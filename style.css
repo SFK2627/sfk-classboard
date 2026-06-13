@@ -2085,3 +2085,276 @@ small {
     position: relative !important;
   }
 }
+
+/* ================================
+   WEEKLY SCHEDULE MODAL
+================================ */
+.scheduleHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+  padding-bottom: 6px;
+  border-bottom: 3px solid #ffd700;
+}
+
+.scheduleHeader h2 {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.weeklyScheduleBtn {
+  background: #111;
+  color: #ffd700;
+  border: 2px solid #111;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: clamp(.65rem, .8vw, .78rem);
+  font-weight: 900;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 2px 2px 0 rgba(0,0,0,.25);
+}
+
+.weeklyScheduleBtn:hover {
+  background: #ffd700;
+  color: #111;
+}
+
+.weeklyScheduleModal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.72);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.weeklyScheduleModal.hidden {
+  display: none;
+}
+
+.weeklyScheduleBox {
+  width: min(1100px, 96vw);
+  height: min(760px, 92vh);
+  background: #fffdf0;
+  border: 4px solid #111;
+  border-radius: 22px;
+  box-shadow: 7px 7px 0 #111;
+  padding: 16px;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.weeklyScheduleTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  background: #111;
+  color: white;
+  border-radius: 16px;
+  padding: 12px 14px;
+}
+
+.weeklyScheduleTop h2 {
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 3px;
+  color: #ffd700;
+}
+
+.weeklyScheduleTop p {
+  color: white;
+  font-weight: 800;
+  font-size: .95rem;
+}
+
+.weeklyCloseBtn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 3px solid #ffd700;
+  background: #ffd700;
+  color: #111;
+  font-size: 1.7rem;
+  font-weight: 900;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.weeklyTabs {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.weeklyTab {
+  background: white;
+  border: 3px solid #111;
+  border-radius: 999px;
+  padding: 9px 10px;
+  font-size: clamp(.75rem, 1vw, .95rem);
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 #111;
+}
+
+.weeklyTab.active {
+  background: #ffd700;
+  color: #111;
+}
+
+.weeklyScheduleContent {
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.weeklyDayTitle {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: #fffdf0;
+  padding-bottom: 10px;
+}
+
+.weeklyDayTitle h3 {
+  font-size: clamp(1.35rem, 2vw, 2rem);
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+
+.weeklyDaySummary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.weeklyDaySummary div {
+  background: #111;
+  color: white;
+  border: 3px solid #ffd700;
+  border-radius: 16px;
+  padding: 10px 12px;
+  box-shadow: 3px 3px 0 rgba(0,0,0,.25);
+}
+
+.weeklyDaySummary span {
+  display: block;
+  color: #ffd700;
+  font-size: .75rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 2px;
+}
+
+.weeklyDaySummary strong {
+  display: block;
+  font-size: clamp(1.15rem, 2vw, 1.65rem);
+  font-weight: 900;
+}
+
+.weeklyList {
+  display: grid;
+  gap: 9px;
+  padding-bottom: 10px;
+}
+
+.weeklyItem {
+  display: grid;
+  grid-template-columns: 170px 1fr;
+  gap: 12px;
+  align-items: center;
+  background: white;
+  border: 3px solid #111;
+  border-left: 12px solid #ffd700;
+  border-radius: 16px;
+  padding: 10px 12px;
+  box-shadow: 3px 3px 0 rgba(0,0,0,.18);
+}
+
+.weeklyTime {
+  font-size: clamp(.9rem, 1.1vw, 1rem);
+  font-weight: 900;
+}
+
+.weeklySubject strong {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: clamp(.9rem, 1.2vw, 1.05rem);
+  font-weight: 900;
+}
+
+.weeklySubject p {
+  margin-top: 5px;
+  font-size: .9rem;
+  font-weight: 800;
+  color: #333;
+}
+
+.weeklyEmpty {
+  background: white;
+  border: 3px solid #111;
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+  font-weight: 900;
+}
+
+/* MOBILE WEEKLY SCHEDULE */
+@media (max-width: 700px) {
+  .scheduleHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .weeklyScheduleBtn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .weeklyScheduleBox {
+    width: 96vw;
+    height: 92vh;
+    padding: 12px;
+    border-radius: 18px;
+  }
+
+  .weeklyScheduleTop {
+    align-items: flex-start;
+  }
+
+  .weeklyTabs {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .weeklyTab {
+    padding: 8px;
+  }
+
+  .weeklyDaySummary {
+    grid-template-columns: 1fr;
+  }
+
+  .weeklyItem {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .weeklyTime {
+    background: #111;
+    color: #ffd700;
+    border-radius: 999px;
+    padding: 5px 9px;
+    width: fit-content;
+  }
+}

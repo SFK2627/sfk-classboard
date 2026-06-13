@@ -11,6 +11,8 @@ let announcementIndex = 0;
 let birthdayIndex = 0;
 let isFetching = false;
 let lastBirthdayDisplayKey = "";
+let weeklyScheduleData = [];
+let activeWeeklyDay = "Monday";
 
 const subjectIcons = {
   english: "📘",
@@ -1127,6 +1129,165 @@ function startAutoScroll(id) {
 
     box.scrollTop = nextScroll;
   }, 180);
+}
+
+async function openWeeklySchedule() {
+  const modal = document.getElementById("weeklyScheduleModal");
+  if (!modal) return;
+
+  modal.classList.remove("hidden");
+
+  if (weeklyScheduleData.length === 0) {
+    await loadWeeklySchedule();
+  }
+
+  const today = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    timeZone: "Asia/Manila"
+  });
+
+  const validDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+  activeWeeklyDay = validDays.includes(today) ? today : "Monday";
+
+  showWeeklyDay(activeWeeklyDay);
+}
+
+function closeWeeklySchedule() {
+  const modal = document.getElementById("weeklyScheduleModal");
+  if (!modal) return;
+
+  modal.classList.add("hidden");
+}
+
+async function loadWeeklySchedule() {
+  const content = document.getElementById("weeklyScheduleContent");
+
+  if (content) {
+    content.innerHTML = `<p>Loading weekly schedule...</p>`;
+  }
+
+  try {
+    const response = await fetch(`${API_URL}?type=schedule`, {
+      cache: "no-store"
+    });
+
+    const data = await response.json();
+
+    console.log("Weekly schedule raw data:", data);
+
+    if (Array.isArray(data)) {
+      weeklyScheduleData = data;
+    } else if (Array.isArray(data.schedule)) {
+      weeklyScheduleData = data.schedule;
+    } else if (Array.isArray(data.data)) {
+      weeklyScheduleData = data.data;
+    } else if (Array.isArray(data.rows)) {
+      weeklyScheduleData = data.rows;
+    } else {
+      weeklyScheduleData = [];
+    }
+
+    console.log("Weekly schedule parsed:", weeklyScheduleData);
+
+  } catch (error) {
+    console.error("Weekly schedule failed:", error);
+
+    if (content) {
+      content.innerHTML = `
+        <p>Unable to load weekly schedule.</p>
+      `;
+    }
+  }
+}
+function showWeeklyDay(day) {
+  activeWeeklyDay = day;
+
+  const content = document.getElementById("weeklyScheduleContent");
+  if (!content) return;
+
+  document.querySelectorAll(".weeklyTab").forEach(button => {
+    button.classList.toggle("active", button.textContent.trim() === day);
+  });
+
+const dayItems = weeklyScheduleData
+  .filter(item => {
+    const itemDay = String(
+      item.Day ||
+      item.day ||
+      item.DAY ||
+      item.Weekday ||
+      item.weekday ||
+      ""
+    ).trim().toLowerCase();
+
+    return itemDay === day.toLowerCase();
+  })
+  .sort((a, b) => {
+    const aStart = a.StartTime || a.startTime || a.Start || a.start || "";
+    const bStart = b.StartTime || b.startTime || b.Start || b.start || "";
+
+    return timeToMinutes(aStart) - timeToMinutes(bStart);
+  });
+
+  if (dayItems.length === 0) {
+    content.innerHTML = `
+      <div class="weeklyEmpty">
+        <h3>${day}</h3>
+        <p>No schedule found for this day.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const firstItem = dayItems[0];
+  const lastItem = dayItems[dayItems.length - 1];
+
+  const pasokTime = firstItem.StartTime || "--";
+  const uwianTime = lastItem.EndTime || "--";
+
+  content.innerHTML = `
+    <div class="weeklyDayTitle">
+      <h3>${day}</h3>
+
+      <div class="weeklyDaySummary">
+        <div>
+          <span>Pasok</span>
+          <strong>${pasokTime}</strong>
+        </div>
+
+        <div>
+          <span>Uwian</span>
+          <strong>${uwianTime}</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="weeklyList">
+      ${dayItems.map(item => {
+        const color = item.Color || getSubjectColor(item.Subject);
+        const textColor = getReadableTextColor(color);
+
+        return `
+          <div class="weeklyItem" style="border-left-color:${color};">
+            <div class="weeklyTime">
+              ${item.StartTime || item.startTime || item.Start || ""} - ${item.EndTime || item.endTime || item.End || ""}
+            </div>
+
+            <div class="weeklySubject">
+              <strong style="color:${textColor}; background:${color};">
+                ${iconFor(item.Subject || item.subject)} ${item.Subject || item.subject || ""}
+              </strong>
+
+				<p>
+				  ${item.Teacher || item.teacher || ""}
+				  ${(item.Room || item.room) ? `• ${item.Room || item.room}` : ""}
+				</p>
+            </div>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
 }
 
 initClassBoard();

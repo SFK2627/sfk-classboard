@@ -77,10 +77,17 @@
     </section>
 
     <section class="mainGrid">
-      <div class="card scheduleCard">
-        <h2>Today's Schedule</h2>
-        <div id="scheduleList"></div>
-      </div>
+	<div class="card scheduleCard">
+	  <div class="scheduleHeader">
+		<h2>Today's Schedule</h2>
+
+		<button class="weeklyScheduleBtn" onclick="openWeeklySchedule()">
+		  View Whole Class Schedule
+		</button>
+	  </div>
+
+	  <div id="scheduleList"></div>
+	</div>
 
       <div class="card announcementsCard">
         <h2 id="announcementTitle">Subject Announcements</h2>
@@ -105,7 +112,30 @@
     <footer class="ticker">
       <div id="tickerText">Loading announcements...</div>
     </footer>
+	<div id="weeklyScheduleModal" class="weeklyScheduleModal hidden">
+  <div class="weeklyScheduleBox">
+    <div class="weeklyScheduleTop">
+      <div>
+        <h2>Weekly Class Schedule</h2>
+        <p>Grade 8 - St. Faustina Kowalska</p>
+      </div>
 
+      <button onclick="closeWeeklySchedule()" class="weeklyCloseBtn">×</button>
+    </div>
+
+    <div class="weeklyTabs">
+      <button class="weeklyTab active" onclick="showWeeklyDay('Monday')">Monday</button>
+      <button class="weeklyTab" onclick="showWeeklyDay('Tuesday')">Tuesday</button>
+      <button class="weeklyTab" onclick="showWeeklyDay('Wednesday')">Wednesday</button>
+      <button class="weeklyTab" onclick="showWeeklyDay('Thursday')">Thursday</button>
+      <button class="weeklyTab" onclick="showWeeklyDay('Friday')">Friday</button>
+    </div>
+
+    <div id="weeklyScheduleContent" class="weeklyScheduleContent">
+      Loading schedule...
+    </div>
+  </div>
+</div>
   </main>
 
   <script src="script.js"></script>
