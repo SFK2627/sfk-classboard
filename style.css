@@ -1,3 +1,6 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@700&display=swap');
 * {
   margin: 0;
   padding: 0;
@@ -305,6 +308,10 @@ body {
   margin-bottom: 6px;
 }
 
+.birthdayCard .label {
+  line-height: 1.10;
+}
+
 .birthdayList {
   height: auto;
   min-height: 0;
@@ -322,8 +329,8 @@ body {
   color: white;
   border: 3px solid #ffd700;
   border-radius: 14px;
-  padding: 9px 11px;
-  min-height: 78px;
+  padding: 5px 10px 7px 17px;
+  min-height: 68px;
   overflow: hidden;
   box-shadow: inset 0 0 0 2px rgba(255,255,255,.08);
 }
@@ -358,9 +365,9 @@ body {
 
 .birthdayItem h3 {
   color: white;
-  font-size: clamp(1rem, 1.55vw, 1.4rem);
-  line-height: 1.02;
-  font-weight: 900;
+ font-size: clamp(.95rem, 1.2vw, 1.2rem);
+  line-height: 1.00;
+  font-weight: 800;
   margin-bottom: 3px;
   white-space: nowrap;
   overflow: hidden;
@@ -823,27 +830,10 @@ small {
     height: auto;
   }
 
-  .birthdayItem {
-    min-height: 95px;
-    grid-template-columns: 52px 1fr;
-  }
-
   .birthdayIcon {
     width: 52px;
     height: 52px;
     font-size: 1.75rem;
-  }
-
-  .birthdayItem strong {
-    font-size: .72rem;
-  }
-
-  .birthdayItem h3 {
-    font-size: clamp(1.25rem, 6vw, 1.8rem);
-  }
-
-  .birthdayItem p {
-    font-size: .85rem;
   }
 
   .noBirthday {
@@ -940,11 +930,6 @@ small {
   font-size: clamp(1.18rem, 1.35vw, 1.6rem);
 }
 
-.birthdayItem strong {
-  font-size: clamp(.75rem, .95vw, .9rem);
-  letter-spacing: .8px;
-}
-
 .birthdayItem h3 {
   
 }
@@ -1013,10 +998,7 @@ small {
 }
 
 @media (max-width: 900px) {
-  .birthdayItem {
-    grid-template-columns: 52px 1fr;
-  }
-
+  
   .birthdayDateBadge {
     grid-column: 1 / -1;
     justify-self: stretch;
@@ -1156,4 +1138,469 @@ small {
   padding: 2px 6px;
   font-size: .72em;
   font-weight: 900;
+}
+/* ================================
+   THINGS TO BRING URGENCY UPDATE
+   - Header counter: TODAY / TOMORROW
+   - Status badges: TODAY, NEED TOMORROW, IN 2 DAYS, THIS WEEK, FUTURE
+   - Auto-hide logic is in JS; this is only the design
+================================ */
+.thingsCard {
+  display: flex;
+  flex-direction: column;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+  padding-bottom: 6px;
+  border-bottom: 3px solid #ffd700;
+}
+
+.cardHeader h2 {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
+  line-height: 1.1;
+}
+
+.bringSummary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  max-width: 58%;
+  background: #111;
+  color: #ffd700;
+  border: 2px solid #ffd700;
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-size: clamp(.58rem, .75vw, .72rem);
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 2px 2px 0 rgba(0,0,0,.24);
+  animation: bringSummaryPulse 2.8s infinite;
+}
+
+.bringSummary:empty {
+  display: none;
+}
+
+.thingsCard #thingsList {
+  max-height: calc(100% - 43px);
+}
+
+.thing-item {
+  background: #fff7c7;
+  padding: 10px 11px 10px 18px;
+}
+
+.thing-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+  min-width: 0;
+}
+
+.thing-subject {
+  display: block;
+  min-width: 0;
+  max-width: 55%;
+  font-size: clamp(1rem, 1.2vw, 1.15rem);
+  font-weight: 950;
+  line-height: 1.05;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.thing-detail,
+.thing-item small {
+  display: block;
+  color: #333;
+  font-size: clamp(.8rem, .95vw, .9rem);
+  font-weight: 800;
+  line-height: 1.18;
+  overflow-wrap: anywhere;
+}
+
+.bring-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  max-width: 45%;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 2px solid rgba(0,0,0,.22);
+  font-size: clamp(.56rem, .72vw, .68rem);
+  font-weight: 950;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 2px 2px 0 rgba(0,0,0,.16);
+}
+
+.status-today,
+.status-tomorrow {
+  background: #111;
+  color: #ff4b4b;
+  border-color: #ff4b4b;
+  animation: bringUrgentPulse 2.6s infinite;
+}
+
+.status-two-days {
+  background: rgba(255, 149, 0, .22);
+  color: #b35b00;
+  border-color: rgba(179, 91, 0, .45);
+}
+
+.status-this-week {
+  background: rgba(255, 214, 10, .32);
+  color: #806500;
+  border-color: rgba(128, 101, 0, .45);
+}
+
+.status-future {
+  background: rgba(48, 209, 88, .22);
+  color: #157a32;
+  border-color: rgba(21, 122, 50, .45);
+}
+
+/* Subject text colors for Things to Bring.
+   JS can add these classes based on the subject name. */
+.subject-english {
+  color: #e75480;
+}
+
+.subject-mathematics,
+.subject-math {
+  color: #15803d;
+}
+
+.subject-science {
+  color: #c89b00;
+}
+
+.subject-ict,
+.subject-le {
+  color: #d11f1f;
+}
+
+.subject-filipino {
+  color: #8b5a2b;
+}
+
+.subject-cled {
+  color: #7c3aed;
+}
+
+.subject-ap {
+  color: #2563eb;
+}
+
+.subject-mapeh {
+  color: #111;
+}
+
+.subject-homeroom {
+  color: #444;
+}
+
+@keyframes bringUrgentPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 2px 2px 0 rgba(0,0,0,.16), 0 0 0 rgba(255,75,75,0);
+  }
+
+  50% {
+    transform: scale(1.035);
+    box-shadow: 2px 2px 0 rgba(0,0,0,.16), 0 0 14px rgba(255,75,75,.58);
+  }
+}
+
+@keyframes bringSummaryPulse {
+  0%, 100% {
+    box-shadow: 2px 2px 0 rgba(0,0,0,.24), 0 0 0 rgba(255,215,0,0);
+  }
+
+  50% {
+    box-shadow: 2px 2px 0 rgba(0,0,0,.24), 0 0 13px rgba(255,215,0,.48);
+  }
+}
+
+@media (max-width: 1200px) {
+  .thingsCard #thingsList {
+    max-height: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .cardHeader {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .bringSummary {
+    max-width: 100%;
+    width: fit-content;
+    font-size: .68rem;
+  }
+
+  .thing-topline {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .thing-subject,
+  .bring-status {
+    max-width: 100%;
+  }
+
+  .bring-status {
+    font-size: .64rem;
+  }
+}
+
+/* ================================
+   THINGS TO BRING BADGE FIX
+   More padding + prevent text clipping
+================================ */
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+  padding-bottom: 6px;
+  border-bottom: 3px solid #ffd700;
+}
+
+.cardHeader h2 {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+  flex-shrink: 0;
+}
+
+.bringSummary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #111;
+  color: #ffd700;
+  border: 2px solid #ffd700;
+  font-size: clamp(.62rem, .78vw, .78rem);
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+  max-width: 58%;
+  overflow: visible;
+  box-shadow: 2px 2px 0 rgba(0,0,0,.25);
+}
+
+.bringSummary:empty {
+  display: none;
+}
+
+.thing-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.thing-subject {
+  font-size: clamp(1rem, 1.18vw, 1.12rem);
+  font-weight: 950;
+  min-width: 0;
+  flex: 1;
+}
+
+.bring-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 27px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  font-size: clamp(.58rem, .72vw, .72rem);
+  font-weight: 950;
+  line-height: 1;
+  white-space: nowrap;
+  flex-shrink: 0;
+  max-width: none;
+  overflow: visible;
+}
+
+@media (max-width: 900px) {
+  .cardHeader {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .bringSummary {
+    max-width: 100%;
+    width: fit-content;
+    font-size: .72rem;
+    padding: 7px 12px;
+  }
+
+  .thing-topline {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .bring-status {
+    width: fit-content;
+    font-size: .7rem;
+    padding: 7px 12px;
+  }
+}
+
+/* Smaller Things to Bring header badge */
+.bringSummary {
+  font-size: clamp(.48rem, .58vw, .6rem);
+  padding: 5px 8px;
+  min-height: 22px;
+  line-height: 1;
+  letter-spacing: .2px;
+  max-width: 52%;
+}
+
+/* ================================
+   THINGS TO BRING SUBJECT BADGE FIX
+   Badge smaller + beside subject name
+================================ */
+
+.thing-topline {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  width: 100%;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.thing-subject {
+  flex: 0 0 auto;
+  font-size: clamp(.95rem, 1.08vw, 1.08rem);
+  font-weight: 950;
+  line-height: 1.05;
+}
+
+.bring-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 22px;
+  padding: 4px 7px;
+  border-radius: 999px;
+  font-size: clamp(.48rem, .58vw, .62rem);
+  font-weight: 950;
+  line-height: 1;
+  white-space: nowrap;
+  flex-shrink: 0;
+  letter-spacing: .1px;
+}
+
+.thing-detail {
+  display: block;
+  margin-top: 2px;
+  font-size: clamp(.82rem, .95vw, .92rem);
+  line-height: 1.2;
+}
+/* ================================
+   BIRTHDAY CORNER READABLE NAME FIX
+   No more left-right marquee / teleport
+================================ */
+
+.birthdayNameMarquee {
+  width: 100%;
+  max-width: 100%;
+  overflow: visible !important;
+  white-space: normal !important;
+  position: relative;
+  line-height: 1.05 !important;
+}
+
+.birthdayNameMarquee span {
+  display: block !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  padding-right: 0 !important;
+  animation: none !important;
+  transform: none !important;
+  white-space: normal !important;
+}
+
+
+.birthdayItem {
+  animation: birthdaySoftFade .45s ease-out;
+}
+
+@keyframes birthdaySoftFade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Birthday Corner title font */
+.birthdayCard .label {
+  font-family: "Fredoka", "Comic Sans MS", cursive !important;
+  font-weight: 900 !important;
+}
+
+.birthdayCard {
+  border-left: 4px solid #111 !important;
+}
+
+/* ================================
+   BIRTHDAY FADE ONLY WHEN NAME CHANGES
+================================ */
+
+.birthdayItem {
+  animation: none !important;
+}
+
+.birthdayItem.birthdayFadeIn {
+  animation: birthdayNameFadeOnly .45s ease-out !important;
+}
+
+@keyframes birthdayNameFadeOnly {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

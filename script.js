@@ -2,7 +2,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzCjWVnO-ZNvKTNqKN1zVsc
 
 const DATA_REFRESH_MS = 5000;
 const ANNOUNCEMENT_ROTATE_MS = 10000;
-const BIRTHDAY_ROTATE_MS = 15000;
+const BIRTHDAY_ROTATE_MS = 30000;
 const CACHE_KEY = "sfkClassBoardData";
 
 let latestData = null;
@@ -10,6 +10,7 @@ let latestDataString = "";
 let announcementIndex = 0;
 let birthdayIndex = 0;
 let isFetching = false;
+let lastBirthdayDisplayKey = "";
 
 const subjectIcons = {
   english: "📘",
@@ -93,10 +94,10 @@ async function loadClassBoard() {
       latestData = data;
       renderDashboard(data);
     } else {
-      latestData = data;
-      updateCountdownAndBell();
-      renderCleanersToday();
-      renderBirthdays(data.birthdays || []);
+		latestData = data;
+		updateCountdownAndBell();
+		renderCleanersToday();
+     
     }
 
   } catch (error) {
@@ -392,29 +393,294 @@ function nextAnnouncement() {
 
 function renderThings(items) {
   const box = document.getElementById("thingsList");
+  const summary = document.getElementById("bringSummary");
 
   if (!box) return;
 
   if (!items || items.length === 0) {
+    if (summary) summary.textContent = "";
     box.innerHTML = `<p>No things to bring yet.</p>`;
     return;
   }
 
-  box.innerHTML = items.map(item => {
-    const subject = item.Subject || "Reminder";
-    const date = item.Date || "";
-    const itemText = item.Item || item.Things || item.Reminder || item.Description || "";
+  const visibleItems = items
+    .map(item => {
+      const subject = item.Subject || "Reminder";
+      const dateValue = getThingDateValue(item);
+      const itemText = getThingText(item);
+      const status = getBringStatus(dateValue);
+
+      return {
+        ...item,
+        subject,
+        dateValue,
+        itemText,
+        status
+      };
+    })
+    .filter(item => item.status && (item.itemText || item.subject))
+    .sort((a, b) => {
+      if (a.status.priority !== b.status.priority) {
+        return a.status.priority - b.status.priority;
+      }
+
+      return a.status.sortValue - b.status.sortValue;
+    });
+
+  updateBringSummary(visibleItems);
+
+  if (visibleItems.length === 0) {
+    box.innerHTML = `<p>No upcoming things to bring.</p>`;
+    return;
+  }
+
+  box.innerHTML = visibleItems.map(item => {
+    const safeSubject = escapeHTML(item.subject);
+    const safeItemText = escapeHTML(item.itemText || "No item specified");
+    const subjectClass = getThingSubjectClass(item.subject);
+
+    const statusLabel = item.status.label
+      ? `<span class="bring-status ${item.status.className}">${escapeHTML(item.status.label)}</span>`
+      : "";
 
     return `
       <div class="thing-item">
-        <strong>
-          ${iconFor(subject)} ${subject}
-          ${date ? `<small class="thing-date">(${date})</small>` : ""}
-        </strong><br>
-        ${itemText}
+        <div class="thing-topline">
+          <strong class="thing-subject ${subjectClass}">${safeSubject}</strong>
+          ${statusLabel}
+        </div>
+
+        <small class="thing-detail">${safeItemText}</small>
       </div>
     `;
   }).join("");
+
+
+}
+
+function getThingDateValue(item) {
+  return (
+    item.DateNeeded ||
+    item.NeededDate ||
+    item.DueDate ||
+    item.Deadline ||
+    item.Date ||
+    ""
+  );
+}
+
+function getThingText(item) {
+  return (
+    item.Item ||
+    item.Things ||
+    item.Materials ||
+    item.Reminder ||
+    item.Description ||
+    item.Task ||
+    ""
+  );
+}
+
+function updateBringSummary(items) {
+  const summary = document.getElementById("bringSummary");
+  if (!summary) return;
+
+  const todayCount = items.filter(item => item.status?.type === "today").length;
+  const tomorrowCount = items.filter(item => item.status?.type === "tomorrow").length;
+
+  const parts = [];
+
+  if (todayCount > 0) {
+    parts.push(`🔥 TODAY: ${todayCount}`);
+  }
+
+  if (tomorrowCount > 0) {
+    parts.push(`⚠️ TOMORROW: ${tomorrowCount}`);
+  }
+
+  summary.textContent = parts.join(" | ");
+}
+
+function getBringStatus(dateValue) {
+  const dueParts = parseDateToManilaParts(dateValue);
+
+  if (!dueParts) {
+    return {
+      type: "no-date",
+      label: "",
+      className: "",
+      priority: 6,
+      sortValue: Number.MAX_SAFE_INTEGER
+    };
+  }
+
+  const todayParts = getTodayManilaParts();
+
+  const dueUTC = Date.UTC(dueParts.year, dueParts.month - 1, dueParts.day);
+  const todayUTC = Date.UTC(todayParts.year, todayParts.month - 1, todayParts.day);
+
+  const diffDays = Math.round((dueUTC - todayUTC) / 86400000);
+
+  if (diffDays < 0) return null;
+
+  if (diffDays === 0) {
+    return {
+      type: "today",
+      label: "🔥 TODAY",
+      className: "status-today",
+      priority: 1,
+      sortValue: dueUTC
+    };
+  }
+
+  if (diffDays === 1) {
+    return {
+      type: "tomorrow",
+      label: "🔴 NEED TOMORROW",
+      className: "status-tomorrow",
+      priority: 2,
+      sortValue: dueUTC
+    };
+  }
+
+  if (diffDays === 2) {
+    return {
+      type: "two-days",
+      label: "🟠 IN 2 DAYS",
+      className: "status-two-days",
+      priority: 3,
+      sortValue: dueUTC
+    };
+  }
+
+  if (diffDays <= 7) {
+    return {
+      type: "this-week",
+      label: `🟡 THIS WEEK • ${formatShortBringDate(dueParts)}`,
+      className: "status-this-week",
+      priority: 4,
+      sortValue: dueUTC
+    };
+  }
+
+  return {
+    type: "future",
+    label: `🟢 ${formatShortBringDate(dueParts)}`,
+    className: "status-future",
+    priority: 5,
+    sortValue: dueUTC
+  };
+}
+
+function getTodayManilaParts() {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(new Date());
+
+  return {
+    year: Number(parts.find(part => part.type === "year")?.value || 0),
+    month: Number(parts.find(part => part.type === "month")?.value || 0),
+    day: Number(parts.find(part => part.type === "day")?.value || 0)
+  };
+}
+
+function parseDateToManilaParts(value) {
+  if (!value) return null;
+
+  const text = String(value).trim();
+  if (!text) return null;
+
+  const isoMatch = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+
+  if (isoMatch) {
+    return {
+      year: Number(isoMatch[1]),
+      month: Number(isoMatch[2]),
+      day: Number(isoMatch[3])
+    };
+  }
+
+  const slashMatch = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})$/);
+
+  if (slashMatch) {
+    const rawYear = Number(slashMatch[3]);
+    const year = rawYear < 100 ? 2000 + rawYear : rawYear;
+
+    return {
+      year,
+      month: Number(slashMatch[1]),
+      day: Number(slashMatch[2])
+    };
+  }
+
+  const dashMatch = text.match(/^(\d{1,2})-(\d{1,2})-(\d{2}|\d{4})$/);
+
+  if (dashMatch) {
+    const rawYear = Number(dashMatch[3]);
+    const year = rawYear < 100 ? 2000 + rawYear : rawYear;
+
+    return {
+      year,
+      month: Number(dashMatch[1]),
+      day: Number(dashMatch[2])
+    };
+  }
+
+  const parsedDate = new Date(text);
+
+  if (isNaN(parsedDate)) return null;
+
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(parsedDate);
+
+  return {
+    year: Number(parts.find(part => part.type === "year")?.value || 0),
+    month: Number(parts.find(part => part.type === "month")?.value || 0),
+    day: Number(parts.find(part => part.type === "day")?.value || 0)
+  };
+}
+
+function formatShortBringDate(dateParts) {
+  const date = new Date(Date.UTC(dateParts.year, dateParts.month - 1, dateParts.day));
+
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "UTC",
+    month: "short",
+    day: "numeric"
+  }).format(date).toUpperCase();
+}
+
+function getThingSubjectClass(subject) {
+  const sub = String(subject || "").toLowerCase().trim();
+
+  if (sub.includes("mapeh")) return "subject-mapeh";
+  if (sub.includes("cled") || sub.includes("christian") || sub.includes("religion")) return "subject-cled";
+  if (sub.includes("math")) return "subject-mathematics";
+  if (sub.includes("ict")) return "subject-ict";
+  if (sub.includes("le")) return "subject-le";
+  if (sub.includes("english")) return "subject-english";
+  if (sub.includes("filipino") || sub.includes("filipno")) return "subject-filipino";
+  if (sub.includes("science")) return "subject-science";
+  if (sub.includes("araling") || /\bap\b/.test(sub)) return "subject-ap";
+  if (sub.includes("homeroom")) return "subject-homeroom";
+
+  return "subject-homeroom";
+}
+
+function escapeHTML(value) {
+  return String(value || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 function renderReminders(items) {
@@ -504,9 +770,13 @@ function renderBirthdays(items) {
       ? `<span class="birthdayCounter">${currentNumber}/${birthdayToday.length}</span>`
       : "";
 
-  box.innerHTML = `
-    <div class="birthdayItem">
-      <div class="birthdayIcon">🎉</div>
+  const birthdayDisplayKey = `${name}-${currentNumber}-${birthdayToday.length}`;
+const shouldFadeBirthday = birthdayDisplayKey !== lastBirthdayDisplayKey;
+lastBirthdayDisplayKey = birthdayDisplayKey;
+
+box.innerHTML = `
+  <div class="birthdayItem ${shouldFadeBirthday ? "birthdayFadeIn" : ""}">
+    <div class="birthdayIcon">🎉</div>
 
       <div class="birthdayContent">
         <strong>
