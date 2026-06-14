@@ -15,6 +15,29 @@
     <div id="bellAlert" class="bell-alert hidden">
       ⏰ CLASS CHANGE SOON
     </div>
+
+    <div id="prayerPopup" class="prayerPopup hidden">
+      <div class="prayerPopupBox prayerPlayerBox">
+        <button class="prayerCloseBtn" onclick="closePrayerPopup()">×</button>
+
+        <div class="prayerPopupIcon" id="prayerPopupIcon">🙏</div>
+
+        <div class="prayerPopupText">
+          <h2 id="prayerPopupTitle">Prayer Time</h2>
+          <p id="prayerPopupSubtitle">Please pause for prayer.</p>
+          <strong id="prayerPopupStatus">Use the player below to play the prayer.</strong>
+
+          <audio id="prayerPlayer" class="prayerPlayer" controls preload="auto">
+            Your browser does not support the audio player.
+          </audio>
+        </div>
+      </div>
+    </div>
+
+    <audio id="angelusAudio" src="angelus.mp3" preload="metadata"></audio>
+    <audio id="reginaCaeliAudio" src="regina-caeli.mp3" preload="metadata"></audio>
+    <audio id="threePmPrayerAudio" src="three-pm-prayer.mp3" preload="metadata"></audio>
+
     
     <header class="topbar">
       <div class="brandBox">
@@ -68,7 +91,7 @@
         </div>
 
         <div id="birthdayList" class="birthdayList">
-          <div class="noBdirsdssthday">
+          <div class="noBirthday">
             <span></span>
             <p>No birthday celebrants today.</p>
           </div>

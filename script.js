@@ -5,6 +5,14 @@ const ANNOUNCEMENT_ROTATE_MS = 10000;
 const BIRTHDAY_ROTATE_MS = 30000;
 const CACHE_KEY = "sfkClassBoardData";
 
+/* PRAYER AUDIO PLAYER SYSTEM
+   No autoplay / no bell.
+   Prayer popup appears at scheduled/test time with a manual audio player.
+*/
+const PRAYER_TEST_TRIGGER_ENABLED = true;
+const PRAYER_TEST_HOUR = "00";
+const PRAYER_TEST_MINUTE = "59";
+
 let latestData = null;
 let latestDataString = "";
 let announcementIndex = 0;
@@ -13,6 +21,7 @@ let isFetching = false;
 let lastBirthdayDisplayKey = "";
 let weeklyScheduleData = [];
 let activeWeeklyDay = "Monday";
+let lastPrayerTriggerKey = "";
 
 const subjectIcons = {
   english: "📘",
@@ -42,6 +51,12 @@ const subjectIcons = {
 };
 
 function initClassBoard() {
+
+  const audioOverlay = document.getElementById("audioStartOverlay");
+  if (audioOverlay) {
+    audioOverlay.classList.remove("hidden");
+  }
+
   startLiveClock();
   renderCleanersToday();
 
@@ -1116,6 +1131,7 @@ function startLiveClock() {
     window.clockInterval = setInterval(() => {
       updateClock();
       updateCountdownAndBell();
+      checkPrayerTimes();
 
       document.title =
         "SFK ClassBoard " + new Date().getSeconds();
@@ -1335,6 +1351,171 @@ const dayItems = weeklyScheduleData
       }).join("")}
     </div>
   `;
+}
+
+
+/* ================================
+   PRAYER AUDIO PLAYER SYSTEM
+   12:00 PM = Angelus / Regina Caeli based on season
+   3:00 PM = Three PM Prayer
+   TEST: configurable time = Angelus
+
+   This version does NOT autoplay and does NOT use bell audio.
+   It opens a popup with a built-in audio player instead.
+================================ */
+function checkPrayerTimes() {
+  const trigger = getCurrentPrayerTrigger();
+
+  if (!trigger || !trigger.config || !trigger.triggerKey) return;
+  if (lastPrayerTriggerKey === trigger.triggerKey) return;
+
+  lastPrayerTriggerKey = trigger.triggerKey;
+  showPrayerPlayerPopup(trigger.config);
+}
+
+function getCurrentPrayerTrigger() {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false
+  }).formatToParts(new Date());
+
+  const dateKey = `${getPartValue(parts, "year")}-${getPartValue(parts, "month")}-${getPartValue(parts, "day")}`;
+  const hour = getPartValue(parts, "hour");
+  const minute = getPartValue(parts, "minute");
+
+  if (hour === "12" && minute === "00") {
+    const config = getNoonPrayerConfig(dateKey);
+    return {
+      config,
+      triggerKey: `${dateKey}-12PM-${config.audioSrc}`
+    };
+  }
+
+  if (hour === "15" && minute === "00") {
+    return {
+      config: {
+        icon: "🙏",
+        title: "3:00 PM Prayer",
+        subtitle: "Let us pause for the three o’clock prayer.",
+        audioSrc: "three-pm-prayer.mp3"
+      },
+      triggerKey: `${dateKey}-3PM`
+    };
+  }
+
+  if (PRAYER_TEST_TRIGGER_ENABLED && hour === PRAYER_TEST_HOUR && minute === PRAYER_TEST_MINUTE) {
+    return {
+      config: {
+        icon: "🧪",
+        title: "Angelus Test",
+        subtitle: `${PRAYER_TEST_HOUR}:${PRAYER_TEST_MINUTE} test prayer player.`,
+        audioSrc: "angelus.mp3"
+      },
+      triggerKey: `${dateKey}-${PRAYER_TEST_HOUR}${PRAYER_TEST_MINUTE}-TEST-ANGELUS-PLAYER`
+    };
+  }
+
+  return null;
+}
+
+function getNoonPrayerConfig(dateKey) {
+  if (dateKey >= "2027-03-28" && dateKey <= "2027-05-16") {
+    return {
+      icon: "👑",
+      title: "Regina Caeli",
+      subtitle: "Queen of Heaven • Easter Season",
+      audioSrc: "regina-caeli.mp3"
+    };
+  }
+
+  return {
+    icon: "🙏",
+    title: "Angelus",
+    subtitle: "12:00 PM Prayer",
+    audioSrc: "angelus.mp3"
+  };
+}
+
+function showPrayerPlayerPopup(config) {
+  const popup = document.getElementById("prayerPopup");
+  const icon = document.getElementById("prayerPopupIcon");
+  const title = document.getElementById("prayerPopupTitle");
+  const subtitle = document.getElementById("prayerPopupSubtitle");
+  const status = document.getElementById("prayerPopupStatus");
+  const player = document.getElementById("prayerPlayer");
+
+  if (!popup) return;
+
+  if (icon) icon.textContent = config.icon || "🙏";
+  if (title) title.textContent = config.title || "Prayer Time";
+  if (subtitle) subtitle.textContent = config.subtitle || "Please pause for prayer.";
+  if (status) status.textContent = "Press play below to start the prayer.";
+
+  if (player) {
+    player.pause();
+    player.src = config.audioSrc;
+    player.currentTime = 0;
+    player.load();
+  }
+
+  popup.classList.remove("hidden");
+}
+
+function closePrayerPopup() {
+  const popup = document.getElementById("prayerPopup");
+  const player = document.getElementById("prayerPlayer");
+
+  if (player) {
+    player.pause();
+    player.currentTime = 0;
+  }
+
+  if (popup) {
+    popup.classList.add("hidden");
+  }
+}
+
+// Kept for compatibility with older onclick handlers, if any.
+function stopPrayerSequence() {
+  closePrayerPopup();
+}
+
+function enableClassBoardSound() {
+  showSoundAlert("Audio player mode is active. The prayer will use manual controls.");
+}
+
+function startClassBoardAudio() {
+  enableClassBoardSound();
+}
+
+function updatePrayerPopupStatus(message) {
+  const status = document.getElementById("prayerPopupStatus");
+  if (status) {
+    status.textContent = message;
+  }
+}
+
+function showSoundAlert(message) {
+  const alert = document.getElementById("bellAlert");
+  if (!alert) return;
+
+  alert.textContent = message;
+  alert.classList.remove("hidden");
+
+  clearTimeout(window.soundAlertTimer);
+  window.soundAlertTimer = setTimeout(() => {
+    alert.classList.add("hidden");
+  }, 5000);
+}
+
+function getPartValue(parts, type) {
+  return parts.find(part => part.type === type)?.value || "";
 }
 
 initClassBoard();
