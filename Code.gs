@@ -1,5 +1,11 @@
 const SPREADSHEET_ID = "1RVCRiYviRAr3nXS_uMBXDK3g9FISq9m3GBt4_V4h3Ew";
 const TIMEZONE = "Asia/Manila";
+const ATTACHMENT_FOLDER_NAME = "SFK ClassBoard Attachments";
+
+function authorizeClassBoardDriveAccess() {
+  const folder = getOrCreateAttachmentFolder();
+  return "Drive access authorized for: " + folder.getName();
+}
 
 function doGet(e) {
   const type = e && e.parameter && e.parameter.type ? e.parameter.type : "today";
@@ -93,16 +99,21 @@ function doPost(e) {
     const id = generateAdminId(type);
 
     if (type === "announcement") {
-      appendAdminRow("Announcements", [
-        id,
-        formatInputDateToSheetDate(payload.Date) || todayDate,
-        payload.Subject || "",
-        payload.Announcement || "",
-        formatInputDateToSheetDate(payload.Deadline) || "",
-        payload.Teacher || "",
-        payload.Priority || "Reminder",
-        payload.Publish || "YES"
-      ]);
+      const attachments = uploadAnnouncementAttachments(payload.AttachmentFiles, id);
+      ensureAnnouncementAttachmentHeaders();
+
+      appendAnnouncementRow({
+        ID: id,
+        Date: formatInputDateToSheetDate(payload.Date) || todayDate,
+        Subject: payload.Subject || "",
+        Announcement: payload.Announcement || "",
+        Deadline: formatInputDateToSheetDate(payload.Deadline) || "",
+        Teacher: payload.Teacher || "",
+        Priority: payload.Priority || "Reminder",
+        Publish: payload.Publish || "YES",
+        AttachmentURLs: attachments.urls,
+        AttachmentNames: attachments.names
+      });
     }
 
     else if (type === "things") {
@@ -489,16 +500,22 @@ function addOfficerRow(payload) {
   );
 
   if (kind === "announcement") {
-    appendAdminRow("Announcements", [
-      generateAdminId("announcement"),
-      formatInputDateToSheetDate(payload.Date) || todayDate,
-      payload.Subject || "",
-      payload.Announcement || "",
-      formatInputDateToSheetDate(payload.Deadline) || "",
-      payload.Teacher || "",
-      payload.Priority || "Reminder",
-      payload.Publish || "YES"
-    ]);
+    const id = generateAdminId("announcement");
+    const attachments = uploadAnnouncementAttachments(payload.AttachmentFiles, id);
+    ensureAnnouncementAttachmentHeaders();
+
+    appendAnnouncementRow({
+      ID: id,
+      Date: formatInputDateToSheetDate(payload.Date) || todayDate,
+      Subject: payload.Subject || "",
+      Announcement: payload.Announcement || "",
+      Deadline: formatInputDateToSheetDate(payload.Deadline) || "",
+      Teacher: payload.Teacher || "",
+      Priority: payload.Priority || "Reminder",
+      Publish: payload.Publish || "YES",
+      AttachmentURLs: attachments.urls,
+      AttachmentNames: attachments.names
+    });
 
     return {
       success: true,
@@ -870,6 +887,120 @@ function sanitizeRowNumbers(rowNumbers) {
       seen[rowNumber] = true;
       return true;
     });
+}
+
+
+function appendAnnouncementRow(data) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName("Announcements");
+
+  if (!sheet) {
+    throw new Error("Sheet not found: Announcements");
+  }
+
+  ensureAnnouncementAttachmentHeaders();
+
+  const lastColumn = sheet.getLastColumn();
+  const headers = sheet.getRange(1, 1, 1, lastColumn).getDisplayValues()[0].map(String);
+  const rowNumber = sheet.getLastRow() + 1;
+
+  headers.forEach(function(header, index) {
+    const clean = normalizeHeaderName(header);
+    let value = "";
+
+    if (clean === "id") value = data.ID || "";
+    else if (clean === "date") value = data.Date || "";
+    else if (clean === "subject") value = data.Subject || "";
+    else if (clean === "announcement") value = data.Announcement || "";
+    else if (clean === "deadline") value = data.Deadline || "";
+    else if (clean === "teacher") value = data.Teacher || "";
+    else if (clean === "priority") value = data.Priority || "Reminder";
+    else if (clean === "publish") value = data.Publish || "YES";
+    else if (clean === "attachmenturls" || clean === "attachments" || clean === "attachmenturl") value = data.AttachmentURLs || "";
+    else if (clean === "attachmentnames" || clean === "attachmentlabels" || clean === "attachmentname") value = data.AttachmentNames || "";
+
+    setCellValueAllowCustom(sheet, rowNumber, index + 1, value, header);
+  });
+}
+
+function uploadAnnouncementAttachments(files, recordId) {
+  const safeFiles = Array.isArray(files) ? files.slice(0, 5) : [];
+
+  if (safeFiles.length === 0) {
+    return {
+      urls: "",
+      names: ""
+    };
+  }
+
+  const folder = getOrCreateAttachmentFolder();
+  const urls = [];
+  const names = [];
+
+  safeFiles.forEach(function(file, index) {
+    if (!file || !file.data) return;
+
+    const originalName = sanitizeFileName(file.name || ("attachment-" + (index + 1)));
+    const mimeType = file.mimeType || "application/octet-stream";
+    const bytes = Utilities.base64Decode(file.data);
+    const blob = Utilities.newBlob(bytes, mimeType, recordId + "-" + (index + 1) + "-" + originalName);
+    const driveFile = folder.createFile(blob);
+
+    try {
+      driveFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    } catch (error) {
+      // Some school domains block public sharing. The file URL is still saved.
+    }
+
+    urls.push(driveFile.getUrl());
+    names.push(originalName);
+  });
+
+  return {
+    urls: urls.join("\n"),
+    names: names.join("\n")
+  };
+}
+
+function getOrCreateAttachmentFolder() {
+  const existing = DriveApp.getFoldersByName(ATTACHMENT_FOLDER_NAME);
+
+  if (existing.hasNext()) {
+    return existing.next();
+  }
+
+  return DriveApp.createFolder(ATTACHMENT_FOLDER_NAME);
+}
+
+function sanitizeFileName(value) {
+  const text = String(value || "attachment").trim();
+  const safe = text.replace(/[\\/:*?"<>|#%{}~&]/g, "-").replace(/\s+/g, " ");
+
+  return safe || "attachment";
+}
+
+function ensureAnnouncementAttachmentHeaders() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName("Announcements");
+
+  if (!sheet) return;
+
+  const requiredHeaders = ["AttachmentURLs", "AttachmentNames"];
+  const lastColumn = Math.max(sheet.getLastColumn(), 1);
+  const headers = sheet.getRange(1, 1, 1, lastColumn).getDisplayValues()[0].map(String);
+  let nextColumn = headers.length + 1;
+
+  requiredHeaders.forEach(function(header) {
+    const exists = headers.some(function(existingHeader) {
+      return normalizeHeaderName(existingHeader) === normalizeHeaderName(header);
+    });
+
+    if (!exists) {
+      sheet.getRange(1, nextColumn).setValue(header);
+      headers.push(header);
+      nextColumn += 1;
+    }
+  });
 }
 
 /* FORMAT EDITED VALUES BEFORE SAVING */

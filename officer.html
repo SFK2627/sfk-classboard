@@ -92,6 +92,17 @@
           <label for="officerAnnouncementDeadline">Deadline</label>
           <input id="officerAnnouncementDeadline" type="date" />
 
+          <label for="officerAnnouncementAttachments">Attachments</label>
+          <input
+            id="officerAnnouncementAttachments"
+            type="file"
+            multiple
+            accept="image/*,.pdf,.doc,.docx,.ppt,.pptx"
+          />
+          <small class="fieldHint">
+            Optional. Up to 5 files. Images/files will appear as clickable attachment chips.
+          </small>
+
           <label for="officerAnnouncementPriority">Priority</label>
           <select id="officerAnnouncementPriority">
             <option value="Reminder">Reminder</option>

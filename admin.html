@@ -87,6 +87,17 @@
           <label for="announcementDeadline">Deadline</label>
           <input id="announcementDeadline" type="date" />
 
+          <label for="announcementAttachments">Attachments</label>
+          <input
+            id="announcementAttachments"
+            type="file"
+            multiple
+            accept="image/*,.pdf,.doc,.docx,.ppt,.pptx"
+          />
+          <small class="fieldHint">
+            Optional. Up to 5 files. Images/files will appear as clickable attachment chips.
+          </small>
+
           <label for="announcementPriority">Priority</label>
           <select id="announcementPriority">
             <option value="Reminder">Reminder</option>

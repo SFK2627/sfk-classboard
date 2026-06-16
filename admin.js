@@ -21,6 +21,8 @@ const TEACHER_OPTIONS = [
 ];
 
 const TEXT_FORMAT_OPTIONS = ["center", "left", "right", "bullets", "numbers"];
+const MAX_ANNOUNCEMENT_ATTACHMENTS = 5;
+const MAX_ANNOUNCEMENT_ATTACHMENT_BYTES = 8 * 1024 * 1024;
 
 document.addEventListener("DOMContentLoaded", () => {
   if (localStorage.getItem(ADMIN_LOGIN_KEY) === "YES") {
@@ -167,6 +169,9 @@ function clearFields(ids) {
 async function saveAnnouncement() {
   const announcementText = document.getElementById("announcementText").value.trim();
   const announcementFormat = document.getElementById("announcementFormat").value;
+  const attachmentFiles = await buildAttachmentPayload("announcementAttachments", showToast);
+
+  if (attachmentFiles === null) return;
 
   const payload = {
     Date: document.getElementById("announcementDate").value,
@@ -174,6 +179,7 @@ async function saveAnnouncement() {
     Announcement: applyTextFormat(announcementText, announcementFormat),
     Teacher: document.getElementById("announcementTeacher").value,
     Deadline: document.getElementById("announcementDeadline").value,
+    AttachmentFiles: attachmentFiles,
     Priority: document.getElementById("announcementPriority").value,
     Publish: document.getElementById("announcementPublish").value
   };
@@ -191,6 +197,7 @@ async function saveAnnouncement() {
       "announcementSubject",
       "announcementText",
       "announcementFormat",
+      "announcementAttachments",
       "announcementTeacher",
       "announcementDeadline",
       "announcementPriority",
@@ -352,6 +359,47 @@ async function saveTickerMessage() {
       "tickerPublish"
     ]);
   }
+}
+
+async function buildAttachmentPayload(inputId, notify) {
+  const input = document.getElementById(inputId);
+  const files = input && input.files ? Array.from(input.files) : [];
+
+  if (files.length === 0) return [];
+
+  if (files.length > MAX_ANNOUNCEMENT_ATTACHMENTS) {
+    notify(`Maximum of ${MAX_ANNOUNCEMENT_ATTACHMENTS} attachments only.`);
+    return null;
+  }
+
+  const totalBytes = files.reduce((sum, file) => sum + file.size, 0);
+
+  if (totalBytes > MAX_ANNOUNCEMENT_ATTACHMENT_BYTES) {
+    notify("Attachments are too large. Keep total size under 8 MB.");
+    return null;
+  }
+
+  return Promise.all(files.map(file => readAttachmentFile(file)));
+}
+
+function readAttachmentFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const dataUrl = String(reader.result || "");
+      const base64 = dataUrl.split(",")[1] || "";
+
+      resolve({
+        name: file.name,
+        mimeType: file.type || "application/octet-stream",
+        data: base64
+      });
+    };
+
+    reader.onerror = () => reject(reader.error || new Error("Unable to read attachment."));
+    reader.readAsDataURL(file);
+  });
 }
 
 /* DAILY SCHEDULE INFO */
