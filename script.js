@@ -4,6 +4,8 @@ const DATA_REFRESH_MS = 5000;
 const ANNOUNCEMENT_ROTATE_MS = 10000;
 const BIRTHDAY_ROTATE_MS = 30000;
 const CACHE_KEY = "sfkClassBoardData";
+const DEFAULT_ASSEMBLY_CANVA_LINK = "https://canva.link/gqit03d2of2blzy";
+const HOLY_MASS_LINK = "https://www.facebook.com/CCFO56/";
 
 /* PRAYER AUDIO PLAYER SYSTEM
    No autoplay / no bell.
@@ -276,6 +278,49 @@ function escapeHtml(value) {
     .replace(/'/g, "&#039;");
 }
 
+function getPeriodLink(item) {
+  if (!item) return "";
+
+  const directLink =
+    item.Link ||
+    item.URL ||
+    item.Url ||
+    item.Hyperlink ||
+    item.link ||
+    item.url ||
+    "";
+
+  if (directLink) return String(directLink).trim();
+
+  const subject = String(item.Subject || item.subject || "").toLowerCase().trim();
+
+  const isMorningAssembly =
+    subject.includes("morning assembly") ||
+    subject.includes("morning worship") ||
+    /morning\s+.*homeroom/.test(subject);
+
+  if (isMorningAssembly) return DEFAULT_ASSEMBLY_CANVA_LINK;
+
+  const isHolyMass =
+    subject.includes("holy mass") ||
+    subject === "mass" ||
+    subject.includes("school mass");
+
+  if (isHolyMass) return HOLY_MASS_LINK;
+
+  return "";
+}
+
+function renderLinkedPeriodText(item) {
+  const subject = item?.Subject || item?.subject || "";
+  const label = `${iconFor(subject)} ${subject}`;
+  const link = getPeriodLink(item);
+
+  if (!link) return escapeHtml(label);
+
+  return `<a class="periodTextLink" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>`;
+}
+
 function renderPeriodDetails(element, item) {
   if (!element || !item) return;
 
@@ -285,61 +330,6 @@ function renderPeriodDetails(element, item) {
   element.innerHTML = `
     <span class="period-time">${escapeHtml(time)}</span>
     <span class="period-location">${escapeHtml(location)}</span>
-  `;
-}
-
-const DEFAULT_ASSEMBLY_CANVA_LINK = "https://canva.link/gqit03d2of2blzy";
-const HOLY_MASS_LINK = "https://www.facebook.com/CCFO56/";
-
-function getScheduleItemLink(item = {}) {
-  const directLink =
-    item.Link ||
-    item.link ||
-    item.URL ||
-    item.Url ||
-    item.url ||
-    item.Hyperlink ||
-    item.hyperlink;
-
-  if (directLink) return String(directLink).trim();
-
-  const subject = String(item.Subject || item.subject || "").toLowerCase();
-  const isMorningWorshipPeriod =
-    subject.includes("morning assembly") ||
-    subject.includes("morning worship") ||
-    (subject.includes("morning") && subject.includes("homeroom"));
-
-  const isHolyMassPeriod =
-    subject === "mass" ||
-    subject.includes("holy mass");
-
-  if (isHolyMassPeriod) return HOLY_MASS_LINK;
-
-  return isMorningWorshipPeriod ? DEFAULT_ASSEMBLY_CANVA_LINK : "";
-}
-
-function isSafeExternalLink(url) {
-  return /^https?:\/\//i.test(String(url || "").trim());
-}
-
-function renderScheduleSubjectText(item = {}, textColor = "inherit") {
-  const subject = item.Subject || item.subject || "";
-  const label = `${iconFor(subject)} ${subject}`;
-  const itemLink = getScheduleItemLink(item);
-  const safeLabel = escapeHtml(label);
-
-  if (!isSafeExternalLink(itemLink)) {
-    return safeLabel;
-  }
-
-  return `
-    <a class="schedule-text-link"
-       href="${escapeHtml(itemLink)}"
-       target="_blank"
-       rel="noopener noreferrer"
-       style="color:${textColor};">
-      ${safeLabel}
-    </a>
   `;
 }
 
@@ -371,7 +361,8 @@ function renderCurrentSubject(item) {
           : "rgba(255,255,255,.35)";
     }
 
-    subjectEl.innerHTML = renderScheduleSubjectText(item, textColor);
+    document.getElementById("currentSubject").innerHTML =
+      renderLinkedPeriodText(item);
 
     renderPeriodDetails(detailsEl, item);
   } else {
@@ -418,7 +409,8 @@ function renderNextSubject(item) {
           : "rgba(0,0,0,.45)";
     }
 
-    subjectEl.innerHTML = renderScheduleSubjectText(item, textColor);
+    document.getElementById("nextSubject").innerHTML =
+      renderLinkedPeriodText(item);
 
     renderPeriodDetails(detailsEl, item);
   } else {
@@ -481,7 +473,7 @@ function renderSchedule(items, currentSubject) {
        style="background:${color}; color:${textColor};">
     ${isCurrent ? `<div class="current-badge">▶ CURRENT PERIOD</div>` : ""}
     <strong style="color:${textColor};">${item.StartTime} - ${item.EndTime}</strong><br>
-    <span class="subject-name" style="color:${textColor};">${renderScheduleSubjectText(item, textColor)}</span><br>
+    <span class="subject-name" style="color:${textColor};">${renderLinkedPeriodText(item)}</span><br>
     <small style="color:${textColor}; opacity:.9;">${item.Teacher} • ${item.Room}</small>
   </div>
 `;
@@ -1631,7 +1623,7 @@ const dayItems = weeklyScheduleData
 
             <div class="weeklySubject">
               <strong style="color:${textColor}; background:${color};">
-                ${renderScheduleSubjectText(item, textColor)}
+                ${renderLinkedPeriodText(item)}
               </strong>
 
 				<p>

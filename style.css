@@ -512,24 +512,6 @@ width: 100%;
   margin-top: 2px;
 }
 
-.schedule-text-link,
-.schedule-text-link:visited,
-.schedule-text-link:hover,
-.schedule-text-link:active {
-  color: inherit;
-  text-decoration: none;
-}
-
-.schedule-text-link {
-  cursor: pointer;
-}
-
-.schedule-text-link:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 3px;
-  border-radius: 6px;
-}
-
 .current-row {
   min-height: 82px;
   outline: 3px solid #111;
@@ -4321,5 +4303,58 @@ ol.formattedText li {
     text-align: center !important;
     padding: 6px 9px !important;
     line-height: 1.05 !important;
+  }
+}
+
+
+/* ================================
+   TEXT-ONLY PERIOD LINKS
+   Same style, no underline/color change
+================================ */
+.periodTextLink,
+.periodTextLink:visited,
+.periodTextLink:hover,
+.periodTextLink:active {
+  color: inherit !important;
+  text-decoration: none !important;
+  font: inherit !important;
+}
+
+.periodTextLink {
+  cursor: pointer;
+}
+
+.periodTextLink:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/* ================================
+   DESKTOP ADVISER REMINDERS BOTTOM BREATHING SPACE
+   Match Things to Bring scroll feel
+================================ */
+@media (min-width: 901px) {
+  .sideCard:not(.thingsCard) {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .sideCard:not(.thingsCard) > h2 {
+    flex: 0 0 auto !important;
+  }
+
+  .sideCard:not(.thingsCard) #reminderList {
+    flex: 1 1 auto !important;
+    height: auto !important;
+    max-height: calc(100% - 43px) !important;
+    overflow-y: auto !important;
+    padding-right: 6px !important;
+    padding-bottom: 12px !important;
+    scroll-padding-bottom: 12px !important;
+  }
+
+  .sideCard:not(.thingsCard) #reminderList .reminder-item:last-child {
+    margin-bottom: 12px !important;
   }
 }
