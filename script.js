@@ -10,8 +10,8 @@ const CACHE_KEY = "sfkClassBoardData";
    Prayer popup appears at scheduled/test time with a manual audio player.
 */
 const PRAYER_TEST_TRIGGER_ENABLED = true;
-const PRAYER_TEST_HOUR = "11";
-const PRAYER_TEST_MINUTE = "33";
+const PRAYER_TEST_HOUR = "00";
+const PRAYER_TEST_MINUTE = "59";
 
 let latestData = null;
 let latestDataString = "";
@@ -226,11 +226,11 @@ function renderCleanersToday() {
   });
 
   const cleanersByDay = {
-    Monday: "Group 1 + Group 6 (1)",
-    Tuesday: "Group 2 + Group 6 (1)",
-    Wednesday: "Group 3 + Group 6 (2)",
-    Thursday: "Group 4 + Group 6 (2)",
-    Friday: "Group 5 + Group 6 (2)"
+    Monday: "Group 1 + Group 6 (2)",
+    Tuesday: "Group 2 + Group 6 (2)",
+    Wednesday: "Group 3 + Group 6 (1)",
+    Thursday: "Group 4 + Group 6 (1)",
+    Friday: "Group 5 + Group 6 (1)"
   };
 
   cleanersEl.textContent = cleanersByDay[today] || "No cleaners today";

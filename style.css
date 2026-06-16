@@ -4271,3 +4271,37 @@ ol.formattedText li {
     line-height: 1 !important;
   }
 }
+
+/* Final phone weekly schedule meta alignment */
+@media (max-width: 700px) {
+  .weeklyDayHeaderLine {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+    text-align: left !important;
+  }
+
+  .weeklyDayHeaderLine h3 {
+    width: 100% !important;
+    margin: 0 0 4px !important;
+    text-align: left !important;
+  }
+
+  .weeklyDayMeta {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    text-align: center !important;
+  }
+
+  .weeklyDayMeta span {
+    justify-content: center !important;
+    text-align: center !important;
+    padding: 6px 9px !important;
+    line-height: 1.05 !important;
+  }
+}
