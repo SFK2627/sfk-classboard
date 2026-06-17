@@ -161,6 +161,7 @@ async function saveOfficerAnnouncement() {
     Announcement: applyTextFormat(announcementText, announcementFormat),
     Teacher: document.getElementById("officerAnnouncementTeacher").value,
     Deadline: document.getElementById("officerAnnouncementDeadline").value,
+    ShowDeadline: document.getElementById("officerAnnouncementShowDeadline").value,
     AttachmentFiles: attachmentFiles,
     Priority: document.getElementById("officerAnnouncementPriority").value,
     Publish: document.getElementById("officerAnnouncementPublish").value
@@ -182,6 +183,7 @@ async function saveOfficerAnnouncement() {
       "officerAnnouncementAttachments",
       "officerAnnouncementTeacher",
       "officerAnnouncementDeadline",
+      "officerAnnouncementShowDeadline",
       "officerAnnouncementPriority",
       "officerAnnouncementPublish"
     ]);

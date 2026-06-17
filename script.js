@@ -188,8 +188,8 @@ function getDisplayPeriodState(schedule, currentSubject, nextSubject) {
   let nextPeriod = nextSubject || null;
 
   if (!currentPeriod && firstPeriod && firstStart !== null && nowMinutes >= firstStart - oneHour && nowMinutes < firstStart) {
-    currentPeriod = firstPeriod;
-    nextPeriod = secondPeriod;
+    currentPeriod = null;
+    nextPeriod = firstPeriod;
   }
 
   if (!currentPeriod && !nextPeriod && lastPeriod && lastEnd !== null && nowMinutes >= lastEnd && nowMinutes < lastEnd + oneHour) {
@@ -579,12 +579,13 @@ function renderAnnouncements(items) {
   const formattedAnnouncement = formatBoardText(announcementText, "center");
   const announcementSizeClass = getAnnouncementTextSizeClass(announcementText);
   const attachmentMarkup = renderAnnouncementAttachments(item);
-  const hasAttachmentsClass = attachmentMarkup ? "has-attachments" : "";
+  const metadataMarkup = renderAnnouncementMetadata(item);
+  const postedChipMarkup = renderAnnouncementPostedChip(item);
 
   title.textContent = `Subject Announcements (${currentNumber} / ${total})`;
 
   box.innerHTML = `
-    <div class="announcement-item rotating-announcement ${announcementSizeClass} ${hasAttachmentsClass}">
+    <div class="announcement-item rotating-announcement ${announcementSizeClass}">
 
       <div class="announcement-top-left">
         <span class="announcement-subject-pill"
@@ -595,6 +596,7 @@ function renderAnnouncements(items) {
             ${item.Priority || "Reminder"}
           </span>
         </span>
+        ${postedChipMarkup}
       </div>
 
       <div class="announcement-center-content">
@@ -602,9 +604,7 @@ function renderAnnouncements(items) {
           ${formattedAnnouncement}
         </div>
 
-        <div class="announcement-footer">
-          📅 Deadline: ${item.Deadline || "None"} • 👤 ${item.Teacher || ""}
-        </div>
+        ${metadataMarkup}
 
         ${attachmentMarkup}
       </div>
@@ -616,6 +616,120 @@ function renderAnnouncements(items) {
 
     </div>
   `;
+}
+
+function renderAnnouncementPostedChip(item) {
+  const postedDate = getAnnouncementPostedDate(item);
+
+  if (!postedDate) return "";
+
+  return `
+    <span class="announcement-posted-chip">
+      📌 Posted: ${escapeHtml(postedDate)}
+    </span>
+  `;
+}
+
+function renderAnnouncementMetadata(item) {
+  const deadline = getAnnouncementField(item, [
+    "Deadline",
+    "DueDate",
+    "Due Date"
+  ]);
+  const teacher = getAnnouncementField(item, [
+    "Teacher",
+    "PostedBy",
+    "Posted By"
+  ]);
+  const showDeadlineValue = getAnnouncementField(item, [
+    "ShowDeadline",
+    "Show Deadline",
+    "DisplayDeadline",
+    "Display Deadline"
+  ]);
+  const shouldShowDeadline = shouldDisplayAnnouncementDeadline(showDeadlineValue, deadline);
+  const parts = [];
+
+  if (shouldShowDeadline && deadline) parts.push(`📅 Deadline: ${escapeHtml(deadline)}`);
+  if (teacher) parts.push(`👤 ${escapeHtml(teacher)}`);
+
+  if (parts.length === 0) return "";
+
+  return `
+    <div class="announcement-footer">
+      ${parts.join(" <span class=\"announcement-meta-dot\">•</span> ")}
+    </div>
+  `;
+}
+
+function getAnnouncementPostedDate(item) {
+  const postedDate = getAnnouncementField(item, [
+    "Date",
+    "PostedDate",
+    "DatePosted",
+    "Posted Date",
+    "Date Posted",
+    "Posted"
+  ]);
+
+  if (postedDate) return postedDate;
+
+  const id = getAnnouncementField(item, ["ID", "Id", "RecordID", "Record Id"]);
+  const match = String(id || "").match(/ANN-(\d{4})(\d{2})(\d{2})/i);
+
+  if (!match) return "";
+
+  const year = Number(match[1]);
+  const monthIndex = Number(match[2]) - 1;
+  const day = Number(match[3]);
+  const date = new Date(year, monthIndex, day);
+
+  if (isNaN(date)) return "";
+
+  return date.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric"
+  });
+}
+
+function getAnnouncementField(item, names) {
+  const entries = Object.entries(item || {});
+
+  for (const name of names) {
+    const direct = item && item[name];
+    if (direct !== undefined && String(direct).trim()) {
+      return String(direct).trim();
+    }
+
+    const normalizedName = normalizeAnnouncementKey(name);
+    const match = entries.find(([key, value]) => {
+      return normalizeAnnouncementKey(key) === normalizedName && String(value || "").trim();
+    });
+
+    if (match) return String(match[1]).trim();
+  }
+
+  return "";
+}
+
+function normalizeAnnouncementKey(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "")
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function shouldDisplayAnnouncementDeadline(showDeadlineValue, deadline) {
+  if (!deadline) return false;
+
+  const value = String(showDeadlineValue || "").trim().toLowerCase();
+
+  if (!value) return true;
+  if (["no", "n", "false", "hide", "hidden", "0"].includes(value)) return false;
+
+  return true;
 }
 
 function renderAnnouncementAttachments(item) {

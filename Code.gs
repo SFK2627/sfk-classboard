@@ -100,20 +100,7 @@ function doPost(e) {
 
     if (type === "announcement") {
       const attachments = uploadAnnouncementAttachments(payload.AttachmentFiles, id);
-      ensureAnnouncementAttachmentHeaders();
-
-      appendAnnouncementRow({
-        ID: id,
-        Date: formatInputDateToSheetDate(payload.Date) || todayDate,
-        Subject: payload.Subject || "",
-        Announcement: payload.Announcement || "",
-        Deadline: formatInputDateToSheetDate(payload.Deadline) || "",
-        Teacher: payload.Teacher || "",
-        Priority: payload.Priority || "Reminder",
-        Publish: payload.Publish || "YES",
-        AttachmentURLs: attachments.urls,
-        AttachmentNames: attachments.names
-      });
+      appendAnnouncementRow(id, payload, todayDate, attachments);
     }
 
     else if (type === "things") {
@@ -502,20 +489,7 @@ function addOfficerRow(payload) {
   if (kind === "announcement") {
     const id = generateAdminId("announcement");
     const attachments = uploadAnnouncementAttachments(payload.AttachmentFiles, id);
-    ensureAnnouncementAttachmentHeaders();
-
-    appendAnnouncementRow({
-      ID: id,
-      Date: formatInputDateToSheetDate(payload.Date) || todayDate,
-      Subject: payload.Subject || "",
-      Announcement: payload.Announcement || "",
-      Deadline: formatInputDateToSheetDate(payload.Deadline) || "",
-      Teacher: payload.Teacher || "",
-      Priority: payload.Priority || "Reminder",
-      Publish: payload.Publish || "YES",
-      AttachmentURLs: attachments.urls,
-      AttachmentNames: attachments.names
-    });
+    appendAnnouncementRow(id, payload, todayDate, attachments);
 
     return {
       success: true,
@@ -889,40 +863,6 @@ function sanitizeRowNumbers(rowNumbers) {
     });
 }
 
-
-function appendAnnouncementRow(data) {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const sheet = ss.getSheetByName("Announcements");
-
-  if (!sheet) {
-    throw new Error("Sheet not found: Announcements");
-  }
-
-  ensureAnnouncementAttachmentHeaders();
-
-  const lastColumn = sheet.getLastColumn();
-  const headers = sheet.getRange(1, 1, 1, lastColumn).getDisplayValues()[0].map(String);
-  const rowNumber = sheet.getLastRow() + 1;
-
-  headers.forEach(function(header, index) {
-    const clean = normalizeHeaderName(header);
-    let value = "";
-
-    if (clean === "id") value = data.ID || "";
-    else if (clean === "date") value = data.Date || "";
-    else if (clean === "subject") value = data.Subject || "";
-    else if (clean === "announcement") value = data.Announcement || "";
-    else if (clean === "deadline") value = data.Deadline || "";
-    else if (clean === "teacher") value = data.Teacher || "";
-    else if (clean === "priority") value = data.Priority || "Reminder";
-    else if (clean === "publish") value = data.Publish || "YES";
-    else if (clean === "attachmenturls" || clean === "attachments" || clean === "attachmenturl") value = data.AttachmentURLs || "";
-    else if (clean === "attachmentnames" || clean === "attachmentlabels" || clean === "attachmentname") value = data.AttachmentNames || "";
-
-    setCellValueAllowCustom(sheet, rowNumber, index + 1, value, header);
-  });
-}
-
 function uploadAnnouncementAttachments(files, recordId) {
   const safeFiles = Array.isArray(files) ? files.slice(0, 5) : [];
 
@@ -962,6 +902,53 @@ function uploadAnnouncementAttachments(files, recordId) {
   };
 }
 
+function appendAnnouncementRow(id, payload, todayDate, attachments) {
+  ensureAnnouncementAttachmentHeaders();
+
+  const rowObject = {
+    id: id,
+    date: formatInputDateToSheetDate(payload.Date) || todayDate,
+    posteddate: formatInputDateToSheetDate(payload.Date) || todayDate,
+    dateposted: formatInputDateToSheetDate(payload.Date) || todayDate,
+    subject: payload.Subject || "",
+    announcement: payload.Announcement || "",
+    deadline: formatInputDateToSheetDate(payload.Deadline) || "",
+    showdeadline: payload.ShowDeadline || "YES",
+    teacher: payload.Teacher || "",
+    priority: payload.Priority || "Reminder",
+    publish: payload.Publish || "YES",
+    attachmenturls: attachments.urls || "",
+    attachments: attachments.urls || "",
+    attachmenturl: attachments.urls || "",
+    attachmentnames: attachments.names || "",
+    attachmentlabels: attachments.names || "",
+    attachmentname: attachments.names || ""
+  };
+
+  appendRowByHeader("Announcements", rowObject);
+}
+
+function appendRowByHeader(sheetName, rowObject) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(sheetName);
+
+  if (!sheet) {
+    throw new Error("Sheet not found: " + sheetName);
+  }
+
+  const lastColumn = Math.max(sheet.getLastColumn(), 1);
+  const headers = sheet.getRange(1, 1, 1, lastColumn).getDisplayValues()[0];
+  const rowNumber = sheet.getLastRow() + 1;
+
+  headers.forEach(function(header, index) {
+    const cleanHeader = normalizeHeaderName(header);
+
+    if (Object.prototype.hasOwnProperty.call(rowObject, cleanHeader)) {
+      setCellValueAllowCustom(sheet, rowNumber, index + 1, rowObject[cleanHeader], header);
+    }
+  });
+}
+
 function getOrCreateAttachmentFolder() {
   const existing = DriveApp.getFoldersByName(ATTACHMENT_FOLDER_NAME);
 
@@ -985,7 +972,7 @@ function ensureAnnouncementAttachmentHeaders() {
 
   if (!sheet) return;
 
-  const requiredHeaders = ["AttachmentURLs", "AttachmentNames"];
+  const requiredHeaders = ["ShowDeadline", "AttachmentURLs", "AttachmentNames"];
   const lastColumn = Math.max(sheet.getLastColumn(), 1);
   const headers = sheet.getRange(1, 1, 1, lastColumn).getDisplayValues()[0].map(String);
   let nextColumn = headers.length + 1;

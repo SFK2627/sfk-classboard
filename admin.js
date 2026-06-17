@@ -179,6 +179,7 @@ async function saveAnnouncement() {
     Announcement: applyTextFormat(announcementText, announcementFormat),
     Teacher: document.getElementById("announcementTeacher").value,
     Deadline: document.getElementById("announcementDeadline").value,
+    ShowDeadline: document.getElementById("announcementShowDeadline").value,
     AttachmentFiles: attachmentFiles,
     Priority: document.getElementById("announcementPriority").value,
     Publish: document.getElementById("announcementPublish").value
@@ -200,6 +201,7 @@ async function saveAnnouncement() {
       "announcementAttachments",
       "announcementTeacher",
       "announcementDeadline",
+      "announcementShowDeadline",
       "announcementPriority",
       "announcementPublish"
     ]);
@@ -704,6 +706,14 @@ function openEditModal(rowNumber) {
       index,
       editingRecord.headers
     );
+    const isDuplicateAnnouncementField =
+      editingRecord.sheetName === "Announcements" &&
+      normalizeFieldName(header) === "announcement" &&
+      !isLongText;
+
+    if (isDuplicateAnnouncementField) {
+      return "";
+    }
 
     const isPublish =
 	  lowerHeader === "publish" ||

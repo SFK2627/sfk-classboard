@@ -594,8 +594,10 @@ small {
   left: 18px;
   right: 18px;
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-start;
   align-items: center;
+  gap: 7px;
   z-index: 2;
 }
 
@@ -777,6 +779,23 @@ ol.formattedText li {
   cursor: pointer;
   box-shadow: 2px 2px 0 rgba(0,0,0,.25);
   white-space: nowrap;
+}
+
+.announcement-posted-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  padding: 5px 10px;
+  border: 2px solid #111;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .86);
+  color: #111;
+  font-size: clamp(.68rem, .86vw, .82rem);
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, .16);
 }
 
 .announcement-controls button:hover,
@@ -3162,6 +3181,27 @@ ol.formattedText li {
   }
 }
 
+/* Final Adviser Reminders breathing room */
+#reminderList {
+  padding-bottom: 16px !important;
+  scroll-padding-bottom: 16px !important;
+}
+
+#reminderList .reminder-item:last-child {
+  margin-bottom: 16px !important;
+}
+
+@media (max-width: 700px) {
+  #reminderList {
+    padding-bottom: 18px !important;
+    scroll-padding-bottom: 18px !important;
+  }
+
+  #reminderList .reminder-item:last-child {
+    margin-bottom: 18px !important;
+  }
+}
+
 /* Prayer popup desktop layout fix */
 .prayerPopup {
   padding: clamp(18px, 3vw, 38px) !important;
@@ -3551,6 +3591,11 @@ ol.formattedText li {
     max-width: 100%;
     padding: 6px 10px;
     font-size: .72rem;
+  }
+
+  .announcement-posted-chip {
+    padding: 4px 8px;
+    font-size: .66rem;
   }
 }
 
@@ -4400,53 +4445,5 @@ ol.formattedText li {
     text-align: center !important;
     padding: 6px 9px !important;
     line-height: 1.05 !important;
-  }
-}
-
-/* FINAL FIX - Announcement attachment chips visible on phone */
-@media (max-width: 700px) {
-  .announcement-item.has-attachments {
-    padding-bottom: 92px !important;
-  }
-
-  .announcement-item.has-attachments .announcement-center-content {
-    justify-content: center !important;
-    gap: 8px !important;
-  }
-
-  .announcement-item.has-attachments .announcement-attachments {
-    margin-top: 4px !important;
-    margin-bottom: 2px !important;
-    gap: 4px !important;
-    max-width: 100% !important;
-  }
-
-  .announcement-item.has-attachments .announcement-attachments-label {
-    display: none !important;
-  }
-
-  .announcement-item.has-attachments .announcement-attachment-list {
-    justify-content: center !important;
-    gap: 5px !important;
-    max-width: 100% !important;
-  }
-
-  .announcement-item.has-attachments .announcement-attachment-chip {
-    max-width: 92% !important;
-    padding: 6px 10px !important;
-    font-size: .72rem !important;
-  }
-}
-
-/* FINAL FIX - Desktop Adviser Reminders bottom breathing space like Things to Bring */
-@media (min-width: 901px) {
-  #reminderList {
-    max-height: calc(100% - 52px) !important;
-    padding-bottom: 12px !important;
-    overflow-y: auto !important;
-  }
-
-  #reminderList .reminder-item:last-child {
-    margin-bottom: 12px !important;
   }
 }
