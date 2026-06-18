@@ -233,6 +233,18 @@ body {
 
 
 /* PRAYER LEADER + CLEANERS */
+.prayerLeaderLink,
+.prayerLeaderLink:visited,
+.prayerLeaderLink:hover,
+.prayerLeaderLink:active,
+.prayerLeaderLink:focus {
+  display: block;
+  min-width: 0;
+  color: inherit;
+  font: inherit;
+  text-decoration: none;
+}
+
 .prayer {
   background: white;
   min-height: 0;
