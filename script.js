@@ -738,9 +738,11 @@ function renderAnnouncementAttachments(item) {
 
   if (urls.length === 0) return "";
 
-  const links = urls
+  const safeUrls = urls
     .filter(isSafeExternalLink)
-    .slice(0, 8)
+    .slice(0, 8);
+
+  const links = safeUrls
     .map((url, index) => {
       const label = labels[index] || `Attachment ${index + 1}`;
       const icon = isImageUrl(url) || isImageUrl(label) ? "🖼️" : "📎";
@@ -761,7 +763,7 @@ function renderAnnouncementAttachments(item) {
 
   return `
     <div class="announcement-attachments" aria-label="Announcement attachments">
-      <div class="announcement-attachments-label">Attachments</div>
+      <div class="announcement-attachments-label">Attachments (${safeUrls.length})</div>
       <div class="announcement-attachment-list">
         ${links}
       </div>
