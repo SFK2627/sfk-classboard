@@ -4,6 +4,7 @@ const DATA_REFRESH_MS = 5000;
 const ANNOUNCEMENT_ROTATE_MS = 10000;
 const BIRTHDAY_ROTATE_MS = 30000;
 const CACHE_KEY = "sfkClassBoardData";
+const ANNOUNCEMENT_HEARTS_KEY = "sfkClassBoardHeartedAnnouncements";
 
 /* PRAYER AUDIO PLAYER SYSTEM
    No autoplay / no bell.
@@ -80,6 +81,7 @@ function initClassBoard() {
   setInterval(loadClassBoard, DATA_REFRESH_MS);
   setInterval(rotateAnnouncements, ANNOUNCEMENT_ROTATE_MS);
   setInterval(rotateBirthdays, BIRTHDAY_ROTATE_MS);
+  window.addEventListener("resize", fitAnnouncementTextToCard);
   setInterval(renderCleanersToday, 60000);
 
   setTimeout(() => {
@@ -611,12 +613,298 @@ function renderAnnouncements(items) {
 
       <div class="announcement-controls">
         <button class="announcement-btn prev-btn" onclick="previousAnnouncement()">← Previous</button>
+        ${renderAnnouncementHeartButton(item)}
         <button class="announcement-btn next-btn" onclick="nextAnnouncement()">Next →</button>
       </div>
 
     </div>
   `;
+
+  requestAnimationFrame(fitAnnouncementTextToCard);
 }
+
+
+
+function fitAnnouncementTextToCard() {
+  const card = document.querySelector(".announcement-item.rotating-announcement");
+  const text = card ? card.querySelector(".announcement-main-text") : null;
+  const center = card ? card.querySelector(".announcement-center-content") : null;
+
+  if (!card || !text || !center) return;
+
+  const plainText = (text.textContent || "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const charCount = plainText.length;
+  const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 1200;
+  const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 800;
+
+  const targetFont = getAnnouncementTargetFontSize(charCount, viewportWidth, viewportHeight);
+  const minimumFont = getAnnouncementMinimumFontSize(charCount, viewportWidth, viewportHeight);
+
+  text.style.setProperty("--announcement-fit-font", `${targetFont}px`);
+  text.style.setProperty("--announcement-fit-line-height", charCount <= 120 ? "1.08" : "1.14");
+
+  let fontSize = targetFont;
+  let safetyCounter = 0;
+
+  while (
+    safetyCounter < 36 &&
+    fontSize > minimumFont &&
+    (
+      center.scrollHeight > center.clientHeight + 2 ||
+      card.scrollHeight > card.clientHeight + 2
+    )
+  ) {
+    fontSize -= 1;
+    text.style.setProperty("--announcement-fit-font", `${fontSize}px`);
+    safetyCounter++;
+  }
+}
+
+function getAnnouncementTargetFontSize(charCount, viewportWidth, viewportHeight) {
+  const shortHeight = viewportHeight <= 820;
+  const veryShortHeight = viewportHeight <= 720;
+  const phone = viewportWidth <= 900;
+
+  let size;
+
+  if (charCount <= 60) size = phone ? 40 : 44;
+  else if (charCount <= 100) size = phone ? 34 : 38;
+  else if (charCount <= 160) size = phone ? 28 : 32;
+  else if (charCount <= 240) size = phone ? 24 : 28;
+  else if (charCount <= 340) size = phone ? 21 : 24;
+  else if (charCount <= 460) size = phone ? 18 : 21;
+  else size = phone ? 16 : 18;
+
+  if (shortHeight) size -= 4;
+  if (veryShortHeight) size -= 3;
+
+  return Math.max(size, getAnnouncementMinimumFontSize(charCount, viewportWidth, viewportHeight));
+}
+
+function getAnnouncementMinimumFontSize(charCount, viewportWidth, viewportHeight) {
+  const phone = viewportWidth <= 900;
+  const veryShortHeight = viewportHeight <= 720;
+
+  if (charCount <= 120) return phone ? 18 : 19;
+  if (charCount <= 260) return phone ? 15 : 16;
+  if (charCount <= 460) return phone ? 13 : 14;
+
+  return veryShortHeight ? 11 : 12;
+}
+
+
+function renderAnnouncementHeartButton(item) {
+  if (!shouldShowAnnouncementHeart(item)) return `<span class="announcement-heart-spacer"></span>`;
+
+  const id = getAnnouncementId(item);
+  const count = getAnnouncementHeartCount(item);
+  const isHearted = id ? isAnnouncementHearted(id) : false;
+  const label = isHearted ? "Noted" : "Noted";
+
+  return `
+    <button
+      class="announcement-heart-btn ${isHearted ? "is-hearted" : ""}"
+      type="button"
+      onclick="heartAnnouncement('${escapeJsAttribute(id)}')"
+      ${!id || isHearted ? "disabled" : ""}
+      aria-label="Acknowledge this announcement">
+      <span class="heart-icon">${isHearted ? "❤️" : "🤍"}</span>
+      <span>${label}</span>
+      <strong>${count}</strong>
+    </button>
+  `;
+}
+
+function shouldShowAnnouncementHeart(item) {
+  return true;
+}
+
+function getAnnouncementId(item) {
+  const explicitId = String(
+    (item && (item.ID || item.Id || item.id || item.RecordID || item["Record ID"])) ||
+    ""
+  ).trim();
+
+  if (explicitId) return explicitId;
+
+  return createAnnouncementFallbackId(item);
+}
+
+function createAnnouncementFallbackId(item) {
+  if (!item) return "";
+
+  const rowNumber = String(
+    item.RowNumber ||
+    item.rowNumber ||
+    item.__rowNumber ||
+    ""
+  ).trim();
+
+  if (rowNumber) {
+    return `ANN-ROW-${rowNumber}`;
+  }
+
+  const raw = [
+    item.Date || item.PostedDate || item.DatePosted || "",
+    item.Subject || "",
+    item.Announcement || "",
+    item.Teacher || "",
+    item.Deadline || ""
+  ]
+    .map(normalizeAnnouncementKeyPart)
+    .filter(Boolean)
+    .join("|");
+
+  return raw ? `ANN-${simpleAnnouncementHash(raw)}` : "";
+}
+
+function normalizeAnnouncementKeyPart(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .slice(0, 160);
+}
+
+function simpleAnnouncementHash(value) {
+  let hash = 0;
+  const text = String(value || "");
+
+  for (let i = 0; i < text.length; i++) {
+    hash = ((hash << 5) - hash) + text.charCodeAt(i);
+    hash |= 0;
+  }
+
+  return Math.abs(hash).toString(36).toUpperCase();
+}
+
+
+function getAnnouncementHeartCount(item) {
+  const value =
+    item && (
+      item.HeartCount ||
+      item.heartCount ||
+      item.NotedCount ||
+      item.AcknowledgementCount ||
+      item.AcknowledgeCount ||
+      item.Hearts
+    );
+
+  const count = Number(value);
+  return Number.isFinite(count) && count > 0 ? count : 0;
+}
+
+function getHeartedAnnouncements() {
+  try {
+    const raw = localStorage.getItem(ANNOUNCEMENT_HEARTS_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function saveHeartedAnnouncements(ids) {
+  localStorage.setItem(
+    ANNOUNCEMENT_HEARTS_KEY,
+    JSON.stringify(Array.from(new Set(ids.filter(Boolean))))
+  );
+}
+
+function isAnnouncementHearted(id) {
+  return getHeartedAnnouncements().includes(String(id || ""));
+}
+
+function markAnnouncementHearted(id) {
+  const ids = getHeartedAnnouncements();
+  ids.push(String(id || ""));
+  saveHeartedAnnouncements(ids);
+}
+
+function escapeJsAttribute(value) {
+  return String(value || "")
+    .replace(/\\/g, "\\\\")
+    .replace(/'/g, "\\'")
+    .replace(/"/g, "&quot;")
+    .replace(/\n/g, "\\n")
+    .replace(/\r/g, "");
+}
+
+async function heartAnnouncement(id) {
+  id = String(id || "").trim();
+
+  if (!id || isAnnouncementHearted(id)) return;
+
+  markAnnouncementHearted(id);
+  updateAnnouncementHeartCountLocal(id, 1);
+  renderDashboard(latestData);
+
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        type: "announcementHeart",
+        payload: {
+          announcementId: id
+        }
+      })
+    });
+
+    const result = await response.json();
+
+    if (result && result.success && Number.isFinite(Number(result.count))) {
+      updateAnnouncementHeartCountLocal(id, Number(result.count), true);
+      renderDashboard(latestData);
+    }
+  } catch (error) {
+    console.warn("Heart acknowledgement sync failed:", error);
+  }
+}
+
+function updateAnnouncementHeartCountLocal(id, value, absolute = false) {
+  if (!latestData || !Array.isArray(latestData.announcements)) return;
+
+  latestData.announcements = latestData.announcements.map(item => {
+    if (getAnnouncementId(item) !== id) return item;
+
+    const current = getAnnouncementHeartCount(item);
+    const nextCount = absolute ? value : current + value;
+
+    return {
+      ...item,
+      HeartCount: Math.max(0, Number(nextCount) || 0)
+    };
+  });
+
+  try {
+    const cachedData = JSON.parse(localStorage.getItem(CACHE_KEY) || "{}");
+
+    if (cachedData && Array.isArray(cachedData.announcements)) {
+      cachedData.announcements = cachedData.announcements.map(item => {
+        const itemId = String(
+          item.ID || item.Id || item.id || item.RecordID || item["Record ID"] || ""
+        ).trim();
+
+        if (itemId !== id) return item;
+
+        const current = Number(item.HeartCount || 0);
+        return {
+          ...item,
+          HeartCount: Math.max(0, Number(absolute ? value : current + value) || 0)
+        };
+      });
+
+      localStorage.setItem(CACHE_KEY, JSON.stringify(cachedData));
+      latestDataString = JSON.stringify(cachedData);
+    }
+  } catch (error) {
+    // Ignore cache update errors.
+  }
+}
+
 
 function renderAnnouncementPostedChip(item) {
   const postedDate = getAnnouncementPostedDate(item);
@@ -796,6 +1084,9 @@ function getAnnouncementTextSizeClass(value) {
   if (charCount > 420 || lineCount >= 8) return "announcement-size-xs";
   if (charCount > 280 || lineCount >= 6) return "announcement-size-sm";
   if (charCount > 160 || lineCount >= 4) return "announcement-size-md";
+
+  if (lineCount <= 1 && charCount <= 80) return "announcement-size-one-line";
+  if (lineCount <= 2 && charCount <= 120) return "announcement-size-short";
 
   return "announcement-size-normal";
 }

@@ -82,6 +82,11 @@ function doPost(e) {
       return jsonResponse(addOfficerRow(payload));
     }
 
+
+    if (type === "announcementHeart") {
+      return jsonResponse(recordAnnouncementHeart(payload));
+    }
+
     if (type === "officerHide") {
       return jsonResponse(hideOfficerRow(payload));
     }
@@ -208,7 +213,7 @@ function getTodayBoard() {
     currentSubject: getCurrentSubject(schedule, now),
     nextSubject: getNextSubject(schedule, now),
 
-    announcements: getPublishedRows("Announcements"),
+    announcements: attachAnnouncementHeartCounts(getPublishedRows("Announcements")),
     thingsToBring: getPublishedRows("ThingsToBring"),
     prayerLeader: getTodaySingleRow("PrayerLeaders", "Date", todayDate),
     adviserReminders: getPublishedRows("AdviserReminders"),
@@ -375,6 +380,200 @@ function normalizeSheetDate(value) {
   return text;
 }
 
+
+/* ANNOUNCEMENT HEART / NOTED COUNT */
+function recordAnnouncementHeart(payload) {
+  const announcementId = String(
+    payload.announcementId ||
+    payload.AnnouncementID ||
+    payload.ID ||
+    ""
+  ).trim();
+
+  if (!announcementId) {
+    return {
+      success: false,
+      message: "Missing announcement ID."
+    };
+  }
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(8000);
+
+  try {
+    const sheet = ensureAnnouncementHeartSheet();
+    const values = sheet.getDataRange().getDisplayValues();
+    const headers = values.length ? values[0].map(h => String(h).trim()) : [];
+    const idCol = getHeaderColumnIndex(headers, ["AnnouncementID", "Announcement ID", "ID"]);
+    const countCol = getHeaderColumnIndex(headers, ["Count", "HeartCount", "NotedCount"]);
+    const updatedCol = getHeaderColumnIndex(headers, ["LastUpdated", "Last Updated"]);
+
+    let targetRow = -1;
+
+    for (let i = 1; i < values.length; i++) {
+      if (String(values[i][idCol - 1] || "").trim() === announcementId) {
+        targetRow = i + 1;
+        break;
+      }
+    }
+
+    let count = 1;
+
+    if (targetRow === -1) {
+      targetRow = sheet.getLastRow() + 1;
+      sheet.getRange(targetRow, idCol).setValue(announcementId);
+      sheet.getRange(targetRow, countCol).setValue(count);
+    } else {
+      const current = Number(sheet.getRange(targetRow, countCol).getValue()) || 0;
+      count = current + 1;
+      sheet.getRange(targetRow, countCol).setValue(count);
+    }
+
+    if (updatedCol > 0) {
+      sheet.getRange(targetRow, updatedCol).setValue(
+        Utilities.formatDate(new Date(), TIMEZONE, "MMMM d, yyyy h:mm:ss a")
+      );
+    }
+
+    return {
+      success: true,
+      count: count,
+      message: "Announcement noted."
+    };
+
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function attachAnnouncementHeartCounts(rows) {
+  const counts = getAnnouncementHeartCountMap();
+
+  return (rows || []).map(function(row) {
+    const id = getAnnouncementStableId(row);
+    const count = counts[String(id || "").trim()] || 0;
+
+    return {
+      ...row,
+      ID: id,
+      Id: id,
+      id: id,
+      HeartCount: count,
+      NotedCount: count,
+      AcknowledgementCount: count
+    };
+  });
+}
+
+
+function getAnnouncementStableId(row) {
+  const explicitId = getValue(row, ["ID", "Id", "id", "RecordID", "Record ID"]);
+
+  if (explicitId) return String(explicitId).trim();
+
+  const rowNumber = getValue(row, ["RowNumber", "rowNumber", "__rowNumber"]);
+
+  if (rowNumber) return "ANN-ROW-" + String(rowNumber).trim();
+
+  const raw = [
+    getValue(row, ["Date", "PostedDate", "DatePosted"]),
+    getValue(row, ["Subject"]),
+    getValue(row, ["Announcement"]),
+    getValue(row, ["Teacher"]),
+    getValue(row, ["Deadline"])
+  ]
+    .map(normalizeAnnouncementKeyPart)
+    .filter(Boolean)
+    .join("|");
+
+  return raw ? "ANN-" + simpleAnnouncementHash(raw) : "";
+}
+
+function normalizeAnnouncementKeyPart(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .slice(0, 160);
+}
+
+function simpleAnnouncementHash(value) {
+  let hash = 0;
+  const text = String(value || "");
+
+  for (let i = 0; i < text.length; i++) {
+    hash = ((hash << 5) - hash) + text.charCodeAt(i);
+    hash |= 0;
+  }
+
+  return Math.abs(hash).toString(36).toUpperCase();
+}
+
+function getAnnouncementHeartCountMap() {
+  const sheet = ensureAnnouncementHeartSheet();
+  const values = sheet.getDataRange().getDisplayValues();
+
+  if (values.length < 2) return {};
+
+  const headers = values[0].map(h => String(h).trim());
+  const idCol = getHeaderColumnIndex(headers, ["AnnouncementID", "Announcement ID", "ID"]);
+  const countCol = getHeaderColumnIndex(headers, ["Count", "HeartCount", "NotedCount"]);
+  const counts = {};
+
+  for (let i = 1; i < values.length; i++) {
+    const id = String(values[i][idCol - 1] || "").trim();
+    const count = Number(values[i][countCol - 1]) || 0;
+
+    if (id) counts[id] = count;
+  }
+
+  return counts;
+}
+
+function ensureAnnouncementHeartSheet() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  let sheet = ss.getSheetByName("AnnouncementHearts");
+
+  if (!sheet) {
+    sheet = ss.insertSheet("AnnouncementHearts");
+    sheet.getRange(1, 1, 1, 3).setValues([[
+      "AnnouncementID",
+      "Count",
+      "LastUpdated"
+    ]]);
+    sheet.setFrozenRows(1);
+    return sheet;
+  }
+
+  const requiredHeaders = ["AnnouncementID", "Count", "LastUpdated"];
+  const lastColumn = Math.max(sheet.getLastColumn(), 1);
+  const existingHeaders = sheet.getRange(1, 1, 1, lastColumn).getDisplayValues()[0]
+    .map(h => String(h).trim());
+
+  requiredHeaders.forEach(function(header) {
+    if (existingHeaders.indexOf(header) === -1) {
+      sheet.getRange(1, sheet.getLastColumn() + 1).setValue(header);
+      existingHeaders.push(header);
+    }
+  });
+
+  return sheet;
+}
+
+function getHeaderColumnIndex(headers, possibleNames) {
+  const normalizedHeaders = headers.map(normalizeHeaderName);
+
+  for (let i = 0; i < possibleNames.length; i++) {
+    const target = normalizeHeaderName(possibleNames[i]);
+    const index = normalizedHeaders.indexOf(target);
+
+    if (index !== -1) return index + 1;
+  }
+
+  return -1;
+}
+
+
 /* ADMIN LIST API */
 function getAdminList(sheetName) {
   if (!isAllowedAdminSheet(sheetName)) {
@@ -424,7 +623,7 @@ function getManageList(sheetName) {
 
   const headers = values[0].map(header => String(header).trim());
 
-  const rows = values.slice(1)
+  let rows = values.slice(1)
     .map((row, index) => {
       return {
         rowNumber: index + 2,
@@ -435,6 +634,10 @@ function getManageList(sheetName) {
       return item.cells.some(cell => String(cell).trim() !== "");
     });
 
+  if (sheetName === "Announcements") {
+    rows = attachManageAnnouncementHeartCounts(headers, rows);
+  }
+
   return {
     status: "success",
     sheetName,
@@ -442,6 +645,34 @@ function getManageList(sheetName) {
     rows
   };
 }
+
+
+function attachManageAnnouncementHeartCounts(headers, rows) {
+  const counts = getAnnouncementHeartCountMap();
+
+  return (rows || []).map(function(item) {
+    const rowObject = {};
+
+    (headers || []).forEach(function(header, index) {
+      rowObject[header] = item.cells[index];
+    });
+
+    rowObject.RowNumber = item.rowNumber;
+    rowObject.rowNumber = item.rowNumber;
+    rowObject.__rowNumber = item.rowNumber;
+
+    const id = getAnnouncementStableId(rowObject);
+    const count = counts[String(id || "").trim()] || 0;
+
+    return {
+      ...item,
+      announcementId: id,
+      notedCount: count,
+      heartCount: count
+    };
+  });
+}
+
 
 /* ADMIN PERMISSIONS */
 function getAllowedAdminSheets() {
@@ -902,6 +1133,22 @@ function uploadAnnouncementAttachments(files, recordId) {
   };
 }
 
+
+function getAnnouncementTeacherDisplay(payload) {
+  const teacher = String(payload.Teacher || "").trim();
+  const officerPosition = String(payload.OfficerPosition || payload.Officer || payload.Position || "").trim();
+
+  if (!officerPosition) {
+    return teacher;
+  }
+
+  if (teacher) {
+    return teacher + " thru " + officerPosition;
+  }
+
+  return "Teacher thru " + officerPosition;
+}
+
 function appendAnnouncementRow(id, payload, todayDate, attachments) {
   ensureAnnouncementAttachmentHeaders();
 
@@ -914,8 +1161,9 @@ function appendAnnouncementRow(id, payload, todayDate, attachments) {
     announcement: payload.Announcement || "",
     deadline: formatInputDateToSheetDate(payload.Deadline) || "",
     showdeadline: payload.ShowDeadline || "YES",
-    teacher: payload.Teacher || "",
+    teacher: getAnnouncementTeacherDisplay(payload),
     priority: payload.Priority || "Reminder",
+    officerposition: payload.OfficerPosition || "",
     publish: payload.Publish || "YES",
     attachmenturls: attachments.urls || "",
     attachments: attachments.urls || "",
@@ -972,7 +1220,7 @@ function ensureAnnouncementAttachmentHeaders() {
 
   if (!sheet) return;
 
-  const requiredHeaders = ["ShowDeadline", "AttachmentURLs", "AttachmentNames"];
+  const requiredHeaders = ["ID", "ShowDeadline", "AttachmentURLs", "AttachmentNames", "OfficerPosition"];
   const lastColumn = Math.max(sheet.getLastColumn(), 1);
   const headers = sheet.getRange(1, 1, 1, lastColumn).getDisplayValues()[0].map(String);
   let nextColumn = headers.length + 1;
@@ -1066,12 +1314,16 @@ function getRows(sheetName) {
 
   const headers = values[0].map(header => String(header).trim());
 
-  return values.slice(1).map(row => {
+  return values.slice(1).map((row, index) => {
     let obj = {};
 
     headers.forEach((header, index) => {
       obj[header] = row[index];
     });
+
+    obj.RowNumber = index + 2;
+    obj.rowNumber = index + 2;
+    obj.__rowNumber = index + 2;
 
     return obj;
   });
@@ -1125,7 +1377,8 @@ function shouldAllowCustomValue(header) {
     "message",
     "announcement",
     "item",
-    "reminder"
+    "reminder",
+    "officerposition"
   ].indexOf(cleanHeader) !== -1;
 }
 

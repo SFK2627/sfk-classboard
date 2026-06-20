@@ -761,3 +761,24 @@ select:focus {
     text-align: center;
   }
 }
+
+
+.adminNotedCountCell {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.adminNotedPill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: #111;
+  color: #ffd700;
+  border: 2px solid #ffd700;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-weight: 900;
+  font-size: .85rem;
+  box-shadow: 2px 2px 0 rgba(0,0,0,.18);
+}

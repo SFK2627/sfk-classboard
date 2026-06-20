@@ -471,12 +471,42 @@ async function loadAdminTable(sheetName, buttonEl) {
   }
 }
 
+
+function getVisibleManageColumnIndexes(headers) {
+  const seen = new Set();
+
+  return (headers || [])
+    .map((header, index) => ({ header, index }))
+    .filter(item => {
+      const key = normalizeManageHeaderKey(item.header);
+
+      if (!key) return true;
+
+      if (seen.has(key)) return false;
+
+      seen.add(key);
+      return true;
+    })
+    .map(item => item.index);
+}
+
+function normalizeManageHeaderKey(header) {
+  return String(header || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_\-]+/g, "")
+    .replace(/[^a-z0-9]/g, "");
+}
+
+
 function renderAdminTable(result) {
   const tableHead = document.querySelector("#adminDataTable thead");
   const tableBody = document.querySelector("#adminDataTable tbody");
 
   const headers = result.headers || [];
   const rows = result.rows || [];
+  const isAnnouncementsSheet = result.sheetName === "Announcements";
+  const visibleColumnIndexes = getVisibleManageColumnIndexes(headers);
 
   if (!tableHead || !tableBody) return;
 
@@ -492,14 +522,15 @@ function renderAdminTable(result) {
       <th>Select</th>
       <th>Actions</th>
       <th>Row</th>
-      ${headers.map(header => `<th>${escapeHtml(header)}</th>`).join("")}
+      ${isAnnouncementsSheet ? "<th>Noted</th>" : ""}
+      ${visibleColumnIndexes.map(index => `<th>${escapeHtml(headers[index])}</th>`).join("")}
     </tr>
   `;
 
   if (rows.length === 0) {
     tableBody.innerHTML = `
       <tr>
-        <td colspan="${headers.length + 3}" class="emptyCell">
+        <td colspan="${visibleColumnIndexes.length + 3 + (isAnnouncementsSheet ? 1 : 0)}" class="emptyCell">
           No data found.
         </td>
       </tr>
@@ -526,7 +557,10 @@ function renderAdminTable(result) {
 
         <td class="rowNumberCell">#${row.rowNumber}</td>
 
-        ${headers.map((header, index) => {
+        ${isAnnouncementsSheet ? renderAdminNotedCountCell(row) : ""}
+
+        ${visibleColumnIndexes.map(index => {
+          const header = headers[index];
           const value = row.cells[index] || "";
           return `
             <td class="${value ? "" : "emptyCell"}">
@@ -538,8 +572,24 @@ function renderAdminTable(result) {
     `;
   }).join("");
 
-  setManageStatus(`${formatSheetLabel(result.sheetName)} loaded. ${rows.length} record(s) found.`);
+  if (isAnnouncementsSheet) {
+    const totalNoted = rows.reduce((sum, row) => sum + (Number(row.notedCount || row.heartCount || 0) || 0), 0);
+    setManageStatus(`${formatSheetLabel(result.sheetName)} loaded. ${rows.length} record(s) found. Total noted: ${totalNoted}.`);
+  } else {
+    setManageStatus(`${formatSheetLabel(result.sheetName)} loaded. ${rows.length} record(s) found.`);
+  }
   attachAdminLongPressSelection();
+}
+
+
+function renderAdminNotedCountCell(row) {
+  const count = Number(row.notedCount || row.heartCount || 0) || 0;
+
+  return `
+    <td class="adminNotedCountCell" title="Students who clicked Noted / Heart">
+      <span class="adminNotedPill">❤️ ${count}</span>
+    </td>
+  `;
 }
 
 function toggleAdminRowSelection(rowNumber, checked) {

@@ -584,3 +584,9 @@ select:focus {
     text-align: center;
   }
 }
+
+
+.requiredMark {
+  color: #b00020;
+  font-weight: 900;
+}

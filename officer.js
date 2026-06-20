@@ -160,6 +160,7 @@ async function saveOfficerAnnouncement() {
     Subject: document.getElementById("officerAnnouncementSubject").value,
     Announcement: applyTextFormat(announcementText, announcementFormat),
     Teacher: document.getElementById("officerAnnouncementTeacher").value,
+    OfficerPosition: document.getElementById("officerAnnouncementPosition").value,
     Deadline: document.getElementById("officerAnnouncementDeadline").value,
     ShowDeadline: document.getElementById("officerAnnouncementShowDeadline").value,
     AttachmentFiles: attachmentFiles,
@@ -167,8 +168,8 @@ async function saveOfficerAnnouncement() {
     Publish: document.getElementById("officerAnnouncementPublish").value
   };
 
-  if (!payload.Date || !payload.Subject || !payload.Announcement || !payload.Teacher) {
-    showOfficerToast("Date, subject, teacher, and announcement are required.");
+  if (!payload.Date || !payload.Subject || !payload.Announcement || !payload.Teacher || !payload.OfficerPosition) {
+    showOfficerToast("Date, subject, teacher, officer position, and announcement are required.");
     return;
   }
 
@@ -375,12 +376,41 @@ async function loadOfficerTable(sheetName, buttonEl) {
   }
 }
 
+
+function getVisibleManageColumnIndexes(headers) {
+  const seen = new Set();
+
+  return (headers || [])
+    .map((header, index) => ({ header, index }))
+    .filter(item => {
+      const key = normalizeManageHeaderKey(item.header);
+
+      if (!key) return true;
+
+      if (seen.has(key)) return false;
+
+      seen.add(key);
+      return true;
+    })
+    .map(item => item.index);
+}
+
+function normalizeManageHeaderKey(header) {
+  return String(header || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_\-]+/g, "")
+    .replace(/[^a-z0-9]/g, "");
+}
+
+
 function renderOfficerTable(result) {
   const tableHead = document.querySelector("#officerDataTable thead");
   const tableBody = document.querySelector("#officerDataTable tbody");
 
   const headers = result.headers || [];
   const rows = result.rows || [];
+  const visibleColumnIndexes = getVisibleManageColumnIndexes(headers);
 
   if (!tableHead || !tableBody) return;
 
@@ -396,14 +426,14 @@ function renderOfficerTable(result) {
       <th>Select</th>
       <th>Action</th>
       <th>Row</th>
-      ${headers.map(header => `<th>${escapeHtml(header)}</th>`).join("")}
+      ${visibleColumnIndexes.map(index => `<th>${escapeHtml(headers[index])}</th>`).join("")}
     </tr>
   `;
 
   if (rows.length === 0) {
     tableBody.innerHTML = `
       <tr>
-        <td colspan="${headers.length + 3}" class="emptyCell">
+        <td colspan="${visibleColumnIndexes.length + 3}" class="emptyCell">
           No data found.
         </td>
       </tr>
@@ -428,7 +458,8 @@ function renderOfficerTable(result) {
 
         <td class="rowNumberCell">#${row.rowNumber}</td>
 
-        ${headers.map((header, index) => {
+        ${visibleColumnIndexes.map(index => {
+          const header = headers[index];
           const value = row.cells[index] || "";
           return `
             <td class="${value ? "" : "emptyCell"}">
