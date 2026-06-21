@@ -228,6 +228,27 @@
       line-height: .95;
       letter-spacing: .03em;
       text-shadow: 4px 4px 0 rgba(0,0,0,.25);
+      white-space: nowrap;
+      animation: sfkStartWordFloat 2.8s ease-in-out infinite;
+    }
+
+    .sfkStartWord span {
+      display: inline-block;
+      transform-origin: 50% 85%;
+      animation: sfkStartLetterWave 1.65s ease-in-out infinite;
+      animation-delay: calc(var(--sfk-wave-index) * 90ms);
+    }
+
+    @keyframes sfkStartLetterWave {
+      0%, 42%, 100% { transform: translateY(0) rotate(0deg); }
+      12% { transform: translateY(-9px) rotate(-4deg); }
+      23% { transform: translateY(2px) rotate(3deg); }
+      32% { transform: translateY(-3px) rotate(-1deg); }
+    }
+
+    @keyframes sfkStartWordFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
     }
 
     .sfkStartSubtitle {
@@ -380,6 +401,17 @@
         font-size: clamp(2.35rem, 14vw, 3.75rem);
       }
 
+      .sfkStartWord span {
+        animation-name: sfkStartLetterWavePhone;
+      }
+
+      @keyframes sfkStartLetterWavePhone {
+        0%, 42%, 100% { transform: translateY(0) rotate(0deg); }
+        12% { transform: translateY(-6px) rotate(-3deg); }
+        23% { transform: translateY(1px) rotate(2deg); }
+        32% { transform: translateY(-2px) rotate(-1deg); }
+      }
+
       .sfkStartSubtitle {
         font-size: clamp(.82rem, 4vw, .98rem);
       }
@@ -418,6 +450,11 @@
         animation: none;
         width: 100%;
       }
+
+      .sfkStartWord,
+      .sfkStartWord span {
+        animation: none;
+      }
     }
   </style>
 
@@ -445,7 +482,7 @@
           <div class="sfkStartCopy">
             <div class="sfkStartPill">Grade 8 - St. Faustina Kowalska</div>
             <h1 class="sfkStartTitle">SFK ClassBoard</h1>
-            <div class="sfkStartWord">#BeKind</div>
+            <div class="sfkStartWord" aria-label="#BeKind"><span aria-hidden="true" style="--sfk-wave-index:0">#</span><span aria-hidden="true" style="--sfk-wave-index:1">B</span><span aria-hidden="true" style="--sfk-wave-index:2">e</span><span aria-hidden="true" style="--sfk-wave-index:3">K</span><span aria-hidden="true" style="--sfk-wave-index:4">i</span><span aria-hidden="true" style="--sfk-wave-index:5">n</span><span aria-hidden="true" style="--sfk-wave-index:6">d</span></div>
             <p class="sfkStartSubtitle">A kind class. A beautiful beginning.</p>
             <p class="sfkStartStatus">Opening your class dashboard...</p>
           </div>
