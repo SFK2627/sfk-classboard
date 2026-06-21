@@ -5155,8 +5155,7 @@ ol.formattedText li {
 
 /* =========================================================
    SFK CLASS PHOTO FIRST-OPEN INTRO ANIMATION
-   30 seconds. Matches ClassBoard yellow/black theme.
-   Appears once per browser tab/session.
+   Refined responsive version for desktop + phone.
 ========================================================= */
 .sfkIntroOverlay {
   position: fixed;
@@ -5164,23 +5163,24 @@ ol.formattedText li {
   z-index: 99999;
   display: grid;
   place-items: center;
-  padding: 20px;
+  padding: clamp(12px, 2vw, 22px);
   overflow: hidden;
-  background: #111;
+  background: linear-gradient(180deg, #f1d343 0%, #efd347 100%);
   opacity: 1;
   visibility: visible;
-  transition: opacity .7s ease, visibility .7s ease;
+  transition: opacity .6s ease, visibility .6s ease;
 }
 
 .sfkIntroOverlay::before {
   content: "";
   position: absolute;
-  inset: -22px;
+  inset: -24px;
   background:
-    linear-gradient(135deg, rgba(247, 198, 0, .18), rgba(255, 223, 58, .10)),
+    radial-gradient(circle at center, rgba(255, 216, 77, .22), transparent 35%),
+    linear-gradient(180deg, rgba(0,0,0,.20), rgba(0,0,0,.52)),
     url("class-photo.jpg") center center / cover no-repeat;
-  filter: blur(7px) saturate(1.08) brightness(.82);
-  transform: scale(1.05);
+  filter: blur(8px) saturate(1.08) brightness(.82);
+  transform: scale(1.06);
   animation: sfkPhotoSlowZoom 30s linear forwards;
 }
 
@@ -5189,8 +5189,8 @@ ol.formattedText li {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at center, rgba(255, 215, 0, .10), transparent 34%),
-    linear-gradient(180deg, rgba(0,0,0,.30), rgba(0,0,0,.66));
+    radial-gradient(circle at center, rgba(255, 225, 124, .16), transparent 38%),
+    linear-gradient(180deg, rgba(0,0,0,.14), rgba(0,0,0,.18));
   pointer-events: none;
 }
 
@@ -5203,8 +5203,9 @@ ol.formattedText li {
 .sfkIntroCard {
   position: relative;
   z-index: 2;
-  width: min(860px, 94vw);
-  min-height: min(520px, 82vh);
+  width: min(940px, 94vw);
+  min-height: min(650px, 88vh);
+  max-height: 92svh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -5212,24 +5213,22 @@ ol.formattedText li {
   justify-content: center;
   gap: 14px;
   text-align: center;
-  padding: clamp(30px, 4vw, 52px);
+  padding: clamp(28px, 3.2vw, 46px);
   border-radius: 34px;
-  background:
-    linear-gradient(180deg, rgba(17, 17, 17, .86), rgba(17, 17, 17, .92));
-  color: white;
-  border: 4px solid rgba(255, 255, 255, .92);
+  background: linear-gradient(180deg, rgba(17,17,17,.90), rgba(10,10,10,.95));
+  color: #fff;
+  border: 6px solid rgba(255,255,255,.96);
   box-shadow:
-    12px 12px 0 rgba(0, 0, 0, .28),
-    0 30px 80px rgba(0, 0, 0, .35);
-  backdrop-filter: blur(8px);
-  animation: sfkIntroCardIn .85s cubic-bezier(.18, .9, .24, 1.1) both;
+    0 32px 90px rgba(0,0,0,.26),
+    18px 18px 0 rgba(120, 95, 0, .24);
+  backdrop-filter: blur(10px);
 }
 
 .sfkIntroCard::before {
   content: "";
   position: absolute;
   inset: 14px;
-  border-radius: 26px;
+  border-radius: 24px;
   border: 1px solid rgba(255, 215, 0, .22);
   pointer-events: none;
 }
@@ -5237,11 +5236,11 @@ ol.formattedText li {
 .sfkIntroPattern {
   position: absolute;
   inset: 0;
-  opacity: .10;
+  opacity: .08;
   background-image:
-    radial-gradient(circle at 12px 12px, #ffd700 2px, transparent 2.5px),
-    radial-gradient(circle at 42px 42px, #ffffff 1.5px, transparent 2px);
-  background-size: 54px 54px;
+    radial-gradient(circle at 14px 14px, #ffd700 2px, transparent 2.5px),
+    radial-gradient(circle at 42px 42px, #ffffff 1.3px, transparent 1.8px);
+  background-size: 58px 58px;
   pointer-events: none;
 }
 
@@ -5254,19 +5253,19 @@ ol.formattedText li {
 .sfkIntroAuraOne {
   width: 360px;
   height: 360px;
-  top: -110px;
-  right: -90px;
-  background: radial-gradient(circle, rgba(255, 215, 0, .28), rgba(255, 215, 0, 0) 72%);
-  animation: sfkIntroAuraFloat 5s ease-in-out infinite;
+  top: -120px;
+  right: -100px;
+  background: radial-gradient(circle, rgba(255, 215, 0, .24), rgba(255, 215, 0, 0) 72%);
+  animation: sfkIntroAuraFloat 5.2s ease-in-out infinite;
 }
 
 .sfkIntroAuraTwo {
-  width: 300px;
-  height: 300px;
-  left: -90px;
-  bottom: -100px;
-  background: radial-gradient(circle, rgba(255, 255, 255, .14), rgba(255, 255, 255, 0) 72%);
-  animation: sfkIntroAuraFloat 6s ease-in-out infinite reverse;
+  width: 320px;
+  height: 320px;
+  left: -100px;
+  bottom: -110px;
+  background: radial-gradient(circle, rgba(255, 255, 255, .11), rgba(255,255,255,0) 72%);
+  animation: sfkIntroAuraFloat 6.1s ease-in-out infinite reverse;
 }
 
 .sfkIntroMiniPill {
@@ -5279,9 +5278,9 @@ ol.formattedText li {
   border-radius: 999px;
   color: #111;
   background: rgba(255, 215, 0, .96);
-  border: 2px solid rgba(255, 255, 255, .82);
-  box-shadow: 3px 3px 0 rgba(0,0,0,.20);
-  font-size: clamp(.78rem, 1.2vw, .94rem);
+  border: 2px solid rgba(255,255,255,.84);
+  box-shadow: 3px 3px 0 rgba(0,0,0,.22);
+  font-size: clamp(.78rem, 1.05vw, .92rem);
   font-weight: 900;
   white-space: nowrap;
 }
@@ -5293,17 +5292,17 @@ ol.formattedText li {
 }
 
 .sfkIntroMiniPillTwo {
-  bottom: 54px;
-  right: 28px;
+  right: 24px;
+  bottom: 70px;
   transform: rotate(3deg);
 }
 
 .sfkIntroLogoWrap {
   position: relative;
   z-index: 2;
-  width: clamp(128px, 17vw, 170px);
-  height: clamp(128px, 17vw, 170px);
-  margin-bottom: 8px;
+  width: clamp(96px, 12vw, 126px);
+  height: clamp(96px, 12vw, 126px);
+  margin-bottom: 2px;
 }
 
 .sfkIntroLogo,
@@ -5316,29 +5315,53 @@ ol.formattedText li {
 
 .sfkIntroLogo {
   inset: 0;
-  border-radius: 34px;
-  background: linear-gradient(180deg, #ffd700 0%, #ffdf3a 100%);
+  border-radius: 28px;
+  background: linear-gradient(180deg, #ffdf4d 0%, #f2cb2a 100%);
   color: #111;
-  border: 4px solid white;
-  box-shadow:
-    0 14px 0 rgba(255,255,255,.08),
-    0 20px 36px rgba(0,0,0,.24);
-  font-size: clamp(4.1rem, 7.5vw, 6.2rem);
-  animation: sfkIntroHeartBeat 1.6s ease-in-out infinite;
+  border: 4px solid #fff;
+  box-shadow: 0 16px 36px rgba(0,0,0,.22);
+  font-size: clamp(3rem, 5.2vw, 4rem);
+  animation: sfkIntroHeartBeat 1.7s ease-in-out infinite;
 }
 
 .sfkIntroKoala {
-  right: -14px;
-  bottom: -10px;
-  width: clamp(46px, 6vw, 64px);
-  height: clamp(46px, 6vw, 64px);
-  border-radius: 50%;
-  background: #fff;
+  left: 50%;
+  transform: translateX(-50%);
+  top: -18px;
+  width: clamp(34px, 4vw, 44px);
+  height: clamp(34px, 4vw, 44px);
+  border-radius: 999px;
+  background: #fff9dd;
   color: #111;
-  border: 3px solid #111;
-  font-size: clamp(1.7rem, 3.4vw, 2.45rem);
-  box-shadow: 4px 4px 0 rgba(0,0,0,.26);
-  animation: sfkIntroKoalaFloat 2.4s ease-in-out infinite;
+  border: 2px solid #111;
+  font-size: clamp(1.2rem, 2vw, 1.45rem);
+  box-shadow: 3px 3px 0 rgba(0,0,0,.20);
+}
+
+.sfkIntroPhotoFrame {
+  position: relative;
+  z-index: 2;
+  width: min(520px, 76vw);
+  max-width: 100%;
+  border-radius: 22px;
+  overflow: hidden;
+  border: 3px solid rgba(255,255,255,.90);
+  box-shadow: 0 12px 36px rgba(0,0,0,.22);
+}
+
+.sfkIntroPhotoFrame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.22));
+  pointer-events: none;
+}
+
+.sfkIntroPhotoPreview {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
 }
 
 .sfkIntroText {
@@ -5351,81 +5374,69 @@ ol.formattedText li {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 15px;
-  margin-bottom: 12px;
+  padding: 8px 16px;
+  margin-bottom: 10px;
   border-radius: 999px;
   background: rgba(255, 215, 0, .16);
-  border: 2px solid rgba(255, 215, 0, .72);
-  color: #ffd700;
-  font-size: clamp(.82rem, 1.35vw, 1rem);
+  border: 2px solid rgba(255, 215, 0, .74);
+  color: #ffe37a;
+  font-size: clamp(.86rem, 1.15vw, 1rem);
   font-weight: 900;
-  letter-spacing: .04em;
+  letter-spacing: .03em;
 }
 
 .sfkIntroText h1 {
   font-family: 'Luckiest Guy', 'Fredoka', Arial, sans-serif;
-  font-size: clamp(3.35rem, 8vw, 6.7rem);
-  line-height: .96;
-  color: #ffd700;
+  font-size: clamp(3.1rem, 7vw, 5.4rem);
+  line-height: .98;
+  color: #ffd94d;
   letter-spacing: .025em;
-  margin-bottom: 9px;
+  margin: 0 0 8px;
   text-shadow: 4px 4px 0 rgba(0,0,0,.28);
   animation: sfkIntroTextUp .8s .12s both;
 }
 
 .sfkIntroText p {
-  font-size: clamp(1.24rem, 2.25vw, 1.8rem);
+  font-size: clamp(1.28rem, 2.05vw, 1.72rem);
   font-weight: 900;
-  color: white;
-  margin-bottom: 6px;
+  color: #fff;
+  margin: 0 0 6px;
   animation: sfkIntroTextUp .8s .22s both;
 }
 
 .sfkIntroText small {
   display: block;
   color: #ffeaa0;
-  font-size: clamp(.95rem, 1.65vw, 1.12rem);
+  font-size: clamp(.95rem, 1.4vw, 1.08rem);
   font-weight: 800;
-  line-height: 1.35;
+  line-height: 1.4;
   animation: sfkIntroTextUp .8s .32s both;
 }
 
-.sfkIntroPhotoBadge,
 .sfkIntroHint {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   margin-top: 12px;
-  padding: 7px 13px;
+  padding: 8px 14px;
   border-radius: 999px;
-  font-size: clamp(.78rem, 1.25vw, .94rem);
+  font-size: clamp(.78rem, 1.05vw, .92rem);
   font-weight: 900;
-}
-
-.sfkIntroPhotoBadge {
-  background: rgba(255, 215, 0, .92);
-  color: #111;
-  border: 2px solid rgba(255,255,255,.70);
-  box-shadow: 2px 2px 0 rgba(0,0,0,.18);
-}
-
-.sfkIntroHint {
-  margin-top: 8px;
-  color: rgba(255,255,255,.90);
+  color: rgba(255,255,255,.92);
   background: rgba(255,255,255,.08);
-  border: 1px solid rgba(255,255,255,.13);
+  border: 1px solid rgba(255,255,255,.14);
 }
 
 .sfkIntroProgress {
   position: absolute;
-  left: clamp(24px, 5vw, 46px);
-  right: clamp(24px, 5vw, 46px);
-  bottom: 22px;
-  height: 10px;
+  left: clamp(18px, 3.2vw, 34px);
+  right: clamp(18px, 3.2vw, 34px);
+  bottom: 18px;
+  height: 12px;
   overflow: hidden;
   border-radius: 999px;
-  background: rgba(255,255,255,.16);
-  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.15);
+  border: 1px solid rgba(255,255,255,.16);
 }
 
 .sfkIntroProgress span {
@@ -5433,7 +5444,7 @@ ol.formattedText li {
   height: 100%;
   width: 0%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #fff2a6, #ffd700 60%, #ffea61);
+  background: linear-gradient(90deg, #fff2a6 0%, #ffd84c 60%, #ffea61 100%);
   animation: sfkIntroProgress 30s linear forwards;
 }
 
@@ -5442,14 +5453,15 @@ ol.formattedText li {
   z-index: 3;
   top: 18px;
   right: 18px;
-  border: 2px solid rgba(255,255,255,.16);
+  border: 2px solid rgba(255,255,255,.18);
   border-radius: 999px;
-  padding: 9px 16px;
-  background: rgba(255,255,255,.09);
-  color: white;
-  font-size: .9rem;
+  padding: 10px 16px;
+  background: rgba(255,255,255,.08);
+  color: #fff;
+  font-size: .96rem;
   font-weight: 900;
   cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0,0,0,.12);
 }
 
 .sfkIntroSkip:hover {
@@ -5459,7 +5471,7 @@ ol.formattedText li {
 }
 
 @keyframes sfkPhotoSlowZoom {
-  from { transform: scale(1.04); }
+  from { transform: scale(1.05); }
   to { transform: scale(1.13); }
 }
 
@@ -5473,11 +5485,6 @@ ol.formattedText li {
   45% { transform: scale(1.06); }
 }
 
-@keyframes sfkIntroKoalaFloat {
-  0%, 100% { transform: translateY(0) rotate(2deg); }
-  50% { transform: translateY(-7px) rotate(-3deg); }
-}
-
 @keyframes sfkIntroTextUp {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
@@ -5493,390 +5500,146 @@ ol.formattedText li {
   to { width: 100%; }
 }
 
-@media (max-width: 700px) {
-  .sfkIntroOverlay { padding: 14px; }
+@media (max-width: 900px) {
+  .sfkIntroCard {
+    width: min(640px, 95vw);
+    min-height: min(680px, 90svh);
+    padding: 24px 20px 42px;
+    border-width: 5px;
+    border-radius: 30px;
+    gap: 12px;
+  }
+
+  .sfkIntroMiniPillTwo {
+    bottom: 56px;
+  }
+
+  .sfkIntroPhotoFrame {
+    width: min(470px, 82vw);
+  }
+}
+
+@media (max-width: 640px) {
+  .sfkIntroOverlay {
+    padding: 10px;
+    background: linear-gradient(180deg, #efcf46 0%, #edcf45 100%);
+  }
 
   .sfkIntroCard {
-    min-height: min(540px, 84vh);
+    width: min(430px, calc(100vw - 20px));
+    min-height: auto;
+    max-height: calc(100svh - 20px);
+    justify-content: flex-start;
+    padding: 20px 16px 44px;
+    border-width: 4px;
     border-radius: 26px;
-    padding: 30px 18px 48px;
+    gap: 10px;
+    overflow-y: auto;
+    box-shadow: 0 18px 44px rgba(0,0,0,.22), 8px 8px 0 rgba(120,95,0,.20);
+  }
+
+  .sfkIntroCard::before {
+    inset: 10px;
+    border-radius: 20px;
   }
 
   .sfkIntroMiniPill {
     display: none;
   }
 
+  .sfkIntroSkip {
+    top: 12px;
+    right: 12px;
+    padding: 9px 14px;
+    font-size: .92rem;
+  }
+
   .sfkIntroLogoWrap {
-    width: clamp(112px, 32vw, 142px);
-    height: clamp(112px, 32vw, 142px);
+    width: 84px;
+    height: 84px;
+    margin-top: 18px;
+  }
+
+  .sfkIntroLogo {
+    font-size: 2.7rem;
+    border-radius: 24px;
   }
 
   .sfkIntroKoala {
-    right: -8px;
-    bottom: -8px;
+    width: 30px;
+    height: 30px;
+    top: -15px;
+    font-size: 1.05rem;
   }
 
-  .sfkIntroText h1 {
-    line-height: 1.02;
+  .sfkIntroPhotoFrame {
+    width: 100%;
+    border-radius: 18px;
   }
 
-  .sfkIntroPhotoBadge,
-  .sfkIntroHint {
-    width: fit-content;
+  .sfkIntroPhotoPreview {
+    aspect-ratio: 4 / 3;
+  }
+
+  .sfkIntroKicker {
+    font-size: .84rem;
+    line-height: 1.25;
+    padding: 8px 14px;
+  }
+
+  .sfkIntroText {
     max-width: 100%;
   }
 
+  .sfkIntroText h1 {
+    font-size: clamp(2.5rem, 14vw, 4rem);
+    line-height: 1;
+  }
+
+  .sfkIntroText p {
+    font-size: clamp(1.12rem, 5.6vw, 1.5rem);
+  }
+
+  .sfkIntroText small {
+    font-size: clamp(.9rem, 4.2vw, 1.02rem);
+  }
+
+  .sfkIntroHint {
+    font-size: .82rem;
+    max-width: 100%;
+    text-wrap: balance;
+  }
+
   .sfkIntroProgress {
-    left: 18px;
-    right: 18px;
-    bottom: 18px;
-  }
-
-  .sfkIntroSkip {
-    top: 12px;
-    right: 12px;
-    padding: 8px 13px;
+    left: 16px;
+    right: 16px;
+    bottom: 14px;
+    height: 10px;
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .sfkIntroCard,
-  .sfkIntroLogo,
-  .sfkIntroKoala,
-  .sfkIntroText h1,
-  .sfkIntroText p,
-  .sfkIntroText small,
-  .sfkIntroAura,
-  .sfkIntroProgress span,
-  .sfkIntroOverlay::before {
-    animation: none !important;
-  }
-}
-
-.sfkIntroOverlay.is-hidden {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
-
-.sfkIntroCard {
-  position: relative;
-  width: min(900px, 94vw);
-  min-height: min(560px, 84vh);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  text-align: center;
-  padding: clamp(30px, 4vw, 54px);
-  border-radius: 34px;
-  background:
-    linear-gradient(180deg, rgba(24, 24, 24, .98), rgba(17, 17, 17, .98));
-  color: white;
-  border: 4px solid rgba(255, 255, 255, .96);
-  box-shadow:
-    12px 12px 0 rgba(0, 0, 0, .25),
-    0 28px 70px rgba(0, 0, 0, .24);
-  animation: sfkIntroCardIn .85s cubic-bezier(.18, .9, .24, 1.1) both;
-}
-
-.sfkIntroPattern {
-  position: absolute;
-  inset: 0;
-  opacity: .12;
-  background-image:
-    radial-gradient(circle at 12px 12px, #ffd700 2px, transparent 2.5px),
-    radial-gradient(circle at 42px 42px, #ffffff 1.5px, transparent 2px);
-  background-size: 54px 54px;
-  pointer-events: none;
-}
-
-.sfkIntroCard::before {
-  content: "";
-  position: absolute;
-  inset: 14px;
-  border-radius: 26px;
-  border: 1px solid rgba(255, 215, 0, .18);
-  pointer-events: none;
-}
-
-.sfkIntroAura {
-  position: absolute;
-  border-radius: 999px;
-  pointer-events: none;
-}
-
-.sfkIntroAuraOne {
-  width: 360px;
-  height: 360px;
-  top: -110px;
-  right: -90px;
-  background: radial-gradient(circle, rgba(255, 215, 0, .25), rgba(255, 215, 0, 0) 72%);
-  animation: sfkIntroAuraFloat 5s ease-in-out infinite;
-}
-
-.sfkIntroAuraTwo {
-  width: 300px;
-  height: 300px;
-  left: -90px;
-  bottom: -100px;
-  background: radial-gradient(circle, rgba(255, 255, 255, .13), rgba(255, 255, 255, 0) 72%);
-  animation: sfkIntroAuraFloat 6s ease-in-out infinite reverse;
-}
-
-.sfkIntroMiniPill {
-  position: absolute;
-  z-index: 2;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 9px 14px;
-  border-radius: 999px;
-  color: #111;
-  background: rgba(255, 215, 0, .94);
-  border: 2px solid rgba(255, 255, 255, .80);
-  box-shadow: 3px 3px 0 rgba(0,0,0,.18);
-  font-size: clamp(.78rem, 1.2vw, .94rem);
-  font-weight: 900;
-  white-space: nowrap;
-}
-
-.sfkIntroMiniPillOne {
-  top: 24px;
-  left: 24px;
-  transform: rotate(-3deg);
-}
-
-.sfkIntroMiniPillTwo {
-  bottom: 54px;
-  right: 28px;
-  transform: rotate(3deg);
-}
-
-.sfkIntroLogoWrap {
-  position: relative;
-  z-index: 2;
-  width: clamp(128px, 17vw, 170px);
-  height: clamp(128px, 17vw, 170px);
-  margin-bottom: 8px;
-}
-
-.sfkIntroLogo,
-.sfkIntroKoala {
-  position: absolute;
-  display: grid;
-  place-items: center;
-  line-height: 1;
-}
-
-.sfkIntroLogo {
-  inset: 0;
-  border-radius: 34px;
-  background: linear-gradient(180deg, #ffd700 0%, #ffdf3a 100%);
-  color: #111;
-  border: 4px solid white;
-  box-shadow:
-    0 14px 0 rgba(255,255,255,.08),
-    0 20px 36px rgba(0,0,0,.22);
-  font-size: clamp(4.1rem, 7.5vw, 6.2rem);
-  animation: sfkIntroHeartBeat 1.6s ease-in-out infinite;
-}
-
-.sfkIntroKoala {
-  right: -14px;
-  bottom: -10px;
-  width: clamp(46px, 6vw, 64px);
-  height: clamp(46px, 6vw, 64px);
-  border-radius: 50%;
-  background: #fff;
-  color: #111;
-  border: 3px solid #111;
-  font-size: clamp(1.7rem, 3.4vw, 2.45rem);
-  box-shadow: 4px 4px 0 rgba(0,0,0,.26);
-  animation: sfkIntroKoalaFloat 2.4s ease-in-out infinite;
-}
-
-.sfkIntroText {
-  position: relative;
-  z-index: 2;
-  max-width: 760px;
-}
-
-.sfkIntroKicker {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 15px;
-  margin-bottom: 12px;
-  border-radius: 999px;
-  background: rgba(255, 215, 0, .12);
-  border: 2px solid rgba(255, 215, 0, .66);
-  color: #ffd700;
-  font-size: clamp(.82rem, 1.35vw, 1rem);
-  font-weight: 900;
-  letter-spacing: .04em;
-}
-
-.sfkIntroText h1 {
-  font-family: 'Luckiest Guy', 'Fredoka', Arial, sans-serif;
-  font-size: clamp(3.35rem, 8vw, 6.7rem);
-  line-height: .96;
-  color: #ffd700;
-  letter-spacing: .025em;
-  margin-bottom: 9px;
-  text-shadow: 4px 4px 0 rgba(0,0,0,.25);
-  animation: sfkIntroTextUp .8s .12s both;
-}
-
-.sfkIntroText p {
-  font-size: clamp(1.24rem, 2.25vw, 1.8rem);
-  font-weight: 900;
-  color: white;
-  margin-bottom: 6px;
-  animation: sfkIntroTextUp .8s .22s both;
-}
-
-.sfkIntroText small {
-  display: block;
-  color: #ffeaa0;
-  font-size: clamp(.95rem, 1.65vw, 1.12rem);
-  font-weight: 800;
-  line-height: 1.35;
-  animation: sfkIntroTextUp .8s .32s both;
-}
-
-.sfkIntroHint {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 14px;
-  padding: 7px 13px;
-  border-radius: 999px;
-  color: rgba(255,255,255,.88);
-  background: rgba(255,255,255,.07);
-  border: 1px solid rgba(255,255,255,.11);
-  font-size: clamp(.78rem, 1.25vw, .94rem);
-  font-weight: 900;
-}
-
-.sfkIntroProgress {
-  position: absolute;
-  left: clamp(24px, 5vw, 46px);
-  right: clamp(24px, 5vw, 46px);
-  bottom: 22px;
-  height: 10px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: rgba(255,255,255,.14);
-  border: 1px solid rgba(255,255,255,.12);
-}
-
-.sfkIntroProgress span {
-  display: block;
-  height: 100%;
-  width: 0%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #fff2a6, #ffd700 60%, #ffea61);
-  animation: sfkIntroProgress 30s linear forwards;
-}
-
-.sfkIntroSkip {
-  position: absolute;
-  z-index: 3;
-  top: 18px;
-  right: 18px;
-  border: 2px solid rgba(255,255,255,.16);
-  border-radius: 999px;
-  padding: 9px 16px;
-  background: rgba(255,255,255,.08);
-  color: white;
-  font-size: .9rem;
-  font-weight: 900;
-  cursor: pointer;
-}
-
-.sfkIntroSkip:hover {
-  background: rgba(255, 215, 0, .18);
-  border-color: rgba(255, 215, 0, .4);
-  color: #ffd700;
-}
-
-@keyframes sfkIntroCardIn {
-  from { opacity: 0; transform: translateY(18px) scale(.97); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-@keyframes sfkIntroHeartBeat {
-  0%, 100% { transform: scale(1); }
-  45% { transform: scale(1.06); }
-}
-
-@keyframes sfkIntroKoalaFloat {
-  0%, 100% { transform: translateY(0) rotate(2deg); }
-  50% { transform: translateY(-7px) rotate(-3deg); }
-}
-
-@keyframes sfkIntroTextUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes sfkIntroAuraFloat {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(-12px, 14px) scale(1.05); }
-}
-
-@keyframes sfkIntroProgress {
-  from { width: 0%; }
-  to { width: 100%; }
-}
-
-@media (max-width: 700px) {
-  .sfkIntroOverlay { padding: 14px; }
-
+@media (max-width: 390px) {
   .sfkIntroCard {
-    min-height: min(540px, 84vh);
-    border-radius: 26px;
-    padding: 30px 18px 48px;
-  }
-
-  .sfkIntroMiniPill {
-    display: none;
-  }
-
-  .sfkIntroLogoWrap {
-    width: clamp(112px, 32vw, 142px);
-    height: clamp(112px, 32vw, 142px);
-  }
-
-  .sfkIntroKoala {
-    right: -8px;
-    bottom: -8px;
+    padding: 18px 14px 42px;
   }
 
   .sfkIntroText h1 {
-    line-height: 1.02;
+    font-size: clamp(2.25rem, 13.2vw, 3.5rem);
   }
 
-  .sfkIntroProgress {
-    left: 18px;
-    right: 18px;
-    bottom: 18px;
+  .sfkIntroText p {
+    font-size: 1.06rem;
   }
 
-  .sfkIntroSkip {
-    top: 12px;
-    right: 12px;
-    padding: 8px 13px;
+  .sfkIntroKicker {
+    font-size: .78rem;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .sfkIntroOverlay::before,
   .sfkIntroCard,
   .sfkIntroLogo,
-  .sfkIntroKoala,
   .sfkIntroText h1,
   .sfkIntroText p,
   .sfkIntroText small,
@@ -5885,3 +5648,4 @@ ol.formattedText li {
     animation: none !important;
   }
 }
+
