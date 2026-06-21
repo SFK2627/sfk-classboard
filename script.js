@@ -12,7 +12,7 @@ const ANNOUNCEMENT_HEARTS_KEY = "sfkClassBoardHeartedAnnouncements";
 */
 const PRAYER_TEST_TRIGGER_ENABLED = true;
 const PRAYER_TEST_HOUR = "00";
-const PRAYER_TEST_MINUTE = "59";
+const PRAYER_TEST_MINUTE = "20";
 
 let latestData = null;
 let latestDataString = "";
@@ -2278,3 +2278,42 @@ function getPartValue(parts, type) {
 }
 
 initClassBoard();
+
+/* ================================
+   FIRST-OPEN INTRO ANIMATION
+   Uses sessionStorage so it will not repeat on auto-refresh.
+================================ */
+const SFK_INTRO_SESSION_KEY = "sfkClassBoardIntroSeenThisSession";
+
+document.addEventListener("DOMContentLoaded", initSfkIntro);
+
+function initSfkIntro() {
+  const intro = document.getElementById("sfkIntroOverlay");
+  if (!intro) return;
+
+  const alreadySeen = sessionStorage.getItem(SFK_INTRO_SESSION_KEY) === "YES";
+
+  if (alreadySeen) {
+    intro.classList.add("is-hidden");
+    setTimeout(() => intro.remove(), 650);
+    return;
+  }
+
+  sessionStorage.setItem(SFK_INTRO_SESSION_KEY, "YES");
+
+  setTimeout(() => {
+    hideSfkIntro(false);
+  }, 30000);
+}
+
+function hideSfkIntro(isManual) {
+  const intro = document.getElementById("sfkIntroOverlay");
+  if (!intro) return;
+
+  sessionStorage.setItem(SFK_INTRO_SESSION_KEY, "YES");
+  intro.classList.add("is-hidden");
+
+  setTimeout(() => {
+    if (intro && intro.parentNode) intro.remove();
+  }, isManual ? 300 : 650);
+}
