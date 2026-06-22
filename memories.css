@@ -1162,6 +1162,12 @@ textarea {
   .postMedia {
     height: min(56vh, 480px);
     min-height: 320px;
+    touch-action: pan-y pinch-zoom;
+  }
+
+  .postMedia .mediaArrow,
+  .viewerModal .viewerArrow {
+    display: none;
   }
 
   .floatingPostButton {

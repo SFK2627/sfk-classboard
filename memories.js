@@ -13,8 +13,11 @@ const memoryState = {
   selectedFiles: [],
   viewerMedia: [],
   viewerIndex: 0,
-  requestedPostHandled: false
+  requestedPostHandled: false,
+  suppressClickUntil: 0
 };
+
+let touchGesture = null;
 
 document.addEventListener("DOMContentLoaded", () => {
   setDefaultMemoryDate();
@@ -42,9 +45,13 @@ function bindMemoryEvents() {
   document.getElementById("memoryForm")?.addEventListener("submit", submitMemoryPost);
   const feed = document.getElementById("memoryFeed");
   feed?.addEventListener("click", handleFeedClick);
+  feed?.addEventListener("touchstart", startFeedSwipe, { passive: true });
+  feed?.addEventListener("touchend", endFeedSwipe, { passive: true });
   document.getElementById("closeViewerButton")?.addEventListener("click", closeViewer);
   document.getElementById("viewerPrevious")?.addEventListener("click", () => moveViewer(-1));
   document.getElementById("viewerNext")?.addEventListener("click", () => moveViewer(1));
+  document.getElementById("viewerModal")?.addEventListener("touchstart", startViewerSwipe, { passive: true });
+  document.getElementById("viewerModal")?.addEventListener("touchend", endViewerSwipe, { passive: true });
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
@@ -310,6 +317,8 @@ function handleFeedClick(event) {
   const action = target.dataset.action;
   const id = target.dataset.id;
 
+  if (action === "view" && Date.now() < memoryState.suppressClickUntil) return;
+
   if (action === "previous") moveCarousel(id, -1);
   if (action === "next") moveCarousel(id, 1);
   if (action === "heart") heartMemory(id);
@@ -326,6 +335,71 @@ function moveCarousel(id, direction) {
   const next = (current + direction + post.media.length) % post.media.length;
   memoryState.carousel.set(id, next);
   renderMemories();
+}
+
+function startFeedSwipe(event) {
+  const media = event.target.closest(".postMedia");
+  const article = event.target.closest(".memoryPost");
+  const touch = event.changedTouches?.[0];
+
+  if (!media || !article || !touch || event.target.closest("video, iframe, button")) return;
+
+  touchGesture = {
+    scope: "feed",
+    id: article.dataset.postId,
+    x: touch.clientX,
+    y: touch.clientY,
+    time: Date.now()
+  };
+}
+
+function endFeedSwipe(event) {
+  if (!touchGesture || touchGesture.scope !== "feed") return;
+  const gesture = touchGesture;
+  touchGesture = null;
+  const touch = event.changedTouches?.[0];
+  if (!touch) return;
+
+  const direction = getSwipeDirection(gesture, touch);
+  if (direction) {
+    memoryState.suppressClickUntil = Date.now() + 450;
+    moveCarousel(gesture.id, direction);
+  }
+}
+
+function startViewerSwipe(event) {
+  const touch = event.changedTouches?.[0];
+  if (!touch || event.target.closest("video, iframe, button")) return;
+
+  touchGesture = {
+    scope: "viewer",
+    x: touch.clientX,
+    y: touch.clientY,
+    time: Date.now()
+  };
+}
+
+function endViewerSwipe(event) {
+  if (!touchGesture || touchGesture.scope !== "viewer") return;
+  const gesture = touchGesture;
+  touchGesture = null;
+  const touch = event.changedTouches?.[0];
+  if (!touch) return;
+
+  const direction = getSwipeDirection(gesture, touch);
+  if (direction) moveViewer(direction);
+}
+
+function getSwipeDirection(start, endTouch) {
+  const deltaX = endTouch.clientX - start.x;
+  const deltaY = endTouch.clientY - start.y;
+  const elapsed = Date.now() - start.time;
+
+  if (elapsed > 900 || Math.abs(deltaX) < 45 || Math.abs(deltaX) < Math.abs(deltaY) * 1.25) {
+    return 0;
+  }
+
+  return deltaX < 0 ? 1 : -1;
 }
 
 async function heartMemory(id) {
