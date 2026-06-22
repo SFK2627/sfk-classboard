@@ -436,8 +436,6 @@ function renderMediaSlide(media, postId, index) {
   return `
     <div class="mediaSlide videoSlide">
       <iframe class="feedVideoFrame" src="${escapeAttr(iframeUrl)}" title="${escapeAttr(media.name)}" loading="lazy" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen data-post-id="${escapeAttr(postId)}" data-media-index="${index}" data-youtube="${youtubeId ? "true" : "false"}"></iframe>
-      <div class="iframeSwipeShield" aria-hidden="true"></div>
-      ${youtubeId ? renderVolumeButton(media, postId, index) : ""}
     </div>
   `;
 }
@@ -454,7 +452,7 @@ function getYouTubeEmbedUrl(videoId, muted) {
     loop: "1",
     playlist: videoId,
     playsinline: "1",
-    controls: "0",
+    controls: "1",
     rel: "0",
     enablejsapi: "1"
   });
@@ -1344,7 +1342,6 @@ function renderViewer() {
     const source = youtubeId ? getYouTubeEmbedUrl(youtubeId, media.muted !== false) : media.url;
     content.innerHTML = `
       <iframe class="viewerVideoFrame" src="${escapeAttr(source)}" title="${escapeAttr(media.name)}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen data-youtube="${youtubeId ? "true" : "false"}"></iframe>
-      ${youtubeId ? renderViewerVolumeButton(media) : ""}
     `;
   }
 
