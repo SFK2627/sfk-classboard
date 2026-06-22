@@ -5152,3 +5152,47 @@ ol.formattedText li {
     line-height: 1.22 !important;
   }
 }
+/* Install button appears only when the browser offers PWA installation. */
+.installAppBtn {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 10000;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 10px 17px;
+  border: 2px solid #111;
+  border-radius: 8px;
+  background: #f7c600;
+  color: #111;
+  box-shadow: 4px 4px 0 #111;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.installAppBtn[hidden] {
+  display: none;
+}
+
+.installAppBtn:hover {
+  background: #ffdf3a;
+}
+
+.installAppBtn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 #111;
+}
+
+@media (max-width: 640px) {
+  .installAppBtn {
+    right: 12px;
+    bottom: 12px;
+    min-height: 44px;
+    padding: 9px 14px;
+    font-size: .9rem;
+  }
+}
