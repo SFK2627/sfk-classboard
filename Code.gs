@@ -39,6 +39,10 @@ function doGet(e) {
       result = getPublishedMemories();
       break;
 
+    case "memoryAudio":
+      result = getMemoryAudioPayload(e.parameter.fileId);
+      break;
+
     default:
       result = {
         status: "error",
@@ -1534,6 +1538,50 @@ function getPublishedMemories() {
     status: "success",
     memories: memories
   };
+}
+
+function getMemoryAudioPayload(fileId) {
+  const cleanId = String(fileId || "").trim();
+
+  if (!cleanId || !isPublishedMemoryAudioFile(cleanId)) {
+    return { success: false, message: "Music file is not available." };
+  }
+
+  try {
+    const file = DriveApp.getFileById(cleanId);
+    const size = Number(file.getSize()) || 0;
+
+    if (size > 12 * 1024 * 1024) {
+      return { success: false, message: "Music file exceeds the 12 MB playback limit." };
+    }
+
+    const blob = file.getBlob();
+    return {
+      success: true,
+      name: file.getName(),
+      mimeType: blob.getContentType() || file.getMimeType() || "audio/mpeg",
+      data: Utilities.base64Encode(blob.getBytes())
+    };
+  } catch (error) {
+    return { success: false, message: "Unable to load the music file from Drive." };
+  }
+}
+
+function isPublishedMemoryAudioFile(fileId) {
+  const rows = getRows("Memories").filter(function(row) {
+    return isPublished(row);
+  });
+
+  return rows.some(function(row) {
+    try {
+      const music = JSON.parse(row.MusicJSON || "null");
+      if (music && String(music.fileId || "").trim() === fileId) return true;
+    } catch (error) {
+      // Continue checking the linked music field.
+    }
+
+    return extractDriveFileId(row.MusicURL) === fileId;
+  });
 }
 
 function createMemoryPost(payload) {

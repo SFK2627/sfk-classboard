@@ -387,12 +387,14 @@ function renderPostMusic(post) {
   const audible = music.muted === false;
   let player = "";
 
-  player = `
-    <audio class="postMusicPlayer" ${audible ? "" : "muted"} loop preload="metadata">
-      <source src="${escapeAttr(music.url)}" />
-      ${music.fallbackUrl ? `<source src="${escapeAttr(music.fallbackUrl)}" />` : ""}
-    </audio>
-  `;
+  player = music.kind === "drive-audio"
+    ? `<audio class="postMusicPlayer" ${audible ? "" : "muted"} loop preload="none" data-drive-audio="true"></audio>`
+    : `
+      <audio class="postMusicPlayer" ${audible ? "" : "muted"} loop preload="metadata">
+        <source src="${escapeAttr(music.url)}" />
+        ${music.fallbackUrl ? `<source src="${escapeAttr(music.fallbackUrl)}" />` : ""}
+      </audio>
+    `;
 
   return `
     <div class="postMusic" data-music-post="${escapeAttr(post.id)}">
@@ -478,35 +480,100 @@ function handleFeedClick(event) {
   if (action === "music") togglePostMusic(id, target);
 }
 
-function togglePostMusic(postId, button) {
+async function togglePostMusic(postId, button) {
   const post = memoryState.posts.find((item) => item.id === postId);
   const music = post?.music;
   const article = button.closest(".memoryPost");
   if (!music || !article) return;
 
-  const willPlay = music.muted !== false;
-  if (willPlay) muteAllOtherMedia("", -1);
-  music.muted = !willPlay;
-  music.started = willPlay;
-
   const audio = article.querySelector(".postMusicPlayer");
-  const iframe = article.querySelector('[data-music-youtube="true"]');
+  if (!audio) return;
 
-  if (audio) {
-    audio.muted = music.muted;
+  const willPlay = music.muted !== false;
+  if (!willPlay) {
+    music.muted = true;
+    audio.muted = true;
+    audio.pause();
+    updateMusicButton(button, false);
+    return;
+  }
+
+  muteAllOtherMedia("", -1);
+  button.disabled = true;
+  button.classList.add("loading");
+  const label = button.querySelector(".musicLabel");
+  if (label) label.textContent = "Loading...";
+
+  try {
+    await preparePostMusic(post, article);
+    music.muted = false;
+    music.started = true;
+    audio.muted = false;
     audio.volume = 1;
-    if (willPlay) audio.play().catch(() => showMemoryToast("Tap the music button again to play."));
-    else audio.pause();
+    await audio.play();
+    updateMusicButton(button, true);
+  } catch (error) {
+    music.muted = true;
+    music.started = false;
+    updateMusicButton(button, false);
+    showMemoryToast(error.message || "Unable to play this music file.");
+  } finally {
+    button.disabled = false;
+    button.classList.remove("loading");
+    if (label) label.textContent = "Music";
+  }
+}
+
+function updateMusicButton(button, audible) {
+  button.classList.toggle("audible", audible);
+  const sound = button.querySelector(".musicSound");
+  if (sound) sound.innerHTML = audible ? "&#128266;" : "&#128263;";
+  button.setAttribute("aria-label", audible ? "Mute background music" : "Play background music");
+}
+
+async function preparePostMusic(post, article) {
+  const music = post?.music;
+  const audio = article?.querySelector(".postMusicPlayer");
+  if (!music || !audio) throw new Error("Music player is unavailable.");
+
+  if (music.kind !== "drive-audio") return;
+
+  if (music.objectUrl) {
+    if (audio.src !== music.objectUrl) {
+      audio.src = music.objectUrl;
+      audio.load();
+    }
+    return;
   }
 
-  if (iframe) {
-    sendYouTubeCommand(iframe, music.muted ? "mute" : "unMute");
-    sendYouTubeCommand(iframe, willPlay ? "playVideo" : "pauseVideo");
+  if (!music.loadingPromise) {
+    music.loadingPromise = fetch(`${MEMORIES_API_URL}?type=memoryAudio&fileId=${encodeURIComponent(music.fileId)}`, {
+      cache: "no-store"
+    })
+      .then((response) => response.json())
+      .then((result) => {
+        if (!result.success || !result.data) {
+          throw new Error(result.message || "Unable to load background music.");
+        }
+
+        const binary = atob(result.data);
+        const bytes = new Uint8Array(binary.length);
+        for (let index = 0; index < binary.length; index++) {
+          bytes[index] = binary.charCodeAt(index);
+        }
+
+        const blob = new Blob([bytes], { type: result.mimeType || "audio/mpeg" });
+        music.objectUrl = URL.createObjectURL(blob);
+        return music.objectUrl;
+      })
+      .finally(() => {
+        music.loadingPromise = null;
+      });
   }
 
-  button.classList.toggle("audible", willPlay);
-  button.querySelector(".musicSound").innerHTML = willPlay ? "&#128266;" : "&#128263;";
-  button.setAttribute("aria-label", willPlay ? "Mute background music" : "Play background music");
+  const objectUrl = await music.loadingPromise;
+  audio.src = objectUrl;
+  audio.load();
 }
 
 function toggleMediaVolume(postId, mediaIndex, button) {
@@ -617,9 +684,15 @@ function observePostMusic() {
       const article = entry.target;
       const post = memoryState.posts.find((item) => item.id === article.dataset.postId);
       const music = post?.music;
-      if (!music || !music.started || music.muted) return;
-
       const visible = entry.isIntersecting && entry.intersectionRatio >= .45;
+      if (!music) return;
+
+      if (visible && music.kind === "drive-audio" && !music.objectUrl) {
+        preparePostMusic(post, article).catch(() => {});
+      }
+
+      if (!music.started || music.muted) return;
+
       const audio = article.querySelector(".postMusicPlayer");
       const iframe = article.querySelector('[data-music-youtube="true"]');
 

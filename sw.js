@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-classboard-v11-media-auth-music-fix";
+const CACHE_NAME = "sfk-classboard-v12-audio-blob-playback";
 const APP_SHELL = [
   "./",
   "./index.html",
