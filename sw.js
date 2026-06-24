@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-classboard-v16-tool-launcher";
+const CACHE_NAME = "sfk-classboard-v19-auto-music-folder";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -8,6 +8,7 @@ const APP_SHELL = [
   "./memories.html",
   "./memories.css",
   "./memories.js",
+  "./music-library.json",
   "./manifest.webmanifest",
   "./class-photo.jpg",
   "./icons/icon-192.png",

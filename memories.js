@@ -10,6 +10,9 @@ const MAX_MUSIC_BYTES = 10 * 1024 * 1024;
 const MAX_TOTAL_UPLOAD_BYTES = 22 * 1024 * 1024;
 const TARGET_IMAGE_BYTES = 420 * 1024;
 const MUSIC_LIBRARY_CACHE_KEY = "sfkMemoryMusicLibraryV1";
+const MUSIC_LIBRARY_TIMEOUT_MS = 3500;
+const GITHUB_MUSIC_LIBRARY_URL = "music-library.json";
+const MUSIC_FILE_EXTENSIONS = [".mp3", ".m4a", ".aac", ".ogg", ".wav", ".webm"];
 
 const memoryState = {
   posts: [],
@@ -177,10 +180,10 @@ function normalizePostMusic(raw) {
       kind: isDriveAudio ? "drive-audio" : raw.music.kind,
       fileId,
       url: isDriveAudio
-        ? (safeHttpUrl(raw.music.url) || safeHttpUrl(raw.music.downloadUrl) || getDriveAudioStreamUrl(fileId))
+        ? (getDriveStreamUrl(fileId) || safeHttpUrl(raw.music.url) || safeHttpUrl(raw.music.downloadUrl) || getDriveAudioStreamUrl(fileId))
         : safeHttpUrl(raw.music.url),
       fallbackUrl: isDriveAudio
-        ? (safeHttpUrl(raw.music.fallbackUrl) || getDriveStreamUrl(fileId))
+        ? (getDriveAudioStreamUrl(fileId) || safeHttpUrl(raw.music.fallbackUrl))
         : safeHttpUrl(raw.music.fallbackUrl),
       previewUrl: safeHttpUrl(raw.music.previewUrl),
       muted: true,
@@ -200,8 +203,8 @@ function normalizePostMusic(raw) {
       kind: "drive-audio",
       name: String(uploaded.name || "Background music"),
       fileId: String(uploaded.fileId),
-      url: safeHttpUrl(uploaded.downloadUrl) || getDriveAudioStreamUrl(uploaded.fileId),
-      fallbackUrl: getDriveStreamUrl(uploaded.fileId),
+      url: getDriveStreamUrl(uploaded.fileId) || safeHttpUrl(uploaded.downloadUrl) || getDriveAudioStreamUrl(uploaded.fileId),
+      fallbackUrl: getDriveAudioStreamUrl(uploaded.fileId),
       previewUrl: safeHttpUrl(uploaded.previewUrl),
       muted: true,
       started: false
@@ -218,8 +221,8 @@ function normalizePostMusic(raw) {
       kind: "drive-audio",
       name: "Background music",
       fileId: driveId,
-      url: safeHttpUrl(raw.MusicDownloadURL || raw.musicDownloadUrl) || getDriveAudioStreamUrl(driveId),
-      fallbackUrl: getDriveStreamUrl(driveId),
+      url: getDriveStreamUrl(driveId) || safeHttpUrl(raw.MusicDownloadURL || raw.musicDownloadUrl) || getDriveAudioStreamUrl(driveId),
+      fallbackUrl: getDriveAudioStreamUrl(driveId),
       previewUrl: url,
       muted: true,
       started: false
@@ -303,6 +306,40 @@ function getDriveAudioStreamUrl(fileId) {
     : "";
 }
 
+function getMusicDirectSources(music) {
+  const sources = [];
+  const add = (url) => {
+    const safe = safeHttpUrl(url);
+    if (safe && !sources.includes(safe)) sources.push(safe);
+  };
+
+  if (music?.fileId) {
+    add(getDriveStreamUrl(music.fileId));
+    add(getDriveAudioStreamUrl(music.fileId));
+  }
+
+  add(music?.url);
+  add(music?.downloadUrl);
+  add(music?.fallbackUrl);
+
+  return sources;
+}
+
+async function fetchJsonWithTimeout(url, options = {}, timeoutMs = MUSIC_LIBRARY_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+    return await response.json();
+  } finally {
+    window.clearTimeout(timer);
+  }
+}
+
 function getYouTubeId(url) {
   const match = String(url).match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([A-Za-z0-9_-]{6,})/i);
   return match ? match[1] : "";
@@ -317,7 +354,9 @@ function getDriveFileId(url) {
 
 function safeHttpUrl(value) {
   try {
-    const url = new URL(String(value || "").trim());
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+    const url = new URL(raw, window.location.href);
     if (["http:", "https:"].includes(url.protocol)) return url.href;
     if (url.protocol === "data:" && /^data:(image|video|audio)\//i.test(url.href)) return url.href;
     return "";
@@ -581,12 +620,15 @@ async function togglePostMusic(postId, button) {
     try {
       await audio.play();
     } catch (playError) {
-      if (music.kind !== "drive-audio" || !music.directPrepared || music.proxyPreferred) {
+      const triedNextSource = music.kind === "drive-audio"
+        ? prepareNextPostMusicSource(post, article)
+        : false;
+
+      if (!triedNextSource) {
         throw playError;
       }
 
       if (label) label.textContent = "Retrying...";
-      await preparePostMusicViaProxy(post, article);
       audio.muted = false;
       audio.volume = 1;
       await audio.play();
@@ -618,7 +660,7 @@ async function preparePostMusic(post, article) {
 
   if (music.kind !== "drive-audio") return;
 
-  const directSource = safeHttpUrl(music.url) || safeHttpUrl(music.fallbackUrl);
+  const directSources = getMusicDirectSources(music);
 
   if (music.objectUrl) {
     if (audio.src !== music.objectUrl) {
@@ -628,52 +670,40 @@ async function preparePostMusic(post, article) {
     return;
   }
 
-  if (directSource && !music.proxyPreferred) {
-    audio.src = directSource;
-    audio.load();
-    music.directPrepared = true;
+  if (!directSources.length) {
+    throw new Error("Music file is not available.");
+  }
+
+  if (music.directPrepared && audio.src) {
     return;
   }
 
-  if (!music.loadingPromise) {
-    music.loadingPromise = fetch(`${MEMORIES_API_URL}?type=memoryAudio&fileId=${encodeURIComponent(music.fileId)}`, {
-      cache: "no-store"
-    })
-      .then((response) => response.json())
-      .then((result) => {
-        if (!result.success || !result.data) {
-          throw new Error(result.message || "Unable to load background music.");
-        }
-
-        const binary = atob(result.data);
-        const bytes = new Uint8Array(binary.length);
-        for (let index = 0; index < binary.length; index++) {
-          bytes[index] = binary.charCodeAt(index);
-        }
-
-        const blob = new Blob([bytes], { type: result.mimeType || "audio/mpeg" });
-        music.objectUrl = URL.createObjectURL(blob);
-        return music.objectUrl;
-      })
-      .finally(() => {
-        music.loadingPromise = null;
-      });
-  }
-
-  const objectUrl = await music.loadingPromise;
-  audio.src = objectUrl;
+  music.directSources = directSources;
+  music.sourceIndex = 0;
+  audio.preload = "auto";
+  audio.src = directSources[0];
   audio.load();
+  music.directPrepared = true;
 }
 
-async function preparePostMusicViaProxy(post, article) {
+function prepareNextPostMusicSource(post, article) {
   const music = post?.music;
   const audio = article?.querySelector(".postMusicPlayer");
-  if (!music || !audio || music.kind !== "drive-audio" || !music.fileId) return false;
+  if (!music || !audio || music.kind !== "drive-audio") return false;
 
-  music.proxyPreferred = true;
-  music.directPrepared = false;
-  await preparePostMusic(post, article);
-  return Boolean(music.objectUrl);
+  const directSources = getMusicDirectSources(music);
+  const currentIndex = Number.isFinite(music.sourceIndex) ? music.sourceIndex : 0;
+  const nextIndex = currentIndex + 1;
+
+  if (!directSources[nextIndex]) return false;
+
+  music.directSources = directSources;
+  music.sourceIndex = nextIndex;
+  music.directPrepared = true;
+  audio.preload = "auto";
+  audio.src = directSources[nextIndex];
+  audio.load();
+  return true;
 }
 
 function toggleMediaVolume(postId, mediaIndex, button) {
@@ -1161,15 +1191,13 @@ async function loadMemoryMusicLibrary(force = false) {
   }
 
   select.disabled = true;
-  select.innerHTML = `<option value="">Loading Drive songs...</option>`;
+  select.innerHTML = `<option value="">Loading saved songs...</option>`;
 
   try {
-    const response = await fetch(`${MEMORIES_API_URL}?type=memoryMusicLibrary`, { cache: "no-store" });
-    const result = await response.json();
-    const songs = Array.isArray(result.songs) ? result.songs : [];
+    const songs = await loadGitHubMusicSongs();
 
-    if (result.status !== "success") {
-      throw new Error(result.message || "Unable to load Drive songs.");
+    if (songs.length === 0) {
+      throw new Error("No GitHub music songs found.");
     }
 
     setMusicLibraryOptions(select, songs);
@@ -1177,7 +1205,7 @@ async function loadMemoryMusicLibrary(force = false) {
 
     memoryState.musicLibraryLoaded = true;
   } catch (error) {
-    select.innerHTML = `<option value="">Drive song list unavailable</option>`;
+    select.innerHTML = `<option value="">No GitHub songs yet</option>`;
   } finally {
     select.disabled = false;
   }
@@ -1188,10 +1216,8 @@ async function refreshMemoryMusicLibrary() {
   if (!select) return;
 
   try {
-    const response = await fetch(`${MEMORIES_API_URL}?type=memoryMusicLibrary`, { cache: "no-store" });
-    const result = await response.json();
-    const songs = Array.isArray(result.songs) ? result.songs : [];
-    if (result.status !== "success") return;
+    const songs = await loadGitHubMusicSongs();
+    if (songs.length === 0) return;
 
     cacheMusicLibrary(songs);
     setMusicLibraryOptions(select, songs);
@@ -1200,11 +1226,93 @@ async function refreshMemoryMusicLibrary() {
   }
 }
 
+async function loadGitHubMusicSongs() {
+  const apiUrl = getGitHubMusicFolderApiUrl();
+
+  if (apiUrl) {
+    try {
+      const result = await fetchJsonWithTimeout(apiUrl, {
+        cache: "no-store",
+        headers: { "Accept": "application/vnd.github+json" }
+      });
+      const songs = normalizeGitHubContentsSongs(result);
+      if (songs.length > 0) return songs;
+    } catch (error) {
+      // Fall back to music-library.json when GitHub API is unavailable or rate-limited.
+    }
+  }
+
+  try {
+    const result = await fetchJsonWithTimeout(`${GITHUB_MUSIC_LIBRARY_URL}?v=${Date.now()}`, { cache: "no-store" });
+    return normalizeMusicLibrarySongs(result);
+  } catch (error) {
+    return [];
+  }
+}
+
+function getGitHubMusicFolderApiUrl() {
+  const hostMatch = window.location.hostname.match(/^(.+)\.github\.io$/i);
+  if (!hostMatch) return "";
+
+  const owner = hostMatch[1];
+  const repo = window.location.pathname.split("/").filter(Boolean)[0];
+  if (!owner || !repo) return "";
+
+  return `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/music`;
+}
+
+function normalizeGitHubContentsSongs(items) {
+  if (!Array.isArray(items)) return [];
+
+  return items
+    .filter(item => item && item.type === "file")
+    .filter(item => MUSIC_FILE_EXTENSIONS.some(ext => String(item.name || "").toLowerCase().endsWith(ext)))
+    .map((item, index) => ({
+      id: String(item.sha || item.name || `song-${index + 1}`),
+      name: makeSongName(item.name || `Song ${index + 1}`),
+      url: safeHttpUrl(`music/${item.name || ""}`) || safeHttpUrl(item.download_url || "")
+    }))
+    .filter(song => song.url)
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function normalizeMusicLibrarySongs(result) {
+  const source = Array.isArray(result)
+    ? result
+    : Array.isArray(result?.songs)
+      ? result.songs
+      : [];
+
+  return source
+    .map((song, index) => {
+      const file = String(song.file || song.filename || "").trim();
+      const url = String(song.url || (file ? `music/${file}` : "")).trim();
+      const safeUrl = safeHttpUrl(url);
+      if (!safeUrl) return null;
+
+      return {
+        id: String(song.id || file || `song-${index + 1}`).trim(),
+        name: String(song.name || song.title || file || `Song ${index + 1}`).trim(),
+        url: safeUrl
+      };
+    })
+    .filter(Boolean);
+}
+
+function makeSongName(filename) {
+  return String(filename || "")
+    .replace(/\.[^.]+$/, "")
+    .replace(/[-_]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, letter => letter.toUpperCase()) || "Untitled song";
+}
+
 function setMusicLibraryOptions(select, songs) {
   if (!select) return;
 
   if (!Array.isArray(songs) || songs.length === 0) {
-    select.innerHTML = `<option value="">No Drive songs found</option>`;
+    select.innerHTML = `<option value="">No GitHub songs yet</option>`;
     return;
   }
 
@@ -1213,7 +1321,7 @@ function setMusicLibraryOptions(select, songs) {
     ${songs.map(song => {
       const id = escapeAttr(song.id || "");
       const name = escapeHtml(song.name || "Untitled song");
-      const url = escapeAttr(song.url || `https://drive.google.com/file/d/${song.id || ""}/view`);
+      const url = escapeAttr(song.url || "");
       return `<option value="${id}" data-url="${url}">${name}</option>`;
     }).join("")}
   `;

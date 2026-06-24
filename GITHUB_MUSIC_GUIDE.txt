@@ -1,0 +1,20 @@
+SFK Memories GitHub Music Library
+
+Goal:
+Use GitHub Pages as the music host instead of Google Drive or Apps Script.
+This is faster, simpler, and still no billing.
+
+How to add songs:
+1. Put your MP3 or M4A files inside the music folder.
+   Example:
+   music/kindness-theme.mp3
+
+2. That is usually enough. The Memories dropdown auto-lists audio files in /music.
+
+Optional fallback:
+If GitHub API is unavailable or rate-limited, you may still list songs manually in music-library.json.
+
+Notes:
+- Avoid spaces in file names. Use dashes instead.
+- The dropdown in Memories reads the GitHub /music folder automatically.
+- Google Drive links can still be pasted manually, but GitHub music is the recommended path.
