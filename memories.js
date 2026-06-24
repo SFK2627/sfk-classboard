@@ -305,6 +305,12 @@ function getDriveAudioStreamUrl(fileId) {
     : "";
 }
 
+function getMemoryAudioProxyUrl(fileId) {
+  return fileId
+    ? `${MEMORIES_API_URL}?type=memoryAudio&fileId=${encodeURIComponent(fileId)}`
+    : "";
+}
+
 function getMusicDirectSources(music) {
   const sources = [];
   const add = (url) => {
@@ -340,6 +346,39 @@ function getManualMusicSources(url) {
   }
 
   return sources;
+}
+
+async function fetchDriveAudioObjectUrl(fileId) {
+  const url = getMemoryAudioProxyUrl(fileId);
+  if (!url) throw new Error("Music file is not available.");
+
+  const response = await fetch(url, { cache: "no-store" });
+  if (!response.ok) throw new Error(`Music file request failed (${response.status}).`);
+
+  const result = await response.json();
+  if (!result.success || !result.data) {
+    throw new Error(result.message || "Music file is not available.");
+  }
+
+  const blob = base64ToBlob(result.data, result.mimeType || "audio/mpeg");
+  return URL.createObjectURL(blob);
+}
+
+function base64ToBlob(base64, mimeType) {
+  const binary = atob(String(base64 || ""));
+  const chunks = [];
+  const chunkSize = 8192;
+
+  for (let index = 0; index < binary.length; index += chunkSize) {
+    const slice = binary.slice(index, index + chunkSize);
+    const bytes = new Uint8Array(slice.length);
+    for (let byteIndex = 0; byteIndex < slice.length; byteIndex++) {
+      bytes[byteIndex] = slice.charCodeAt(byteIndex);
+    }
+    chunks.push(bytes);
+  }
+
+  return new Blob(chunks, { type: mimeType || "audio/mpeg" });
 }
 
 function testAudioSource(url, timeoutMs = MUSIC_LINK_TEST_TIMEOUT_MS) {
@@ -784,6 +823,19 @@ async function preparePostMusic(post, article) {
       audio.load();
     }
     return;
+  }
+
+  if (music.fileId && !music.proxyFailed) {
+    try {
+      music.objectUrl = await fetchDriveAudioObjectUrl(music.fileId);
+      audio.preload = "auto";
+      audio.src = music.objectUrl;
+      audio.load();
+      music.directPrepared = true;
+      return;
+    } catch (error) {
+      music.proxyFailed = true;
+    }
   }
 
   if (!directSources.length) {
@@ -1398,6 +1450,26 @@ async function testMusicLink() {
   button.disabled = true;
   button.textContent = "Testing...";
   message.textContent = "Checking if this link can load as audio...";
+
+  const driveId = getDriveFileId(rawUrl);
+  if (driveId) {
+    let objectUrl = "";
+    try {
+      message.textContent = "Checking Google Drive audio through the app...";
+      objectUrl = await fetchDriveAudioObjectUrl(driveId);
+      await testAudioSource(objectUrl);
+      message.className = "musicTestMessage ok";
+      message.textContent = "Playable through app audio proxy. This Drive music should work.";
+      renderComposePreview();
+      button.disabled = false;
+      button.textContent = "Test Music Link";
+      return;
+    } catch (error) {
+      // Continue to the direct Drive URLs below.
+    } finally {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    }
+  }
 
   for (let index = 0; index < sources.length; index++) {
     try {

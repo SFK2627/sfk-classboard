@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-classboard-v26-pause-media-on-page-hide";
+const CACHE_NAME = "sfk-classboard-v27-drive-audio-proxy";
 const APP_SHELL = [
   "./",
   "./index.html",
