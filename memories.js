@@ -2,11 +2,12 @@ const MEMORIES_API_URL = "https://script.google.com/macros/s/AKfycbzCjWVnO-ZNvKT
 const MEMORY_CACHE_KEY = "sfkMemoriesCacheV1";
 const HEARTED_MEMORY_KEY = "sfkHeartedMemoriesV1";
 const MEMORY_AUTH_SESSION_KEY = "sfkMemoriesAuthSessionV1";
+const MEMORIES_SEEN_IDS_KEY = "sfkMemoriesSeenPostIdsV1";
 const MAX_MEDIA_FILES = 6;
-const MAX_VIDEO_BYTES = 750 * 1024;
-const MAX_MUSIC_BYTES = 750 * 1024;
-const MAX_TOTAL_PAYLOAD_CHARS = 720 * 1024;
-const TARGET_IMAGE_BYTES = 115 * 1024;
+const MAX_VIDEO_BYTES = 12 * 1024 * 1024;
+const MAX_MUSIC_BYTES = 10 * 1024 * 1024;
+const MAX_TOTAL_UPLOAD_BYTES = 22 * 1024 * 1024;
+const TARGET_IMAGE_BYTES = 420 * 1024;
 
 const memoryState = {
   posts: [],
@@ -17,7 +18,8 @@ const memoryState = {
   viewerMedia: [],
   viewerIndex: 0,
   requestedPostHandled: false,
-  suppressClickUntil: 0
+  suppressClickUntil: 0,
+  musicLibraryLoaded: false
 };
 
 let touchGesture = null;
@@ -49,6 +51,7 @@ function bindMemoryEvents() {
   document.getElementById("changeRoleButton")?.addEventListener("click", resetMemoryAuth);
   document.getElementById("memoryFiles")?.addEventListener("change", handleMemoryFiles);
   document.getElementById("memoryMusicFile")?.addEventListener("change", handleMusicFile);
+  document.getElementById("memoryMusicLibrary")?.addEventListener("change", handleMusicLibraryChange);
   document.getElementById("memoryForm")?.addEventListener("submit", submitMemoryPost);
   const feed = document.getElementById("memoryFeed");
   feed?.addEventListener("click", handleFeedClick);
@@ -91,6 +94,7 @@ async function loadMemories() {
 
     memoryState.posts = result.memories.map(normalizeMemoryPost);
     localStorage.setItem(MEMORY_CACHE_KEY, JSON.stringify(memoryState.posts));
+    markLoadedMemoriesSeen(memoryState.posts);
     renderMemories();
   } catch (error) {
     console.error("Memories load failed:", error);
@@ -98,6 +102,14 @@ async function loadMemories() {
       setFeedStatus("Memories will appear after the updated Apps Script is deployed.");
     }
   }
+}
+
+function markLoadedMemoriesSeen(posts) {
+  const ids = (posts || [])
+    .map(post => String(post.id || "").trim())
+    .filter(Boolean);
+
+  localStorage.setItem(MEMORIES_SEEN_IDS_KEY, JSON.stringify(Array.from(new Set(ids)).slice(0, 500)));
 }
 
 function renderCachedMemories() {
@@ -338,7 +350,7 @@ function renderMemoryPost(post) {
         <div class="postAvatar">${avatar}</div>
         <div class="postIdentity">
           <strong>${escapeHtml(post.postedBy)}</strong>
-          <small><span class="postRole">${escapeHtml(post.role)}</span> &middot; ${escapeHtml(post.date || "SFK 2026-2027")}</small>
+          <small><span class="postRole">${escapeHtml(post.role)}</span></small>
         </div>
         ${menu}
       </header>
@@ -1056,7 +1068,55 @@ function showMemoryForm() {
   document.getElementById("memoryAuthStep").hidden = true;
   document.getElementById("memoryForm").hidden = false;
   document.getElementById("postingRole").textContent = memoryState.auth?.role || "Officer";
+  loadMemoryMusicLibrary();
   window.setTimeout(() => document.getElementById("memoryTitle")?.focus(), 80);
+}
+
+async function loadMemoryMusicLibrary(force = false) {
+  const select = document.getElementById("memoryMusicLibrary");
+  if (!select) return;
+  if (memoryState.musicLibraryLoaded && !force) return;
+
+  select.disabled = true;
+  select.innerHTML = `<option value="">Loading Drive songs...</option>`;
+
+  try {
+    const response = await fetch(`${MEMORIES_API_URL}?type=memoryMusicLibrary`, { cache: "no-store" });
+    const result = await response.json();
+    const songs = Array.isArray(result.songs) ? result.songs : [];
+
+    if (result.status !== "success") {
+      throw new Error(result.message || "Unable to load Drive songs.");
+    }
+
+    if (songs.length === 0) {
+      select.innerHTML = `<option value="">No Drive songs found</option>`;
+    } else {
+      select.innerHTML = `
+        <option value="">No saved song</option>
+        ${songs.map(song => {
+          const id = escapeAttr(song.id || "");
+          const name = escapeHtml(song.name || "Untitled song");
+          const url = escapeAttr(song.url || `https://drive.google.com/file/d/${song.id || ""}/view`);
+          return `<option value="${id}" data-url="${url}">${name}</option>`;
+        }).join("")}
+      `;
+    }
+
+    memoryState.musicLibraryLoaded = true;
+  } catch (error) {
+    select.innerHTML = `<option value="">Drive song list unavailable</option>`;
+  } finally {
+    select.disabled = false;
+  }
+}
+
+function handleMusicLibraryChange(event) {
+  const option = event.target.selectedOptions?.[0];
+  const input = document.getElementById("memoryMusicUrl");
+  if (!input || !option || !option.value) return;
+
+  input.value = option.dataset.url || `https://drive.google.com/file/d/${option.value}/view`;
 }
 
 async function unlockMemoryPosting() {
@@ -1128,7 +1188,7 @@ function handleMusicFile(event) {
   if (!label) return;
 
   if (!file) {
-    label.textContent = "Tiny MP3/M4A, up to 750 KB";
+    label.textContent = "MP3/M4A, up to 10 MB";
     return;
   }
 
@@ -1179,7 +1239,7 @@ async function submitMemoryPost(event) {
     }
 
     const mediaFiles = [];
-    let payloadChars = 0;
+    let uploadBytes = 0;
 
     for (const file of memoryState.selectedFiles) {
       if (file.type.startsWith("video/") && file.size > MAX_VIDEO_BYTES) {
@@ -1187,9 +1247,9 @@ async function submitMemoryPost(event) {
       }
 
       const prepared = await prepareMediaFile(file);
-      payloadChars += prepared.data.length;
-      if (payloadChars > MAX_TOTAL_PAYLOAD_CHARS) {
-        throw new Error("Too many photos for the no-billing version. Try 1-4 photos only, or use a Drive/YouTube link for videos.");
+      uploadBytes += Math.ceil(prepared.data.length * .75);
+      if (uploadBytes > MAX_TOTAL_UPLOAD_BYTES) {
+        throw new Error("The selected media is too large for one post. Use fewer files or use a Drive/YouTube link for videos.");
       }
       mediaFiles.push(prepared);
     }
@@ -1197,10 +1257,14 @@ async function submitMemoryPost(event) {
     let preparedMusic = null;
     if (musicFile) {
       if (musicFile.size > MAX_MUSIC_BYTES) {
-        throw new Error("Without billing/Storage, uploaded music must be 750 KB or smaller. For full songs, use a direct MP3/M4A link.");
+        throw new Error("Background music must be 10 MB or smaller.");
       }
 
       preparedMusic = await fileToPayload(musicFile);
+      uploadBytes += Math.ceil(preparedMusic.data.length * .75);
+      if (uploadBytes > MAX_TOTAL_UPLOAD_BYTES) {
+        throw new Error("The total upload is too large for one post. Use fewer files or choose a Drive song.");
+      }
     }
 
     button.textContent = "Sharing...";
@@ -1310,7 +1374,9 @@ function resetMemoryForm() {
   memoryState.selectedFiles = [];
   document.getElementById("mediaPreview").innerHTML = "";
   document.getElementById("postMessage").textContent = "";
-  document.getElementById("musicFileName").textContent = "Tiny MP3/M4A, up to 750 KB";
+  document.getElementById("musicFileName").textContent = "MP3/M4A, up to 10 MB";
+  const musicLibrary = document.getElementById("memoryMusicLibrary");
+  if (musicLibrary) musicLibrary.value = "";
   setDefaultMemoryDate();
 }
 

@@ -5,6 +5,7 @@ const ANNOUNCEMENT_ROTATE_MS = 10000;
 const BIRTHDAY_ROTATE_MS = 30000;
 const CACHE_KEY = "sfkClassBoardData";
 const ANNOUNCEMENT_HEARTS_KEY = "sfkClassBoardHeartedAnnouncements";
+const MEMORIES_SEEN_IDS_KEY = "sfkMemoriesSeenPostIdsV1";
 
 /* PRAYER AUDIO PLAYER SYSTEM
    No autoplay / no bell.
@@ -77,8 +78,10 @@ function initClassBoard() {
   }
 
   loadClassBoard();
+  loadMemoriesUnreadBadge();
 
   setInterval(loadClassBoard, DATA_REFRESH_MS);
+  setInterval(loadMemoriesUnreadBadge, 60000);
   setInterval(rotateAnnouncements, ANNOUNCEMENT_ROTATE_MS);
   setInterval(rotateBirthdays, BIRTHDAY_ROTATE_MS);
   window.addEventListener("resize", fitAnnouncementTextToCard);
@@ -135,6 +138,60 @@ async function loadClassBoard() {
   } finally {
     isFetching = false;
   }
+}
+
+async function loadMemoriesUnreadBadge() {
+  const badge = document.getElementById("memoriesUnreadBadge");
+  if (!badge) return;
+
+  try {
+    const response = await fetch(`${API_URL}?type=memories`, { cache: "no-store" });
+    const result = await response.json();
+    const posts = Array.isArray(result.memories) ? result.memories : [];
+    const ids = posts.map(getMemoryPostId).filter(Boolean);
+    const savedSeen = localStorage.getItem(MEMORIES_SEEN_IDS_KEY);
+
+    if (!savedSeen) {
+      saveSeenMemoryIds(ids);
+      renderMemoriesUnreadBadge(0);
+      return;
+    }
+
+    const seen = getSeenMemoryIds();
+    const unread = ids.filter(id => !seen.includes(id)).length;
+    renderMemoriesUnreadBadge(unread);
+  } catch (error) {
+    renderMemoriesUnreadBadge(0);
+  }
+}
+
+function getMemoryPostId(item) {
+  return String(item?.ID || item?.Id || item?.id || "").trim();
+}
+
+function getSeenMemoryIds() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(MEMORIES_SEEN_IDS_KEY) || "[]");
+    return Array.isArray(parsed) ? parsed.map(String) : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function saveSeenMemoryIds(ids) {
+  localStorage.setItem(
+    MEMORIES_SEEN_IDS_KEY,
+    JSON.stringify(Array.from(new Set((ids || []).map(String).filter(Boolean))).slice(0, 500))
+  );
+}
+
+function renderMemoriesUnreadBadge(count) {
+  const badge = document.getElementById("memoriesUnreadBadge");
+  if (!badge) return;
+
+  const safeCount = Math.max(0, Number(count) || 0);
+  badge.hidden = safeCount === 0;
+  badge.textContent = safeCount > 99 ? "99+" : String(safeCount);
 }
 
 function renderDashboard(data) {
@@ -824,6 +881,11 @@ function markAnnouncementHearted(id) {
   saveHeartedAnnouncements(ids);
 }
 
+function unmarkAnnouncementHearted(id) {
+  const cleanId = String(id || "");
+  saveHeartedAnnouncements(getHeartedAnnouncements().filter(item => item !== cleanId));
+}
+
 function escapeJsAttribute(value) {
   return String(value || "")
     .replace(/\\/g, "\\\\")
@@ -836,10 +898,18 @@ function escapeJsAttribute(value) {
 async function heartAnnouncement(id) {
   id = String(id || "").trim();
 
-  if (!id || isAnnouncementHearted(id)) return;
+  if (!id) return;
 
-  markAnnouncementHearted(id);
-  updateAnnouncementHeartCountLocal(id, 1);
+  const wasHearted = isAnnouncementHearted(id);
+  const delta = wasHearted ? -1 : 1;
+
+  if (wasHearted) {
+    unmarkAnnouncementHearted(id);
+  } else {
+    markAnnouncementHearted(id);
+  }
+
+  updateAnnouncementHeartCountLocal(id, delta);
   renderDashboard(latestData);
 
   try {
@@ -848,7 +918,8 @@ async function heartAnnouncement(id) {
       body: JSON.stringify({
         type: "announcementHeart",
         payload: {
-          announcementId: id
+          announcementId: id,
+          delta
         }
       })
     });
@@ -861,6 +932,13 @@ async function heartAnnouncement(id) {
     }
   } catch (error) {
     console.warn("Heart acknowledgement sync failed:", error);
+    if (wasHearted) {
+      markAnnouncementHearted(id);
+    } else {
+      unmarkAnnouncementHearted(id);
+    }
+    updateAnnouncementHeartCountLocal(id, -delta);
+    renderDashboard(latestData);
   }
 }
 

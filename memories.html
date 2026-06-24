@@ -141,12 +141,18 @@
 
         <div class="musicFields">
           <div class="musicFieldsTitle"><span>&#9835;</span><div><strong>Background music</strong><small>Optional. Continues while swiping photos.</small></div></div>
+          <label>Choose saved song
+            <select id="memoryMusicLibrary">
+              <option value="">Loading Drive songs...</option>
+            </select>
+            <small class="fieldHint">Put songs in a Google Drive folder named SFK ClassBoard Music.</small>
+          </label>
           <label>Music link
             <input id="memoryMusicUrl" type="url" placeholder="Direct MP3/M4A URL, e.g. GitHub Pages music link" />
-            <small class="fieldHint">Google Drive music can be slow. For no-billing setup, use a direct MP3/M4A link.</small>
+            <small class="fieldHint">Google Drive links will use the Apps Script audio helper.</small>
           </label>
           <label class="smallUploadButton" for="memoryMusicFile">
-            <span>+ Upload tiny audio</span><small id="musicFileName">Tiny MP3/M4A, up to 750 KB</small>
+            <span>+ Upload audio</span><small id="musicFileName">MP3/M4A, up to 10 MB</small>
             <input id="memoryMusicFile" type="file" accept="audio/*" />
           </label>
         </div>

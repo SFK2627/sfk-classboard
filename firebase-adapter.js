@@ -87,13 +87,13 @@
 
     try {
       const parsed = new URL(url);
-      if (parsed.searchParams.get("type") === "memoryAudio") {
+      if (["memoryAudio", "memoryMusicLibrary"].includes(parsed.searchParams.get("type"))) {
         return originalFetch(input, options);
       }
 
       if (options && String(options.method || "GET").toUpperCase() === "POST") {
         const body = JSON.parse(options.body || "{}");
-        return jsonResponse(await handlePost(body));
+        return jsonResponse(await handlePost(body, url));
       }
 
       return jsonResponse(await handleGet(parsed.searchParams));
@@ -117,7 +117,7 @@
     return { status: "error", message: "Invalid Firebase endpoint." };
   }
 
-  async function handlePost(body) {
+  async function handlePost(body, sourceUrl) {
     const type = body.type;
     const payload = body.payload || {};
 
@@ -127,12 +127,12 @@
     if (type === "adminBatchUnpublish" || type === "officerBatchHide") return batchRows(payload, unpublishRow);
     if (type === "adminBatchDelete") return batchRows(payload, deleteRow);
     if (type === "officerAdd") return addTypedRow(payload.kind, payload);
-    if (type === "announcementHeart") return recordHeart("Announcements", payload.announcementId || payload.AnnouncementID || payload.ID || payload.id);
-    if (type === "memoryHeart") return recordHeart("Memories", payload.memoryId || payload.MemoryID || payload.ID || payload.id);
+    if (type === "announcementHeart") return recordHeart("Announcements", payload.announcementId || payload.AnnouncementID || payload.ID || payload.id, payload.delta);
+    if (type === "memoryHeart") return recordHeart("Memories", payload.memoryId || payload.MemoryID || payload.ID || payload.id, payload.delta);
     if (type === "memoryAuth") return checkMemoryAuth(payload);
     if (type === "memoryHide") return hideMemory(payload.memoryId || payload.MemoryID || payload.ID || payload.id);
     if (type === "memoryDelete") return deleteMemory(payload.memoryId || payload.MemoryID || payload.ID || payload.id);
-    if (type === "memoryCreate") return createMemory(payload);
+    if (type === "memoryCreate") return createMemory(payload, sourceUrl);
 
     if (TYPE_TO_SHEET[type]) return addTypedRow(type, payload);
 
@@ -294,14 +294,15 @@
     return row;
   }
 
-  async function recordHeart(sheetName, id) {
+  async function recordHeart(sheetName, id, deltaValue) {
     if (!id) return { success: false, message: "Missing record ID." };
     const meta = getSheetMeta(sheetName);
     const ref = db.collection(meta.collection).doc(String(id));
+    const delta = Number(deltaValue) < 0 ? -1 : 1;
     let count = 0;
     await db.runTransaction(async transaction => {
       const doc = await transaction.get(ref);
-      count = (Number((doc.exists && doc.data().HeartCount) || 0) || 0) + 1;
+      count = Math.max(0, (Number((doc.exists && doc.data().HeartCount) || 0) || 0) + delta);
       transaction.set(ref, withMeta({ HeartCount: count }, false), { merge: true });
     });
     return { success: true, count };
@@ -318,10 +319,11 @@
     };
   }
 
-  async function createMemory(payload) {
+  async function createMemory(payload, sourceUrl) {
     const id = generateId("memory");
-    const media = buildMemoryMedia(payload.MediaFiles || []);
-    const music = buildMemoryMusic(payload);
+    const uploaded = await uploadMemoryAssets(payload, id, sourceUrl);
+    const media = uploaded.media || [];
+    const music = uploaded.music || (payload.MusicFile ? null : buildMemoryMusic(payload));
 
     const row = {
       ID: id,
@@ -343,6 +345,33 @@
 
     await db.collection(SHEETS.Memories.collection).doc(id).set(withMeta(row));
     return { success: true, id, message: "Memory posted." };
+  }
+
+  async function uploadMemoryAssets(payload, memoryId, sourceUrl) {
+    const hasMediaFiles = Array.isArray(payload.MediaFiles) && payload.MediaFiles.length > 0;
+    const hasMusicFile = Boolean(payload.MusicFile && payload.MusicFile.data);
+    if (!hasMediaFiles && !hasMusicFile) {
+      return { media: [], music: null };
+    }
+
+    const response = await originalFetch(sourceUrl, {
+      method: "POST",
+      body: JSON.stringify({
+        type: "memoryUploadAssets",
+        payload: {
+          Role: payload.Role,
+          Pin: payload.Pin,
+          MemoryID: memoryId,
+          MediaFiles: payload.MediaFiles || [],
+          MusicFile: payload.MusicFile || null
+        }
+      })
+    });
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.message || "Unable to upload memory media to Drive.");
+    }
+    return result;
   }
 
   async function hideMemory(id) {
