@@ -3,6 +3,7 @@ const MEMORY_CACHE_KEY = "sfkMemoriesCacheV1";
 const HEARTED_MEMORY_KEY = "sfkHeartedMemoriesV1";
 const MEMORY_AUTH_SESSION_KEY = "sfkMemoriesAuthSessionV1";
 const MEMORIES_SEEN_IDS_KEY = "sfkMemoriesSeenPostIdsV1";
+const MEMORY_POSTED_BY_KEY = "sfkMemoryPostedByV1";
 const MAX_MEDIA_FILES = 6;
 const MAX_VIDEO_BYTES = 12 * 1024 * 1024;
 const MAX_MUSIC_BYTES = 10 * 1024 * 1024;
@@ -16,6 +17,7 @@ const memoryState = {
   carousel: new Map(),
   auth: null,
   selectedFiles: [],
+  coverIndex: 0,
   viewerMedia: [],
   viewerIndex: 0,
   requestedPostHandled: false,
@@ -51,9 +53,13 @@ function bindMemoryEvents() {
   document.getElementById("unlockPostingButton")?.addEventListener("click", unlockMemoryPosting);
   document.getElementById("changeRoleButton")?.addEventListener("click", resetMemoryAuth);
   document.getElementById("memoryFiles")?.addEventListener("change", handleMemoryFiles);
+  document.getElementById("mediaPreview")?.addEventListener("click", handleMediaPreviewAction);
   document.getElementById("memoryMusicFile")?.addEventListener("change", handleMusicFile);
   document.getElementById("memoryMusicLibrary")?.addEventListener("change", handleMusicLibraryChange);
   document.getElementById("memoryForm")?.addEventListener("submit", submitMemoryPost);
+  ["memoryTitle", "memoryDate", "memoryPostedBy", "memoryCaption", "memoryVideoUrl", "memoryMusicUrl"].forEach((id) => {
+    document.getElementById(id)?.addEventListener("input", renderComposePreview);
+  });
   const feed = document.getElementById("memoryFeed");
   feed?.addEventListener("click", handleFeedClick);
   feed?.addEventListener("touchstart", startFeedSwipe, { passive: true });
@@ -155,6 +161,7 @@ function normalizeMemoryPost(raw) {
     role: String(raw.Role || "Officer").trim(),
     heartCount: Math.max(0, Number(raw.HeartCount || 0)),
     createdAt: String(raw.CreatedAt || "").trim(),
+    videoUrl: String(raw.VideoURL || raw.videoUrl || "").trim(),
     media,
     music
   };
@@ -1134,7 +1141,9 @@ function showMemoryForm() {
   document.getElementById("memoryAuthStep").hidden = true;
   document.getElementById("memoryForm").hidden = false;
   document.getElementById("postingRole").textContent = memoryState.auth?.role || "Officer";
+  restoreRememberedPostedBy();
   loadMemoryMusicLibrary();
+  renderComposePreview();
   window.setTimeout(() => document.getElementById("memoryTitle")?.focus(), 80);
 }
 
@@ -1234,6 +1243,7 @@ function handleMusicLibraryChange(event) {
   if (!input || !option || !option.value) return;
 
   input.value = option.dataset.url || `https://drive.google.com/file/d/${option.value}/view`;
+  renderComposePreview();
 }
 
 async function unlockMemoryPosting() {
@@ -1292,7 +1302,9 @@ function restoreMemoryAuth() {
 function handleMemoryFiles(event) {
   const files = Array.from(event.target.files || []).slice(0, MAX_MEDIA_FILES);
   memoryState.selectedFiles = files;
+  memoryState.coverIndex = 0;
   renderSelectedMediaPreview();
+  renderComposePreview();
 
   if ((event.target.files || []).length > MAX_MEDIA_FILES) {
     showMemoryToast(`Only the first ${MAX_MEDIA_FILES} files will be uploaded.`);
@@ -1312,20 +1324,154 @@ function handleMusicFile(event) {
   label.textContent = file.size > MAX_MUSIC_BYTES
     ? `${file.name} is too large`
     : file.name;
+  renderComposePreview();
 }
 
 function renderSelectedMediaPreview() {
   const container = document.getElementById("mediaPreview");
   if (!container) return;
 
-  container.innerHTML = memoryState.selectedFiles.map((file) => {
+  if (memoryState.selectedFiles.length === 0) {
+    container.innerHTML = "";
+    return;
+  }
+
+  container.innerHTML = memoryState.selectedFiles.map((file, index) => {
     const url = URL.createObjectURL(file);
     const preview = file.type.startsWith("video/")
       ? `<video src="${escapeAttr(url)}" muted></video>`
       : `<img src="${escapeAttr(url)}" alt="" />`;
 
-    return `<div class="previewItem">${preview}<span>${escapeHtml(file.name)}</span></div>`;
+    return `
+      <div class="previewItem ${index === memoryState.coverIndex ? "isCover" : ""}" data-preview-index="${index}">
+        ${preview}
+        <span>${escapeHtml(file.name)}</span>
+        <div class="previewControls">
+          <button type="button" data-preview-action="cover" ${index === memoryState.coverIndex ? "disabled" : ""}>Cover</button>
+          <button type="button" data-preview-action="left" ${index === 0 ? "disabled" : ""}>&#8592;</button>
+          <button type="button" data-preview-action="right" ${index === memoryState.selectedFiles.length - 1 ? "disabled" : ""}>&#8594;</button>
+          <button type="button" data-preview-action="remove">Remove</button>
+        </div>
+      </div>
+    `;
   }).join("");
+}
+
+function handleMediaPreviewAction(event) {
+  const button = event.target.closest("[data-preview-action]");
+  const item = event.target.closest("[data-preview-index]");
+  if (!button || !item) return;
+
+  const index = Number(item.dataset.previewIndex);
+  if (!Number.isInteger(index) || !memoryState.selectedFiles[index]) return;
+
+  const action = button.dataset.previewAction;
+  if (action === "cover") {
+    moveSelectedFile(index, 0);
+    memoryState.coverIndex = 0;
+  } else if (action === "left") {
+    moveSelectedFile(index, index - 1);
+  } else if (action === "right") {
+    moveSelectedFile(index, index + 1);
+  } else if (action === "remove") {
+    memoryState.selectedFiles.splice(index, 1);
+    memoryState.coverIndex = Math.min(memoryState.coverIndex, Math.max(0, memoryState.selectedFiles.length - 1));
+  }
+
+  syncMemoryFileInput();
+  renderSelectedMediaPreview();
+  renderComposePreview();
+}
+
+function moveSelectedFile(fromIndex, toIndex) {
+  if (toIndex < 0 || toIndex >= memoryState.selectedFiles.length || fromIndex === toIndex) return;
+
+  const [file] = memoryState.selectedFiles.splice(fromIndex, 1);
+  memoryState.selectedFiles.splice(toIndex, 0, file);
+
+  if (memoryState.coverIndex === fromIndex) {
+    memoryState.coverIndex = toIndex;
+  } else if (fromIndex < memoryState.coverIndex && toIndex >= memoryState.coverIndex) {
+    memoryState.coverIndex -= 1;
+  } else if (fromIndex > memoryState.coverIndex && toIndex <= memoryState.coverIndex) {
+    memoryState.coverIndex += 1;
+  }
+}
+
+function syncMemoryFileInput() {
+  const input = document.getElementById("memoryFiles");
+  if (!input || typeof DataTransfer === "undefined") return;
+
+  const transfer = new DataTransfer();
+  memoryState.selectedFiles.forEach((file) => transfer.items.add(file));
+  input.files = transfer.files;
+}
+
+function renderComposePreview() {
+  const container = document.getElementById("composePreview");
+  if (!container) return;
+
+  const title = document.getElementById("memoryTitle")?.value.trim() || "Untitled Memory";
+  const caption = document.getElementById("memoryCaption")?.value.trim() || "";
+  const postedBy = document.getElementById("memoryPostedBy")?.value.trim() || "SFK";
+  const date = document.getElementById("memoryDate")?.value || "";
+  const videoUrl = document.getElementById("memoryVideoUrl")?.value.trim() || "";
+  const musicUrl = document.getElementById("memoryMusicUrl")?.value.trim() || "";
+  const musicFile = document.getElementById("memoryMusicFile")?.files?.[0] || null;
+  const firstFile = memoryState.selectedFiles[0] || null;
+
+  let mediaPreview = `<div class="composePreviewMedia textOnly"><span>SFK Memory</span></div>`;
+  if (firstFile) {
+    const url = URL.createObjectURL(firstFile);
+    mediaPreview = firstFile.type.startsWith("video/")
+      ? `<video class="composePreviewMedia" src="${escapeAttr(url)}" muted></video>`
+      : `<img class="composePreviewMedia" src="${escapeAttr(url)}" alt="" />`;
+  } else if (videoUrl) {
+    mediaPreview = `<div class="composePreviewMedia linked"><span>Linked video</span></div>`;
+  }
+
+  const musicLabel = musicFile
+    ? musicFile.name
+    : musicUrl
+      ? "Linked background music"
+      : "";
+
+  container.innerHTML = `
+    <div class="composePreviewTitle">
+      <strong>Post preview</strong>
+      <small>${memoryState.selectedFiles.length > 1 ? "Cover is the first item below." : "Preview before posting."}</small>
+    </div>
+    <article class="composePreviewCard">
+      <header><span class="postAvatar">${escapeHtml(getInitials(postedBy))}</span><div><strong>${escapeHtml(postedBy)}</strong><small>${escapeHtml(memoryState.auth?.role || "Officer")}</small></div></header>
+      ${mediaPreview}
+      <div class="composePreviewDetails">
+        <strong>${escapeHtml(title)}</strong>
+        ${caption ? `<p>${escapeHtml(caption)}</p>` : ""}
+        <time>${escapeHtml(formatPreviewDate(date))}</time>
+        ${musicLabel ? `<span class="composePreviewMusic">&#9835; ${escapeHtml(musicLabel)}</span>` : ""}
+      </div>
+    </article>
+  `;
+}
+
+function formatPreviewDate(value) {
+  if (!value) return "SFK Memory";
+  const date = new Date(`${value}T00:00:00`);
+  if (isNaN(date)) return value;
+  return date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+}
+
+function restoreRememberedPostedBy() {
+  const input = document.getElementById("memoryPostedBy");
+  if (!input || input.value.trim()) return;
+
+  const saved = localStorage.getItem(MEMORY_POSTED_BY_KEY);
+  if (saved) input.value = saved;
+}
+
+function rememberPostedBy(value) {
+  const cleanValue = String(value || "").trim();
+  if (cleanValue) localStorage.setItem(MEMORY_POSTED_BY_KEY, cleanValue);
 }
 
 async function submitMemoryPost(event) {
@@ -1407,6 +1553,7 @@ async function submitMemoryPost(event) {
     const result = await postMemoryApi("memoryCreate", payload);
     if (!result.success) throw new Error(result.message || "Memory could not be posted.");
 
+    rememberPostedBy(payload.PostedBy);
     resetMemoryForm();
     closeModal("composeModal");
     showMemoryToast("Memory shared successfully.");
@@ -1493,12 +1640,15 @@ function loadImage(src) {
 function resetMemoryForm() {
   document.getElementById("memoryForm")?.reset();
   memoryState.selectedFiles = [];
+  memoryState.coverIndex = 0;
   document.getElementById("mediaPreview").innerHTML = "";
   document.getElementById("postMessage").textContent = "";
   document.getElementById("musicFileName").textContent = "MP3/M4A, up to 10 MB";
   const musicLibrary = document.getElementById("memoryMusicLibrary");
   if (musicLibrary) musicLibrary.value = "";
   setDefaultMemoryDate();
+  restoreRememberedPostedBy();
+  renderComposePreview();
 }
 
 function openManageActions(id) {
@@ -1513,6 +1663,7 @@ function openManageActions(id) {
     <div class="modalBackdrop" data-manage-close></div>
     <section class="manageSheet" role="dialog" aria-modal="true" aria-label="Manage memory">
       <div class="managePreview"><span class="miniBrandMark">SFK</span><div><strong>${escapeHtml(post.title)}</strong><small>${escapeHtml(post.date)}</small></div></div>
+      <button type="button" data-manage-action="edit">Edit details</button>
       <button type="button" data-manage-action="hide">Hide from Memories</button>
       ${memoryState.auth.role === "Admin" ? `<button class="dangerAction" type="button" data-manage-action="delete">Delete permanently</button>` : ""}
       <button type="button" data-manage-close>Cancel</button>
@@ -1528,6 +1679,13 @@ function openManageActions(id) {
     const actionButton = event.target.closest("[data-manage-action]");
     if (!actionButton) return;
     const action = actionButton.dataset.manageAction;
+    if (action === "edit") {
+      renderEditMemoryForm(layer, post);
+      return;
+    }
+
+    if (action !== "hide" && action !== "delete") return;
+
     const label = action === "delete" ? "permanently delete" : "hide";
     if (!window.confirm(`Do you want to ${label} this memory?`)) return;
 
@@ -1549,6 +1707,98 @@ function openManageActions(id) {
   });
 
   document.body.appendChild(layer);
+}
+
+function renderEditMemoryForm(layer, post) {
+  const videoUrl = post.videoUrl || "";
+
+  layer.innerHTML = `
+    <div class="modalBackdrop" data-manage-close></div>
+    <section class="manageSheet editMemorySheet" role="dialog" aria-modal="true" aria-label="Edit memory">
+      <div class="managePreview"><span class="miniBrandMark">SFK</span><div><strong>Edit memory</strong><small>${escapeHtml(post.id)}</small></div></div>
+      <label>Memory title
+        <input id="editMemoryTitle" type="text" maxlength="80" value="${escapeAttr(post.title || "")}" />
+      </label>
+      <label>Event date
+        <input id="editMemoryDate" type="date" value="${escapeAttr(toDateInputValue(post.date))}" />
+      </label>
+      <label>Posted by
+        <input id="editMemoryPostedBy" type="text" maxlength="60" value="${escapeAttr(post.postedBy || "")}" />
+      </label>
+      <label>Caption and details
+        <textarea id="editMemoryCaption" rows="4" maxlength="1200">${escapeHtml(post.caption || "")}</textarea>
+      </label>
+      <label>Video link
+        <input id="editMemoryVideoUrl" type="url" value="${escapeAttr(videoUrl)}" />
+        <small class="fieldHint">This edits the linked video only. Uploaded photos/videos stay as-is.</small>
+      </label>
+      <p id="editMemoryMessage" class="formMessage" aria-live="polite"></p>
+      <div class="manageActionsRow">
+        <button class="secondaryButton" type="button" data-manage-action="back">Back</button>
+        <button class="primaryButton" type="button" data-manage-action="save-edit">Save changes</button>
+      </div>
+    </section>
+  `;
+
+  layer.onclick = async (event) => {
+    if (event.target.closest("[data-manage-close]")) {
+      layer.remove();
+      return;
+    }
+
+    const actionButton = event.target.closest("[data-manage-action]");
+    if (!actionButton) return;
+
+    const action = actionButton.dataset.manageAction;
+    if (action === "back") {
+      layer.remove();
+      openManageActions(post.id);
+      return;
+    }
+
+    if (action !== "save-edit") return;
+
+    const title = document.getElementById("editMemoryTitle").value.trim();
+    const caption = document.getElementById("editMemoryCaption").value.trim();
+    const postedBy = document.getElementById("editMemoryPostedBy").value.trim();
+    const date = document.getElementById("editMemoryDate").value;
+    const videoUrlValue = document.getElementById("editMemoryVideoUrl").value.trim();
+    const message = document.getElementById("editMemoryMessage");
+
+    if (!postedBy) {
+      message.textContent = "Posted by is required.";
+      return;
+    }
+
+    if (!title && !caption && !videoUrlValue && post.media.length === 0 && !post.music) {
+      message.textContent = "Write a title or caption, or keep an attachment.";
+      return;
+    }
+
+    actionButton.disabled = true;
+    message.textContent = "Saving changes...";
+
+    try {
+      const result = await postMemoryApi("memoryUpdate", {
+        MemoryID: post.id,
+        Role: memoryState.auth.role,
+        Pin: memoryState.auth.pin,
+        Title: title,
+        Date: date,
+        PostedBy: postedBy,
+        Caption: caption,
+        VideoURL: videoUrlValue
+      });
+
+      if (!result.success) throw new Error(result.message || "Memory could not be updated.");
+      layer.remove();
+      showMemoryToast(result.message || "Memory updated.");
+      await loadMemories();
+    } catch (error) {
+      message.textContent = error.message || "Unable to update memory.";
+      actionButton.disabled = false;
+    }
+  };
 }
 
 function openPostViewer(id, index) {
@@ -1670,6 +1920,18 @@ function setDefaultMemoryDate() {
   const input = document.getElementById("memoryDate");
   if (!input || input.value) return;
   input.value = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
+}
+
+function toDateInputValue(value) {
+  const text = String(value || "").trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
+
+  const parsed = new Date(text);
+  if (!isNaN(parsed)) {
+    return parsed.toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
+  }
+
+  return new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
 }
 
 function setFeedStatus(message) {

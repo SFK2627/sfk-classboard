@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-classboard-v14-youtube-scroll-mode";
+const CACHE_NAME = "sfk-classboard-v15-compact-admin-officer";
 const APP_SHELL = [
   "./",
   "./index.html",

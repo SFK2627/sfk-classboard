@@ -656,56 +656,190 @@ select:focus {
 /* PHONE */
 @media (max-width: 720px) {
   .adminApp {
-    padding: 12px;
+    padding: 8px;
   }
 
   .adminTopbar {
-    flex-direction: column;
-    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    flex-direction: row;
+    text-align: left;
+    padding: 9px 10px;
+    border-width: 2px;
+    border-radius: 12px;
+    gap: 8px;
+    box-shadow: 3px 3px 0 rgba(0,0,0,.26);
+    margin-bottom: 9px;
+  }
+
+  .adminTopbar h1 {
+    font-size: 1.15rem;
+  }
+
+  .adminTopbar p {
+    margin-top: 2px;
+    font-size: .68rem;
+    line-height: 1.15;
   }
 
   .logoutBtn {
-    width: 100%;
+    width: auto;
+    padding: 8px 10px;
+    font-size: .72rem;
   }
 
   .adminGrid {
     grid-template-columns: 1fr;
+    gap: 8px;
   }
 
   .formCard {
-    padding: 14px;
+    border-width: 2px;
+    border-left-width: 5px;
+    border-radius: 12px;
+    padding: 10px;
+    box-shadow: 3px 3px 0 rgba(0,0,0,.2);
+  }
+
+  .formCard h2 {
+    margin-bottom: 7px;
+    padding-bottom: 5px;
+    border-bottom-width: 2px;
+    font-size: 1rem;
+  }
+
+  label {
+    margin: 7px 0 3px;
+    font-size: .66rem;
+    letter-spacing: .25px;
+  }
+
+  input,
+  textarea,
+  select {
+    min-height: 38px;
+    border-radius: 9px;
+    padding: 7px 9px;
+    font-size: .86rem;
+  }
+
+  textarea {
+    min-height: 62px;
+    line-height: 1.25;
+  }
+
+  .fieldHint {
+    margin: 1px 0 6px;
+    font-size: .68rem;
+  }
+
+  .formCard button {
+    position: sticky;
+    bottom: 8px;
+    z-index: 5;
+    min-height: 40px;
+    margin-top: 9px;
+    border-radius: 10px;
+    padding: 8px 10px;
+    font-size: .82rem;
+    box-shadow: 0 -2px 10px rgba(255,255,255,.7), 3px 3px 0 rgba(0,0,0,.18);
   }
 
   .loginCard {
-    padding: 22px;
+    padding: 18px;
+    border-width: 3px;
+    border-radius: 16px;
+  }
+
+  .koalaMark {
+    font-size: 2.3rem;
+  }
+
+  .loginCard h1 {
+    font-size: 1.45rem;
+  }
+
+  .loginCard p {
+    font-size: .82rem;
+    margin-bottom: 12px;
   }
 
   .managePanel {
-    padding: 14px;
+    margin-top: 10px;
+    padding: 10px;
+    border-width: 2px;
+    border-left-width: 5px;
+    border-radius: 12px;
   }
 
   .manageHeader {
-    flex-direction: column;
+    flex-direction: row;
     align-items: stretch;
-    text-align: center;
+    text-align: left;
+    gap: 8px;
+    margin-bottom: 9px;
+    padding-bottom: 8px;
+    border-bottom-width: 2px;
+  }
+
+  .manageHeader h2 {
+    font-size: 1.05rem;
+  }
+
+  .manageHeader p {
+    font-size: .7rem;
+    line-height: 1.2;
   }
 
   .refreshBtn {
-    width: 100%;
+    align-self: start;
+    width: auto;
+    padding: 7px 10px;
+    font-size: .72rem;
   }
 
   .manageTabs {
-    justify-content: center;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: thin;
   }
 
   .manageTabs button {
-    flex: 1 1 auto;
-    font-size: .8rem;
-    padding: 9px 10px;
+    flex: 0 0 auto;
+    font-size: .72rem;
+    padding: 7px 9px;
+    box-shadow: none;
   }
 
   .manageStatus {
-    text-align: center;
+    border-width: 2px;
+    border-radius: 10px;
+    padding: 8px 9px;
+    text-align: left;
+    font-size: .75rem;
+  }
+
+  .batchActions {
+    flex-wrap: nowrap;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 5px;
+  }
+
+  .batchActions button {
+    flex: 0 0 auto;
+    padding: 7px 9px;
+    font-size: .7rem;
+    box-shadow: none;
+  }
+
+  .tableWrap {
+    border-width: 2px;
+    border-radius: 10px;
   }
 
   #adminDataTable {
@@ -724,21 +858,42 @@ select:focus {
 
   .editModal {
     align-items: flex-start;
-    padding: 12px;
+    padding: 8px;
     overflow-y: auto;
   }
 
   .editModalCard {
     max-height: none;
-    padding: 15px;
+    padding: 10px;
+    border-width: 2px;
+    border-radius: 14px;
+    box-shadow: 4px 4px 0 rgba(0,0,0,.3);
   }
 
   .editModalHeader {
     align-items: flex-start;
+    padding-bottom: 8px;
+    margin-bottom: 9px;
+    border-bottom-width: 2px;
+  }
+
+  .editModalHeader h2 {
+    font-size: 1.15rem;
+  }
+
+  .editModalHeader p {
+    font-size: .72rem;
+  }
+
+  .modalCloseBtn {
+    width: 32px;
+    height: 32px;
+    font-size: 1.05rem;
   }
 
   .editFields {
     grid-template-columns: 1fr;
+    gap: 7px;
   }
 
   .editFieldFull {
@@ -746,12 +901,24 @@ select:focus {
   }
 
   .editModalActions {
-    flex-direction: column;
+    position: sticky;
+    bottom: -10px;
+    z-index: 8;
+    flex-direction: row;
+    gap: 8px;
+    margin: 8px -10px -10px;
+    padding: 9px 10px calc(9px + env(safe-area-inset-bottom));
+    border-top-width: 2px;
+    background: white;
+    box-shadow: 0 -5px 16px rgba(0,0,0,.12);
   }
 
   .cancelEditBtn,
   .saveEditBtn {
-    width: 100%;
+    flex: 1;
+    width: auto;
+    padding: 9px 10px;
+    font-size: .8rem;
   }
 
   .adminToast {

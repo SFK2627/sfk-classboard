@@ -133,6 +133,10 @@ function doPost(e) {
       return jsonResponse(deleteMemoryPost(payload));
     }
 
+    if (type === "memoryUpdate") {
+      return jsonResponse(updateMemoryPost(payload));
+    }
+
     if (type === "officerHide") {
       return jsonResponse(hideOfficerRow(payload));
     }
@@ -1867,6 +1871,32 @@ function hideMemoryPost(payload) {
 
   sheet.getRange(rowNumber, getMemoryColumn(sheet, "Publish")).setValue("NO");
   return { success: true, message: "Memory hidden." };
+}
+
+function updateMemoryPost(payload) {
+  const role = normalizeMemoryRole(payload.Role);
+  if (!isValidMemoryAuth(role, payload.Pin)) {
+    return { success: false, message: "Incorrect admin/officer credentials." };
+  }
+
+  const sheet = ensureMemoriesSheet();
+  const rowNumber = findMemoryRow(sheet, payload.MemoryID || payload.memoryId);
+  if (rowNumber < 2) return { success: false, message: "Memory not found." };
+
+  const title = String(payload.Title || "").trim() || "Untitled Memory";
+  const caption = String(payload.Caption || "").trim();
+  const postedBy = String(payload.PostedBy || "").trim() || "SFK";
+  const videoUrl = String(payload.VideoURL || "").trim();
+  const eventDate = formatInputDateToSheetDate(payload.Date) ||
+    Utilities.formatDate(new Date(), TIMEZONE, "MMMM d, yyyy");
+
+  sheet.getRange(rowNumber, getMemoryColumn(sheet, "Date")).setValue(eventDate);
+  sheet.getRange(rowNumber, getMemoryColumn(sheet, "Title")).setValue(title);
+  sheet.getRange(rowNumber, getMemoryColumn(sheet, "Caption")).setValue(caption);
+  sheet.getRange(rowNumber, getMemoryColumn(sheet, "PostedBy")).setValue(postedBy);
+  sheet.getRange(rowNumber, getMemoryColumn(sheet, "VideoURL")).setValue(videoUrl);
+
+  return { success: true, message: "Memory updated." };
 }
 
 function deleteMemoryPost(payload) {

@@ -132,6 +132,7 @@
     if (type === "memoryAuth") return checkMemoryAuth(payload);
     if (type === "memoryHide") return hideMemory(payload.memoryId || payload.MemoryID || payload.ID || payload.id);
     if (type === "memoryDelete") return deleteMemory(payload.memoryId || payload.MemoryID || payload.ID || payload.id);
+    if (type === "memoryUpdate") return updateMemory(payload.memoryId || payload.MemoryID || payload.ID || payload.id, payload);
     if (type === "memoryCreate") return createMemory(payload, sourceUrl);
 
     if (TYPE_TO_SHEET[type]) return addTypedRow(type, payload);
@@ -384,6 +385,21 @@
     if (!id) return { success: false, message: "Missing memory ID." };
     await db.collection(SHEETS.Memories.collection).doc(String(id)).delete();
     return { success: true, message: "Memory deleted." };
+  }
+
+  async function updateMemory(id, payload) {
+    if (!id) return { success: false, message: "Missing memory ID." };
+
+    const next = {
+      Title: payload.Title || "Untitled Memory",
+      Date: normalizeInputDate(payload.Date) || formatLongDate(new Date()),
+      Caption: payload.Caption || "",
+      PostedBy: payload.PostedBy || "SFK",
+      VideoURL: payload.VideoURL || ""
+    };
+
+    await db.collection(SHEETS.Memories.collection).doc(String(id)).set(withMeta(next, false), { merge: true });
+    return { success: true, message: "Memory updated." };
   }
 
   function getMemoryAudio(fileId) {
