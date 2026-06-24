@@ -396,16 +396,97 @@ function renderMemories() {
   const empty = document.getElementById("emptyMemories");
   if (!feed || !empty) return;
 
+  const playbackState = captureFeedPlaybackState();
   updateMemoryStats();
   const filtered = getFilteredPosts();
   setFeedStatus("");
   empty.hidden = filtered.length !== 0;
   feed.innerHTML = filtered.map(renderMemoryPost).join("");
   window.requestAnimationFrame(() => {
+    restoreFeedPlaybackState(playbackState);
     observeFeedVideos();
     observePostMusic();
     scrollToRequestedMemory();
   });
+}
+
+function captureFeedPlaybackState() {
+  const states = new Map();
+
+  document.querySelectorAll(".memoryPost").forEach((article) => {
+    const postId = article.dataset.postId;
+    if (!postId) return;
+
+    article.querySelectorAll(".feedVideo").forEach((video, index) => {
+      states.set(`video:${postId}:${video.dataset.mediaIndex || index}`, captureMediaElementState(video));
+    });
+
+    const music = article.querySelector(".postMusicPlayer");
+    if (music) {
+      states.set(`music:${postId}`, captureMediaElementState(music));
+    }
+  });
+
+  return states;
+}
+
+function captureMediaElementState(element) {
+  return {
+    currentTime: Number.isFinite(element.currentTime) ? element.currentTime : 0,
+    muted: Boolean(element.muted),
+    paused: Boolean(element.paused),
+    ended: Boolean(element.ended),
+    src: element.currentSrc || element.src || "",
+    volume: Number.isFinite(element.volume) ? element.volume : 1
+  };
+}
+
+function restoreFeedPlaybackState(states) {
+  if (!states || states.size === 0) return;
+
+  document.querySelectorAll(".memoryPost").forEach((article) => {
+    const postId = article.dataset.postId;
+    if (!postId) return;
+
+    article.querySelectorAll(".feedVideo").forEach((video, index) => {
+      restoreMediaElementState(video, states.get(`video:${postId}:${video.dataset.mediaIndex || index}`));
+    });
+
+    const music = article.querySelector(".postMusicPlayer");
+    restoreMediaElementState(music, states.get(`music:${postId}`), true);
+  });
+}
+
+function restoreMediaElementState(element, state, restoreSource = false) {
+  if (!element || !state) return;
+
+  if (restoreSource && state.src && element.src !== state.src) {
+    element.src = state.src;
+    element.load();
+  }
+
+  element.muted = state.muted;
+  element.volume = state.volume;
+
+  const restore = () => {
+    if (state.currentTime > 0) {
+      try {
+        element.currentTime = state.currentTime;
+      } catch (error) {
+        // Some browsers block seeking until more metadata is ready.
+      }
+    }
+
+    if (!state.paused && !state.ended) {
+      element.play().catch(() => {});
+    }
+  };
+
+  if (element.readyState >= 1) {
+    restore();
+  } else {
+    element.addEventListener("loadedmetadata", restore, { once: true });
+  }
 }
 
 function getFilteredPosts() {
@@ -583,15 +664,19 @@ function handleFeedClick(event) {
 
   if (action === "view" && Date.now() < memoryState.suppressClickUntil) return;
 
-  if (action === "previous") moveCarousel(id, -1);
-  if (action === "next") moveCarousel(id, 1);
-  if (action === "heart") heartMemory(id);
-  if (action === "share") shareMemory(id);
-  if (action === "manage") openManageActions(id);
-  if (action === "view") openPostViewer(id, Number(target.dataset.index) || 0);
-  if (action === "volume") toggleMediaVolume(id, Number(target.dataset.index) || 0, target);
-  if (action === "music") togglePostMusic(id, target);
-  if (action === "youtube-controls") toggleYouTubeControls(target);
+  if (action === "previous") return moveCarousel(id, -1);
+  if (action === "next") return moveCarousel(id, 1);
+  if (action === "heart") {
+    event.preventDefault();
+    event.stopPropagation();
+    return heartMemory(id);
+  }
+  if (action === "share") return shareMemory(id);
+  if (action === "manage") return openManageActions(id);
+  if (action === "view") return openPostViewer(id, Number(target.dataset.index) || 0);
+  if (action === "volume") return toggleMediaVolume(id, Number(target.dataset.index) || 0, target);
+  if (action === "music") return togglePostMusic(id, target);
+  if (action === "youtube-controls") return toggleYouTubeControls(target);
 }
 
 function toggleYouTubeControls(button) {

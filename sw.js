@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-classboard-v24-link-only-no-audio-upload";
+const CACHE_NAME = "sfk-classboard-v25-preserve-media-on-heart";
 const APP_SHELL = [
   "./",
   "./index.html",
