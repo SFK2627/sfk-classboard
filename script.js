@@ -766,7 +766,7 @@ function renderAnnouncementHeartButton(item) {
       class="announcement-heart-btn ${isHearted ? "is-hearted" : ""}"
       type="button"
       onclick="heartAnnouncement('${escapeJsAttribute(id)}')"
-      ${!id || isHearted ? "disabled" : ""}
+      ${!id ? "disabled" : ""}
       aria-label="Acknowledge this announcement">
       <span class="heart-icon">${isHearted ? "❤️" : "🤍"}</span>
       <span>${label}</span>

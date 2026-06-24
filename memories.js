@@ -994,21 +994,36 @@ function getSwipeDirection(start, endTouch) {
 }
 
 async function heartMemory(id) {
-  if (!id || getHeartedMemoryIds().includes(id)) return;
+  if (!id) return;
 
-  setHeartedMemory(id);
+  const wasHearted = getHeartedMemoryIds().includes(id);
+  const delta = wasHearted ? -1 : 1;
+  if (wasHearted) {
+    unsetHeartedMemory(id);
+  } else {
+    setHeartedMemory(id);
+  }
+
   const post = memoryState.posts.find((item) => item.id === id);
-  if (post) post.heartCount += 1;
+  if (post) post.heartCount = Math.max(0, Number(post.heartCount || 0) + delta);
   renderMemories();
 
   try {
-    const result = await postMemoryApi("memoryHeart", { MemoryID: id });
+    const result = await postMemoryApi("memoryHeart", { MemoryID: id, delta });
     if (result.success && post) {
-      post.heartCount = Number(result.count) || post.heartCount;
+      post.heartCount = Math.max(0, Number(result.count) || 0);
       renderMemories();
     }
   } catch (error) {
+    if (wasHearted) {
+      setHeartedMemory(id);
+    } else {
+      unsetHeartedMemory(id);
+    }
+    if (post) post.heartCount = Math.max(0, Number(post.heartCount || 0) - delta);
+    renderMemories();
     console.warn("Memory heart sync failed:", error);
+    showMemoryToast("Heart update failed. Please try again.");
   }
 }
 
@@ -1024,6 +1039,11 @@ function getHeartedMemoryIds() {
 function setHeartedMemory(id) {
   const ids = getHeartedMemoryIds();
   if (!ids.includes(id)) ids.push(id);
+  localStorage.setItem(HEARTED_MEMORY_KEY, JSON.stringify(ids.slice(-500)));
+}
+
+function unsetHeartedMemory(id) {
+  const ids = getHeartedMemoryIds().filter((item) => item !== id);
   localStorage.setItem(HEARTED_MEMORY_KEY, JSON.stringify(ids.slice(-500)));
 }
 

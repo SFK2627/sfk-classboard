@@ -1845,7 +1845,8 @@ function recordMemoryHeart(payload) {
 
     const heartColumn = getMemoryColumn(sheet, "HeartCount");
     const current = Number(sheet.getRange(rowNumber, heartColumn).getValue()) || 0;
-    const next = current + 1;
+    const delta = Number(payload.delta) < 0 ? -1 : 1;
+    const next = Math.max(0, current + delta);
     sheet.getRange(rowNumber, heartColumn).setValue(next);
 
     return { success: true, count: next };
