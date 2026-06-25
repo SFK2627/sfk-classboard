@@ -213,7 +213,7 @@ function renderDashboard(data) {
   updateMobilePeriodCardVisibility(periodState);
   renderPrayerLeader(data.prayerLeader);
   renderCleanersToday();
-  renderSchedule(data.schedule, data.currentSubject);
+  renderSchedule(data.schedule, periodState.currentPeriod);
   renderAnnouncements(data.announcements || []);
   renderThings(data.thingsToBring || []);
   renderReminders(data.adviserReminders || []);
@@ -240,19 +240,19 @@ function getDisplayPeriodState(schedule, currentSubject, nextSubject) {
   const lastPeriod = sortedSchedule[sortedSchedule.length - 1] || null;
   const firstStart = firstPeriod ? timeToMinutes(firstPeriod.StartTime) : null;
   const lastEnd = lastPeriod ? timeToMinutes(lastPeriod.EndTime) : null;
-  const secondPeriod = sortedSchedule[1] || null;
   const oneHour = 60;
 
-  let currentPeriod = currentSubject || null;
-  let nextPeriod = nextSubject || null;
+  let currentPeriod = sortedSchedule.find(item => {
+    const start = timeToMinutes(item.StartTime);
+    const end = timeToMinutes(item.EndTime);
+    return nowMinutes >= start && nowMinutes < end;
+  }) || null;
+
+  let nextPeriod = sortedSchedule.find(item => timeToMinutes(item.StartTime) > nowMinutes) || null;
 
   if (!currentPeriod && firstPeriod && firstStart !== null && nowMinutes >= firstStart - oneHour && nowMinutes < firstStart) {
     currentPeriod = null;
     nextPeriod = firstPeriod;
-  }
-
-  if (!currentPeriod && !nextPeriod && lastPeriod && lastEnd !== null && nowMinutes >= lastEnd && nowMinutes < lastEnd + oneHour) {
-    currentPeriod = lastPeriod;
   }
 
   const shouldHideOnMobile =
