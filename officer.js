@@ -823,7 +823,7 @@ async function saveOfficerThings() {
   };
 
   if (!payload.Date || !payload.Subject || !payload.Item) {
-    showOfficerToast("Date, subject, and item are required.");
+    showOfficerToast("Date needed, subject, and item are required.");
     return;
   }
 
@@ -1114,7 +1114,7 @@ function renderOfficerTable(result) {
       <th>Select</th>
       <th>Action</th>
       <th>Row</th>
-      ${visibleColumnIndexes.map(index => `<th>${escapeHtml(headers[index])}</th>`).join("")}
+      ${visibleColumnIndexes.map(index => `<th>${escapeHtml(getManageHeaderLabel(result.sheetName, headers[index]))}</th>`).join("")}
     </tr>
   `;
 
@@ -1153,7 +1153,7 @@ function renderOfficerTable(result) {
           const header = headers[index];
           const value = row.cells[index] || "";
           return `
-            <td class="${value ? "" : "emptyCell"}" data-label="${escapeHtml(header)}">
+            <td class="${value ? "" : "emptyCell"}" data-label="${escapeHtml(getManageHeaderLabel(result.sheetName, header))}">
               ${formatManageCellDisplay(value)}
             </td>
           `;
@@ -1423,6 +1423,17 @@ function formatSheetLabel(sheetName) {
   };
 
   return labels[sheetName] || sheetName;
+}
+
+function getManageHeaderLabel(sheetName, header) {
+  const rawHeader = String(header || "").trim();
+  const key = normalizeManageHeaderKey(rawHeader);
+
+  if (sheetName === "ThingsToBring" && key === "date") {
+    return "Date Needed";
+  }
+
+  return rawHeader || header;
 }
 
 function escapeHtml(value) {

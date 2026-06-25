@@ -1921,3 +1921,33 @@ body.toolModalOpen {
 .richEditor li {
   text-align: inherit;
 }
+
+/* Phone modal centering fix: keep tool sheets comfortable instead of stuck to bottom. */
+@media (max-width: 820px) {
+  .toolModal {
+    place-items: center !important;
+    align-items: center !important;
+    justify-items: center !important;
+    padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom)) !important;
+  }
+
+  .toolModalCard {
+    width: min(100%, 680px) !important;
+    max-height: calc(100dvh - 30px) !important;
+    margin: auto !important;
+    border-radius: 18px !important;
+  }
+
+  .toolModal.toolModalManage {
+    place-items: center !important;
+    align-items: center !important;
+    justify-items: center !important;
+    padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom)) !important;
+  }
+
+  .toolModal.toolModalManage .toolModalCard {
+    width: min(100%, 720px) !important;
+    max-height: calc(100dvh - 30px) !important;
+    margin: auto !important;
+  }
+}

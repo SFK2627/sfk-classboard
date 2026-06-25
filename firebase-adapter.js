@@ -194,12 +194,20 @@
   }
 
   async function getMemories() {
-    const memories = (await getPublishedRows("Memories")).map(row => ({
-      ...row,
-      ID: row.ID || row.id,
-      media: Array.isArray(row.media) ? row.media : parseJsonArray(row.MediaJSON),
-      music: row.music && typeof row.music === "object" ? row.music : parseJsonObject(row.MusicJSON)
-    }));
+    const memories = (await getPublishedRows("Memories")).map(row => {
+      const count = readHeartCount(row);
+      return {
+        ...row,
+        ID: row.ID || row.MemoryID || row.memoryId || row.id || row.docId,
+        id: row.ID || row.MemoryID || row.memoryId || row.id || row.docId,
+        HeartCount: count,
+        heartCount: count,
+        Hearts: count,
+        hearts: count,
+        media: Array.isArray(row.media) ? row.media : parseJsonArray(row.MediaJSON),
+        music: row.music && typeof row.music === "object" ? row.music : parseJsonObject(row.MusicJSON)
+      };
+    });
 
     return {
       status: "success",
@@ -211,7 +219,10 @@
     const meta = getSheetMeta(sheetName);
     const snap = await db.collection(meta.collection).get();
     const rows = [];
-    snap.forEach(doc => rows.push({ id: doc.id, ...doc.data() }));
+    snap.forEach(doc => {
+      const data = doc.data() || {};
+      rows.push({ ...data, docId: doc.id, id: data.id || doc.id });
+    });
     return rows.sort(compareRows);
   }
 
@@ -304,17 +315,50 @@
   }
 
   async function recordHeart(sheetName, id, deltaValue) {
-    if (!id) return { success: false, message: "Missing record ID." };
+    const recordId = String(id || "").trim();
+    if (!recordId) return { success: false, message: "Missing record ID." };
+
     const meta = getSheetMeta(sheetName);
-    const ref = db.collection(meta.collection).doc(String(id));
+    const ref = await resolveRecordRef(meta.collection, recordId);
+    if (!ref) {
+      return { success: false, message: "Record not found. Please refresh and try again." };
+    }
+
     const delta = Number(deltaValue) < 0 ? -1 : 1;
     let count = 0;
     await db.runTransaction(async transaction => {
       const doc = await transaction.get(ref);
-      count = Math.max(0, (Number((doc.exists && doc.data().HeartCount) || 0) || 0) + delta);
-      transaction.set(ref, withMeta({ HeartCount: count }, false), { merge: true });
+      if (!doc.exists) throw new Error("Record not found.");
+      count = Math.max(0, readHeartCount(doc.data()) + delta);
+      transaction.set(ref, withMeta({ HeartCount: count, heartCount: count, Hearts: count, hearts: count }, false), { merge: true });
     });
     return { success: true, count };
+  }
+
+  async function resolveRecordRef(collectionName, recordId) {
+    const directRef = db.collection(collectionName).doc(recordId);
+    const directDoc = await directRef.get();
+    if (directDoc.exists) return directRef;
+
+    const byUpperId = await db.collection(collectionName).where("ID", "==", recordId).limit(1).get();
+    if (!byUpperId.empty) return byUpperId.docs[0].ref;
+
+    const byLowerId = await db.collection(collectionName).where("id", "==", recordId).limit(1).get();
+    if (!byLowerId.empty) return byLowerId.docs[0].ref;
+
+    const byMemoryId = await db.collection(collectionName).where("MemoryID", "==", recordId).limit(1).get();
+    if (!byMemoryId.empty) return byMemoryId.docs[0].ref;
+
+    const byLowerMemoryId = await db.collection(collectionName).where("memoryId", "==", recordId).limit(1).get();
+    if (!byLowerMemoryId.empty) return byLowerMemoryId.docs[0].ref;
+
+    return null;
+  }
+
+  function readHeartCount(row) {
+    const value = row?.HeartCount ?? row?.heartCount ?? row?.Hearts ?? row?.hearts ?? row?.Count ?? row?.count ?? row?.notedCount ?? row?.NotedCount ?? 0;
+    const count = Number(value);
+    return Number.isFinite(count) ? Math.max(0, count) : 0;
   }
 
   function checkMemoryAuth(payload) {
@@ -346,7 +390,10 @@
       MusicJSON: music ? JSON.stringify(music) : "",
       VideoURL: payload.VideoURL || "",
       Publish: payload.Publish || "YES",
-      HeartCount: 0
+      HeartCount: 0,
+      heartCount: 0,
+      Hearts: 0,
+      hearts: 0
     };
 
     const linkedVideo = String(payload.VideoURL || "").trim();

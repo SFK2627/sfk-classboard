@@ -1,12 +1,12 @@
-const CACHE_NAME = "sfk-officers-pwa-v11-smart-announcement-fit";
+const CACHE_NAME = "sfk-officers-pwa-v12-things-date-modal-center";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./sw.js",
-  "../officer.html?embedded=1&v=rich-list-align-indent-1",
-  "../officer.css?v=smart-announcement-fit-1",
-  "../officer.js?v=smart-announcement-fit-1",
+  "../officer.html?embedded=1&v=things-date-modal-center-1",
+  "../officer.css?v=things-date-modal-center-1",
+  "../officer.js?v=things-date-modal-center-1",
   "../firebase-config.js",
   "../firebase-adapter.js",
   "../icons/icon-192.png",

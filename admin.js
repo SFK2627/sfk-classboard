@@ -840,7 +840,7 @@ async function saveThingsToBring() {
   };
 
   if (!payload.Date || !payload.Subject || !payload.Item) {
-    showToast("Date, subject, and item are required.");
+    showToast("Date needed, subject, and item are required.");
     return;
   }
 
@@ -1211,7 +1211,7 @@ function renderAdminTable(result) {
       <th>Actions</th>
       <th>Row</th>
       ${isAnnouncementsSheet ? "<th>Noted</th>" : ""}
-      ${visibleColumnIndexes.map(index => `<th>${escapeHtml(headers[index])}</th>`).join("")}
+      ${visibleColumnIndexes.map(index => `<th>${escapeHtml(getManageHeaderLabel(result.sheetName, headers[index]))}</th>`).join("")}
     </tr>
   `;
 
@@ -1254,7 +1254,7 @@ function renderAdminTable(result) {
           const header = headers[index];
           const value = row.cells[index] || "";
           return `
-            <td class="${value ? "" : "emptyCell"}" data-label="${escapeAttribute(header)}">
+            <td class="${value ? "" : "emptyCell"}" data-label="${escapeAttribute(getManageHeaderLabel(result.sheetName, header))}">
               ${formatManageCellDisplay(value)}
             </td>
           `;
@@ -1463,6 +1463,7 @@ function openEditModal(rowNumber) {
   editFields.innerHTML = editingRecord.headers.map((header, index) => {
     const value = editingRecord.cells[index] || "";
     const lowerHeader = String(header).trim().toLowerCase();
+    const labelText = getManageHeaderLabel(editingRecord.sheetName, header);
 
     const isLongText = isFormattedTextField(
       editingRecord.sheetName,
@@ -1494,7 +1495,7 @@ function openEditModal(rowNumber) {
     if (isId) {
   return `
     <div class="${fieldClass}">
-      <label>${escapeHtml(header)}</label>
+      <label>${escapeHtml(labelText)}</label>
       <input 
         class="editInput readOnlyField"
         data-index="${index}"
@@ -1508,7 +1509,7 @@ function openEditModal(rowNumber) {
 if (isPublish) {
   return `
     <div class="${fieldClass}">
-      <label>${escapeHtml(header)}</label>
+      <label>${escapeHtml(labelText)}</label>
       <select class="editInput" data-index="${index}">
         <option value="YES" ${String(value).toUpperCase() === "YES" ? "selected" : ""}>YES</option>
         <option value="NO" ${String(value).toUpperCase() === "NO" ? "selected" : ""}>NO</option>
@@ -1520,7 +1521,7 @@ if (isPublish) {
 if (isTeacher) {
   return `
     <div class="${fieldClass}">
-      <label>${escapeHtml(header)}</label>
+      <label>${escapeHtml(labelText)}</label>
       <select class="editInput" data-index="${index}">
         ${renderTeacherOptions(value)}
       </select>
@@ -1535,7 +1536,7 @@ if (isTeacher) {
 
         return `
           <div class="${fieldClass}">
-            <label>${escapeHtml(header)}</label>
+            <label>${escapeHtml(labelText)}</label>
             <div class="richComposer editRichComposer" data-rich-target="${targetId}">
               ${getRichEditorToolbarMarkup("Edit formatting tools")}
               <div class="richEditor" contenteditable="true" data-placeholder="Edit formatted text here...">${safeHtml}</div>
@@ -1549,7 +1550,7 @@ if (isTeacher) {
 
       return `
         <div class="${fieldClass}">
-          <label>${escapeHtml(header)}</label>
+          <label>${escapeHtml(labelText)}</label>
           <select class="editFormatSelect" data-index="${index}">
             ${renderTextFormatOptions(parsedFormat.format)}
           </select>
@@ -1560,7 +1561,7 @@ if (isTeacher) {
 
     return `
       <div class="${fieldClass}">
-        <label>${escapeHtml(header)}</label>
+        <label>${escapeHtml(labelText)}</label>
         <input 
           class="editInput"
           data-index="${index}"
@@ -1900,6 +1901,17 @@ function formatSheetLabel(sheetName) {
   };
 
   return labels[sheetName] || sheetName;
+}
+
+function getManageHeaderLabel(sheetName, header) {
+  const rawHeader = String(header || "").trim();
+  const key = normalizeManageHeaderKey(rawHeader);
+
+  if (sheetName === "ThingsToBring" && key === "date") {
+    return "Date Needed";
+  }
+
+  return rawHeader || header;
 }
 
 function escapeHtml(value) {

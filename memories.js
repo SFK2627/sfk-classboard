@@ -100,24 +100,109 @@ async function loadMemories() {
   setFeedStatus("Loading memories...");
 
   try {
-    const response = await fetch(`${MEMORIES_API_URL}?type=memories`, { cache: "no-store" });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-    const result = await response.json();
-    if (result.status !== "success" || !Array.isArray(result.memories)) {
-      throw new Error(result.message || "Invalid memories response.");
-    }
-
-    memoryState.posts = result.memories.map(normalizeMemoryPost);
+    const rows = await loadMemoriesFromFirebaseFirst();
+    memoryState.posts = rows.map(normalizeMemoryPost);
     localStorage.setItem(MEMORY_CACHE_KEY, JSON.stringify(memoryState.posts));
     markLoadedMemoriesSeen(memoryState.posts);
     renderMemories();
   } catch (error) {
     console.error("Memories load failed:", error);
     if (memoryState.posts.length === 0) {
-      setFeedStatus("Memories will appear after the updated Apps Script is deployed.");
+      setFeedStatus("Memories will appear after the database loads correctly.");
     }
   }
+}
+
+async function loadMemoriesFromFirebaseFirst() {
+  try {
+    const rows = await loadMemoriesDirectFromFirebase();
+    if (Array.isArray(rows)) return rows;
+  } catch (error) {
+    console.warn("Direct Firebase memories load failed. Falling back to API.", error);
+  }
+
+  const response = await fetch(`${MEMORIES_API_URL}?type=memories`, { cache: "no-store" });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+  const result = await response.json();
+  if (result.status !== "success" || !Array.isArray(result.memories)) {
+    throw new Error(result.message || "Invalid memories response.");
+  }
+
+  return result.memories;
+}
+
+async function loadMemoriesDirectFromFirebase() {
+  const db = getClassBoardFirestore();
+  if (!db) throw new Error("Firebase is not ready.");
+
+  const snap = await db.collection("memories").get();
+  const rows = [];
+  snap.forEach((doc) => {
+    const data = convertFirestoreData(doc.data() || {});
+    const id = String(data.ID || data.MemoryID || data.memoryId || data.id || doc.id || "").trim();
+    rows.push({
+      ...data,
+      docId: doc.id,
+      id,
+      ID: id,
+      HeartCount: readMemoryHeartCount(data),
+      heartCount: readMemoryHeartCount(data)
+    });
+  });
+
+  return rows
+    .filter((row) => String(row.Publish || "YES").trim().toUpperCase() === "YES")
+    .sort((a, b) => compareMemoryRowsForDisplay(a, b));
+}
+
+function getClassBoardFirestore() {
+  try {
+    if (window.SFK_CLASSBOARD_FIREBASE_DB) return window.SFK_CLASSBOARD_FIREBASE_DB;
+    if (!window.firebase || !window.SFK_FIREBASE_READY) return null;
+    if (!firebase.apps.length) firebase.initializeApp(window.SFK_FIREBASE_CONFIG);
+    const db = firebase.firestore();
+    window.SFK_CLASSBOARD_FIREBASE_DB = db;
+    return db;
+  } catch (error) {
+    console.warn("Firebase database is unavailable:", error);
+    return null;
+  }
+}
+
+function convertFirestoreData(data) {
+  const next = { ...data };
+  Object.keys(next).forEach((key) => {
+    const value = next[key];
+    if (value && typeof value.toDate === "function") {
+      next[key] = value.toDate().toISOString();
+    }
+  });
+  return next;
+}
+
+function compareMemoryRowsForDisplay(a, b) {
+  const bValue = memorySortValue(b);
+  const aValue = memorySortValue(a);
+  if (bValue !== aValue) return bValue - aValue;
+  return String(b.ID || b.id || "").localeCompare(String(a.ID || a.id || ""));
+}
+
+function memorySortValue(row) {
+  const candidates = [row.CreatedAt, row.createdAt, row.Date, row.date];
+  for (const value of candidates) {
+    const millis = valueToMillis(value);
+    if (Number.isFinite(millis)) return millis;
+  }
+  return 0;
+}
+
+function valueToMillis(value) {
+  if (!value) return NaN;
+  if (typeof value.toMillis === "function") return value.toMillis();
+  if (typeof value.toDate === "function") return value.toDate().getTime();
+  const parsed = Date.parse(String(value));
+  return Number.isFinite(parsed) ? parsed : NaN;
 }
 
 function markLoadedMemoriesSeen(posts) {
@@ -137,6 +222,12 @@ function renderCachedMemories() {
   } catch (error) {
     localStorage.removeItem(MEMORY_CACHE_KEY);
   }
+}
+
+function readMemoryHeartCount(raw) {
+  const value = raw?.HeartCount ?? raw?.heartCount ?? raw?.Hearts ?? raw?.hearts ?? raw?.Count ?? raw?.count ?? raw?.notedCount ?? raw?.NotedCount ?? 0;
+  const count = Number(value);
+  return Number.isFinite(count) ? Math.max(0, count) : 0;
 }
 
 function normalizeMemoryPost(raw) {
@@ -168,7 +259,7 @@ function normalizeMemoryPost(raw) {
     caption: String(raw.Caption || "").trim(),
     postedBy: String(raw.PostedBy || "SFK").trim(),
     role: String(raw.Role || "Officer").trim(),
-    heartCount: Math.max(0, Number(raw.HeartCount || 0)),
+    heartCount: readMemoryHeartCount(raw),
     createdAt: String(raw.CreatedAt || "").trim(),
     videoUrl: String(raw.VideoURL || raw.videoUrl || "").trim(),
     media,
@@ -1633,7 +1724,18 @@ function getViewerSwipeDirection(start, endTouch) {
 async function heartMemory(id) {
   if (!id) return;
 
-  const wasHearted = getHeartedMemoryIds().includes(id);
+  const post = memoryState.posts.find((item) => item.id === id);
+  const previousCount = post ? readMemoryHeartCount(post) : 0;
+  let wasHearted = getHeartedMemoryIds().includes(id);
+
+  // Repair stale local hearts from earlier failed saves: if the server says zero
+  // hearts but this device still thinks it hearted the post, the next tap should
+  // count as a fresh heart instead of sending another -1.
+  if (wasHearted && previousCount === 0) {
+    unsetHeartedMemory(id);
+    wasHearted = false;
+  }
+
   const delta = wasHearted ? -1 : 1;
   if (wasHearted) {
     unsetHeartedMemory(id);
@@ -1641,27 +1743,104 @@ async function heartMemory(id) {
     setHeartedMemory(id);
   }
 
-  const post = memoryState.posts.find((item) => item.id === id);
-  if (post) post.heartCount = Math.max(0, Number(post.heartCount || 0) + delta);
+  if (post) {
+    post.heartCount = Math.max(0, previousCount + delta);
+    saveMemoryCacheSnapshot();
+  }
   updateMemoryHeartDisplay(id);
 
   try {
-    const result = await postMemoryApi("memoryHeart", { MemoryID: id, delta });
-    if (result.success && post) {
-      post.heartCount = Math.max(0, Number(result.count) || 0);
-      updateMemoryHeartDisplay(id);
+    const result = await saveMemoryHeartToDatabase(id, delta);
+    if (!result || result.success !== true) {
+      throw new Error((result && result.message) || "Heart was not saved.");
     }
+
+    if (post && result.count !== undefined && result.count !== null) {
+      const serverCount = Number(result.count);
+      if (Number.isFinite(serverCount)) {
+        post.heartCount = Math.max(0, serverCount);
+      }
+    }
+    saveMemoryCacheSnapshot();
+    updateMemoryHeartDisplay(id);
   } catch (error) {
     if (wasHearted) {
       setHeartedMemory(id);
     } else {
       unsetHeartedMemory(id);
     }
-    if (post) post.heartCount = Math.max(0, Number(post.heartCount || 0) - delta);
+    if (post) {
+      post.heartCount = previousCount;
+      saveMemoryCacheSnapshot();
+    }
     updateMemoryHeartDisplay(id);
     console.warn("Memory heart sync failed:", error);
     showMemoryToast("Heart update failed. Please try again.");
   }
+}
+
+async function saveMemoryHeartToDatabase(id, delta) {
+  const db = getClassBoardFirestore();
+  if (db) {
+    return saveMemoryHeartDirectToFirebase(id, delta);
+  }
+
+  return postMemoryApi("memoryHeart", { MemoryID: id, memoryId: id, id, delta });
+}
+
+async function saveMemoryHeartDirectToFirebase(id, delta) {
+  const db = getClassBoardFirestore();
+  if (!db) throw new Error("Firebase is not ready.");
+
+  const ref = await resolveMemoryDocumentRef(db, id);
+  if (!ref) throw new Error("Memory record was not found in Firebase.");
+
+  let nextCount = 0;
+  await db.runTransaction(async (transaction) => {
+    const doc = await transaction.get(ref);
+    if (!doc.exists) throw new Error("Memory record was not found in Firebase.");
+
+    const current = readMemoryHeartCount(doc.data() || {});
+    nextCount = Math.max(0, current + (Number(delta) < 0 ? -1 : 1));
+    const update = {
+      HeartCount: nextCount,
+      heartCount: nextCount,
+      Hearts: nextCount,
+      hearts: nextCount
+    };
+    if (window.firebase?.firestore?.FieldValue) {
+      update.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+    }
+    transaction.set(ref, update, { merge: true });
+  });
+
+  return { success: true, count: nextCount };
+}
+
+async function resolveMemoryDocumentRef(db, id) {
+  const cleanId = String(id || "").trim();
+  if (!cleanId) return null;
+
+  const collection = db.collection("memories");
+
+  try {
+    const direct = await collection.doc(cleanId).get();
+    if (direct.exists) return direct.ref;
+  } catch (error) {
+    console.warn("Direct memory document lookup failed:", error);
+  }
+
+  const fields = ["ID", "id", "MemoryID", "memoryId"];
+  for (const field of fields) {
+    try {
+      const snap = await collection.where(field, "==", cleanId).limit(1).get();
+      if (!snap.empty) return snap.docs[0].ref;
+    } catch (error) {
+      console.warn(`Memory lookup by ${field} failed:`, error);
+    }
+  }
+
+  return null;
 }
 
 function updateMemoryHeartDisplay(id) {
@@ -1684,6 +1863,14 @@ function updateMemoryHeartDisplay(id) {
   }
 
   updateMemoryStats();
+}
+
+function saveMemoryCacheSnapshot() {
+  try {
+    localStorage.setItem(MEMORY_CACHE_KEY, JSON.stringify(memoryState.posts));
+  } catch (error) {
+    console.warn("Unable to update memories cache:", error);
+  }
 }
 
 function getHeartedMemoryIds() {
