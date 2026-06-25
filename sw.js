@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-classboard-v46-announcement-stable-slots";
+const CACHE_NAME = "sfk-classboard-v47-true-lightbox-carousel";
 const APP_SHELL = [
   "./",
   "./index.html",

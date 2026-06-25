@@ -1119,7 +1119,8 @@ function capturePageMediaResumeState() {
   const viewerModal = document.getElementById("viewerModal");
   if (viewerModal && !viewerModal.hidden) {
     const media = memoryState.viewerMedia[memoryState.viewerIndex];
-    const video = viewerModal.querySelector(".viewerVideo");
+    const activeViewerSlide = getActiveViewerSlide();
+    const video = activeViewerSlide?.querySelector(".viewerVideo");
     if (video && media) {
       const wasPlaying = !video.paused && !video.ended;
       const shouldResume = wasPlaying || media.muted === false;
@@ -1136,7 +1137,7 @@ function capturePageMediaResumeState() {
       }
     }
 
-    const iframe = viewerModal.querySelector('.viewerVideoFrame[data-youtube="true"]');
+    const iframe = activeViewerSlide?.querySelector('.viewerVideoFrame[data-youtube="true"]');
     if (iframe && media) {
       state.hasActiveMedia = true;
       state.viewerIframe = {
@@ -1228,8 +1229,9 @@ function restorePageMediaState(state) {
 
   if (state.viewerVideo && !document.getElementById("viewerModal")?.hidden) {
     const media = memoryState.viewerMedia[state.viewerVideo.index];
-    const video = document.querySelector("#viewerModal .viewerVideo");
-    const button = document.querySelector("#viewerModal .viewerVolumeButton");
+    const activeViewerSlide = getActiveViewerSlide();
+    const video = activeViewerSlide?.querySelector(".viewerVideo");
+    const button = activeViewerSlide?.querySelector(".viewerVolumeButton");
     if (media && video) {
       media.muted = state.viewerVideo.muted;
       video.muted = state.viewerVideo.muted;
@@ -1242,7 +1244,8 @@ function restorePageMediaState(state) {
 
   if (state.viewerIframe && !document.getElementById("viewerModal")?.hidden) {
     const media = memoryState.viewerMedia[state.viewerIframe.index];
-    const iframe = document.querySelector('#viewerModal .viewerVideoFrame[data-youtube="true"]');
+    const activeViewerSlide = getActiveViewerSlide();
+    const iframe = activeViewerSlide?.querySelector('.viewerVideoFrame[data-youtube="true"]');
     if (media && iframe) {
       media.muted = state.viewerIframe.muted;
       sendYouTubeCommand(iframe, state.viewerIframe.muted ? "mute" : "unMute");
@@ -1532,14 +1535,21 @@ function startViewerSwipe(event) {
   if (!touch || event.target.closest("video, iframe, button")) return;
 
   const content = document.getElementById("viewerContent");
+  const track = content?.querySelector(".viewerTrack");
+  if (!content || !track) return;
+
   touchGesture = {
     scope: "viewer",
     x: touch.clientX,
     y: touch.clientY,
     time: Date.now(),
-    width: content?.clientWidth || window.innerWidth || 360,
+    width: content.clientWidth || window.innerWidth || 360,
     content,
-    horizontal: false
+    track,
+    currentIndex: memoryState.viewerIndex,
+    mediaCount: memoryState.viewerMedia.length,
+    horizontal: false,
+    deltaX: 0
   };
 }
 
@@ -1565,17 +1575,12 @@ function moveViewerSwipe(event) {
 
   event.preventDefault();
 
-  const content = touchGesture.content || document.getElementById("viewerContent");
-  if (!content) return;
+  const atFirst = touchGesture.currentIndex === 0 && deltaX > 0;
+  const atLast = touchGesture.currentIndex === touchGesture.mediaCount - 1 && deltaX < 0;
+  const resistedX = atFirst || atLast ? deltaX * .28 : deltaX;
 
-  const width = Math.max(1, touchGesture.width || content.clientWidth || window.innerWidth || 360);
-  const opacity = Math.max(.48, 1 - (Math.abs(deltaX) / (width * 1.15)));
-
-  content.classList.remove("viewerEnterNext", "viewerEnterPrevious");
-  content.style.transition = "none";
-  content.style.transform = `translate3d(${deltaX}px, 0, 0)`;
-  content.style.opacity = String(opacity);
-  touchGesture.deltaX = deltaX;
+  setViewerTrackPosition(touchGesture.currentIndex, resistedX, false);
+  touchGesture.deltaX = resistedX;
 }
 
 function endViewerSwipe(event) {
@@ -1586,12 +1591,16 @@ function endViewerSwipe(event) {
   if (!touch) return;
 
   const direction = getViewerSwipeDirection(gesture, touch);
+  const canMove = direction === 1
+    ? gesture.currentIndex < gesture.mediaCount - 1
+    : gesture.currentIndex > 0;
+
   if (gesture.horizontal || direction) memoryState.suppressClickUntil = Date.now() + 450;
 
-  if (direction) {
+  if (direction && canMove) {
     moveViewer(direction, { smooth: true, gesture });
   } else {
-    resetViewerSwipePosition(gesture.content);
+    setViewerTrackPosition(gesture.currentIndex, 0, true);
   }
 }
 
@@ -2397,19 +2406,27 @@ function openPostViewer(id, index) {
 }
 
 function renderViewer() {
-  const media = memoryState.viewerMedia[memoryState.viewerIndex];
   const content = document.getElementById("viewerContent");
-  if (!media || !content) return;
+  if (!content || memoryState.viewerMedia.length === 0) return;
 
   clearViewerInlineMotion(content);
   content.classList.remove("viewerSwitching", "viewerEnterNext", "viewerEnterPrevious");
-  content.innerHTML = renderViewerMedia(media);
+  const slides = memoryState.viewerMedia.map((media, index) => `
+    <div class="viewerSlide ${index === memoryState.viewerIndex ? "active" : ""}" data-viewer-slide-index="${index}">
+      ${renderViewerMedia(media, { active: index === memoryState.viewerIndex })}
+    </div>
+  `).join("");
+
+  content.innerHTML = `<div class="viewerTrack" id="viewerTrack">${slides}</div>`;
+  setViewerTrackPosition(memoryState.viewerIndex, 0, false);
   attachViewerMediaFallbacks(content);
   updateViewerControls();
+  syncActiveViewerPlayback();
 }
 
-function renderViewerMedia(media) {
+function renderViewerMedia(media, options = {}) {
   if (!media) return "";
+  const active = options.active !== false;
 
   if (media.kind === "image") {
     return `<img src="${escapeAttr(media.viewerUrl || media.url)}" alt="${escapeAttr(media.name)}" draggable="false" />`;
@@ -2418,13 +2435,13 @@ function renderViewerMedia(media) {
   if (media.kind === "direct-video" || media.kind === "drive-video") {
     const source = media.kind === "drive-video" ? (media.streamUrl || media.url) : media.url;
     return `
-      <video class="viewerVideo" src="${escapeAttr(source)}" autoplay ${media.muted === false ? "" : "muted"} loop playsinline ${media.kind === "drive-video" ? `data-viewer-drive-preview="${escapeAttr(media.url)}"` : ""}></video>
-      ${renderViewerVolumeButton(media)}
+      <video class="viewerVideo" src="${escapeAttr(source)}" ${active ? "autoplay" : 'preload="metadata"'} ${media.muted === false && active ? "" : "muted"} loop playsinline ${media.kind === "drive-video" ? `data-viewer-drive-preview="${escapeAttr(media.url)}"` : ""}></video>
+      ${active ? renderViewerVolumeButton(media) : ""}
     `;
   }
 
   const youtubeId = getYouTubeId(media.fullUrl || media.url);
-  const source = youtubeId ? getYouTubeEmbedUrl(youtubeId, media.muted !== false) : media.url;
+  const source = youtubeId ? getYouTubeEmbedUrl(youtubeId, active && media.muted !== false) : media.url;
   return `
     <iframe class="viewerVideoFrame" src="${escapeAttr(source)}" title="${escapeAttr(media.name)}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen data-youtube="${youtubeId ? "true" : "false"}"></iframe>
   `;
@@ -2432,18 +2449,19 @@ function renderViewerMedia(media) {
 
 function attachViewerMediaFallbacks(content = document.getElementById("viewerContent")) {
   if (!content) return;
-  const driveVideo = content.querySelector("video[data-viewer-drive-preview]");
-  driveVideo?.addEventListener("error", () => {
-    const preview = driveVideo.dataset.viewerDrivePreview;
-    const shell = driveVideo.closest(".viewerSlide") || content;
-    shell.innerHTML = `<iframe class="viewerVideoFrame" src="${escapeAttr(preview)}" title="Google Drive video" allow="fullscreen" allowfullscreen></iframe>`;
-  }, { once: true });
+  content.querySelectorAll("video[data-viewer-drive-preview]").forEach((driveVideo) => {
+    driveVideo.addEventListener("error", () => {
+      const preview = driveVideo.dataset.viewerDrivePreview;
+      const shell = driveVideo.closest(".viewerSlide") || content;
+      shell.innerHTML = `<iframe class="viewerVideoFrame" src="${escapeAttr(preview)}" title="Google Drive video" allow="fullscreen" allowfullscreen></iframe>`;
+    }, { once: true });
+  });
 }
 
 function updateViewerControls() {
   const multiple = memoryState.viewerMedia.length > 1;
-  document.getElementById("viewerPrevious").hidden = !multiple;
-  document.getElementById("viewerNext").hidden = !multiple;
+  document.getElementById("viewerPrevious").hidden = !multiple || memoryState.viewerIndex === 0;
+  document.getElementById("viewerNext").hidden = !multiple || memoryState.viewerIndex === memoryState.viewerMedia.length - 1;
   const counter = document.getElementById("viewerCounter");
   if (counter) counter.textContent = `${memoryState.viewerIndex + 1} / ${memoryState.viewerMedia.length}`;
 }
@@ -2464,9 +2482,9 @@ function handleViewerClick(event) {
   if (willUnmute) muteAllOtherMedia("", -1);
   media.muted = !willUnmute;
 
-  const content = document.getElementById("viewerContent");
-  const video = content?.querySelector("video");
-  const iframe = content?.querySelector('iframe[data-youtube="true"]');
+  const activeSlide = getActiveViewerSlide();
+  const video = activeSlide?.querySelector("video");
+  const iframe = activeSlide?.querySelector('iframe[data-youtube="true"]');
 
   if (video) {
     video.muted = media.muted;
@@ -2485,85 +2503,106 @@ function handleViewerClick(event) {
 function moveViewer(direction, options = {}) {
   if (memoryState.viewerMedia.length < 2 || memoryState.viewerAnimating) return;
 
-  const nextIndex = (memoryState.viewerIndex + direction + memoryState.viewerMedia.length) % memoryState.viewerMedia.length;
-  if (options.smooth !== false) {
-    animateViewerSwitch(direction, nextIndex, options);
+  const currentIndex = memoryState.viewerIndex;
+  const nextIndex = Math.max(0, Math.min(memoryState.viewerMedia.length - 1, currentIndex + direction));
+  if (nextIndex === currentIndex) {
+    setViewerTrackPosition(currentIndex, 0, true);
     return;
   }
 
-  memoryState.viewerIndex = nextIndex;
-  renderViewer();
+  if (options.smooth === false) {
+    memoryState.viewerIndex = nextIndex;
+    updateViewerActiveSlide();
+    setViewerTrackPosition(nextIndex, 0, false);
+    updateViewerControls();
+    syncActiveViewerPlayback();
+    return;
+  }
+
+  animateViewerSwitch(direction, nextIndex, options);
 }
 
 function animateViewerSwitch(direction, nextIndex, options = {}) {
   const content = document.getElementById("viewerContent");
-  const currentMedia = memoryState.viewerMedia[memoryState.viewerIndex];
-  const nextMedia = memoryState.viewerMedia[nextIndex];
+  const track = content?.querySelector(".viewerTrack");
 
-  if (!content || !currentMedia || !nextMedia) {
+  if (!content || !track) {
     memoryState.viewerIndex = nextIndex;
     renderViewer();
     return;
   }
 
   memoryState.viewerAnimating = true;
-  const width = Math.max(1, content.clientWidth || window.innerWidth || 360);
-  const startX = Number(options.gesture?.deltaX || 0);
-  const incomingStartX = startX + (direction * width);
-  const outgoingEndX = -direction * width;
-
-  content.classList.remove("viewerEnterNext", "viewerEnterPrevious");
-  clearViewerInlineMotion(content);
-  content.classList.add("viewerSwitching");
-  content.innerHTML = `
-    <div class="viewerSlide viewerSlideOutgoing">${renderViewerMedia(currentMedia)}</div>
-    <div class="viewerSlide viewerSlideIncoming">${renderViewerMedia(nextMedia)}</div>
-  `;
-
-  const outgoing = content.querySelector(".viewerSlideOutgoing");
-  const incoming = content.querySelector(".viewerSlideIncoming");
-  if (!outgoing || !incoming) {
-    memoryState.viewerIndex = nextIndex;
-    memoryState.viewerAnimating = false;
-    renderViewer();
-    return;
-  }
-
-  outgoing.style.transition = "none";
-  incoming.style.transition = "none";
-  outgoing.style.transform = `translate3d(${startX}px, 0, 0)`;
-  outgoing.style.opacity = "1";
-  incoming.style.transform = `translate3d(${incomingStartX}px, 0, 0)`;
-  incoming.style.opacity = ".98";
-  attachViewerMediaFallbacks(content);
+  const startOffset = Number(options.gesture?.deltaX || 0);
+  memoryState.viewerIndex = nextIndex;
+  updateViewerActiveSlide();
   updateViewerControls();
-
-  void content.offsetWidth;
+  setViewerTrackPosition(nextIndex - direction, startOffset, false);
 
   window.requestAnimationFrame(() => {
-    const easing = "cubic-bezier(.22, .72, .2, 1)";
-    outgoing.style.transition = `transform 315ms ${easing}, opacity 315ms ease, scale 315ms ease`;
-    incoming.style.transition = `transform 315ms ${easing}, opacity 315ms ease`;
-    outgoing.style.transform = `translate3d(${outgoingEndX}px, 0, 0) scale(.985)`;
-    outgoing.style.opacity = ".18";
-    incoming.style.transform = "translate3d(0, 0, 0)";
-    incoming.style.opacity = "1";
+    setViewerTrackPosition(nextIndex, 0, true);
   });
 
   window.setTimeout(() => {
-    memoryState.viewerIndex = nextIndex;
-    content.classList.remove("viewerSwitching");
     memoryState.viewerAnimating = false;
-    renderViewer();
-  }, 335);
+    setViewerTrackPosition(memoryState.viewerIndex, 0, false);
+    syncActiveViewerPlayback();
+  }, 360);
+}
+
+function setViewerTrackPosition(index = memoryState.viewerIndex, offsetPx = 0, animate = false) {
+  const track = document.getElementById("viewerTrack") || document.querySelector("#viewerContent .viewerTrack");
+  if (!track) return;
+
+  const easing = "cubic-bezier(.22, .72, .2, 1)";
+  track.style.transition = animate ? `transform 335ms ${easing}` : "none";
+  track.style.transform = `translate3d(calc(-${index * 100}% + ${offsetPx}px), 0, 0)`;
+}
+
+function updateViewerActiveSlide() {
+  const content = document.getElementById("viewerContent");
+  if (!content) return;
+
+  content.querySelectorAll(".viewerSlide").forEach((slide) => {
+    const active = Number(slide.dataset.viewerSlideIndex) === memoryState.viewerIndex;
+    slide.classList.toggle("active", active);
+  });
+}
+
+function getActiveViewerSlide() {
+  return document.querySelector(`#viewerContent .viewerSlide[data-viewer-slide-index="${memoryState.viewerIndex}"]`);
+}
+
+function syncActiveViewerPlayback() {
+  const content = document.getElementById("viewerContent");
+  if (!content || document.getElementById("viewerModal")?.hidden) return;
+
+  content.querySelectorAll(".viewerSlide").forEach((slide) => {
+    const index = Number(slide.dataset.viewerSlideIndex);
+    const active = index === memoryState.viewerIndex;
+    const media = memoryState.viewerMedia[index];
+    const video = slide.querySelector("video");
+    const iframe = slide.querySelector('iframe[data-youtube="true"]');
+
+    if (video) {
+      video.muted = active ? media?.muted !== false : true;
+      if (active && !document.hidden) {
+        video.play().catch(() => {});
+      } else {
+        video.pause();
+      }
+    }
+
+    if (iframe) {
+      sendYouTubeCommand(iframe, active && media?.muted === false ? "unMute" : "mute");
+      sendYouTubeCommand(iframe, active && !document.hidden ? "playVideo" : "pauseVideo");
+    }
+  });
 }
 
 function resetViewerSwipePosition(content = document.getElementById("viewerContent")) {
   if (!content) return;
-  content.style.transition = "transform 220ms cubic-bezier(.22, .72, .2, 1), opacity 220ms ease";
-  content.style.transform = "translate3d(0, 0, 0)";
-  content.style.opacity = "1";
-  window.setTimeout(() => clearViewerInlineMotion(content), 240);
+  setViewerTrackPosition(memoryState.viewerIndex, 0, true);
 }
 
 function clearViewerInlineMotion(content = document.getElementById("viewerContent")) {
@@ -2571,6 +2610,11 @@ function clearViewerInlineMotion(content = document.getElementById("viewerConten
   content.style.transition = "";
   content.style.transform = "";
   content.style.opacity = "";
+  const track = content.querySelector(".viewerTrack");
+  if (track) {
+    track.style.transition = "";
+    track.style.transform = "";
+  }
 }
 
 function closeViewer() {
