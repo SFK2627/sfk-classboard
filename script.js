@@ -113,7 +113,6 @@ async function loadClassBoard() {
     clearTimeout(timeout);
 
     const data = await response.json();
-    // Hearts/Noted temporarily removed from the viewer.
     const newDataString = JSON.stringify(data);
 
     localStorage.setItem(CACHE_KEY, newDataString);
@@ -334,6 +333,10 @@ function escapeHtml(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+function escapeAttr(value) {
+  return escapeHtml(value);
 }
 
 function renderPeriodDetails(element, item) {
@@ -671,8 +674,9 @@ function renderAnnouncements(items) {
 
         ${attachmentMarkup}
 
-        <div class="announcement-controls announcement-controls-no-heart">
+        <div class="announcement-controls">
           <button class="announcement-btn prev-btn" onclick="previousAnnouncement()">← Previous</button>
+          ${renderAnnouncementHeartButton(item)}
           <button class="announcement-btn next-btn" onclick="nextAnnouncement()">Next →</button>
         </div>
       </div>
@@ -869,13 +873,14 @@ function renderAnnouncementHeartButton(item) {
 
   const id = getAnnouncementId(item);
   const count = getAnnouncementHeartCount(item);
-  const isHearted = id && count > 0 ? isAnnouncementHearted(id) : false;
-  const label = isHearted ? "Noted" : "Noted";
+  const isHearted = id ? isAnnouncementHeartedByThisDevice(item) : false;
+  const label = "Noted";
 
   return `
     <button
       class="announcement-heart-btn ${isHearted ? "is-hearted" : ""}"
       type="button"
+      data-announcement-id="${escapeAttr(id)}"
       onclick="heartAnnouncement('${escapeJsAttribute(id)}')"
       ${!id ? "disabled" : ""}
       aria-label="Acknowledge this announcement">
@@ -892,7 +897,7 @@ function shouldShowAnnouncementHeart(item) {
 
 function getAnnouncementId(item) {
   const explicitId = String(
-    (item && (item.ID || item.Id || item.id || item.RecordID || item["Record ID"])) ||
+    (item && (item.docId || item.DocID || item.__docId || item.ID || item.Id || item.id || item.RecordID || item["Record ID"])) ||
     ""
   ).trim();
 
@@ -951,24 +956,29 @@ function simpleAnnouncementHash(value) {
 
 
 function getAnnouncementHeartCount(item) {
+  const heartUsers = getHeartUsersV2(item);
+  const mapCount = Object.keys(heartUsers).length;
+  if (mapCount > 0) return mapCount;
+
   const values = [
-    item?.HeartCount,
-    item?.heartCount,
-    item?.NotedCount,
-    item?.notedCount,
-    item?.AcknowledgementCount,
-    item?.acknowledgementCount,
-    item?.AcknowledgeCount,
-    item?.acknowledgeCount,
-    item?.Hearts,
-    item?.hearts,
-    item?.Count,
-    item?.count
+    item?.HeartCountV2,
+    item?.heartCountV2,
+    item?.NotedCountV2,
+    item?.notedCountV2
   ]
     .map(value => Number(value))
     .filter(value => Number.isFinite(value) && value >= 0);
 
   return values.length ? Math.max(...values) : 0;
+}
+
+function getHeartUsersV2(item) {
+  return normalizeHeartedDevices(item?.HeartUsersV2 || item?.heartUsersV2 || item?.NotedDevicesV2 || item?.notedDevicesV2);
+}
+
+function isAnnouncementHeartedByThisDevice(item) {
+  const deviceId = getClassBoardHeartDeviceId();
+  return Boolean(getHeartUsersV2(item)[deviceId]);
 }
 
 function getHeartedAnnouncements() {
@@ -1044,7 +1054,7 @@ function syncAnnouncementHeartStatesFromServer(data) {
 }
 
 function getServerHeartStateForDevice(item, deviceId) {
-  const map = normalizeHeartedDevices(item?.HeartedDevices || item?.heartedDevices);
+  const map = normalizeHeartedDevices(item?.HeartUsersV2 || item?.heartUsersV2 || item?.NotedDevicesV2 || item?.notedDevicesV2 || item?.HeartedDevices || item?.heartedDevices);
   const keys = Object.keys(map);
   if (keys.length === 0) return null;
   return Boolean(map[deviceId]);
@@ -1069,8 +1079,182 @@ function escapeJsAttribute(value) {
 }
 
 async function heartAnnouncement(id) {
-  // Hearts/Noted are temporarily disabled.
+  const cleanId = String(id || "").trim();
+  if (!cleanId || ANNOUNCEMENT_HEART_PENDING.has(cleanId)) return false;
+
+  const item = findAnnouncementById(cleanId);
+  if (!item) {
+    console.warn("Announcement not found for heart:", cleanId);
+    return false;
+  }
+
+  const nextHearted = !isAnnouncementHeartedByThisDevice(item);
+  ANNOUNCEMENT_HEART_PENDING.add(cleanId);
+  setAnnouncementHeartButtonSaving(cleanId, true);
+
+  try {
+    const result = await saveAnnouncementHeartV2(cleanId, nextHearted);
+    applyAnnouncementHeartResult(cleanId, result.count, result.hearted, result.heartUsers);
+    renderAnnouncements(latestData?.announcements || []);
+  } catch (error) {
+    console.error("Announcement heart failed:", error);
+    alert("Unable to save Noted. Please refresh and try again.");
+  } finally {
+    ANNOUNCEMENT_HEART_PENDING.delete(cleanId);
+    setAnnouncementHeartButtonSaving(cleanId, false);
+  }
+
   return false;
+}
+
+function findAnnouncementById(id) {
+  const cleanId = String(id || "").trim();
+  return (latestData?.announcements || []).find(item => getAnnouncementId(item) === cleanId) || null;
+}
+
+function setAnnouncementHeartButtonSaving(id, saving) {
+  const button = document.querySelector(`.announcement-heart-btn[data-announcement-id="${cssEscapeSafe(id)}"]`);
+  if (!button) return;
+  button.disabled = Boolean(saving);
+  button.classList.toggle("is-saving", Boolean(saving));
+}
+
+function cssEscapeSafe(value) {
+  const text = String(value || "");
+  if (window.CSS && typeof CSS.escape === "function") return CSS.escape(text);
+  return text.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+}
+
+async function saveAnnouncementHeartV2(id, hearted) {
+  const db = getClassBoardFirestore();
+  if (!db) {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        type: "announcementHeartV2",
+        payload: { id, announcementId: id, hearted, deviceId: getClassBoardHeartDeviceId() }
+      })
+    });
+    const result = await response.json();
+    if (!result.success && result.status !== "success") throw new Error(result.message || "Heart save failed.");
+    return normalizeHeartSaveResult(result, hearted);
+  }
+
+  const ref = await resolveClassBoardDocumentRef(db, "announcements", id, ["ID", "id", "RecordID"]);
+  if (!ref) throw new Error("Announcement record was not found in Firebase.");
+
+  return runHeartV2Transaction(db, ref, hearted);
+}
+
+async function resolveClassBoardDocumentRef(db, collectionName, id, fields = []) {
+  const cleanId = String(id || "").trim();
+  if (!cleanId) return null;
+
+  const collection = db.collection(collectionName);
+  try {
+    const direct = await collection.doc(cleanId).get();
+    if (direct.exists) return direct.ref;
+  } catch (error) {
+    console.warn("Direct document lookup failed:", error);
+  }
+
+  for (const field of fields) {
+    try {
+      const snap = await collection.where(field, "==", cleanId).limit(1).get();
+      if (!snap.empty) return snap.docs[0].ref;
+    } catch (error) {
+      console.warn(`Document lookup by ${field} failed:`, error);
+    }
+  }
+
+  return null;
+}
+
+async function runHeartV2Transaction(db, ref, hearted) {
+  const deviceId = getClassBoardHeartDeviceId();
+  let heartUsers = {};
+  let nextCount = 0;
+
+  await db.runTransaction(async (transaction) => {
+    const doc = await transaction.get(ref);
+    if (!doc.exists) throw new Error("Record was not found in Firebase.");
+
+    const data = doc.data() || {};
+    heartUsers = getHeartUsersV2(data);
+
+    if (hearted) heartUsers[deviceId] = true;
+    else delete heartUsers[deviceId];
+
+    nextCount = Object.keys(heartUsers).length;
+    const update = {
+      HeartUsersV2: heartUsers,
+      heartUsersV2: heartUsers,
+      HeartCountV2: nextCount,
+      heartCountV2: nextCount,
+      NotedCountV2: nextCount,
+      notedCountV2: nextCount,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    transaction.set(ref, update, { merge: true });
+  });
+
+  return { success: true, hearted: Boolean(heartUsers[deviceId]), count: nextCount, heartUsers };
+}
+
+function normalizeHeartSaveResult(result, requestedHearted) {
+  const heartUsers = normalizeHeartedDevices(result.heartUsers || result.HeartUsersV2 || result.heartUsersV2);
+  const count = Number.isFinite(Number(result.count)) ? Math.max(0, Number(result.count)) : Object.keys(heartUsers).length;
+  return {
+    success: true,
+    hearted: typeof result.hearted === "boolean" ? result.hearted : Boolean(requestedHearted),
+    count,
+    heartUsers
+  };
+}
+
+function getClassBoardFirestore() {
+  try {
+    if (window.SFK_CLASSBOARD_FIREBASE_DB) return window.SFK_CLASSBOARD_FIREBASE_DB;
+    if (!window.firebase || !window.SFK_FIREBASE_READY) return null;
+    if (!firebase.apps.length) firebase.initializeApp(window.SFK_FIREBASE_CONFIG);
+    const db = firebase.firestore();
+    window.SFK_CLASSBOARD_FIREBASE_DB = db;
+    return db;
+  } catch (error) {
+    console.warn("Firebase database is unavailable:", error);
+    return null;
+  }
+}
+
+function applyAnnouncementHeartResult(id, count, hearted, heartUsers) {
+  if (!latestData || !Array.isArray(latestData.announcements)) return;
+
+  const deviceId = getClassBoardHeartDeviceId();
+  const map = normalizeHeartedDevices(heartUsers);
+  if (Object.keys(map).length === 0 && hearted) map[deviceId] = true;
+  if (!hearted) delete map[deviceId];
+  const safeCount = Math.max(0, Number.isFinite(Number(count)) ? Number(count) : Object.keys(map).length);
+
+  latestData.announcements = latestData.announcements.map(item => {
+    if (getAnnouncementId(item) !== id) return item;
+    return {
+      ...item,
+      HeartUsersV2: map,
+      heartUsersV2: map,
+      HeartCountV2: safeCount,
+      heartCountV2: safeCount,
+      NotedCountV2: safeCount,
+      notedCountV2: safeCount
+    };
+  });
+
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(latestData));
+    latestDataString = JSON.stringify(latestData);
+  } catch (error) {
+    // Ignore cache update errors.
+  }
 }
 
 function updateAnnouncementHeartCountLocal(id, value, absolute = false) {
@@ -2684,4 +2868,375 @@ function getPartValue(parts, type) {
   return parts.find(part => part.type === type)?.value || "";
 }
 
+// initClassBoard() is called after the stable heart ledger override below.
+
+
+/* ========================================================================
+   STABLE HEART LEDGER V3
+   Source of truth: settings collection documents with Kind=ClassBoardHeartLedgerV3.
+   This avoids writing counts into announcement/memory records and avoids old broken
+   HeartCount/HeartUsers fields. Counts are always calculated from actual heart docs.
+======================================================================== */
+const HEART_LEDGER_KIND_V3 = "ClassBoardHeartLedgerV3";
+const HEART_LEDGER_COLLECTION_V3 = "settings";
+const ANNOUNCEMENT_HEART_LEDGER_PENDING = new Set();
+
+function getHeartLedgerDbV3() {
+  try {
+    if (window.SFK_CLASSBOARD_FIREBASE_DB) return window.SFK_CLASSBOARD_FIREBASE_DB;
+    if (!window.firebase || !window.SFK_FIREBASE_READY) return null;
+    if (!firebase.apps.length) firebase.initializeApp(window.SFK_FIREBASE_CONFIG);
+    const db = firebase.firestore();
+    window.SFK_CLASSBOARD_FIREBASE_DB = db;
+    return db;
+  } catch (error) {
+    console.warn("Heart ledger database unavailable:", error);
+    return null;
+  }
+}
+
+function makeHeartLedgerTargetKeyV3(type, id) {
+  return `${String(type || "record").trim()}:${String(id || "").trim()}`;
+}
+
+function makeAnnouncementHeartTargetKeyV3(itemOrId) {
+  const id = typeof itemOrId === "object" ? getAnnouncementId(itemOrId) : String(itemOrId || "").trim();
+  return makeHeartLedgerTargetKeyV3("announcement", id);
+}
+
+function hashHeartLedgerTextV3(value) {
+  const text = String(value || "");
+  let hash = 2166136261;
+  for (let i = 0; i < text.length; i++) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(36);
+}
+
+function makeHeartLedgerDocIdV3(targetKey, deviceId) {
+  return `heartV3_${hashHeartLedgerTextV3(targetKey)}_${hashHeartLedgerTextV3(deviceId)}`;
+}
+
+async function readHeartLedgerSummaryV3(targetType, targetKeys) {
+  const db = getHeartLedgerDbV3();
+  const uniqueKeys = Array.from(new Set((targetKeys || []).map(String).filter(Boolean)));
+  const summary = {};
+  uniqueKeys.forEach(key => {
+    summary[key] = { count: 0, mine: false };
+  });
+
+  if (!db || uniqueKeys.length === 0) return summary;
+
+  const deviceId = getClassBoardHeartDeviceId();
+  const targetSet = new Set(uniqueKeys);
+
+  try {
+    const snap = await db.collection(HEART_LEDGER_COLLECTION_V3)
+      .where("Kind", "==", HEART_LEDGER_KIND_V3)
+      .get();
+
+    snap.forEach(doc => {
+      const data = doc.data() || {};
+      const key = String(data.TargetKey || "").trim();
+      if (!targetSet.has(key)) return;
+      if (String(data.TargetType || "").trim() !== String(targetType || "").trim()) return;
+      if (data.Active === false) return;
+
+      summary[key].count += 1;
+      if (String(data.DeviceID || "") === deviceId) summary[key].mine = true;
+    });
+  } catch (error) {
+    console.warn("Unable to read heart ledger:", error);
+  }
+
+  return summary;
+}
+
+async function saveHeartLedgerStateV3(targetType, targetKey, shouldHeart) {
+  const db = getHeartLedgerDbV3();
+  if (!db) throw new Error("Firebase is not ready for hearts.");
+
+  const deviceId = getClassBoardHeartDeviceId();
+  const cleanTargetKey = String(targetKey || "").trim();
+  if (!cleanTargetKey) throw new Error("Missing heart target.");
+
+  const docId = makeHeartLedgerDocIdV3(cleanTargetKey, deviceId);
+  const ref = db.collection(HEART_LEDGER_COLLECTION_V3).doc(docId);
+
+  if (shouldHeart) {
+    const payload = {
+      Kind: HEART_LEDGER_KIND_V3,
+      TargetType: String(targetType || "record"),
+      TargetKey: cleanTargetKey,
+      DeviceID: deviceId,
+      Active: true,
+      UpdatedAtText: new Date().toISOString()
+    };
+    if (window.firebase?.firestore?.FieldValue) {
+      payload.UpdatedAt = firebase.firestore.FieldValue.serverTimestamp();
+    }
+    await ref.set(payload, { merge: true });
+  } else {
+    await ref.delete().catch(async () => {
+      await ref.set({
+        Kind: HEART_LEDGER_KIND_V3,
+        TargetType: String(targetType || "record"),
+        TargetKey: cleanTargetKey,
+        DeviceID: deviceId,
+        Active: false,
+        UpdatedAtText: new Date().toISOString()
+      }, { merge: true });
+    });
+  }
+
+  const summary = await readHeartLedgerSummaryV3(targetType, [cleanTargetKey]);
+  return {
+    success: true,
+    hearted: Boolean(summary[cleanTargetKey]?.mine),
+    count: Number(summary[cleanTargetKey]?.count || 0),
+    targetKey: cleanTargetKey
+  };
+}
+
+async function hydrateAnnouncementHeartsV3(announcements) {
+  if (!Array.isArray(announcements) || announcements.length === 0) return announcements;
+  const keys = announcements.map(item => makeAnnouncementHeartTargetKeyV3(item));
+  const summary = await readHeartLedgerSummaryV3("announcement", keys);
+  announcements.forEach(item => {
+    const key = makeAnnouncementHeartTargetKeyV3(item);
+    const info = summary[key] || { count: 0, mine: false };
+    item._heartV3TargetKey = key;
+    item._heartV3Count = Number(info.count || 0);
+    item._heartV3Mine = Boolean(info.mine);
+  });
+  return announcements;
+}
+
+// Override the original loader so heart counts come from the ledger before rendering.
+loadClassBoard = async function loadClassBoardWithHeartLedger() {
+  if (isFetching) return;
+  isFetching = true;
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12000);
+    const response = await fetch(`${API_URL}?type=today`, {
+      cache: "no-store",
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+
+    const data = await response.json();
+    if (Array.isArray(data.announcements)) {
+      await hydrateAnnouncementHeartsV3(data.announcements);
+    }
+
+    const newDataString = JSON.stringify(data);
+    localStorage.setItem(CACHE_KEY, newDataString);
+
+    if (newDataString !== latestDataString) {
+      latestDataString = newDataString;
+      latestData = data;
+      renderDashboard(data);
+    } else {
+      latestData = data;
+      updateCountdownAndBell();
+      renderCleanersToday();
+    }
+  } catch (error) {
+    console.error("ClassBoard fetch failed:", error);
+    if (!latestData) {
+      const title = document.getElementById("dashboardTitle");
+      if (title) title.textContent = "Unable to load ClassBoard";
+    }
+  } finally {
+    isFetching = false;
+  }
+};
+
+renderAnnouncementHeartButton = function renderAnnouncementHeartButtonV3(item) {
+  if (!shouldShowAnnouncementHeart(item)) return `<span class="announcement-heart-spacer"></span>`;
+  const id = getAnnouncementId(item);
+  const count = getAnnouncementHeartCount(item);
+  const isHearted = isAnnouncementHeartedByThisDevice(item);
+  return `
+    <button
+      class="announcement-heart-btn ${isHearted ? "is-hearted" : ""}"
+      type="button"
+      data-announcement-id="${escapeAttr(id)}"
+      onclick="return heartAnnouncement('${escapeJsAttribute(id)}')"
+      ${!id ? "disabled" : ""}
+      aria-label="Acknowledge this announcement">
+      <span class="heart-icon">${isHearted ? "❤️" : "🤍"}</span>
+      <span>Noted</span>
+      <strong>${count}</strong>
+    </button>
+  `;
+};
+
+getAnnouncementHeartCount = function getAnnouncementHeartCountV3(item) {
+  const value = Number(item?._heartV3Count);
+  return Number.isFinite(value) && value >= 0 ? value : 0;
+};
+
+isAnnouncementHeartedByThisDevice = function isAnnouncementHeartedByThisDeviceV3(item) {
+  return Boolean(item?._heartV3Mine);
+};
+
+syncAnnouncementHeartStatesFromServer = function syncAnnouncementHeartStatesFromServerV3() {
+  // No-op. Heart state comes from the Firestore ledger, not localStorage.
+};
+
+heartAnnouncement = async function heartAnnouncementV3(id) {
+  const cleanId = String(id || "").trim();
+  if (!cleanId || ANNOUNCEMENT_HEART_LEDGER_PENDING.has(cleanId)) return false;
+
+  const item = findAnnouncementById(cleanId);
+  if (!item) {
+    console.warn("Announcement not found for heart:", cleanId);
+    return false;
+  }
+
+  const targetKey = makeAnnouncementHeartTargetKeyV3(item);
+  const nextHearted = !Boolean(item._heartV3Mine);
+  ANNOUNCEMENT_HEART_LEDGER_PENDING.add(cleanId);
+  setAnnouncementHeartButtonSaving(cleanId, true);
+
+  try {
+    const result = await saveHeartLedgerStateV3("announcement", targetKey, nextHearted);
+    if (latestData && Array.isArray(latestData.announcements)) {
+      latestData.announcements.forEach(record => {
+        if (getAnnouncementId(record) === cleanId) {
+          record._heartV3TargetKey = targetKey;
+          record._heartV3Count = result.count;
+          record._heartV3Mine = result.hearted;
+        }
+      });
+      latestDataString = JSON.stringify(latestData);
+      localStorage.setItem(CACHE_KEY, latestDataString);
+    }
+    renderAnnouncements(latestData?.announcements || []);
+  } catch (error) {
+    console.error("Announcement heart failed:", error);
+    alert("Unable to save Noted. Please refresh and try again.");
+  } finally {
+    ANNOUNCEMENT_HEART_LEDGER_PENDING.delete(cleanId);
+    setAnnouncementHeartButtonSaving(cleanId, false);
+  }
+
+  return false;
+};
+
 initClassBoard();
+
+/* ========================================================================
+   FAST HEART LEDGER V4 UI
+   Optimistic UI: button/count updates instantly; Firebase save happens behind
+   the scenes. This removes the visible wait/loading cursor on desktop.
+======================================================================== */
+function updateAnnouncementHeartButtonInstantV4(id, hearted, count) {
+  const button = document.querySelector(`.announcement-heart-btn[data-announcement-id="${cssEscapeSafe(id)}"]`);
+  if (!button) return;
+  button.classList.toggle("is-hearted", Boolean(hearted));
+  button.classList.remove("is-saving");
+  button.disabled = false;
+  const icon = button.querySelector(".heart-icon");
+  if (icon) icon.textContent = hearted ? "❤️" : "🤍";
+  const countEl = button.querySelector("strong");
+  if (countEl) countEl.textContent = String(Math.max(0, Number(count) || 0));
+}
+
+function updateAnnouncementHeartRecordInstantV4(id, targetKey, hearted, count) {
+  const safeCount = Math.max(0, Number(count) || 0);
+  if (latestData && Array.isArray(latestData.announcements)) {
+    latestData.announcements.forEach(record => {
+      if (getAnnouncementId(record) === id) {
+        record._heartV3TargetKey = targetKey;
+        record._heartV3Count = safeCount;
+        record._heartV3Mine = Boolean(hearted);
+      }
+    });
+    try {
+      latestDataString = JSON.stringify(latestData);
+      localStorage.setItem(CACHE_KEY, latestDataString);
+    } catch (error) {
+      // Ignore cache write issues.
+    }
+  }
+  updateAnnouncementHeartButtonInstantV4(id, hearted, safeCount);
+}
+
+async function writeAnnouncementHeartLedgerFastV4(targetType, targetKey, shouldHeart) {
+  const db = getHeartLedgerDbV3();
+  if (!db) throw new Error("Firebase is not ready for hearts.");
+  const deviceId = getClassBoardHeartDeviceId();
+  const cleanTargetKey = String(targetKey || "").trim();
+  if (!cleanTargetKey) throw new Error("Missing heart target.");
+  const docId = makeHeartLedgerDocIdV3(cleanTargetKey, deviceId);
+  const ref = db.collection(HEART_LEDGER_COLLECTION_V3).doc(docId);
+  if (shouldHeart) {
+    const payload = {
+      Kind: HEART_LEDGER_KIND_V3,
+      TargetType: String(targetType || "record"),
+      TargetKey: cleanTargetKey,
+      DeviceID: deviceId,
+      Active: true,
+      UpdatedAtText: new Date().toISOString()
+    };
+    if (window.firebase?.firestore?.FieldValue) payload.UpdatedAt = firebase.firestore.FieldValue.serverTimestamp();
+    await ref.set(payload, { merge: true });
+  } else {
+    await ref.delete().catch(async () => {
+      await ref.set({
+        Kind: HEART_LEDGER_KIND_V3,
+        TargetType: String(targetType || "record"),
+        TargetKey: cleanTargetKey,
+        DeviceID: deviceId,
+        Active: false,
+        UpdatedAtText: new Date().toISOString()
+      }, { merge: true });
+    });
+  }
+  return { success: true, targetKey: cleanTargetKey, hearted: Boolean(shouldHeart) };
+}
+
+setAnnouncementHeartButtonSaving = function setAnnouncementHeartButtonSavingFastV4(id, saving) {
+  const button = document.querySelector(`.announcement-heart-btn[data-announcement-id="${cssEscapeSafe(id)}"]`);
+  if (!button) return;
+  // Do not disable the button or show wait cursor. The pending set still blocks double saves.
+  button.classList.toggle("is-saving", Boolean(saving));
+  button.disabled = false;
+};
+
+heartAnnouncement = function heartAnnouncementFastV4(id) {
+  const cleanId = String(id || "").trim();
+  if (!cleanId || ANNOUNCEMENT_HEART_LEDGER_PENDING.has(cleanId)) return false;
+
+  const item = findAnnouncementById(cleanId);
+  if (!item) {
+    console.warn("Announcement not found for heart:", cleanId);
+    return false;
+  }
+
+  const targetKey = makeAnnouncementHeartTargetKeyV3(item);
+  const previousHearted = Boolean(item._heartV3Mine);
+  const previousCount = Math.max(0, Number(item._heartV3Count) || 0);
+  const nextHearted = !previousHearted;
+  const optimisticCount = Math.max(0, previousCount + (nextHearted ? 1 : -1));
+
+  ANNOUNCEMENT_HEART_LEDGER_PENDING.add(cleanId);
+  updateAnnouncementHeartRecordInstantV4(cleanId, targetKey, nextHearted, optimisticCount);
+
+  writeAnnouncementHeartLedgerFastV4("announcement", targetKey, nextHearted)
+    .catch(error => {
+      console.error("Announcement heart save failed:", error);
+      updateAnnouncementHeartRecordInstantV4(cleanId, targetKey, previousHearted, previousCount);
+    })
+    .finally(() => {
+      ANNOUNCEMENT_HEART_LEDGER_PENDING.delete(cleanId);
+      setAnnouncementHeartButtonSaving(cleanId, false);
+    });
+
+  return false;
+};

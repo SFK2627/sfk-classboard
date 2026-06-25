@@ -2045,14 +2045,16 @@ textarea {
 }
 
 
-/* TEMPORARY HEART REMOVAL: Memories */
-.heartButton,
-.heartCount {
-  display: none !important;
+
+/* Fresh stable Memories heart system */
+.heartButton:disabled,
+.heartButton.is-saving {
+  opacity: .65;
+  cursor: wait;
 }
-.postActionsNoHeart {
-  padding-top: 8px !important;
-}
-.postDetailsNoHeart {
-  padding-top: 2px !important;
+
+/* Fast heart feedback: no wait cursor. Count updates instantly while save syncs quietly. */
+.heartButton.is-saving {
+  opacity: 1 !important;
+  cursor: pointer !important;
 }

@@ -1193,7 +1193,7 @@ function renderAdminTable(result) {
   const headers = result.headers || [];
   const rows = result.rows || [];
   const totalRows = Number.isFinite(result.totalRows) ? result.totalRows : rows.length;
-  const isAnnouncementsSheet = false; // Noted/heart column temporarily removed.
+  const isAnnouncementsSheet = sheetName === "Announcements";
   const visibleColumnIndexes = getVisibleManageColumnIndexes(headers);
 
   if (!tableHead || !tableBody) return;
@@ -1291,19 +1291,18 @@ function renderAdminNotedCountCell(row) {
 
 
 function getManageHeartCount(row) {
-  const values = [
-    row?.notedCount,
-    row?.NotedCount,
-    row?.heartCount,
-    row?.HeartCount,
-    row?.Hearts,
-    row?.hearts,
-    row?.Count,
-    row?.count
-  ]
+  const users = normalizeManageHeartUsers(row?.HeartUsersV2 || row?.heartUsersV2 || row?.NotedDevicesV2 || row?.notedDevicesV2);
+  const mapCount = Object.keys(users).length;
+  if (mapCount > 0) return mapCount;
+  const values = [row?.NotedCountV2, row?.notedCountV2, row?.HeartCountV2, row?.heartCountV2]
     .map(value => Number(value))
     .filter(value => Number.isFinite(value) && value >= 0);
   return values.length ? Math.max(...values) : 0;
+}
+
+function normalizeManageHeartUsers(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  return Object.fromEntries(Object.entries(value).filter(([key, isHearted]) => key && Boolean(isHearted)));
 }
 
 function toggleAdminRowSelection(rowNumber, checked) {

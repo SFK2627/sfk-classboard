@@ -1,14 +1,14 @@
-const CACHE_NAME = "sfk-officers-pwa-v15-hearts-removed-temporary";
+const CACHE_NAME = "sfk-officers-pwa-v19-fast-heart-feedback";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./sw.js",
-  "../officer.html?embedded=1&v=solid-heart-1",
-  "../officer.css?v=solid-heart-1",
-  "../officer.js?v=solid-heart-1",
+  "../officer.html?embedded=1&v=heart-ledger-v3",
+  "../officer.css?v=heart-ledger-v3",
+  "../officer.js?v=heart-ledger-v3",
   "../firebase-config.js",
-  "../firebase-adapter.js?v=6-attachment-upload",
+  "../firebase-adapter.js?v=9-heart-ledger-v3",
   "../icons/icon-192.png",
   "../icons/icon-512.png",
   "../icons/icon-maskable-512.png"

@@ -128,8 +128,8 @@
     if (type === "adminBatchUnpublish" || type === "officerBatchHide") return batchRows(payload, unpublishRow);
     if (type === "adminBatchDelete") return batchRows(payload, deleteRow);
     if (type === "officerAdd") return addTypedRow(payload.kind, payload, sourceUrl);
-    if (type === "announcementHeart") return recordHeart("Announcements", payload.announcementId || payload.AnnouncementID || payload.ID || payload.id, payload.delta, payload);
-    if (type === "memoryHeart") return recordHeart("Memories", payload.memoryId || payload.MemoryID || payload.ID || payload.id, payload.delta, payload);
+    if (type === "announcementHeart" || type === "announcementHeartV2") return recordHeart("Announcements", payload.announcementId || payload.AnnouncementID || payload.ID || payload.id, payload.delta, payload);
+    if (type === "memoryHeart" || type === "memoryHeartV2") return recordHeart("Memories", payload.memoryId || payload.MemoryID || payload.ID || payload.id, payload.delta, payload);
     if (type === "memoryAuth") return checkMemoryAuth(payload);
     if (type === "memoryHide") return hideMemory(payload.memoryId || payload.MemoryID || payload.ID || payload.id);
     if (type === "memoryDelete") return deleteMemory(payload.memoryId || payload.MemoryID || payload.ID || payload.id);
@@ -420,45 +420,36 @@
     const requestedState = parseHeartRequestedState(payload);
     let count = 0;
     let hearted = false;
+    let savedHeartUsers = {};
 
     await db.runTransaction(async transaction => {
       const doc = await transaction.get(ref);
       if (!doc.exists) throw new Error("Record not found.");
 
       const data = doc.data() || {};
-      const currentCount = readHeartCount(data);
-      const heartedDevices = normalizeHeartedDevices(data.HeartedDevices || data.heartedDevices);
+      const heartedDevices = normalizeHeartedDevices(data.HeartUsersV2 || data.heartUsersV2 || data.NotedDevicesV2 || data.notedDevicesV2);
       const currentlyHearted = Boolean(heartedDevices[deviceId]);
       const nextHearted = requestedState === null ? !currentlyHearted : requestedState;
 
-      count = currentCount;
-      if (nextHearted && !currentlyHearted) {
-        heartedDevices[deviceId] = true;
-        hearted = true;
-        count = currentCount + 1;
-      } else if (!nextHearted && currentlyHearted) {
-        delete heartedDevices[deviceId];
-        hearted = false;
-        count = Math.max(0, currentCount - 1);
-      } else {
-        hearted = currentlyHearted;
-        count = currentCount;
-      }
+      if (nextHearted) heartedDevices[deviceId] = true;
+      else delete heartedDevices[deviceId];
+
+      hearted = Boolean(heartedDevices[deviceId]);
+      count = Object.keys(heartedDevices).length;
+      savedHeartUsers = { ...heartedDevices };
 
       const update = withMeta({
-        HeartCount: count,
-        heartCount: count,
-        Hearts: count,
-        hearts: count,
-        NotedCount: count,
-        notedCount: count,
-        HeartedDevices: heartedDevices,
-        heartedDevices
+        HeartUsersV2: heartedDevices,
+        heartUsersV2: heartedDevices,
+        HeartCountV2: count,
+        heartCountV2: count,
+        NotedCountV2: count,
+        notedCountV2: count
       }, false);
       transaction.set(ref, update, { merge: true });
     });
 
-    return { success: true, count, hearted };
+    return { success: true, count, hearted, heartUsers: savedHeartUsers };
   }
 
   async function resolveRecordRef(collectionName, recordId) {
@@ -482,18 +473,11 @@
   }
 
   function readHeartCount(row) {
-    const values = [
-      row?.HeartCount,
-      row?.heartCount,
-      row?.Hearts,
-      row?.hearts,
-      row?.Count,
-      row?.count,
-      row?.notedCount,
-      row?.NotedCount,
-      row?.AcknowledgeCount,
-      row?.acknowledgeCount
-    ]
+    const users = normalizeHeartedDevices(row?.HeartUsersV2 || row?.heartUsersV2 || row?.NotedDevicesV2 || row?.notedDevicesV2);
+    const mapCount = Object.keys(users).length;
+    if (mapCount > 0) return mapCount;
+
+    const values = [row?.HeartCountV2, row?.heartCountV2, row?.NotedCountV2, row?.notedCountV2]
       .map(value => Number(value))
       .filter(value => Number.isFinite(value) && value >= 0);
 

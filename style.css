@@ -5901,18 +5901,17 @@ ol.formattedText li {
   }
 }
 
+/* Fresh stable Noted/Heart system */
+.announcement-heart-btn.is-saving {
+  opacity: .72 !important;
+  cursor: wait !important;
+}
+.announcement-heart-btn.is-hearted:not(:disabled) {
+  cursor: pointer !important;
+}
 
-/* TEMPORARY HEART REMOVAL: Subject Announcements */
-.announcement-heart-btn,
-.announcement-heart-spacer {
-  display: none !important;
-}
-.announcement-controls-no-heart {
-  justify-content: space-between !important;
-}
-.announcement-controls-no-heart .prev-btn {
-  margin-right: 0 !important;
-}
-.announcement-controls-no-heart .next-btn {
-  margin-left: 0 !important;
+/* Fast heart feedback: no wait cursor. Count updates instantly while save syncs quietly. */
+.announcement-heart-btn.is-saving {
+  opacity: 1 !important;
+  cursor: pointer !important;
 }

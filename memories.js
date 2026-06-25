@@ -103,7 +103,6 @@ async function loadMemories() {
   try {
     const rows = await loadMemoriesFromFirebaseFirst();
     memoryState.posts = rows.map(normalizeMemoryPost);
-    // Hearts temporarily removed from Memories.
     localStorage.setItem(MEMORY_CACHE_KEY, JSON.stringify(memoryState.posts));
     markLoadedMemoriesSeen(memoryState.posts);
     renderMemories();
@@ -142,7 +141,7 @@ async function loadMemoriesDirectFromFirebase() {
   const rows = [];
   snap.forEach((doc) => {
     const data = convertFirestoreData(doc.data() || {});
-    const id = String(data.ID || data.MemoryID || data.memoryId || data.id || doc.id || "").trim();
+    const id = String(doc.id || data.docId || data.ID || data.MemoryID || data.memoryId || data.id || "").trim();
     rows.push({
       ...data,
       docId: doc.id,
@@ -227,22 +226,29 @@ function renderCachedMemories() {
 }
 
 function readMemoryHeartCount(raw) {
+  const heartUsers = getHeartUsersV2(raw);
+  const mapCount = Object.keys(heartUsers).length;
+  if (mapCount > 0) return mapCount;
+
   const values = [
-    raw?.HeartCount,
-    raw?.heartCount,
-    raw?.Hearts,
-    raw?.hearts,
-    raw?.Count,
-    raw?.count,
-    raw?.notedCount,
-    raw?.NotedCount,
-    raw?.AcknowledgeCount,
-    raw?.acknowledgeCount
+    raw?.HeartCountV2,
+    raw?.heartCountV2,
+    raw?.NotedCountV2,
+    raw?.notedCountV2
   ]
     .map(value => Number(value))
     .filter(value => Number.isFinite(value) && value >= 0);
 
   return values.length ? Math.max(...values) : 0;
+}
+
+function getHeartUsersV2(raw) {
+  return normalizeHeartedDevices(raw?.HeartUsersV2 || raw?.heartUsersV2 || raw?.NotedDevicesV2 || raw?.notedDevicesV2);
+}
+
+function isMemoryHeartedByThisDevice(post) {
+  const deviceId = getClassBoardHeartDeviceId();
+  return Boolean(getHeartUsersV2(post)[deviceId]);
 }
 
 function normalizeMemoryPost(raw) {
@@ -268,14 +274,14 @@ function normalizeMemoryPost(raw) {
   const music = normalizePostMusic(raw);
 
   return {
-    id: String(raw.ID || raw.Id || raw.id || "").trim(),
+    id: String(raw.docId || raw.DocID || raw.__docId || raw.ID || raw.Id || raw.id || raw.MemoryID || raw.memoryId || "").trim(),
     date: String(raw.Date || "").trim(),
     title: String(raw.Title || "Untitled Memory").trim(),
     caption: String(raw.Caption || "").trim(),
     postedBy: String(raw.PostedBy || "SFK").trim(),
     role: String(raw.Role || "Officer").trim(),
     heartCount: readMemoryHeartCount(raw),
-    heartedDevices: normalizeHeartedDevices(raw.HeartedDevices || raw.heartedDevices),
+    heartUsersV2: getHeartUsersV2(raw),
     createdAt: String(raw.CreatedAt || "").trim(),
     videoUrl: String(raw.VideoURL || raw.videoUrl || "").trim(),
     media,
@@ -707,7 +713,7 @@ function getFilteredPosts() {
 
 function renderMemoryPost(post) {
   const currentIndex = Math.min(memoryState.carousel.get(post.id) || 0, Math.max(0, post.media.length - 1));
-  // Hearts temporarily removed from Memories.
+  const hearted = isMemoryHeartedByThisDevice(post);
   const avatar = escapeHtml(getInitials(post.postedBy));
   const menu = memoryState.auth
     ? `<button class="postMenuButton" type="button" data-action="manage" data-id="${escapeAttr(post.id)}" aria-label="Manage memory">&#8943;</button>`
@@ -726,11 +732,13 @@ function renderMemoryPost(post) {
 
       ${renderPostMedia(post, currentIndex)}
 
-      <div class="postActions postActionsNoHeart">
+      <div class="postActions">
+        <button class="heartButton ${hearted ? "hearted" : ""}" type="button" data-action="heart" data-id="${escapeAttr(post.id)}" aria-label="Heart this memory">${hearted ? "&#9829;" : "&#9825;"}</button>
         <button class="shareButton" type="button" data-action="share" data-id="${escapeAttr(post.id)}" aria-label="Share this memory">&#8599;</button>
       </div>
 
-      <div class="postDetails postDetailsNoHeart">
+      <div class="postDetails">
+        <span class="heartCount">${formatHeartCount(post.heartCount)}</span>
         <p class="postCaption"><strong>${escapeHtml(post.title)}</strong>${post.caption ? ` ${escapeHtml(post.caption)}` : ""}</p>
         <time class="postDate">${escapeHtml(post.date || post.createdAt || "SFK Memory")}</time>
       </div>
@@ -872,7 +880,7 @@ function handleFeedClick(event) {
   if (action === "heart") {
     event.preventDefault();
     event.stopPropagation();
-    return false;
+    return heartMemory(id);
   }
   if (action === "share") return shareMemory(id);
   if (action === "manage") return openManageActions(id);
@@ -1742,9 +1750,42 @@ function getViewerSwipeDirection(start, endTouch) {
   return deltaX < 0 ? 1 : -1;
 }
 
+const MEMORY_HEART_PENDING = new Set();
+
 async function heartMemory(id) {
-  // Hearts are temporarily disabled in Memories.
+  const cleanId = String(id || "").trim();
+  if (!cleanId || MEMORY_HEART_PENDING.has(cleanId)) return false;
+
+  const post = memoryState.posts.find((item) => item.id === cleanId);
+  if (!post) return false;
+
+  const nextHearted = !isMemoryHeartedByThisDevice(post);
+  MEMORY_HEART_PENDING.add(cleanId);
+  setMemoryHeartButtonSaving(cleanId, true);
+
+  try {
+    const result = await saveMemoryHeartToDatabase(cleanId, 0, nextHearted);
+    applyMemoryHeartResult(cleanId, result.count, result.hearted, result.heartUsers);
+    updateMemoryHeartDisplay(cleanId);
+    saveMemoryCacheSnapshot();
+  } catch (error) {
+    console.error("Memory heart failed:", error);
+    showToast("Unable to save heart. Please refresh and try again.");
+  } finally {
+    MEMORY_HEART_PENDING.delete(cleanId);
+    setMemoryHeartButtonSaving(cleanId, false);
+  }
+
   return false;
+}
+
+function setMemoryHeartButtonSaving(id, saving) {
+  const article = Array.from(document.querySelectorAll(".memoryPost"))
+    .find((item) => item.dataset.postId === String(id || ""));
+  const button = article?.querySelector('.heartButton[data-action="heart"]');
+  if (!button) return;
+  button.disabled = Boolean(saving);
+  button.classList.toggle("is-saving", Boolean(saving));
 }
 
 async function saveMemoryHeartToDatabase(id, delta, hearted) {
@@ -1753,7 +1794,7 @@ async function saveMemoryHeartToDatabase(id, delta, hearted) {
     return saveMemoryHeartDirectToFirebase(id, delta, hearted);
   }
 
-  return postMemoryApi("memoryHeart", { MemoryID: id, memoryId: id, id, delta, hearted, deviceId: getClassBoardHeartDeviceId() });
+  return postMemoryApi("memoryHeartV2", { MemoryID: id, memoryId: id, id, hearted, deviceId: getClassBoardHeartDeviceId() });
 }
 
 async function saveMemoryHeartDirectToFirebase(id, delta, hearted) {
@@ -1768,40 +1809,30 @@ async function saveMemoryHeartDirectToFirebase(id, delta, hearted) {
 
   let nextCount = 0;
   let serverHearted = false;
+  let heartUsers = {};
 
   await db.runTransaction(async (transaction) => {
     const doc = await transaction.get(ref);
     if (!doc.exists) throw new Error("Memory record was not found in Firebase.");
 
     const data = doc.data() || {};
-    const currentCount = readMemoryHeartCount(data);
-    const heartedDevices = normalizeHeartedDevices(data.HeartedDevices || data.heartedDevices);
-    const currentlyHearted = Boolean(heartedDevices[deviceId]);
+    heartUsers = getHeartUsersV2(data);
+    const currentlyHearted = Boolean(heartUsers[deviceId]);
     const nextHearted = requestedHearted === null ? !currentlyHearted : requestedHearted;
 
-    nextCount = currentCount;
-    if (nextHearted && !currentlyHearted) {
-      heartedDevices[deviceId] = true;
-      serverHearted = true;
-      nextCount = currentCount + 1;
-    } else if (!nextHearted && currentlyHearted) {
-      delete heartedDevices[deviceId];
-      serverHearted = false;
-      nextCount = Math.max(0, currentCount - 1);
-    } else {
-      serverHearted = currentlyHearted;
-      nextCount = currentCount;
-    }
+    if (nextHearted) heartUsers[deviceId] = true;
+    else delete heartUsers[deviceId];
+
+    nextCount = Object.keys(heartUsers).length;
+    serverHearted = Boolean(heartUsers[deviceId]);
 
     const update = {
-      HeartCount: nextCount,
-      heartCount: nextCount,
-      Hearts: nextCount,
-      hearts: nextCount,
-      NotedCount: nextCount,
-      notedCount: nextCount,
-      HeartedDevices: heartedDevices,
-      heartedDevices
+      HeartUsersV2: heartUsers,
+      heartUsersV2: heartUsers,
+      HeartCountV2: nextCount,
+      heartCountV2: nextCount,
+      NotedCountV2: nextCount,
+      notedCountV2: nextCount
     };
     if (window.firebase?.firestore?.FieldValue) {
       update.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
@@ -1809,7 +1840,7 @@ async function saveMemoryHeartDirectToFirebase(id, delta, hearted) {
     transaction.set(ref, update, { merge: true });
   });
 
-  return { success: true, count: nextCount, hearted: serverHearted };
+  return { success: true, count: nextCount, hearted: serverHearted, heartUsers };
 }
 
 async function resolveMemoryDocumentRef(db, id) {
@@ -1825,7 +1856,7 @@ async function resolveMemoryDocumentRef(db, id) {
     console.warn("Direct memory document lookup failed:", error);
   }
 
-  const fields = ["ID", "id", "MemoryID", "memoryId"];
+  const fields = ["docId", "DocID", "ID", "id", "MemoryID", "memoryId"];
   for (const field of fields) {
     try {
       const snap = await collection.where(field, "==", cleanId).limit(1).get();
@@ -1838,13 +1869,34 @@ async function resolveMemoryDocumentRef(db, id) {
   return null;
 }
 
+function applyMemoryHeartResult(id, count, hearted, heartUsers) {
+  const cleanId = String(id || "").trim();
+  const deviceId = getClassBoardHeartDeviceId();
+  const map = normalizeHeartedDevices(heartUsers);
+  if (Object.keys(map).length === 0 && hearted) map[deviceId] = true;
+  if (!hearted) delete map[deviceId];
+  const safeCount = Math.max(0, Number.isFinite(Number(count)) ? Number(count) : Object.keys(map).length);
+
+  memoryState.posts = memoryState.posts.map((post) => {
+    if (post.id !== cleanId) return post;
+    return {
+      ...post,
+      heartUsersV2: map,
+      HeartUsersV2: map,
+      HeartCountV2: safeCount,
+      heartCountV2: safeCount,
+      heartCount: safeCount
+    };
+  });
+}
+
 function updateMemoryHeartDisplay(id) {
   const post = memoryState.posts.find((item) => item.id === id);
   const article = Array.from(document.querySelectorAll(".memoryPost"))
     .find((item) => item.dataset.postId === id);
   if (!post || !article) return;
 
-  const hearted = readMemoryHeartCount(post) > 0 && getHeartedMemoryIds().includes(id);
+  const hearted = isMemoryHeartedByThisDevice(post);
   const button = article.querySelector('.heartButton[data-action="heart"]');
   const count = article.querySelector(".heartCount");
 
@@ -1866,9 +1918,9 @@ function syncMemoryHeartStatesFromServer(posts) {
     const id = String(post?.id || "").trim();
     if (!id) return;
 
-    const keys = Object.keys(post.heartedDevices || {});
-    if (keys.length && post.heartedDevices[deviceId]) setHeartedMemory(id);
-    else if (keys.length || readMemoryHeartCount(post) === 0) unsetHeartedMemory(id);
+    const users = getHeartUsersV2(post);
+    if (users[deviceId]) setHeartedMemory(id);
+    else unsetHeartedMemory(id);
   });
 }
 
@@ -3003,3 +3055,307 @@ function escapeHtml(value) {
 function escapeAttr(value) {
   return escapeHtml(value).replace(/`/g, "&#096;");
 }
+
+/* ========================================================================
+   STABLE MEMORY HEART LEDGER V3
+   Source of truth: settings collection documents with Kind=ClassBoardHeartLedgerV3.
+   This does not touch old HeartCount fields and is shared in spirit with the
+   Subject Announcement heart system.
+======================================================================== */
+const MEMORY_HEART_LEDGER_KIND_V3 = "ClassBoardHeartLedgerV3";
+const MEMORY_HEART_LEDGER_COLLECTION_V3 = "settings";
+const MEMORY_HEART_LEDGER_PENDING = new Set();
+
+function getMemoryHeartLedgerDbV3() {
+  try {
+    if (window.SFK_CLASSBOARD_FIREBASE_DB) return window.SFK_CLASSBOARD_FIREBASE_DB;
+    if (!window.firebase || !window.SFK_FIREBASE_READY) return null;
+    if (!firebase.apps.length) firebase.initializeApp(window.SFK_FIREBASE_CONFIG);
+    const db = firebase.firestore();
+    window.SFK_CLASSBOARD_FIREBASE_DB = db;
+    return db;
+  } catch (error) {
+    console.warn("Memory heart ledger database unavailable:", error);
+    return null;
+  }
+}
+
+function makeMemoryHeartTargetKeyV3(postOrId) {
+  const id = typeof postOrId === "object"
+    ? String(postOrId?.docId || postOrId?.DocID || postOrId?.id || postOrId?.ID || postOrId?.MemoryID || postOrId?.memoryId || "").trim()
+    : String(postOrId || "").trim();
+  return `memory:${id}`;
+}
+
+function hashMemoryHeartLedgerTextV3(value) {
+  const text = String(value || "");
+  let hash = 2166136261;
+  for (let i = 0; i < text.length; i++) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(36);
+}
+
+function makeMemoryHeartLedgerDocIdV3(targetKey, deviceId) {
+  return `heartV3_${hashMemoryHeartLedgerTextV3(targetKey)}_${hashMemoryHeartLedgerTextV3(deviceId)}`;
+}
+
+async function readMemoryHeartLedgerSummaryV3(targetKeys) {
+  const db = getMemoryHeartLedgerDbV3();
+  const uniqueKeys = Array.from(new Set((targetKeys || []).map(String).filter(Boolean)));
+  const summary = {};
+  uniqueKeys.forEach(key => {
+    summary[key] = { count: 0, mine: false };
+  });
+  if (!db || uniqueKeys.length === 0) return summary;
+
+  const targetSet = new Set(uniqueKeys);
+  const deviceId = getClassBoardHeartDeviceId();
+
+  try {
+    const snap = await db.collection(MEMORY_HEART_LEDGER_COLLECTION_V3)
+      .where("Kind", "==", MEMORY_HEART_LEDGER_KIND_V3)
+      .get();
+
+    snap.forEach(doc => {
+      const data = doc.data() || {};
+      const key = String(data.TargetKey || "").trim();
+      if (!targetSet.has(key)) return;
+      if (String(data.TargetType || "").trim() !== "memory") return;
+      if (data.Active === false) return;
+      summary[key].count += 1;
+      if (String(data.DeviceID || "") === deviceId) summary[key].mine = true;
+    });
+  } catch (error) {
+    console.warn("Unable to read memory heart ledger:", error);
+  }
+
+  return summary;
+}
+
+async function saveMemoryHeartLedgerStateV3(targetKey, shouldHeart) {
+  const db = getMemoryHeartLedgerDbV3();
+  if (!db) throw new Error("Firebase is not ready for memory hearts.");
+
+  const deviceId = getClassBoardHeartDeviceId();
+  const cleanTargetKey = String(targetKey || "").trim();
+  if (!cleanTargetKey) throw new Error("Missing memory heart target.");
+
+  const docId = makeMemoryHeartLedgerDocIdV3(cleanTargetKey, deviceId);
+  const ref = db.collection(MEMORY_HEART_LEDGER_COLLECTION_V3).doc(docId);
+
+  if (shouldHeart) {
+    const payload = {
+      Kind: MEMORY_HEART_LEDGER_KIND_V3,
+      TargetType: "memory",
+      TargetKey: cleanTargetKey,
+      DeviceID: deviceId,
+      Active: true,
+      UpdatedAtText: new Date().toISOString()
+    };
+    if (window.firebase?.firestore?.FieldValue) {
+      payload.UpdatedAt = firebase.firestore.FieldValue.serverTimestamp();
+    }
+    await ref.set(payload, { merge: true });
+  } else {
+    await ref.delete().catch(async () => {
+      await ref.set({
+        Kind: MEMORY_HEART_LEDGER_KIND_V3,
+        TargetType: "memory",
+        TargetKey: cleanTargetKey,
+        DeviceID: deviceId,
+        Active: false,
+        UpdatedAtText: new Date().toISOString()
+      }, { merge: true });
+    });
+  }
+
+  const summary = await readMemoryHeartLedgerSummaryV3([cleanTargetKey]);
+  return {
+    success: true,
+    hearted: Boolean(summary[cleanTargetKey]?.mine),
+    count: Number(summary[cleanTargetKey]?.count || 0),
+    targetKey: cleanTargetKey
+  };
+}
+
+async function hydrateMemoryHeartsV3(posts) {
+  if (!Array.isArray(posts) || posts.length === 0) return posts;
+  const keys = posts.map(post => makeMemoryHeartTargetKeyV3(post));
+  const summary = await readMemoryHeartLedgerSummaryV3(keys);
+  posts.forEach(post => {
+    const key = makeMemoryHeartTargetKeyV3(post);
+    const info = summary[key] || { count: 0, mine: false };
+    post._heartV3TargetKey = key;
+    post._heartV3Count = Number(info.count || 0);
+    post._heartV3Mine = Boolean(info.mine);
+    post.heartCount = post._heartV3Count;
+    post.HeartCount = post._heartV3Count;
+  });
+  return posts;
+}
+
+loadMemories = async function loadMemoriesWithHeartLedgerV3() {
+  setFeedStatus("Loading memories...");
+  try {
+    const rows = await loadMemoriesFromFirebaseFirst();
+    const posts = rows.map(normalizeMemoryPost);
+    await hydrateMemoryHeartsV3(posts);
+    memoryState.posts = posts;
+    localStorage.setItem(MEMORY_CACHE_KEY, JSON.stringify(memoryState.posts));
+    markLoadedMemoriesSeen(memoryState.posts);
+    renderMemories();
+  } catch (error) {
+    console.error("Memories load failed:", error);
+    if (memoryState.posts.length === 0) {
+      setFeedStatus("Memories will appear after the database loads correctly.");
+    }
+  }
+};
+
+readMemoryHeartCount = function readMemoryHeartCountV3(raw) {
+  const ledgerCount = Number(raw?._heartV3Count);
+  return Number.isFinite(ledgerCount) && ledgerCount >= 0 ? ledgerCount : 0;
+};
+
+isMemoryHeartedByThisDevice = function isMemoryHeartedByThisDeviceV3(post) {
+  return Boolean(post?._heartV3Mine);
+};
+
+heartMemory = async function heartMemoryV3(id) {
+  const cleanId = String(id || "").trim();
+  if (!cleanId || MEMORY_HEART_LEDGER_PENDING.has(cleanId)) return false;
+
+  const post = memoryState.posts.find((item) => item.id === cleanId);
+  if (!post) return false;
+
+  const targetKey = makeMemoryHeartTargetKeyV3(post);
+  const nextHearted = !Boolean(post._heartV3Mine);
+  MEMORY_HEART_LEDGER_PENDING.add(cleanId);
+  setMemoryHeartButtonSaving(cleanId, true);
+
+  try {
+    const result = await saveMemoryHeartLedgerStateV3(targetKey, nextHearted);
+    memoryState.posts = memoryState.posts.map((item) => {
+      if (item.id !== cleanId) return item;
+      return {
+        ...item,
+        _heartV3TargetKey: targetKey,
+        _heartV3Count: result.count,
+        _heartV3Mine: result.hearted,
+        heartCount: result.count,
+        HeartCount: result.count
+      };
+    });
+    updateMemoryHeartDisplay(cleanId);
+    saveMemoryCacheSnapshot();
+  } catch (error) {
+    console.error("Memory heart failed:", error);
+    showToast("Unable to save heart. Please refresh and try again.");
+  } finally {
+    MEMORY_HEART_LEDGER_PENDING.delete(cleanId);
+    setMemoryHeartButtonSaving(cleanId, false);
+  }
+
+  return false;
+};
+
+syncMemoryHeartStatesFromServer = function syncMemoryHeartStatesFromServerV3() {
+  // No-op. Heart state now comes from the Firestore ledger during loadMemories().
+};
+
+/* ========================================================================
+   FAST MEMORY HEART LEDGER V4 UI
+   Optimistic UI: heart/count updates immediately; Firebase save is background.
+======================================================================== */
+async function writeMemoryHeartLedgerFastV4(targetKey, shouldHeart) {
+  const db = getMemoryHeartLedgerDbV3();
+  if (!db) throw new Error("Firebase is not ready for memory hearts.");
+  const deviceId = getClassBoardHeartDeviceId();
+  const cleanTargetKey = String(targetKey || "").trim();
+  if (!cleanTargetKey) throw new Error("Missing memory heart target.");
+  const docId = makeMemoryHeartLedgerDocIdV3(cleanTargetKey, deviceId);
+  const ref = db.collection(MEMORY_HEART_LEDGER_COLLECTION_V3).doc(docId);
+  if (shouldHeart) {
+    const payload = {
+      Kind: MEMORY_HEART_LEDGER_KIND_V3,
+      TargetType: "memory",
+      TargetKey: cleanTargetKey,
+      DeviceID: deviceId,
+      Active: true,
+      UpdatedAtText: new Date().toISOString()
+    };
+    if (window.firebase?.firestore?.FieldValue) payload.UpdatedAt = firebase.firestore.FieldValue.serverTimestamp();
+    await ref.set(payload, { merge: true });
+  } else {
+    await ref.delete().catch(async () => {
+      await ref.set({
+        Kind: MEMORY_HEART_LEDGER_KIND_V3,
+        TargetType: "memory",
+        TargetKey: cleanTargetKey,
+        DeviceID: deviceId,
+        Active: false,
+        UpdatedAtText: new Date().toISOString()
+      }, { merge: true });
+    });
+  }
+  return { success: true, targetKey: cleanTargetKey, hearted: Boolean(shouldHeart) };
+}
+
+function updateMemoryHeartRecordInstantV4(id, targetKey, hearted, count) {
+  const safeCount = Math.max(0, Number(count) || 0);
+  memoryState.posts = memoryState.posts.map((item) => {
+    if (item.id !== id) return item;
+    return {
+      ...item,
+      _heartV3TargetKey: targetKey,
+      _heartV3Count: safeCount,
+      _heartV3Mine: Boolean(hearted),
+      heartCount: safeCount,
+      HeartCount: safeCount
+    };
+  });
+  updateMemoryHeartDisplay(id);
+  saveMemoryCacheSnapshot();
+}
+
+setMemoryHeartButtonSaving = function setMemoryHeartButtonSavingFastV4(id, saving) {
+  const article = Array.from(document.querySelectorAll(".memoryPost"))
+    .find((item) => item.dataset.postId === String(id || ""));
+  const button = article?.querySelector('.heartButton[data-action="heart"]');
+  if (!button) return;
+  // Do not disable the button or show wait cursor. The pending set still blocks double saves.
+  button.classList.toggle("is-saving", Boolean(saving));
+  button.disabled = false;
+};
+
+heartMemory = function heartMemoryFastV4(id) {
+  const cleanId = String(id || "").trim();
+  if (!cleanId || MEMORY_HEART_LEDGER_PENDING.has(cleanId)) return false;
+
+  const post = memoryState.posts.find((item) => item.id === cleanId);
+  if (!post) return false;
+
+  const targetKey = makeMemoryHeartTargetKeyV3(post);
+  const previousHearted = Boolean(post._heartV3Mine);
+  const previousCount = Math.max(0, Number(post._heartV3Count ?? post.heartCount) || 0);
+  const nextHearted = !previousHearted;
+  const optimisticCount = Math.max(0, previousCount + (nextHearted ? 1 : -1));
+
+  MEMORY_HEART_LEDGER_PENDING.add(cleanId);
+  updateMemoryHeartRecordInstantV4(cleanId, targetKey, nextHearted, optimisticCount);
+
+  writeMemoryHeartLedgerFastV4(targetKey, nextHearted)
+    .catch(error => {
+      console.error("Memory heart save failed:", error);
+      updateMemoryHeartRecordInstantV4(cleanId, targetKey, previousHearted, previousCount);
+      showToast("Heart was not saved. Please try again.");
+    })
+    .finally(() => {
+      MEMORY_HEART_LEDGER_PENDING.delete(cleanId);
+      setMemoryHeartButtonSaving(cleanId, false);
+    });
+
+  return false;
+};
