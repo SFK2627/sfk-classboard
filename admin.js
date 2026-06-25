@@ -523,25 +523,81 @@ function getCurrentListElement(editor) {
 }
 
 function applyAlignmentToSelectedBlocks(editor, align) {
-  getSelectedRichBlocks(editor).forEach(block => {
-    block.style.textAlign = align;
+  const blocks = getSelectedRichBlocks(editor);
+  const listTargets = new Set();
+
+  blocks.forEach(block => {
+    const list = getClosestRichList(editor, block);
+    if (list) {
+      listTargets.add(list);
+    } else {
+      block.style.textAlign = align;
+    }
   });
+
+  listTargets.forEach(list => applyRichListAlignment(list, align));
+}
+
+function applyRichListAlignment(list, align) {
+  list.style.textAlign = align;
+
+  if (align === "left") {
+    list.style.width = "100%";
+    list.style.marginLeft = "0";
+    list.style.marginRight = "0";
+  } else if (align === "center") {
+    list.style.width = "fit-content";
+    list.style.marginLeft = "auto";
+    list.style.marginRight = "auto";
+  } else if (align === "right") {
+    list.style.width = "100%";
+    list.style.marginLeft = "0";
+    list.style.marginRight = "0";
+  }
 }
 
 function applyRichIndentToSelection(editor, direction) {
   const blocks = getSelectedRichBlocks(editor);
   if (!blocks.length) return;
 
+  const targets = [];
+  const seen = new Set();
+
   blocks.forEach(block => {
-    const current = parseRichIndentValue(block.style.marginLeft);
+    const target = getRichIndentTarget(editor, block);
+    if (target && !seen.has(target)) {
+      seen.add(target);
+      targets.push(target);
+    }
+  });
+
+  targets.forEach(target => {
+    const current = parseRichIndentValue(target.style.marginLeft);
     const next = Math.max(0, Math.min(RICH_MAX_INDENT_LEVEL * RICH_INDENT_STEP_EM, current + (direction * RICH_INDENT_STEP_EM)));
 
     if (next <= 0.01) {
-      block.style.removeProperty("margin-left");
+      target.style.removeProperty("margin-left");
     } else {
-      block.style.marginLeft = formatRichIndentValue(next);
+      target.style.marginLeft = formatRichIndentValue(next);
     }
   });
+}
+
+function getRichIndentTarget(editor, block) {
+  const list = getClosestRichList(editor, block);
+  return list || block;
+}
+
+function getClosestRichList(editor, node) {
+  if (!node) return null;
+  if (node.nodeType === Node.TEXT_NODE) node = node.parentElement;
+
+  while (node && node !== editor) {
+    if (node.tagName === "UL" || node.tagName === "OL") return node;
+    node = node.parentElement;
+  }
+
+  return null;
 }
 
 function applyRichTextColor(editor, color) {

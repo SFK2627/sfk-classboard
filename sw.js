@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-classboard-v41-resume-media-on-return";
+const CACHE_NAME = "sfk-classboard-v45-smart-announcement-fit";
 const APP_SHELL = [
   "./",
   "./index.html",

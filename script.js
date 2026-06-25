@@ -637,6 +637,7 @@ function renderAnnouncements(items) {
   const announcementText = item.Announcement || "";
   const formattedAnnouncement = formatBoardText(announcementText, "center");
   const announcementSizeClass = getAnnouncementTextSizeClass(announcementText);
+  const announcementRichClass = isRichBoardText(announcementText) ? "announcement-rich" : "";
   const attachmentMarkup = renderAnnouncementAttachments(item);
   const metadataMarkup = renderAnnouncementMetadata(item);
   const postedChipMarkup = renderAnnouncementPostedChip(item);
@@ -644,7 +645,7 @@ function renderAnnouncements(items) {
   title.textContent = `Subject Announcements (${currentNumber} / ${total})`;
 
   box.innerHTML = `
-    <div class="announcement-item rotating-announcement ${announcementSizeClass}">
+    <div class="announcement-item rotating-announcement ${announcementSizeClass} ${announcementRichClass}">
 
       <div class="announcement-top-left">
         <span class="announcement-subject-pill"
@@ -678,6 +679,8 @@ function renderAnnouncements(items) {
   `;
 
   requestAnimationFrame(fitAnnouncementTextToCard);
+  setTimeout(fitAnnouncementTextToCard, 90);
+  setTimeout(fitAnnouncementTextToCard, 260);
 }
 
 
@@ -696,62 +699,166 @@ function fitAnnouncementTextToCard() {
   const charCount = plainText.length;
   const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 1200;
   const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 800;
+  const visualUnits = estimateAnnouncementVisualUnits(text);
+  const hasRichText = !!text.querySelector(".richBoardText");
+  const canGrowWithPage = viewportWidth <= 1200 || card.classList.contains("announcement-phone-flow");
 
-  const targetFont = getAnnouncementTargetFontSize(charCount, viewportWidth, viewportHeight);
-  const minimumFont = getAnnouncementMinimumFontSize(charCount, viewportWidth, viewportHeight);
+  card.classList.remove("announcement-fitted-tight", "announcement-fit-scroll");
+  text.style.removeProperty("max-height");
+  text.style.removeProperty("overflow-y");
+
+  const targetFont = getAnnouncementTargetFontSize(charCount, viewportWidth, viewportHeight, visualUnits, hasRichText);
+  const minimumFont = getAnnouncementMinimumFontSize(charCount, viewportWidth, viewportHeight, visualUnits, hasRichText);
+  const lineHeight = getAnnouncementLineHeight(charCount, visualUnits, hasRichText);
 
   text.style.setProperty("--announcement-fit-font", `${targetFont}px`);
-  text.style.setProperty("--announcement-fit-line-height", charCount <= 120 ? "1.08" : "1.14");
+  text.style.setProperty("--announcement-fit-line-height", String(lineHeight));
+
+  // In one-column tablet/phone layouts, the card is allowed to grow with the page.
+  // Do not squeeze the text there; readability is more important than fixed height.
+  if (canGrowWithPage) {
+    text.style.maxHeight = "none";
+    text.style.overflowY = "visible";
+    return;
+  }
 
   let fontSize = targetFont;
   let safetyCounter = 0;
+  let availableTextHeight = getAnnouncementAvailableTextHeight(center, text);
+  text.style.maxHeight = `${availableTextHeight}px`;
+  text.style.overflowY = "hidden";
 
   while (
-    safetyCounter < 36 &&
+    safetyCounter < 80 &&
     fontSize > minimumFont &&
-    (
-      center.scrollHeight > center.clientHeight + 2 ||
-      card.scrollHeight > card.clientHeight + 2
-    )
+    announcementContentOverflows(card, center, text, availableTextHeight)
   ) {
-    fontSize -= 1;
+    fontSize = Math.max(minimumFont, fontSize - 0.75);
     text.style.setProperty("--announcement-fit-font", `${fontSize}px`);
+    availableTextHeight = getAnnouncementAvailableTextHeight(center, text);
+    text.style.maxHeight = `${availableTextHeight}px`;
     safetyCounter++;
+  }
+
+  const stillOverflowing = announcementContentOverflows(card, center, text, availableTextHeight);
+  card.classList.toggle("announcement-fitted-tight", stillOverflowing);
+
+  // Last-resort safety: never overlap the footer/buttons. Keep a readable floor and
+  // allow the text area itself to scroll only when an announcement is truly too long.
+  if (stillOverflowing) {
+    text.style.overflowY = "auto";
+    card.classList.add("announcement-fit-scroll");
   }
 }
 
-function getAnnouncementTargetFontSize(charCount, viewportWidth, viewportHeight) {
+function getAnnouncementAvailableTextHeight(center, text) {
+  if (!center || !text) return 160;
+
+  const children = Array.from(center.children || []);
+  const styles = window.getComputedStyle(center);
+  const gap = Number.parseFloat(styles.rowGap || styles.gap || "0") || 0;
+  const paddingTop = Number.parseFloat(styles.paddingTop || "0") || 0;
+  const paddingBottom = Number.parseFloat(styles.paddingBottom || "0") || 0;
+  const centerHeight = center.clientHeight || center.getBoundingClientRect().height || 0;
+  const nonTextHeight = children
+    .filter(child => child !== text && child.offsetParent !== null)
+    .reduce((sum, child) => sum + child.offsetHeight, 0);
+  const visibleChildren = children.filter(child => child.offsetParent !== null).length;
+  const gapHeight = Math.max(0, visibleChildren - 1) * gap;
+  const available = centerHeight - nonTextHeight - gapHeight - paddingTop - paddingBottom - 10;
+
+  return Math.max(58, available || Math.max(120, centerHeight * 0.70));
+}
+
+function announcementContentOverflows(card, center, text, availableTextHeight) {
+  return (
+    text.scrollHeight > availableTextHeight + 3 ||
+    center.scrollHeight > center.clientHeight + 3 ||
+    card.scrollHeight > card.clientHeight + 3
+  );
+}
+
+function estimateAnnouncementVisualUnits(text) {
+  if (!text) return 1;
+
+  const rich = text.querySelector(".richBoardText");
+  const blockCount = rich
+    ? rich.querySelectorAll("p, div").length
+    : 0;
+  const breakCount = rich
+    ? rich.querySelectorAll("br").length
+    : 0;
+  const listCount = rich
+    ? rich.querySelectorAll("li").length
+    : 0;
+  const plain = (text.textContent || "").replace(/\s+/g, " ").trim();
+  const wrapUnits = Math.ceil(plain.length / 72);
+
+  // Count visual rows, but keep the estimate gentle. The actual DOM measurement
+  // below will decide whether shrinking is really needed.
+  return Math.max(1, Math.ceil(blockCount * 0.75) + Math.ceil(breakCount * 0.45) + Math.ceil(listCount * 0.28), wrapUnits);
+}
+
+function getAnnouncementTargetFontSize(charCount, viewportWidth, viewportHeight, visualUnits = 1, hasRichText = false) {
   const shortHeight = viewportHeight <= 820;
   const veryShortHeight = viewportHeight <= 720;
   const phone = viewportWidth <= 900;
+  const wideBoard = viewportWidth >= 1500 && viewportHeight >= 820;
 
   let size;
 
-  if (charCount <= 60) size = phone ? 40 : 44;
-  else if (charCount <= 100) size = phone ? 34 : 38;
-  else if (charCount <= 160) size = phone ? 28 : 32;
-  else if (charCount <= 240) size = phone ? 24 : 28;
-  else if (charCount <= 340) size = phone ? 21 : 24;
-  else if (charCount <= 460) size = phone ? 18 : 21;
-  else size = phone ? 16 : 18;
+  if (hasRichText) {
+    if (charCount <= 60) size = phone ? 21 : 26;
+    else if (charCount <= 120) size = phone ? 19 : 23;
+    else if (charCount <= 220) size = phone ? 17 : 21;
+    else if (charCount <= 360) size = phone ? 15 : 18;
+    else if (charCount <= 540) size = phone ? 14 : 16;
+    else size = phone ? 13 : 15;
 
-  if (shortHeight) size -= 4;
-  if (veryShortHeight) size -= 3;
+    if (wideBoard && charCount <= 260) size += 2;
+    if (visualUnits >= 8) size -= 1;
+    if (visualUnits >= 12) size -= 1;
+  } else {
+    if (charCount <= 60) size = phone ? 40 : 44;
+    else if (charCount <= 100) size = phone ? 34 : 38;
+    else if (charCount <= 160) size = phone ? 28 : 32;
+    else if (charCount <= 240) size = phone ? 24 : 28;
+    else if (charCount <= 340) size = phone ? 21 : 24;
+    else if (charCount <= 460) size = phone ? 18 : 21;
+    else size = phone ? 16 : 18;
+  }
 
-  return Math.max(size, getAnnouncementMinimumFontSize(charCount, viewportWidth, viewportHeight));
+  if (shortHeight) size -= hasRichText ? 1 : 2;
+  if (veryShortHeight) size -= hasRichText ? 1 : 2;
+
+  return Math.max(size, getAnnouncementMinimumFontSize(charCount, viewportWidth, viewportHeight, visualUnits, hasRichText));
 }
 
-function getAnnouncementMinimumFontSize(charCount, viewportWidth, viewportHeight) {
+function getAnnouncementMinimumFontSize(charCount, viewportWidth, viewportHeight, visualUnits = 1, hasRichText = false) {
   const phone = viewportWidth <= 900;
   const veryShortHeight = viewportHeight <= 720;
 
-  if (charCount <= 120) return phone ? 18 : 19;
-  if (charCount <= 260) return phone ? 15 : 16;
-  if (charCount <= 460) return phone ? 13 : 14;
+  if (hasRichText) {
+    if (phone) return 12;
+    if (charCount > 700 || visualUnits > 14 || veryShortHeight) return 10.5;
+    return 12;
+  }
 
-  return veryShortHeight ? 11 : 12;
+  if (charCount <= 120) return phone ? 16 : 17;
+  if (charCount <= 260) return phone ? 13 : 14;
+  if (charCount <= 460) return phone ? 11 : 12;
+
+  return veryShortHeight ? 9.5 : 10.5;
 }
 
+function getAnnouncementLineHeight(charCount, visualUnits = 1, hasRichText = false) {
+  if (hasRichText) {
+    if (charCount <= 120 && visualUnits <= 3) return 1.20;
+    if (charCount <= 360) return 1.16;
+    return 1.12;
+  }
+  return charCount <= 120 ? 1.08 : 1.14;
+}
 
 function renderAnnouncementHeartButton(item) {
   if (!shouldShowAnnouncementHeart(item)) return `<span class="announcement-heart-spacer"></span>`;

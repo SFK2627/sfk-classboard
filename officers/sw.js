@@ -1,12 +1,12 @@
-const CACHE_NAME = "sfk-officers-pwa-v8-rich-editor-enhanced";
+const CACHE_NAME = "sfk-officers-pwa-v11-smart-announcement-fit";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./sw.js",
-  "../officer.html?embedded=1&v=rich-editor-2",
-  "../officer.css?v=rich-editor-2",
-  "../officer.js?v=rich-editor-2",
+  "../officer.html?embedded=1&v=rich-list-align-indent-1",
+  "../officer.css?v=smart-announcement-fit-1",
+  "../officer.js?v=smart-announcement-fit-1",
   "../firebase-config.js",
   "../firebase-adapter.js",
   "../icons/icon-192.png",
