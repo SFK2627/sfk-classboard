@@ -2092,8 +2092,8 @@ async function createMemoryShareImage(post) {
   const cardH = canvas.height - 84;
 
   ctx.save();
-  ctx.shadowColor = "rgba(0,0,0,.16)";
-  ctx.shadowBlur = 28;
+  ctx.shadowColor = "rgba(17,17,17,.16)";
+  ctx.shadowBlur = 30;
   ctx.shadowOffsetY = 12;
   drawRoundRect(ctx, cardX, cardY, cardW, cardH, 42);
   ctx.fillStyle = "#ffffff";
@@ -2102,11 +2102,11 @@ async function createMemoryShareImage(post) {
 
   drawRoundRect(ctx, cardX, cardY, cardW, cardH, 42);
   ctx.lineWidth = 3;
-  ctx.strokeStyle = "#111111";
+  ctx.strokeStyle = "#181818";
   ctx.stroke();
 
   ctx.save();
-  drawRoundRect(ctx, cardX + 22, cardY + 22, cardW - 44, 7, 4);
+  drawRoundRect(ctx, cardX + 24, cardY + 20, cardW - 48, 6, 4);
   ctx.fillStyle = "#f7c600";
   ctx.globalAlpha = .95;
   ctx.fill();
@@ -2135,15 +2135,15 @@ async function createMemoryShareImage(post) {
 
 function drawShareBackground(ctx, width, height) {
   const gradient = ctx.createLinearGradient(0, 0, width, height);
-  gradient.addColorStop(0, "#fff8d8");
-  gradient.addColorStop(0.48, "#fffdf5");
-  gradient.addColorStop(1, "#f7c600");
+  gradient.addColorStop(0, "#fffdf3");
+  gradient.addColorStop(0.52, "#fff8e2");
+  gradient.addColorStop(1, "#f5d64e");
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, width, height);
 
   ctx.save();
-  ctx.globalAlpha = 0.13;
-  ctx.strokeStyle = "#111111";
+  ctx.globalAlpha = 0.06;
+  ctx.strokeStyle = "#6f6642";
   ctx.lineWidth = 1;
   for (let x = 0; x <= width; x += 54) {
     ctx.beginPath();
@@ -2160,21 +2160,34 @@ function drawShareBackground(ctx, width, height) {
   ctx.restore();
 
   ctx.save();
-  ctx.globalAlpha = 0.08;
-  ctx.fillStyle = "#111111";
+  const glowA = ctx.createRadialGradient(width - 120, 100, 0, width - 120, 100, 320);
+  glowA.addColorStop(0, "rgba(255,255,255,.72)");
+  glowA.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = glowA;
   ctx.beginPath();
-  ctx.arc(width - 80, 120, 250, 0, Math.PI * 2);
+  ctx.arc(width - 120, 100, 320, 0, Math.PI * 2);
   ctx.fill();
+
+  const glowB = ctx.createRadialGradient(70, height - 95, 0, 70, height - 95, 250);
+  glowB.addColorStop(0, "rgba(247,198,0,.22)");
+  glowB.addColorStop(1, "rgba(247,198,0,0)");
+  ctx.fillStyle = glowB;
   ctx.beginPath();
-  ctx.arc(80, height - 130, 210, 0, Math.PI * 2);
+  ctx.arc(70, height - 95, 250, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 }
 
 function drawShareHeader(ctx, post, x, y, width) {
+  ctx.save();
+  ctx.shadowColor = "rgba(17,17,17,.10)";
+  ctx.shadowBlur = 14;
+  ctx.shadowOffsetY = 4;
   drawRoundRect(ctx, x, y, 138, 58, 22);
   ctx.fillStyle = "#111111";
   ctx.fill();
+  ctx.restore();
+
   ctx.fillStyle = "#f7c600";
   ctx.font = "900 31px Arial, Helvetica, sans-serif";
   ctx.textAlign = "center";
@@ -2185,30 +2198,37 @@ function drawShareHeader(ctx, post, x, y, width) {
   ctx.fillStyle = "#111111";
   ctx.font = "900 39px Arial, Helvetica, sans-serif";
   ctx.fillText("SFK Memories", x + 162, y + 24);
-  ctx.fillStyle = "#6d6a62";
+  ctx.fillStyle = "#7a7568";
   ctx.font = "800 22px Arial, Helvetica, sans-serif";
   ctx.fillText("Grade 8 - St. Faustina Kowalska • #BeKind", x + 163, y + 58);
 
   const dateText = post.date || post.createdAt || "Class Memory";
+  ctx.font = "800 21px Arial, Helvetica, sans-serif";
   const dateW = Math.min(330, Math.max(178, ctx.measureText(dateText).width + 48));
-  drawRoundRect(ctx, x + width - dateW, y + 6, dateW, 48, 20);
-  ctx.fillStyle = "#fff3a5";
+  const dateX = x + width - dateW;
+  ctx.save();
+  ctx.shadowColor = "rgba(17,17,17,.08)";
+  ctx.shadowBlur = 12;
+  ctx.shadowOffsetY = 4;
+  drawRoundRect(ctx, dateX, y + 6, dateW, 48, 20);
+  ctx.fillStyle = "#fff3b7";
   ctx.fill();
+  ctx.restore();
+  drawRoundRect(ctx, dateX, y + 6, dateW, 48, 20);
   ctx.strokeStyle = "#111111";
   ctx.lineWidth = 2;
   ctx.stroke();
   ctx.fillStyle = "#111111";
-  ctx.font = "800 21px Arial, Helvetica, sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText(dateText, x + width - (dateW / 2), y + 31);
+  ctx.fillText(dateText, dateX + (dateW / 2), y + 31);
   ctx.textAlign = "left";
 }
 
 async function drawShareMedia(ctx, post, x, y, width, height) {
   ctx.save();
-  ctx.shadowColor = "rgba(0,0,0,.18)";
-  ctx.shadowBlur = 22;
-  ctx.shadowOffsetY = 8;
+  ctx.shadowColor = "rgba(17,17,17,.16)";
+  ctx.shadowBlur = 24;
+  ctx.shadowOffsetY = 10;
   drawRoundRect(ctx, x, y, width, height, 34);
   ctx.fillStyle = "#ffffff";
   ctx.fill();
@@ -2218,7 +2238,7 @@ async function drawShareMedia(ctx, post, x, y, width, height) {
   ctx.fillStyle = "#ffffff";
   ctx.fill();
   ctx.lineWidth = 2;
-  ctx.strokeStyle = "#111111";
+  ctx.strokeStyle = "#181818";
   ctx.stroke();
 
   const imageMedia = post.media.filter((item) => item.kind === "image");
@@ -2227,10 +2247,22 @@ async function drawShareMedia(ctx, post, x, y, width, height) {
     return;
   }
 
+  const framePad = 10;
+  const innerX = x + framePad;
+  const innerY = y + framePad;
+  const innerW = width - (framePad * 2);
+  const innerH = height - (framePad * 2);
+
+  ctx.save();
+  drawRoundRect(ctx, innerX, innerY, innerW, innerH, 26);
+  ctx.fillStyle = "#faf7ef";
+  ctx.fill();
+  ctx.restore();
+
   const items = imageMedia.slice(0, MEMORY_SHARE_PREVIEW_LIMIT);
   const images = await Promise.all(items.map((item) => loadShareImage(item)));
-  const gap = 8;
-  const layouts = getShareMediaLayout(items.length, x, y, width, height, gap);
+  const gap = 10;
+  const layouts = getShareMediaLayout(items.length, innerX, innerY, innerW, innerH, gap);
 
   layouts.forEach((box, index) => {
     ctx.save();
@@ -2248,7 +2280,7 @@ async function drawShareMedia(ctx, post, x, y, width, height) {
       drawShareMediaPlaceholder(ctx, box.x, box.y, box.w, box.h, "Photo");
     }
     if (index === layouts.length - 1 && imageMedia.length > MEMORY_SHARE_PREVIEW_LIMIT) {
-      ctx.fillStyle = "rgba(17,17,17,.62)";
+      ctx.fillStyle = "rgba(17,17,17,.58)";
       ctx.fillRect(box.x, box.y, box.w, box.h);
       ctx.fillStyle = "#ffffff";
       ctx.font = "900 82px Arial, Helvetica, sans-serif";
@@ -2299,12 +2331,13 @@ function getShareMediaLayout(count, x, y, width, height, gap) {
 
 function drawShareTextOnlyMedia(ctx, post, x, y, width, height) {
   const gradient = ctx.createLinearGradient(x, y, x + width, y + height);
-  gradient.addColorStop(0, "#111111");
-  gradient.addColorStop(1, "#3a3100");
+  gradient.addColorStop(0, "#151515");
+  gradient.addColorStop(.68, "#302700");
+  gradient.addColorStop(1, "#4a3a00");
   ctx.fillStyle = gradient;
   ctx.fillRect(x, y, width, height);
 
-  ctx.fillStyle = "rgba(247, 198, 0, .14)";
+  ctx.fillStyle = "rgba(247, 198, 0, .12)";
   for (let i = 0; i < 8; i += 1) {
     ctx.beginPath();
     ctx.arc(x + 100 + i * 130, y + 90 + (i % 2) * 260, 54, 0, Math.PI * 2);
@@ -2312,16 +2345,16 @@ function drawShareTextOnlyMedia(ctx, post, x, y, width, height) {
   }
 
   ctx.fillStyle = "#f7c600";
-  ctx.font = "900 30px Arial, Helvetica, sans-serif";
+  ctx.font = "900 28px Arial, Helvetica, sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText("SFK MEMORY", x + width / 2, y + 150);
+  ctx.fillText("SFK MEMORY", x + width / 2, y + 140);
   ctx.fillStyle = "#ffffff";
   ctx.font = "900 56px Arial, Helvetica, sans-serif";
-  wrapCanvasText(ctx, post.title || "Class Memory", x + 95, y + 250, width - 190, 68, 3);
+  wrapCanvasText(ctx, post.title || "Class Memory", x + 95, y + 238, width - 190, 68, 3);
   if (post.caption) {
-    ctx.fillStyle = "#fff5bf";
+    ctx.fillStyle = "#fff5c8";
     ctx.font = "700 31px Arial, Helvetica, sans-serif";
-    wrapCanvasText(ctx, post.caption, x + 105, y + 470, width - 210, 42, 4);
+    wrapCanvasText(ctx, post.caption, x + 105, y + 456, width - 210, 42, 4);
   }
   ctx.textAlign = "left";
 }
@@ -2343,34 +2376,34 @@ function drawShareDetails(ctx, post, x, y, width, hasPhoto = false) {
   const captionMaxY = MEMORY_SHARE_IMAGE_HEIGHT - 210;
 
   ctx.save();
-  drawRoundRect(ctx, x, y - 17, 92, 8, 5);
+  drawRoundRect(ctx, x, y - 20, 86, 7, 4);
   ctx.fillStyle = "#f7c600";
   ctx.fill();
   ctx.restore();
 
   ctx.fillStyle = "#111111";
-  ctx.font = hasPhoto ? "900 43px Arial, Helvetica, sans-serif" : "900 50px Arial, Helvetica, sans-serif";
-  const titleLineHeight = hasPhoto ? 52 : 60;
+  ctx.font = hasPhoto ? "900 42px Arial, Helvetica, sans-serif" : "900 48px Arial, Helvetica, sans-serif";
+  const titleLineHeight = hasPhoto ? 50 : 58;
   const titleLines = wrapCanvasText(ctx, post.title || "Untitled Memory", x, y, width, titleLineHeight, hasPhoto ? 2 : 3);
-  let cursorY = y + (titleLines * titleLineHeight) + 14;
+  let cursorY = y + (titleLines * titleLineHeight) + 18;
 
   if (post.caption && cursorY < titleMaxY) {
-    ctx.fillStyle = "#2d2b25";
+    ctx.fillStyle = "#36332d";
     ctx.font = hasPhoto ? "700 28px Arial, Helvetica, sans-serif" : "700 31px Arial, Helvetica, sans-serif";
     const captionLineHeight = hasPhoto ? 37 : 42;
     const maxCaptionLines = Math.max(1, Math.min(hasPhoto ? 2 : 4, Math.floor((captionMaxY - cursorY) / captionLineHeight)));
     const captionLines = wrapCanvasText(ctx, post.caption, x, cursorY, width, captionLineHeight, maxCaptionLines);
-    cursorY += (captionLines * captionLineHeight) + 22;
+    cursorY += (captionLines * captionLineHeight) + 26;
   } else {
-    cursorY += 14;
+    cursorY += 20;
   }
 
   const metaY = Math.min(cursorY, MEMORY_SHARE_IMAGE_HEIGHT - 214);
   const avatarSize = 60;
 
   ctx.save();
-  ctx.shadowColor = "rgba(0,0,0,.12)";
-  ctx.shadowBlur = 10;
+  ctx.shadowColor = "rgba(17,17,17,.10)";
+  ctx.shadowBlur = 12;
   ctx.shadowOffsetY = 4;
   ctx.fillStyle = "#f7c600";
   ctx.beginPath();
@@ -2393,15 +2426,15 @@ function drawShareDetails(ctx, post, x, y, width, hasPhoto = false) {
   ctx.textBaseline = "alphabetic";
   ctx.fillStyle = "#111111";
   ctx.font = "900 27px Arial, Helvetica, sans-serif";
-  ctx.fillText(post.postedBy || "SFK", x + avatarSize + 18, metaY + 29);
-  ctx.fillStyle = "#6d6a62";
+  ctx.fillText(post.postedBy || "SFK", x + avatarSize + 18, metaY + 28);
+  ctx.fillStyle = "#7a7568";
   ctx.font = "800 21px Arial, Helvetica, sans-serif";
   ctx.fillText(post.role || "Officer", x + avatarSize + 18, metaY + 58);
 
   if (post.media.length) {
     const attachmentText = `${post.media.length} attachment${post.media.length > 1 ? "s" : ""}`;
-    ctx.fillStyle = "#111111";
-    ctx.font = "800 22px Arial, Helvetica, sans-serif";
+    ctx.fillStyle = "#6a5a16";
+    ctx.font = "800 21px Arial, Helvetica, sans-serif";
     ctx.textAlign = "right";
     ctx.textBaseline = "alphabetic";
     ctx.fillText(attachmentText, x + width, metaY + 43);
@@ -2412,7 +2445,7 @@ function drawShareDetails(ctx, post, x, y, width, hasPhoto = false) {
 
 function drawShareFooter(ctx, width, height) {
   const footerY = height - 118;
-  ctx.strokeStyle = "#e8dfb7";
+  ctx.strokeStyle = "#eadfa9";
   ctx.lineWidth = 3;
   ctx.beginPath();
   ctx.moveTo(88, footerY - 28);
@@ -2420,11 +2453,11 @@ function drawShareFooter(ctx, width, height) {
   ctx.stroke();
 
   ctx.fillStyle = "#111111";
-  ctx.font = "900 25px Arial, Helvetica, sans-serif";
+  ctx.font = "900 24px Arial, Helvetica, sans-serif";
   ctx.textAlign = "center";
   ctx.fillText("SFK ClassBoard Memories", width / 2, footerY);
-  ctx.fillStyle = "#705a00";
-  ctx.font = "800 21px Arial, Helvetica, sans-serif";
+  ctx.fillStyle = "#7b6700";
+  ctx.font = "800 20px Arial, Helvetica, sans-serif";
   ctx.fillText("Our moments, milestones, and kind beginnings.", width / 2, footerY + 34);
   ctx.textAlign = "left";
 }
