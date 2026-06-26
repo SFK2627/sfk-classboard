@@ -5910,7 +5910,7 @@ ol.formattedText li {
   cursor: pointer !important;
 }
 
-/* Phone sticky header: keep the compact ClassBoard header visible while scrolling */
+/* Phone sticky header: keep compact header sticky WITHOUT changing its black design */
 @media (max-width: 700px) {
   .topbar {
     position: sticky !important;
@@ -5918,15 +5918,17 @@ ol.formattedText li {
     z-index: 5000 !important;
     margin-bottom: 10px !important;
     will-change: transform !important;
+    background: #111 !important;
+    color: #fff !important;
+    border: 2px solid #fff !important;
+    opacity: 1 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    isolation: isolate !important;
   }
 
   .topbar::after {
-    content: "";
-    position: absolute;
-    inset: -7px -8px -9px -8px;
-    background: linear-gradient(135deg, #f7c600, #ffdf3a);
-    border-radius: 18px;
-    z-index: -1;
-    pointer-events: none;
+    content: none !important;
+    display: none !important;
   }
 }
