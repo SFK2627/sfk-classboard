@@ -1,18 +1,17 @@
-const CACHE_NAME = "sfk-classboard-v58-sticky-manage-loading-fix";
+const CACHE_NAME = "sfk-admin-pwa-v20-manage-loading-sticky-fix";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css",
-  "./script.js",
-  "./pwa.js",
-  "./memories.html",
-  "./memories.css",
-  "./memories.js",
   "./manifest.webmanifest",
-  "./class-photo.jpg",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
-  "./icons/icon-maskable-512.png"
+  "./sw.js",
+  "../admin.html?embedded=1&v=heart-ledger-v3",
+  "../admin.css?v=heart-ledger-v3",
+  "../admin.js?v=heart-ledger-v3",
+  "../firebase-config.js",
+  "../firebase-adapter.js?v=9-heart-ledger-v3",
+  "../icons/icon-192.png",
+  "../icons/icon-512.png",
+  "../icons/icon-maskable-512.png"
 ];
 
 self.addEventListener("install", (event) => {
