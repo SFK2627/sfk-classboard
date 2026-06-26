@@ -2197,10 +2197,10 @@ function drawShareHeader(ctx, post, x, y, width) {
   ctx.textAlign = "left";
   ctx.fillStyle = "#111111";
   ctx.font = "900 39px Arial, Helvetica, sans-serif";
-  ctx.fillText("SFK Memories", x + 162, y + 24);
+  ctx.fillText("SFK Updates 🫶", x + 162, y + 24);
   ctx.fillStyle = "#7a7568";
-  ctx.font = "800 22px Arial, Helvetica, sans-serif";
-  ctx.fillText("Grade 8 - St. Faustina Kowalska • #BeKind", x + 163, y + 58);
+  ctx.font = "800 18px Arial, Helvetica, sans-serif";
+  ctx.fillText("Grade 8 - St. Faustina Kowalska (SY \'26-\'27) • #BeKind", x + 163, y + 58);
 
   const dateText = post.date || post.createdAt || "Class Memory";
   ctx.font = "800 21px Arial, Helvetica, sans-serif";
@@ -2452,12 +2452,35 @@ function drawShareFooter(ctx, width, height) {
   ctx.lineTo(width - 88, footerY - 28);
   ctx.stroke();
 
-  ctx.fillStyle = "#111111";
-  ctx.font = "900 24px Arial, Helvetica, sans-serif";
-  ctx.textAlign = "center";
-  ctx.fillText("SFK ClassBoard Memories", width / 2, footerY);
+  const footerTextY = footerY;
+  const parts = [
+    { text: "S", color: "#f7c600", weight: "900" },
+    { text: "o ", color: "#111111", weight: "900" },
+    { text: "F", color: "#f7c600", weight: "900" },
+    { text: "ar, so ", color: "#111111", weight: "900" },
+    { text: "K", color: "#f7c600", weight: "900" },
+    { text: "ind - SFK Memories", color: "#111111", weight: "900" }
+  ];
+  const fontSize = 24;
+  const fontFamily = 'Arial, Helvetica, sans-serif';
+  let totalWidth = 0;
+  parts.forEach((part) => {
+    ctx.font = `${part.weight} ${fontSize}px ${fontFamily}`;
+    totalWidth += ctx.measureText(part.text).width;
+  });
+  let drawX = (width - totalWidth) / 2;
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+  parts.forEach((part) => {
+    ctx.font = `${part.weight} ${fontSize}px ${fontFamily}`;
+    ctx.fillStyle = part.color;
+    ctx.fillText(part.text, drawX, footerTextY);
+    drawX += ctx.measureText(part.text).width;
+  });
+
   ctx.fillStyle = "#7b6700";
   ctx.font = "800 20px Arial, Helvetica, sans-serif";
+  ctx.textAlign = "center";
   ctx.fillText("Our moments, milestones, and kind beginnings.", width / 2, footerY + 34);
   ctx.textAlign = "left";
 }
