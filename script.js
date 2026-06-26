@@ -1321,8 +1321,11 @@ function renderAnnouncementPostedChip(item) {
   if (!postedDate) return "";
 
   return `
-    <span class="announcement-posted-chip">
-      📌 Posted: ${escapeHtml(postedDate)}
+    <span class="announcement-posted-chip" aria-label="Posted ${escapeHtml(postedDate)}">
+      <span class="posted-icon">📌</span>
+      <span class="posted-word">Posted</span>
+      <span class="posted-separator">•</span>
+      <span class="posted-date-text">${escapeHtml(postedDate)}</span>
     </span>
   `;
 }

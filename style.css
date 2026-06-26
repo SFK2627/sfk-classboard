@@ -6049,3 +6049,65 @@ ol.formattedText li {
     box-shadow: none !important;
   }
 }
+
+/* =========================================================
+   Compact Posted Date Meta
+   Cleaner text-only posted date for Subject Announcements.
+   Removes the bulky white oblong while keeping it readable.
+========================================================= */
+.announcement-posted-chip,
+.announcementsCard .announcement-posted-chip {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  padding: 2px 4px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #3b3100 !important;
+  font-weight: 900 !important;
+  letter-spacing: .01em !important;
+  line-height: 1.1 !important;
+  white-space: nowrap !important;
+  max-width: 100% !important;
+}
+
+.announcement-posted-chip .posted-icon {
+  font-size: .95em !important;
+  line-height: 1 !important;
+}
+
+.announcement-posted-chip .posted-word,
+.announcement-posted-chip .posted-separator {
+  opacity: .72 !important;
+}
+
+.announcement-posted-chip .posted-date-text {
+  color: #111 !important;
+  font-weight: 950 !important;
+}
+
+@media (max-width: 900px) {
+  .announcement-posted-chip,
+  .announcementsCard .announcement-posted-chip {
+    font-size: clamp(.74rem, 3.1vw, .88rem) !important;
+    padding: 1px 2px !important;
+    gap: 4px !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .announcement-posted-chip .posted-word,
+  .announcement-posted-chip .posted-separator {
+    display: none !important;
+  }
+
+  .announcement-posted-chip,
+  .announcementsCard .announcement-posted-chip {
+    font-size: clamp(.72rem, 3vw, .82rem) !important;
+  }
+}
