@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-classboard-v66-memory-share-better-layout-no-hearts-v33";
+const CACHE_NAME = "sfk-classboard-v68-phone-only-announcement-controls";
 const APP_SHELL = [
   "./",
   "./index.html",

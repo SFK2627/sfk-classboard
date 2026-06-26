@@ -6,7 +6,9 @@ const BIRTHDAY_ROTATE_MS = 30000;
 const CACHE_KEY = "sfkClassBoardData";
 const ANNOUNCEMENT_HEARTS_KEY = "sfkClassBoardHeartedAnnouncements";
 const MEMORIES_SEEN_IDS_KEY = "sfkMemoriesSeenPostIdsV1";
-const IS_PHONE_DEVICE = /Android|iPhone|iPod|Windows Phone|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+const IS_PHONE_DEVICE =
+  navigator.userAgentData?.mobile === true ||
+  /Android|iPhone|iPod|Windows Phone|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
 if (IS_PHONE_DEVICE) {
   document.documentElement.classList.add("phone-device");
