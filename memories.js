@@ -9,6 +9,9 @@ const MAX_VIDEO_BYTES = 12 * 1024 * 1024;
 const MAX_TOTAL_UPLOAD_BYTES = 22 * 1024 * 1024;
 const TARGET_IMAGE_BYTES = 420 * 1024;
 const MUSIC_LINK_TEST_TIMEOUT_MS = 8000;
+const MEMORY_SHARE_IMAGE_WIDTH = 1080;
+const MEMORY_SHARE_IMAGE_HEIGHT = 1350;
+const MEMORY_SHARE_PREVIEW_LIMIT = 4;
 
 const memoryState = {
   posts: [],
@@ -734,7 +737,7 @@ function renderMemoryPost(post) {
 
       <div class="postActions">
         <button class="heartButton ${hearted ? "hearted" : ""}" type="button" data-action="heart" data-id="${escapeAttr(post.id)}" aria-label="Heart this memory">${hearted ? "&#9829;" : "&#9825;"}</button>
-        <button class="shareButton" type="button" data-action="share" data-id="${escapeAttr(post.id)}" aria-label="Share this memory">&#8599;</button>
+        <button class="shareButton" type="button" data-action="share" data-id="${escapeAttr(post.id)}" aria-label="Create share image for this memory" title="Create share image">&#8599;</button>
       </div>
 
       <div class="postDetails">
@@ -1997,21 +2000,490 @@ async function shareMemory(id) {
   shareUrl.searchParams.set("memory", id);
   const shareData = {
     title: `${post.title} | SFK Memories`,
-    text: `${post.title} - ${post.caption}`.trim(),
+    text: `${post.title}${post.caption ? ` - ${post.caption}` : ""}`.trim(),
     url: shareUrl.href
   };
+  const button = getShareButtonById(id);
 
   try {
-    const mobileLike = window.matchMedia("(pointer: coarse)").matches || /Android|iPhone|iPad/i.test(navigator.userAgent);
-    if (navigator.share && mobileLike) {
-      await navigator.share(shareData);
-    } else {
-      await copyMemoryLink(shareData.url);
-      showMemoryToast("Memory link copied.");
+    setShareButtonBusy(button, true);
+    showMemoryToast("Creating clean share image...");
+
+    const image = await createMemoryShareImage(post);
+    if (image?.file && navigator.share && navigator.canShare && navigator.canShare({ files: [image.file] })) {
+      await navigator.share({
+        title: shareData.title,
+        text: shareData.text,
+        files: [image.file]
+      });
+      showMemoryToast("Share image ready.");
+      return;
     }
+
+    if (image?.blob) {
+      downloadBlob(image.blob, image.fileName);
+      try {
+        await copyMemoryLink(shareData.url);
+        showMemoryToast("Share image downloaded. Link copied too.");
+      } catch (copyError) {
+        showMemoryToast("Share image downloaded.");
+      }
+      return;
+    }
+
+    await shareMemoryLinkFallback(shareData);
   } catch (error) {
-    if (error.name !== "AbortError") showMemoryToast("Unable to share this memory.");
+    if (error?.name === "AbortError") return;
+    console.warn("Memory image share failed:", error);
+    try {
+      await shareMemoryLinkFallback(shareData);
+    } catch (fallbackError) {
+      console.warn("Memory link fallback failed:", fallbackError);
+      showMemoryToast("Unable to share this memory.");
+    }
+  } finally {
+    setShareButtonBusy(button, false);
   }
+}
+
+async function shareMemoryLinkFallback(shareData) {
+  const mobileLike = window.matchMedia("(pointer: coarse)").matches || /Android|iPhone|iPad/i.test(navigator.userAgent);
+  if (navigator.share && mobileLike) {
+    await navigator.share(shareData);
+    return;
+  }
+  await copyMemoryLink(shareData.url);
+  showMemoryToast("Memory link copied.");
+}
+
+function getShareButtonById(id) {
+  return Array.from(document.querySelectorAll('.shareButton[data-action="share"]'))
+    .find((button) => button.dataset.id === id);
+}
+
+function setShareButtonBusy(button, busy) {
+  if (!button) return;
+  button.disabled = busy;
+  button.classList.toggle("loading", busy);
+  button.setAttribute("aria-busy", busy ? "true" : "false");
+  button.innerHTML = busy ? "&#8635;" : "&#8599;";
+}
+
+async function createMemoryShareImage(post) {
+  const canvas = document.createElement("canvas");
+  canvas.width = MEMORY_SHARE_IMAGE_WIDTH;
+  canvas.height = MEMORY_SHARE_IMAGE_HEIGHT;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas is not available.");
+
+  drawShareBackground(ctx, canvas.width, canvas.height);
+
+  const margin = 64;
+  const cardX = 42;
+  const cardY = 42;
+  const cardW = canvas.width - 84;
+  const cardH = canvas.height - 84;
+
+  drawRoundRect(ctx, cardX, cardY, cardW, cardH, 42);
+  ctx.fillStyle = "#ffffff";
+  ctx.fill();
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = "#111111";
+  ctx.stroke();
+
+  drawShareHeader(ctx, post, margin, 78, canvas.width - (margin * 2));
+
+  const mediaX = margin;
+  const mediaY = 238;
+  const mediaW = canvas.width - (margin * 2);
+  const mediaH = post.media.length ? 610 : 520;
+  await drawShareMedia(ctx, post, mediaX, mediaY, mediaW, mediaH);
+
+  const detailsY = mediaY + mediaH + 44;
+  drawShareDetails(ctx, post, margin, detailsY, canvas.width - (margin * 2));
+  drawShareFooter(ctx, canvas.width, canvas.height);
+
+  const blob = await canvasToBlob(canvas);
+  const fileName = `${safeShareFileName(post.title || "sfk-memory")}.png`;
+  const file = typeof File !== "undefined"
+    ? new File([blob], fileName, { type: "image/png", lastModified: Date.now() })
+    : null;
+  return { blob, file, fileName };
+}
+
+function drawShareBackground(ctx, width, height) {
+  const gradient = ctx.createLinearGradient(0, 0, width, height);
+  gradient.addColorStop(0, "#fff8d8");
+  gradient.addColorStop(0.48, "#fffdf5");
+  gradient.addColorStop(1, "#f7c600");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.save();
+  ctx.globalAlpha = 0.13;
+  ctx.strokeStyle = "#111111";
+  ctx.lineWidth = 1;
+  for (let x = 0; x <= width; x += 54) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, height);
+    ctx.stroke();
+  }
+  for (let y = 0; y <= height; y += 54) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(width, y);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  ctx.save();
+  ctx.globalAlpha = 0.08;
+  ctx.fillStyle = "#111111";
+  ctx.beginPath();
+  ctx.arc(width - 80, 120, 250, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(80, height - 130, 210, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawShareHeader(ctx, post, x, y, width) {
+  drawRoundRect(ctx, x, y, 138, 58, 22);
+  ctx.fillStyle = "#111111";
+  ctx.fill();
+  ctx.fillStyle = "#f7c600";
+  ctx.font = "900 31px Arial, Helvetica, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("SFK", x + 69, y + 30);
+
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#111111";
+  ctx.font = "900 39px Arial, Helvetica, sans-serif";
+  ctx.fillText("SFK Memories", x + 162, y + 24);
+  ctx.fillStyle = "#6d6a62";
+  ctx.font = "800 22px Arial, Helvetica, sans-serif";
+  ctx.fillText("Grade 8 - St. Faustina Kowalska • #BeKind", x + 163, y + 58);
+
+  const dateText = post.date || post.createdAt || "Class Memory";
+  const dateW = Math.min(330, Math.max(178, ctx.measureText(dateText).width + 48));
+  drawRoundRect(ctx, x + width - dateW, y + 6, dateW, 48, 20);
+  ctx.fillStyle = "#fff3a5";
+  ctx.fill();
+  ctx.strokeStyle = "#111111";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.fillStyle = "#111111";
+  ctx.font = "800 21px Arial, Helvetica, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(dateText, x + width - (dateW / 2), y + 31);
+  ctx.textAlign = "left";
+}
+
+async function drawShareMedia(ctx, post, x, y, width, height) {
+  drawRoundRect(ctx, x, y, width, height, 34);
+  ctx.fillStyle = "#111111";
+  ctx.fill();
+
+  const imageMedia = post.media.filter((item) => item.kind === "image");
+  if (imageMedia.length === 0) {
+    drawShareTextOnlyMedia(ctx, post, x, y, width, height);
+    return;
+  }
+
+  const items = imageMedia.slice(0, MEMORY_SHARE_PREVIEW_LIMIT);
+  const images = await Promise.all(items.map((item) => loadShareImage(item.url)));
+  const gap = 8;
+  const layouts = getShareMediaLayout(items.length, x, y, width, height, gap);
+
+  layouts.forEach((box, index) => {
+    ctx.save();
+    drawRoundRect(ctx, box.x, box.y, box.w, box.h, box.r || 22);
+    ctx.clip();
+    ctx.fillStyle = "#f5f3ed";
+    ctx.fillRect(box.x, box.y, box.w, box.h);
+    if (images[index]) {
+      drawCoverImage(ctx, images[index], box.x, box.y, box.w, box.h);
+    } else {
+      drawShareMediaPlaceholder(ctx, box.x, box.y, box.w, box.h, "Photo");
+    }
+    if (index === layouts.length - 1 && imageMedia.length > MEMORY_SHARE_PREVIEW_LIMIT) {
+      ctx.fillStyle = "rgba(17,17,17,.62)";
+      ctx.fillRect(box.x, box.y, box.w, box.h);
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "900 82px Arial, Helvetica, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(`+${imageMedia.length - MEMORY_SHARE_PREVIEW_LIMIT}`, box.x + box.w / 2, box.y + box.h / 2);
+      ctx.textAlign = "left";
+      ctx.textBaseline = "alphabetic";
+    }
+    ctx.restore();
+  });
+}
+
+function getShareMediaLayout(count, x, y, width, height, gap) {
+  if (count <= 1) return [{ x, y, w: width, h: height, r: 32 }];
+  if (count === 2) {
+    const half = (width - gap) / 2;
+    return [
+      { x, y, w: half, h: height, r: 28 },
+      { x: x + half + gap, y, w: half, h: height, r: 28 }
+    ];
+  }
+  if (count === 3) {
+    const leftW = Math.round((width - gap) * .58);
+    const rightW = width - gap - leftW;
+    const rightH = (height - gap) / 2;
+    return [
+      { x, y, w: leftW, h: height, r: 28 },
+      { x: x + leftW + gap, y, w: rightW, h: rightH, r: 24 },
+      { x: x + leftW + gap, y: y + rightH + gap, w: rightW, h: rightH, r: 24 }
+    ];
+  }
+  const colW = (width - gap) / 2;
+  const rowH = (height - gap) / 2;
+  return [
+    { x, y, w: colW, h: rowH, r: 24 },
+    { x: x + colW + gap, y, w: colW, h: rowH, r: 24 },
+    { x, y: y + rowH + gap, w: colW, h: rowH, r: 24 },
+    { x: x + colW + gap, y: y + rowH + gap, w: colW, h: rowH, r: 24 }
+  ];
+}
+
+function drawShareTextOnlyMedia(ctx, post, x, y, width, height) {
+  const gradient = ctx.createLinearGradient(x, y, x + width, y + height);
+  gradient.addColorStop(0, "#111111");
+  gradient.addColorStop(1, "#3a3100");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(x, y, width, height);
+
+  ctx.fillStyle = "rgba(247, 198, 0, .14)";
+  for (let i = 0; i < 8; i += 1) {
+    ctx.beginPath();
+    ctx.arc(x + 100 + i * 130, y + 90 + (i % 2) * 260, 54, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.fillStyle = "#f7c600";
+  ctx.font = "900 30px Arial, Helvetica, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("SFK MEMORY", x + width / 2, y + 150);
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "900 56px Arial, Helvetica, sans-serif";
+  wrapCanvasText(ctx, post.title || "Class Memory", x + 95, y + 250, width - 190, 68, 3);
+  if (post.caption) {
+    ctx.fillStyle = "#fff5bf";
+    ctx.font = "700 31px Arial, Helvetica, sans-serif";
+    wrapCanvasText(ctx, post.caption, x + 105, y + 470, width - 210, 42, 4);
+  }
+  ctx.textAlign = "left";
+}
+
+function drawShareMediaPlaceholder(ctx, x, y, width, height, label) {
+  ctx.fillStyle = "#fff6c7";
+  ctx.fillRect(x, y, width, height);
+  ctx.fillStyle = "#111111";
+  ctx.font = "900 34px Arial, Helvetica, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(label || "Memory", x + width / 2, y + height / 2);
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+}
+
+function drawShareDetails(ctx, post, x, y, width) {
+  ctx.fillStyle = "#111111";
+  ctx.font = "900 48px Arial, Helvetica, sans-serif";
+  const titleLines = wrapCanvasText(ctx, post.title || "Untitled Memory", x, y, width, 58, 2);
+  let cursorY = y + (titleLines * 58) + 10;
+
+  if (post.caption) {
+    ctx.fillStyle = "#2d2b25";
+    ctx.font = "700 30px Arial, Helvetica, sans-serif";
+    const captionLines = wrapCanvasText(ctx, post.caption, x, cursorY, width, 42, 5);
+    cursorY += (captionLines * 42) + 34;
+  } else {
+    cursorY += 20;
+  }
+
+  const avatarSize = 64;
+  ctx.fillStyle = "#f7c600";
+  ctx.beginPath();
+  ctx.arc(x + avatarSize / 2, cursorY + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = "#111111";
+  ctx.stroke();
+  ctx.fillStyle = "#111111";
+  ctx.font = "900 24px Arial, Helvetica, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(getInitials(post.postedBy), x + avatarSize / 2, cursorY + avatarSize / 2 + 1);
+
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = "#111111";
+  ctx.font = "900 27px Arial, Helvetica, sans-serif";
+  ctx.fillText(post.postedBy || "SFK", x + avatarSize + 18, cursorY + 29);
+  ctx.fillStyle = "#6d6a62";
+  ctx.font = "800 21px Arial, Helvetica, sans-serif";
+  ctx.fillText(post.role || "Officer", x + avatarSize + 18, cursorY + 58);
+
+  const meta = [];
+  if (post.media.length) meta.push(`${post.media.length} attachment${post.media.length > 1 ? "s" : ""}`);
+  if (post.heartCount) meta.push(`${post.heartCount} heart${post.heartCount > 1 ? "s" : ""}`);
+  if (meta.length) {
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#111111";
+    ctx.font = "800 23px Arial, Helvetica, sans-serif";
+    ctx.fillText(meta.join(" • "), x + width, cursorY + 43);
+    ctx.textAlign = "left";
+  }
+}
+
+function drawShareFooter(ctx, width, height) {
+  const footerY = height - 118;
+  ctx.strokeStyle = "#e8dfb7";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(88, footerY - 28);
+  ctx.lineTo(width - 88, footerY - 28);
+  ctx.stroke();
+
+  ctx.fillStyle = "#111111";
+  ctx.font = "900 25px Arial, Helvetica, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("SFK ClassBoard Memories", width / 2, footerY);
+  ctx.fillStyle = "#705a00";
+  ctx.font = "800 21px Arial, Helvetica, sans-serif";
+  ctx.fillText("Our moments, milestones, and kind beginnings.", width / 2, footerY + 34);
+  ctx.textAlign = "left";
+}
+
+async function loadShareImage(url) {
+  const cleanUrl = safeHttpUrl(url);
+  if (!cleanUrl) return null;
+  return new Promise((resolve) => {
+    const image = new Image();
+    const done = (value) => {
+      window.clearTimeout(timer);
+      resolve(value);
+    };
+    const timer = window.setTimeout(() => done(null), 9000);
+    image.crossOrigin = "anonymous";
+    image.onload = () => done(image);
+    image.onerror = () => done(null);
+    image.src = cleanUrl;
+  });
+}
+
+function drawCoverImage(ctx, image, x, y, width, height) {
+  const imageRatio = image.naturalWidth / image.naturalHeight;
+  const boxRatio = width / height;
+  let sourceW = image.naturalWidth;
+  let sourceH = image.naturalHeight;
+  let sourceX = 0;
+  let sourceY = 0;
+
+  if (imageRatio > boxRatio) {
+    sourceW = image.naturalHeight * boxRatio;
+    sourceX = (image.naturalWidth - sourceW) / 2;
+  } else {
+    sourceH = image.naturalWidth / boxRatio;
+    sourceY = (image.naturalHeight - sourceH) / 2;
+  }
+
+  ctx.drawImage(image, sourceX, sourceY, sourceW, sourceH, x, y, width, height);
+}
+
+function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight, maxLines = 4) {
+  const words = String(text || "").replace(/\s+/g, " ").trim().split(" ").filter(Boolean);
+  if (words.length === 0) return 0;
+
+  const lines = [];
+  let line = "";
+
+  for (const word of words) {
+    const testLine = line ? `${line} ${word}` : word;
+    if (ctx.measureText(testLine).width <= maxWidth) {
+      line = testLine;
+      continue;
+    }
+
+    if (line) lines.push(line);
+    else lines.push(trimCanvasText(ctx, word, maxWidth));
+    line = line ? word : "";
+
+    if (lines.length >= maxLines) break;
+  }
+
+  if (line && lines.length < maxLines) lines.push(line);
+
+  const visibleLines = lines.slice(0, maxLines);
+  const hasMore = lines.length > maxLines || words.join(" ").length > visibleLines.join(" ").length;
+  visibleLines.forEach((value, index) => {
+    const output = hasMore && index === maxLines - 1
+      ? trimCanvasText(ctx, `${value}...`, maxWidth)
+      : value;
+    ctx.fillText(output, x, y + (index * lineHeight));
+  });
+
+  return visibleLines.length;
+}
+
+function trimCanvasText(ctx, text, maxWidth) {
+  let output = String(text || "");
+  while (output.length > 1 && ctx.measureText(output).width > maxWidth) {
+    output = `${output.slice(0, -4)}...`;
+  }
+  return output;
+}
+
+function drawRoundRect(ctx, x, y, width, height, radius) {
+  const r = Math.min(radius, width / 2, height / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + width, y, x + width, y + height, r);
+  ctx.arcTo(x + width, y + height, x, y + height, r);
+  ctx.arcTo(x, y + height, x, y, r);
+  ctx.arcTo(x, y, x + width, y, r);
+  ctx.closePath();
+}
+
+function canvasToBlob(canvas) {
+  return new Promise((resolve, reject) => {
+    try {
+      canvas.toBlob((blob) => {
+        if (blob) resolve(blob);
+        else reject(new Error("Image export failed."));
+      }, "image/png", 0.95);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+function downloadBlob(blob, fileName) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 3500);
+}
+
+function safeShareFileName(value) {
+  const clean = String(value || "sfk-memory")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 55);
+  return clean || "sfk-memory";
 }
 
 async function copyMemoryLink(value) {

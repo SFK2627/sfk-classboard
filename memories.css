@@ -781,6 +781,16 @@ select:focus-visible {
   background: #f5f3ed;
 }
 
+.shareButton.loading {
+  opacity: .72;
+  animation: shareSpin .8s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes shareSpin {
+  to { transform: rotate(360deg); }
+}
+
 .heartButton.hearted {
   color: var(--heart);
   animation: heartPop .35s ease;
