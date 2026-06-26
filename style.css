@@ -5529,7 +5529,7 @@ ol.formattedText li {
   overflow: hidden !important;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 900px), (hover: none) and (pointer: coarse) {
   .announcement-item.rotating-announcement.announcement-rich {
     padding: 12px 10px 14px !important;
   }
@@ -5877,8 +5877,8 @@ ol.formattedText li {
   }
 }
 
-/* Phone/tablet and touch devices: keep announcement controls compact. */
-@media (max-width: 900px), (any-pointer: coarse) {
+/* Phone/tablet: cards can grow naturally; bottom stack still stays after text. */
+@media (max-width: 900px) {
   .announcement-item.rotating-announcement {
     height: auto !important;
     overflow: visible !important;
