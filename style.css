@@ -5899,6 +5899,91 @@ ol.formattedText li {
   .announcement-bottom-stack {
     gap: 9px !important;
   }
+
+  .announcement-bottom-stack .announcement-controls {
+    width: auto !important;
+    max-width: 150px !important;
+    align-self: center !important;
+    gap: 12px !important;
+    justify-content: center !important;
+  }
+
+  .announcement-bottom-stack .announcement-controls .announcement-btn {
+    width: 26px !important;
+    min-width: 26px !important;
+    height: 28px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: #111 !important;
+    box-shadow: none !important;
+    font-size: 1.05rem !important;
+    transform: none !important;
+  }
+
+  .announcement-bottom-stack .announcement-controls .announcement-btn:hover,
+  .announcement-bottom-stack .announcement-controls .announcement-btn:focus,
+  .announcement-bottom-stack .announcement-controls .announcement-btn:active {
+    background: transparent !important;
+    color: #111 !important;
+    box-shadow: none !important;
+  }
+
+  .announcement-nav-label {
+    display: none !important;
+  }
+
+  .announcement-nav-icon {
+    display: block !important;
+    line-height: 1 !important;
+  }
+
+  .announcement-bottom-stack .announcement-heart-btn {
+    min-width: 0 !important;
+    max-width: none !important;
+    min-height: 28px !important;
+    padding: 0 3px !important;
+    gap: 4px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: #111 !important;
+    box-shadow: none !important;
+    font-size: .82rem !important;
+    transform: none !important;
+  }
+
+  .announcement-bottom-stack .announcement-heart-btn:hover:not(:disabled),
+  .announcement-bottom-stack .announcement-heart-btn:focus,
+  .announcement-bottom-stack .announcement-heart-btn:active,
+  .announcement-bottom-stack .announcement-heart-btn.is-hearted {
+    background: transparent !important;
+    color: #111 !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  .announcement-bottom-stack .announcement-heart-btn > span:not(.heart-icon) {
+    display: none !important;
+  }
+
+  .announcement-bottom-stack .announcement-heart-btn strong {
+    min-width: 0 !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    color: inherit !important;
+    font-size: .9rem !important;
+  }
+
+  .announcement-bottom-stack .announcement-heart-spacer {
+    width: 48px !important;
+    min-width: 48px !important;
+  }
 }
 
 /* Fresh stable Noted/Heart system */
