@@ -950,6 +950,10 @@ function renderPostMusic(post) {
     <div class="postMusic ${music.kind === "youtube-audio" ? "youtubeMusic" : ""} ${audible ? "isPlaying" : ""}" data-music-post="${escapeAttr(post.id)}">
       ${player}
       <button class="musicToggleButton ${audible ? "audible" : ""}" type="button" data-action="music" data-id="${escapeAttr(post.id)}" title="${escapeAttr(musicName)}" aria-label="${audible ? `Mute ${musicName}` : `Play ${musicName}`}">
+        <span class="musicPillEqualizer" aria-hidden="true">
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        </span>
         <span class="musicNote">&#9835;</span><span class="musicLabelViewport"><span class="musicLabel">${escapeHtml(musicName)}</span></span><span class="musicSound">${audible ? "&#128266;" : "&#128263;"}</span>
       </button>
     </div>
