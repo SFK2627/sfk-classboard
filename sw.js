@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-classboard-v100-secure-firebase-auth";
+const CACHE_NAME = "sfk-classboard-v101-persistent-secure-login";
 const APP_SHELL = [
   "./",
   "./index.html",

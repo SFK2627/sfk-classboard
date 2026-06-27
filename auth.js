@@ -31,7 +31,7 @@
     if (!email) throw new Error(`${cleanRole === "admin" ? "Admin" : "Officer"} account is not configured.`);
 
     const auth = getAuth();
-    await auth.setPersistence(firebase.auth.Auth.Persistence.SESSION);
+    await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
     const credential = await auth.signInWithEmailAndPassword(email, String(pin || ""));
     if (roleForUser(credential.user) !== cleanRole) {
       await auth.signOut();
