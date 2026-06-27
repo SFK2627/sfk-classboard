@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
   <link rel="stylesheet" href="style.css?v=74-clock-access-menu" />
-  <link rel="stylesheet" href="class-chat.css?v=18-media-links" />
+  <link rel="stylesheet" href="class-chat.css?v=19-profile-colors" />
   <script src="orientation-lock.js?v=3-phone-device-lock" defer></script>
 
   <style id="sfkStartIntroStyle">
@@ -767,6 +767,10 @@
           <span class="classChatMenuIcon" aria-hidden="true">&#9734;</span>
           <span id="classChatSavedLabel">Saved messages</span>
         </button>
+        <button id="classChatColorOpen" type="button" hidden>
+          <span class="classChatMenuIcon classChatColorMenuIcon" aria-hidden="true"></span>
+          <span>Profile color</span>
+        </button>
         <button id="classChatPollOpen" type="button" hidden>
           <span class="classChatMenuIcon" aria-hidden="true">&#9776;</span>
           <span>Create quick poll</span>
@@ -881,6 +885,28 @@
           <div id="classChatSavedResults" class="classChatSearchResults"></div>
         </div>
 
+        <form id="classChatColorPanel" class="classChatUtilityBody classChatColorPanel" hidden>
+          <div class="classChatColorPreview">
+            <span id="classChatColorPreview">ST</span>
+            <div>
+              <strong>Choose your profile color</strong>
+              <small>This color appears beside your messages.</small>
+            </div>
+          </div>
+          <div id="classChatProfileColors" class="classChatColorChoices" role="radiogroup" aria-label="Profile color">
+            <label style="--profile-color:#F7C600"><input type="radio" name="classChatProfileColor" value="#F7C600" /><span></span><small>Yellow</small></label>
+            <label style="--profile-color:#FF7A7A"><input type="radio" name="classChatProfileColor" value="#FF7A7A" /><span></span><small>Coral</small></label>
+            <label style="--profile-color:#FF8FCB"><input type="radio" name="classChatProfileColor" value="#FF8FCB" /><span></span><small>Pink</small></label>
+            <label style="--profile-color:#B99CFF"><input type="radio" name="classChatProfileColor" value="#B99CFF" /><span></span><small>Violet</small></label>
+            <label style="--profile-color:#73B9FF"><input type="radio" name="classChatProfileColor" value="#73B9FF" /><span></span><small>Blue</small></label>
+            <label style="--profile-color:#68D9B0"><input type="radio" name="classChatProfileColor" value="#68D9B0" /><span></span><small>Mint</small></label>
+            <label style="--profile-color:#FF9E45"><input type="radio" name="classChatProfileColor" value="#FF9E45" /><span></span><small>Orange</small></label>
+            <label style="--profile-color:#A9B1BD"><input type="radio" name="classChatProfileColor" value="#A9B1BD" /><span></span><small>Gray</small></label>
+          </div>
+          <button id="classChatColorSave" type="submit">Save profile color</button>
+          <p id="classChatColorMessage" class="classChatUtilityHint" role="status"></p>
+        </form>
+
         <form id="classChatSchedulePanel" class="classChatUtilityBody classChatPollPanel" hidden>
           <label for="classChatScheduleText">Message</label>
           <textarea id="classChatScheduleText" maxlength="500" rows="5" placeholder="Type the scheduled message..." required></textarea>
@@ -964,6 +990,19 @@
           <input id="classChatNewPin" type="password" inputmode="numeric" autocomplete="new-password" pattern="[0-9]{6}" maxlength="6" required />
           <label for="classChatConfirmPin">Confirm new PIN</label>
           <input id="classChatConfirmPin" type="password" inputmode="numeric" autocomplete="new-password" pattern="[0-9]{6}" maxlength="6" required />
+          <fieldset class="classChatFirstColor">
+            <legend>Choose your profile color</legend>
+            <div class="classChatColorChoices" role="radiogroup" aria-label="First profile color">
+              <label style="--profile-color:#F7C600"><input type="radio" name="classChatFirstColor" value="#F7C600" checked /><span></span><small>Yellow</small></label>
+              <label style="--profile-color:#FF7A7A"><input type="radio" name="classChatFirstColor" value="#FF7A7A" /><span></span><small>Coral</small></label>
+              <label style="--profile-color:#FF8FCB"><input type="radio" name="classChatFirstColor" value="#FF8FCB" /><span></span><small>Pink</small></label>
+              <label style="--profile-color:#B99CFF"><input type="radio" name="classChatFirstColor" value="#B99CFF" /><span></span><small>Violet</small></label>
+              <label style="--profile-color:#73B9FF"><input type="radio" name="classChatFirstColor" value="#73B9FF" /><span></span><small>Blue</small></label>
+              <label style="--profile-color:#68D9B0"><input type="radio" name="classChatFirstColor" value="#68D9B0" /><span></span><small>Mint</small></label>
+              <label style="--profile-color:#FF9E45"><input type="radio" name="classChatFirstColor" value="#FF9E45" /><span></span><small>Orange</small></label>
+              <label style="--profile-color:#A9B1BD"><input type="radio" name="classChatFirstColor" value="#A9B1BD" /><span></span><small>Gray</small></label>
+            </div>
+          </fieldset>
           <button type="submit">Save PIN and continue</button>
         </form>
         <p id="classChatLoginMessage" class="classChatLoginMessage" role="status"></p>
@@ -1041,7 +1080,7 @@
   <script src="firebase-config.js?v=2-secure-auth"></script>
   <script src="firebase-adapter.js?v=15-secure-auth"></script>
   <script src="script.js?v=73-clock-access-menu"></script>
-  <script src="class-chat.js?v=21-media-links-final"></script>
+  <script src="class-chat.js?v=22-profile-colors"></script>
   <script src="pwa.js?v=3"></script>
 </body>
 </html>

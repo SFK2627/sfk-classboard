@@ -136,12 +136,14 @@
             Active: true,
             Blocked: false,
             MustChangePin: true,
+            AvatarColor: "#F7C600",
             CreatedAt: firebase.firestore.FieldValue.serverTimestamp(),
             UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
           });
           await services.db.collection("chatDirectory").doc(credential.user.uid).set({
             Name: entry.name,
             Role: "student",
+            AvatarColor: "#F7C600",
             UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
           });
           await services.provisionAuth.signOut();
@@ -181,17 +183,20 @@
         directoryBatch.set(db.collection("chatDirectory").doc(doc.id), {
           Name: doc.data()?.Name || "Student",
           Role: "student",
+          AvatarColor: doc.data()?.AvatarColor || "#F7C600",
           UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
       });
       directoryBatch.set(db.collection("chatDirectory").doc("staff_adviser"), {
         Name: "SFK Adviser",
         Role: "admin",
+        AvatarColor: "#F7C600",
         UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
       directoryBatch.set(db.collection("chatDirectory").doc("staff_officer"), {
         Name: "SFK Officer",
         Role: "officer",
+        AvatarColor: "#A9B1BD",
         UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
       await directoryBatch.commit();

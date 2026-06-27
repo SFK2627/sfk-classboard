@@ -217,6 +217,16 @@
   text-align: center;
 }
 
+.classChatColorMenuIcon {
+  width: 18px;
+  height: 18px;
+  flex-basis: 18px;
+  margin: 0 3px;
+  border: 1.5px solid #111;
+  border-radius: 50%;
+  background: var(--profile-color, #f7c600);
+}
+
 @keyframes classChatMenuIn {
   from { opacity: 0; transform: translateY(-5px) scale(.98); }
   to { opacity: 1; transform: translateY(0) scale(1); }
@@ -513,6 +523,7 @@
 }
 
 .classChatControlsPanel > button,
+.classChatColorPanel > button,
 .classChatPollPanel > button {
   width: 100%;
   margin-top: 14px;
@@ -524,6 +535,120 @@
   font-weight: 950;
   box-shadow: 3px 3px 0 #111;
   cursor: pointer;
+}
+
+.classChatColorPanel > button:disabled {
+  opacity: .48;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.classChatColorPreview {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-bottom: 18px;
+  padding: 14px;
+  border: 1px solid #ddd6c8;
+  border-radius: 13px;
+  background: #fff;
+}
+
+.classChatColorPreview > span {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #111;
+  border-radius: 50%;
+  background: var(--profile-color, #f7c600);
+  color: #111;
+  font-size: .78rem;
+  font-weight: 950;
+  box-shadow: 2px 2px 0 rgba(17, 17, 17, .18);
+}
+
+.classChatColorPreview strong,
+.classChatColorPreview small {
+  display: block;
+}
+
+.classChatColorPreview small {
+  margin-top: 4px;
+  color: #716c63;
+  font-size: .75rem;
+}
+
+.classChatFirstColor {
+  min-width: 0;
+  margin: 18px 0 0;
+  border: 0;
+  padding: 0;
+}
+
+.classChatFirstColor legend {
+  margin-bottom: 9px;
+  font-size: .79rem;
+  font-weight: 900;
+}
+
+.classChatColorChoices {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.classChatColorChoices label,
+.classChatAuthForm .classChatColorChoices label {
+  min-width: 0;
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  margin: 0;
+  border: 1.5px solid transparent;
+  border-radius: 11px;
+  padding: 8px 3px 7px;
+  cursor: pointer;
+}
+
+.classChatColorChoices label:has(input:checked) {
+  border-color: #111;
+  background: #fff7cf;
+}
+
+.classChatColorChoices input,
+.classChatAuthForm .classChatColorChoices input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.classChatColorChoices label > span {
+  width: 32px;
+  height: 32px;
+  display: block;
+  border: 2px solid #111;
+  border-radius: 50%;
+  background: var(--profile-color);
+  box-shadow: 2px 2px 0 rgba(17, 17, 17, .16);
+}
+
+.classChatColorChoices label > small {
+  min-width: 0;
+  overflow: hidden;
+  color: #4f4b44;
+  font-size: .62rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.classChatColorChoices label:has(input:disabled) {
+  opacity: .58;
+  cursor: not-allowed;
 }
 
 .classChatPollPanel > .classChatAddPollOption {
@@ -953,7 +1078,7 @@
   place-items: center;
   border: 1px solid #111;
   border-radius: 50%;
-  background: #f7c600;
+  background: var(--profile-color, #f7c600);
   font-size: .57rem;
   font-weight: 950;
   visibility: hidden;
@@ -1661,6 +1786,10 @@ body.classChatIsOpen {
   color: #d0cbc2;
 }
 
+.classChatPanel.is-dark .classChatColorMenuIcon {
+  border-color: #f5f5f5;
+}
+
 .classChatPanel.is-dark .classChatUtility {
   background: #0f0f0f;
 }
@@ -1832,6 +1961,21 @@ body.classChatIsOpen {
 }
 
 .classChatPanel.is-dark .classChatPinNotice {
+  background: #29240e;
+}
+
+.classChatPanel.is-dark .classChatColorPreview {
+  border-color: #3d3d3d;
+  background: #1d1d1d;
+}
+
+.classChatPanel.is-dark .classChatColorPreview small,
+.classChatPanel.is-dark .classChatColorChoices label > small {
+  color: #b9b4ac;
+}
+
+.classChatPanel.is-dark .classChatColorChoices label:has(input:checked) {
+  border-color: #f7c600;
   background: #29240e;
 }
 

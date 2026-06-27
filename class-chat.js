@@ -5,6 +5,12 @@
   const MESSAGE_LIMIT_STEP = 30;
   const MAX_POLL_OPTIONS = 12;
   const OWN_DELETE_WINDOW_MS = 5 * 60 * 1000;
+  const PROFILE_COLOR_COOLDOWN_MS = 3 * 24 * 60 * 60 * 1000;
+  const DEFAULT_PROFILE_COLOR = "#F7C600";
+  const PROFILE_COLORS = [
+    "#F7C600", "#FF7A7A", "#FF8FCB", "#B99CFF",
+    "#73B9FF", "#68D9B0", "#FF9E45", "#A9B1BD"
+  ];
   const CHAT_THEME_KEY = "sfkClassChatTheme";
   const CHAT_FONT_SIZE_KEY = "sfkClassChatFontSize";
   const CHAT_LAST_COUNT_KEY = "sfkClassChatLastReadCount";
@@ -84,6 +90,7 @@
     elements.fontSizeToggle.addEventListener("click", cycleChatFontSize);
     elements.searchOpen.addEventListener("click", () => openUtility("search"));
     elements.savedOpen.addEventListener("click", () => openUtility("saved"));
+    elements.colorOpen.addEventListener("click", () => openUtility("color"));
     elements.pollOpen.addEventListener("click", () => openUtility("poll"));
     elements.controlsOpen.addEventListener("click", () => openUtility("controls"));
     elements.scheduleOpen.addEventListener("click", () => openUtility("schedule"));
@@ -98,6 +105,8 @@
     elements.scheduleForm.addEventListener("submit", scheduleChatMessage);
     elements.mediaOpen.addEventListener("click", () => openUtility("media"));
     elements.mediaForm.addEventListener("submit", sendMediaMessage);
+    elements.colorForm.addEventListener("submit", saveProfileColor);
+    elements.profileColors.addEventListener("change", updateProfileColorPreview);
     elements.addPollOption.addEventListener("click", addPollOption);
     elements.pollOptionsEditor.addEventListener("click", handlePollOptionEditorClick);
     elements.pinned.addEventListener("click", focusPinnedMessage);
@@ -142,6 +151,8 @@
     elements.searchOpen = document.getElementById("classChatSearchOpen");
     elements.savedOpen = document.getElementById("classChatSavedOpen");
     elements.savedLabel = document.getElementById("classChatSavedLabel");
+    elements.colorOpen = document.getElementById("classChatColorOpen");
+    elements.colorMenuIcon = elements.colorOpen?.querySelector(".classChatColorMenuIcon");
     elements.pollOpen = document.getElementById("classChatPollOpen");
     elements.controlsOpen = document.getElementById("classChatControlsOpen");
     elements.scheduleOpen = document.getElementById("classChatScheduleOpen");
@@ -166,6 +177,11 @@
     elements.pollDeadline = document.getElementById("classChatPollDeadline");
     elements.savedPanel = document.getElementById("classChatSavedPanel");
     elements.savedResults = document.getElementById("classChatSavedResults");
+    elements.colorForm = document.getElementById("classChatColorPanel");
+    elements.profileColors = document.getElementById("classChatProfileColors");
+    elements.colorPreview = document.getElementById("classChatColorPreview");
+    elements.colorSave = document.getElementById("classChatColorSave");
+    elements.colorMessage = document.getElementById("classChatColorMessage");
     elements.scheduleForm = document.getElementById("classChatSchedulePanel");
     elements.scheduleText = document.getElementById("classChatScheduleText");
     elements.scheduleAt = document.getElementById("classChatScheduleAt");
@@ -201,6 +217,7 @@
     elements.staffPin = document.getElementById("classChatStaffPin");
     elements.newPin = document.getElementById("classChatNewPin");
     elements.confirmPin = document.getElementById("classChatConfirmPin");
+    elements.firstColorChoices = Array.from(document.querySelectorAll('input[name="classChatFirstColor"]'));
     elements.loginMessage = document.getElementById("classChatLoginMessage");
     elements.messages = document.getElementById("classChatMessages");
     elements.loadEarlier = document.getElementById("classChatLoadEarlier");
@@ -431,6 +448,7 @@
     elements.controlsForm.hidden = type !== "controls";
     elements.pollForm.hidden = type !== "poll";
     elements.savedPanel.hidden = type !== "saved";
+    elements.colorForm.hidden = type !== "color";
     elements.scheduleForm.hidden = type !== "schedule";
     elements.reportsPanel.hidden = type !== "reports";
     elements.mediaForm.hidden = type !== "media";
@@ -465,6 +483,10 @@
     if (type === "saved") {
       elements.utilityTitle.textContent = "Saved messages";
       renderSavedMessages();
+    }
+    if (type === "color") {
+      elements.utilityTitle.textContent = "Profile color";
+      prepareProfileColorPanel();
     }
     if (type === "schedule") {
       elements.utilityTitle.textContent = "Schedule message";
@@ -549,6 +571,7 @@
     elements.logout.hidden = false;
     elements.searchOpen.hidden = true;
     elements.savedOpen.hidden = true;
+    elements.colorOpen.hidden = true;
     elements.pollOpen.hidden = true;
     elements.controlsOpen.hidden = true;
     elements.scheduleOpen.hidden = true;
@@ -559,6 +582,7 @@
     elements.staffPin.value = "";
     elements.newPin.value = "";
     elements.confirmPin.value = "";
+    selectRadioColor(elements.firstColorChoices, DEFAULT_PROFILE_COLOR);
     elements.changePinForm.hidden = true;
     elements.roleTabsWrap.hidden = false;
     selectRole(selectedRole);
@@ -570,6 +594,8 @@
     elements.logout.hidden = false;
     elements.searchOpen.hidden = false;
     elements.savedOpen.hidden = false;
+    elements.colorOpen.hidden = currentProfile.role !== "student";
+    elements.colorMenuIcon?.style.setProperty("--profile-color", normalizeProfileColor(currentProfile.avatarColor));
     elements.status.textContent = `${currentProfile.name} · Class member`;
     elements.controlsOpen.hidden = currentProfile.role !== "admin";
     elements.pollOpen.hidden = false;
@@ -623,7 +649,9 @@
         name: String(profile.Name || "Student").trim(),
         role: "student",
         mutedUntil: timestampToMillis(profile.MutedUntil),
-        mustChangePin: profile.MustChangePin === true
+        mustChangePin: profile.MustChangePin === true,
+        avatarColor: normalizeProfileColor(profile.AvatarColor),
+        colorChangedAt: timestampToMillis(profile.ColorChangedAt)
       };
     });
   }
@@ -650,7 +678,9 @@
         studentId: "",
         name: role === "admin" ? "SFK Adviser" : "SFK Officer",
         role,
-        mutedUntil: 0
+        mutedUntil: 0,
+        avatarColor: DEFAULT_PROFILE_COLOR,
+        colorChangedAt: 0
       };
     });
   }
@@ -679,7 +709,9 @@
         studentId: "",
         name: email === STAFF_EMAILS.admin ? "SFK Adviser" : "SFK Officer",
         role: email === STAFF_EMAILS.admin ? "admin" : "officer",
-        mutedUntil: 0
+        mutedUntil: 0,
+        avatarColor: DEFAULT_PROFILE_COLOR,
+        colorChangedAt: 0
       };
       showRoom();
       return;
@@ -699,7 +731,9 @@
       name: String(profile.Name || "Student"),
       role: "student",
       mutedUntil: timestampToMillis(profile.MutedUntil),
-      mustChangePin: profile.MustChangePin === true
+      mustChangePin: profile.MustChangePin === true,
+      avatarColor: normalizeProfileColor(profile.AvatarColor),
+      colorChangedAt: timestampToMillis(profile.ColorChangedAt)
     };
     if (currentProfile.mustChangePin) showFirstPinChange();
     else showRoom();
@@ -712,6 +746,7 @@
     elements.roleTabsWrap.hidden = true;
     elements.loginMessage.textContent = "";
     elements.status.textContent = "Create your personal Chat PIN";
+    selectRadioColor(elements.firstColorChoices, currentProfile.avatarColor);
     window.setTimeout(() => elements.newPin.focus(), 80);
   }
 
@@ -719,6 +754,7 @@
     event.preventDefault();
     const newPin = elements.newPin.value.trim();
     const confirmPin = elements.confirmPin.value.trim();
+    const avatarColor = selectedRadioColor(elements.firstColorChoices);
 
     if (!/^\d{6}$/.test(newPin)) {
       elements.loginMessage.textContent = "Your new PIN must contain exactly 6 digits.";
@@ -738,11 +774,25 @@
     elements.loginMessage.textContent = "Saving your personal PIN...";
     try {
       await auth.currentUser.updatePassword(newPin);
-      await db.collection("chatProfiles").doc(currentProfile.uid).update({
+      const batch = db.batch();
+      const updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+      batch.update(db.collection("chatProfiles").doc(currentProfile.uid), {
         MustChangePin: false,
-        UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        AvatarColor: avatarColor,
+        ColorChangedAt: updatedAt,
+        UpdatedAt: updatedAt
       });
+      batch.set(db.collection("chatDirectory").doc(currentProfile.uid), {
+        Name: currentProfile.name,
+        Role: "student",
+        AvatarColor: avatarColor,
+        UpdatedAt: updatedAt
+      }, { merge: true });
+      await batch.commit();
       currentProfile.mustChangePin = false;
+      currentProfile.avatarColor = avatarColor;
+      currentProfile.colorChangedAt = Date.now();
+      elements.colorMenuIcon?.style.setProperty("--profile-color", avatarColor);
       elements.changePinForm.hidden = true;
       elements.roleTabsWrap.hidden = false;
       showRoom();
@@ -756,6 +806,94 @@
   function setLoginDisabled(disabled) {
     elements.studentForm.querySelectorAll("input, button").forEach((node) => { node.disabled = disabled; });
     elements.staffForm.querySelectorAll("input, select, button").forEach((node) => { node.disabled = disabled; });
+  }
+
+  function normalizeProfileColor(value) {
+    const color = String(value || "").trim().toUpperCase();
+    return PROFILE_COLORS.includes(color) ? color : DEFAULT_PROFILE_COLOR;
+  }
+
+  function selectedRadioColor(nodes) {
+    return normalizeProfileColor(nodes.find((input) => input.checked)?.value);
+  }
+
+  function selectRadioColor(nodes, value) {
+    const color = normalizeProfileColor(value);
+    nodes.forEach((input) => {
+      input.checked = normalizeProfileColor(input.value) === color;
+    });
+  }
+
+  function profileColorForMessage(message) {
+    const directoryProfile = chatDirectory.find((entry) => entry.uid === message.SenderUID);
+    if (directoryProfile?.AvatarColor) return normalizeProfileColor(directoryProfile.AvatarColor);
+    if (message.SenderUID === currentProfile?.uid) return normalizeProfileColor(currentProfile.avatarColor);
+    return DEFAULT_PROFILE_COLOR;
+  }
+
+  function updateProfileColorPreview() {
+    const choices = Array.from(elements.profileColors.querySelectorAll('input[name="classChatProfileColor"]'));
+    elements.colorPreview.style.setProperty("--profile-color", selectedRadioColor(choices));
+  }
+
+  function prepareProfileColorPanel() {
+    const choices = Array.from(elements.profileColors.querySelectorAll('input[name="classChatProfileColor"]'));
+    const selectedColor = normalizeProfileColor(currentProfile?.avatarColor);
+    const availableAt = Number(currentProfile?.colorChangedAt || 0) + PROFILE_COLOR_COOLDOWN_MS;
+    const coolingDown = Number(currentProfile?.colorChangedAt || 0) > 0 && Date.now() < availableAt;
+    selectRadioColor(choices, selectedColor);
+    choices.forEach((input) => { input.disabled = coolingDown; });
+    elements.colorPreview.textContent = initials(currentProfile?.name || "Student");
+    elements.colorPreview.style.setProperty("--profile-color", selectedColor);
+    elements.colorSave.disabled = coolingDown;
+    elements.colorMessage.textContent = coolingDown
+      ? `You can change your color again on ${new Date(availableAt).toLocaleString()}.`
+      : "After saving, the next color change will be available after 3 days.";
+  }
+
+  async function saveProfileColor(event) {
+    event.preventDefault();
+    if (currentProfile?.role !== "student") return;
+    const availableAt = Number(currentProfile.colorChangedAt || 0) + PROFILE_COLOR_COOLDOWN_MS;
+    if (currentProfile.colorChangedAt > 0 && Date.now() < availableAt) {
+      prepareProfileColorPanel();
+      return;
+    }
+
+    const choices = Array.from(elements.profileColors.querySelectorAll('input[name="classChatProfileColor"]'));
+    const avatarColor = selectedRadioColor(choices);
+    if (avatarColor === normalizeProfileColor(currentProfile.avatarColor)) {
+      elements.colorMessage.textContent = "Choose a different color before saving.";
+      return;
+    }
+
+    elements.colorSave.disabled = true;
+    elements.colorMessage.textContent = "Saving profile color...";
+    try {
+      const batch = db.batch();
+      const updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+      batch.update(db.collection("chatProfiles").doc(currentProfile.uid), {
+        AvatarColor: avatarColor,
+        ColorChangedAt: updatedAt,
+        UpdatedAt: updatedAt
+      });
+      batch.set(db.collection("chatDirectory").doc(currentProfile.uid), {
+        Name: currentProfile.name,
+        Role: "student",
+        AvatarColor: avatarColor,
+        UpdatedAt: updatedAt
+      }, { merge: true });
+      await batch.commit();
+      currentProfile.avatarColor = avatarColor;
+      currentProfile.colorChangedAt = Date.now();
+      elements.colorMenuIcon?.style.setProperty("--profile-color", avatarColor);
+      renderMessages();
+      prepareProfileColorPanel();
+      showChatToast("Profile color updated.");
+    } catch (error) {
+      elements.colorSave.disabled = false;
+      elements.colorMessage.textContent = readableError(error);
+    }
   }
 
   function startRealtimeListeners() {
@@ -837,13 +975,21 @@
     if (currentProfile.role === "student") {
       profileUnsubscribe = db.collection("chatProfiles").doc(currentProfile.uid).onSnapshot((snapshot) => {
         const profile = snapshot.data() || {};
+        const previousColor = currentProfile.avatarColor;
         currentProfile.mutedUntil = timestampToMillis(profile.MutedUntil);
+        currentProfile.avatarColor = normalizeProfileColor(profile.AvatarColor);
+        currentProfile.colorChangedAt = timestampToMillis(profile.ColorChangedAt);
+        elements.colorMenuIcon?.style.setProperty("--profile-color", currentProfile.avatarColor);
+        if (previousColor !== currentProfile.avatarColor && currentMessages.length) renderMessages();
         if (profile.Active === false || profile.Blocked === true) leaveChat();
       });
     }
 
     directoryUnsubscribe = db.collection("chatDirectory").orderBy("Name").onSnapshot((snapshot) => {
+      const previousColors = chatDirectory.map((entry) => `${entry.uid}:${entry.AvatarColor || ""}`).join("|");
       chatDirectory = snapshot.docs.map((doc) => ({ uid: doc.id, ...doc.data() }));
+      const nextColors = chatDirectory.map((entry) => `${entry.uid}:${entry.AvatarColor || ""}`).join("|");
+      if (previousColors !== nextColors && currentMessages.length) renderMessages();
     }, () => {
       chatDirectory = [];
     });
@@ -1086,7 +1232,7 @@
         ${showNewDivider ? `<div class="classChatNewDivider">New messages</div>` : ""}
         <article class="classChatMessage ${own ? "is-own" : ""} ${grouped ? "is-grouped" : "is-first"} ${groupEnd ? "is-group-end" : ""} ${removed ? "has-removed" : ""} ${mentioned ? "is-mentioned" : ""} ${message.Priority ? "is-priority" : ""}"
                  data-message-id="${message.id}">
-          ${own ? "" : `<span class="classChatMessageAvatar">${escapeHtml(initials(message.SenderName))}</span>`}
+          ${own ? "" : `<span class="classChatMessageAvatar" style="--profile-color:${profileColorForMessage(message)}">${escapeHtml(initials(message.SenderName))}</span>`}
           <div class="classChatBubbleWrap">
             ${own ? "" : `<p class="classChatSender">${escapeHtml(message.SenderName || "Student")}${roleBadgeMarkup(message.SenderRole)}</p>`}
             <div class="classChatBubble">
