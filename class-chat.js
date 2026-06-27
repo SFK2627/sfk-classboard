@@ -23,6 +23,7 @@
   let longPressTimer = null;
   let typingTimer = null;
   let typingClearTimer = null;
+  let messageGesture = null;
 
   const elements = {};
 
@@ -50,9 +51,9 @@
     elements.messages.addEventListener("click", handleMessageClick);
     elements.messages.addEventListener("dblclick", handleMessageDoubleClick);
     elements.messages.addEventListener("pointerdown", startLongPress);
-    elements.messages.addEventListener("pointerup", cancelLongPress);
-    elements.messages.addEventListener("pointercancel", cancelLongPress);
-    elements.messages.addEventListener("pointermove", cancelLongPress);
+    elements.messages.addEventListener("pointerup", finishMessageGesture);
+    elements.messages.addEventListener("pointercancel", cancelMessageGesture);
+    elements.messages.addEventListener("pointermove", moveMessageGesture);
     document.addEventListener("click", handleOutsideReactionTray);
     document.addEventListener("keydown", handleChatKeydown);
   }
@@ -438,7 +439,7 @@
 
       return `
         ${showDay ? `<div class="classChatDay">${escapeHtml(day)}</div>` : ""}
-        <article class="classChatMessage ${own ? "is-own" : ""} ${grouped ? "is-grouped" : "is-first"}"
+        <article class="classChatMessage ${own ? "is-own" : ""} ${grouped ? "is-grouped" : "is-first"} ${removed ? "has-removed" : ""}"
                  data-message-id="${message.id}">
           ${own ? "" : `<span class="classChatMessageAvatar">${escapeHtml(initials(message.SenderName))}</span>`}
           <div class="classChatBubbleWrap">
@@ -560,6 +561,12 @@
   }
 
   function handleMessageClick(event) {
+    const quoted = event.target.closest("[data-quoted-message-id]");
+    if (quoted) {
+      focusOriginalMessage(quoted.dataset.quotedMessageId);
+      return;
+    }
+
     const button = event.target.closest("[data-chat-action]");
     if (!button) return;
     const message = findMessage(button.dataset.messageId);
@@ -570,16 +577,36 @@
     if (button.dataset.chatAction === "delete") removeMessage(message);
   }
 
+  function focusOriginalMessage(messageId) {
+    const original = elements.messages.querySelector(`.classChatMessage[data-message-id="${cssEscape(messageId)}"]`);
+    if (!original) return;
+    original.scrollIntoView({ behavior: "smooth", block: "center" });
+    original.classList.remove("is-highlighted");
+    window.requestAnimationFrame(() => original.classList.add("is-highlighted"));
+    window.setTimeout(() => original.classList.remove("is-highlighted"), 1100);
+  }
+
   function handleMessageDoubleClick(event) {
     const article = event.target.closest(".classChatMessage");
     if (!article || event.target.closest("button")) return;
+    showQuickHeart(article);
     reactToMessage(article.dataset.messageId, "🫶");
   }
 
   function startLongPress(event) {
-    if (event.pointerType === "mouse" || event.target.closest("button")) return;
+    if (event.target.closest("button")) return;
     const article = event.target.closest(".classChatMessage");
     if (!article) return;
+    messageGesture = {
+      article,
+      messageId: article.dataset.messageId,
+      startX: event.clientX,
+      startY: event.clientY,
+      pointerId: event.pointerId,
+      pointerType: event.pointerType,
+      translated: false
+    };
+    if (event.pointerType === "mouse") return;
     window.clearTimeout(longPressTimer);
     longPressTimer = window.setTimeout(() => {
       showReactionTray(article.dataset.messageId, article.querySelector(".classChatBubble"));
@@ -587,8 +614,51 @@
     }, 520);
   }
 
-  function cancelLongPress() {
+  function moveMessageGesture(event) {
+    if (!messageGesture || messageGesture.pointerId !== event.pointerId) return;
+    const dx = event.clientX - messageGesture.startX;
+    const dy = event.clientY - messageGesture.startY;
+    if (Math.abs(dx) > 8 || Math.abs(dy) > 8) window.clearTimeout(longPressTimer);
+    if (messageGesture.pointerType === "mouse" || Math.abs(dx) <= Math.abs(dy)) return;
+
+    const message = findMessage(messageGesture.messageId);
+    if (!message || message.Removed) return;
+    const own = message.SenderUID === currentProfile.uid;
+    const direction = own ? -1 : 1;
+    const distance = Math.min(54, Math.max(0, dx * direction));
+    if (!distance) return;
+
+    event.preventDefault();
+    messageGesture.translated = true;
+    messageGesture.article.style.setProperty("--chat-swipe", `${distance * direction}px`);
+    messageGesture.article.classList.toggle("is-reply-ready", distance >= 46);
+  }
+
+  function finishMessageGesture(event) {
     window.clearTimeout(longPressTimer);
+    if (!messageGesture || messageGesture.pointerId !== event.pointerId) return;
+    const gesture = messageGesture;
+    messageGesture = null;
+    const shouldReply = gesture.article.classList.contains("is-reply-ready");
+    resetGestureArticle(gesture.article);
+    if (shouldReply) {
+      const message = findMessage(gesture.messageId);
+      if (message && !message.Removed) {
+        setReply(message);
+        navigator.vibrate?.(18);
+      }
+    }
+  }
+
+  function cancelMessageGesture() {
+    window.clearTimeout(longPressTimer);
+    if (messageGesture?.article) resetGestureArticle(messageGesture.article);
+    messageGesture = null;
+  }
+
+  function resetGestureArticle(article) {
+    article.classList.remove("is-reply-ready");
+    article.style.removeProperty("--chat-swipe");
   }
 
   function setReply(message) {
@@ -609,20 +679,37 @@
     const message = findMessage(messageId);
     if (!message || message.Removed) return;
     reactionMessageId = messageId;
-    elements.reactionTray.innerHTML = REACTIONS.map((emoji) => (
-      `<button type="button" data-chat-emoji="${emoji}" aria-label="React ${emoji}">${emoji}</button>`
-    )).join("");
+    const own = message.SenderUID === currentProfile.uid;
+    const canDeleteOwn = own && Date.now() - timestampToMillis(message.CreatedAt) <= OWN_DELETE_WINDOW_MS;
+    const canRemove = currentProfile.role === "admin" || canDeleteOwn;
+    elements.reactionTray.innerHTML = `
+      <div class="classChatReactionChoices">
+        ${REACTIONS.map((emoji) => (
+          `<button type="button" data-chat-emoji="${emoji}" aria-label="React ${emoji}">${emoji}</button>`
+        )).join("")}
+      </div>
+      <div class="classChatTrayActions">
+        <button type="button" data-chat-tray-action="reply"><span aria-hidden="true">&#8617;</span> Reply</button>
+        ${canRemove ? `<button type="button" data-chat-tray-action="delete"><span aria-hidden="true">&#9003;</span> Remove</button>` : ""}
+      </div>`;
 
     elements.reactionTray.querySelectorAll("[data-chat-emoji]").forEach((button) => {
       button.addEventListener("click", () => reactToMessage(messageId, button.dataset.chatEmoji));
+    });
+    elements.reactionTray.querySelectorAll("[data-chat-tray-action]").forEach((button) => {
+      button.addEventListener("click", () => {
+        hideReactionTray();
+        if (button.dataset.chatTrayAction === "reply") setReply(message);
+        if (button.dataset.chatTrayAction === "delete") removeMessage(message);
+      });
     });
 
     elements.reactionTray.hidden = false;
     const panelRect = elements.layer.querySelector(".classChatPanel").getBoundingClientRect();
     const anchorRect = anchor.getBoundingClientRect();
-    const trayWidth = Math.min(390, panelRect.width - 24);
+    const trayWidth = Math.min(360, panelRect.width - 24);
     const left = Math.max(12, Math.min(anchorRect.left - panelRect.left, panelRect.width - trayWidth - 12));
-    const top = Math.max(74, anchorRect.top - panelRect.top - 54);
+    const top = Math.max(74, anchorRect.top - panelRect.top - 112);
     elements.reactionTray.style.left = `${left}px`;
     elements.reactionTray.style.top = `${top}px`;
   }
@@ -630,6 +717,16 @@
   function hideReactionTray() {
     reactionMessageId = "";
     elements.reactionTray.hidden = true;
+  }
+
+  function showQuickHeart(article) {
+    const bubble = article.querySelector(".classChatBubble");
+    if (!bubble) return;
+    const heart = document.createElement("span");
+    heart.className = "classChatQuickHeart";
+    heart.textContent = "🫶";
+    bubble.appendChild(heart);
+    window.setTimeout(() => heart.remove(), 620);
   }
 
   function handleOutsideReactionTray(event) {
