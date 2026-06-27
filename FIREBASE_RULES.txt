@@ -2,38 +2,101 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email == "admin@sfk-classboard.app";
+    }
+
+    function isOfficer() {
+      return request.auth != null
+        && request.auth.token.email == "officers@sfk-classboard.app";
+    }
+
+    function isStaff() {
+      return isAdmin() || isOfficer();
+    }
+
+    function isHeartLedgerDocument(docId) {
+      return docId.matches("^heartV3_.*")
+        && request.resource.data.Kind == "ClassBoardHeartLedgerV3"
+        && request.resource.data.TargetType in ["announcement", "memory"]
+        && request.resource.data.TargetKey is string
+        && request.resource.data.DeviceID is string
+        && request.resource.data.Active is bool
+        && request.resource.data.keys().hasOnly([
+          "Kind", "TargetType", "TargetKey", "DeviceID", "Active",
+          "UpdatedAtText", "UpdatedAt"
+        ]);
+    }
+
     match /settings/{docId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create, update: if isStaff() || isHeartLedgerDocument(docId);
+      allow delete: if isAdmin() || docId.matches("^heartV3_.*");
     }
+
     match /schedule/{docId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create, update: if isStaff();
+      allow delete: if isAdmin();
     }
+
     match /announcements/{docId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create, update: if isStaff();
+      allow delete: if isAdmin();
     }
+
     match /thingsToBring/{docId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create, update: if isStaff();
+      allow delete: if isAdmin();
     }
+
     match /adviserReminders/{docId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create, update: if isStaff();
+      allow delete: if isAdmin();
     }
+
     match /prayerLeaders/{docId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create, update: if isStaff();
+      allow delete: if isAdmin();
     }
+
     match /dailyQuotes/{docId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create, update: if isStaff();
+      allow delete: if isAdmin();
     }
+
     match /birthdays/{docId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create, update: if isStaff();
+      allow delete: if isAdmin();
     }
+
     match /tickerMessages/{docId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create, update: if isStaff();
+      allow delete: if isAdmin();
     }
+
     match /dailyInfo/{docId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create, update: if isStaff();
+      allow delete: if isAdmin();
     }
+
     match /memories/{docId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create, update: if isStaff();
+      allow delete: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

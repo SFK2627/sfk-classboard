@@ -1,8 +1,5 @@
 const OFFICER_API_URL = "https://script.google.com/macros/s/AKfycbzCjWVnO-ZNvKTNqKN1zVscNsfPox0uDnO1QTSbBCrMFaS79tfL3mopHa2pH7gHczYeOA/exec";
 
-const OFFICER_PIN = "SFK2627";
-const OFFICER_LOGIN_KEY = "sfkOfficerLoggedIn";
-
 let currentOfficerSheet = "";
 let latestOfficerTableData = null;
 let selectedOfficerRows = new Set();
@@ -17,9 +14,10 @@ document.addEventListener("DOMContentLoaded", () => {
   initOfficerToolLauncher();
   initRichTextEditors();
 
-  if (localStorage.getItem(OFFICER_LOGIN_KEY) === "YES") {
-    showOfficerPanel();
-  }
+  window.SFKAuth?.onAuthStateChanged((user, role) => {
+    if (user && role === "officer") showOfficerPanel();
+    else showOfficerLogin();
+  });
 
   const pinInput = document.getElementById("officerPin");
   if (pinInput) {
@@ -33,28 +31,36 @@ document.addEventListener("DOMContentLoaded", () => {
   setTodayForOfficerDateInputs();
 });
 
-function loginOfficer() {
+async function loginOfficer() {
   const pinInput = document.getElementById("officerPin");
   const message = document.getElementById("officerLoginMessage");
-
   const pin = pinInput.value.trim();
 
-  if (pin === OFFICER_PIN) {
-    localStorage.setItem(OFFICER_LOGIN_KEY, "YES");
-    showOfficerPanel();
+  if (!pin) {
+    message.textContent = "Enter the shared Officer PIN.";
+    pinInput.focus();
+    return;
+  }
+
+  message.textContent = "Checking access...";
+  try {
+    await window.SFKAuth.signInWithPin("officer", pin);
     pinInput.value = "";
     message.textContent = "";
-  } else {
+  } catch (error) {
     message.textContent = "Incorrect Officer PIN. Please try again.";
     pinInput.value = "";
     pinInput.focus();
   }
 }
 
-function logoutOfficer() {
-  localStorage.removeItem(OFFICER_LOGIN_KEY);
+async function logoutOfficer() {
   closeOfficerTool();
+  await window.SFKAuth?.signOut();
+  showOfficerLogin();
+}
 
+function showOfficerLogin() {
   document.getElementById("officerLoginScreen").classList.remove("hidden");
   document.getElementById("officerPanel").classList.add("hidden");
 }

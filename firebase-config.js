@@ -10,6 +10,13 @@ window.SFK_FIREBASE_CONFIG = {
   measurementId: "G-QXK14EYDP2"
 };
 
+// These are account identifiers, not passwords. Create both accounts in
+// Firebase Authentication. The Officer account is shared by all officers.
+window.SFK_AUTH_ACCOUNTS = {
+  admin: "admin@sfk-classboard.app",
+  officer: "officers@sfk-classboard.app"
+};
+
 window.SFK_FIREBASE_READY =
   window.SFK_FIREBASE_CONFIG &&
   !String(window.SFK_FIREBASE_CONFIG.apiKey || "").includes("PASTE_");

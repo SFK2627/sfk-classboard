@@ -113,8 +113,14 @@
     if (type === "today") return getTodayBoard();
     if (type === "schedule") return getWeeklySchedule();
     if (type === "settings") return getSettings();
-    if (type === "adminList") return getManageList(params.get("sheet"));
-    if (type === "officerList") return getManageList(params.get("sheet"));
+    if (type === "adminList") {
+      requireFirebaseRole(["admin"]);
+      return getManageList(params.get("sheet"));
+    }
+    if (type === "officerList") {
+      requireFirebaseRole(["admin", "officer"]);
+      return getManageList(params.get("sheet"));
+    }
     if (type === "memories") return getMemories();
     if (type === "memoryAudio") return getMemoryAudio(params.get("fileId"));
 
@@ -125,22 +131,70 @@
     const type = body.type;
     const payload = body.payload || {};
 
-    if (type === "adminUpdate") return updateRow(payload);
-    if (type === "adminUnpublish" || type === "officerHide") return unpublishRow(payload);
-    if (type === "adminRestore" || type === "officerRestore") return publishRow(payload);
-    if (type === "adminDelete") return deleteRow(payload);
-    if (type === "adminBatchUnpublish" || type === "officerBatchHide") return batchRows(payload, unpublishRow);
-    if (type === "adminBatchDelete") return batchRows(payload, deleteRow);
-    if (type === "officerAdd") return addTypedRow(payload.kind, payload, sourceUrl);
+    if (type === "adminUpdate") {
+      requireFirebaseRole(["admin"]);
+      return updateRow(payload);
+    }
+    if (type === "adminUnpublish") {
+      requireFirebaseRole(["admin"]);
+      return unpublishRow(payload);
+    }
+    if (type === "officerHide") {
+      requireFirebaseRole(["admin", "officer"]);
+      return unpublishRow(payload);
+    }
+    if (type === "adminRestore") {
+      requireFirebaseRole(["admin"]);
+      return publishRow(payload);
+    }
+    if (type === "officerRestore") {
+      requireFirebaseRole(["admin", "officer"]);
+      return publishRow(payload);
+    }
+    if (type === "adminDelete") {
+      requireFirebaseRole(["admin"]);
+      return deleteRow(payload);
+    }
+    if (type === "adminBatchUnpublish") {
+      requireFirebaseRole(["admin"]);
+      return batchRows(payload, unpublishRow);
+    }
+    if (type === "officerBatchHide") {
+      requireFirebaseRole(["admin", "officer"]);
+      return batchRows(payload, unpublishRow);
+    }
+    if (type === "adminBatchDelete") {
+      requireFirebaseRole(["admin"]);
+      return batchRows(payload, deleteRow);
+    }
+    if (type === "officerAdd") {
+      requireFirebaseRole(["admin", "officer"]);
+      return addTypedRow(payload.kind, payload, sourceUrl);
+    }
     if (type === "announcementHeart" || type === "announcementHeartV2") return recordHeart("Announcements", payload.announcementId || payload.AnnouncementID || payload.ID || payload.id, payload.delta, payload);
     if (type === "memoryHeart" || type === "memoryHeartV2") return recordHeart("Memories", payload.memoryId || payload.MemoryID || payload.ID || payload.id, payload.delta, payload);
     if (type === "memoryAuth") return checkMemoryAuth(payload);
-    if (type === "memoryHide") return hideMemory(payload.memoryId || payload.MemoryID || payload.ID || payload.id);
-    if (type === "memoryDelete") return deleteMemory(payload.memoryId || payload.MemoryID || payload.ID || payload.id);
-    if (type === "memoryUpdate") return updateMemory(payload.memoryId || payload.MemoryID || payload.ID || payload.id, payload);
-    if (type === "memoryCreate") return createMemory(payload, sourceUrl);
+    if (type === "memoryHide") {
+      requireFirebaseRole(["admin", "officer"]);
+      return hideMemory(payload.memoryId || payload.MemoryID || payload.ID || payload.id);
+    }
+    if (type === "memoryDelete") {
+      requireFirebaseRole(["admin"]);
+      return deleteMemory(payload.memoryId || payload.MemoryID || payload.ID || payload.id);
+    }
+    if (type === "memoryUpdate") {
+      requireFirebaseRole(["admin", "officer"]);
+      return updateMemory(payload.memoryId || payload.MemoryID || payload.ID || payload.id, payload);
+    }
+    if (type === "memoryCreate") {
+      requireFirebaseRole(["admin", "officer"]);
+      return createMemory(payload, sourceUrl);
+    }
 
-    if (TYPE_TO_SHEET[type]) return addTypedRow(type, payload, sourceUrl);
+    if (TYPE_TO_SHEET[type]) {
+      requireFirebaseRole(["admin"]);
+      return addTypedRow(type, payload, sourceUrl);
+    }
 
     return { success: false, message: `Unknown Firebase request type: ${type}` };
   }
@@ -309,13 +363,15 @@
   }
 
   async function uploadAnnouncementAttachmentsViaAppsScript(sourceUrl, id, files) {
+    const authToken = await getFirebaseAuthToken();
     const response = await originalFetch(sourceUrl, {
       method: "POST",
       body: JSON.stringify({
         type: "announcementUploadAttachments",
         payload: {
           RecordID: id,
-          AttachmentFiles: files
+          AttachmentFiles: files,
+          AuthToken: authToken
         }
       })
     });
@@ -525,13 +581,12 @@
   }
 
   function checkMemoryAuth(payload) {
-    const role = normalize(payload.Role || payload.role);
-    const pin = String(payload.Pin || payload.pin || "");
-    const ok = (role === "admin" && pin === "0524") || (role === "officer" && pin === "sfk2627");
+    const role = currentFirebaseRole();
+    const ok = role === "admin" || role === "officer";
     return {
       success: ok,
       role: ok ? (role === "admin" ? "Admin" : "Officer") : "",
-      message: ok ? "Posting unlocked." : "Incorrect PIN."
+      message: ok ? "Posting unlocked." : "Authentication required."
     };
   }
 
@@ -574,13 +629,14 @@
       return { media: [], music: null };
     }
 
+    const authToken = await getFirebaseAuthToken();
     const response = await originalFetch(sourceUrl, {
       method: "POST",
       body: JSON.stringify({
         type: "memoryUploadAssets",
         payload: {
           Role: payload.Role,
-          Pin: payload.Pin,
+          AuthToken: authToken,
           MemoryID: memoryId,
           MediaFiles: payload.MediaFiles || [],
           MusicFile: payload.MusicFile || null
@@ -592,6 +648,28 @@
       throw new Error(result.message || "Unable to upload memory media to Drive.");
     }
     return result;
+  }
+
+  function currentFirebaseRole() {
+    try {
+      return window.SFKAuth?.currentRole?.() || "";
+    } catch (error) {
+      return "";
+    }
+  }
+
+  function requireFirebaseRole(allowedRoles) {
+    const role = currentFirebaseRole();
+    if (!allowedRoles.includes(role)) {
+      throw new Error("You are not authorized to perform this action.");
+    }
+    return role;
+  }
+
+  async function getFirebaseAuthToken() {
+    const token = await window.SFKAuth?.getIdToken?.();
+    if (!token) throw new Error("Your login session expired. Please sign in again.");
+    return token;
   }
 
   async function hideMemory(id) {

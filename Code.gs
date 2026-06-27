@@ -3,12 +3,70 @@ const TIMEZONE = "Asia/Manila";
 const ATTACHMENT_FOLDER_NAME = "SFK ClassBoard Attachments";
 const MEMORY_FOLDER_NAME = "SFK ClassBoard Memories";
 const MEMORY_MUSIC_FOLDER_NAME = "SFK ClassBoard Music";
-const MEMORY_ADMIN_PIN = "0524";
-const MEMORY_OFFICER_PIN = "SFK2627";
+const AUTH_ADMIN_EMAIL = "admin@sfk-classboard.app";
+const AUTH_OFFICER_EMAIL = "officers@sfk-classboard.app";
 
 function authorizeClassBoardDriveAccess() {
   const folder = getOrCreateAttachmentFolder();
   return "Drive access authorized for: " + folder.getName();
+}
+
+function requireGetRole_(event, allowedRoles, callback) {
+  const token = event && event.parameter ? event.parameter.authToken : "";
+  const access = verifyFirebaseAccessToken_(token);
+  if (!access.success || allowedRoles.indexOf(access.role) < 0) {
+    return { success: false, status: "error", message: "Authentication required." };
+  }
+  return callback();
+}
+
+function verifyFirebaseAccessToken_(idToken) {
+  const token = String(idToken || "").trim();
+  if (!token) return { success: false, role: "" };
+
+  const apiKey = PropertiesService.getScriptProperties().getProperty("FIREBASE_WEB_API_KEY");
+  if (!apiKey) {
+    throw new Error("Missing FIREBASE_WEB_API_KEY in Apps Script properties.");
+  }
+
+  const digest = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, token)
+    .map(function(value) {
+      const byte = value < 0 ? value + 256 : value;
+      return ("0" + byte.toString(16)).slice(-2);
+    })
+    .join("");
+  const cache = CacheService.getScriptCache();
+  const cached = cache.get("firebaseAuth:" + digest);
+  if (cached) return JSON.parse(cached);
+
+  try {
+    const response = UrlFetchApp.fetch(
+      "https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=" + encodeURIComponent(apiKey),
+      {
+        method: "post",
+        contentType: "application/json",
+        payload: JSON.stringify({ idToken: token }),
+        muteHttpExceptions: true
+      }
+    );
+    if (response.getResponseCode() !== 200) return { success: false, role: "" };
+
+    const data = JSON.parse(response.getContentText() || "{}");
+    const email = String(data.users && data.users[0] && data.users[0].email || "").trim().toLowerCase();
+    const role = email === AUTH_ADMIN_EMAIL ? "admin" :
+      (email === AUTH_OFFICER_EMAIL ? "officer" : "");
+    const result = { success: Boolean(role), role: role, email: email };
+    if (result.success) cache.put("firebaseAuth:" + digest, JSON.stringify(result), 3000);
+    return result;
+  } catch (error) {
+    console.error("Firebase token verification failed: " + error);
+    return { success: false, role: "" };
+  }
+}
+
+function isAuthenticatedPayloadRole_(payload, allowedRoles) {
+  const role = String(payload && payload.AuthenticatedRole || "").trim().toLowerCase();
+  return allowedRoles.indexOf(role) >= 0;
 }
 
 function doGet(e) {
@@ -29,11 +87,15 @@ function doGet(e) {
       break;
 
     case "adminList":
-      result = getAdminList(e.parameter.sheet);
+      result = requireGetRole_(e, ["admin"], function() {
+        return getAdminList(e.parameter.sheet);
+      });
       break;
 
     case "officerList":
-      result = getOfficerList(e.parameter.sheet);
+      result = requireGetRole_(e, ["admin", "officer"], function() {
+        return getOfficerList(e.parameter.sheet);
+      });
       break;
 
     case "memories":
@@ -70,6 +132,25 @@ function doPost(e) {
         success: false,
         message: "Missing request type."
       });
+    }
+
+    const publicWriteTypes = {
+      announcementHeart: true,
+      memoryHeart: true
+    };
+    if (!publicWriteTypes[type]) {
+      const access = verifyFirebaseAccessToken_(payload.AuthToken);
+      const adminOnly = type.indexOf("admin") === 0 ||
+        ["announcement", "things", "reminder", "prayer", "quote", "birthday", "ticker", "dailyInfo", "memoryDelete"].indexOf(type) >= 0;
+      const allowedRoles = adminOnly ? ["admin"] : ["admin", "officer"];
+      if (!access.success || allowedRoles.indexOf(access.role) < 0) {
+        return jsonResponse({
+          success: false,
+          message: "Your login is invalid or you are not authorized for this action."
+        });
+      }
+      payload.AuthenticatedRole = access.role;
+      delete payload.AuthToken;
     }
 
     /* ADMIN MANAGE ACTIONS */
@@ -120,13 +201,15 @@ function doPost(e) {
     }
 
     if (type === "memoryAuth") {
-      const role = normalizeMemoryRole(payload.Role);
-      const allowed = isValidMemoryAuth(role, payload.Pin);
       return jsonResponse({
-        success: allowed,
-        role: allowed ? role : "",
-        message: allowed ? "Posting unlocked." : "Incorrect admin/officer PIN."
+        success: true,
+        role: payload.AuthenticatedRole === "admin" ? "Admin" : "Officer",
+        message: "Posting unlocked."
       });
+    }
+
+    if (type === "musicMetadataBatch") {
+      return jsonResponse(getJukeHostMusicMetadataBatch(payload));
     }
 
     if (type === "memoryHeart") {
@@ -1629,6 +1712,208 @@ function jsonResponse(data) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+function getJukeHostMusicMetadataBatch(payload) {
+  if (!isAuthenticatedPayloadRole_(payload, ["admin", "officer"])) {
+    return { success: false, message: "Authentication required." };
+  }
+
+  const urls = Array.from(new Set((payload.Urls || [])
+    .map(value => String(value || "").trim())
+    .filter(isAllowedJukeHostAudioUrl)))
+    .slice(0, 100);
+
+  if (!urls.length) {
+    return { success: false, message: "No valid JukeHost audio links were provided." };
+  }
+
+  const items = urls.map(url => ({ url: url, title: "", source: "" }));
+  const unresolvedIndexes = items.map((item, index) => index);
+
+  for (let start = 0; start < unresolvedIndexes.length; start += 8) {
+    const indexBatch = unresolvedIndexes.slice(start, start + 8);
+    const responses = fetchJukeHostMetadataRequests_(indexBatch.map(index => ({
+      url: items[index].url,
+      method: "get",
+      headers: { Range: "bytes=0-131071" },
+      followRedirects: true,
+      muteHttpExceptions: true
+    })));
+
+    responses.forEach((response, responseIndex) => {
+      if (!response) return;
+      const item = items[indexBatch[responseIndex]];
+      const headerTitle = getMusicTitleFromHeaders_(response.getAllHeaders());
+      if (headerTitle) {
+        item.title = headerTitle;
+        item.source = "filename";
+        return;
+      }
+
+      const headers = response.getAllHeaders();
+      const contentRange = getHeaderValue_(headers, "content-range");
+      const contentLength = Number(getHeaderValue_(headers, "content-length") || 0);
+      if (!contentRange && contentLength > 524288) return;
+
+      try {
+        const tags = readId3MusicTags_(response.getBlob().getBytes());
+        if (tags.title) {
+          item.title = tags.artist && tags.title.toLowerCase().indexOf(tags.artist.toLowerCase()) === -1
+            ? tags.artist + " - " + tags.title
+            : tags.title;
+          item.title = cleanDetectedMusicTitle_(item.title);
+          item.source = "id3";
+        }
+      } catch (error) {
+        // Leave this title blank so the client can assign an editable fallback.
+      }
+    });
+  }
+
+  return {
+    success: true,
+    items: items,
+    detected: items.filter(item => item.title).length,
+    total: items.length
+  };
+}
+
+function isAllowedJukeHostAudioUrl(value) {
+  return /^https:\/\/audio\.jukehost\.co\.uk\/[a-z0-9-]+(?:[/?#].*)?$/i.test(String(value || ""));
+}
+
+function fetchJukeHostMetadataRequests_(requests) {
+  if (!requests.length) return [];
+  try {
+    return UrlFetchApp.fetchAll(requests);
+  } catch (error) {
+    return requests.map(request => {
+      try {
+        const options = Object.assign({}, request);
+        delete options.url;
+        return UrlFetchApp.fetch(request.url, options);
+      } catch (fetchError) {
+        return null;
+      }
+    });
+  }
+}
+
+function getMusicTitleFromHeaders_(headers) {
+  const disposition = getHeaderValue_(headers, "content-disposition");
+  if (!disposition) return "";
+
+  const encoded = disposition.match(/filename\*\s*=\s*UTF-8''([^;]+)/i);
+  const plain = disposition.match(/filename\s*=\s*"?([^";]+)"?/i);
+  const raw = encoded && encoded[1] ? encoded[1] : (plain && plain[1] ? plain[1] : "");
+  if (!raw) return "";
+
+  let decoded = raw.trim();
+  try {
+    decoded = decodeURIComponent(decoded);
+  } catch (error) {
+    // Keep the original filename.
+  }
+  const title = cleanDetectedMusicTitle_(decoded);
+  return /^[a-f0-9-]{24,}$/i.test(title) ? "" : title;
+}
+
+function getHeaderValue_(headers, targetName) {
+  const target = String(targetName || "").toLowerCase();
+  const keys = Object.keys(headers || {});
+  for (let index = 0; index < keys.length; index++) {
+    if (keys[index].toLowerCase() === target) {
+      const value = headers[keys[index]];
+      return Array.isArray(value) ? String(value[0] || "") : String(value || "");
+    }
+  }
+  return "";
+}
+
+function readId3MusicTags_(signedBytes) {
+  const bytes = (signedBytes || []).map(value => value & 255);
+  if (bytes.length < 10 || bytes[0] !== 73 || bytes[1] !== 68 || bytes[2] !== 51) return {};
+
+  const version = bytes[3];
+  const tagSize = readSynchsafeInt_(bytes, 6);
+  const end = Math.min(bytes.length, 10 + tagSize);
+  const tags = {};
+  let offset = 10;
+
+  while (offset < end) {
+    const isV22 = version === 2;
+    const headerSize = isV22 ? 6 : 10;
+    if (offset + headerSize > end) break;
+
+    const frameIdLength = isV22 ? 3 : 4;
+    let frameId = "";
+    for (let i = 0; i < frameIdLength; i++) frameId += String.fromCharCode(bytes[offset + i]);
+    if (!frameId.replace(/\0/g, "").trim()) break;
+
+    const frameSize = isV22
+      ? ((bytes[offset + 3] << 16) | (bytes[offset + 4] << 8) | bytes[offset + 5])
+      : (version === 4 ? readSynchsafeInt_(bytes, offset + 4) : readUint32_(bytes, offset + 4));
+    if (!frameSize || offset + headerSize + frameSize > end) break;
+
+    const frameData = bytes.slice(offset + headerSize, offset + headerSize + frameSize);
+    if (frameId === "TIT2" || frameId === "TT2") tags.title = decodeId3TextFrame_(frameData);
+    if (frameId === "TPE1" || frameId === "TP1") tags.artist = decodeId3TextFrame_(frameData);
+    if (tags.title && tags.artist) break;
+    offset += headerSize + frameSize;
+  }
+
+  return tags;
+}
+
+function readSynchsafeInt_(bytes, offset) {
+  return ((bytes[offset] & 127) << 21) |
+    ((bytes[offset + 1] & 127) << 14) |
+    ((bytes[offset + 2] & 127) << 7) |
+    (bytes[offset + 3] & 127);
+}
+
+function readUint32_(bytes, offset) {
+  return ((bytes[offset] << 24) >>> 0) +
+    (bytes[offset + 1] << 16) +
+    (bytes[offset + 2] << 8) +
+    bytes[offset + 3];
+}
+
+function decodeId3TextFrame_(frameData) {
+  if (!frameData || frameData.length < 2) return "";
+  const encoding = frameData[0];
+  let data = frameData.slice(1);
+  let charset = "ISO-8859-1";
+
+  if (encoding === 3) charset = "UTF-8";
+  if (encoding === 2) charset = "UTF-16BE";
+  if (encoding === 1) {
+    if (data[0] === 255 && data[1] === 254) {
+      charset = "UTF-16LE";
+      data = data.slice(2);
+    } else if (data[0] === 254 && data[1] === 255) {
+      charset = "UTF-16BE";
+      data = data.slice(2);
+    } else {
+      charset = "UTF-16";
+    }
+  }
+
+  try {
+    const signed = data.map(value => value > 127 ? value - 256 : value);
+    return Utilities.newBlob(signed).getDataAsString(charset).replace(/\0/g, "").trim();
+  } catch (error) {
+    return "";
+  }
+}
+
+function cleanDetectedMusicTitle_(value) {
+  return String(value || "")
+    .replace(/\.(mp3|m4a|aac|ogg|wav|webm)$/i, "")
+    .replace(/_/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 /* SFK MEMORIES */
 function getPublishedMemories() {
   const sheet = ensureMemoriesSheet();
@@ -1793,9 +2078,9 @@ function isPublishedMemoryAudioFile(fileId) {
 }
 
 function createMemoryPost(payload) {
-  const role = normalizeMemoryRole(payload.Role);
+  const role = payload.AuthenticatedRole === "admin" ? "Admin" : "Officer";
 
-  if (!isValidMemoryAuth(role, payload.Pin)) {
+  if (!isAuthenticatedPayloadRole_(payload, ["admin", "officer"])) {
     return { success: false, message: "Incorrect admin/officer credentials." };
   }
 
@@ -1847,9 +2132,9 @@ function createMemoryPost(payload) {
 }
 
 function uploadMemoryAssets(payload) {
-  const role = normalizeMemoryRole(payload.Role);
+  const role = payload.AuthenticatedRole === "admin" ? "Admin" : "Officer";
 
-  if (!isValidMemoryAuth(role, payload.Pin)) {
+  if (!isAuthenticatedPayloadRole_(payload, ["admin", "officer"])) {
     return { success: false, message: "Incorrect admin/officer credentials." };
   }
 
@@ -2014,8 +2299,8 @@ function recordMemoryHeart(payload) {
 }
 
 function hideMemoryPost(payload) {
-  const role = normalizeMemoryRole(payload.Role);
-  if (!isValidMemoryAuth(role, payload.Pin)) {
+  const role = payload.AuthenticatedRole === "admin" ? "Admin" : "Officer";
+  if (!isAuthenticatedPayloadRole_(payload, ["admin", "officer"])) {
     return { success: false, message: "Incorrect admin/officer credentials." };
   }
 
@@ -2028,8 +2313,8 @@ function hideMemoryPost(payload) {
 }
 
 function updateMemoryPost(payload) {
-  const role = normalizeMemoryRole(payload.Role);
-  if (!isValidMemoryAuth(role, payload.Pin)) {
+  const role = payload.AuthenticatedRole === "admin" ? "Admin" : "Officer";
+  if (!isAuthenticatedPayloadRole_(payload, ["admin", "officer"])) {
     return { success: false, message: "Incorrect admin/officer credentials." };
   }
 
@@ -2056,8 +2341,8 @@ function updateMemoryPost(payload) {
 }
 
 function deleteMemoryPost(payload) {
-  const role = normalizeMemoryRole(payload.Role);
-  if (role !== "Admin" || !isValidMemoryAuth(role, payload.Pin)) {
+  const role = payload.AuthenticatedRole === "admin" ? "Admin" : "Officer";
+  if (role !== "Admin" || !isAuthenticatedPayloadRole_(payload, ["admin"])) {
     return { success: false, message: "Only the admin can permanently delete memories." };
   }
 
@@ -2071,12 +2356,6 @@ function deleteMemoryPost(payload) {
 
 function normalizeMemoryRole(value) {
   return String(value || "").trim().toLowerCase() === "admin" ? "Admin" : "Officer";
-}
-
-function isValidMemoryAuth(role, pin) {
-  const cleanPin = String(pin || "").trim();
-  return (role === "Admin" && cleanPin === MEMORY_ADMIN_PIN) ||
-    (role === "Officer" && cleanPin === MEMORY_OFFICER_PIN);
 }
 
 function ensureMemoriesSheet() {

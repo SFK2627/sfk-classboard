@@ -1,10 +1,13 @@
-const CACHE_NAME = "sfk-classboard-v99-phone-timer-control";
+const CACHE_NAME = "sfk-classboard-v100-secure-firebase-auth";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./style.css",
   "./script.js",
   "./pwa.js",
+  "./firebase-config.js",
+  "./firebase-adapter.js",
+  "./auth.js",
   "./orientation-lock.js",
   "./memories.html",
   "./memories.css",

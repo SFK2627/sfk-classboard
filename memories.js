@@ -1,7 +1,6 @@
 const MEMORIES_API_URL = "https://script.google.com/macros/s/AKfycbzCjWVnO-ZNvKTNqKN1zVscNsfPox0uDnO1QTSbBCrMFaS79tfL3mopHa2pH7gHczYeOA/exec";
 const MEMORY_CACHE_KEY = "sfkMemoriesCacheV1";
 const HEARTED_MEMORY_KEY = "sfkHeartedMemoriesV1";
-const MEMORY_AUTH_SESSION_KEY = "sfkMemoriesAuthSessionV1";
 const MEMORIES_SEEN_IDS_KEY = "sfkMemoriesSeenPostIdsV1";
 const MEMORY_POSTED_BY_KEY = "sfkMemoryPostedByV1";
 const MEMORY_MUSIC_AUTOPLAY_KEY = "sfkMemoryMusicAutoplayV1";
@@ -4003,7 +4002,6 @@ async function requestMusicMetadataBatch(urls) {
 
   const result = await postMemoryApi("musicMetadataBatch", {
     Role: memoryState.auth?.role || "",
-    Pin: memoryState.auth?.pin || "",
     Urls: uniqueUrls
   });
   if (!result?.success || !Array.isArray(result.items)) {
@@ -4488,29 +4486,25 @@ async function unlockMemoryPosting() {
   message.textContent = "Checking access...";
 
   try {
-    const result = await postMemoryApi("memoryAuth", { Role: role, Pin: pin });
-    if (!result.success) {
-      message.textContent = result.message || "Incorrect PIN.";
-      return;
-    }
-
-    memoryState.auth = { role: result.role || role, pin };
-    sessionStorage.setItem(MEMORY_AUTH_SESSION_KEY, JSON.stringify(memoryState.auth));
+    const user = await window.SFKAuth.signInWithPin(role, pin);
+    const authenticatedRole = window.SFKAuth.roleForUser(user);
+    memoryState.auth = { role: authenticatedRole === "admin" ? "Admin" : "Officer" };
     document.getElementById("memoryPin").value = "";
+    message.textContent = "";
     showMemoryForm();
     renderMemories();
   } catch (error) {
-    message.textContent = "Could not verify access. Please try again.";
+    message.textContent = "Incorrect PIN or access is not configured.";
   } finally {
     button.disabled = false;
   }
 }
 
-function resetMemoryAuth() {
+async function resetMemoryAuth() {
   stopMusicLibraryPreview();
   closeMusicLibraryManager();
   memoryState.auth = null;
-  sessionStorage.removeItem(MEMORY_AUTH_SESSION_KEY);
+  await window.SFKAuth?.signOut();
   showMemoryAuthStep();
   renderMemories();
 }
@@ -4563,16 +4557,18 @@ function hasMusicDraft() {
 }
 
 function restoreMemoryAuth() {
-  try {
-    const saved = JSON.parse(sessionStorage.getItem(MEMORY_AUTH_SESSION_KEY) || "null");
-    if (!saved || !saved.role || !saved.pin) return;
-    memoryState.auth = {
-      role: saved.role === "Admin" ? "Admin" : "Officer",
-      pin: String(saved.pin)
-    };
-  } catch (error) {
-    sessionStorage.removeItem(MEMORY_AUTH_SESSION_KEY);
-  }
+  window.SFKAuth?.onAuthStateChanged((user, role) => {
+    memoryState.auth = user && role
+      ? { role: role === "admin" ? "Admin" : "Officer" }
+      : null;
+    renderMemories();
+
+    const composeModal = document.getElementById("composeModal");
+    if (composeModal && !composeModal.hidden) {
+      if (memoryState.auth) showMemoryForm();
+      else showMemoryAuthStep();
+    }
+  });
 }
 
 function handleMemoryFiles(event) {
@@ -4798,7 +4794,6 @@ async function submitMemoryPost(event) {
 
     const payload = {
       Role: memoryState.auth.role,
-      Pin: memoryState.auth.pin,
       Title: title,
       Date: document.getElementById("memoryDate").value,
       PostedBy: document.getElementById("memoryPostedBy").value.trim(),
@@ -4970,7 +4965,6 @@ function openManageActions(id) {
       const result = await postMemoryApi(action === "delete" ? "memoryDelete" : "memoryHide", {
         MemoryID: id,
         Role: memoryState.auth.role,
-        Pin: memoryState.auth.pin
       });
       if (!result.success) throw new Error(result.message || "Action failed.");
       layer.remove();
@@ -5064,7 +5058,6 @@ function renderEditMemoryForm(layer, post) {
       const result = await postMemoryApi("memoryUpdate", {
         MemoryID: post.id,
         Role: memoryState.auth.role,
-        Pin: memoryState.auth.pin,
         Title: title,
         Date: date,
         PostedBy: postedBy,
@@ -5380,9 +5373,16 @@ function getInitials(value) {
 }
 
 async function postMemoryApi(type, payload) {
+  const authToken = await window.SFKAuth?.getIdToken();
   const response = await fetch(MEMORIES_API_URL, {
     method: "POST",
-    body: JSON.stringify({ type, payload })
+    body: JSON.stringify({
+      type,
+      payload: {
+        ...(payload || {}),
+        ...(authToken ? { AuthToken: authToken } : {})
+      }
+    })
   });
   const text = await response.text();
 

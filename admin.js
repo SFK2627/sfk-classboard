@@ -1,8 +1,5 @@
 const ADMIN_API_URL = "https://script.google.com/macros/s/AKfycbzCjWVnO-ZNvKTNqKN1zVscNsfPox0uDnO1QTSbBCrMFaS79tfL3mopHa2pH7gHczYeOA/exec";
 
-const ADMIN_PIN = "0524"; 
-const ADMIN_LOGIN_KEY = "sfkAdminLoggedIn";
-
 let currentAdminSheet = "";
 let editingRecord = null;
 let latestAdminTableData = null;
@@ -30,9 +27,10 @@ document.addEventListener("DOMContentLoaded", () => {
   initAdminToolLauncher();
   initRichTextEditors();
 
-  if (localStorage.getItem(ADMIN_LOGIN_KEY) === "YES") {
-    showAdminPanel();
-  }
+  window.SFKAuth?.onAuthStateChanged((user, role) => {
+    if (user && role === "admin") showAdminPanel();
+    else showAdminLogin();
+  });
 
   const pinInput = document.getElementById("adminPin");
   if (pinInput) {
@@ -46,28 +44,36 @@ document.addEventListener("DOMContentLoaded", () => {
   setTodayForDateInputs();
 });
 
-function loginAdmin() {
+async function loginAdmin() {
   const pinInput = document.getElementById("adminPin");
   const message = document.getElementById("loginMessage");
-
   const pin = pinInput.value.trim();
 
-  if (pin === ADMIN_PIN) {
-    localStorage.setItem(ADMIN_LOGIN_KEY, "YES");
-    showAdminPanel();
+  if (!pin) {
+    message.textContent = "Enter the Admin PIN.";
+    pinInput.focus();
+    return;
+  }
+
+  message.textContent = "Checking access...";
+  try {
+    await window.SFKAuth.signInWithPin("admin", pin);
     pinInput.value = "";
     message.textContent = "";
-  } else {
+  } catch (error) {
     message.textContent = "Incorrect PIN. Please try again.";
     pinInput.value = "";
     pinInput.focus();
   }
 }
 
-function logoutAdmin() {
-  localStorage.removeItem(ADMIN_LOGIN_KEY);
+async function logoutAdmin() {
   closeAdminTool();
+  await window.SFKAuth?.signOut();
+  showAdminLogin();
+}
 
+function showAdminLogin() {
   document.getElementById("loginScreen").classList.remove("hidden");
   document.getElementById("adminPanel").classList.add("hidden");
 }
