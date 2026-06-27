@@ -61,7 +61,9 @@
 
         for (const messageDoc of snapshot.docs) {
           const reactions = await messageDoc.ref.collection("reactions").get();
-          const refs = reactions.docs.map((doc) => doc.ref);
+          const votes = await messageDoc.ref.collection("votes").get();
+          const refs = reactions.docs.map((doc) => doc.ref)
+            .concat(votes.docs.map((doc) => doc.ref));
           refs.push(messageDoc.ref);
           await deleteRefsInBatches(db, refs);
           deletedMessages += 1;
@@ -102,7 +104,7 @@
     const entries = parseEntries(input.value);
 
     if (!entries.length) {
-      message.textContent = "Enter at least one valid Student ID | Name | PIN entry.";
+      message.textContent = "Enter at least one valid Student ID | Full Name entry.";
       return;
     }
 
