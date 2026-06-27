@@ -20,11 +20,79 @@
         <button id="chatRosterRefresh" type="button">Refresh Student List</button>
       </div>
       <div id="chatRosterList" class="chatRosterList"></div>
+      <div class="chatDangerZone">
+        <div>
+          <strong>Clear class conversation</strong>
+          <small>Deletes every message and reaction. Student accounts are not affected.</small>
+        </div>
+        <button id="chatClearAll" type="button">Clear Entire Chat</button>
+      </div>
     `;
     grid.appendChild(card);
 
     document.getElementById("chatRosterCreate").addEventListener("click", createChatAccounts);
     document.getElementById("chatRosterRefresh").addEventListener("click", loadChatRoster);
+    document.getElementById("chatClearAll").addEventListener("click", clearEntireChat);
+  }
+
+  async function clearEntireChat() {
+    const button = document.getElementById("chatClearAll");
+    const message = document.getElementById("chatRosterMessage");
+    const confirmed = window.confirm(
+      "Delete every class chat message and reaction? Student accounts will remain."
+    );
+    if (!confirmed) return;
+
+    const phrase = window.prompt('Type DELETE ALL to confirm. This cannot be undone.');
+    if (String(phrase || "").trim().toUpperCase() !== "DELETE ALL") {
+      message.textContent = "Chat cleanup cancelled.";
+      return;
+    }
+
+    button.disabled = true;
+    message.textContent = "Clearing the class conversation...";
+    try {
+      const { db } = getServices();
+      let deletedMessages = 0;
+
+      while (true) {
+        const snapshot = await db.collection("chatMessages").limit(50).get();
+        if (snapshot.empty) break;
+
+        for (const messageDoc of snapshot.docs) {
+          const reactions = await messageDoc.ref.collection("reactions").get();
+          const refs = reactions.docs.map((doc) => doc.ref);
+          refs.push(messageDoc.ref);
+          await deleteRefsInBatches(db, refs);
+          deletedMessages += 1;
+          message.textContent = `Clearing chat... ${deletedMessages} messages removed`;
+        }
+      }
+
+      await deleteFlatCollection(db, "chatTyping");
+      await deleteFlatCollection(db, "chatReadReceipts");
+      message.textContent = `Class conversation cleared. ${deletedMessages} message${deletedMessages === 1 ? "" : "s"} removed.`;
+    } catch (error) {
+      message.textContent = friendlyError(error);
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  async function deleteFlatCollection(db, collectionName) {
+    while (true) {
+      const snapshot = await db.collection(collectionName).limit(400).get();
+      if (snapshot.empty) return;
+      await deleteRefsInBatches(db, snapshot.docs.map((doc) => doc.ref));
+    }
+  }
+
+  async function deleteRefsInBatches(db, refs) {
+    for (let index = 0; index < refs.length; index += 400) {
+      const batch = db.batch();
+      refs.slice(index, index + 400).forEach((ref) => batch.delete(ref));
+      await batch.commit();
+    }
   }
 
   async function createChatAccounts() {

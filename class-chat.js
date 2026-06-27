@@ -4,6 +4,7 @@
   const REACTIONS = ["🫶", "👍", "❤️", "😂", "😮", "😢", "🙏", "✅"];
   const MESSAGE_LIMIT_STEP = 30;
   const OWN_DELETE_WINDOW_MS = 5 * 60 * 1000;
+  const CHAT_THEME_KEY = "sfkClassChatTheme";
   const STAFF_EMAILS = {
     admin: String(window.SFK_AUTH_ACCOUNTS?.admin || "").trim().toLowerCase(),
     officer: String(window.SFK_AUTH_ACCOUNTS?.officer || "").trim().toLowerCase()
@@ -34,12 +35,15 @@
   function initClassChat() {
     cacheElements();
     if (!elements.open || !elements.layer) return;
+    applySavedTheme();
 
     elements.open.addEventListener("click", openChat);
     elements.layer.querySelectorAll("[data-chat-close]").forEach((button) => {
       button.addEventListener("click", closeChat);
     });
-    elements.logout.addEventListener("click", leaveChat);
+    elements.logout.addEventListener("click", toggleChatMenu);
+    elements.themeToggle.addEventListener("click", toggleChatTheme);
+    elements.leave.addEventListener("click", leaveChat);
     elements.roleTabs.forEach((button) => {
       button.addEventListener("click", () => selectRole(button.dataset.chatRole));
     });
@@ -57,6 +61,7 @@
     elements.messages.addEventListener("pointercancel", cancelMessageGesture);
     elements.messages.addEventListener("pointermove", moveMessageGesture);
     document.addEventListener("click", handleOutsideReactionTray);
+    document.addEventListener("click", handleOutsideChatMenu);
     document.addEventListener("keydown", handleChatKeydown);
   }
 
@@ -64,8 +69,13 @@
     elements.open = document.getElementById("classChatOpen");
     elements.unread = document.getElementById("classChatUnread");
     elements.layer = document.getElementById("classChatLayer");
+    elements.panel = document.querySelector(".classChatPanel");
     elements.status = document.getElementById("classChatStatus");
     elements.logout = document.getElementById("classChatLogout");
+    elements.menu = document.getElementById("classChatMenu");
+    elements.themeToggle = document.getElementById("classChatThemeToggle");
+    elements.themeLabel = elements.themeToggle?.querySelector(".classChatMenuLabel");
+    elements.leave = document.getElementById("classChatLeave");
     elements.login = document.getElementById("classChatLogin");
     elements.room = document.getElementById("classChatRoom");
     elements.roleTabs = Array.from(document.querySelectorAll("[data-chat-role]"));
@@ -132,6 +142,7 @@
     elements.layer.hidden = true;
     document.body.classList.remove("classChatIsOpen");
     hideReactionTray();
+    closeChatMenu();
     clearReply();
     stopRealtimeListeners();
     await clearTyping();
@@ -145,6 +156,53 @@
 
   async function leaveChat() {
     await closeChat();
+  }
+
+  function toggleChatMenu(event) {
+    event.stopPropagation();
+    const willOpen = elements.menu.hidden;
+    elements.menu.hidden = !willOpen;
+    elements.logout.setAttribute("aria-expanded", String(willOpen));
+  }
+
+  function closeChatMenu() {
+    elements.menu.hidden = true;
+    elements.logout.setAttribute("aria-expanded", "false");
+  }
+
+  function handleOutsideChatMenu(event) {
+    if (elements.menu.hidden) return;
+    if (!elements.menu.contains(event.target) && event.target !== elements.logout) closeChatMenu();
+  }
+
+  function applySavedTheme() {
+    let theme = "light";
+    try {
+      theme = localStorage.getItem(CHAT_THEME_KEY) === "dark" ? "dark" : "light";
+    } catch (error) {
+      theme = "light";
+    }
+    setChatTheme(theme, false);
+  }
+
+  function toggleChatTheme() {
+    const nextTheme = elements.panel.classList.contains("is-dark") ? "light" : "dark";
+    setChatTheme(nextTheme, true);
+  }
+
+  function setChatTheme(theme, persist) {
+    const dark = theme === "dark";
+    elements.panel.classList.toggle("is-dark", dark);
+    elements.themeToggle.setAttribute("aria-pressed", String(dark));
+    elements.themeLabel.textContent = dark ? "Light mode" : "Dark mode";
+    elements.themeToggle.querySelector(".classChatMenuIcon").textContent = dark ? "☀" : "☽";
+    if (persist) {
+      try {
+        localStorage.setItem(CHAT_THEME_KEY, dark ? "dark" : "light");
+      } catch (error) {
+        // Theme persistence is optional when storage is blocked.
+      }
+    }
   }
 
   function showLogin() {
@@ -892,7 +950,13 @@
   }
 
   function handleChatKeydown(event) {
-    if (event.key === "Escape" && !elements.layer.hidden) closeChat();
+    if (event.key !== "Escape" || elements.layer.hidden) return;
+    if (!elements.menu.hidden) {
+      closeChatMenu();
+      elements.logout.focus();
+      return;
+    }
+    closeChat();
     if (event.key === "Enter" && !event.shiftKey && document.activeElement === elements.input) {
       event.preventDefault();
       elements.composer.requestSubmit();

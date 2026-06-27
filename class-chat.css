@@ -160,6 +160,59 @@
   background: #f3efdf;
 }
 
+.classChatMenu {
+  position: absolute;
+  top: 62px;
+  right: 12px;
+  z-index: 12;
+  width: 205px;
+  overflow: hidden;
+  padding: 6px;
+  border: 1px solid #ddd8cc;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 12px 32px rgba(17, 17, 17, .20);
+  animation: classChatMenuIn .14s ease-out;
+}
+
+.classChatMenu[hidden] {
+  display: none !important;
+}
+
+.classChatMenu button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  border: 0;
+  border-radius: 10px;
+  padding: 11px 12px;
+  background: transparent;
+  color: #111;
+  font: inherit;
+  font-size: .86rem;
+  font-weight: 850;
+  text-align: left;
+  cursor: pointer;
+}
+
+.classChatMenu button:hover {
+  background: #f3f1eb;
+}
+
+.classChatMenuIcon {
+  width: 24px;
+  flex: 0 0 24px;
+  color: #6d675d;
+  font-size: 1.15rem;
+  text-align: center;
+}
+
+@keyframes classChatMenuIn {
+  from { opacity: 0; transform: translateY(-5px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 .classChatIdentity {
   min-width: 0;
   flex: 1;
@@ -793,6 +846,176 @@
 
 body.classChatIsOpen {
   overflow: hidden;
+}
+
+.classChatPanel.is-dark {
+  background: #0f0f0f;
+  color: #f5f5f5;
+}
+
+.classChatPanel.is-dark .classChatTopbar {
+  border-bottom-color: #2b2b2b;
+  background: rgba(15, 15, 15, .96);
+}
+
+.classChatPanel.is-dark .classChatBack,
+.classChatPanel.is-dark .classChatLogout {
+  color: #f5f5f5;
+}
+
+.classChatPanel.is-dark .classChatBack:hover,
+.classChatPanel.is-dark .classChatLogout:hover {
+  background: #262626;
+}
+
+.classChatPanel.is-dark .classChatIdentity p,
+.classChatPanel.is-dark .classChatWelcome p,
+.classChatPanel.is-dark .classChatPinNotice span {
+  color: #aaa59d;
+}
+
+.classChatPanel.is-dark .classChatMenu {
+  border-color: #383838;
+  background: #1d1d1d;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .48);
+}
+
+.classChatPanel.is-dark .classChatMenu button {
+  color: #f4f4f4;
+}
+
+.classChatPanel.is-dark .classChatMenu button:hover {
+  background: #303030;
+}
+
+.classChatPanel.is-dark .classChatMenuIcon {
+  color: #d0cbc2;
+}
+
+.classChatPanel.is-dark .classChatLogin {
+  background: #0f0f0f;
+}
+
+.classChatPanel.is-dark .classChatRoleTabs {
+  background: #242424;
+}
+
+.classChatPanel.is-dark .classChatRoleTabs button {
+  color: #aaa;
+}
+
+.classChatPanel.is-dark .classChatRoleTabs button.is-active {
+  background: #3a3a3a;
+  color: #fff;
+  box-shadow: none;
+}
+
+.classChatPanel.is-dark .classChatAuthForm input,
+.classChatPanel.is-dark .classChatAuthForm select {
+  border-color: #444;
+  background: #1d1d1d;
+  color: #fff;
+  color-scheme: dark;
+}
+
+.classChatPanel.is-dark .classChatPinNotice {
+  background: #29240e;
+}
+
+.classChatPanel.is-dark .classChatRoom {
+  background: #0f0f0f;
+}
+
+.classChatPanel.is-dark .classChatLoadEarlier {
+  color: #d0b94c;
+}
+
+.classChatPanel.is-dark .classChatDay {
+  background: #262626;
+  color: #aaa;
+}
+
+.classChatPanel.is-dark .classChatSender,
+.classChatPanel.is-dark .classChatMeta,
+.classChatPanel.is-dark .classChatTyping {
+  color: #99958e;
+}
+
+.classChatPanel.is-dark .classChatMessage:not(.is-own) .classChatBubble {
+  border-color: #343434;
+  background: #262626;
+  color: #f5f5f5;
+}
+
+.classChatPanel.is-dark .classChatMessage.has-removed .classChatBubble,
+.classChatPanel.is-dark .classChatMessage.has-removed.is-own .classChatBubble {
+  border-color: #383838;
+  background: #1b1b1b;
+  color: #a7a39c;
+}
+
+.classChatPanel.is-dark .classChatQuoted {
+  border-left-color: #f7c600;
+  background: rgba(0, 0, 0, .22);
+}
+
+.classChatPanel.is-dark .classChatReactionChip {
+  border-color: #484848;
+  background: #272727;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .34);
+}
+
+.classChatPanel.is-dark .classChatReactionChip.is-mine {
+  border-color: #f7c600;
+}
+
+.classChatPanel.is-dark .classChatMessageActions button {
+  color: #aaa;
+}
+
+.classChatPanel.is-dark .classChatReply {
+  border-top-color: #333;
+  background: #181818;
+}
+
+.classChatPanel.is-dark .classChatReply span {
+  color: #aaa;
+}
+
+.classChatPanel.is-dark .classChatReply button {
+  color: #fff;
+}
+
+.classChatPanel.is-dark .classChatComposer {
+  border-top-color: #303030;
+  background: #151515;
+}
+
+.classChatPanel.is-dark .classChatComposer textarea {
+  border-color: #3d3d3d;
+  background: #262626;
+  color: #fff;
+}
+
+.classChatPanel.is-dark .classChatReactionTray {
+  border-color: #3a3a3a;
+  background: #1d1d1d;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .50);
+}
+
+.classChatPanel.is-dark .classChatReactionChoices button {
+  color: #fff;
+}
+
+.classChatPanel.is-dark .classChatReactionChoices button:hover,
+.classChatPanel.is-dark .classChatTrayActions button {
+  background: #303030;
+  color: #fff;
+}
+
+.classChatPanel.is-dark .classChatTrayActions {
+  border-top-color: #3a3a3a;
 }
 
 @media (max-width: 600px) {
