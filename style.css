@@ -6305,3 +6305,228 @@ html.phone-device .announcement-bottom-stack .announcement-heart-spacer {
     font-size: clamp(.72rem, 3vw, .82rem) !important;
   }
 }
+
+/* Clock access menu */
+.timeBox[role="button"] {
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform .14s ease, filter .14s ease, box-shadow .14s ease;
+}
+
+.timeBox[role="button"]:hover {
+  filter: brightness(1.04);
+}
+
+.timeBox[role="button"]:active {
+  transform: scale(.97);
+}
+
+.timeBox[role="button"]:focus-visible {
+  outline: 3px solid #fff !important;
+  outline-offset: 3px;
+}
+
+.accessMenuLayer[hidden] {
+  display: none !important;
+}
+
+.accessMenuLayer {
+  position: fixed;
+  inset: 0;
+  z-index: 999990;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.accessMenuBackdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: rgba(0, 0, 0, .58);
+  cursor: default;
+  opacity: 0;
+  transition: opacity .17s ease;
+}
+
+.accessMenuPanel {
+  position: relative;
+  z-index: 1;
+  width: min(430px, 100%);
+  overflow: hidden;
+  border: 3px solid #111;
+  border-radius: 8px;
+  background: #fffdf3;
+  box-shadow: 8px 8px 0 rgba(0, 0, 0, .32);
+  opacity: 0;
+  transform: translateY(10px) scale(.98);
+  transition: opacity .17s ease, transform .17s ease;
+}
+
+.accessMenuLayer.isOpen .accessMenuBackdrop,
+.accessMenuLayer.isOpen .accessMenuPanel {
+  opacity: 1;
+}
+
+.accessMenuLayer.isOpen .accessMenuPanel {
+  transform: translateY(0) scale(1);
+}
+
+.accessMenuHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px 18px;
+  border-bottom: 3px solid #111;
+  background: #f7c600;
+}
+
+.accessMenuEyebrow {
+  display: block;
+  margin-bottom: 3px;
+  font-size: .68rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.accessMenuHeader h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.accessMenuClose {
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  border: 2px solid #111;
+  border-radius: 50%;
+  background: #fff;
+  color: #111;
+  font-size: 1.55rem;
+  font-weight: 900;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.accessMenuOptions {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+}
+
+.accessMenuItem {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 68px;
+  padding: 10px 12px;
+  border: 2px solid #111;
+  border-radius: 8px;
+  background: #fff;
+  color: #111;
+  text-decoration: none;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, .16);
+  transition: transform .12s ease, background .12s ease, box-shadow .12s ease;
+}
+
+.accessMenuItem:hover,
+.accessMenuItem:focus-visible {
+  background: #fff3ad;
+  outline: none;
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, .24);
+}
+
+.accessMenuItem:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, .2);
+}
+
+.accessMenuBadge {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 2px solid #111;
+  border-radius: 8px;
+  background: #f7c600;
+  font-size: 1.15rem;
+  font-weight: 950;
+}
+
+.accessMenuItem strong,
+.accessMenuItem small {
+  display: block;
+}
+
+.accessMenuItem strong {
+  font-size: 1rem;
+  line-height: 1.1;
+}
+
+.accessMenuItem small {
+  margin-top: 4px;
+  color: #5b5544;
+  font-size: .78rem;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.accessMenuArrow {
+  font-size: 1.35rem;
+  font-weight: 900;
+}
+
+@media (max-width: 700px) {
+  .accessMenuLayer {
+    align-items: end;
+    padding: 12px;
+  }
+
+  .accessMenuPanel {
+    width: 100%;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, .3);
+    transform: translateY(24px);
+  }
+
+  .accessMenuHeader {
+    padding: 13px 14px;
+  }
+
+  .accessMenuHeader h2 {
+    font-size: 1.18rem;
+  }
+
+  .accessMenuOptions {
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .accessMenuItem {
+    min-height: 62px;
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+    gap: 10px;
+    padding: 8px 10px;
+  }
+
+  .accessMenuBadge {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .timeBox[role="button"],
+  .accessMenuBackdrop,
+  .accessMenuPanel,
+  .accessMenuItem {
+    transition: none !important;
+  }
+}

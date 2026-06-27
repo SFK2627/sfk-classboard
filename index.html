@@ -13,7 +13,7 @@
   <link rel="manifest" href="manifest.webmanifest?v=3" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
-  <link rel="stylesheet" href="style.css?v=73-phone-timer-control" />
+  <link rel="stylesheet" href="style.css?v=74-clock-access-menu" />
   <script src="orientation-lock.js?v=3-phone-device-lock" defer></script>
 
   <style id="sfkStartIntroStyle">
@@ -558,11 +558,46 @@
         <small id="quoteAuthor"></small>
       </div>
 
-      <div class="timeBox">
+      <div
+        id="classBoardAccessTrigger"
+        class="timeBox"
+        role="button"
+        tabindex="0"
+        aria-haspopup="dialog"
+        aria-controls="classBoardAccessMenu"
+        aria-expanded="false"
+        title="Open ClassBoard access menu"
+      >
         <h2 id="timeText">--:-- --</h2>
         <p id="dateText">Loading date...</p>
       </div>
     </header>
+
+    <div id="classBoardAccessMenu" class="accessMenuLayer" hidden>
+      <button class="accessMenuBackdrop" type="button" aria-label="Close access menu"></button>
+      <section class="accessMenuPanel" role="dialog" aria-modal="true" aria-labelledby="accessMenuTitle">
+        <header class="accessMenuHeader">
+          <div>
+            <span class="accessMenuEyebrow">SFK CLASSBOARD</span>
+            <h2 id="accessMenuTitle">Choose access</h2>
+          </div>
+          <button id="closeAccessMenu" class="accessMenuClose" type="button" aria-label="Close menu">&times;</button>
+        </header>
+
+        <nav class="accessMenuOptions" aria-label="ClassBoard access">
+          <a class="accessMenuItem" href="admin.html">
+            <span class="accessMenuBadge" aria-hidden="true">A</span>
+            <span><strong>Admin Panel</strong><small>Full ClassBoard management</small></span>
+            <span class="accessMenuArrow" aria-hidden="true">&rarr;</span>
+          </a>
+          <a class="accessMenuItem" href="officer.html">
+            <span class="accessMenuBadge" aria-hidden="true">O</span>
+            <span><strong>Officers Panel</strong><small>Post announcements and updates</small></span>
+            <span class="accessMenuArrow" aria-hidden="true">&rarr;</span>
+          </a>
+        </nav>
+      </section>
+    </div>
 
     <section class="heroGrid">
       <div class="card current">
@@ -737,7 +772,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js?v=2-secure-auth"></script>
   <script src="firebase-adapter.js?v=15-secure-auth"></script>
-  <script src="script.js?v=72-phone-timer-control"></script>
+  <script src="script.js?v=73-clock-access-menu"></script>
   <script src="pwa.js?v=3"></script>
 </body>
 </html>

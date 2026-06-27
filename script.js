@@ -69,6 +69,7 @@ const subjectIcons = {
 
 function initClassBoard() {
   ensureAnnouncementTimerControl();
+  initClassBoardAccessMenu();
 
   const audioOverlay = document.getElementById("audioStartOverlay");
   if (audioOverlay) {
@@ -106,6 +107,52 @@ function initClassBoard() {
 
   syncTodayScheduleToggle();
   window.addEventListener("resize", syncTodayScheduleToggle);
+}
+
+function initClassBoardAccessMenu() {
+  const trigger = document.getElementById("classBoardAccessTrigger");
+  const layer = document.getElementById("classBoardAccessMenu");
+  if (!trigger || !layer || trigger.dataset.menuReady === "true") return;
+
+  trigger.dataset.menuReady = "true";
+  trigger.addEventListener("click", openClassBoardAccessMenu);
+  trigger.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    openClassBoardAccessMenu();
+  });
+
+  layer.querySelector(".accessMenuBackdrop")?.addEventListener("click", closeClassBoardAccessMenu);
+  document.getElementById("closeAccessMenu")?.addEventListener("click", closeClassBoardAccessMenu);
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !layer.hidden) closeClassBoardAccessMenu();
+  });
+}
+
+function openClassBoardAccessMenu() {
+  const trigger = document.getElementById("classBoardAccessTrigger");
+  const layer = document.getElementById("classBoardAccessMenu");
+  if (!trigger || !layer) return;
+
+  layer.hidden = false;
+  trigger.setAttribute("aria-expanded", "true");
+  document.body.classList.add("accessMenuOpen");
+  window.requestAnimationFrame(() => layer.classList.add("isOpen"));
+  window.setTimeout(() => layer.querySelector(".accessMenuItem")?.focus(), 80);
+}
+
+function closeClassBoardAccessMenu() {
+  const trigger = document.getElementById("classBoardAccessTrigger");
+  const layer = document.getElementById("classBoardAccessMenu");
+  if (!layer || layer.hidden) return;
+
+  layer.classList.remove("isOpen");
+  trigger?.setAttribute("aria-expanded", "false");
+  document.body.classList.remove("accessMenuOpen");
+  window.setTimeout(() => {
+    layer.hidden = true;
+    trigger?.focus();
+  }, 170);
 }
 
 function ensureAnnouncementTimerControl() {

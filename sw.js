@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-classboard-v101-persistent-secure-login";
+const CACHE_NAME = "sfk-classboard-v102-clock-access-menu";
 const APP_SHELL = [
   "./",
   "./index.html",
