@@ -32,6 +32,7 @@
   let savedUnsubscribe = null;
   let scheduledUnsubscribe = null;
   let scheduledRefreshTimer = null;
+  let scheduledMessagesSignature = "";
   const pollVoteUnsubscribes = new Map();
   let currentMessages = [];
   let regularMessages = [];
@@ -790,6 +791,7 @@
     scheduledRefreshTimer = window.setInterval(() => {
       refreshScheduledMessages();
       applyChatConfig();
+      updatePollDeadlineStates();
     }, 30000);
   }
 
@@ -829,7 +831,7 @@
       .orderBy("PublishAt", "desc")
       .limit(50)
       .onSnapshot((snapshot) => {
-        scheduledMessages = snapshot.docs.map((doc) => ({
+        const nextScheduledMessages = snapshot.docs.map((doc) => ({
           ...doc.data(),
           id: `scheduled_${doc.id}`,
           ScheduledDocID: doc.id,
@@ -837,12 +839,36 @@
           CreatedAt: doc.data().PublishAt,
           Removed: false
         })).reverse();
+        const nextSignature = nextScheduledMessages.map((message) => (
+          `${message.ScheduledDocID}:${timestampToMillis(message.CreatedAt)}:${message.Text || ""}`
+        )).join("|");
+        if (nextSignature === scheduledMessagesSignature) return;
+        scheduledMessagesSignature = nextSignature;
+        scheduledMessages = nextScheduledMessages;
         rebuildCurrentMessages();
         renderMessages();
       }, () => {
+        if (!scheduledMessages.length) return;
+        scheduledMessagesSignature = "";
         scheduledMessages = [];
         rebuildCurrentMessages();
+        renderMessages();
       });
+  }
+
+  function updatePollDeadlineStates() {
+    currentMessages.filter((message) => message.Type === "poll").forEach((message) => {
+      const deadlinePassed = timestampToMillis(message.PollEndsAt) > 0
+        && timestampToMillis(message.PollEndsAt) <= Date.now();
+      if (!deadlinePassed && message.PollClosed !== true) return;
+      const card = elements.messages.querySelector(`[data-poll-id="${cssEscape(message.id)}"]`);
+      if (!card) return;
+      card.querySelectorAll("[data-poll-option]").forEach((button) => { button.disabled = true; });
+      const total = card.querySelector("[data-poll-total]");
+      if (total && !total.textContent.includes("Poll closed")) {
+        total.textContent = `${total.textContent} · Poll closed`;
+      }
+    });
   }
 
   function renderPinnedMessage() {

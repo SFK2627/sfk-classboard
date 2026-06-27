@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-classboard-v129-save-feedback";
+const CACHE_NAME = "sfk-classboard-v131-stable-youtube-player";
 const APP_SHELL = [
   "./",
   "./index.html",
