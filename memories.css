@@ -121,6 +121,57 @@ select:focus-visible {
   font-weight: 700;
 }
 
+.memoryTopbarActions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.musicAutoplayToggle {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 9px;
+  border: 1px solid var(--ink);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--ink);
+  font-size: .72rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.musicAutoplayToggle > span {
+  color: #8a7000;
+  font-size: 1rem;
+}
+
+.musicAutoplayToggle small {
+  min-width: 25px;
+  padding: 2px 5px;
+  border-radius: 999px;
+  background: #e8e5dc;
+  color: #5e5b54;
+  font-size: .58rem;
+  font-weight: 1000;
+  text-transform: uppercase;
+}
+
+.musicAutoplayToggle.isEnabled {
+  background: var(--ink);
+  color: var(--white);
+}
+
+.musicAutoplayToggle.isEnabled > span {
+  color: var(--gold);
+}
+
+.musicAutoplayToggle.isEnabled small {
+  background: var(--gold);
+  color: var(--ink);
+}
+
 .brandMark,
 .miniBrandMark,
 .largeBrandMark,
@@ -2591,6 +2642,19 @@ textarea {
     min-height: 38px;
     padding: 6px 10px;
     font-size: .78rem;
+  }
+
+  .memoryTopbarActions {
+    gap: 5px;
+  }
+
+  .musicAutoplayToggle {
+    min-height: 38px;
+    padding: 5px 7px;
+  }
+
+  .musicAutoplayToggle b {
+    display: none;
   }
 
   .memoryHighlights {

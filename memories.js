@@ -4,6 +4,7 @@ const HEARTED_MEMORY_KEY = "sfkHeartedMemoriesV1";
 const MEMORY_AUTH_SESSION_KEY = "sfkMemoriesAuthSessionV1";
 const MEMORIES_SEEN_IDS_KEY = "sfkMemoriesSeenPostIdsV1";
 const MEMORY_POSTED_BY_KEY = "sfkMemoryPostedByV1";
+const MEMORY_MUSIC_AUTOPLAY_KEY = "sfkMemoryMusicAutoplayV1";
 const MAX_MEDIA_FILES = 6;
 const MAX_VIDEO_BYTES = 12 * 1024 * 1024;
 const MAX_TOTAL_UPLOAD_BYTES = 22 * 1024 * 1024;
@@ -98,6 +99,10 @@ const memoryState = {
   youtubeApiKey: "",
   youtubeSearchResults: [],
   youtubePreviewId: "",
+  musicAutoplayEnabled: localStorage.getItem(MEMORY_MUSIC_AUTOPLAY_KEY) === "true",
+  musicAutoplayUnlocked: false,
+  musicAutoplayTimer: null,
+  musicAutoplaySyncing: false,
   selectedMusicLibraryIds: new Set()
 };
 
@@ -111,6 +116,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setDefaultMemoryDate();
   restoreMemoryAuth();
   bindMemoryEvents();
+  updateMusicAutoplayButton();
   renderCachedMemories();
   loadMemories();
 });
@@ -134,6 +140,7 @@ function bindMemoryEvents() {
   document.getElementById("mediaPreview")?.addEventListener("click", handleMediaPreviewAction);
   document.getElementById("togglePostPreviewButton")?.addEventListener("click", togglePostPreview);
   document.getElementById("toggleMusicFieldsButton")?.addEventListener("click", () => toggleMusicFields());
+  document.getElementById("musicAutoplayToggle")?.addEventListener("click", toggleMusicAutoplay);
   document.getElementById("toggleAdditionalMusicSources")?.addEventListener("click", toggleAdditionalMusicSources);
   document.getElementById("testMusicLinkButton")?.addEventListener("click", testMusicLink);
   document.getElementById("musicLibrarySearch")?.addEventListener("input", renderMemoryMusicLibrary);
@@ -197,6 +204,11 @@ function bindMemoryEvents() {
   window.addEventListener("pageshow", resumePageMedia);
   document.addEventListener("freeze", () => pauseAllPageMedia({ remember: true }));
   document.addEventListener("resume", resumePageMedia);
+  document.addEventListener("pointerdown", () => {
+    memoryState.musicAutoplayUnlocked = true;
+    scheduleMusicAutoplaySync();
+  }, { once: true, capture: true, passive: true });
+  window.addEventListener("scroll", scheduleMusicAutoplaySync, { passive: true });
 }
 
 async function loadMemories() {
@@ -749,6 +761,7 @@ function renderMemories() {
     updateMusicTitleMarquees();
     observeFeedVideos();
     observePostMusic();
+    scheduleMusicAutoplaySync();
     scrollToRequestedMemory();
   });
 }
@@ -1156,6 +1169,97 @@ function updateMusicButton(button, audible) {
   button.title = musicName;
   button.setAttribute("aria-label", audible ? `Mute ${musicName}` : `Play ${musicName}`);
   updateMusicTitleMarquees();
+}
+
+function updateMusicAutoplayButton() {
+  const button = document.getElementById("musicAutoplayToggle");
+  if (!button) return;
+  const enabled = memoryState.musicAutoplayEnabled;
+  button.classList.toggle("isEnabled", enabled);
+  button.setAttribute("aria-pressed", enabled ? "true" : "false");
+  const status = button.querySelector("small");
+  if (status) status.textContent = enabled ? "On" : "Off";
+  button.title = enabled
+    ? "Turn off automatic music playback"
+    : "Automatically play music on visible posts";
+}
+
+function toggleMusicAutoplay() {
+  memoryState.musicAutoplayEnabled = !memoryState.musicAutoplayEnabled;
+  memoryState.musicAutoplayUnlocked = true;
+  localStorage.setItem(MEMORY_MUSIC_AUTOPLAY_KEY, String(memoryState.musicAutoplayEnabled));
+  updateMusicAutoplayButton();
+
+  if (memoryState.musicAutoplayEnabled) {
+    showMemoryToast("Music autoplay is on.");
+    scheduleMusicAutoplaySync();
+  } else {
+    stopAllPostMusic();
+    showMemoryToast("Music autoplay is off.");
+  }
+}
+
+function stopAllPostMusic() {
+  memoryState.posts.forEach((post) => {
+    if (!post.music) return;
+    post.music.muted = true;
+    post.music.started = false;
+  });
+
+  document.querySelectorAll(".postMusicPlayer").forEach((audio) => {
+    audio.muted = true;
+    audio.pause();
+  });
+  document.querySelectorAll('[data-music-youtube="true"]').forEach((iframe) => {
+    sendYouTubeCommand(iframe, "mute");
+    sendYouTubeCommand(iframe, "pauseVideo");
+  });
+  document.querySelectorAll(".musicToggleButton").forEach((button) => {
+    updateMusicButton(button, false);
+  });
+}
+
+function scheduleMusicAutoplaySync() {
+  window.clearTimeout(memoryState.musicAutoplayTimer);
+  memoryState.musicAutoplayTimer = window.setTimeout(syncMusicAutoplayToVisiblePost, 120);
+}
+
+async function syncMusicAutoplayToVisiblePost() {
+  if (
+    !memoryState.musicAutoplayEnabled ||
+    !memoryState.musicAutoplayUnlocked ||
+    memoryState.musicAutoplaySyncing ||
+    document.hidden
+  ) return;
+
+  const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+  let bestArticle = null;
+  let bestRatio = 0;
+
+  document.querySelectorAll('.memoryPost[data-has-music="true"]').forEach((article) => {
+    const rect = article.getBoundingClientRect();
+    const visibleHeight = Math.max(0, Math.min(rect.bottom, viewportHeight) - Math.max(rect.top, 0));
+    const ratio = visibleHeight / Math.max(1, Math.min(rect.height, viewportHeight));
+    if (ratio > bestRatio) {
+      bestRatio = ratio;
+      bestArticle = article;
+    }
+  });
+
+  if (!bestArticle || bestRatio < .4) {
+    stopAllPostMusic();
+    return;
+  }
+  const post = memoryState.posts.find((item) => item.id === bestArticle.dataset.postId);
+  const button = bestArticle.querySelector(".musicToggleButton");
+  if (!post?.music || !button || post.music.muted === false) return;
+
+  memoryState.musicAutoplaySyncing = true;
+  try {
+    await togglePostMusic(post.id, button);
+  } finally {
+    memoryState.musicAutoplaySyncing = false;
+  }
 }
 
 function updateMusicTitleMarquees() {
@@ -1661,6 +1765,7 @@ function observePostMusic() {
 
       if (iframe) sendYouTubeCommand(iframe, visible ? "playVideo" : "pauseVideo");
     });
+    scheduleMusicAutoplaySync();
   }, { threshold: [0, .45, 1] });
 
   document.querySelectorAll('.memoryPost[data-has-music="true"]').forEach((article) => {

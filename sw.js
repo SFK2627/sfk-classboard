@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-classboard-v93-phone-device-lock";
+const CACHE_NAME = "sfk-classboard-v94-memories-music-autoplay";
 const APP_SHELL = [
   "./",
   "./index.html",

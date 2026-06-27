@@ -11,7 +11,7 @@
   <link rel="manifest" href="manifest.webmanifest?v=14" />
   <link rel="icon" href="icons/icon-192.png?v=14" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=14" />
-  <link rel="stylesheet" href="memories.css?v=55-recovery" />
+  <link rel="stylesheet" href="memories.css?v=56-music-autoplay-toggle" />
   <script src="orientation-lock.js?v=3-phone-device-lock" defer></script>
 </head>
 <body>
@@ -22,7 +22,12 @@
         <span class="brandMark">SFK</span>
         <span><strong>SFK Memories</strong><small>#BeKind Collection</small></span>
       </a>
-      <button id="topPostButton" class="primaryButton compactButton" type="button">+ Post</button>
+      <div class="memoryTopbarActions">
+        <button id="musicAutoplayToggle" class="musicAutoplayToggle" type="button" aria-pressed="false" title="Automatically play music on visible posts">
+          <span aria-hidden="true">&#9835;</span><b>Auto</b><small>Off</small>
+        </button>
+        <button id="topPostButton" class="primaryButton compactButton" type="button">+ Post</button>
+      </div>
     </div>
   </header>
 
@@ -310,6 +315,6 @@
   <script src="firebase-config.js?v=1"></script>
   <script src="firebase-adapter.js?v=13-youtube-song-picker"></script>
   <script src="pwa.js?v=15"></script>
-  <script src="memories.js?v=53-recovery"></script>
+  <script src="memories.js?v=54-music-autoplay-toggle"></script>
 </body>
 </html>
