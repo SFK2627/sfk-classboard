@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-classboard-v94-memories-music-autoplay";
+const CACHE_NAME = "sfk-classboard-v95-announcement-progress-timer";
 const APP_SHELL = [
   "./",
   "./index.html",

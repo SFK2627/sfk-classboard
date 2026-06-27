@@ -25,6 +25,9 @@ const PRAYER_TEST_MINUTE = "20";
 let latestData = null;
 let latestDataString = "";
 let announcementIndex = 0;
+let announcementRotateTimer = null;
+let announcementRotationCount = 0;
+let announcementRotationVersion = 0;
 let birthdayIndex = 0;
 let isFetching = false;
 let lastBirthdayDisplayKey = "";
@@ -89,7 +92,6 @@ function initClassBoard() {
 
   setInterval(loadClassBoard, DATA_REFRESH_MS);
   setInterval(loadMemoriesUnreadBadge, 60000);
-  setInterval(rotateAnnouncements, ANNOUNCEMENT_ROTATE_MS);
   setInterval(rotateBirthdays, BIRTHDAY_ROTATE_MS);
   window.addEventListener("resize", fitAnnouncementTextToCard);
   setInterval(renderCleanersToday, 60000);
@@ -222,6 +224,7 @@ function renderDashboard(data) {
   renderCleanersToday();
   renderSchedule(data.schedule, periodState.currentPeriod);
   renderAnnouncements(data.announcements || []);
+  ensureAnnouncementRotation(data.announcements || []);
   renderThings(data.thingsToBring || []);
   renderReminders(data.adviserReminders || []);
   renderQuote(data.dailyQuote);
@@ -1526,6 +1529,7 @@ function rotateAnnouncements() {
 
   announcementIndex++;
   renderAnnouncements(latestData.announcements);
+  resetAnnouncementRotation(latestData.announcements);
 }
 
 function previousAnnouncement() {
@@ -1538,6 +1542,7 @@ function previousAnnouncement() {
   }
 
   renderAnnouncements(latestData.announcements);
+  resetAnnouncementRotation(latestData.announcements);
 }
 
 function nextAnnouncement() {
@@ -1545,6 +1550,40 @@ function nextAnnouncement() {
 
   announcementIndex++;
   renderAnnouncements(latestData.announcements);
+  resetAnnouncementRotation(latestData.announcements);
+}
+
+function ensureAnnouncementRotation(items) {
+  const total = Array.isArray(items) ? items.length : 0;
+  if (!announcementRotateTimer || announcementRotationCount !== total) {
+    resetAnnouncementRotation(items);
+  }
+}
+
+function resetAnnouncementRotation(items = latestData?.announcements || []) {
+  announcementRotationVersion++;
+  const rotationVersion = announcementRotationVersion;
+  window.clearTimeout(announcementRotateTimer);
+  announcementRotateTimer = null;
+  announcementRotationCount = Array.isArray(items) ? items.length : 0;
+
+  const progress = document.getElementById("announcementProgress");
+  const fill = document.getElementById("announcementProgressFill");
+  if (!progress || !fill) return;
+
+  progress.classList.toggle("isStatic", announcementRotationCount <= 1);
+  fill.style.transition = "none";
+  fill.style.width = announcementRotationCount ? (announcementRotationCount === 1 ? "100%" : "0%") : "0%";
+
+  if (announcementRotationCount <= 1) return;
+
+  void fill.offsetWidth;
+  window.requestAnimationFrame(() => {
+    if (rotationVersion !== announcementRotationVersion) return;
+    fill.style.transition = `width ${ANNOUNCEMENT_ROTATE_MS}ms linear`;
+    fill.style.width = "100%";
+    announcementRotateTimer = window.setTimeout(rotateAnnouncements, ANNOUNCEMENT_ROTATE_MS);
+  });
 }
 
 function renderThings(items) {
