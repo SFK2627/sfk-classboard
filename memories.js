@@ -862,6 +862,7 @@ function renderMemoryPost(post) {
       </header>
 
       ${renderPostMedia(post, currentIndex)}
+      ${post.music?.kind === "youtube-audio" ? renderPostMusic(post) : ""}
 
       <div class="postActions">
         <button class="heartButton ${hearted ? "hearted" : ""}" type="button" data-action="heart" data-id="${escapeAttr(post.id)}" aria-label="Heart this memory">${hearted ? "&#9829;" : "&#9825;"}</button>
@@ -886,7 +887,7 @@ function renderPostMedia(post, currentIndex) {
           <strong>${escapeHtml(post.title || "Text Memory")}</strong>
           ${post.caption ? `<p>${escapeHtml(post.caption)}</p>` : ""}
         </div>
-        ${renderPostMusic(post)}
+        ${post.music?.kind === "youtube-audio" ? "" : renderPostMusic(post)}
       </div>
     `;
   }
@@ -905,7 +906,7 @@ function renderPostMedia(post, currentIndex) {
     <div class="postMedia">
       <div class="mediaTrack" style="transform:translateX(-${currentIndex * 100}%)">${slides}</div>
       ${controls}
-      ${renderPostMusic(post)}
+      ${post.music?.kind === "youtube-audio" ? "" : renderPostMusic(post)}
     </div>
   `;
 }
