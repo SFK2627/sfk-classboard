@@ -3027,3 +3027,166 @@ body.shareFormatOpen {
     display: none;
   }
 }
+
+/* SFK heart brand marks: container grows while text size stays unchanged. */
+.brandMark {
+  width: 50px;
+  height: 46px;
+  padding: 0 0 5px;
+  border: 0;
+  border-radius: 0;
+  background: var(--gold);
+  box-shadow: none;
+  clip-path: polygon(50% 96%, 10% 64%, 4% 42%, 8% 22%, 22% 7%, 38% 7%, 50% 21%, 62% 7%, 78% 7%, 92% 22%, 96% 42%, 90% 64%);
+  clip-path: path("M25 44 C21 40 3 28 3 15 C3 7 9 2 17 2 C21 2 24 4 25 8 C27 4 30 2 34 2 C42 2 48 7 48 15 C48 28 29 40 25 44 Z");
+  filter:
+    drop-shadow(0 0 1px var(--ink))
+    drop-shadow(0 0 1px var(--ink));
+  font-size: .82rem;
+  line-height: 1;
+}
+
+.largeBrandMark {
+  width: 94px;
+  height: 86px;
+  padding: 0 0 9px;
+  border: 0;
+  border-radius: 0;
+  background: var(--gold);
+  box-shadow: none;
+  clip-path: polygon(50% 97%, 10% 65%, 4% 43%, 8% 22%, 22% 6%, 38% 6%, 50% 20%, 62% 6%, 78% 6%, 92% 22%, 96% 43%, 90% 65%);
+  clip-path: path("M47 83 C41 77 5 54 5 29 C5 12 18 3 32 3 C39 3 44 8 47 15 C50 8 55 3 62 3 C76 3 89 12 89 29 C89 54 53 77 47 83 Z");
+  filter:
+    drop-shadow(0 0 1px var(--ink))
+    drop-shadow(0 0 1px var(--ink))
+    drop-shadow(6px 6px 0 var(--ink));
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+@media (max-width: 540px) {
+  .brandMark {
+    width: 50px;
+    height: 46px;
+    font-size: .82rem;
+  }
+}
+
+/* Layered hearts keep the black outline and shadow outside the clipped shape. */
+.brandMark,
+.largeBrandMark {
+  position: relative;
+  isolation: isolate;
+  overflow: visible;
+  clip-path: none;
+  background: transparent;
+}
+
+.brandMark::before,
+.brandMark::after,
+.largeBrandMark::before,
+.largeBrandMark::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.brandMark::after {
+  z-index: -2;
+  background: var(--ink);
+  clip-path: polygon(50% 96%, 10% 64%, 4% 42%, 8% 22%, 22% 7%, 38% 7%, 50% 21%, 62% 7%, 78% 7%, 92% 22%, 96% 42%, 90% 64%);
+  clip-path: path("M25 44 C21 40 3 28 3 15 C3 7 9 2 17 2 C21 2 24 4 25 8 C27 4 30 2 34 2 C42 2 48 7 48 15 C48 28 29 40 25 44 Z");
+  filter: drop-shadow(2px 2px 0 rgba(17, 17, 17, .28));
+}
+
+.brandMark::before {
+  z-index: -1;
+  background: var(--gold);
+  transform: scale(.9);
+  transform-origin: center;
+  clip-path: polygon(50% 96%, 10% 64%, 4% 42%, 8% 22%, 22% 7%, 38% 7%, 50% 21%, 62% 7%, 78% 7%, 92% 22%, 96% 42%, 90% 64%);
+  clip-path: path("M25 44 C21 40 3 28 3 15 C3 7 9 2 17 2 C21 2 24 4 25 8 C27 4 30 2 34 2 C42 2 48 7 48 15 C48 28 29 40 25 44 Z");
+}
+
+.largeBrandMark::after {
+  z-index: -2;
+  background: var(--ink);
+  clip-path: polygon(50% 97%, 10% 65%, 4% 43%, 8% 22%, 22% 6%, 38% 6%, 50% 20%, 62% 6%, 78% 6%, 92% 22%, 96% 43%, 90% 65%);
+  clip-path: path("M47 83 C41 77 5 54 5 29 C5 12 18 3 32 3 C39 3 44 8 47 15 C50 8 55 3 62 3 C76 3 89 12 89 29 C89 54 53 77 47 83 Z");
+}
+
+.largeBrandMark::before {
+  z-index: -1;
+  background: var(--gold);
+  transform: scale(.92);
+  transform-origin: center;
+  clip-path: polygon(50% 97%, 10% 65%, 4% 43%, 8% 22%, 22% 6%, 38% 6%, 50% 20%, 62% 6%, 78% 6%, 92% 22%, 96% 43%, 90% 65%);
+  clip-path: path("M47 83 C41 77 5 54 5 29 C5 12 18 3 32 3 C39 3 44 8 47 15 C50 8 55 3 62 3 C76 3 89 12 89 29 C89 54 53 77 47 83 Z");
+}
+
+.brandMark,
+.largeBrandMark {
+  padding: 0;
+}
+
+.brandMark::after {
+  z-index: -3;
+  background: rgba(17, 17, 17, .32);
+  transform: translate(2px, 2px);
+  filter: none;
+}
+
+.brandMark::before {
+  z-index: -2;
+  background: var(--ink);
+  transform: none;
+}
+
+.largeBrandMark::after {
+  z-index: -3;
+  background: rgba(17, 17, 17, .9);
+  transform: translate(6px, 6px);
+  filter: none;
+}
+
+.largeBrandMark::before {
+  z-index: -2;
+  background: var(--ink);
+  transform: none;
+}
+
+.brandMarkText {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  isolation: isolate;
+  display: grid;
+  place-items: center;
+  padding: 0 0 5px;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: 1;
+}
+
+.brandMarkText::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--gold);
+  transform: scale(.9);
+  transform-origin: center;
+  clip-path: polygon(50% 96%, 10% 64%, 4% 42%, 8% 22%, 22% 7%, 38% 7%, 50% 21%, 62% 7%, 78% 7%, 92% 22%, 96% 42%, 90% 64%);
+  clip-path: path("M25 44 C21 40 3 28 3 15 C3 7 9 2 17 2 C21 2 24 4 25 8 C27 4 30 2 34 2 C42 2 48 7 48 15 C48 28 29 40 25 44 Z");
+}
+
+.largeBrandMark .brandMarkText {
+  padding-bottom: 9px;
+}
+
+.largeBrandMark .brandMarkText::before {
+  transform: scale(.92);
+  clip-path: polygon(50% 97%, 10% 65%, 4% 43%, 8% 22%, 22% 6%, 38% 6%, 50% 20%, 62% 6%, 78% 6%, 92% 22%, 96% 43%, 90% 65%);
+  clip-path: path("M47 83 C41 77 5 54 5 29 C5 12 18 3 32 3 C39 3 44 8 47 15 C50 8 55 3 62 3 C76 3 89 12 89 29 C89 54 53 77 47 83 Z");
+}
