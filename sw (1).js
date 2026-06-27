@@ -34,7 +34,7 @@
 </head>
 <body>
   <iframe src="../admin.html?embedded=1&v=phone-orientation-lock" title="SFK ClassBoard Admin" allow="fullscreen" allowfullscreen></iframe>
-  <script src="../orientation-lock.js?v=1"></script>
+  <script src="../orientation-lock.js?v=2-phone-only"></script>
   <script>
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {

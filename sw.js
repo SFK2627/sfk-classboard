@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-classboard-v89-phone-orientation-lock";
+const CACHE_NAME = "sfk-classboard-v90-phone-only-orientation-lock";
 const APP_SHELL = [
   "./",
   "./index.html",

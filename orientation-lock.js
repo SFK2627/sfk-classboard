@@ -5,7 +5,7 @@
     window.navigator.standalone === true;
   const isPhone = () =>
     window.matchMedia("(pointer: coarse)").matches &&
-    Math.min(window.screen?.width || innerWidth, window.screen?.height || innerHeight) <= 600;
+    Math.min(window.screen?.width || innerWidth, window.screen?.height || innerHeight) <= 520;
 
   let locking = false;
 
