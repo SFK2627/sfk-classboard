@@ -32,6 +32,44 @@ body {
   letter-spacing: 0;
 }
 
+.phonePortraitGuard {
+  display: none;
+}
+
+@media (orientation: landscape) and (max-height: 540px) and (max-width: 950px) and (pointer: coarse) {
+  .phonePortraitGuard {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: var(--gold);
+    color: var(--ink);
+    text-align: center;
+  }
+
+  .phonePortraitGuard > div {
+    display: grid;
+    justify-items: center;
+    gap: 7px;
+  }
+
+  .phonePortraitGuard span {
+    font-size: 2.2rem;
+    line-height: 1;
+  }
+
+  .phonePortraitGuard strong {
+    font-size: 1.15rem;
+  }
+
+  .phonePortraitGuard small {
+    font-size: .78rem;
+    font-weight: 800;
+  }
+}
+
 button,
 input,
 textarea,
