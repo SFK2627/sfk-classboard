@@ -14,6 +14,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
   <link rel="stylesheet" href="style.css?v=74-clock-access-menu" />
+  <link rel="stylesheet" href="class-chat.css?v=2-compact-icon-message-time" />
   <script src="orientation-lock.js?v=3-phone-device-lock" defer></script>
 
   <style id="sfkStartIntroStyle">
@@ -695,7 +696,13 @@
       </div>
 
       <div class="card sideCard">
-        <h2>Adviser Reminders</h2>
+        <div class="cardHeader adviserReminderHeader">
+          <h2>Adviser Reminders</h2>
+          <button id="classChatOpen" class="classChatOpen" type="button" aria-label="Open class group chat" title="Class group chat">
+            <span class="classChatGlyph" aria-hidden="true"></span>
+            <span id="classChatUnread" class="classChatUnread" hidden>0</span>
+          </button>
+        </div>
         <div id="reminderList"></div>
       </div>
     </section>
@@ -728,6 +735,84 @@
   </div>
 </div>
   </main>
+
+  <div id="classChatLayer" class="classChatLayer" hidden>
+    <button class="classChatBackdrop" type="button" data-chat-close aria-label="Close class chat"></button>
+    <section class="classChatPanel" role="dialog" aria-modal="true" aria-labelledby="classChatTitle">
+      <header class="classChatTopbar">
+        <button class="classChatBack" type="button" data-chat-close aria-label="Close class chat">&#8592;</button>
+        <div class="classChatIdentity">
+          <span class="classChatAvatar">SFK</span>
+          <div>
+            <h2 id="classChatTitle">SFK Class GC</h2>
+            <p id="classChatStatus">Sign in to join the conversation</p>
+          </div>
+        </div>
+        <button id="classChatLogout" class="classChatLogout" type="button" hidden aria-label="Leave chat" title="Leave chat">&#8943;</button>
+      </header>
+
+      <div id="classChatLogin" class="classChatLogin">
+        <div class="classChatWelcome">
+          <span class="classChatWelcomeMark">SFK</span>
+          <h3>Class conversation</h3>
+          <p>Use your assigned chat account. Your name will appear automatically.</p>
+        </div>
+
+        <div class="classChatRoleTabs" role="tablist" aria-label="Chat account type">
+          <button class="is-active" type="button" data-chat-role="student">Student</button>
+          <button type="button" data-chat-role="staff">Adviser / Officer</button>
+        </div>
+
+        <form id="classChatStudentForm" class="classChatAuthForm">
+          <label for="classChatStudentId">Student ID</label>
+          <input id="classChatStudentId" type="text" inputmode="numeric" autocomplete="username" required />
+          <label for="classChatStudentPin">Personal Chat PIN</label>
+          <input id="classChatStudentPin" type="password" inputmode="numeric" autocomplete="current-password" minlength="6" required />
+          <button type="submit">Open class chat</button>
+        </form>
+
+        <form id="classChatStaffForm" class="classChatAuthForm" hidden>
+          <label for="classChatStaffRole">Account</label>
+          <select id="classChatStaffRole">
+            <option value="admin">Adviser / Admin</option>
+            <option value="officer">Officer</option>
+          </select>
+          <label for="classChatStaffPin">Account PIN</label>
+          <input id="classChatStaffPin" type="password" autocomplete="current-password" required />
+          <button type="submit">Open class chat</button>
+        </form>
+
+        <form id="classChatChangePinForm" class="classChatAuthForm classChatChangePinForm" hidden>
+          <div class="classChatPinNotice">
+            <strong>Create your personal Chat PIN</strong>
+            <span>Replace the default PIN before opening the class conversation.</span>
+          </div>
+          <label for="classChatNewPin">New 6-digit PIN</label>
+          <input id="classChatNewPin" type="password" inputmode="numeric" autocomplete="new-password" pattern="[0-9]{6}" maxlength="6" required />
+          <label for="classChatConfirmPin">Confirm new PIN</label>
+          <input id="classChatConfirmPin" type="password" inputmode="numeric" autocomplete="new-password" pattern="[0-9]{6}" maxlength="6" required />
+          <button type="submit">Save PIN and continue</button>
+        </form>
+        <p id="classChatLoginMessage" class="classChatLoginMessage" role="status"></p>
+      </div>
+
+      <div id="classChatRoom" class="classChatRoom" hidden>
+        <button id="classChatLoadEarlier" class="classChatLoadEarlier" type="button">Load earlier messages</button>
+        <div id="classChatMessages" class="classChatMessages" aria-live="polite"></div>
+        <div id="classChatTyping" class="classChatTyping" hidden></div>
+        <div id="classChatReply" class="classChatReply" hidden>
+          <div><strong id="classChatReplyName"></strong><span id="classChatReplyText"></span></div>
+          <button id="classChatReplyCancel" type="button" aria-label="Cancel reply">&times;</button>
+        </div>
+        <form id="classChatComposer" class="classChatComposer">
+          <textarea id="classChatInput" rows="1" maxlength="500" placeholder="Message..." aria-label="Message"></textarea>
+          <button id="classChatSend" type="submit" aria-label="Send message">&#10148;</button>
+        </form>
+      </div>
+
+      <div id="classChatReactionTray" class="classChatReactionTray" hidden></div>
+    </section>
+  </div>
 
 
   <script id="sfkStartIntroScript">
@@ -769,10 +854,12 @@
   </script>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js?v=2-secure-auth"></script>
   <script src="firebase-adapter.js?v=15-secure-auth"></script>
   <script src="script.js?v=73-clock-access-menu"></script>
+  <script src="class-chat.js?v=3-removed-replies"></script>
   <script src="pwa.js?v=3"></script>
 </body>
 </html>

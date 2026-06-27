@@ -1,0 +1,695 @@
+.adviserReminderHeader {
+  align-items: center;
+  flex-direction: row;
+}
+
+.classChatOpen {
+  position: relative;
+  width: 31px;
+  height: 31px;
+  flex: 0 0 31px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 2px solid #111;
+  border-radius: 50%;
+  background: #f7c600;
+  color: #111;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 rgba(17, 17, 17, .20);
+  transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.classChatOpen:hover {
+  filter: brightness(1.04);
+  transform: translateY(-1px);
+}
+
+.classChatOpen:active {
+  transform: translate(2px, 2px) scale(.96);
+  box-shadow: 1px 1px 0 rgba(17, 17, 17, .28);
+}
+
+.classChatOpen:focus-visible {
+  outline: 3px solid rgba(17, 17, 17, .25);
+  outline-offset: 3px;
+}
+
+.classChatGlyph {
+  position: relative;
+  width: 16px;
+  height: 12px;
+  border: 2px solid currentColor;
+  border-radius: 7px;
+}
+
+.classChatGlyph::before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  bottom: -4px;
+  width: 5px;
+  height: 5px;
+  border-left: 2px solid currentColor;
+  transform: skew(-28deg);
+}
+
+.classChatGlyph::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 4px;
+  width: 7px;
+  height: 4px;
+  border-bottom: 2px solid currentColor;
+  transform: skew(-24deg) rotate(-8deg);
+}
+
+.classChatUnread {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 17px;
+  height: 17px;
+  display: grid;
+  place-items: center;
+  padding: 0 5px;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: #d61f36;
+  color: #fff;
+  font-size: .6rem;
+  font-weight: 900;
+}
+
+.classChatLayer {
+  position: fixed;
+  inset: 0;
+  z-index: 120000;
+}
+
+.classChatLayer[hidden],
+.classChatLogin[hidden],
+.classChatRoom[hidden],
+.classChatReactionTray[hidden],
+.classChatReply[hidden] {
+  display: none !important;
+}
+
+.classChatBackdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: rgba(17, 17, 17, .43);
+  backdrop-filter: blur(2px);
+}
+
+.classChatPanel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: min(430px, 100%);
+  height: 100%;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #fffdf6;
+  border-left: 2px solid #111;
+  box-shadow: -18px 0 45px rgba(0, 0, 0, .22);
+  animation: classChatEnter .22s ease-out both;
+}
+
+@keyframes classChatEnter {
+  from { transform: translateX(36px); opacity: .6; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.classChatTopbar {
+  min-height: 68px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid #ded9ca;
+  background: rgba(255, 253, 246, .97);
+}
+
+.classChatBack,
+.classChatLogout {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #111;
+  font-size: 1.55rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.classChatBack:hover,
+.classChatLogout:hover {
+  background: #f3efdf;
+}
+
+.classChatIdentity {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.classChatAvatar,
+.classChatWelcomeMark {
+  display: grid;
+  place-items: center;
+  border: 2px solid #111;
+  border-radius: 50%;
+  background: #f7c600;
+  color: #111;
+  font-weight: 950;
+}
+
+.classChatAvatar {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  font-size: .75rem;
+}
+
+.classChatIdentity h2,
+.classChatIdentity p {
+  overflow: hidden;
+  margin: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.classChatIdentity h2 {
+  font-size: 1rem;
+}
+
+.classChatIdentity p {
+  margin-top: 2px;
+  color: #6b665c;
+  font-size: .74rem;
+}
+
+.classChatLogin {
+  flex: 1;
+  overflow-y: auto;
+  padding: 26px 22px;
+}
+
+.classChatWelcome {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.classChatWelcomeMark {
+  width: 70px;
+  height: 70px;
+  margin: 0 auto 14px;
+  box-shadow: 5px 5px 0 rgba(17, 17, 17, .16);
+}
+
+.classChatWelcome h3 {
+  margin: 0 0 5px;
+  font-size: 1.45rem;
+}
+
+.classChatWelcome p {
+  max-width: 330px;
+  margin: 0 auto;
+  color: #625e55;
+  font-size: .88rem;
+  line-height: 1.4;
+}
+
+.classChatRoleTabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-bottom: 18px;
+  padding: 4px;
+  border-radius: 12px;
+  background: #eee9dc;
+}
+
+.classChatRoleTabs button {
+  border: 0;
+  border-radius: 9px;
+  padding: 10px 8px;
+  background: transparent;
+  color: #6b665c;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.classChatRoleTabs button.is-active {
+  background: #fff;
+  color: #111;
+  box-shadow: 0 2px 8px rgba(17, 17, 17, .10);
+}
+
+.classChatAuthForm label {
+  display: block;
+  margin: 13px 0 6px;
+  font-size: .79rem;
+  font-weight: 900;
+}
+
+.classChatAuthForm input,
+.classChatAuthForm select {
+  width: 100%;
+  min-height: 48px;
+  box-sizing: border-box;
+  border: 1.5px solid #c8c1b2;
+  border-radius: 12px;
+  padding: 11px 13px;
+  background: #fff;
+  color: #111;
+  font: inherit;
+  outline: none;
+}
+
+.classChatAuthForm input:focus,
+.classChatAuthForm select:focus {
+  border-color: #111;
+  box-shadow: 0 0 0 3px rgba(247, 198, 0, .26);
+}
+
+.classChatAuthForm button {
+  width: 100%;
+  margin-top: 18px;
+  border: 2px solid #111;
+  border-radius: 12px;
+  padding: 12px;
+  background: #f7c600;
+  color: #111;
+  font-weight: 950;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 #111;
+}
+
+.classChatLoginMessage {
+  min-height: 20px;
+  margin: 14px 0 0;
+  color: #b00020;
+  font-size: .8rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.classChatPinNotice {
+  margin-bottom: 16px;
+  padding: 13px 14px;
+  border-left: 4px solid #f7c600;
+  border-radius: 10px;
+  background: #fff7cf;
+}
+
+.classChatPinNotice strong,
+.classChatPinNotice span {
+  display: block;
+}
+
+.classChatPinNotice span {
+  margin-top: 5px;
+  color: #5f5a50;
+  font-size: .82rem;
+  line-height: 1.35;
+}
+
+.classChatRoom {
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background:
+    linear-gradient(rgba(247, 198, 0, .035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(247, 198, 0, .035) 1px, transparent 1px),
+    #fffdf8;
+  background-size: 32px 32px;
+}
+
+.classChatLoadEarlier {
+  align-self: center;
+  margin: 10px 0 0;
+  border: 0;
+  background: transparent;
+  color: #665c31;
+  font-size: .76rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.classChatMessages {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 14px 14px 8px;
+  scrollbar-width: thin;
+}
+
+.classChatDay {
+  width: max-content;
+  margin: 12px auto;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(17, 17, 17, .06);
+  color: #6a665d;
+  font-size: .68rem;
+  font-weight: 800;
+}
+
+.classChatMessage {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 7px;
+  margin: 3px 0 7px;
+}
+
+.classChatMessage.is-own {
+  justify-content: flex-end;
+}
+
+.classChatMessageAvatar {
+  width: 27px;
+  height: 27px;
+  flex: 0 0 27px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #111;
+  border-radius: 50%;
+  background: #f7c600;
+  font-size: .57rem;
+  font-weight: 950;
+}
+
+.classChatMessage.is-grouped .classChatMessageAvatar {
+  visibility: hidden;
+}
+
+.classChatBubbleWrap {
+  max-width: min(78%, 320px);
+}
+
+.classChatSender {
+  margin: 0 0 4px 10px;
+  color: #625e55;
+  font-size: .68rem;
+  font-weight: 850;
+}
+
+.classChatMessage.is-grouped .classChatSender {
+  display: none;
+}
+
+.classChatBubble {
+  position: relative;
+  border-radius: 18px;
+  padding: 9px 12px;
+  background: #eeeae1;
+  color: #111;
+  font-size: .9rem;
+  line-height: 1.34;
+  overflow-wrap: anywhere;
+  cursor: default;
+  user-select: text;
+}
+
+.classChatMessage.is-own .classChatBubble {
+  background: #f7c600;
+}
+
+.classChatMessage.is-first:not(.is-own) .classChatBubble {
+  border-bottom-left-radius: 6px;
+}
+
+.classChatMessage.is-first.is-own .classChatBubble {
+  border-bottom-right-radius: 6px;
+}
+
+.classChatMessage.is-grouped:not(.is-own) .classChatBubble {
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+}
+
+.classChatMessage.is-grouped.is-own .classChatBubble {
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
+.classChatQuoted {
+  margin-bottom: 7px;
+  padding: 6px 8px;
+  border-left: 3px solid rgba(17, 17, 17, .42);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, .44);
+  font-size: .72rem;
+  line-height: 1.25;
+}
+
+.classChatQuoted strong,
+.classChatQuoted span {
+  display: block;
+}
+
+.classChatQuoted span {
+  margin-top: 2px;
+  overflow: hidden;
+  opacity: .78;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.classChatRemoved {
+  color: #6f6a61;
+  font-style: italic;
+}
+
+.classChatMeta {
+  min-height: 15px;
+  margin: 4px 7px 1px;
+  color: #817c72;
+  font-size: .62rem;
+  line-height: 1.25;
+}
+
+.classChatMessage.is-own .classChatMeta {
+  text-align: right;
+}
+
+.classChatReactionSummary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: -4px 7px 0;
+}
+
+.classChatReactionChip {
+  border: 1px solid #ddd7c8;
+  border-radius: 999px;
+  padding: 2px 6px;
+  background: #fff;
+  color: #111;
+  font-size: .72rem;
+  line-height: 1.2;
+  box-shadow: 0 2px 5px rgba(17, 17, 17, .08);
+}
+
+.classChatReactionChip.is-mine {
+  border-color: #111;
+}
+
+.classChatMessageActions {
+  display: flex;
+  gap: 6px;
+  margin: 5px 6px 0;
+}
+
+.classChatMessageActions button {
+  border: 0;
+  padding: 2px 3px;
+  background: transparent;
+  color: #777168;
+  font-size: .66rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.classChatTyping {
+  padding: 3px 18px 7px;
+  color: #777168;
+  font-size: .72rem;
+  font-style: italic;
+}
+
+.classChatReply {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-top: 1px solid #e1dccf;
+  background: #fff;
+}
+
+.classChatReply > div {
+  min-width: 0;
+  flex: 1;
+  padding-left: 9px;
+  border-left: 3px solid #f7c600;
+}
+
+.classChatReply strong,
+.classChatReply span {
+  display: block;
+  overflow: hidden;
+  font-size: .73rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.classChatReply span {
+  margin-top: 2px;
+  color: #6e695f;
+}
+
+.classChatReply button {
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.classChatComposer {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 9px 12px max(9px, env(safe-area-inset-bottom));
+  border-top: 1px solid #ded9ca;
+  background: #fff;
+}
+
+.classChatComposer textarea {
+  max-height: 112px;
+  min-height: 42px;
+  flex: 1;
+  box-sizing: border-box;
+  resize: none;
+  border: 1.5px solid #cbc5b8;
+  border-radius: 22px;
+  padding: 10px 15px;
+  background: #faf9f6;
+  color: #111;
+  font: inherit;
+  line-height: 1.3;
+  outline: none;
+}
+
+.classChatComposer textarea:focus {
+  border-color: #111;
+}
+
+.classChatComposer button {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  display: grid;
+  place-items: center;
+  padding: 0 0 0 2px;
+  border: 0;
+  border-radius: 50%;
+  background: #111;
+  color: #f7c600;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: transform .14s ease;
+}
+
+.classChatComposer button:active {
+  transform: scale(.9);
+}
+
+.classChatReactionTray {
+  position: absolute;
+  z-index: 5;
+  display: flex;
+  gap: 2px;
+  max-width: calc(100% - 24px);
+  padding: 7px;
+  border: 1px solid #ddd7c8;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 9px 26px rgba(17, 17, 17, .22);
+}
+
+.classChatReactionTray button {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  font-size: 1.15rem;
+  cursor: pointer;
+  transition: transform .12s ease, background .12s ease;
+}
+
+.classChatReactionTray button:hover {
+  background: #f4f0e6;
+  transform: translateY(-3px) scale(1.08);
+}
+
+body.classChatIsOpen {
+  overflow: hidden;
+}
+
+@media (max-width: 600px) {
+  .classChatBackdrop {
+    display: none;
+  }
+
+  .classChatPanel {
+    width: 100%;
+    border-left: 0;
+    box-shadow: none;
+  }
+
+  .classChatTopbar {
+    padding-top: max(9px, env(safe-area-inset-top));
+  }
+
+  .classChatMessages {
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+
+  .classChatBubbleWrap {
+    max-width: 82%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .classChatPanel {
+    animation: none;
+  }
+
+  .classChatOpen,
+  .classChatComposer button {
+    transition: none;
+  }
+}

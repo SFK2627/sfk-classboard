@@ -302,6 +302,44 @@ select:focus {
   gap: 10px;
 }
 
+.chatRosterToolbar {
+  margin-top: 12px;
+}
+
+.chatRosterList {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.chatRosterRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 11px;
+  border: 1px solid #d9d1bb;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.chatRosterRow strong,
+.chatRosterRow small {
+  display: block;
+}
+
+.chatRosterRow small {
+  margin-top: 3px;
+  color: #5f5a50;
+}
+
+.chatRosterRow button {
+  width: auto;
+  min-width: 82px;
+  margin: 0;
+  padding: 8px 10px;
+}
+
 .toolLaunchButton {
   min-height: 82px;
   border: 2px solid #111;

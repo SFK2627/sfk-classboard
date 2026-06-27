@@ -1,9 +1,12 @@
-const CACHE_NAME = "sfk-classboard-v111-slim-animated-music-pill";
+const CACHE_NAME = "sfk-classboard-v115-removed-reply-privacy";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./style.css",
   "./script.js",
+  "./class-chat.css",
+  "./class-chat.js",
+  "./class-chat-admin.js",
   "./pwa.js",
   "./firebase-config.js",
   "./firebase-adapter.js",
