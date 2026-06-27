@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-classboard-v127-hidden-composer-scrollbar";
+const CACHE_NAME = "sfk-classboard-v128-complete-chat-features";
 const APP_SHELL = [
   "./",
   "./index.html",

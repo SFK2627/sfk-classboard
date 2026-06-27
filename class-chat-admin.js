@@ -23,7 +23,7 @@
       <div class="chatDangerZone">
         <div>
           <strong>Clear class conversation</strong>
-          <small>Deletes every message and reaction. Student accounts are not affected.</small>
+          <small>Deletes messages, reactions, poll votes, scheduled posts, and saved copies. Student accounts are not affected.</small>
         </div>
         <button id="chatClearAll" type="button">Clear Entire Chat</button>
       </div>
@@ -73,6 +73,12 @@
 
       await deleteFlatCollection(db, "chatTyping");
       await deleteFlatCollection(db, "chatReadReceipts");
+      await deleteFlatCollection(db, "chatScheduled");
+      const profiles = await db.collection("chatProfiles").get();
+      for (const profile of profiles.docs) {
+        const saved = await db.collection("chatSaved").doc(profile.id).collection("items").get();
+        await deleteRefsInBatches(db, saved.docs.map((doc) => doc.ref));
+      }
       message.textContent = `Class conversation cleared. ${deletedMessages} message${deletedMessages === 1 ? "" : "s"} removed.`;
     } catch (error) {
       message.textContent = friendlyError(error);
@@ -133,6 +139,11 @@
             CreatedAt: firebase.firestore.FieldValue.serverTimestamp(),
             UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
           });
+          await services.db.collection("chatDirectory").doc(credential.user.uid).set({
+            Name: entry.name,
+            Role: "student",
+            UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
           await services.provisionAuth.signOut();
           created += 1;
         } catch (error) {
@@ -164,6 +175,26 @@
         list.innerHTML = `<p class="fieldHint">No student chat accounts yet.</p>`;
         return;
       }
+
+      const directoryBatch = db.batch();
+      snapshot.docs.forEach((doc) => {
+        directoryBatch.set(db.collection("chatDirectory").doc(doc.id), {
+          Name: doc.data()?.Name || "Student",
+          Role: "student",
+          UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      });
+      directoryBatch.set(db.collection("chatDirectory").doc("staff_adviser"), {
+        Name: "SFK Adviser",
+        Role: "admin",
+        UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+      directoryBatch.set(db.collection("chatDirectory").doc("staff_officer"), {
+        Name: "SFK Officer",
+        Role: "officer",
+        UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+      await directoryBatch.commit();
 
       list.innerHTML = snapshot.docs.map((doc) => {
         const profile = doc.data() || {};

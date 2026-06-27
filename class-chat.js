@@ -8,6 +8,7 @@
   const CHAT_THEME_KEY = "sfkClassChatTheme";
   const CHAT_LAST_COUNT_KEY = "sfkClassChatLastReadCount";
   const CHAT_LAST_TIME_KEY = "sfkClassChatLastReadTime";
+  const CHAT_DRAFT_PREFIX = "sfkClassChatDraft:";
   const STAFF_EMAILS = {
     admin: String(window.SFK_AUTH_ACCOUNTS?.admin || "").trim().toLowerCase(),
     officer: String(window.SFK_AUTH_ACCOUNTS?.officer || "").trim().toLowerCase()
@@ -25,11 +26,23 @@
   let configUnsubscribe = null;
   let profileUnsubscribe = null;
   let metaUnsubscribe = null;
+  let directoryUnsubscribe = null;
+  let receiptsUnsubscribe = null;
+  let savedUnsubscribe = null;
+  let scheduledUnsubscribe = null;
+  let scheduledRefreshTimer = null;
   const pollVoteUnsubscribes = new Map();
   let currentMessages = [];
+  let regularMessages = [];
+  let scheduledMessages = [];
   let searchMessages = [];
+  let chatDirectory = [];
+  let readReceipts = [];
+  let savedMessageIds = new Set();
+  let savedItems = [];
   let replyTarget = null;
   let editTarget = null;
+  let draftBeforeEdit = "";
   let currentPinned = null;
   let currentMetaCount = 0;
   let unreadDividerAfter = 0;
@@ -60,16 +73,22 @@
     elements.logout.addEventListener("click", toggleChatMenu);
     elements.themeToggle.addEventListener("click", toggleChatTheme);
     elements.searchOpen.addEventListener("click", () => openUtility("search"));
+    elements.savedOpen.addEventListener("click", () => openUtility("saved"));
     elements.pollOpen.addEventListener("click", () => openUtility("poll"));
     elements.controlsOpen.addEventListener("click", () => openUtility("controls"));
+    elements.scheduleOpen.addEventListener("click", () => openUtility("schedule"));
+    elements.reportsOpen.addEventListener("click", () => openUtility("reports"));
     elements.leave.addEventListener("click", leaveChat);
     elements.utilityBack.addEventListener("click", closeUtility);
     elements.searchInput.addEventListener("input", renderSearchResults);
     elements.controlsForm.addEventListener("submit", saveChatControls);
     elements.pollForm.addEventListener("submit", createQuickPoll);
+    elements.scheduleForm.addEventListener("submit", scheduleChatMessage);
     elements.addPollOption.addEventListener("click", addPollOption);
     elements.pollOptionsEditor.addEventListener("click", handlePollOptionEditorClick);
     elements.pinned.addEventListener("click", focusPinnedMessage);
+    elements.jumpUnread.addEventListener("click", jumpToUnread);
+    elements.messages.addEventListener("scroll", updateJumpButton);
     elements.roleTabs.forEach((button) => {
       button.addEventListener("click", () => selectRole(button.dataset.chatRole));
     });
@@ -103,8 +122,11 @@
     elements.themeLabel = elements.themeToggle?.querySelector(".classChatMenuLabel");
     elements.leave = document.getElementById("classChatLeave");
     elements.searchOpen = document.getElementById("classChatSearchOpen");
+    elements.savedOpen = document.getElementById("classChatSavedOpen");
     elements.pollOpen = document.getElementById("classChatPollOpen");
     elements.controlsOpen = document.getElementById("classChatControlsOpen");
+    elements.scheduleOpen = document.getElementById("classChatScheduleOpen");
+    elements.reportsOpen = document.getElementById("classChatReportsOpen");
     elements.utility = document.getElementById("classChatUtility");
     elements.utilityBack = document.getElementById("classChatUtilityBack");
     elements.utilityTitle = document.getElementById("classChatUtilityTitle");
@@ -120,6 +142,20 @@
     elements.pollOptionsEditor = document.getElementById("classChatPollOptionsEditor");
     elements.addPollOption = document.getElementById("classChatAddPollOption");
     elements.pollMessage = document.getElementById("classChatPollMessage");
+    elements.pollMultiple = document.getElementById("classChatPollMultiple");
+    elements.pollAnonymous = document.getElementById("classChatPollAnonymous");
+    elements.pollDeadline = document.getElementById("classChatPollDeadline");
+    elements.savedPanel = document.getElementById("classChatSavedPanel");
+    elements.savedResults = document.getElementById("classChatSavedResults");
+    elements.scheduleForm = document.getElementById("classChatSchedulePanel");
+    elements.scheduleText = document.getElementById("classChatScheduleText");
+    elements.scheduleAt = document.getElementById("classChatScheduleAt");
+    elements.scheduleMessage = document.getElementById("classChatScheduleMessage");
+    elements.reportsPanel = document.getElementById("classChatReportsPanel");
+    elements.reportsResults = document.getElementById("classChatReportsResults");
+    elements.hoursToggle = document.getElementById("classChatHoursToggle");
+    elements.hoursStart = document.getElementById("classChatHoursStart");
+    elements.hoursEnd = document.getElementById("classChatHoursEnd");
     elements.login = document.getElementById("classChatLogin");
     elements.room = document.getElementById("classChatRoom");
     elements.pinned = document.getElementById("classChatPinned");
@@ -144,10 +180,12 @@
     elements.replyName = document.getElementById("classChatReplyName");
     elements.replyText = document.getElementById("classChatReplyText");
     elements.replyCancel = document.getElementById("classChatReplyCancel");
+    elements.mentionSuggestions = document.getElementById("classChatMentionSuggestions");
     elements.composer = document.getElementById("classChatComposer");
     elements.input = document.getElementById("classChatInput");
     elements.send = document.getElementById("classChatSend");
     elements.reactionTray = document.getElementById("classChatReactionTray");
+    elements.jumpUnread = document.getElementById("classChatJumpUnread");
   }
 
   function ensureFirebase() {
@@ -281,6 +319,9 @@
     elements.searchPanel.hidden = type !== "search";
     elements.controlsForm.hidden = type !== "controls";
     elements.pollForm.hidden = type !== "poll";
+    elements.savedPanel.hidden = type !== "saved";
+    elements.scheduleForm.hidden = type !== "schedule";
+    elements.reportsPanel.hidden = type !== "reports";
 
     if (type === "search") {
       elements.utilityTitle.textContent = "Search messages";
@@ -291,12 +332,30 @@
       elements.utilityTitle.textContent = "Chat controls";
       elements.lockToggle.checked = currentConfig.Locked === true;
       elements.slowMode.value = String(Number(currentConfig.SlowModeSeconds || 0));
+      elements.hoursToggle.checked = currentConfig.ChatHoursEnabled === true;
+      elements.hoursStart.value = currentConfig.ChatHoursStart || "06:00";
+      elements.hoursEnd.value = currentConfig.ChatHoursEnd || "21:00";
       elements.controlsMessage.textContent = "";
     }
     if (type === "poll") {
       elements.utilityTitle.textContent = "Create quick poll";
       elements.pollMessage.textContent = "";
+      elements.pollDeadline.min = toLocalDateTimeInput(new Date(Date.now() + 5 * 60 * 1000));
       window.setTimeout(() => elements.pollQuestion.focus(), 80);
+    }
+    if (type === "saved") {
+      elements.utilityTitle.textContent = "Saved messages";
+      renderSavedMessages();
+    }
+    if (type === "schedule") {
+      elements.utilityTitle.textContent = "Schedule message";
+      elements.scheduleMessage.textContent = "";
+      elements.scheduleAt.min = toLocalDateTimeInput(new Date(Date.now() + 60 * 1000));
+      window.setTimeout(() => elements.scheduleText.focus(), 80);
+    }
+    if (type === "reports") {
+      elements.utilityTitle.textContent = "Reported messages";
+      loadReportedMessages();
     }
   }
 
@@ -365,8 +424,11 @@
     elements.room.hidden = true;
     elements.logout.hidden = false;
     elements.searchOpen.hidden = true;
+    elements.savedOpen.hidden = true;
     elements.pollOpen.hidden = true;
     elements.controlsOpen.hidden = true;
+    elements.scheduleOpen.hidden = true;
+    elements.reportsOpen.hidden = true;
     elements.status.textContent = "Sign in to join the conversation";
     elements.messages.innerHTML = "";
     elements.studentPin.value = "";
@@ -383,12 +445,16 @@
     elements.room.hidden = false;
     elements.logout.hidden = false;
     elements.searchOpen.hidden = false;
+    elements.savedOpen.hidden = false;
     elements.status.textContent = `${currentProfile.name} · Class member`;
     elements.controlsOpen.hidden = currentProfile.role !== "admin";
     elements.pollOpen.hidden = false;
+    elements.scheduleOpen.hidden = currentProfile.role !== "admin";
+    elements.reportsOpen.hidden = currentProfile.role !== "admin";
     unreadDividerAfter = getStoredNumber(CHAT_LAST_TIME_KEY);
     elements.loginMessage.textContent = "";
     startRealtimeListeners();
+    restoreDraft();
     window.setTimeout(() => elements.input.focus(), 80);
   }
 
@@ -577,7 +643,8 @@
       .limit(messageLimit)
       .onSnapshot((snapshot) => {
         const wasNearBottom = isNearBottom();
-        currentMessages = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })).reverse();
+        regularMessages = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })).reverse();
+        rebuildCurrentMessages();
         renderMessages();
         markRead();
         markLocalRead();
@@ -621,7 +688,10 @@
     configUnsubscribe = db.collection("chatConfig").doc("main").onSnapshot((snapshot) => {
       currentConfig = {
         Locked: snapshot.data()?.Locked === true,
-        SlowModeSeconds: Number(snapshot.data()?.SlowModeSeconds || 0)
+        SlowModeSeconds: Number(snapshot.data()?.SlowModeSeconds || 0),
+        ChatHoursEnabled: snapshot.data()?.ChatHoursEnabled === true,
+        ChatHoursStart: snapshot.data()?.ChatHoursStart || "06:00",
+        ChatHoursEnd: snapshot.data()?.ChatHoursEnd || "21:00"
       };
       applyChatConfig();
     }, () => {
@@ -636,6 +706,31 @@
         if (profile.Active === false || profile.Blocked === true) leaveChat();
       });
     }
+
+    directoryUnsubscribe = db.collection("chatDirectory").orderBy("Name").onSnapshot((snapshot) => {
+      chatDirectory = snapshot.docs.map((doc) => ({ uid: doc.id, ...doc.data() }));
+    }, () => {
+      chatDirectory = [];
+    });
+
+    receiptsUnsubscribe = db.collection("chatReadReceipts").onSnapshot((snapshot) => {
+      readReceipts = snapshot.docs.map((doc) => ({ uid: doc.id, ...doc.data() }));
+      updateSeenIndicators();
+    });
+
+    savedUnsubscribe = db.collection("chatSaved").doc(currentProfile.uid).collection("items")
+      .onSnapshot((snapshot) => {
+        savedMessageIds = new Set(snapshot.docs.map((doc) => doc.id));
+        savedItems = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+          .sort((a, b) => timestampToMillis(b.SavedAt) - timestampToMillis(a.SavedAt));
+        if (!elements.savedPanel.hidden) renderSavedMessages();
+      });
+
+    refreshScheduledMessages();
+    scheduledRefreshTimer = window.setInterval(() => {
+      refreshScheduledMessages();
+      applyChatConfig();
+    }, 30000);
   }
 
   function stopRealtimeListeners() {
@@ -644,12 +739,50 @@
     if (pinnedUnsubscribe) pinnedUnsubscribe();
     if (configUnsubscribe) configUnsubscribe();
     if (profileUnsubscribe) profileUnsubscribe();
+    if (directoryUnsubscribe) directoryUnsubscribe();
+    if (receiptsUnsubscribe) receiptsUnsubscribe();
+    if (savedUnsubscribe) savedUnsubscribe();
+    if (scheduledUnsubscribe) scheduledUnsubscribe();
+    window.clearInterval(scheduledRefreshTimer);
     messagesUnsubscribe = null;
     typingUnsubscribe = null;
     pinnedUnsubscribe = null;
     configUnsubscribe = null;
     profileUnsubscribe = null;
+    directoryUnsubscribe = null;
+    receiptsUnsubscribe = null;
+    savedUnsubscribe = null;
+    scheduledUnsubscribe = null;
+    scheduledRefreshTimer = null;
     clearPollVoteListeners();
+  }
+
+  function rebuildCurrentMessages() {
+    currentMessages = regularMessages.concat(scheduledMessages)
+      .sort((a, b) => timestampToMillis(a.CreatedAt) - timestampToMillis(b.CreatedAt));
+  }
+
+  function refreshScheduledMessages() {
+    if (scheduledUnsubscribe) scheduledUnsubscribe();
+    scheduledUnsubscribe = db.collection("chatScheduled")
+      .where("PublishAt", "<=", firebase.firestore.Timestamp.now())
+      .orderBy("PublishAt", "desc")
+      .limit(50)
+      .onSnapshot((snapshot) => {
+        scheduledMessages = snapshot.docs.map((doc) => ({
+          ...doc.data(),
+          id: `scheduled_${doc.id}`,
+          ScheduledDocID: doc.id,
+          IsScheduled: true,
+          CreatedAt: doc.data().PublishAt,
+          Removed: false
+        })).reverse();
+        rebuildCurrentMessages();
+        renderMessages();
+      }, () => {
+        scheduledMessages = [];
+        rebuildCurrentMessages();
+      });
   }
 
   function renderPinnedMessage() {
@@ -677,17 +810,43 @@
 
   function applyChatConfig() {
     if (!currentProfile) return;
-    const lockedForUser = currentConfig.Locked && currentProfile.role !== "admin";
-    elements.input.disabled = lockedForUser;
-    elements.send.disabled = lockedForUser;
-    elements.input.placeholder = lockedForUser
-      ? "Conversation locked by the Adviser"
+    const restricted = isChatRestrictedForUser();
+    elements.input.disabled = restricted;
+    elements.send.disabled = restricted;
+    elements.input.placeholder = restricted
+      ? currentConfig.Locked
+        ? "Conversation locked by the Adviser"
+        : "Chat is outside the allowed hours"
       : currentConfig.SlowModeSeconds > 0
         ? `Message... · ${currentConfig.SlowModeSeconds}s slow mode`
         : "Message...";
-    elements.status.textContent = lockedForUser
-      ? "Adviser-only messaging"
+    elements.status.textContent = restricted
+      ? currentConfig.Locked ? "Adviser-only messaging" : "Chat hours closed"
       : `${currentProfile.name} · Class member`;
+  }
+
+  function isChatRestrictedForUser() {
+    if (currentProfile?.role === "admin") return false;
+    if (currentConfig.Locked) return true;
+    if (!currentConfig.ChatHoursEnabled) return false;
+    const parts = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Asia/Manila",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false
+    }).formatToParts(new Date());
+    const nowMinutes = Number(parts.find((part) => part.type === "hour")?.value || 0) * 60
+      + Number(parts.find((part) => part.type === "minute")?.value || 0);
+    const start = timeInputToMinutes(currentConfig.ChatHoursStart || "06:00");
+    const end = timeInputToMinutes(currentConfig.ChatHoursEnd || "21:00");
+    return start <= end
+      ? nowMinutes < start || nowMinutes > end
+      : nowMinutes > end && nowMinutes < start;
+  }
+
+  function timeInputToMinutes(value) {
+    const [hours, minutes] = String(value || "00:00").split(":").map(Number);
+    return (hours * 60) + minutes;
   }
 
   function loadEarlier() {
@@ -723,11 +882,15 @@
         && Date.now() - createdAt.getTime() <= OWN_DELETE_WINDOW_MS;
       const canModerate = currentProfile.role === "admin";
       const removed = message.Removed === true;
+      const mentioned = !removed && isCurrentUserMentioned(message.Text);
+      const priorityLabel = message.Priority === true
+        ? `<span class="classChatPriorityLabel">ADVISER PRIORITY</span>`
+        : "";
       const messageContent = removed
         ? `<span class="classChatRemoved">Message removed by the Adviser.</span>`
         : message.Type === "poll"
           ? renderPollMarkup(message)
-          : `<span>${escapeHtml(message.Text || "")}${message.Edited ? `<small class="classChatEdited">edited</small>` : ""}</span>`;
+          : `<span>${formatMessageText(message.Text || "")}${message.Edited ? `<small class="classChatEdited">edited</small>` : ""}</span>`;
 
       const replySource = message.ReplyToID ? findMessage(message.ReplyToID) : null;
       const replyIsUnavailable = removed
@@ -739,39 +902,46 @@
           <span>${escapeHtml(message.ReplyToText || "Original message")}</span>
         </div>` : "";
 
-      const actionButtons = !removed ? `
+      const actionButtons = !removed && !message.IsScheduled ? `
         <div class="classChatMessageActions">
           <button type="button" data-chat-action="reply" data-message-id="${message.id}">Reply</button>
           <button type="button" data-chat-action="react" data-message-id="${message.id}">React</button>
           ${canEditOwn ? `<button type="button" data-chat-action="edit" data-message-id="${message.id}">Edit</button>` : ""}
+          <button type="button" data-chat-action="save" data-message-id="${message.id}">${savedMessageIds.has(message.id) ? "Unsave" : "Save"}</button>
           ${canModerate ? `<button type="button" data-chat-action="pin" data-message-id="${message.id}">${message.Pinned ? "Unpin" : "Pin"}</button>` : ""}
+          ${canModerate ? `<button type="button" data-chat-action="priority" data-message-id="${message.id}">${message.Priority ? "Normal" : "Priority"}</button>` : ""}
+          ${message.Type === "poll" && (own || canModerate) && !message.PollClosed ? `<button type="button" data-chat-action="close-poll" data-message-id="${message.id}">Close poll</button>` : ""}
+          ${!own ? `<button type="button" data-chat-action="report" data-message-id="${message.id}">Report</button>` : ""}
           ${(canDeleteOwn || canModerate) ? `<button type="button" data-chat-action="delete" data-message-id="${message.id}">Remove</button>` : ""}
         </div>` : "";
 
       return `
         ${showDay ? `<div class="classChatDay">${escapeHtml(day)}</div>` : ""}
         ${showNewDivider ? `<div class="classChatNewDivider">New messages</div>` : ""}
-        <article class="classChatMessage ${own ? "is-own" : ""} ${grouped ? "is-grouped" : "is-first"} ${groupEnd ? "is-group-end" : ""} ${removed ? "has-removed" : ""}"
+        <article class="classChatMessage ${own ? "is-own" : ""} ${grouped ? "is-grouped" : "is-first"} ${groupEnd ? "is-group-end" : ""} ${removed ? "has-removed" : ""} ${mentioned ? "is-mentioned" : ""} ${message.Priority ? "is-priority" : ""}"
                  data-message-id="${message.id}">
           ${own ? "" : `<span class="classChatMessageAvatar">${escapeHtml(initials(message.SenderName))}</span>`}
           <div class="classChatBubbleWrap">
             ${own ? "" : `<p class="classChatSender">${escapeHtml(message.SenderName || "Student")}</p>`}
             <div class="classChatBubble">
+              ${priorityLabel}
               ${quoted}
               ${messageContent}
             </div>
             <div class="classChatReactionSummary" data-reactions-for="${message.id}"></div>
-            <div class="classChatMeta">${groupEnd ? formatTime(createdAt) : ""}</div>
+            <div class="classChatMeta">${groupEnd ? `${formatTime(createdAt)}<span class="classChatSeen" data-seen-message="${message.id}"></span>` : ""}</div>
             ${actionButtons}
           </div>
         </article>`;
     }).join("");
 
-    currentMessages.forEach((message) => loadReactions(message.id));
+    currentMessages.filter((message) => !message.IsScheduled).forEach((message) => loadReactions(message.id));
     clearPollVoteListeners();
     currentMessages.filter((message) => message.Type === "poll" && !message.Removed)
       .forEach((message) => loadPollVotes(message));
     verifyQuotedMessages();
+    updateSeenIndicators();
+    updateJumpButton();
   }
 
   function isSameMessageGroup(first, second) {
@@ -784,17 +954,84 @@
 
   function renderPollMarkup(message) {
     const options = Array.isArray(message.PollOptions) ? message.PollOptions : [];
+    const deadlinePassed = timestampToMillis(message.PollEndsAt) > 0
+      && timestampToMillis(message.PollEndsAt) <= Date.now();
+    const closed = message.PollClosed === true || deadlinePassed;
     return `
       <div class="classChatPollCard" data-poll-id="${message.id}">
         <strong class="classChatPollQuestion">${escapeHtml(message.Text || "Class poll")}</strong>
+        <small class="classChatPollTotal">${message.PollMultiple ? "Select one or more" : "Select one"}${message.PollAnonymous ? " · Anonymous" : ""}${closed ? " · Closed" : ""}</small>
         <div class="classChatPollOptions">
           ${options.map((option, index) => `
-            <button type="button" class="classChatPollOption" data-poll-option="${index}">
+            <button type="button" class="classChatPollOption" data-poll-option="${index}" ${closed ? "disabled" : ""}>
               <span><b>${escapeHtml(option)}</b><em>0%</em></span>
+              <small class="classChatPollVoters" data-poll-voters hidden></small>
             </button>`).join("")}
         </div>
-        <small class="classChatPollTotal">No votes yet</small>
+        <small class="classChatPollTotal" data-poll-total>No votes yet${closed ? " · Poll closed" : ""}</small>
       </div>`;
+  }
+
+  function formatMessageText(text) {
+    const names = [...new Set(
+      chatDirectory.map((entry) => String(entry.Name || "").trim())
+        .concat(currentProfile?.name || "")
+        .filter(Boolean)
+    )].sort((a, b) => b.length - a.length);
+    if (!names.length) return escapeHtml(text);
+    const pattern = new RegExp(`@(${names.map(escapeRegExp).join("|")})(?=\\s|$|[.,!?])`, "gi");
+    let output = "";
+    let cursor = 0;
+    String(text).replace(pattern, (match, name, offset) => {
+      output += escapeHtml(String(text).slice(cursor, offset));
+      output += `<span class="classChatMention">@${escapeHtml(name)}</span>`;
+      cursor = offset + match.length;
+      return match;
+    });
+    output += escapeHtml(String(text).slice(cursor));
+    return output;
+  }
+
+  function isCurrentUserMentioned(text) {
+    if (!currentProfile?.name) return false;
+    return String(text || "").toLowerCase().includes(`@${currentProfile.name.toLowerCase()}`);
+  }
+
+  function updateSeenIndicators() {
+    if (!currentProfile || !elements.messages) return;
+    elements.messages.querySelectorAll("[data-seen-message]").forEach((node) => { node.textContent = ""; });
+    const latestOwn = [...currentMessages].reverse().find((message) => (
+      !message.IsScheduled && !message.Removed && message.SenderUID === currentProfile.uid
+    ));
+    if (!latestOwn) return;
+    const createdAt = timestampToMillis(latestOwn.CreatedAt);
+    const seenNames = readReceipts
+      .filter((receipt) => receipt.uid !== currentProfile.uid && timestampToMillis(receipt.LastSeenAt) >= createdAt)
+      .map((receipt) => receipt.Name || "Classmate");
+    const node = elements.messages.querySelector(`[data-seen-message="${cssEscape(latestOwn.id)}"]`);
+    if (!node || !seenNames.length) return;
+    node.textContent = seenNames.length <= 2
+      ? `Seen by ${seenNames.join(" and ")}`
+      : `Seen by ${seenNames.length}`;
+  }
+
+  function updateJumpButton() {
+    if (elements.room.hidden) {
+      elements.jumpUnread.hidden = true;
+      return;
+    }
+    elements.jumpUnread.hidden = isNearBottom();
+  }
+
+  function jumpToUnread() {
+    const divider = elements.messages.querySelector(".classChatNewDivider");
+    if (divider) divider.scrollIntoView({ behavior: "smooth", block: "center" });
+    else scrollToBottom();
+    window.setTimeout(updateJumpButton, 450);
+  }
+
+  function escapeRegExp(value) {
+    return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 
   async function verifyQuotedMessages() {
@@ -828,8 +1065,10 @@
       window.alert(`Messaging is muted until ${new Date(currentProfile.mutedUntil).toLocaleString()}.`);
       return;
     }
-    if (currentConfig.Locked && currentProfile.role !== "admin") {
-      window.alert("The Adviser has temporarily locked the class conversation.");
+    if (isChatRestrictedForUser()) {
+      window.alert(currentConfig.Locked
+        ? "The Adviser has temporarily locked the class conversation."
+        : "Chat messaging is currently outside the allowed hours.");
       return;
     }
     const slowModeMs = Number(currentConfig.SlowModeSeconds || 0) * 1000;
@@ -873,6 +1112,7 @@
       elements.input.value = "";
       resizeComposer();
       clearReply();
+      clearDraft();
       await clearTyping();
       scrollToBottom();
     } catch (error) {
@@ -899,6 +1139,82 @@
   function handleComposerInput() {
     resizeComposer();
     scheduleTyping();
+    saveDraft();
+    renderMentionSuggestions();
+  }
+
+  function renderMentionSuggestions() {
+    const cursor = elements.input.selectionStart ?? elements.input.value.length;
+    const beforeCursor = elements.input.value.slice(0, cursor);
+    const match = beforeCursor.match(/@([^@\n]*)$/);
+    if (!match) {
+      elements.mentionSuggestions.hidden = true;
+      return;
+    }
+    const query = match[1].trim().toLowerCase();
+    if (match[1].endsWith(" ") && chatDirectory.some((entry) => String(entry.Name || "").toLowerCase() === query)) {
+      elements.mentionSuggestions.hidden = true;
+      return;
+    }
+    const suggestions = chatDirectory
+      .filter((entry) => entry.uid !== currentProfile.uid && entry.Name !== currentProfile.name)
+      .filter((entry) => !query || String(entry.Name || "").toLowerCase().includes(query))
+      .slice(0, 8);
+    if (!suggestions.length) {
+      elements.mentionSuggestions.hidden = true;
+      return;
+    }
+    elements.mentionSuggestions.innerHTML = suggestions.map((entry) => `
+      <button type="button" data-mention-name="${escapeHtml(entry.Name || "")}">
+        <span class="classChatMessageAvatar" style="visibility:visible">${escapeHtml(initials(entry.Name))}</span>
+        <span>${escapeHtml(entry.Name || "Student")}</span>
+      </button>`).join("");
+    elements.mentionSuggestions.hidden = false;
+    elements.mentionSuggestions.querySelectorAll("[data-mention-name]").forEach((button) => {
+      button.addEventListener("click", () => insertMention(button.dataset.mentionName, match.index, cursor));
+    });
+  }
+
+  function insertMention(name, start, end) {
+    elements.input.setRangeText(`@${name} `, start, end, "end");
+    elements.mentionSuggestions.hidden = true;
+    elements.input.focus();
+    handleComposerInput();
+  }
+
+  function draftKey() {
+    return `${CHAT_DRAFT_PREFIX}${currentProfile?.uid || "guest"}`;
+  }
+
+  function saveDraft() {
+    if (!currentProfile || editTarget) return;
+    try {
+      const value = elements.input.value;
+      if (value) localStorage.setItem(draftKey(), value);
+      else localStorage.removeItem(draftKey());
+    } catch (error) {
+      // Draft saving is optional when browser storage is blocked.
+    }
+  }
+
+  function restoreDraft() {
+    try {
+      const draft = localStorage.getItem(draftKey()) || "";
+      if (draft && !elements.input.value) {
+        elements.input.value = draft;
+        resizeComposer();
+      }
+    } catch (error) {
+      // Draft saving is optional when browser storage is blocked.
+    }
+  }
+
+  function clearDraft() {
+    try {
+      localStorage.removeItem(draftKey());
+    } catch (error) {
+      // Draft saving is optional when browser storage is blocked.
+    }
   }
 
   function resizeComposer() {
@@ -956,7 +1272,11 @@
     if (button.dataset.chatAction === "reply") setReply(message);
     if (button.dataset.chatAction === "react") showReactionTray(message.id, button);
     if (button.dataset.chatAction === "edit") setEdit(message);
+    if (button.dataset.chatAction === "save") toggleSavedMessage(message);
     if (button.dataset.chatAction === "pin") togglePinnedMessage(message);
+    if (button.dataset.chatAction === "priority") togglePriorityMessage(message);
+    if (button.dataset.chatAction === "close-poll") closePoll(message);
+    if (button.dataset.chatAction === "report") reportMessage(message);
     if (button.dataset.chatAction === "delete") removeMessage(message);
   }
 
@@ -1088,8 +1408,10 @@
     editTarget = null;
     elements.reply.hidden = true;
     if (wasEditing) {
-      elements.input.value = "";
+      elements.input.value = draftBeforeEdit;
+      draftBeforeEdit = "";
       resizeComposer();
+      saveDraft();
     }
   }
 
@@ -1097,6 +1419,7 @@
     if (!message || message.Removed || message.Type === "poll") return;
     replyTarget = null;
     editTarget = message;
+    draftBeforeEdit = elements.input.value;
     elements.replyName.textContent = "Editing message";
     elements.replyText.textContent = message.Text || "";
     elements.reply.hidden = false;
@@ -1124,9 +1447,13 @@
       </div>
       <div class="classChatTrayActions">
         <button type="button" data-chat-tray-action="reply"><span aria-hidden="true">&#8617;</span> Reply</button>
+        <button type="button" data-chat-tray-action="save"><span aria-hidden="true">&#9734;</span> ${savedMessageIds.has(message.id) ? "Unsave" : "Save"}</button>
         ${canEditOwn ? `<button type="button" data-chat-tray-action="edit"><span aria-hidden="true">&#9998;</span> Edit</button>` : ""}
         ${currentProfile.role === "admin" ? `<button type="button" data-chat-tray-action="pin"><span aria-hidden="true">&#128204;</span> ${message.Pinned ? "Unpin" : "Pin"}</button>` : ""}
+        ${currentProfile.role === "admin" ? `<button type="button" data-chat-tray-action="priority"><span aria-hidden="true">&#9733;</span> ${message.Priority ? "Normal" : "Priority"}</button>` : ""}
         ${currentProfile.role === "admin" && !own && message.SenderRole === "student" ? `<button type="button" data-chat-tray-action="mute"><span aria-hidden="true">&#128263;</span> Mute 10m</button>` : ""}
+        ${message.Type === "poll" && (own || currentProfile.role === "admin") && !message.PollClosed ? `<button type="button" data-chat-tray-action="close-poll"><span aria-hidden="true">&#9632;</span> Close poll</button>` : ""}
+        ${!own ? `<button type="button" data-chat-tray-action="report"><span aria-hidden="true">&#9873;</span> Report</button>` : ""}
         ${canRemove ? `<button type="button" data-chat-tray-action="delete"><span aria-hidden="true">&#9003;</span> Remove</button>` : ""}
       </div>`;
 
@@ -1137,9 +1464,13 @@
       button.addEventListener("click", () => {
         hideReactionTray();
         if (button.dataset.chatTrayAction === "reply") setReply(message);
+        if (button.dataset.chatTrayAction === "save") toggleSavedMessage(message);
         if (button.dataset.chatTrayAction === "edit") setEdit(message);
         if (button.dataset.chatTrayAction === "pin") togglePinnedMessage(message);
+        if (button.dataset.chatTrayAction === "priority") togglePriorityMessage(message);
         if (button.dataset.chatTrayAction === "mute") muteMessageSender(message);
+        if (button.dataset.chatTrayAction === "close-poll") closePoll(message);
+        if (button.dataset.chatTrayAction === "report") reportMessage(message);
         if (button.dataset.chatTrayAction === "delete") removeMessage(message);
       });
     });
@@ -1257,6 +1588,121 @@
     }
   }
 
+  async function togglePriorityMessage(message) {
+    if (currentProfile.role !== "admin" || !message || message.IsScheduled) return;
+    try {
+      await db.collection("chatMessages").doc(message.id).update({
+        Priority: message.Priority !== true,
+        PriorityAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    } catch (error) {
+      window.alert(readableError(error));
+    }
+  }
+
+  async function toggleSavedMessage(message) {
+    if (!message || message.IsScheduled) return;
+    const ref = db.collection("chatSaved").doc(currentProfile.uid).collection("items").doc(message.id);
+    try {
+      if (savedMessageIds.has(message.id)) {
+        await ref.delete();
+      } else {
+        await ref.set({
+          MessageID: message.id,
+          Text: message.Text || "",
+          SenderName: message.SenderName || "",
+          MessageCreatedAt: message.CreatedAt || firebase.firestore.Timestamp.now(),
+          SavedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+    } catch (error) {
+      window.alert(readableError(error));
+    }
+  }
+
+  function renderSavedMessages() {
+    if (!savedItems.length) {
+      elements.savedResults.innerHTML = `<p class="classChatUtilityHint">No saved messages yet.</p>`;
+      return;
+    }
+    elements.savedResults.innerHTML = savedItems.map((item) => `
+      <button type="button" class="classChatSearchResult" data-saved-message="${item.MessageID || item.id}">
+        <strong>${escapeHtml(item.SenderName || "Classmate")}</strong>
+        <span>${escapeHtml(item.Text || "")}</span>
+        <small>${escapeHtml(formatDayLabel(timestampToDate(item.MessageCreatedAt)))}</small>
+      </button>`).join("");
+    elements.savedResults.querySelectorAll("[data-saved-message]").forEach((button) => {
+      button.addEventListener("click", () => openSearchResult(button.dataset.savedMessage));
+    });
+  }
+
+  async function reportMessage(message) {
+    if (!message || message.IsScheduled || message.SenderUID === currentProfile.uid) return;
+    const reason = window.prompt("Why are you reporting this message? You may leave this blank.");
+    if (reason === null) return;
+    try {
+      await db.collection("chatReports").add({
+        MessageID: message.id,
+        MessageText: message.Text || "",
+        SenderUID: message.SenderUID || "",
+        SenderName: message.SenderName || "",
+        ReporterUID: currentProfile.uid,
+        ReporterName: currentProfile.name,
+        Reason: String(reason || "").trim(),
+        Status: "OPEN",
+        CreatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      window.alert("The message was privately reported to the Adviser.");
+    } catch (error) {
+      window.alert(readableError(error));
+    }
+  }
+
+  async function loadReportedMessages() {
+    elements.reportsResults.innerHTML = `<p class="classChatUtilityHint">Loading reports...</p>`;
+    try {
+      const snapshot = await db.collection("chatReports").orderBy("CreatedAt", "desc").limit(100).get();
+      if (snapshot.empty) {
+        elements.reportsResults.innerHTML = `<p class="classChatUtilityHint">No reported messages.</p>`;
+        return;
+      }
+      elements.reportsResults.innerHTML = snapshot.docs.map((doc) => {
+        const report = doc.data() || {};
+        return `
+          <div class="classChatSearchResult">
+            <strong>${escapeHtml(report.SenderName || "Student")} · ${escapeHtml(report.Status || "OPEN")}</strong>
+            <span>${escapeHtml(report.MessageText || "Message unavailable")}</span>
+            <small>Reported by ${escapeHtml(report.ReporterName || "Class member")}${report.Reason ? ` · ${escapeHtml(report.Reason)}` : ""}</small>
+            ${report.Status !== "RESOLVED" ? `<button type="button" data-resolve-report="${doc.id}">Mark resolved</button>` : ""}
+          </div>`;
+      }).join("");
+      elements.reportsResults.querySelectorAll("[data-resolve-report]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          await db.collection("chatReports").doc(button.dataset.resolveReport).update({
+            Status: "RESOLVED",
+            ResolvedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          loadReportedMessages();
+        });
+      });
+    } catch (error) {
+      elements.reportsResults.innerHTML = `<p class="classChatUtilityHint">${escapeHtml(readableError(error))}</p>`;
+    }
+  }
+
+  async function closePoll(message) {
+    if (!message || message.Type !== "poll" || (message.SenderUID !== currentProfile.uid && currentProfile.role !== "admin")) return;
+    if (!window.confirm("Close this poll? Voting will stop.")) return;
+    try {
+      await db.collection("chatMessages").doc(message.id).update({
+        PollClosed: true,
+        PollClosedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    } catch (error) {
+      window.alert(readableError(error));
+    }
+  }
+
   async function muteMessageSender(message) {
     if (currentProfile.role !== "admin" || message.SenderRole !== "student") return;
     if (!window.confirm(`Mute ${message.SenderName || "this student"} for 10 minutes?`)) return;
@@ -1280,6 +1726,9 @@
       await db.collection("chatConfig").doc("main").set({
         Locked: elements.lockToggle.checked,
         SlowModeSeconds: Number(elements.slowMode.value || 0),
+        ChatHoursEnabled: elements.hoursToggle.checked,
+        ChatHoursStart: elements.hoursStart.value || "06:00",
+        ChatHoursEnd: elements.hoursEnd.value || "21:00",
         UpdatedBy: currentProfile.uid,
         UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
@@ -1294,8 +1743,10 @@
   async function createQuickPoll(event) {
     event.preventDefault();
     if (!currentProfile) return;
-    if (currentConfig.Locked && currentProfile.role !== "admin") {
-      elements.pollMessage.textContent = "The Adviser has locked the conversation.";
+    if (isChatRestrictedForUser()) {
+      elements.pollMessage.textContent = currentConfig.Locked
+        ? "The Adviser has locked the conversation."
+        : "Poll posting is outside the allowed chat hours.";
       return;
     }
 
@@ -1307,21 +1758,31 @@
       elements.pollMessage.textContent = "Enter a question and at least two choices.";
       return;
     }
+    const deadlineDate = elements.pollDeadline.value ? new Date(elements.pollDeadline.value) : null;
+    if (deadlineDate && deadlineDate.getTime() <= Date.now()) {
+      elements.pollMessage.textContent = "Choose a future voting deadline.";
+      return;
+    }
 
     const button = elements.pollForm.querySelector("button[type='submit']");
     button.disabled = true;
     elements.pollMessage.textContent = "Posting poll...";
     try {
-      await createChatMessage({
+      const payload = {
         Type: "poll",
         Text: question,
         PollOptions: options,
+        PollMultiple: elements.pollMultiple.checked,
+        PollAnonymous: elements.pollAnonymous.checked,
+        PollClosed: false,
         SenderUID: currentProfile.uid,
         SenderName: currentProfile.name,
         SenderRole: currentProfile.role,
         Removed: false,
         CreatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
+      };
+      if (deadlineDate) payload.PollEndsAt = firebase.firestore.Timestamp.fromDate(deadlineDate);
+      await createChatMessage(payload);
       elements.pollForm.reset();
       resetPollOptionsEditor();
       closeUtility();
@@ -1329,6 +1790,37 @@
       scrollToBottom();
     } catch (error) {
       elements.pollMessage.textContent = readableError(error);
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  async function scheduleChatMessage(event) {
+    event.preventDefault();
+    if (currentProfile.role !== "admin") return;
+    const text = elements.scheduleText.value.trim();
+    const publishAt = new Date(elements.scheduleAt.value);
+    if (!text || !Number.isFinite(publishAt.getTime()) || publishAt.getTime() <= Date.now()) {
+      elements.scheduleMessage.textContent = "Enter a message and a future publish date/time.";
+      return;
+    }
+    const button = elements.scheduleForm.querySelector("button[type='submit']");
+    button.disabled = true;
+    elements.scheduleMessage.textContent = "Scheduling message...";
+    try {
+      await db.collection("chatScheduled").add({
+        Text: text,
+        PublishAt: firebase.firestore.Timestamp.fromDate(publishAt),
+        SenderUID: currentProfile.uid,
+        SenderName: currentProfile.name,
+        SenderRole: "admin",
+        Priority: true,
+        CreatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      elements.scheduleForm.reset();
+      elements.scheduleMessage.textContent = "Message scheduled.";
+    } catch (error) {
+      elements.scheduleMessage.textContent = readableError(error);
     } finally {
       button.disabled = false;
     }
@@ -1386,17 +1878,39 @@
     refreshPollOptionRows();
   }
 
+  function toLocalDateTimeInput(date) {
+    const local = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
+    return local.toISOString().slice(0, 16);
+  }
+
   async function voteInPoll(messageId, optionIndex) {
     const message = findMessage(messageId);
     if (!message || message.Removed || message.Type !== "poll") return;
     const options = Array.isArray(message.PollOptions) ? message.PollOptions : [];
     if (!Number.isInteger(optionIndex) || optionIndex < 0 || optionIndex >= options.length) return;
+    if (message.PollClosed === true || (timestampToMillis(message.PollEndsAt) > 0 && timestampToMillis(message.PollEndsAt) <= Date.now())) return;
 
     try {
-      await db.collection("chatMessages").doc(messageId).collection("votes").doc(currentProfile.uid).set({
+      const ref = db.collection("chatMessages").doc(messageId).collection("votes").doc(currentProfile.uid);
+      const existing = await ref.get();
+      const oldIndexes = existing.exists
+        ? (Array.isArray(existing.data()?.OptionIndexes)
+          ? existing.data().OptionIndexes
+          : [existing.data()?.OptionIndex].filter(Number.isInteger))
+        : [];
+      const optionIndexes = message.PollMultiple
+        ? (oldIndexes.includes(optionIndex)
+          ? oldIndexes.filter((index) => index !== optionIndex)
+          : oldIndexes.concat(optionIndex))
+        : [optionIndex];
+      if (!optionIndexes.length) {
+        await ref.delete();
+        return;
+      }
+      await ref.set({
         UID: currentProfile.uid,
         Name: currentProfile.name,
-        OptionIndex: optionIndex,
+        OptionIndexes: optionIndexes,
         UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
     } catch (error) {
@@ -1410,29 +1924,41 @@
       if (!card) return;
       const options = Array.isArray(message.PollOptions) ? message.PollOptions : [];
       const counts = options.map(() => 0);
+      const voterNames = options.map(() => []);
       let selectedIndex = -1;
       snapshot.docs.forEach((doc) => {
         const vote = doc.data() || {};
-        if (Number.isInteger(vote.OptionIndex) && counts[vote.OptionIndex] !== undefined) {
-          counts[vote.OptionIndex] += 1;
-          if (doc.id === currentProfile.uid) selectedIndex = vote.OptionIndex;
-        }
+        const indexes = Array.isArray(vote.OptionIndexes)
+          ? vote.OptionIndexes
+          : [vote.OptionIndex].filter(Number.isInteger);
+        indexes.forEach((index) => {
+          if (counts[index] !== undefined) {
+            counts[index] += 1;
+            voterNames[index].push(vote.Name || "Classmate");
+          }
+        });
+        if (doc.id === currentProfile.uid) selectedIndex = indexes;
       });
       const total = counts.reduce((sum, count) => sum + count, 0);
+      const closed = message.PollClosed === true
+        || (timestampToMillis(message.PollEndsAt) > 0 && timestampToMillis(message.PollEndsAt) <= Date.now());
       card.querySelectorAll("[data-poll-option]").forEach((button) => {
         const index = Number(button.dataset.pollOption);
         const percent = total ? Math.round((counts[index] / total) * 100) : 0;
         button.style.setProperty("--poll-percent", `${percent}%`);
-        button.classList.toggle("is-selected", index === selectedIndex);
+        button.classList.toggle("is-selected", Array.isArray(selectedIndex) && selectedIndex.includes(index));
         button.querySelector("em").textContent = `${percent}%`;
+        const names = button.querySelector("[data-poll-voters]");
+        names.hidden = message.PollAnonymous === true || !voterNames[index].length;
+        names.textContent = message.PollAnonymous === true ? "" : voterNames[index].join(", ");
       });
-      card.querySelector(".classChatPollTotal").textContent = total
-        ? `${total} vote${total === 1 ? "" : "s"}`
-        : "No votes yet";
+      card.querySelector("[data-poll-total]").textContent = total
+        ? `${total} vote${total === 1 ? "" : "s"}${closed ? " · Poll closed" : ""}`
+        : `No votes yet${closed ? " · Poll closed" : ""}`;
     }, () => {
       const card = elements.messages.querySelector(`[data-poll-id="${cssEscape(message.id)}"]`);
       if (!card) return;
-      card.querySelector(".classChatPollTotal").textContent = "Votes unavailable";
+      card.querySelector("[data-poll-total]").textContent = "Votes unavailable";
     });
     pollVoteUnsubscribes.set(message.id, unsubscribe);
   }

@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
   <link rel="stylesheet" href="style.css?v=74-clock-access-menu" />
-  <link rel="stylesheet" href="class-chat.css?v=13-hidden-composer-scrollbar" />
+  <link rel="stylesheet" href="class-chat.css?v=14-complete-features" />
   <script src="orientation-lock.js?v=3-phone-device-lock" defer></script>
 
   <style id="sfkStartIntroStyle">
@@ -759,6 +759,10 @@
           <span class="classChatMenuIcon" aria-hidden="true">&#8981;</span>
           <span>Search messages</span>
         </button>
+        <button id="classChatSavedOpen" type="button" hidden>
+          <span class="classChatMenuIcon" aria-hidden="true">&#9734;</span>
+          <span>Saved messages</span>
+        </button>
         <button id="classChatPollOpen" type="button" hidden>
           <span class="classChatMenuIcon" aria-hidden="true">&#9776;</span>
           <span>Create quick poll</span>
@@ -766,6 +770,14 @@
         <button id="classChatControlsOpen" type="button" hidden>
           <span class="classChatMenuIcon" aria-hidden="true">&#9881;</span>
           <span>Chat controls</span>
+        </button>
+        <button id="classChatScheduleOpen" type="button" hidden>
+          <span class="classChatMenuIcon" aria-hidden="true">&#9719;</span>
+          <span>Schedule message</span>
+        </button>
+        <button id="classChatReportsOpen" type="button" hidden>
+          <span class="classChatMenuIcon" aria-hidden="true">&#9873;</span>
+          <span>Reported messages</span>
         </button>
         <button id="classChatLeave" type="button">
           <span class="classChatMenuIcon" aria-hidden="true">&#8594;</span>
@@ -801,6 +813,14 @@
             <option value="30">30 seconds</option>
             <option value="60">1 minute</option>
           </select>
+          <label class="classChatControlRow">
+            <span><strong>Chat hours</strong><small>Students can send only during the selected hours.</small></span>
+            <input id="classChatHoursToggle" type="checkbox" />
+          </label>
+          <div class="classChatHoursGrid">
+            <label for="classChatHoursStart">Start<input id="classChatHoursStart" type="time" value="06:00" /></label>
+            <label for="classChatHoursEnd">End<input id="classChatHoursEnd" type="time" value="21:00" /></label>
+          </div>
           <button type="submit">Save chat controls</button>
           <p id="classChatControlsMessage" class="classChatUtilityHint" role="status"></p>
         </form>
@@ -826,9 +846,32 @@
             </div>
           </div>
           <button id="classChatAddPollOption" class="classChatAddPollOption" type="button">+ Add choice</button>
+          <label class="classChatPollSetting"><input id="classChatPollMultiple" type="checkbox" /> Allow multiple answers</label>
+          <label class="classChatPollSetting"><input id="classChatPollAnonymous" type="checkbox" /> Anonymous voting</label>
+          <label for="classChatPollDeadline">Voting deadline (optional)</label>
+          <input id="classChatPollDeadline" type="datetime-local" />
           <button type="submit">Post poll</button>
           <p id="classChatPollMessage" class="classChatUtilityHint" role="status"></p>
         </form>
+
+        <div id="classChatSavedPanel" class="classChatUtilityBody" hidden>
+          <p class="classChatUtilityHint">Messages saved only for your account.</p>
+          <div id="classChatSavedResults" class="classChatSearchResults"></div>
+        </div>
+
+        <form id="classChatSchedulePanel" class="classChatUtilityBody classChatPollPanel" hidden>
+          <label for="classChatScheduleText">Message</label>
+          <textarea id="classChatScheduleText" maxlength="500" rows="5" placeholder="Type the scheduled message..." required></textarea>
+          <label for="classChatScheduleAt">Publish date and time</label>
+          <input id="classChatScheduleAt" type="datetime-local" required />
+          <button type="submit">Schedule message</button>
+          <p id="classChatScheduleMessage" class="classChatUtilityHint" role="status"></p>
+        </form>
+
+        <div id="classChatReportsPanel" class="classChatUtilityBody" hidden>
+          <p class="classChatUtilityHint">Private reports visible only to the Adviser/Admin.</p>
+          <div id="classChatReportsResults" class="classChatSearchResults"></div>
+        </div>
       </section>
 
       <div id="classChatLogin" class="classChatLogin">
@@ -889,10 +932,12 @@
           <div><strong id="classChatReplyName"></strong><span id="classChatReplyText"></span></div>
           <button id="classChatReplyCancel" type="button" aria-label="Cancel reply">&times;</button>
         </div>
+        <div id="classChatMentionSuggestions" class="classChatMentionSuggestions" hidden></div>
         <form id="classChatComposer" class="classChatComposer">
           <textarea id="classChatInput" rows="1" maxlength="500" placeholder="Message..." aria-label="Message"></textarea>
           <button id="classChatSend" type="submit" aria-label="Send message">&#10148;</button>
         </form>
+        <button id="classChatJumpUnread" class="classChatJumpUnread" type="button" hidden aria-label="Jump to unread messages">&#8595;</button>
       </div>
 
       <div id="classChatReactionTray" class="classChatReactionTray" hidden></div>
@@ -944,7 +989,7 @@
   <script src="firebase-config.js?v=2-secure-auth"></script>
   <script src="firebase-adapter.js?v=15-secure-auth"></script>
   <script src="script.js?v=73-clock-access-menu"></script>
-  <script src="class-chat.js?v=12-logged-out-menu"></script>
+  <script src="class-chat.js?v=14-complete-features"></script>
   <script src="pwa.js?v=3"></script>
 </body>
 </html>
