@@ -65,8 +65,9 @@
         <div class="formCard">
           <h2>📢 Subject Announcement</h2>
 
-          <label for="officerAnnouncementDate">Date</label>
-          <input id="officerAnnouncementDate" type="date" />
+          <label for="officerAnnouncementPublishDate">Publish Date</label>
+          <input id="officerAnnouncementPublishDate" type="date" />
+          <small class="fieldHint">This is the displayed date and the first day the announcement will appear.</small>
 
           <label for="officerAnnouncementSubject">Subject</label>
           <input id="officerAnnouncementSubject" list="subjectOptions" type="text" placeholder="Select or type subject" />
@@ -168,10 +169,14 @@
             <option value="For Submission">For Submission</option>
           </select>
 
-          <label for="officerAnnouncementPublish">Publish</label>
+          <label for="officerAnnouncementExpiryDate">Expiry Date</label>
+          <input id="officerAnnouncementExpiryDate" type="date" />
+          <small class="fieldHint">First day this announcement will no longer appear. Leave blank for no expiry.</small>
+
+          <label for="officerAnnouncementPublish">Visibility</label>
           <select id="officerAnnouncementPublish">
-            <option value="YES">YES</option>
-            <option value="NO">NO</option>
+            <option value="YES">Active / Follow Publish Date</option>
+            <option value="NO">Draft / Hidden</option>
           </select>
 
           <button onclick="saveOfficerAnnouncement()">Save Announcement</button>
@@ -375,8 +380,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js?v=1"></script>
-  <script src="firebase-adapter.js?v=8-heart-id-resolution-fix"></script>
+  <script src="firebase-adapter.js?v=14-announcement-schedule"></script>
   <script src="pwa.js?v=14"></script>
-  <script src="officer.js?v=fresh-heart-v2"></script>
+  <script src="officer.js?v=announcement-publish-date"></script>
 </body>
 </html>

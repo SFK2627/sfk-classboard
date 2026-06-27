@@ -13,7 +13,7 @@
     },
     Announcements: {
       collection: "announcements",
-      headers: ["ID", "Date", "Subject", "Announcement", "Teacher", "Deadline", "ShowDeadline", "AttachmentURLs", "AttachmentNames", "Priority", "Publish", "HeartCount"]
+      headers: ["ID", "Date", "Subject", "Announcement", "Teacher", "Deadline", "ShowDeadline", "AttachmentURLs", "AttachmentNames", "Priority", "PublishDate", "ExpiryDate", "Publish", "HeartCount"]
     },
     ThingsToBring: {
       collection: "thingsToBring",
@@ -231,7 +231,10 @@
   }
 
   async function getPublishedRows(sheetName) {
-    return (await getRows(sheetName)).filter(row => isPublished(row));
+    return (await getRows(sheetName)).filter(row =>
+      isPublished(row) &&
+      (sheetName !== "Announcements" || isAnnouncementActiveToday(row))
+    );
   }
 
   async function getTodayRows(sheetName, todayDate) {
@@ -763,6 +766,8 @@
         Announcement: payload.Announcement || "",
         Teacher: payload.Teacher || "",
         Deadline: normalizeInputDate(payload.Deadline),
+        PublishDate: normalizeInputDate(payload.PublishDate),
+        ExpiryDate: normalizeInputDate(payload.ExpiryDate),
         ShowDeadline: payload.ShowDeadline || "",
         AttachmentURLs: payload.AttachmentURLs || payload.Attachments || payload.AttachmentURL || "",
         Attachments: payload.AttachmentURLs || payload.Attachments || payload.AttachmentURL || "",
@@ -817,6 +822,36 @@
 
   function isPublished(row) {
     return String(row.Publish || row.Published || "YES").trim().toUpperCase() !== "NO";
+  }
+
+  function isAnnouncementActiveToday(row) {
+    const todayKey = getManilaDateKey(new Date());
+    const publishKey = getDateKey(row.PublishDate || row.ScheduledPublishDate || row.StartDate);
+    const expiryKey = getDateKey(row.ExpiryDate || row.ExpirationDate || row.EndDate);
+    return (!publishKey || todayKey >= publishKey) && (!expiryKey || todayKey < expiryKey);
+  }
+
+  function getManilaDateKey(date) {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: TIMEZONE,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).formatToParts(date);
+    const year = parts.find(part => part.type === "year")?.value || "";
+    const month = parts.find(part => part.type === "month")?.value || "";
+    const day = parts.find(part => part.type === "day")?.value || "";
+    return `${year}-${month}-${day}`;
+  }
+
+  function getDateKey(value) {
+    if (!value) return "";
+    if (typeof value.toDate === "function") return getManilaDateKey(value.toDate());
+    const text = String(value).trim();
+    const isoMatch = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
+    const date = new Date(text);
+    return Number.isFinite(date.getTime()) ? getManilaDateKey(date) : "";
   }
 
   function getCurrentSubject(schedule, now) {

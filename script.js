@@ -28,6 +28,8 @@ let announcementIndex = 0;
 let announcementRotateTimer = null;
 let announcementRotationCount = 0;
 let announcementRotationVersion = 0;
+let announcementRotationPaused = false;
+let announcementRemainingMs = ANNOUNCEMENT_ROTATE_MS;
 let birthdayIndex = 0;
 let isFetching = false;
 let lastBirthdayDisplayKey = "";
@@ -633,6 +635,7 @@ function scrollToCurrentSchedule() {
 }
 
 function renderAnnouncements(items) {
+  items = getActiveAnnouncements(items);
   const box = document.getElementById("announcementList");
   const title = document.getElementById("announcementTitle");
 
@@ -1337,9 +1340,9 @@ function renderAnnouncementPostedChip(item) {
   if (!postedDate) return "";
 
   return `
-    <span class="announcement-posted-chip" aria-label="Posted ${escapeHtml(postedDate)}">
+    <span class="announcement-posted-chip" aria-label="Published ${escapeHtml(postedDate)}">
       <span class="posted-icon">📌</span>
-      <span class="posted-word">Posted</span>
+      <span class="posted-word">Published</span>
       <span class="posted-separator">•</span>
       <span class="posted-date-text">${escapeHtml(postedDate)}</span>
     </span>
@@ -1380,6 +1383,8 @@ function renderAnnouncementMetadata(item) {
 
 function getAnnouncementPostedDate(item) {
   const postedDate = getAnnouncementField(item, [
+    "PublishDate",
+    "Publish Date",
     "Date",
     "PostedDate",
     "DatePosted",
@@ -1525,37 +1530,43 @@ function getAnnouncementTextSizeClass(value) {
 }
 
 function rotateAnnouncements() {
-  if (!latestData || !latestData.announcements || latestData.announcements.length === 0) return;
+  const items = getActiveAnnouncements(latestData?.announcements || []);
+  if (items.length === 0) return;
 
   announcementIndex++;
-  renderAnnouncements(latestData.announcements);
-  resetAnnouncementRotation(latestData.announcements);
+  renderAnnouncements(items);
+  resetAnnouncementRotation(items);
 }
 
 function previousAnnouncement() {
-  if (!latestData || !latestData.announcements || latestData.announcements.length === 0) return;
+  const items = getActiveAnnouncements(latestData?.announcements || []);
+  if (items.length === 0) return;
 
   announcementIndex--;
 
   if (announcementIndex < 0) {
-    announcementIndex = latestData.announcements.length - 1;
+    announcementIndex = items.length - 1;
   }
 
-  renderAnnouncements(latestData.announcements);
-  resetAnnouncementRotation(latestData.announcements);
+  renderAnnouncements(items);
+  resetAnnouncementRotation(items);
 }
 
 function nextAnnouncement() {
-  if (!latestData || !latestData.announcements || latestData.announcements.length === 0) return;
+  const items = getActiveAnnouncements(latestData?.announcements || []);
+  if (items.length === 0) return;
 
   announcementIndex++;
-  renderAnnouncements(latestData.announcements);
-  resetAnnouncementRotation(latestData.announcements);
+  renderAnnouncements(items);
+  resetAnnouncementRotation(items);
 }
 
 function ensureAnnouncementRotation(items) {
-  const total = Array.isArray(items) ? items.length : 0;
-  if (!announcementRotateTimer || announcementRotationCount !== total) {
+  const total = getActiveAnnouncements(items).length;
+  if (
+    announcementRotationCount !== total ||
+    (!announcementRotateTimer && !announcementRotationPaused)
+  ) {
     resetAnnouncementRotation(items);
   }
 }
@@ -1565,7 +1576,8 @@ function resetAnnouncementRotation(items = latestData?.announcements || []) {
   const rotationVersion = announcementRotationVersion;
   window.clearTimeout(announcementRotateTimer);
   announcementRotateTimer = null;
-  announcementRotationCount = Array.isArray(items) ? items.length : 0;
+  announcementRotationCount = getActiveAnnouncements(items).length;
+  announcementRemainingMs = ANNOUNCEMENT_ROTATE_MS;
 
   const progress = document.getElementById("announcementProgress");
   const fill = document.getElementById("announcementProgressFill");
@@ -1574,16 +1586,96 @@ function resetAnnouncementRotation(items = latestData?.announcements || []) {
   progress.classList.toggle("isStatic", announcementRotationCount <= 1);
   fill.style.transition = "none";
   fill.style.width = announcementRotationCount ? (announcementRotationCount === 1 ? "100%" : "0%") : "0%";
+  updateAnnouncementTimerButton();
 
-  if (announcementRotationCount <= 1) return;
+  if (announcementRotationCount <= 1 || announcementRotationPaused) return;
 
   void fill.offsetWidth;
   window.requestAnimationFrame(() => {
     if (rotationVersion !== announcementRotationVersion) return;
-    fill.style.transition = `width ${ANNOUNCEMENT_ROTATE_MS}ms linear`;
+    fill.style.transition = `width ${announcementRemainingMs}ms linear`;
     fill.style.width = "100%";
-    announcementRotateTimer = window.setTimeout(rotateAnnouncements, ANNOUNCEMENT_ROTATE_MS);
+    announcementRotateTimer = window.setTimeout(rotateAnnouncements, announcementRemainingMs);
   });
+}
+
+function toggleAnnouncementRotation() {
+  if (announcementRotationCount <= 1) return;
+
+  const progress = document.getElementById("announcementProgress");
+  const fill = document.getElementById("announcementProgressFill");
+  if (!progress || !fill) return;
+
+  announcementRotationVersion++;
+  window.clearTimeout(announcementRotateTimer);
+  announcementRotateTimer = null;
+
+  if (!announcementRotationPaused) {
+    const trackWidth = Math.max(1, progress.getBoundingClientRect().width);
+    const fillWidth = Math.max(0, fill.getBoundingClientRect().width);
+    const completedRatio = Math.min(1, fillWidth / trackWidth);
+    announcementRemainingMs = Math.max(80, ANNOUNCEMENT_ROTATE_MS * (1 - completedRatio));
+    fill.style.transition = "none";
+    fill.style.width = `${completedRatio * 100}%`;
+    announcementRotationPaused = true;
+    updateAnnouncementTimerButton();
+    return;
+  }
+
+  announcementRotationPaused = false;
+  updateAnnouncementTimerButton();
+  const rotationVersion = announcementRotationVersion;
+  void fill.offsetWidth;
+  window.requestAnimationFrame(() => {
+    if (rotationVersion !== announcementRotationVersion) return;
+    fill.style.transition = `width ${announcementRemainingMs}ms linear`;
+    fill.style.width = "100%";
+    announcementRotateTimer = window.setTimeout(rotateAnnouncements, announcementRemainingMs);
+  });
+}
+
+function updateAnnouncementTimerButton() {
+  const button = document.getElementById("announcementTimerToggle");
+  if (!button) return;
+
+  const paused = announcementRotationPaused;
+  button.disabled = announcementRotationCount <= 1;
+  button.classList.toggle("isPaused", paused);
+  button.setAttribute("aria-pressed", paused ? "true" : "false");
+  button.setAttribute("aria-label", paused ? "Resume announcement timer" : "Pause announcement timer");
+  button.title = paused ? "Resume announcement timer" : "Pause announcement timer";
+  button.innerHTML = paused ? "&#9654;" : "&#10074;&#10074;";
+}
+
+function getActiveAnnouncements(items) {
+  const todayKey = getManilaDateKey(new Date());
+  return (Array.isArray(items) ? items : []).filter(item => {
+    const publishKey = getAnnouncementDateKey(item?.PublishDate || item?.ScheduledPublishDate || item?.StartDate);
+    const expiryKey = getAnnouncementDateKey(item?.ExpiryDate || item?.ExpirationDate || item?.EndDate);
+    return (!publishKey || todayKey >= publishKey) && (!expiryKey || todayKey < expiryKey);
+  });
+}
+
+function getManilaDateKey(date) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(date);
+  const year = parts.find(part => part.type === "year")?.value || "";
+  const month = parts.find(part => part.type === "month")?.value || "";
+  const day = parts.find(part => part.type === "day")?.value || "";
+  return `${year}-${month}-${day}`;
+}
+
+function getAnnouncementDateKey(value) {
+  if (!value) return "";
+  const text = String(value).trim();
+  const isoMatch = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
+  const date = new Date(text);
+  return Number.isFinite(date.getTime()) ? getManilaDateKey(date) : "";
 }
 
 function renderThings(items) {

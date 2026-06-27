@@ -195,8 +195,8 @@ function setTodayForOfficerDateInputs() {
   });
 
   const dateInputs = [
-    "officerAnnouncementDate",
     "officerAnnouncementDeadline",
+    "officerAnnouncementPublishDate",
     "officerThingsDate",
     "officerPrayerDate",
     "officerQuoteDate",
@@ -776,20 +776,27 @@ async function saveOfficerAnnouncement() {
   if (attachmentFiles === null) return;
 
   const payload = {
-    Date: document.getElementById("officerAnnouncementDate").value,
+    Date: document.getElementById("officerAnnouncementPublishDate").value,
     Subject: document.getElementById("officerAnnouncementSubject").value,
     Announcement: announcementText,
     Teacher: document.getElementById("officerAnnouncementTeacher").value,
     OfficerPosition: document.getElementById("officerAnnouncementPosition").value,
     Deadline: document.getElementById("officerAnnouncementDeadline").value,
+    PublishDate: document.getElementById("officerAnnouncementPublishDate").value,
+    ExpiryDate: document.getElementById("officerAnnouncementExpiryDate").value,
     ShowDeadline: document.getElementById("officerAnnouncementShowDeadline").value,
     AttachmentFiles: attachmentFiles,
     Priority: document.getElementById("officerAnnouncementPriority").value,
     Publish: document.getElementById("officerAnnouncementPublish").value
   };
 
-  if (!payload.Date || !payload.Subject || !payload.Announcement || !payload.Teacher || !payload.OfficerPosition) {
-    showOfficerToast("Date, subject, teacher, officer position, and announcement are required.");
+  if (!payload.PublishDate || !payload.Subject || !payload.Announcement || !payload.Teacher || !payload.OfficerPosition) {
+    showOfficerToast("Publish date, subject, teacher, officer position, and announcement are required.");
+    return;
+  }
+
+  if (payload.PublishDate && payload.ExpiryDate && payload.ExpiryDate <= payload.PublishDate) {
+    showOfficerToast("Expiry Date must be after the Publish Date.");
     return;
   }
 
@@ -797,13 +804,14 @@ async function saveOfficerAnnouncement() {
 
   if (saved) {
     clearOfficerFields([
-      "officerAnnouncementDate",
       "officerAnnouncementSubject",
       "officerAnnouncementText",
       "officerAnnouncementFormat",
       "officerAnnouncementAttachments",
       "officerAnnouncementTeacher",
       "officerAnnouncementDeadline",
+      "officerAnnouncementPublishDate",
+      "officerAnnouncementExpiryDate",
       "officerAnnouncementShowDeadline",
       "officerAnnouncementPriority",
       "officerAnnouncementPublish"

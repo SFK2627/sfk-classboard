@@ -208,8 +208,8 @@ function setTodayForDateInputs() {
   });
 
   const dateInputs = [
-    "announcementDate",
     "announcementDeadline",
+    "announcementPublishDate",
     "thingsDate",
     "adviserDate",
     "prayerDate",
@@ -794,19 +794,26 @@ async function saveAnnouncement() {
   if (attachmentFiles === null) return;
 
   const payload = {
-    Date: document.getElementById("announcementDate").value,
+    Date: document.getElementById("announcementPublishDate").value,
     Subject: document.getElementById("announcementSubject").value,
     Announcement: announcementText,
     Teacher: document.getElementById("announcementTeacher").value,
     Deadline: document.getElementById("announcementDeadline").value,
+    PublishDate: document.getElementById("announcementPublishDate").value,
+    ExpiryDate: document.getElementById("announcementExpiryDate").value,
     ShowDeadline: document.getElementById("announcementShowDeadline").value,
     AttachmentFiles: attachmentFiles,
     Priority: document.getElementById("announcementPriority").value,
     Publish: document.getElementById("announcementPublish").value
   };
 
-  if (!payload.Date || !payload.Subject || !payload.Announcement || !payload.Teacher) {
-    showToast("Date, subject, teacher, and announcement are required.");
+  if (!payload.PublishDate || !payload.Subject || !payload.Announcement || !payload.Teacher) {
+    showToast("Publish date, subject, teacher, and announcement are required.");
+    return;
+  }
+
+  if (payload.PublishDate && payload.ExpiryDate && payload.ExpiryDate <= payload.PublishDate) {
+    showToast("Expiry Date must be after the Publish Date.");
     return;
   }
 
@@ -814,13 +821,14 @@ async function saveAnnouncement() {
 
   if (saved) {
     clearFields([
-      "announcementDate",
       "announcementSubject",
       "announcementText",
       "announcementFormat",
       "announcementAttachments",
       "announcementTeacher",
       "announcementDeadline",
+      "announcementPublishDate",
+      "announcementExpiryDate",
       "announcementShowDeadline",
       "announcementPriority",
       "announcementPublish"
@@ -1500,6 +1508,9 @@ function openEditModal(rowNumber) {
 
 	const isId =
 	  lowerHeader === "id";
+    const isAnnouncementScheduleDate =
+      editingRecord.sheetName === "Announcements" &&
+      ["publishdate", "expirydate"].includes(normalizeFieldName(header));
 
     const fieldClass = isLongText ? "editField editFieldFull" : "editField";
 
@@ -1525,6 +1536,20 @@ if (isPublish) {
         <option value="YES" ${String(value).toUpperCase() === "YES" ? "selected" : ""}>YES</option>
         <option value="NO" ${String(value).toUpperCase() === "NO" ? "selected" : ""}>NO</option>
       </select>
+    </div>
+  `;
+}
+
+if (isAnnouncementScheduleDate) {
+  return `
+    <div class="${fieldClass}">
+      <label>${escapeHtml(labelText)}</label>
+      <input
+        class="editInput"
+        type="date"
+        data-index="${index}"
+        value="${escapeAttribute(toDateInputValue(value))}"
+      />
     </div>
   `;
 }
@@ -1936,6 +1961,15 @@ function escapeHtml(value) {
 
 function escapeAttribute(value) {
   return escapeHtml(value).replaceAll("`", "&#096;");
+}
+
+function toDateInputValue(value) {
+  const text = String(value || "").trim();
+  const isoMatch = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
+  const date = new Date(text);
+  if (!Number.isFinite(date.getTime())) return "";
+  return date.toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
 }
 
 function renderTeacherOptions(selectedValue) {

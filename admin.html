@@ -60,8 +60,9 @@
         <div class="formCard">
           <h2>📢 Subject Announcement</h2>
 
-          <label for="announcementDate">Date</label>
-          <input id="announcementDate" type="date" />
+          <label for="announcementPublishDate">Publish Date</label>
+          <input id="announcementPublishDate" type="date" />
+          <small class="fieldHint">This is the displayed date and the first day the announcement will appear.</small>
 
           <label for="announcementSubject">Subject</label>
           <input id="announcementSubject" list="subjectOptions" type="text" placeholder="Select or type subject" />
@@ -148,10 +149,14 @@
             <option value="For Submission">For Submission</option>
           </select>
 
-          <label for="announcementPublish">Publish</label>
+          <label for="announcementExpiryDate">Expiry Date</label>
+          <input id="announcementExpiryDate" type="date" />
+          <small class="fieldHint">First day this announcement will no longer appear. Leave blank for no expiry.</small>
+
+          <label for="announcementPublish">Visibility</label>
           <select id="announcementPublish">
-            <option value="YES">YES</option>
-            <option value="NO">NO</option>
+            <option value="YES">Active / Follow Publish Date</option>
+            <option value="NO">Draft / Hidden</option>
           </select>
 
           <button onclick="saveAnnouncement()">Save Announcement</button>
@@ -461,8 +466,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js?v=1"></script>
-  <script src="firebase-adapter.js?v=8-heart-id-resolution-fix"></script>
+  <script src="firebase-adapter.js?v=14-announcement-schedule"></script>
   <script src="pwa.js?v=14"></script>
-  <script src="admin.js?v=fresh-heart-v2"></script>
+  <script src="admin.js?v=announcement-publish-date"></script>
 </body>
 </html>
