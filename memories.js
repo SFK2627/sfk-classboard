@@ -920,7 +920,10 @@ function renderPostMusic(post) {
   let player = "";
 
   player = music.kind === "youtube-audio"
-    ? `<iframe class="postMusicFrame" src="${escapeAttr(getYouTubeMusicEmbedUrl(music.videoId))}" title="${escapeAttr(musicName)}" loading="lazy" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen data-music-youtube="true" data-post-id="${escapeAttr(post.id)}"></iframe>`
+    ? `<div class="youtubeMusicPopover">
+        <iframe class="postMusicFrame" src="${escapeAttr(getYouTubeMusicEmbedUrl(music.videoId))}" title="${escapeAttr(musicName)}" loading="lazy" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen data-music-youtube="true" data-post-id="${escapeAttr(post.id)}"></iframe>
+        <button class="youtubeMusicClose" type="button" data-action="youtube-music-hide" data-id="${escapeAttr(post.id)}" aria-label="Pause and hide YouTube player">&times;</button>
+      </div>`
     : music.kind === "drive-audio"
     ? `<audio class="postMusicPlayer" ${audible ? "" : "muted"} loop preload="metadata" data-drive-audio="true"></audio>`
     : `
@@ -1032,6 +1035,12 @@ function handleFeedClick(event) {
     return heartMemory(id);
   }
   if (action === "share") return shareMemory(id);
+  if (action === "youtube-music-hide") {
+    const article = target.closest(".memoryPost");
+    const musicButton = article?.querySelector(".musicToggleButton");
+    if (musicButton) return togglePostMusic(id, musicButton);
+    return;
+  }
   if (action === "manage") return openManageActions(id);
   if (action === "view") return openPostViewer(id, Number(target.dataset.index) || 0);
   if (action === "volume") return toggleMediaVolume(id, Number(target.dataset.index) || 0, target);
