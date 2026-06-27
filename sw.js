@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-classboard-v104-memory-heart-outline-shadow";
+const CACHE_NAME = "sfk-classboard-v108-memory-icon-motion-feedback";
 const APP_SHELL = [
   "./",
   "./index.html",

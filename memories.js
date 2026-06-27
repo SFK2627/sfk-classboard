@@ -1176,8 +1176,10 @@ function updateMusicAutoplayButton() {
   const enabled = memoryState.musicAutoplayEnabled;
   button.classList.toggle("isEnabled", enabled);
   button.setAttribute("aria-pressed", enabled ? "true" : "false");
-  const status = button.querySelector("small");
-  if (status) status.textContent = enabled ? "On" : "Off";
+  button.setAttribute(
+    "aria-label",
+    enabled ? "Turn off automatic music playback" : "Turn on automatic music playback"
+  );
   button.title = enabled
     ? "Turn off automatic music playback"
     : "Automatically play music on visible posts";
