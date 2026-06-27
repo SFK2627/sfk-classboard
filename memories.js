@@ -122,7 +122,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function bindMemoryEvents() {
-  ["topPostButton", "sidePostButton", "floatingPostButton"].forEach((id) => {
+  ["topPostButton", "sidePostButton"].forEach((id) => {
     document.getElementById(id)?.addEventListener("click", openComposeModal);
   });
 

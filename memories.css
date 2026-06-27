@@ -961,25 +961,6 @@ select:focus-visible {
   color: var(--muted);
 }
 
-.floatingPostButton {
-  position: fixed;
-  right: 18px;
-  bottom: calc(18px + env(safe-area-inset-bottom));
-  z-index: 80;
-  width: 54px;
-  height: 54px;
-  display: none;
-  place-items: center;
-  border: 3px solid var(--ink);
-  border-radius: 50%;
-  background: var(--gold);
-  color: var(--ink);
-  box-shadow: 4px 4px 0 var(--ink);
-  font-size: 1.8rem;
-  font-weight: 900;
-  cursor: pointer;
-}
-
 .modalLayer {
   position: fixed;
   inset: 0;
@@ -2606,9 +2587,6 @@ textarea {
     border-color: var(--gold);
   }
 
-  .floatingPostButton {
-    display: grid;
-  }
 }
 
 @media (max-width: 540px) {

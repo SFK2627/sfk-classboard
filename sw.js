@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-classboard-v95-announcement-progress-timer";
+const CACHE_NAME = "sfk-classboard-v96-remove-memories-floating-post";
 const APP_SHELL = [
   "./",
   "./index.html",
