@@ -16,6 +16,21 @@ service cloud.firestore {
       return isAdmin() || isOfficer();
     }
 
+    function hasActiveChatProfile() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/chatProfiles/$(request.auth.uid))
+        && get(/databases/$(database)/documents/chatProfiles/$(request.auth.uid)).data.Active == true
+        && get(/databases/$(database)/documents/chatProfiles/$(request.auth.uid)).data.Blocked != true
+        && (
+          !("MustChangePin" in get(/databases/$(database)/documents/chatProfiles/$(request.auth.uid)).data)
+          || get(/databases/$(database)/documents/chatProfiles/$(request.auth.uid)).data.MustChangePin == false
+        );
+    }
+
+    function isChatMember() {
+      return isStaff() || hasActiveChatProfile();
+    }
+
     function isHeartLedgerDocument(docId) {
       return docId.matches("^heartV3_.*")
         && request.resource.data.Kind == "ClassBoardHeartLedgerV3"
@@ -93,6 +108,80 @@ service cloud.firestore {
       allow read: if true;
       allow create, update: if isStaff();
       allow delete: if isAdmin();
+    }
+
+    match /chatProfiles/{userId} {
+      allow get: if isAdmin() || (request.auth != null && request.auth.uid == userId);
+      allow list, create, delete: if isAdmin();
+      allow update: if isAdmin()
+        || (
+          request.auth != null
+          && request.auth.uid == userId
+          && resource.data.MustChangePin == true
+          && request.resource.data.MustChangePin == false
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(["MustChangePin", "UpdatedAt"])
+        );
+    }
+
+    match /chatMessages/{messageId} {
+      allow read: if isChatMember();
+      allow create: if isChatMember()
+        && request.resource.data.SenderUID == request.auth.uid
+        && request.resource.data.SenderName is string
+        && request.resource.data.Text is string
+        && request.resource.data.Text.size() > 0
+        && request.resource.data.Text.size() <= 500
+        && request.resource.data.Removed == false
+        && request.resource.data.keys().hasOnly([
+          "Text", "SenderUID", "SenderName", "SenderRole", "Removed", "CreatedAt",
+          "ReplyToID", "ReplyToName", "ReplyToText"
+        ]);
+      allow update: if isAdmin()
+        || (
+          isChatMember()
+          && resource.data.SenderUID == request.auth.uid
+          && request.time < resource.data.CreatedAt + duration.value(5, "m")
+          && request.resource.data.SenderUID == resource.data.SenderUID
+          && request.resource.data.Removed == true
+          && request.resource.data.Text == ""
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(["Text", "Removed", "RemovedBy", "RemovedAt"])
+        );
+      allow delete: if false;
+
+      match /reactions/{userId} {
+        allow read: if isChatMember();
+        allow create, update: if isChatMember()
+          && request.auth.uid == userId
+          && request.resource.data.UID == request.auth.uid
+          && request.resource.data.Emoji in ["🫶", "👍", "❤️", "😂", "😮", "😢", "🙏", "✅"]
+          && request.resource.data.keys().hasOnly(["Emoji", "UID", "Name", "UpdatedAt"]);
+        allow delete: if isAdmin() || (isChatMember() && request.auth.uid == userId);
+      }
+    }
+
+    match /chatTyping/{userId} {
+      allow read: if isChatMember();
+      allow create, update: if isChatMember()
+        && request.auth.uid == userId
+        && request.resource.data.UID == request.auth.uid
+        && request.resource.data.keys().hasOnly(["UID", "Name", "ExpiresAt"]);
+      allow delete: if isAdmin() || (isChatMember() && request.auth.uid == userId);
+    }
+
+    match /chatReadReceipts/{userId} {
+      allow read: if isChatMember();
+      allow create, update: if isChatMember()
+        && request.auth.uid == userId
+        && request.resource.data.UID == request.auth.uid
+        && request.resource.data.keys().hasOnly(["UID", "Name", "LastSeenAt"]);
+      allow delete: if isAdmin();
+    }
+
+    match /chatModerationLogs/{logId} {
+      allow read, create: if isAdmin();
+      allow update, delete: if false;
     }
 
     match /{document=**} {

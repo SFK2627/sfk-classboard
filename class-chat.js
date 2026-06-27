@@ -24,6 +24,8 @@
   let typingTimer = null;
   let typingClearTimer = null;
   let messageGesture = null;
+  let lastTouchTap = { messageId: "", time: 0 };
+  let lastTouchDoubleAt = 0;
 
   const elements = {};
 
@@ -589,6 +591,7 @@
   function handleMessageDoubleClick(event) {
     const article = event.target.closest(".classChatMessage");
     if (!article || event.target.closest("button")) return;
+    if (Date.now() - lastTouchDoubleAt < 650) return;
     showQuickHeart(article);
     reactToMessage(article.dataset.messageId, "🫶");
   }
@@ -604,14 +607,17 @@
       startY: event.clientY,
       pointerId: event.pointerId,
       pointerType: event.pointerType,
-      translated: false
+      translated: false,
+      longPressed: false
     };
     if (event.pointerType === "mouse") return;
     window.clearTimeout(longPressTimer);
     longPressTimer = window.setTimeout(() => {
+      if (!messageGesture || messageGesture.messageId !== article.dataset.messageId) return;
+      messageGesture.longPressed = true;
       showReactionTray(article.dataset.messageId, article.querySelector(".classChatBubble"));
       navigator.vibrate?.(24);
-    }, 520);
+    }, 440);
   }
 
   function moveMessageGesture(event) {
@@ -647,7 +653,31 @@
         setReply(message);
         navigator.vibrate?.(18);
       }
+      return;
     }
+
+    if (gesture.pointerType !== "mouse" && !gesture.translated && !gesture.longPressed) {
+      handleTouchTap(gesture);
+    }
+  }
+
+  function handleTouchTap(gesture) {
+    const now = Date.now();
+    const isDoubleTap = lastTouchTap.messageId === gesture.messageId
+      && now - lastTouchTap.time <= 320;
+
+    if (!isDoubleTap) {
+      lastTouchTap = { messageId: gesture.messageId, time: now };
+      return;
+    }
+
+    lastTouchTap = { messageId: "", time: 0 };
+    lastTouchDoubleAt = now;
+    const message = findMessage(gesture.messageId);
+    if (!message || message.Removed) return;
+    showQuickHeart(gesture.article);
+    reactToMessage(gesture.messageId, "🫶");
+    navigator.vibrate?.([18, 22, 18]);
   }
 
   function cancelMessageGesture() {

@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-classboard-v116-ig-style-chat";
+const CACHE_NAME = "sfk-classboard-v119-reaction-overlay";
 const APP_SHELL = [
   "./",
   "./index.html",

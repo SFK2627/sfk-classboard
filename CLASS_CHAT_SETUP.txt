@@ -1,0 +1,29 @@
+SFK CLASS CHAT - ONE-TIME SETUP
+
+1. Replace the supplied website files in GitHub.
+
+2. Firebase Console > Build > Authentication > Sign-in method:
+   Make sure Email/Password is enabled.
+
+3. Firebase Console > Build > Firestore Database > Rules:
+   Replace the current rules with FIREBASE_RULES.txt, then click Publish.
+
+4. Open the deployed Admin page and log in.
+   Open "Class Chat Students".
+
+5. Add students one per line:
+   Student ID | Full Name
+
+   Example:
+   20260001 | Juan Dela Cruz
+   20260002 | Maria Santos
+
+6. Click "Create Chat Accounts".
+
+Students open the chat icon beside Adviser Reminders and use their Student ID
+plus the default PIN 123456. On first login, they must replace it with their
+own 6-digit PIN before entering the class conversation.
+
+The no-billing version cannot reset another Firebase user's forgotten PIN from
+the Admin page. Firebase Admin SDK or a real recovery email is required for that.
+Adviser/Admin can remove any message inside the chat.
