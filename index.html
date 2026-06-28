@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
   <link rel="stylesheet" href="style.css?v=74-clock-access-menu" />
-  <link rel="stylesheet" href="class-chat.css?v=36-menu-over-watch-party" />
+  <link rel="stylesheet" href="class-chat.css?v=37-drive-fullscreen-watch-party" />
   <script src="orientation-lock.js?v=3-phone-device-lock" defer></script>
 
   <style id="sfkStartIntroStyle">
@@ -853,6 +853,10 @@
             <span><strong>Watch Party</strong><small>Allows synchronized viewing and student host requests.</small></span>
             <input id="classChatWatchToggle" type="checkbox" checked />
           </label>
+          <label class="classChatControlRow">
+            <span><strong>Watch Party fullscreen</strong><small>Allows members to expand the shared video to fullscreen.</small></span>
+            <input id="classChatWatchFullscreenToggle" type="checkbox" checked />
+          </label>
           <label for="classChatBlockedKeywords">Blocked keywords</label>
           <textarea id="classChatBlockedKeywords" rows="4" placeholder="Enter words separated by commas or new lines"></textarea>
           <button type="submit">Save chat controls</button>
@@ -1065,6 +1069,7 @@
               </div>
             </div>
             <button id="classChatWatchJoin" class="classChatWatchJoin" type="button" hidden>Join Watch Party</button>
+            <button id="classChatWatchFullscreen" class="classChatWatchFullscreen" type="button" hidden aria-label="Enter fullscreen" title="Fullscreen">&#x26F6;</button>
           </div>
 
           <div id="classChatWatchNow" class="classChatWatchNow" hidden>
@@ -1089,7 +1094,7 @@
           <section class="classChatWatchRequestCard">
             <div>
               <strong>Request to Host</strong>
-              <small>Submit a YouTube, TikTok, or Instagram link for approval.</small>
+              <small>Submit a YouTube, TikTok, Instagram, or public Google Drive video link.</small>
             </div>
             <form id="classChatWatchRequestForm">
               <input id="classChatWatchUrl" type="url" maxlength="2000" placeholder="Paste video link" required />
@@ -1168,7 +1173,7 @@
   <script src="firebase-config.js?v=2-secure-auth"></script>
   <script src="firebase-adapter.js?v=15-secure-auth"></script>
   <script src="script.js?v=73-clock-access-menu"></script>
-  <script src="class-chat.js?v=36-watch-party-room"></script>
+  <script src="class-chat.js?v=37-drive-fullscreen-watch-party"></script>
   <script src="pwa.js?v=3"></script>
 </body>
 </html>

@@ -2115,6 +2115,44 @@
   backdrop-filter: blur(2px);
 }
 
+.classChatWatchFullscreen {
+  position: absolute;
+  right: 9px;
+  bottom: 9px;
+  z-index: 4;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, .45);
+  border-radius: 50%;
+  padding: 0;
+  background: rgba(17, 17, 17, .72);
+  color: #fff;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+}
+
+.classChatWatchFullscreen:hover,
+.classChatWatchFullscreen.is-active {
+  background: #f7c600;
+  color: #111;
+}
+
+.classChatWatchStage:fullscreen,
+.classChatWatchStage:-webkit-full-screen {
+  width: 100vw;
+  height: 100vh;
+  max-height: none;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  aspect-ratio: auto;
+  background: #000;
+}
+
 .classChatWatchNow {
   display: flex;
   align-items: center;

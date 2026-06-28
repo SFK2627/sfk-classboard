@@ -116,6 +116,9 @@
     elements.watchQueueList.addEventListener("click", handleWatchQueueAction);
     elements.watchControls.addEventListener("click", handleWatchControls);
     elements.watchSeek.addEventListener("change", handleWatchSeek);
+    elements.watchFullscreen.addEventListener("click", toggleWatchFullscreen);
+    document.addEventListener("fullscreenchange", syncWatchFullscreenButton);
+    document.addEventListener("webkitfullscreenchange", syncWatchFullscreenButton);
     elements.themeToggle.addEventListener("click", toggleChatTheme);
     elements.fontSizeToggle.addEventListener("click", cycleChatFontSize);
     elements.searchOpen.addEventListener("click", () => openUtility("search"));
@@ -257,6 +260,7 @@
     elements.linksToggle = document.getElementById("classChatLinksToggle");
     elements.mediaToggle = document.getElementById("classChatMediaToggle");
     elements.watchToggle = document.getElementById("classChatWatchToggle");
+    elements.watchFullscreenToggle = document.getElementById("classChatWatchFullscreenToggle");
     elements.blockedKeywords = document.getElementById("classChatBlockedKeywords");
     elements.login = document.getElementById("classChatLogin");
     elements.room = document.getElementById("classChatRoom");
@@ -296,6 +300,7 @@
     elements.watchStage = document.getElementById("classChatWatchStage");
     elements.watchPlayer = document.getElementById("classChatWatchPlayer");
     elements.watchJoin = document.getElementById("classChatWatchJoin");
+    elements.watchFullscreen = document.getElementById("classChatWatchFullscreen");
     elements.watchNow = document.getElementById("classChatWatchNow");
     elements.watchNowTitle = document.getElementById("classChatWatchNowTitle");
     elements.watchHost = document.getElementById("classChatWatchHost");
@@ -562,6 +567,7 @@
       elements.linksToggle.checked = currentConfig.ClickableLinksEnabled !== false;
       elements.mediaToggle.checked = currentConfig.AllowMedia !== false;
       elements.watchToggle.checked = currentConfig.WatchPartyEnabled !== false;
+      elements.watchFullscreenToggle.checked = currentConfig.WatchPartyFullscreenAllowed !== false;
       elements.blockedKeywords.value = Array.isArray(currentConfig.BlockedKeywords)
         ? currentConfig.BlockedKeywords.join(", ")
         : "";
@@ -1076,7 +1082,8 @@
         BlockedKeywords: Array.isArray(snapshot.data()?.BlockedKeywords) ? snapshot.data().BlockedKeywords : [],
         ClickableLinksEnabled: snapshot.data()?.ClickableLinksEnabled !== false,
         AllowMedia: snapshot.data()?.AllowMedia !== false,
-        WatchPartyEnabled: snapshot.data()?.WatchPartyEnabled !== false
+        WatchPartyEnabled: snapshot.data()?.WatchPartyEnabled !== false,
+        WatchPartyFullscreenAllowed: snapshot.data()?.WatchPartyFullscreenAllowed !== false
       };
       applyChatConfig();
       if (previousLinkSetting !== undefined
@@ -1297,6 +1304,12 @@
     if (currentConfig.AllowMedia === false && !elements.mediaForm.hidden) closeUtility();
     elements.watchOpen.hidden = !currentProfile || currentConfig.WatchPartyEnabled === false;
     if (currentConfig.WatchPartyEnabled === false && !elements.watchRoom.hidden) closeWatchParty();
+    if (currentConfig.WatchPartyFullscreenAllowed === false
+        && (document.fullscreenElement || document.webkitFullscreenElement) === elements.watchStage) {
+      if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+    }
+    if (!elements.watchRoom.hidden) renderWatchParty();
     elements.input.placeholder = restricted
       ? currentConfig.Locked
         ? "Conversation locked by the Adviser"
@@ -1856,7 +1869,9 @@
     elements.watchEnd.hidden = !active || !canControlWatchParty();
     elements.watchNow.hidden = !active;
     elements.watchControls.hidden = !active || !canControlWatchParty()
-      || currentWatchParty.Provider === "instagram";
+      || currentWatchParty.Provider === "instagram"
+      || currentWatchParty.Provider === "drive";
+    elements.watchFullscreen.hidden = !active || currentConfig.WatchPartyFullscreenAllowed === false;
     elements.watchRequestForm.querySelector("button").textContent = isWatchStaff()
       ? "Start Watch Party"
       : "Send request";
@@ -1879,16 +1894,18 @@
     }
 
     const provider = String(currentWatchParty.Provider || "video");
-    const isInstagram = provider === "instagram";
+    const usesIndependentPlayer = provider === "instagram" || provider === "drive";
     elements.watchStatus.textContent = currentWatchParty.PlaybackState === "playing"
       ? `Playing with ${currentWatchParty.HostName || "SFK"}`
-      : `Paused by ${currentWatchParty.HostName || "SFK"}`;
+      : usesIndependentPlayer
+        ? `Viewing with ${currentWatchParty.HostName || "SFK"}`
+        : `Paused by ${currentWatchParty.HostName || "SFK"}`;
     elements.watchNowTitle.textContent = currentWatchParty.Title || "Watch Party";
     elements.watchHost.textContent = `Hosted by ${currentWatchParty.HostName || "SFK"}`;
     elements.watchProvider.textContent = provider.toUpperCase();
     elements.watchStage.classList.remove("is-empty");
     elements.watchStage.dataset.provider = provider;
-    elements.watchJoin.hidden = isInstagram || watchJoined;
+    elements.watchJoin.hidden = usesIndependentPlayer || watchJoined;
     elements.watchPlayPause.innerHTML = currentWatchParty.PlaybackState === "playing" ? "&#10074;&#10074;" : "&#9654;";
     if (!elements.watchRoom.hidden) ensureWatchPlayer();
     updateWatchTimeDisplay();
@@ -1910,7 +1927,7 @@
     watchPlayerProvider = provider;
     watchPlayerTime = Number(currentWatchParty.Position || 0);
     watchPlayerDuration = 0;
-    watchJoined = provider === "instagram";
+    watchJoined = provider === "instagram" || provider === "drive";
 
     const iframe = document.createElement("iframe");
     iframe.className = "classChatWatchFrame";
@@ -1924,10 +1941,14 @@
     } else if (provider === "tiktok") {
       iframe.src = `https://www.tiktok.com/player/v1/${videoId}?controls=0&play_button=0&progress_bar=0&volume_control=1&fullscreen_button=1&description=0&music_info=0&rel=0&autoplay=0`;
       iframe.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
+    } else if (provider === "drive") {
+      iframe.src = `https://drive.google.com/file/d/${videoId}/preview`;
+      iframe.allow = "autoplay; encrypted-media; fullscreen";
     } else {
       iframe.src = `https://www.instagram.com/${instagramType}/${videoId}/embed/`;
       iframe.allow = "autoplay; encrypted-media; picture-in-picture";
     }
+    iframe.setAttribute("allowfullscreen", "");
     iframe.addEventListener("load", () => {
       window.setTimeout(() => applyWatchStateToPlayer(true), 180);
     });
@@ -1989,7 +2010,10 @@
   }
 
   function applyWatchStateToPlayer(force) {
-    if (!currentWatchParty?.Active || !watchPlayer || currentWatchParty.Provider === "instagram") return;
+    if (!currentWatchParty?.Active
+        || !watchPlayer
+        || currentWatchParty.Provider === "instagram"
+        || currentWatchParty.Provider === "drive") return;
     const target = watchTargetPosition();
     const drift = Math.abs(Number(watchPlayerTime || 0) - target);
     suppressWatchPlayerEvents = true;
@@ -2069,6 +2093,32 @@
     elements.watchTime.textContent = `${formatWatchTime(position)} / ${watchPlayerDuration ? formatWatchTime(watchPlayerDuration) : "--:--"}`;
   }
 
+  async function toggleWatchFullscreen() {
+    if (!currentWatchParty?.Active || currentConfig.WatchPartyFullscreenAllowed === false) return;
+    const fullscreenElement = document.fullscreenElement || document.webkitFullscreenElement;
+    try {
+      if (fullscreenElement) {
+        if (document.exitFullscreen) await document.exitFullscreen();
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      } else if (elements.watchStage.requestFullscreen) {
+        await elements.watchStage.requestFullscreen();
+      } else if (elements.watchStage.webkitRequestFullscreen) {
+        elements.watchStage.webkitRequestFullscreen();
+      } else {
+        throw new Error("Fullscreen is not supported by this browser.");
+      }
+    } catch (error) {
+      window.alert(readableError(error));
+    }
+  }
+
+  function syncWatchFullscreenButton() {
+    const active = (document.fullscreenElement || document.webkitFullscreenElement) === elements.watchStage;
+    elements.watchFullscreen.classList.toggle("is-active", active);
+    elements.watchFullscreen.setAttribute("aria-label", active ? "Exit fullscreen" : "Enter fullscreen");
+    elements.watchFullscreen.title = active ? "Exit fullscreen" : "Fullscreen";
+  }
+
   function formatWatchTime(value) {
     const seconds = Math.max(0, Math.floor(Number(value || 0)));
     const minutes = Math.floor(seconds / 60);
@@ -2092,7 +2142,9 @@
         url
       };
     }
-    throw new Error("Use a YouTube, TikTok, or Instagram video link.");
+    const driveId = googleDriveFileId(url);
+    if (driveId) return { provider: "drive", videoId: driveId, url };
+    throw new Error("Use a YouTube, TikTok, Instagram, or public Google Drive video link.");
   }
 
   async function submitWatchRequest(event) {
@@ -3235,6 +3287,7 @@
         ClickableLinksEnabled: elements.linksToggle.checked,
         AllowMedia: elements.mediaToggle.checked,
         WatchPartyEnabled: elements.watchToggle.checked,
+        WatchPartyFullscreenAllowed: elements.watchFullscreenToggle.checked,
         BlockedKeywords: String(elements.blockedKeywords.value || "")
           .split(/[,\n]/)
           .map((word) => word.trim().toLowerCase())
