@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
   <link rel="stylesheet" href="style.css?v=74-clock-access-menu" />
-  <link rel="stylesheet" href="class-chat.css?v=39-public-links-watch-party" />
+  <link rel="stylesheet" href="class-chat.css?v=40-admin-audit-history" />
   <script src="orientation-lock.js?v=4-watch-party-landscape" defer></script>
 
   <style id="sfkStartIntroStyle">
@@ -763,6 +763,12 @@
           <span class="classChatMenuIcon" aria-hidden="true">Aa</span>
           <span id="classChatFontSizeLabel">Text size: Default</span>
         </button>
+        <button id="classChatMoreToggle" class="classChatMoreToggle" type="button" hidden aria-expanded="false">
+          <span class="classChatMenuIcon" aria-hidden="true">&#9776;</span>
+          <span>More tools</span>
+          <b aria-hidden="true">&#9662;</b>
+        </button>
+        <div id="classChatMoreTools" class="classChatMenuMore" hidden>
         <button id="classChatSearchOpen" type="button">
           <span class="classChatMenuIcon" aria-hidden="true">&#8981;</span>
           <span>Search messages</span>
@@ -791,6 +797,11 @@
           <span class="classChatMenuIcon" aria-hidden="true">&#9873;</span>
           <span>Reported messages</span>
         </button>
+        <button id="classChatAuditOpen" type="button" hidden>
+          <span class="classChatMenuIcon" aria-hidden="true">&#9201;</span>
+          <span>Activity history</span>
+        </button>
+        </div>
         <button id="classChatLeave" type="button">
           <span class="classChatMenuIcon" aria-hidden="true">&#8594;</span>
           <span>Leave chat</span>
@@ -935,6 +946,23 @@
         <div id="classChatReportsPanel" class="classChatUtilityBody" hidden>
           <p class="classChatUtilityHint">Private reports visible only to the Adviser/Admin.</p>
           <div id="classChatReportsResults" class="classChatSearchResults"></div>
+        </div>
+
+        <div id="classChatAuditPanel" class="classChatUtilityBody classChatAuditPanel" hidden>
+          <div class="classChatAuditFilters">
+            <label class="classChatSearchBox">
+              <span aria-hidden="true">&#8981;</span>
+              <input id="classChatAuditSearch" type="search" placeholder="Search person or message..." autocomplete="off" />
+            </label>
+            <select id="classChatAuditType" aria-label="Filter activity type">
+              <option value="all">All activity</option>
+              <option value="message">Messages</option>
+              <option value="reaction">Reactions</option>
+              <option value="moderation">Deleted / moderation</option>
+            </select>
+          </div>
+          <p class="classChatUtilityHint">Admin-only history. Deleted message content remains visible here.</p>
+          <div id="classChatAuditResults" class="classChatAuditResults"></div>
         </div>
 
         <form id="classChatMediaPanel" class="classChatUtilityBody classChatPollPanel" hidden>
@@ -1173,7 +1201,7 @@
   <script src="firebase-config.js?v=2-secure-auth"></script>
   <script src="firebase-adapter.js?v=15-secure-auth"></script>
   <script src="script.js?v=73-clock-access-menu"></script>
-  <script src="class-chat.js?v=43-role-aware-watch-form"></script>
+  <script src="class-chat.js?v=44-admin-audit-history"></script>
   <script src="pwa.js?v=3"></script>
 </body>
 </html>

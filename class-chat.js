@@ -41,6 +41,7 @@
   let scheduledRefreshTimer = null;
   let watchPartyUnsubscribe = null;
   let watchRequestsUnsubscribe = null;
+  let auditUnsubscribe = null;
   let watchSyncTimer = null;
   let scheduledMessagesSignature = "";
   const pollVoteUnsubscribes = new Map();
@@ -51,6 +52,7 @@
   let regularMessages = [];
   let scheduledMessages = [];
   let searchMessages = [];
+  let auditEntries = [];
   let chatDirectory = [];
   let readReceipts = [];
   let savedMessageIds = new Set();
@@ -123,6 +125,7 @@
     document.addEventListener("webkitfullscreenchange", syncWatchFullscreenButton);
     elements.themeToggle.addEventListener("click", toggleChatTheme);
     elements.fontSizeToggle.addEventListener("click", cycleChatFontSize);
+    elements.moreToggle.addEventListener("click", toggleMoreTools);
     elements.searchOpen.addEventListener("click", () => openUtility("search"));
     elements.savedOpen.addEventListener("click", () => openUtility("saved"));
     elements.colorOpen.addEventListener("click", () => openUtility("color"));
@@ -130,11 +133,14 @@
     elements.controlsOpen.addEventListener("click", () => openUtility("controls"));
     elements.scheduleOpen.addEventListener("click", () => openUtility("schedule"));
     elements.reportsOpen.addEventListener("click", () => openUtility("reports"));
+    elements.auditOpen.addEventListener("click", () => openUtility("audit"));
     elements.leave.addEventListener("click", requestCloseChat);
     elements.exitNo.addEventListener("click", hideExitDialog);
     elements.exitYes.addEventListener("click", closeChat);
     elements.utilityBack.addEventListener("click", closeUtility);
     elements.searchInput.addEventListener("input", renderSearchResults);
+    elements.auditSearch.addEventListener("input", renderAuditEntries);
+    elements.auditType.addEventListener("change", renderAuditEntries);
     elements.controlsForm.addEventListener("submit", saveChatControls);
     elements.pollForm.addEventListener("submit", createQuickPoll);
     elements.scheduleForm.addEventListener("submit", scheduleChatMessage);
@@ -207,6 +213,8 @@
     elements.themeLabel = elements.themeToggle?.querySelector(".classChatMenuLabel");
     elements.fontSizeToggle = document.getElementById("classChatFontSizeToggle");
     elements.fontSizeLabel = document.getElementById("classChatFontSizeLabel");
+    elements.moreToggle = document.getElementById("classChatMoreToggle");
+    elements.moreTools = document.getElementById("classChatMoreTools");
     elements.leave = document.getElementById("classChatLeave");
     elements.searchOpen = document.getElementById("classChatSearchOpen");
     elements.savedOpen = document.getElementById("classChatSavedOpen");
@@ -217,6 +225,7 @@
     elements.controlsOpen = document.getElementById("classChatControlsOpen");
     elements.scheduleOpen = document.getElementById("classChatScheduleOpen");
     elements.reportsOpen = document.getElementById("classChatReportsOpen");
+    elements.auditOpen = document.getElementById("classChatAuditOpen");
     elements.utility = document.getElementById("classChatUtility");
     elements.utilityBack = document.getElementById("classChatUtilityBack");
     elements.utilityTitle = document.getElementById("classChatUtilityTitle");
@@ -249,6 +258,10 @@
     elements.scheduleMessage = document.getElementById("classChatScheduleMessage");
     elements.reportsPanel = document.getElementById("classChatReportsPanel");
     elements.reportsResults = document.getElementById("classChatReportsResults");
+    elements.auditPanel = document.getElementById("classChatAuditPanel");
+    elements.auditSearch = document.getElementById("classChatAuditSearch");
+    elements.auditType = document.getElementById("classChatAuditType");
+    elements.auditResults = document.getElementById("classChatAuditResults");
     elements.mediaForm = document.getElementById("classChatMediaPanel");
     elements.mediaUrl = document.getElementById("classChatMediaUrl");
     elements.mediaType = document.getElementById("classChatMediaType");
@@ -450,6 +463,15 @@
   function closeChatMenu() {
     elements.menu.hidden = true;
     elements.logout.setAttribute("aria-expanded", "false");
+    elements.moreTools.hidden = true;
+    elements.moreToggle.setAttribute("aria-expanded", "false");
+  }
+
+  function toggleMoreTools(event) {
+    event.stopPropagation();
+    const willOpen = elements.moreTools.hidden;
+    elements.moreTools.hidden = !willOpen;
+    elements.moreToggle.setAttribute("aria-expanded", String(willOpen));
   }
 
   function handleOutsideChatMenu(event) {
@@ -552,6 +574,7 @@
     elements.colorForm.hidden = type !== "color";
     elements.scheduleForm.hidden = type !== "schedule";
     elements.reportsPanel.hidden = type !== "reports";
+    elements.auditPanel.hidden = type !== "audit";
     elements.mediaForm.hidden = type !== "media";
 
     if (type === "search") {
@@ -601,6 +624,12 @@
       elements.utilityTitle.textContent = "Reported messages";
       loadReportedMessages();
     }
+    if (type === "audit") {
+      elements.utilityTitle.textContent = "Activity history";
+      startAuditListener();
+    } else {
+      stopAuditListener();
+    }
     if (type === "media") {
       elements.utilityTitle.textContent = "Send media";
       elements.mediaMessage.textContent = "";
@@ -610,6 +639,7 @@
 
   function closeUtility() {
     elements.utility.hidden = true;
+    stopAuditListener();
   }
 
   async function loadSearchMessages() {
@@ -673,6 +703,7 @@
     elements.room.hidden = true;
     elements.logout.hidden = false;
     elements.watchOpen.hidden = true;
+    elements.moreToggle.hidden = true;
     elements.searchOpen.hidden = true;
     elements.savedOpen.hidden = true;
     elements.colorOpen.hidden = true;
@@ -680,6 +711,7 @@
     elements.controlsOpen.hidden = true;
     elements.scheduleOpen.hidden = true;
     elements.reportsOpen.hidden = true;
+    elements.auditOpen.hidden = true;
     elements.status.textContent = "Sign in to join the conversation";
     elements.messages.innerHTML = "";
     elements.studentPin.value = "";
@@ -700,6 +732,7 @@
     elements.room.hidden = false;
     elements.logout.hidden = false;
     elements.watchOpen.hidden = currentConfig.WatchPartyEnabled === false;
+    elements.moreToggle.hidden = false;
     elements.searchOpen.hidden = false;
     elements.savedOpen.hidden = false;
     elements.colorOpen.hidden = currentProfile.role !== "student";
@@ -709,6 +742,7 @@
     elements.pollOpen.hidden = false;
     elements.scheduleOpen.hidden = currentProfile.role !== "admin";
     elements.reportsOpen.hidden = currentProfile.role !== "admin";
+    elements.auditOpen.hidden = currentProfile.role !== "admin";
     unreadDividerAfter = getStoredNumber(CHAT_LAST_TIME_KEY);
     elements.loginMessage.textContent = "";
     startRealtimeListeners();
@@ -1201,6 +1235,7 @@
     if (scheduledUnsubscribe) scheduledUnsubscribe();
     if (watchPartyUnsubscribe) watchPartyUnsubscribe();
     if (watchRequestsUnsubscribe) watchRequestsUnsubscribe();
+    stopAuditListener();
     window.clearInterval(scheduledRefreshTimer);
     window.clearInterval(watchSyncTimer);
     messagesUnsubscribe = null;
@@ -2513,6 +2548,12 @@
     };
     const batch = db.batch();
     batch.set(db.collection("chatWatchParty").doc("main"), party);
+    addAuditToBatch(batch, "WATCH_PARTY_STARTED", {
+      TargetUID: request.RequesterUID || "",
+      TargetName: request.RequesterName || "",
+      Text: party.Title,
+      MediaType: party.Provider
+    });
     if (requestId) {
       batch.update(db.collection("chatWatchRequests").doc(requestId), {
         Status: "approved",
@@ -2526,14 +2567,22 @@
 
   async function endWatchParty() {
     if (!canControlWatchParty()) return;
-    await db.collection("chatWatchParty").doc("main").update({
+    const batch = db.batch();
+    batch.update(db.collection("chatWatchParty").doc("main"), {
       Active: false,
       PlaybackState: "paused",
       Position: watchPlayerTime || watchTargetPosition(),
       EndedBy: currentProfile.uid,
       EndedAt: firebase.firestore.FieldValue.serverTimestamp(),
       UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }).catch((error) => {
+    });
+    addAuditToBatch(batch, "WATCH_PARTY_ENDED", {
+      TargetUID: currentWatchParty.HostUID || "",
+      TargetName: currentWatchParty.HostName || "",
+      Text: currentWatchParty.Title || "Watch Party",
+      MediaType: currentWatchParty.Provider || ""
+    });
+    await batch.commit().catch((error) => {
       window.alert(readableError(error));
     });
   }
@@ -2632,11 +2681,21 @@
     elements.send.disabled = true;
     try {
       if (editTarget) {
-        await db.collection("chatMessages").doc(editTarget.id).update({
+        const batch = db.batch();
+        const messageRef = db.collection("chatMessages").doc(editTarget.id);
+        batch.update(messageRef, {
           Text: text,
           Edited: true,
           EditedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
+        addAuditToBatch(batch, "MESSAGE_EDITED", {
+          MessageID: editTarget.id,
+          TargetUID: editTarget.SenderUID || currentProfile.uid,
+          TargetName: editTarget.SenderName || currentProfile.name,
+          PreviousText: editTarget.Text || "",
+          NewText: text
+        });
+        await batch.commit();
         elements.input.value = "";
         resizeComposer();
         clearReply();
@@ -2717,8 +2776,39 @@
       TotalMessages: firebase.firestore.FieldValue.increment(1),
       LatestAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
+    const event = payload.Type === "poll"
+      ? "POLL_SENT"
+      : payload.MediaType ? "MEDIA_SENT" : "MESSAGE_SENT";
+    addAuditToBatch(batch, event, {
+      MessageID: messageRef.id,
+      TargetUID: payload.SenderUID || currentProfile.uid,
+      TargetName: payload.SenderName || currentProfile.name,
+      Text: payload.Text || "",
+      MediaType: payload.MediaType || ""
+    });
     await batch.commit();
     return messageRef.id;
+  }
+
+  function addAuditToBatch(batch, event, details = {}) {
+    const auditRef = db.collection("chatAuditLogs").doc();
+    const payload = {
+      Event: event,
+      ActorUID: currentProfile.uid,
+      ActorName: currentProfile.name,
+      ActorRole: currentProfile.role,
+      CreatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    [
+      "MessageID", "TargetUID", "TargetName", "Text", "PreviousText",
+      "NewText", "Emoji", "PreviousEmoji", "MediaType", "Details"
+    ].forEach((key) => {
+      if (details[key] !== undefined && details[key] !== "") {
+        payload[key] = String(details[key]).slice(0, 2000);
+      }
+    });
+    batch.set(auditRef, payload);
+    return auditRef;
   }
 
   function handleComposerInput() {
@@ -3205,6 +3295,7 @@
 
   async function reactToMessage(messageId, emoji, animationSource = null) {
     if (!REACTIONS.includes(emoji) || !currentProfile) return;
+    const previousEmoji = currentUserReaction(messageId);
     const removingIntent = isRemovingOwnReaction(messageId, emoji);
     if (animationSource) {
       if (removingIntent) animateReactionRemoval(messageId, emoji);
@@ -3219,16 +3310,30 @@
 
     const ref = db.collection("chatMessages").doc(messageId).collection("reactions").doc(currentProfile.uid);
     try {
+      const batch = db.batch();
       if (optimistic.removed) {
-        await ref.delete();
+        batch.delete(ref);
       } else {
-        await ref.set({
+        batch.set(ref, {
           Emoji: emoji,
           UID: currentProfile.uid,
           Name: currentProfile.name,
           UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
       }
+      const message = findMessage(messageId);
+      const event = optimistic.removed
+        ? "REACTION_REMOVED"
+        : previousEmoji ? "REACTION_CHANGED" : "REACTION_ADDED";
+      addAuditToBatch(batch, event, {
+        MessageID: messageId,
+        TargetUID: message?.SenderUID || "",
+        TargetName: message?.SenderName || "",
+        Text: message?.Text || "",
+        Emoji: optimistic.removed ? "" : emoji,
+        PreviousEmoji: previousEmoji
+      });
+      await batch.commit();
     } catch (error) {
       await loadReactions(messageId);
       window.alert(readableError(error));
@@ -3438,6 +3543,12 @@
         PinnedBy: currentProfile.uid,
         PinnedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
+      addAuditToBatch(batch, message.Pinned ? "MESSAGE_UNPINNED" : "MESSAGE_PINNED", {
+        MessageID: message.id,
+        TargetUID: message.SenderUID || "",
+        TargetName: message.SenderName || "",
+        Text: message.Text || ""
+      });
       await batch.commit();
     } catch (error) {
       window.alert(readableError(error));
@@ -3447,10 +3558,19 @@
   async function togglePriorityMessage(message) {
     if (currentProfile.role !== "admin" || !message || message.IsScheduled) return;
     try {
-      await db.collection("chatMessages").doc(message.id).update({
+      const batch = db.batch();
+      batch.update(db.collection("chatMessages").doc(message.id), {
         Priority: message.Priority !== true,
         PriorityAt: firebase.firestore.FieldValue.serverTimestamp()
       });
+      addAuditToBatch(batch, "PRIORITY_CHANGED", {
+        MessageID: message.id,
+        TargetUID: message.SenderUID || "",
+        TargetName: message.SenderName || "",
+        Text: message.Text || "",
+        Details: message.Priority ? "Changed to normal" : "Marked priority"
+      });
+      await batch.commit();
     } catch (error) {
       window.alert(readableError(error));
     }
@@ -3522,7 +3642,8 @@
     const reason = window.prompt("Why are you reporting this message? You may leave this blank.");
     if (reason === null) return;
     try {
-      await db.collection("chatReports").add({
+      const batch = db.batch();
+      batch.set(db.collection("chatReports").doc(), {
         MessageID: message.id,
         MessageText: message.Text || "",
         SenderUID: message.SenderUID || "",
@@ -3533,6 +3654,14 @@
         Status: "OPEN",
         CreatedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
+      addAuditToBatch(batch, "REPORT_CREATED", {
+        MessageID: message.id,
+        TargetUID: message.SenderUID || "",
+        TargetName: message.SenderName || "",
+        Text: message.Text || "",
+        Details: String(reason || "").trim()
+      });
+      await batch.commit();
       window.alert("The message was privately reported to the Adviser.");
     } catch (error) {
       window.alert(readableError(error));
@@ -3571,14 +3700,131 @@
     }
   }
 
+  function startAuditListener() {
+    if (currentProfile?.role !== "admin" || auditUnsubscribe) return;
+    elements.auditResults.innerHTML = `<p class="classChatAuditEmpty">Loading activity history...</p>`;
+    auditUnsubscribe = db.collection("chatAuditLogs")
+      .orderBy("CreatedAt", "desc")
+      .limit(300)
+      .onSnapshot((snapshot) => {
+        auditEntries = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        renderAuditEntries();
+      }, (error) => {
+        elements.auditResults.innerHTML = `<p class="classChatAuditEmpty">${escapeHtml(readableError(error))}</p>`;
+      });
+  }
+
+  function stopAuditListener() {
+    if (auditUnsubscribe) auditUnsubscribe();
+    auditUnsubscribe = null;
+  }
+
+  function renderAuditEntries() {
+    if (!elements.auditResults) return;
+    const query = String(elements.auditSearch.value || "").trim().toLowerCase();
+    const type = elements.auditType.value || "all";
+    const entries = auditEntries.filter((entry) => {
+      const event = String(entry.Event || "");
+      const category = event.startsWith("REACTION_")
+        ? "reaction"
+        : [
+          "MESSAGE_DELETED", "MESSAGE_PINNED", "MESSAGE_UNPINNED",
+          "PRIORITY_CHANGED", "POLL_CLOSED", "USER_MUTED", "REPORT_CREATED"
+        ].includes(event) ? "moderation" : "message";
+      if (type !== "all" && category !== type) return false;
+      if (!query) return true;
+      return [
+        entry.ActorName, entry.TargetName, entry.Text, entry.PreviousText,
+        entry.NewText, entry.Emoji, entry.PreviousEmoji, event
+      ].join(" ").toLowerCase().includes(query);
+    });
+
+    if (!entries.length) {
+      elements.auditResults.innerHTML = `<p class="classChatAuditEmpty">No matching activity yet.</p>`;
+      return;
+    }
+
+    elements.auditResults.innerHTML = entries.map((entry) => auditEntryMarkup(entry)).join("");
+  }
+
+  function auditEntryMarkup(entry) {
+    const event = String(entry.Event || "ACTIVITY");
+    const labels = {
+      MESSAGE_SENT: ["&#9993;", "sent a message"],
+      POLL_SENT: ["&#9776;", "created a poll"],
+      MEDIA_SENT: ["&#9654;", "shared media"],
+      MESSAGE_EDITED: ["&#9998;", "edited a message"],
+      MESSAGE_DELETED: ["&#9003;", "deleted a message"],
+      REACTION_ADDED: ["&#9825;", "reacted to a message"],
+      REACTION_CHANGED: ["&#9825;", "changed a reaction"],
+      REACTION_REMOVED: ["&#9825;", "removed a reaction"],
+      MESSAGE_PINNED: ["&#128204;", "pinned a message"],
+      MESSAGE_UNPINNED: ["&#128204;", "unpinned a message"],
+      PRIORITY_CHANGED: ["&#9733;", "changed message priority"],
+      POLL_CLOSED: ["&#9632;", "closed a poll"],
+      USER_MUTED: ["&#128263;", "muted a student"],
+      REPORT_CREATED: ["&#9873;", "reported a message"],
+      WATCH_PARTY_STARTED: ["&#9654;", "started a Watch Party"],
+      WATCH_PARTY_ENDED: ["&#9632;", "ended a Watch Party"]
+    };
+    const [icon, action] = labels[event] || ["&#8226;", event.toLowerCase().replaceAll("_", " ")];
+    const actor = entry.ActorName || "Class member";
+    const created = timestampToDate(entry.CreatedAt);
+    const target = entry.TargetName && entry.TargetName !== actor
+      ? ` · ${entry.TargetName}`
+      : "";
+    const summary = event.startsWith("REACTION_")
+      ? `${entry.PreviousEmoji ? `${entry.PreviousEmoji} → ` : ""}${entry.Emoji || entry.PreviousEmoji || ""}${entry.Text ? ` · ${entry.Text}` : ""}`
+      : entry.NewText || entry.Text || entry.Details || entry.MediaType || "Activity recorded";
+    const detailText = event === "MESSAGE_DELETED"
+      ? entry.Text
+      : event === "MESSAGE_EDITED" ? entry.PreviousText : "";
+    const detailLabel = event === "MESSAGE_DELETED" ? "View deleted message" : "View original message";
+
+    return `
+      <article class="classChatAuditItem">
+        <span class="classChatAuditIcon" aria-hidden="true">${icon}</span>
+        <div>
+          <header>
+            <strong>${escapeHtml(actor)} ${escapeHtml(action)}${escapeHtml(target)}</strong>
+            <time>${escapeHtml(formatAuditTime(created))}</time>
+          </header>
+          <p>${escapeHtml(String(summary || "").slice(0, 500))}</p>
+          ${detailText ? `
+            <details>
+              <summary>${detailLabel}</summary>
+              <p>${escapeHtml(String(detailText).slice(0, 1000))}</p>
+            </details>` : ""}
+        </div>
+      </article>`;
+  }
+
+  function formatAuditTime(date) {
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "Just now";
+    return date.toLocaleString([], {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit"
+    });
+  }
+
   async function closePoll(message) {
     if (!message || message.Type !== "poll" || (message.SenderUID !== currentProfile.uid && currentProfile.role !== "admin")) return;
     if (!window.confirm("Close this poll? Voting will stop.")) return;
     try {
-      await db.collection("chatMessages").doc(message.id).update({
+      const batch = db.batch();
+      batch.update(db.collection("chatMessages").doc(message.id), {
         PollClosed: true,
         PollClosedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
+      addAuditToBatch(batch, "POLL_CLOSED", {
+        MessageID: message.id,
+        TargetUID: message.SenderUID || "",
+        TargetName: message.SenderName || "",
+        Text: message.Text || ""
+      });
+      await batch.commit();
     } catch (error) {
       window.alert(readableError(error));
     }
@@ -3588,10 +3834,17 @@
     if (currentProfile.role !== "admin" || message.SenderRole !== "student") return;
     if (!window.confirm(`Mute ${message.SenderName || "this student"} for 10 minutes?`)) return;
     try {
-      await db.collection("chatProfiles").doc(message.SenderUID).update({
+      const batch = db.batch();
+      batch.update(db.collection("chatProfiles").doc(message.SenderUID), {
         MutedUntil: firebase.firestore.Timestamp.fromMillis(Date.now() + 10 * 60 * 1000),
         UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
+      addAuditToBatch(batch, "USER_MUTED", {
+        TargetUID: message.SenderUID || "",
+        TargetName: message.SenderName || "",
+        Details: "Muted for 10 minutes"
+      });
+      await batch.commit();
     } catch (error) {
       window.alert(readableError(error));
     }
@@ -3946,8 +4199,9 @@
 
     const ref = db.collection("chatMessages").doc(message.id);
     try {
+      const batch = db.batch();
       if (canModerate && !own) {
-        await db.collection("chatModerationLogs").add({
+        batch.set(db.collection("chatModerationLogs").doc(), {
           Action: "MESSAGE_REMOVED",
           MessageID: message.id,
           OriginalText: message.Text || "",
@@ -3965,7 +4219,16 @@
         RemovedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
       if (canModerate) removal.Pinned = false;
-      await ref.update(removal);
+      batch.update(ref, removal);
+      addAuditToBatch(batch, "MESSAGE_DELETED", {
+        MessageID: message.id,
+        TargetUID: message.SenderUID || "",
+        TargetName: message.SenderName || "",
+        Text: message.Text || "",
+        MediaType: message.MediaType || "",
+        Details: canModerate && !own ? "Removed by Admin" : "Removed by sender"
+      });
+      await batch.commit();
 
       if (canModerate) {
         const replies = await db.collection("chatMessages").where("ReplyToID", "==", message.id).get();
