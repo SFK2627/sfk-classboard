@@ -41,6 +41,7 @@
   let scheduledMessagesSignature = "";
   const pollVoteUnsubscribes = new Map();
   const reactionStateByMessage = new Map();
+  const tiktokEmbedIdCache = new Map();
   let currentMessages = [];
   let regularMessages = [];
   let scheduledMessages = [];
@@ -1332,6 +1333,7 @@
     verifyQuotedMessages();
     updateSeenIndicators();
     updateJumpButton();
+    hydrateTikTokShortEmbeds();
   }
 
   function isSameMessageGroup(first, second) {
@@ -1444,12 +1446,20 @@
       return `
         <div class="classChatSocialVideo is-tiktok">
           <iframe
-            src="https://www.tiktok.com/player/v1/${tiktokId}?controls=1&autoplay=0&description=1"
-            title="TikTok video player"
+            src="https://www.tiktok.com/embed/v2/${tiktokId}"
+            title="TikTok video"
             loading="lazy"
             referrerpolicy="strict-origin-when-cross-origin"
-            allow="fullscreen"
+            allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
             allowfullscreen></iframe>
+          <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">Open in TikTok</a>
+        </div>`;
+    }
+    if (isTikTokShortUrl(url)) {
+      return `
+        <div class="classChatSocialVideo is-tiktok is-tiktok-loading" data-tiktok-short-url="${escapeHtml(url)}">
+          <span>Loading TikTok preview...</span>
+          <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">Open in TikTok</a>
         </div>`;
     }
 
@@ -1496,17 +1506,20 @@
         </div>`;
     }
 
-    if (isFacebookVideoUrl(url)) {
+    const facebook = facebookEmbedData(url);
+    if (facebook) {
+      const plugin = facebook.type === "post" ? "post.php" : "video.php";
       return `
-        <div class="classChatSocialVideo is-facebook">
+        <div class="classChatSocialVideo is-facebook ${facebook.type === "post" ? "is-facebook-post" : ""}">
           <iframe
-            src="https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false&width=500"
+            src="https://www.facebook.com/plugins/${plugin}?href=${encodeURIComponent(url)}&show_text=${facebook.type === "post" ? "true" : "false"}&width=500"
             title="Facebook video player"
             loading="lazy"
             scrolling="no"
             frameborder="0"
             allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
             allowfullscreen></iframe>
+          <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">Open in Facebook</a>
         </div>`;
     }
     return "";
@@ -1596,18 +1609,68 @@
     }
   }
 
-  function isFacebookVideoUrl(value) {
+  function isTikTokShortUrl(value) {
+    try {
+      const host = new URL(String(value)).hostname.replace(/^www\./, "").toLowerCase();
+      return host === "vt.tiktok.com" || host === "vm.tiktok.com";
+    } catch (error) {
+      return false;
+    }
+  }
+
+  async function resolveTikTokShortId(url) {
+    if (tiktokEmbedIdCache.has(url)) return tiktokEmbedIdCache.get(url);
+    const request = fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`)
+      .then((response) => {
+        if (!response.ok) throw new Error("TikTok preview unavailable");
+        return response.json();
+      })
+      .then((data) => {
+        const html = String(data?.html || "");
+        return html.match(/data-video-id=["'](\d{8,24})["']/)?.[1]
+          || html.match(/\/video\/(\d{8,24})/)?.[1]
+          || "";
+      })
+      .catch(() => "");
+    tiktokEmbedIdCache.set(url, request);
+    return request;
+  }
+
+  function hydrateTikTokShortEmbeds() {
+    elements.messages.querySelectorAll("[data-tiktok-short-url]").forEach(async (container) => {
+      if (container.dataset.tiktokLoading === "true") return;
+      container.dataset.tiktokLoading = "true";
+      const url = container.dataset.tiktokShortUrl;
+      const videoId = await resolveTikTokShortId(url);
+      if (!container.isConnected) return;
+      if (!videoId) {
+        container.querySelector("span").textContent = "TikTok preview unavailable.";
+        return;
+      }
+      container.classList.remove("is-tiktok-loading");
+      container.innerHTML = `
+        <iframe
+          src="https://www.tiktok.com/embed/v2/${videoId}"
+          title="TikTok video"
+          loading="lazy"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+          allowfullscreen></iframe>
+        <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">Open in TikTok</a>`;
+    });
+  }
+
+  function facebookEmbedData(value) {
     try {
       const parsed = new URL(String(value));
       const host = parsed.hostname.replace(/^www\./, "").toLowerCase();
-      if (!["facebook.com", "m.facebook.com", "web.facebook.com", "fb.watch"].includes(host)) return false;
-      return host === "fb.watch"
-        || /\/(reel|videos|watch)\//i.test(parsed.pathname)
-        || /\/share\/(v|r)\//i.test(parsed.pathname)
-        || parsed.pathname === "/watch/"
-        || parsed.searchParams.has("v");
+      if (!["facebook.com", "m.facebook.com", "web.facebook.com"].includes(host)) return null;
+      if (/\/reel\/[^/]+/i.test(parsed.pathname)) return { type: "post" };
+      if (/\/videos\/[^/]+/i.test(parsed.pathname)) return { type: "video" };
+      if (/\/watch\/?$/i.test(parsed.pathname) && parsed.searchParams.has("v")) return { type: "video" };
+      return null;
     } catch (error) {
-      return false;
+      return null;
     }
   }
 

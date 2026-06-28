@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-classboard-v145-more-inline-embeds";
+const CACHE_NAME = "sfk-classboard-v146-social-embed-compatibility";
 const APP_SHELL = [
   "./",
   "./index.html",

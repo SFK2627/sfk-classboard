@@ -1290,6 +1290,7 @@
 }
 
 .classChatSocialVideo {
+  position: relative;
   width: min(310px, 72vw);
   margin-top: 9px;
   overflow: hidden;
@@ -1300,6 +1301,11 @@
 
 .classChatSocialVideo.is-facebook {
   aspect-ratio: 16 / 9;
+}
+
+.classChatSocialVideo.is-facebook-post {
+  height: min(430px, 62vh);
+  aspect-ratio: auto;
 }
 
 .classChatSocialVideo.is-drive,
@@ -1313,6 +1319,19 @@
   max-height: 410px;
 }
 
+.classChatSocialVideo.is-tiktok-loading {
+  display: grid;
+  place-items: center;
+  color: #fff;
+}
+
+.classChatSocialVideo.is-tiktok-loading > span {
+  max-width: 150px;
+  font-size: .72rem;
+  font-weight: 800;
+  text-align: center;
+}
+
 .classChatSocialVideo.is-instagram {
   width: min(300px, 70vw);
   height: min(465px, 65vh);
@@ -1324,6 +1343,21 @@
   height: 100%;
   display: block;
   border: 0;
+}
+
+.classChatSocialVideo > a {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  z-index: 2;
+  border-radius: 999px;
+  padding: 5px 8px;
+  background: rgba(17, 17, 17, .82);
+  color: #fff;
+  font-size: .62rem;
+  font-weight: 850;
+  text-decoration: none;
+  backdrop-filter: blur(5px);
 }
 
 .classChatMediaAttachment {
