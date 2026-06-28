@@ -1302,10 +1302,21 @@
   aspect-ratio: 16 / 9;
 }
 
+.classChatSocialVideo.is-drive,
+.classChatSocialVideo.is-vimeo {
+  aspect-ratio: 16 / 9;
+}
+
 .classChatSocialVideo.is-tiktok {
   width: min(245px, 66vw);
   aspect-ratio: 9 / 16;
   max-height: 410px;
+}
+
+.classChatSocialVideo.is-instagram {
+  width: min(300px, 70vw);
+  height: min(465px, 65vh);
+  background: #fff;
 }
 
 .classChatSocialVideo iframe {

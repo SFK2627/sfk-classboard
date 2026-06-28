@@ -1453,6 +1453,49 @@
         </div>`;
     }
 
+    const instagram = instagramEmbedData(url);
+    if (instagram) {
+      return `
+        <div class="classChatSocialVideo is-instagram">
+          <iframe
+            src="https://www.instagram.com/${instagram.type}/${instagram.code}/embed/"
+            title="Instagram post"
+            loading="lazy"
+            scrolling="no"
+            referrerpolicy="strict-origin-when-cross-origin"
+            allow="autoplay; encrypted-media; picture-in-picture"
+            allowfullscreen></iframe>
+        </div>`;
+    }
+
+    const driveFileId = googleDriveFileId(url);
+    if (driveFileId) {
+      return `
+        <div class="classChatSocialVideo is-drive">
+          <iframe
+            src="https://drive.google.com/file/d/${driveFileId}/preview"
+            title="Google Drive file preview"
+            loading="lazy"
+            referrerpolicy="strict-origin-when-cross-origin"
+            allow="autoplay; encrypted-media; picture-in-picture"
+            allowfullscreen></iframe>
+        </div>`;
+    }
+
+    const vimeoId = vimeoVideoId(url);
+    if (vimeoId) {
+      return `
+        <div class="classChatSocialVideo is-vimeo">
+          <iframe
+            src="https://player.vimeo.com/video/${vimeoId}"
+            title="Vimeo video player"
+            loading="lazy"
+            referrerpolicy="strict-origin-when-cross-origin"
+            allow="autoplay; fullscreen; picture-in-picture"
+            allowfullscreen></iframe>
+        </div>`;
+    }
+
     if (isFacebookVideoUrl(url)) {
       return `
         <div class="classChatSocialVideo is-facebook">
@@ -1565,6 +1608,43 @@
         || parsed.searchParams.has("v");
     } catch (error) {
       return false;
+    }
+  }
+
+  function instagramEmbedData(value) {
+    try {
+      const parsed = new URL(String(value));
+      const host = parsed.hostname.replace(/^www\./, "").toLowerCase();
+      if (host !== "instagram.com" && host !== "m.instagram.com") return null;
+      const match = parsed.pathname.match(/^\/(p|reel|tv)\/([A-Za-z0-9_-]{5,30})(?:\/|$)/);
+      return match ? { type: match[1], code: match[2] } : null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function googleDriveFileId(value) {
+    try {
+      const parsed = new URL(String(value));
+      const host = parsed.hostname.replace(/^www\./, "").toLowerCase();
+      if (host !== "drive.google.com") return "";
+      const pathMatch = parsed.pathname.match(/\/file\/d\/([A-Za-z0-9_-]{10,100})(?:\/|$)/);
+      const id = pathMatch?.[1] || parsed.searchParams.get("id") || "";
+      return /^[A-Za-z0-9_-]{10,100}$/.test(id) ? id : "";
+    } catch (error) {
+      return "";
+    }
+  }
+
+  function vimeoVideoId(value) {
+    try {
+      const parsed = new URL(String(value));
+      const host = parsed.hostname.replace(/^www\./, "").toLowerCase();
+      if (host !== "vimeo.com" && host !== "player.vimeo.com") return "";
+      const match = parsed.pathname.match(/(?:\/video)?\/(\d{6,15})(?:\/|$)/);
+      return match?.[1] || "";
+    } catch (error) {
+      return "";
     }
   }
 
