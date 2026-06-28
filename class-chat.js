@@ -58,6 +58,7 @@
   let lastSentAt = 0;
   let currentConfig = { Locked: false, SlowModeSeconds: 0 };
   let reactionMessageId = "";
+  let reactionDetailsMessageId = "";
   let longPressTimer = null;
   let longPressFeedbackTimer = null;
   let typingTimer = null;
@@ -153,6 +154,8 @@
     elements.messages.addEventListener("pointerup", finishMessageGesture);
     elements.messages.addEventListener("pointercancel", cancelMessageGesture);
     elements.messages.addEventListener("pointermove", moveMessageGesture);
+    elements.reactionDetailsBackdrop.addEventListener("click", closeReactionDetails);
+    elements.reactionDetailsClose.addEventListener("click", closeReactionDetails);
     document.addEventListener("click", handleOutsideReactionTray);
     document.addEventListener("click", handleOutsideChatMenu);
     document.addEventListener("keydown", handleChatKeydown);
@@ -259,6 +262,10 @@
     elements.send = document.getElementById("classChatSend");
     elements.mediaOpen = document.getElementById("classChatMediaOpen");
     elements.reactionTray = document.getElementById("classChatReactionTray");
+    elements.reactionDetails = document.getElementById("classChatReactionDetails");
+    elements.reactionDetailsBackdrop = document.getElementById("classChatReactionDetailsBackdrop");
+    elements.reactionDetailsClose = document.getElementById("classChatReactionDetailsClose");
+    elements.reactionDetailsList = document.getElementById("classChatReactionDetailsList");
     elements.jumpUnread = document.getElementById("classChatJumpUnread");
     elements.toast = document.getElementById("classChatToast");
     elements.exitDialog = document.getElementById("classChatExitDialog");
@@ -310,6 +317,7 @@
     elements.layer.hidden = true;
     document.body.classList.remove("classChatIsOpen");
     hideReactionTray();
+    closeReactionDetails();
     window.clearTimeout(chatToastTimer);
     elements.toast.hidden = true;
     closeChatMenu();
@@ -335,6 +343,10 @@
   }
 
   function requestCloseChat() {
+    if (!elements.reactionDetails.hidden) {
+      closeReactionDetails();
+      return;
+    }
     closeChatMenu();
     hideReactionTray();
     elements.exitDialog.hidden = false;
@@ -1990,6 +2002,7 @@
   function showReactionTray(messageId, anchor) {
     const message = findMessage(messageId);
     if (!message || message.Removed) return;
+    closeReactionDetails();
     clearReactionFocus();
     const focusedArticle = elements.messages.querySelector(`.classChatMessage[data-message-id="${cssEscape(messageId)}"]`);
     focusedArticle?.classList.add("is-reaction-focus");
@@ -2097,41 +2110,7 @@
     const article = elements.messages.querySelector(`.classChatMessage[data-message-id="${cssEscape(messageId)}"]`);
     const bubble = article?.querySelector(".classChatBubble");
     if (!article || !bubble || !source) return;
-
-    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
-      showReactionBurst(article, emoji);
-      return;
-    }
-
-    const sourceRect = source.getBoundingClientRect();
-    const targetRect = bubble.getBoundingClientRect();
-    const startX = sourceRect.left + (sourceRect.width / 2);
-    const startY = sourceRect.top + (sourceRect.height / 2);
-    const endX = targetRect.left + (targetRect.width / 2);
-    const endY = targetRect.top + Math.min(targetRect.height * .52, 54);
-    const flying = document.createElement("span");
-    flying.className = "classChatFlyingReaction";
-    flying.textContent = emoji;
-    flying.style.left = `${startX}px`;
-    flying.style.top = `${startY}px`;
-    document.body.appendChild(flying);
-
-    const animation = flying.animate([
-      { opacity: 0, transform: "translate(-50%, -50%) scale(.55) rotate(-10deg)" },
-      { opacity: 1, transform: "translate(-50%, -75%) scale(1.45) rotate(5deg)", offset: .32 },
-      {
-        opacity: .95,
-        transform: `translate(calc(-50% + ${endX - startX}px), calc(-50% + ${endY - startY}px)) scale(.72) rotate(0deg)`
-      }
-    ], {
-      duration: 190,
-      easing: "cubic-bezier(.2,.9,.25,1)",
-      fill: "forwards"
-    });
-    animation.finished.then(() => {
-      flying.remove();
-      showReactionBurst(article, emoji);
-    }).catch(() => flying.remove());
+    showReactionBurst(article, emoji);
   }
 
   function showReactionBurst(article, emoji) {
@@ -2200,6 +2179,9 @@
     hideReactionTray();
     const optimistic = optimisticReactionGroups(messageId, emoji);
     renderReactionSummary(messageId, optimistic.groups, optimistic.removed ? "" : emoji);
+    if (reactionDetailsMessageId === messageId) {
+      renderReactionDetailsList(messageId, optimistic.groups);
+    }
 
     const ref = db.collection("chatMessages").doc(messageId).collection("reactions").doc(currentProfile.uid);
     try {
@@ -2234,6 +2216,7 @@
       });
       reactionStateByMessage.set(messageId, groups);
       renderReactionSummary(messageId, groups, pulseEmoji);
+      if (reactionDetailsMessageId === messageId) renderReactionDetailsList(messageId, groups);
     } catch (error) {
       container.innerHTML = "";
       container.closest(".classChatMessage")?.classList.remove("has-reactions");
@@ -2262,13 +2245,76 @@
     container.closest(".classChatMessage")?.classList.toggle("has-reactions", total > 0);
     const chip = container.querySelector("[data-reaction-summary]");
     if (chip) {
-      chip.addEventListener("click", () => showReactionTray(messageId, chip));
+      chip.addEventListener("click", () => showReactionDetails(messageId));
       if (pulseEmoji) {
         chip.classList.remove("is-new");
         void chip.offsetWidth;
         chip.classList.add("is-new");
       }
     }
+  }
+
+  function showReactionDetails(messageId) {
+    const groups = reactionStateByMessage.get(messageId);
+    if (!groups) return;
+    hideReactionTray();
+    reactionDetailsMessageId = messageId;
+    renderReactionDetailsList(messageId, groups);
+    elements.reactionDetails.hidden = false;
+    elements.reactionDetails.classList.remove("is-opening");
+    void elements.reactionDetails.offsetWidth;
+    elements.reactionDetails.classList.add("is-opening");
+  }
+
+  function closeReactionDetails() {
+    reactionDetailsMessageId = "";
+    elements.reactionDetails?.classList.remove("is-opening");
+    if (elements.reactionDetails) elements.reactionDetails.hidden = true;
+  }
+
+  function reactionProfileColor(userId) {
+    if (userId === currentProfile?.uid) return normalizeProfileColor(currentProfile.avatarColor);
+    const profile = chatDirectory.find((entry) => entry.uid === userId);
+    return normalizeProfileColor(profile?.AvatarColor);
+  }
+
+  function renderReactionDetailsList(messageId, groups) {
+    const people = Array.from(groups.entries()).flatMap(([emoji, users]) => (
+      users.map((user) => ({ ...user, emoji }))
+    )).sort((a, b) => {
+      if (a.uid === currentProfile.uid) return -1;
+      if (b.uid === currentProfile.uid) return 1;
+      return a.name.localeCompare(b.name);
+    });
+
+    if (!people.length) {
+      elements.reactionDetailsList.innerHTML = `<p class="classChatReactionDetailsEmpty">No reactions yet.</p>`;
+      window.setTimeout(() => {
+        if (reactionDetailsMessageId === messageId) closeReactionDetails();
+      }, 180);
+      return;
+    }
+
+    elements.reactionDetailsList.innerHTML = people.map((person) => {
+      const own = person.uid === currentProfile.uid;
+      const color = reactionProfileColor(person.uid);
+      const content = `
+        <span class="classChatReactionPersonAvatar" style="--profile-color:${color};--profile-ink:${profileInkColor(color)}">${escapeHtml(initials(person.name))}</span>
+        <span class="classChatReactionPersonName">
+          <strong>${escapeHtml(person.name)}</strong>
+          ${own ? "<small>Tap to remove</small>" : ""}
+        </span>
+        <span class="classChatReactionPersonEmoji">${person.emoji}</span>`;
+      return own
+        ? `<button type="button" class="classChatReactionPerson is-own" data-remove-reaction="${person.emoji}">${content}</button>`
+        : `<div class="classChatReactionPerson">${content}</div>`;
+    }).join("");
+
+    elements.reactionDetailsList.querySelectorAll("[data-remove-reaction]").forEach((button) => {
+      button.addEventListener("click", () => {
+        reactToMessage(messageId, button.dataset.removeReaction);
+      });
+    });
   }
 
   async function togglePinnedMessage(message) {
@@ -2886,6 +2932,10 @@
     if (event.key !== "Escape" || elements.layer.hidden) return;
     if (!elements.exitDialog.hidden) {
       hideExitDialog();
+      return;
+    }
+    if (!elements.reactionDetails.hidden) {
+      closeReactionDetails();
       return;
     }
     if (!elements.utility.hidden) {

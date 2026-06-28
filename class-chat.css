@@ -1843,6 +1843,169 @@
   transform: translateY(1px) scale(.76);
 }
 
+.classChatReactionDetails {
+  position: absolute;
+  inset: 0;
+  z-index: 24;
+  display: flex;
+  align-items: flex-end;
+}
+
+.classChatReactionDetailsBackdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  border: 0;
+  background: rgba(7, 7, 7, .58);
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(1px);
+}
+
+.classChatReactionDetailsSheet {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-height: 72%;
+  min-height: min(330px, 52vh);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 1px solid #ded8cd;
+  border-bottom: 0;
+  border-radius: 22px 22px 0 0;
+  padding: 8px 14px max(16px, env(safe-area-inset-bottom));
+  background: #fff;
+  box-shadow: 0 -16px 42px rgba(0, 0, 0, .28);
+  transform-origin: center bottom;
+}
+
+.classChatReactionDetails.is-opening .classChatReactionDetailsBackdrop {
+  animation: classChatReactionDetailsFade .12s linear both;
+}
+
+.classChatReactionDetails.is-opening .classChatReactionDetailsSheet {
+  animation: classChatReactionDetailsUp .18s cubic-bezier(.2, .9, .3, 1) both;
+}
+
+.classChatReactionDetailsHandle {
+  width: 64px;
+  height: 22px;
+  flex: 0 0 22px;
+  align-self: center;
+  display: grid;
+  place-items: center;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.classChatReactionDetailsHandle span {
+  width: 38px;
+  height: 4px;
+  border-radius: 999px;
+  background: #b8b4ac;
+}
+
+.classChatReactionDetailsSheet h3 {
+  margin: 7px 6px 12px;
+  font-size: 1.15rem;
+  text-align: center;
+}
+
+.classChatReactionDetailsList {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 2px 0 10px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.classChatReactionPerson {
+  width: 100%;
+  min-height: 62px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 12px;
+  padding: 8px 9px;
+  background: transparent;
+  color: #111;
+  font: inherit;
+  text-align: left;
+}
+
+button.classChatReactionPerson {
+  cursor: pointer;
+}
+
+button.classChatReactionPerson:active {
+  background: #f1eee7;
+  transform: scale(.985);
+}
+
+.classChatReactionPersonAvatar {
+  width: 43px;
+  height: 43px;
+  flex: 0 0 43px;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid #111;
+  border-radius: 50%;
+  background: var(--profile-color, #f7c600);
+  color: var(--profile-ink, #111);
+  font-size: .7rem;
+  font-weight: 950;
+}
+
+.classChatReactionPersonName {
+  min-width: 0;
+  flex: 1;
+}
+
+.classChatReactionPersonName strong,
+.classChatReactionPersonName small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.classChatReactionPersonName strong {
+  font-size: .9rem;
+}
+
+.classChatReactionPersonName small {
+  margin-top: 3px;
+  color: #777168;
+  font-size: .72rem;
+}
+
+.classChatReactionPersonEmoji {
+  flex: 0 0 auto;
+  font-size: 1.55rem;
+}
+
+.classChatReactionDetailsEmpty {
+  margin: 34px 0;
+  color: #777168;
+  font-size: .82rem;
+  text-align: center;
+}
+
+@keyframes classChatReactionDetailsFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes classChatReactionDetailsUp {
+  from { opacity: .75; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .classChatFlyingReaction {
   position: fixed;
   z-index: 200001;
@@ -2493,6 +2656,29 @@ body.classChatIsOpen {
   color: #ff6b72;
 }
 
+.classChatPanel.is-dark .classChatReactionDetailsSheet {
+  border-color: #383838;
+  background: #1b1c1f;
+  color: #fff;
+}
+
+.classChatPanel.is-dark .classChatReactionDetailsHandle span {
+  background: #8e9399;
+}
+
+.classChatPanel.is-dark .classChatReactionPerson {
+  color: #fff;
+}
+
+.classChatPanel.is-dark button.classChatReactionPerson:active {
+  background: #2b2d31;
+}
+
+.classChatPanel.is-dark .classChatReactionPersonName small,
+.classChatPanel.is-dark .classChatReactionDetailsEmpty {
+  color: #a9adb3;
+}
+
 @media (max-width: 600px) {
   .classChatBackdrop {
     display: none;
@@ -2558,6 +2744,8 @@ body.classChatIsOpen {
 
   .classChatReactionTray,
   .classChatPanel.is-reaction-mode::after,
+  .classChatReactionDetailsBackdrop,
+  .classChatReactionDetailsSheet,
   .classChatReactionChoices button,
   .classChatTrayActions,
   .classChatReactionChip,
