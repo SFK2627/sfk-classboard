@@ -814,7 +814,8 @@
 .classChatPanel.has-custom-theme .classChatWatchEmpty > span,
 .classChatPanel.has-custom-theme .classChatWatchControls #classChatWatchPlayPause,
 .classChatPanel.has-custom-theme .classChatWatchRequestCard form button,
-.classChatPanel.has-custom-theme .classChatWatchQueue article button[data-watch-request-action="approve"] {
+.classChatPanel.has-custom-theme .classChatWatchQueue article button[data-watch-request-action="accept"],
+.classChatPanel.has-custom-theme .classChatWatchQueue article button[data-watch-request-action="start"] {
   background: var(--chat-accent);
   color: var(--chat-accent-ink);
 }
@@ -2617,7 +2618,19 @@
   background: #f4f1ea;
 }
 
-.classChatWatchQueue article > div:first-child {
+.classChatWatchQueueNumber {
+  flex: 0 0 34px;
+  display: grid;
+  place-items: center;
+  min-height: 30px;
+  border-radius: 999px;
+  background: #111;
+  color: #f7c600;
+  font-size: .65rem;
+  font-weight: 950;
+}
+
+.classChatWatchQueue article > .classChatWatchQueueNumber + div {
   min-width: 0;
   flex: 1;
 }
@@ -2652,7 +2665,8 @@
   cursor: pointer;
 }
 
-.classChatWatchQueue article button[data-watch-request-action="approve"] {
+.classChatWatchQueue article button[data-watch-request-action="accept"],
+.classChatWatchQueue article button[data-watch-request-action="start"] {
   background: #f7c600;
 }
 
@@ -3149,7 +3163,8 @@ body.classChatIsOpen {
 
 .classChatPanel.is-dark .classChatWatchControls #classChatWatchPlayPause,
 .classChatPanel.is-dark .classChatWatchRequestCard form button,
-.classChatPanel.is-dark .classChatWatchQueue article button[data-watch-request-action="approve"] {
+.classChatPanel.is-dark .classChatWatchQueue article button[data-watch-request-action="accept"],
+.classChatPanel.is-dark .classChatWatchQueue article button[data-watch-request-action="start"] {
   border-color: #111;
   background: #f7c600;
   color: #111;
@@ -3597,7 +3612,8 @@ body.classChatIsOpen {
 .classChatPanel.has-custom-theme.is-dark .classChatWatchEmpty > span,
 .classChatPanel.has-custom-theme.is-dark .classChatWatchControls #classChatWatchPlayPause,
 .classChatPanel.has-custom-theme.is-dark .classChatWatchRequestCard form button,
-.classChatPanel.has-custom-theme.is-dark .classChatWatchQueue article button[data-watch-request-action="approve"] {
+.classChatPanel.has-custom-theme.is-dark .classChatWatchQueue article button[data-watch-request-action="accept"],
+.classChatPanel.has-custom-theme.is-dark .classChatWatchQueue article button[data-watch-request-action="start"] {
   background: var(--chat-accent);
   color: var(--chat-accent-ink);
 }

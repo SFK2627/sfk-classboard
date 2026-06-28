@@ -88,6 +88,7 @@
   let hasMoreMessages = true;
   let currentWatchParty = null;
   let watchRequests = [];
+  let ownWatchRequest = null;
   let watchJoined = false;
   let watchSessionJoined = false;
   let watchPlayer = null;
@@ -1445,6 +1446,7 @@
     closeWatchParty();
     watchJoined = false;
     watchSessionJoined = false;
+    ownWatchRequest = null;
     clearReactionListeners();
     clearPollVoteListeners();
   }
@@ -2160,12 +2162,12 @@
 
     if (isWatchStaff()) {
       watchRequestsUnsubscribe = db.collection("chatWatchRequests")
-        .where("Status", "==", "pending")
-        .limit(20)
+        .limit(60)
         .onSnapshot((snapshot) => {
           watchRequests = snapshot.docs
             .map((doc) => ({ id: doc.id, ...doc.data() }))
-            .sort((a, b) => timestampToMillis(a.CreatedAt) - timestampToMillis(b.CreatedAt));
+            .filter((request) => ["pending", "queued"].includes(request.Status))
+            .sort(compareWatchRequests);
           renderWatchQueue();
         }, () => {
           watchRequests = [];
@@ -2174,6 +2176,14 @@
     } else {
       watchRequests = [];
       renderWatchQueue();
+      watchRequestsUnsubscribe = db.collection("chatWatchRequests").doc(currentProfile.uid)
+        .onSnapshot((snapshot) => {
+          ownWatchRequest = snapshot.exists ? { id: snapshot.id, ...snapshot.data() } : null;
+          renderOwnWatchRequestStatus();
+        }, () => {
+          ownWatchRequest = null;
+          renderOwnWatchRequestStatus();
+        });
     }
 
     window.clearInterval(watchSyncTimer);
@@ -2992,6 +3002,10 @@
   async function submitWatchRequest(event) {
     event.preventDefault();
     if (!currentProfile || currentConfig.WatchPartyEnabled === false) return;
+    if (!isWatchStaff() && ["pending", "queued"].includes(ownWatchRequest?.Status)) {
+      renderOwnWatchRequestStatus();
+      return;
+    }
     const button = elements.watchRequestForm.querySelector("button");
     button.disabled = true;
     elements.watchRequestMessage.textContent = "Checking video link...";
@@ -3022,30 +3036,74 @@
           CreatedAt: firebase.firestore.FieldValue.serverTimestamp(),
           UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        elements.watchRequestMessage.textContent = "Host request sent for approval.";
+        ownWatchRequest = {
+          id: currentProfile.uid,
+          RequesterUID: currentProfile.uid,
+          Status: "pending"
+        };
+        elements.watchRequestMessage.textContent = "Request sent. Waiting for Admin approval.";
       }
       elements.watchRequestForm.reset();
     } catch (error) {
       elements.watchRequestMessage.textContent = readableError(error);
     } finally {
       button.disabled = false;
+      renderOwnWatchRequestStatus();
+    }
+  }
+
+  function compareWatchRequests(a, b) {
+    const aQueued = a.Status === "queued";
+    const bQueued = b.Status === "queued";
+    if (aQueued !== bQueued) return aQueued ? -1 : 1;
+    if (aQueued) {
+      return Number(a.QueuePosition || 999) - Number(b.QueuePosition || 999)
+        || timestampToMillis(a.AcceptedAt) - timestampToMillis(b.AcceptedAt);
+    }
+    return timestampToMillis(a.CreatedAt) - timestampToMillis(b.CreatedAt);
+  }
+
+  function renderOwnWatchRequestStatus() {
+    if (!elements.watchRequestMessage || isWatchStaff()) return;
+    const status = ownWatchRequest?.Status || "";
+    const blocked = status === "pending" || status === "queued";
+    const button = elements.watchRequestForm.querySelector("button");
+    button.disabled = blocked;
+    if (status === "pending") {
+      elements.watchRequestMessage.textContent = "Waiting for Admin approval.";
+    } else if (status === "queued") {
+      const position = Math.max(1, Number(ownWatchRequest.QueuePosition || 1));
+      elements.watchRequestMessage.textContent = `You are #${position} in the Watch Party queue.`;
+    } else if (status === "declined") {
+      elements.watchRequestMessage.textContent = "Your previous request was declined. You may send another.";
+    } else if (status === "approved") {
+      elements.watchRequestMessage.textContent = "Your requested video has started.";
+    } else if (!status) {
+      elements.watchRequestMessage.textContent = "";
     }
   }
 
   function renderWatchQueue() {
     if (!elements.watchQueue) return;
     const visible = isWatchStaff() && watchRequests.length > 0;
+    const queuedCount = watchRequests.filter((request) => request.Status === "queued").length;
+    const pendingCount = watchRequests.length - queuedCount;
     elements.watchQueue.hidden = !visible;
-    elements.watchQueueCount.textContent = visible ? `${watchRequests.length} pending` : "";
+    elements.watchQueueCount.textContent = visible
+      ? `${queuedCount} queued · ${pendingCount} pending`
+      : "";
     elements.watchQueueList.innerHTML = watchRequests.map((request) => `
-      <article>
+      <article data-request-status="${escapeHtml(request.Status || "pending")}">
+        <span class="classChatWatchQueueNumber">${request.Status === "queued"
+          ? `#${Math.max(1, Number(request.QueuePosition || 1))}`
+          : "NEW"}</span>
         <div>
           <strong>${escapeHtml(request.Title || "Watch request")}</strong>
           <small>${escapeHtml(request.RequesterName || "Student")} · ${escapeHtml(String(request.Provider || "").toUpperCase())}</small>
         </div>
         <div>
-          <button type="button" data-watch-request-action="decline" data-request-id="${request.id}">Decline</button>
-          <button type="button" data-watch-request-action="approve" data-request-id="${request.id}">Approve</button>
+          <button type="button" data-watch-request-action="${request.Status === "queued" ? "remove" : "decline"}" data-request-id="${request.id}">${request.Status === "queued" ? "Remove" : "Decline"}</button>
+          <button type="button" data-watch-request-action="${request.Status === "queued" ? "start" : "accept"}" data-request-id="${request.id}">${request.Status === "queued" ? "Start" : "Accept"}</button>
         </div>
       </article>`).join("");
   }
@@ -3057,7 +3115,27 @@
     if (!request) return;
     button.disabled = true;
     try {
-      if (button.dataset.watchRequestAction === "approve") {
+      const action = button.dataset.watchRequestAction;
+      if (action === "accept") {
+        const nextPosition = watchRequests
+          .filter((entry) => entry.Status === "queued")
+          .reduce((maximum, entry) => Math.max(maximum, Number(entry.QueuePosition || 0)), 0) + 1;
+        await db.collection("chatWatchRequests").doc(request.id).update({
+          Status: "queued",
+          QueuePosition: nextPosition,
+          AcceptedBy: currentProfile.uid,
+          AcceptedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        request.Status = "queued";
+        request.QueuePosition = nextPosition;
+        renderWatchQueue();
+      } else if (action === "start") {
+        if (currentWatchParty?.Active
+            && !window.confirm("Replace the current Watch Party with this queued video?")) {
+          button.disabled = false;
+          return;
+        }
         await startApprovedWatchParty(request, request.id);
       } else {
         await db.collection("chatWatchRequests").doc(request.id).update({
@@ -3066,11 +3144,28 @@
           ReviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
           UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
+        if (request.Status === "queued") await renumberWatchQueue(request.id);
       }
     } catch (error) {
       window.alert(readableError(error));
       button.disabled = false;
     }
+  }
+
+  async function renumberWatchQueue(excludedRequestId = "") {
+    const queued = watchRequests
+      .filter((request) => request.Status === "queued" && request.id !== excludedRequestId)
+      .sort(compareWatchRequests);
+    const changes = queued.filter((request, index) => Number(request.QueuePosition || 0) !== index + 1);
+    if (!changes.length) return;
+    const batch = db.batch();
+    changes.forEach((request, index) => {
+      batch.update(db.collection("chatWatchRequests").doc(request.id), {
+        QueuePosition: queued.indexOf(request) + 1,
+        UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    });
+    await batch.commit();
   }
 
   async function startApprovedWatchParty(request, requestId) {
@@ -3113,6 +3208,7 @@
       });
     }
     await batch.commit();
+    if (requestId) await renumberWatchQueue(requestId);
   }
 
   async function endWatchParty() {
