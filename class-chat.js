@@ -1929,6 +1929,11 @@
     watchPlayerDuration = 0;
     watchJoined = provider === "instagram" || provider === "drive";
 
+    if (provider === "drive") {
+      mountDriveWatchPlayer(videoId);
+      return;
+    }
+
     const iframe = document.createElement("iframe");
     iframe.className = "classChatWatchFrame";
     iframe.title = "SFK Watch Party player";
@@ -1941,9 +1946,6 @@
     } else if (provider === "tiktok") {
       iframe.src = `https://www.tiktok.com/player/v1/${videoId}?controls=0&play_button=0&progress_bar=0&volume_control=1&fullscreen_button=1&description=0&music_info=0&rel=0&autoplay=0`;
       iframe.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
-    } else if (provider === "drive") {
-      iframe.src = `https://drive.google.com/file/d/${videoId}/preview`;
-      iframe.allow = "autoplay; encrypted-media; fullscreen";
     } else {
       iframe.src = `https://www.instagram.com/${instagramType}/${videoId}/embed/`;
       iframe.allow = "autoplay; encrypted-media; picture-in-picture";
@@ -1955,6 +1957,44 @@
     elements.watchPlayer.innerHTML = "";
     elements.watchPlayer.appendChild(iframe);
     watchPlayer = iframe;
+    renderWatchParty();
+  }
+
+  function mountDriveWatchPlayer(videoId) {
+    const video = document.createElement("video");
+    video.className = "classChatWatchFrame classChatWatchDriveVideo";
+    video.controls = true;
+    video.playsInline = true;
+    video.preload = "metadata";
+    video.src = `https://drive.google.com/uc?export=download&id=${encodeURIComponent(videoId)}`;
+    video.setAttribute("controlslist", "nodownload");
+    video.addEventListener("webkitbeginfullscreen", () => {
+      window.SFK_WATCH_PARTY_LANDSCAPE = true;
+      window.SFK_PHONE_ORIENTATION?.allowWatchLandscape?.(true);
+    });
+    video.addEventListener("webkitendfullscreen", () => {
+      window.SFK_WATCH_PARTY_LANDSCAPE = false;
+      window.SFK_PHONE_ORIENTATION?.allowWatchLandscape?.(false);
+    });
+
+    let fallbackMounted = false;
+    video.addEventListener("error", () => {
+      if (fallbackMounted || watchPlayer !== video) return;
+      fallbackMounted = true;
+      const iframe = document.createElement("iframe");
+      iframe.className = "classChatWatchFrame";
+      iframe.title = "Google Drive video player";
+      iframe.src = `https://drive.google.com/file/d/${encodeURIComponent(videoId)}/preview?embedded=true`;
+      iframe.allow = "autoplay; encrypted-media; fullscreen";
+      iframe.allowFullscreen = true;
+      iframe.setAttribute("allowfullscreen", "");
+      iframe.referrerPolicy = "strict-origin-when-cross-origin";
+      elements.watchPlayer.replaceChildren(iframe);
+      watchPlayer = iframe;
+    }, { once: true });
+
+    elements.watchPlayer.replaceChildren(video);
+    watchPlayer = video;
     renderWatchParty();
   }
 
@@ -2101,19 +2141,29 @@
         if (document.exitFullscreen) await document.exitFullscreen();
         else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
       } else if (elements.watchStage.requestFullscreen) {
+        window.SFK_WATCH_PARTY_LANDSCAPE = true;
+        window.SFK_PHONE_ORIENTATION?.allowWatchLandscape?.(true);
         await elements.watchStage.requestFullscreen();
       } else if (elements.watchStage.webkitRequestFullscreen) {
+        window.SFK_WATCH_PARTY_LANDSCAPE = true;
+        window.SFK_PHONE_ORIENTATION?.allowWatchLandscape?.(true);
         elements.watchStage.webkitRequestFullscreen();
       } else {
         throw new Error("Fullscreen is not supported by this browser.");
       }
     } catch (error) {
+      window.SFK_WATCH_PARTY_LANDSCAPE = false;
+      window.SFK_PHONE_ORIENTATION?.allowWatchLandscape?.(false);
       window.alert(readableError(error));
     }
   }
 
   function syncWatchFullscreenButton() {
-    const active = (document.fullscreenElement || document.webkitFullscreenElement) === elements.watchStage;
+    const fullscreenElement = document.fullscreenElement || document.webkitFullscreenElement;
+    const active = fullscreenElement === elements.watchStage
+      || Boolean(fullscreenElement && elements.watchStage.contains(fullscreenElement));
+    window.SFK_WATCH_PARTY_LANDSCAPE = active;
+    window.SFK_PHONE_ORIENTATION?.allowWatchLandscape?.(active);
     elements.watchFullscreen.classList.toggle("is-active", active);
     elements.watchFullscreen.setAttribute("aria-label", active ? "Exit fullscreen" : "Enter fullscreen");
     elements.watchFullscreen.title = active ? "Exit fullscreen" : "Fullscreen";

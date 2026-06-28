@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-classboard-v154-drive-fullscreen-watch-party";
+const CACHE_NAME = "sfk-classboard-v155-drive-player-landscape";
 const APP_SHELL = [
   "./",
   "./index.html",

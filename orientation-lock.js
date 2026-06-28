@@ -9,12 +9,13 @@
       .test(window.navigator.userAgent || "");
     return userAgentDataMobile === true || phoneUserAgent;
   };
+  const isWatchLandscapeAllowed = () => window.SFK_WATCH_PARTY_LANDSCAPE === true;
 
   let locking = false;
   let portraitLocked = false;
 
   async function lockPortrait(allowFullscreen) {
-    if (locking || portraitLocked || !isPhone() || !orientation?.lock) return;
+    if (locking || portraitLocked || !isPhone() || !orientation?.lock || isWatchLandscapeAllowed()) return;
     locking = true;
 
     try {
@@ -28,6 +29,7 @@
         await document.documentElement.requestFullscreen({ navigationUI: "hide" });
       }
 
+      if (isWatchLandscapeAllowed()) return;
       try {
         await orientation.lock("portrait-primary");
       } catch (error) {
@@ -35,11 +37,27 @@
       }
       portraitLocked = true;
     } catch (error) {
-      // Some browsers only honor the manifest lock in an installed PWA.
+      // Installed PWAs and supported Android browsers enforce the lock.
     } finally {
       locking = false;
     }
   }
+
+  async function allowWatchLandscape(allowed) {
+    window.SFK_WATCH_PARTY_LANDSCAPE = allowed === true;
+    if (allowed) {
+      portraitLocked = false;
+      try {
+        orientation?.unlock?.();
+      } catch (error) {
+        // The browser may use device auto-rotate without exposing unlock().
+      }
+      return;
+    }
+    await lockPortrait(false);
+  }
+
+  window.SFK_PHONE_ORIENTATION = { allowWatchLandscape };
 
   const retryLock = () => lockPortrait(false);
 
@@ -59,13 +77,27 @@
     retryLock();
   });
   document.addEventListener("fullscreenchange", () => {
-    if (!document.fullscreenElement) portraitLocked = false;
+    const fullscreenElement = document.fullscreenElement;
+    const watchStage = document.querySelector(".classChatWatchStage");
+    const watchFullscreen = fullscreenElement === watchStage
+      || Boolean(fullscreenElement && watchStage?.contains(fullscreenElement));
+    allowWatchLandscape(watchFullscreen);
   });
-  document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) retryLock();
+  document.addEventListener("webkitfullscreenchange", () => {
+    const fullscreenElement = document.webkitFullscreenElement;
+    const watchStage = document.querySelector(".classChatWatchStage");
+    const watchFullscreen = fullscreenElement === watchStage
+      || Boolean(fullscreenElement && watchStage?.contains(fullscreenElement));
+    allowWatchLandscape(watchFullscreen);
   });
+  document.addEventListener("pointerdown", (event) => {
+    if (event.target.closest?.("#classChatWatchFullscreen")) allowWatchLandscape(true);
+  }, { capture: true, passive: true });
   document.addEventListener("pointerup", () => lockPortrait(true), {
     capture: true,
     passive: true
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) retryLock();
   });
 })();

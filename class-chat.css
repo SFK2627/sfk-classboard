@@ -2074,6 +2074,15 @@
   border: 0;
 }
 
+.classChatWatchFrame {
+  object-fit: contain;
+  background: #000;
+}
+
+.classChatWatchDriveVideo {
+  color-scheme: dark;
+}
+
 .classChatWatchEmpty {
   height: 100%;
   display: grid;
