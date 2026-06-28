@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-classboard-v175-watch-request-queue";
+const CACHE_NAME = "sfk-classboard-v176-watch-viewer-presence-fix";
 const APP_SHELL = [
   "./",
   "./index.html",

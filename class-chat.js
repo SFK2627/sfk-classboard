@@ -7,6 +7,8 @@
   const OWN_DELETE_WINDOW_MS = 5 * 60 * 1000;
   const PROFILE_COLOR_COOLDOWN_MS = 3 * 24 * 60 * 60 * 1000;
   const WATCH_HOST_DURATION_MS = 15 * 60 * 1000;
+  const WATCH_VIEWER_TTL_MS = 75 * 1000;
+  const WATCH_VIEWER_HEARTBEAT_MS = 30 * 1000;
   const DEFAULT_PROFILE_COLOR = "#F7C600";
   const PROFILE_COLORS = [
     "#F7C600", "#FF7A7A", "#FF8FCB", "#B99CFF",
@@ -42,8 +44,10 @@
   let scheduledRefreshTimer = null;
   let watchPartyUnsubscribe = null;
   let watchRequestsUnsubscribe = null;
+  let watchViewersUnsubscribe = null;
   let auditUnsubscribe = null;
   let watchSyncTimer = null;
+  let watchPresenceTimer = null;
   let scheduledMessagesSignature = "";
   const pollVoteUnsubscribes = new Map();
   const reactionUnsubscribes = new Map();
@@ -107,6 +111,8 @@
   let tiktokNeedsSoundUnlock = false;
   let tiktokAutoUnmuteAttempted = false;
   let watchEndUpdatePending = false;
+  let watchViewers = [];
+  let watchViewerSessionId = "";
 
   const elements = {};
 
@@ -1424,9 +1430,11 @@
     if (scheduledUnsubscribe) scheduledUnsubscribe();
     if (watchPartyUnsubscribe) watchPartyUnsubscribe();
     if (watchRequestsUnsubscribe) watchRequestsUnsubscribe();
+    if (watchViewersUnsubscribe) watchViewersUnsubscribe();
     stopAuditListener();
     window.clearInterval(scheduledRefreshTimer);
     window.clearInterval(watchSyncTimer);
+    window.clearInterval(watchPresenceTimer);
     messagesUnsubscribe = null;
     typingUnsubscribe = null;
     pinnedUnsubscribe = null;
@@ -1438,8 +1446,12 @@
     scheduledUnsubscribe = null;
     watchPartyUnsubscribe = null;
     watchRequestsUnsubscribe = null;
+    watchViewersUnsubscribe = null;
     scheduledRefreshTimer = null;
     watchSyncTimer = null;
+    watchPresenceTimer = null;
+    watchViewers = [];
+    watchViewerSessionId = "";
     loadingEarlierMessages = false;
     elements.messages?.classList.remove("is-loading-earlier", "is-restoring-scroll");
     elements.messages?.removeAttribute("aria-busy");
@@ -2085,10 +2097,14 @@
 
   function renderWatchViewerCount() {
     if (!elements.watchViewerCount) return;
-    const viewers = currentWatchParty?.Active && Array.isArray(currentWatchParty.ViewerUIDs)
-      ? currentWatchParty.ViewerUIDs
-      : [];
-    const count = new Set(viewers.filter(Boolean)).size;
+    const sessionId = watchPartySessionId();
+    const now = Date.now();
+    const count = sessionId
+      ? watchViewers.filter((viewer) => (
+        viewer.PartySessionID === sessionId
+        && timestampToMillis(viewer.ExpiresAt) > now
+      )).length
+      : 0;
     elements.watchViewerCount.textContent = ` · ${count} watching`;
     elements.watchViewerCount.title = `${count} ${count === 1 ? "viewer" : "viewers"} currently watching`;
   }
@@ -2100,40 +2116,22 @@
         || !watchJoined
         || elements.watchRoom.hidden
         || document.hidden) return;
-    const uid = currentProfile.uid;
     const sessionId = watchPartySessionId();
-    if (!sessionId || currentWatchParty.ViewerUIDs?.includes(uid)) return;
-    const partyRef = db.collection("chatWatchParty").doc("main");
-    await db.runTransaction(async (transaction) => {
-      const snapshot = await transaction.get(partyRef);
-      const party = snapshot.data() || {};
-      if (!party.Active
-          || watchPartySessionId(party) !== sessionId
-          || party.ViewerUIDs?.includes(uid)) return;
-      transaction.update(partyRef, {
-        ViewerUIDs: firebase.firestore.FieldValue.arrayUnion(uid),
-        PresenceUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-    }).catch(() => {});
+    if (!sessionId) return;
+    await db.collection("chatWatchViewers").doc(currentProfile.uid).set({
+      UID: currentProfile.uid,
+      Name: currentProfile.name,
+      PartySessionID: sessionId,
+      ExpiresAt: firebase.firestore.Timestamp.fromMillis(Date.now() + WATCH_VIEWER_TTL_MS),
+      UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).catch((error) => {
+      console.warn("Watch viewer presence failed:", error);
+    });
   }
 
   async function clearWatchPresence() {
-    if (!db || !currentProfile?.uid || !currentWatchParty?.Active) return;
-    const uid = currentProfile.uid;
-    const sessionId = watchPartySessionId();
-    if (!sessionId) return;
-    const partyRef = db.collection("chatWatchParty").doc("main");
-    await db.runTransaction(async (transaction) => {
-      const snapshot = await transaction.get(partyRef);
-      const party = snapshot.data() || {};
-      if (!party.Active
-          || watchPartySessionId(party) !== sessionId
-          || !party.ViewerUIDs?.includes(uid)) return;
-      transaction.update(partyRef, {
-        ViewerUIDs: firebase.firestore.FieldValue.arrayRemove(uid),
-        PresenceUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-    }).catch(() => {});
+    if (!db || !currentProfile?.uid) return;
+    await db.collection("chatWatchViewers").doc(currentProfile.uid).delete().catch(() => {});
   }
 
   function handleWatchVisibilityChange() {
@@ -2144,6 +2142,35 @@
     }
   }
 
+  function startWatchViewerListener() {
+    const sessionId = watchPartySessionId();
+    if (watchViewersUnsubscribe && watchViewerSessionId === sessionId) return;
+    if (watchViewersUnsubscribe) watchViewersUnsubscribe();
+    watchViewersUnsubscribe = null;
+    watchViewerSessionId = sessionId;
+    watchViewers = [];
+    renderWatchViewerCount();
+    if (!sessionId || elements.watchRoom.hidden) return;
+    watchViewersUnsubscribe = db.collection("chatWatchViewers")
+      .where("PartySessionID", "==", sessionId)
+      .onSnapshot((snapshot) => {
+        watchViewers = snapshot.docs.map((doc) => doc.data() || {});
+        renderWatchViewerCount();
+      }, (error) => {
+        watchViewers = [];
+        renderWatchViewerCount();
+        console.warn("Watch viewer counter failed:", error);
+      });
+  }
+
+  function stopWatchViewerListener() {
+    if (watchViewersUnsubscribe) watchViewersUnsubscribe();
+    watchViewersUnsubscribe = null;
+    watchViewerSessionId = "";
+    watchViewers = [];
+    renderWatchViewerCount();
+  }
+
   function startWatchPartyListeners() {
     watchPartyUnsubscribe = db.collection("chatWatchParty").doc("main").onSnapshot((snapshot) => {
       currentWatchParty = snapshot.exists ? snapshot.data() : null;
@@ -2151,6 +2178,7 @@
       elements.watchBadge.hidden = !active;
       elements.watchOpen.classList.toggle("is-active", active);
       renderWatchParty();
+      if (!elements.watchRoom.hidden) startWatchViewerListener();
       if (active) refreshWatchPresence();
       else clearWatchPresence();
     }, () => {
@@ -2196,6 +2224,8 @@
       }
     }, 1000);
 
+    window.clearInterval(watchPresenceTimer);
+    watchPresenceTimer = window.setInterval(refreshWatchPresence, WATCH_VIEWER_HEARTBEAT_MS);
   }
 
   function isWatchStaff() {
@@ -2216,6 +2246,7 @@
     closeReactionDetails();
     elements.watchRoom.hidden = false;
     renderWatchParty();
+    startWatchViewerListener();
     refreshWatchPresence();
   }
 
@@ -2223,6 +2254,7 @@
     if (!elements.watchRoom || elements.watchRoom.hidden) return;
     elements.watchRoom.hidden = true;
     clearWatchPresence();
+    stopWatchViewerListener();
     destroyWatchPlayer();
   }
 
@@ -3174,7 +3206,6 @@
     const party = {
       Active: true,
       PartySessionID: `${now}-${Math.random().toString(36).slice(2, 10)}`,
-      ViewerUIDs: [],
       Provider: request.Provider,
       VideoID: request.VideoID,
       InstagramType: request.InstagramType || "",
