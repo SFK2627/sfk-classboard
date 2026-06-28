@@ -98,6 +98,7 @@
   let suppressWatchPlayerEvents = false;
   let watchPlayerKey = "";
   let lastWatchDriftSync = 0;
+  let tiktokAutoplayFallbackUsed = false;
 
   const elements = {};
 
@@ -2228,7 +2229,8 @@
       iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?enablejsapi=1&controls=0&playsinline=1&rel=0&origin=${origin}`;
       iframe.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
     } else if (provider === "tiktok") {
-      iframe.src = `https://www.tiktok.com/player/v1/${videoId}?controls=0&play_button=0&progress_bar=0&volume_control=1&fullscreen_button=1&description=0&music_info=0&rel=0&autoplay=0`;
+      const shouldAutoplay = watchJoined && currentWatchParty.PlaybackState === "playing" ? 1 : 0;
+      iframe.src = `https://www.tiktok.com/player/v1/${videoId}?controls=0&play_button=0&progress_bar=0&volume_control=1&fullscreen_button=1&description=0&music_info=0&rel=0&autoplay=${shouldAutoplay}`;
       iframe.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
     } else if (provider === "bilibili") {
       const parameter = videoId.toLowerCase().startsWith("av")
@@ -2389,6 +2391,7 @@
     watchPlayerTime = 0;
     watchPlayerDuration = 0;
     watchPlayerSyncSupported = false;
+    tiktokAutoplayFallbackUsed = false;
   }
 
   function joinWatchParty() {
@@ -2482,9 +2485,21 @@
       if (Number.isFinite(data.info.duration)) watchPlayerDuration = data.info.duration;
     }
     if (data?.["x-tiktok-player"] === true) {
+      if (data.type === "onPlayerReady") {
+        applyWatchStateToPlayer(true);
+      }
       if (data.type === "onCurrentTime") {
         if (Number.isFinite(data.value?.currentTime)) watchPlayerTime = data.value.currentTime;
         if (Number.isFinite(data.value?.duration)) watchPlayerDuration = data.value.duration;
+      }
+      if (data.type === "onPlayerError"
+          && Number(data.value?.errorCode ?? data.errorCode) === 3002
+          && watchJoined
+          && !tiktokAutoplayFallbackUsed) {
+        tiktokAutoplayFallbackUsed = true;
+        sendWatchPlayerCommand("mute");
+        window.setTimeout(() => sendWatchPlayerCommand("play"), 80);
+        showChatToast("TikTok continued muted because the browser blocked autoplay audio.");
       }
     }
     updateWatchTimeDisplay();

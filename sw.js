@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-classboard-v167-session-watch-join";
+const CACHE_NAME = "sfk-classboard-v168-tiktok-session-autoplay";
 const APP_SHELL = [
   "./",
   "./index.html",
