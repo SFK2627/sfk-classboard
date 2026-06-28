@@ -168,7 +168,8 @@
 }
 
 .classChatBack,
-.classChatLogout {
+.classChatLogout,
+.classChatWatchOpen {
   width: 40px;
   height: 40px;
   display: grid;
@@ -184,13 +185,36 @@
 }
 
 .classChatLogout[hidden],
+.classChatWatchOpen[hidden],
 .classChatMenu button[hidden] {
   display: none !important;
 }
 
 .classChatBack:hover,
-.classChatLogout:hover {
+.classChatLogout:hover,
+.classChatWatchOpen:hover {
   background: #f3efdf;
+}
+
+.classChatWatchOpen {
+  position: relative;
+  font-size: 1rem;
+}
+
+.classChatWatchOpen.is-active {
+  color: #7a5f00;
+  background: #fff3bd;
+}
+
+.classChatWatchOpen i {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 8px;
+  height: 8px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #e22838;
 }
 
 .classChatMenu {
@@ -1938,6 +1962,351 @@
   align-items: flex-end;
 }
 
+.classChatWatchRoom {
+  position: absolute;
+  inset: 70px 0 0;
+  z-index: 18;
+  display: flex;
+  flex-direction: column;
+  background: #fffdf8;
+  animation: classChatUtilityIn .16s ease-out;
+}
+
+.classChatWatchHeader {
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 13px;
+  border-bottom: 1px solid #e1dccf;
+  background: rgba(255, 255, 255, .96);
+  backdrop-filter: blur(14px);
+}
+
+.classChatWatchHeader > button {
+  min-width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #111;
+  font-size: 1.2rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.classChatWatchHeader > div {
+  min-width: 0;
+  flex: 1;
+}
+
+.classChatWatchHeader h3,
+.classChatWatchHeader p {
+  overflow: hidden;
+  margin: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.classChatWatchHeader h3 {
+  font-size: .98rem;
+}
+
+.classChatWatchHeader p {
+  margin-top: 2px;
+  color: #716c63;
+  font-size: .7rem;
+}
+
+.classChatWatchHeader > .classChatWatchEnd {
+  width: auto;
+  border-radius: 999px;
+  padding: 0 11px;
+  color: #b51f2c;
+  font-size: .72rem;
+}
+
+.classChatWatchBody {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  padding: 15px;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.classChatWatchStage {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid #111;
+  border-radius: 14px;
+  background: #090909;
+  box-shadow: 0 10px 28px rgba(17, 17, 17, .16);
+  aspect-ratio: 16 / 9;
+}
+
+.classChatWatchStage[data-provider="tiktok"],
+.classChatWatchStage[data-provider="instagram"] {
+  width: min(290px, 82vw);
+  max-height: 56vh;
+  margin-right: auto;
+  margin-left: auto;
+  aspect-ratio: 9 / 16;
+}
+
+.classChatWatchPlayer,
+.classChatWatchFrame {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border: 0;
+}
+
+.classChatWatchEmpty {
+  height: 100%;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 6px;
+  color: #fff;
+  text-align: center;
+}
+
+.classChatWatchEmpty > span {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  padding-left: 3px;
+  background: #f7c600;
+  color: #111;
+  font-size: 1.1rem;
+}
+
+.classChatWatchEmpty small {
+  max-width: 220px;
+  color: #aaa;
+  font-size: .7rem;
+}
+
+.classChatWatchJoin {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  border: 0;
+  background: rgba(0, 0, 0, .62);
+  color: #fff;
+  font-size: .92rem;
+  font-weight: 950;
+  cursor: pointer;
+  backdrop-filter: blur(2px);
+}
+
+.classChatWatchNow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  border: 1px solid #ddd6c8;
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: #fff;
+}
+
+.classChatWatchNow > div {
+  min-width: 0;
+  flex: 1;
+}
+
+.classChatWatchNow strong,
+.classChatWatchNow small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.classChatWatchNow small {
+  margin-top: 3px;
+  color: #716c63;
+  font-size: .7rem;
+}
+
+.classChatWatchNow > span {
+  border-radius: 999px;
+  padding: 4px 7px;
+  background: #111;
+  color: #f7c600;
+  font-size: .58rem;
+  font-weight: 950;
+}
+
+.classChatWatchControls {
+  margin-top: 9px;
+  border: 1px solid #ddd6c8;
+  border-radius: 12px;
+  padding: 10px;
+  background: #fff;
+}
+
+.classChatWatchControls > div {
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+}
+
+.classChatWatchControls button {
+  min-width: 44px;
+  min-height: 38px;
+  border: 1px solid #111;
+  border-radius: 999px;
+  padding: 7px 10px;
+  background: #fff;
+  color: #111;
+  font-size: .7rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.classChatWatchControls #classChatWatchPlayPause {
+  background: #f7c600;
+}
+
+.classChatWatchControls input {
+  width: 100%;
+  margin: 10px 0 3px;
+  accent-color: #f7c600;
+}
+
+.classChatWatchControls > small {
+  display: block;
+  color: #716c63;
+  font-size: .66rem;
+  text-align: center;
+}
+
+.classChatWatchRequestCard,
+.classChatWatchQueue {
+  margin-top: 12px;
+  border: 1px solid #ddd6c8;
+  border-radius: 13px;
+  padding: 12px;
+  background: #fff;
+}
+
+.classChatWatchRequestCard > div strong,
+.classChatWatchRequestCard > div small {
+  display: block;
+}
+
+.classChatWatchRequestCard > div small {
+  margin-top: 3px;
+  color: #716c63;
+  font-size: .7rem;
+}
+
+.classChatWatchRequestCard form {
+  display: grid;
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.classChatWatchRequestCard input {
+  width: 100%;
+  min-height: 42px;
+  box-sizing: border-box;
+  border: 1px solid #cfc8ba;
+  border-radius: 10px;
+  padding: 9px 11px;
+  background: #fff;
+  color: #111;
+  font: inherit;
+}
+
+.classChatWatchRequestCard form button {
+  min-height: 42px;
+  border: 2px solid #111;
+  border-radius: 10px;
+  background: #f7c600;
+  color: #111;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.classChatWatchRequestCard > p {
+  min-height: 16px;
+  margin: 8px 2px 0;
+  color: #7a6500;
+  font-size: .7rem;
+  font-weight: 800;
+}
+
+.classChatWatchQueue > header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.classChatWatchQueue > header small {
+  color: #716c63;
+}
+
+.classChatWatchQueueList,
+.classChatWatchQueue > div {
+  display: grid;
+  gap: 7px;
+}
+
+.classChatWatchQueue article {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 10px;
+  padding: 9px;
+  background: #f4f1ea;
+}
+
+.classChatWatchQueue article > div:first-child {
+  min-width: 0;
+  flex: 1;
+}
+
+.classChatWatchQueue article strong,
+.classChatWatchQueue article small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.classChatWatchQueue article small {
+  margin-top: 2px;
+  color: #716c63;
+  font-size: .66rem;
+}
+
+.classChatWatchQueue article > div:last-child {
+  display: flex;
+  gap: 5px;
+}
+
+.classChatWatchQueue article button {
+  border: 1px solid #111;
+  border-radius: 8px;
+  padding: 6px 8px;
+  background: #fff;
+  color: #111;
+  font-size: .66rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.classChatWatchQueue article button[data-watch-request-action="approve"] {
+  background: #f7c600;
+}
+
 .classChatReactionDetailsBackdrop {
   position: absolute;
   inset: 0;
@@ -2375,12 +2744,69 @@ body.classChatIsOpen {
 }
 
 .classChatPanel.is-dark .classChatBack,
-.classChatPanel.is-dark .classChatLogout {
+.classChatPanel.is-dark .classChatLogout,
+.classChatPanel.is-dark .classChatWatchOpen {
   color: #f5f5f5;
 }
 
 .classChatPanel.is-dark .classChatBack:hover,
-.classChatPanel.is-dark .classChatLogout:hover {
+.classChatPanel.is-dark .classChatLogout:hover,
+.classChatPanel.is-dark .classChatWatchOpen:hover {
+  background: #262626;
+}
+
+.classChatPanel.is-dark .classChatWatchOpen.is-active {
+  background: #30280d;
+  color: #f7c600;
+}
+
+.classChatPanel.is-dark .classChatWatchRoom {
+  background: #0f0f0f;
+}
+
+.classChatPanel.is-dark .classChatWatchHeader {
+  border-bottom-color: #303030;
+  background: rgba(15, 15, 15, .96);
+}
+
+.classChatPanel.is-dark .classChatWatchHeader > button,
+.classChatPanel.is-dark .classChatWatchHeader h3 {
+  color: #fff;
+}
+
+.classChatPanel.is-dark .classChatWatchHeader p,
+.classChatPanel.is-dark .classChatWatchNow small,
+.classChatPanel.is-dark .classChatWatchRequestCard > div small,
+.classChatPanel.is-dark .classChatWatchQueue article small,
+.classChatPanel.is-dark .classChatWatchControls > small {
+  color: #aaa59d;
+}
+
+.classChatPanel.is-dark .classChatWatchNow,
+.classChatPanel.is-dark .classChatWatchControls,
+.classChatPanel.is-dark .classChatWatchRequestCard,
+.classChatPanel.is-dark .classChatWatchQueue {
+  border-color: #383838;
+  background: #1d1d1d;
+}
+
+.classChatPanel.is-dark .classChatWatchRequestCard input,
+.classChatPanel.is-dark .classChatWatchControls button,
+.classChatPanel.is-dark .classChatWatchQueue article button {
+  border-color: #4a4a4a;
+  background: #292929;
+  color: #fff;
+}
+
+.classChatPanel.is-dark .classChatWatchControls #classChatWatchPlayPause,
+.classChatPanel.is-dark .classChatWatchRequestCard form button,
+.classChatPanel.is-dark .classChatWatchQueue article button[data-watch-request-action="approve"] {
+  border-color: #111;
+  background: #f7c600;
+  color: #111;
+}
+
+.classChatPanel.is-dark .classChatWatchQueue article {
   background: #262626;
 }
 

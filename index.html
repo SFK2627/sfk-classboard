@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
   <link rel="stylesheet" href="style.css?v=74-clock-access-menu" />
-  <link rel="stylesheet" href="class-chat.css?v=32-premium-auto-history" />
+  <link rel="stylesheet" href="class-chat.css?v=33-watch-party-room" />
   <script src="orientation-lock.js?v=3-phone-device-lock" defer></script>
 
   <style id="sfkStartIntroStyle">
@@ -748,6 +748,10 @@
             <p id="classChatStatus">Sign in to join the conversation</p>
           </div>
         </div>
+        <button id="classChatWatchOpen" class="classChatWatchOpen" type="button" hidden aria-label="Open Watch Party" title="Watch Party">
+          <span aria-hidden="true">&#9654;</span>
+          <i id="classChatWatchBadge" hidden></i>
+        </button>
         <button id="classChatLogout" class="classChatLogout" type="button" hidden aria-label="Open chat menu" title="Chat menu" aria-expanded="false">&#8943;</button>
       </header>
       <div id="classChatMenu" class="classChatMenu" hidden>
@@ -844,6 +848,10 @@
           <label class="classChatControlRow">
             <span><strong>Allow media</strong><small>Lets members send image, GIF, video, audio, and YouTube links.</small></span>
             <input id="classChatMediaToggle" type="checkbox" checked />
+          </label>
+          <label class="classChatControlRow">
+            <span><strong>Watch Party</strong><small>Allows synchronized viewing and student host requests.</small></span>
+            <input id="classChatWatchToggle" type="checkbox" checked />
           </label>
           <label for="classChatBlockedKeywords">Blocked keywords</label>
           <textarea id="classChatBlockedKeywords" rows="4" placeholder="Enter words separated by commas or new lines"></textarea>
@@ -1037,6 +1045,70 @@
         <button id="classChatJumpUnread" class="classChatJumpUnread" type="button" hidden aria-label="Jump to unread messages">&#8595;</button>
       </div>
 
+      <section id="classChatWatchRoom" class="classChatWatchRoom" hidden aria-labelledby="classChatWatchTitle">
+        <header class="classChatWatchHeader">
+          <button id="classChatWatchBack" type="button" aria-label="Back to class chat">&#8592;</button>
+          <div>
+            <h3 id="classChatWatchTitle">SFK Watch Party</h3>
+            <p id="classChatWatchStatus">No active watch party</p>
+          </div>
+          <button id="classChatWatchEnd" class="classChatWatchEnd" type="button" hidden>End</button>
+        </header>
+
+        <div class="classChatWatchBody">
+          <div id="classChatWatchStage" class="classChatWatchStage is-empty">
+            <div id="classChatWatchPlayer" class="classChatWatchPlayer">
+              <div class="classChatWatchEmpty">
+                <span aria-hidden="true">&#9654;</span>
+                <strong>No video is playing</strong>
+                <small>Approved host requests will appear here.</small>
+              </div>
+            </div>
+            <button id="classChatWatchJoin" class="classChatWatchJoin" type="button" hidden>Join Watch Party</button>
+          </div>
+
+          <div id="classChatWatchNow" class="classChatWatchNow" hidden>
+            <div>
+              <strong id="classChatWatchNowTitle">Watch Party</strong>
+              <small id="classChatWatchHost">Hosted by SFK</small>
+            </div>
+            <span id="classChatWatchProvider">VIDEO</span>
+          </div>
+
+          <div id="classChatWatchControls" class="classChatWatchControls" hidden>
+            <div>
+              <button type="button" data-watch-control="back" aria-label="Back 10 seconds">&#8630; 10</button>
+              <button id="classChatWatchPlayPause" type="button" data-watch-control="toggle" aria-label="Play or pause">&#9654;</button>
+              <button type="button" data-watch-control="forward" aria-label="Forward 10 seconds">10 &#8631;</button>
+              <button type="button" data-watch-control="sync">Sync</button>
+            </div>
+            <input id="classChatWatchSeek" type="range" min="0" max="100" value="0" step="1" aria-label="Video position" />
+            <small id="classChatWatchTime">0:00 / 0:00</small>
+          </div>
+
+          <section class="classChatWatchRequestCard">
+            <div>
+              <strong>Request to Host</strong>
+              <small>Submit a YouTube, TikTok, or Instagram link for approval.</small>
+            </div>
+            <form id="classChatWatchRequestForm">
+              <input id="classChatWatchUrl" type="url" maxlength="2000" placeholder="Paste video link" required />
+              <input id="classChatWatchRequestTitle" type="text" maxlength="100" placeholder="Title (optional)" />
+              <button type="submit">Send request</button>
+            </form>
+            <p id="classChatWatchRequestMessage" role="status"></p>
+          </section>
+
+          <section id="classChatWatchQueue" class="classChatWatchQueue" hidden>
+            <header>
+              <strong>Host Requests</strong>
+              <small id="classChatWatchQueueCount"></small>
+            </header>
+            <div id="classChatWatchQueueList"></div>
+          </section>
+        </div>
+      </section>
+
       <div id="classChatReactionDetails" class="classChatReactionDetails" hidden>
         <button id="classChatReactionDetailsBackdrop" class="classChatReactionDetailsBackdrop" type="button" aria-label="Close reaction details"></button>
         <section class="classChatReactionDetailsSheet" role="dialog" aria-modal="true" aria-labelledby="classChatReactionDetailsTitle">
@@ -1096,7 +1168,7 @@
   <script src="firebase-config.js?v=2-secure-auth"></script>
   <script src="firebase-adapter.js?v=15-secure-auth"></script>
   <script src="script.js?v=73-clock-access-menu"></script>
-  <script src="class-chat.js?v=35-premium-auto-history"></script>
+  <script src="class-chat.js?v=36-watch-party-room"></script>
   <script src="pwa.js?v=3"></script>
 </body>
 </html>

@@ -6,6 +6,7 @@
   const MAX_POLL_OPTIONS = 12;
   const OWN_DELETE_WINDOW_MS = 5 * 60 * 1000;
   const PROFILE_COLOR_COOLDOWN_MS = 3 * 24 * 60 * 60 * 1000;
+  const WATCH_HOST_DURATION_MS = 15 * 60 * 1000;
   const DEFAULT_PROFILE_COLOR = "#F7C600";
   const PROFILE_COLORS = [
     "#F7C600", "#FF7A7A", "#FF8FCB", "#B99CFF",
@@ -38,6 +39,9 @@
   let savedUnsubscribe = null;
   let scheduledUnsubscribe = null;
   let scheduledRefreshTimer = null;
+  let watchPartyUnsubscribe = null;
+  let watchRequestsUnsubscribe = null;
+  let watchSyncTimer = null;
   let scheduledMessagesSignature = "";
   const pollVoteUnsubscribes = new Map();
   const reactionStateByMessage = new Map();
@@ -77,6 +81,16 @@
   let firstCustomColorSelected = false;
   let loadingEarlierMessages = false;
   let hasMoreMessages = true;
+  let currentWatchParty = null;
+  let watchRequests = [];
+  let watchJoined = false;
+  let watchPlayer = null;
+  let watchPlayerProvider = "";
+  let watchPlayerTime = 0;
+  let watchPlayerDuration = 0;
+  let suppressWatchPlayerEvents = false;
+  let watchPlayerKey = "";
+  let lastWatchDriftSync = 0;
 
   const elements = {};
 
@@ -94,6 +108,14 @@
       button.addEventListener("click", requestCloseChat);
     });
     elements.logout.addEventListener("click", toggleChatMenu);
+    elements.watchOpen.addEventListener("click", openWatchParty);
+    elements.watchBack.addEventListener("click", closeWatchParty);
+    elements.watchEnd.addEventListener("click", endWatchParty);
+    elements.watchJoin.addEventListener("click", joinWatchParty);
+    elements.watchRequestForm.addEventListener("submit", submitWatchRequest);
+    elements.watchQueueList.addEventListener("click", handleWatchQueueAction);
+    elements.watchControls.addEventListener("click", handleWatchControls);
+    elements.watchSeek.addEventListener("change", handleWatchSeek);
     elements.themeToggle.addEventListener("click", toggleChatTheme);
     elements.fontSizeToggle.addEventListener("click", cycleChatFontSize);
     elements.searchOpen.addEventListener("click", () => openUtility("search"));
@@ -163,6 +185,7 @@
     document.addEventListener("keydown", handleChatKeydown);
     window.addEventListener("popstate", handleChatPopstate);
     window.addEventListener("beforeunload", handleChatBeforeUnload);
+    window.addEventListener("message", handleWatchPlayerMessage);
   }
 
   function cacheElements() {
@@ -172,6 +195,8 @@
     elements.panel = document.querySelector(".classChatPanel");
     elements.status = document.getElementById("classChatStatus");
     elements.logout = document.getElementById("classChatLogout");
+    elements.watchOpen = document.getElementById("classChatWatchOpen");
+    elements.watchBadge = document.getElementById("classChatWatchBadge");
     elements.menu = document.getElementById("classChatMenu");
     elements.themeToggle = document.getElementById("classChatThemeToggle");
     elements.themeLabel = elements.themeToggle?.querySelector(".classChatMenuLabel");
@@ -231,6 +256,7 @@
     elements.keywordToggle = document.getElementById("classChatKeywordToggle");
     elements.linksToggle = document.getElementById("classChatLinksToggle");
     elements.mediaToggle = document.getElementById("classChatMediaToggle");
+    elements.watchToggle = document.getElementById("classChatWatchToggle");
     elements.blockedKeywords = document.getElementById("classChatBlockedKeywords");
     elements.login = document.getElementById("classChatLogin");
     elements.room = document.getElementById("classChatRoom");
@@ -263,6 +289,28 @@
     elements.send = document.getElementById("classChatSend");
     elements.mediaOpen = document.getElementById("classChatMediaOpen");
     elements.reactionTray = document.getElementById("classChatReactionTray");
+    elements.watchRoom = document.getElementById("classChatWatchRoom");
+    elements.watchBack = document.getElementById("classChatWatchBack");
+    elements.watchStatus = document.getElementById("classChatWatchStatus");
+    elements.watchEnd = document.getElementById("classChatWatchEnd");
+    elements.watchStage = document.getElementById("classChatWatchStage");
+    elements.watchPlayer = document.getElementById("classChatWatchPlayer");
+    elements.watchJoin = document.getElementById("classChatWatchJoin");
+    elements.watchNow = document.getElementById("classChatWatchNow");
+    elements.watchNowTitle = document.getElementById("classChatWatchNowTitle");
+    elements.watchHost = document.getElementById("classChatWatchHost");
+    elements.watchProvider = document.getElementById("classChatWatchProvider");
+    elements.watchControls = document.getElementById("classChatWatchControls");
+    elements.watchPlayPause = document.getElementById("classChatWatchPlayPause");
+    elements.watchSeek = document.getElementById("classChatWatchSeek");
+    elements.watchTime = document.getElementById("classChatWatchTime");
+    elements.watchRequestForm = document.getElementById("classChatWatchRequestForm");
+    elements.watchUrl = document.getElementById("classChatWatchUrl");
+    elements.watchRequestTitle = document.getElementById("classChatWatchRequestTitle");
+    elements.watchRequestMessage = document.getElementById("classChatWatchRequestMessage");
+    elements.watchQueue = document.getElementById("classChatWatchQueue");
+    elements.watchQueueCount = document.getElementById("classChatWatchQueueCount");
+    elements.watchQueueList = document.getElementById("classChatWatchQueueList");
     elements.reactionDetails = document.getElementById("classChatReactionDetails");
     elements.reactionDetailsBackdrop = document.getElementById("classChatReactionDetailsBackdrop");
     elements.reactionDetailsClose = document.getElementById("classChatReactionDetailsClose");
@@ -344,6 +392,10 @@
   }
 
   function requestCloseChat() {
+    if (!elements.watchRoom.hidden) {
+      closeWatchParty();
+      return;
+    }
     if (!elements.reactionDetails.hidden) {
       closeReactionDetails();
       return;
@@ -509,6 +561,7 @@
       elements.keywordToggle.checked = currentConfig.KeywordFilterEnabled === true;
       elements.linksToggle.checked = currentConfig.ClickableLinksEnabled !== false;
       elements.mediaToggle.checked = currentConfig.AllowMedia !== false;
+      elements.watchToggle.checked = currentConfig.WatchPartyEnabled !== false;
       elements.blockedKeywords.value = Array.isArray(currentConfig.BlockedKeywords)
         ? currentConfig.BlockedKeywords.join(", ")
         : "";
@@ -609,6 +662,7 @@
     elements.login.hidden = false;
     elements.room.hidden = true;
     elements.logout.hidden = false;
+    elements.watchOpen.hidden = true;
     elements.searchOpen.hidden = true;
     elements.savedOpen.hidden = true;
     elements.colorOpen.hidden = true;
@@ -635,6 +689,7 @@
     elements.login.hidden = true;
     elements.room.hidden = false;
     elements.logout.hidden = false;
+    elements.watchOpen.hidden = currentConfig.WatchPartyEnabled === false;
     elements.searchOpen.hidden = false;
     elements.savedOpen.hidden = false;
     elements.colorOpen.hidden = currentProfile.role !== "student";
@@ -1020,7 +1075,8 @@
         KeywordFilterEnabled: snapshot.data()?.KeywordFilterEnabled === true,
         BlockedKeywords: Array.isArray(snapshot.data()?.BlockedKeywords) ? snapshot.data().BlockedKeywords : [],
         ClickableLinksEnabled: snapshot.data()?.ClickableLinksEnabled !== false,
-        AllowMedia: snapshot.data()?.AllowMedia !== false
+        AllowMedia: snapshot.data()?.AllowMedia !== false,
+        WatchPartyEnabled: snapshot.data()?.WatchPartyEnabled !== false
       };
       applyChatConfig();
       if (previousLinkSetting !== undefined
@@ -1071,6 +1127,7 @@
         if (!elements.savedPanel.hidden) renderSavedMessages();
       });
 
+    startWatchPartyListeners();
     refreshScheduledMessages();
     scheduledRefreshTimer = window.setInterval(() => {
       refreshScheduledMessages();
@@ -1131,7 +1188,10 @@
     if (receiptsUnsubscribe) receiptsUnsubscribe();
     if (savedUnsubscribe) savedUnsubscribe();
     if (scheduledUnsubscribe) scheduledUnsubscribe();
+    if (watchPartyUnsubscribe) watchPartyUnsubscribe();
+    if (watchRequestsUnsubscribe) watchRequestsUnsubscribe();
     window.clearInterval(scheduledRefreshTimer);
+    window.clearInterval(watchSyncTimer);
     messagesUnsubscribe = null;
     typingUnsubscribe = null;
     pinnedUnsubscribe = null;
@@ -1141,10 +1201,14 @@
     receiptsUnsubscribe = null;
     savedUnsubscribe = null;
     scheduledUnsubscribe = null;
+    watchPartyUnsubscribe = null;
+    watchRequestsUnsubscribe = null;
     scheduledRefreshTimer = null;
+    watchSyncTimer = null;
     loadingEarlierMessages = false;
     elements.messages?.classList.remove("is-loading-earlier", "is-restoring-scroll");
     elements.messages?.removeAttribute("aria-busy");
+    closeWatchParty();
     clearPollVoteListeners();
   }
 
@@ -1231,6 +1295,8 @@
     elements.mediaOpen.hidden = currentConfig.AllowMedia === false;
     elements.mediaOpen.disabled = restricted || currentConfig.AllowMedia === false;
     if (currentConfig.AllowMedia === false && !elements.mediaForm.hidden) closeUtility();
+    elements.watchOpen.hidden = !currentProfile || currentConfig.WatchPartyEnabled === false;
+    if (currentConfig.WatchPartyEnabled === false && !elements.watchRoom.hidden) closeWatchParty();
     elements.input.placeholder = restricted
       ? currentConfig.Locked
         ? "Conversation locked by the Adviser"
@@ -1713,6 +1779,452 @@
     } catch (error) {
       return "";
     }
+  }
+
+  function startWatchPartyListeners() {
+    watchPartyUnsubscribe = db.collection("chatWatchParty").doc("main").onSnapshot((snapshot) => {
+      currentWatchParty = snapshot.exists ? snapshot.data() : null;
+      const active = currentWatchParty?.Active === true;
+      elements.watchBadge.hidden = !active;
+      elements.watchOpen.classList.toggle("is-active", active);
+      renderWatchParty();
+    }, () => {
+      currentWatchParty = null;
+      elements.watchBadge.hidden = true;
+      elements.watchOpen.classList.remove("is-active");
+      renderWatchParty();
+    });
+
+    if (isWatchStaff()) {
+      watchRequestsUnsubscribe = db.collection("chatWatchRequests")
+        .where("Status", "==", "pending")
+        .limit(20)
+        .onSnapshot((snapshot) => {
+          watchRequests = snapshot.docs
+            .map((doc) => ({ id: doc.id, ...doc.data() }))
+            .sort((a, b) => timestampToMillis(a.CreatedAt) - timestampToMillis(b.CreatedAt));
+          renderWatchQueue();
+        }, () => {
+          watchRequests = [];
+          renderWatchQueue();
+        });
+    } else {
+      watchRequests = [];
+      renderWatchQueue();
+    }
+
+    window.clearInterval(watchSyncTimer);
+    watchSyncTimer = window.setInterval(() => {
+      updateWatchTimeDisplay();
+      if (currentWatchParty?.Active && watchJoined && Date.now() - lastWatchDriftSync > 8000) {
+        lastWatchDriftSync = Date.now();
+        applyWatchStateToPlayer(false);
+      }
+    }, 1000);
+  }
+
+  function isWatchStaff() {
+    return currentProfile?.role === "admin" || currentProfile?.role === "officer";
+  }
+
+  function canControlWatchParty() {
+    if (!currentProfile || !currentWatchParty?.Active) return false;
+    if (isWatchStaff()) return true;
+    return currentWatchParty.HostUID === currentProfile.uid
+      && timestampToMillis(currentWatchParty.HostExpiresAt) > Date.now();
+  }
+
+  function openWatchParty() {
+    closeChatMenu();
+    closeUtility();
+    hideReactionTray();
+    closeReactionDetails();
+    elements.watchRoom.hidden = false;
+    renderWatchParty();
+  }
+
+  function closeWatchParty() {
+    if (!elements.watchRoom || elements.watchRoom.hidden) return;
+    elements.watchRoom.hidden = true;
+    watchJoined = false;
+    destroyWatchPlayer();
+  }
+
+  function renderWatchParty() {
+    if (!elements.watchRoom) return;
+    const active = currentWatchParty?.Active === true;
+    elements.watchEnd.hidden = !active || !canControlWatchParty();
+    elements.watchNow.hidden = !active;
+    elements.watchControls.hidden = !active || !canControlWatchParty()
+      || currentWatchParty.Provider === "instagram";
+    elements.watchRequestForm.querySelector("button").textContent = isWatchStaff()
+      ? "Start Watch Party"
+      : "Send request";
+
+    if (!active) {
+      elements.watchStatus.textContent = "No active watch party";
+      elements.watchJoin.hidden = true;
+      elements.watchStage.classList.add("is-empty");
+      elements.watchStage.removeAttribute("data-provider");
+      if (!elements.watchRoom.hidden) {
+        destroyWatchPlayer();
+        elements.watchPlayer.innerHTML = `
+          <div class="classChatWatchEmpty">
+            <span aria-hidden="true">&#9654;</span>
+            <strong>No video is playing</strong>
+            <small>Approved host requests will appear here.</small>
+          </div>`;
+      }
+      return;
+    }
+
+    const provider = String(currentWatchParty.Provider || "video");
+    const isInstagram = provider === "instagram";
+    elements.watchStatus.textContent = currentWatchParty.PlaybackState === "playing"
+      ? `Playing with ${currentWatchParty.HostName || "SFK"}`
+      : `Paused by ${currentWatchParty.HostName || "SFK"}`;
+    elements.watchNowTitle.textContent = currentWatchParty.Title || "Watch Party";
+    elements.watchHost.textContent = `Hosted by ${currentWatchParty.HostName || "SFK"}`;
+    elements.watchProvider.textContent = provider.toUpperCase();
+    elements.watchStage.classList.remove("is-empty");
+    elements.watchStage.dataset.provider = provider;
+    elements.watchJoin.hidden = isInstagram || watchJoined;
+    elements.watchPlayPause.innerHTML = currentWatchParty.PlaybackState === "playing" ? "&#10074;&#10074;" : "&#9654;";
+    if (!elements.watchRoom.hidden) ensureWatchPlayer();
+    updateWatchTimeDisplay();
+  }
+
+  function ensureWatchPlayer() {
+    if (!currentWatchParty?.Active) return;
+    const provider = currentWatchParty.Provider;
+    const videoId = currentWatchParty.VideoID || "";
+    const instagramType = currentWatchParty.InstagramType || "reel";
+    const nextKey = `${provider}:${instagramType}:${videoId}`;
+    if (watchPlayerKey === nextKey && watchPlayer?.isConnected) {
+      applyWatchStateToPlayer(false);
+      return;
+    }
+
+    destroyWatchPlayer();
+    watchPlayerKey = nextKey;
+    watchPlayerProvider = provider;
+    watchPlayerTime = Number(currentWatchParty.Position || 0);
+    watchPlayerDuration = 0;
+    watchJoined = provider === "instagram";
+
+    const iframe = document.createElement("iframe");
+    iframe.className = "classChatWatchFrame";
+    iframe.title = "SFK Watch Party player";
+    iframe.allowFullscreen = true;
+    iframe.referrerPolicy = "strict-origin-when-cross-origin";
+    if (provider === "youtube") {
+      const origin = encodeURIComponent(window.location.origin);
+      iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?enablejsapi=1&controls=0&playsinline=1&rel=0&origin=${origin}`;
+      iframe.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
+    } else if (provider === "tiktok") {
+      iframe.src = `https://www.tiktok.com/player/v1/${videoId}?controls=0&play_button=0&progress_bar=0&volume_control=1&fullscreen_button=1&description=0&music_info=0&rel=0&autoplay=0`;
+      iframe.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
+    } else {
+      iframe.src = `https://www.instagram.com/${instagramType}/${videoId}/embed/`;
+      iframe.allow = "autoplay; encrypted-media; picture-in-picture";
+    }
+    iframe.addEventListener("load", () => {
+      window.setTimeout(() => applyWatchStateToPlayer(true), 180);
+    });
+    elements.watchPlayer.innerHTML = "";
+    elements.watchPlayer.appendChild(iframe);
+    watchPlayer = iframe;
+    renderWatchParty();
+  }
+
+  function destroyWatchPlayer() {
+    watchPlayer?.remove();
+    watchPlayer = null;
+    watchPlayerKey = "";
+    watchPlayerProvider = "";
+    watchPlayerTime = 0;
+    watchPlayerDuration = 0;
+  }
+
+  function joinWatchParty() {
+    watchJoined = true;
+    elements.watchJoin.hidden = true;
+    applyWatchStateToPlayer(true);
+  }
+
+  function watchTargetPosition() {
+    if (!currentWatchParty?.Active) return 0;
+    let position = Number(currentWatchParty.Position || 0);
+    if (currentWatchParty.PlaybackState === "playing") {
+      const updatedAt = timestampToMillis(currentWatchParty.StateUpdatedAt);
+      if (updatedAt) position += Math.max(0, Date.now() - updatedAt) / 1000;
+    }
+    return Math.max(0, position);
+  }
+
+  function sendWatchPlayerCommand(command, value) {
+    if (!watchPlayer?.contentWindow) return;
+    if (watchPlayerProvider === "youtube") {
+      const commands = {
+        play: ["playVideo", []],
+        pause: ["pauseVideo", []],
+        seek: ["seekTo", [Number(value || 0), true]]
+      };
+      const entry = commands[command];
+      if (!entry) return;
+      watchPlayer.contentWindow.postMessage(JSON.stringify({
+        event: "command",
+        func: entry[0],
+        args: entry[1]
+      }), "*");
+      watchPlayer.contentWindow.postMessage(JSON.stringify({ event: "listening", id: "sfkWatchParty" }), "*");
+    } else if (watchPlayerProvider === "tiktok") {
+      const type = command === "seek" ? "seekTo" : command;
+      watchPlayer.contentWindow.postMessage({
+        type,
+        value: command === "seek" ? Number(value || 0) : undefined,
+        "x-tiktok-player": true
+      }, "*");
+    }
+  }
+
+  function applyWatchStateToPlayer(force) {
+    if (!currentWatchParty?.Active || !watchPlayer || currentWatchParty.Provider === "instagram") return;
+    const target = watchTargetPosition();
+    const drift = Math.abs(Number(watchPlayerTime || 0) - target);
+    suppressWatchPlayerEvents = true;
+    if (force || drift > 2.5) {
+      sendWatchPlayerCommand("seek", target);
+      watchPlayerTime = target;
+    }
+    if (watchJoined) {
+      sendWatchPlayerCommand(currentWatchParty.PlaybackState === "playing" ? "play" : "pause");
+    } else {
+      sendWatchPlayerCommand("pause");
+    }
+    window.setTimeout(() => { suppressWatchPlayerEvents = false; }, 250);
+  }
+
+  function handleWatchPlayerMessage(event) {
+    if (!watchPlayer?.contentWindow || event.source !== watchPlayer.contentWindow) return;
+    let data = event.data;
+    if (typeof data === "string") {
+      try { data = JSON.parse(data); } catch (error) { return; }
+    }
+    if (data?.event === "infoDelivery" && data.info) {
+      if (Number.isFinite(data.info.currentTime)) watchPlayerTime = data.info.currentTime;
+      if (Number.isFinite(data.info.duration)) watchPlayerDuration = data.info.duration;
+    }
+    if (data?.["x-tiktok-player"] === true) {
+      if (data.type === "onCurrentTime") {
+        if (Number.isFinite(data.value?.currentTime)) watchPlayerTime = data.value.currentTime;
+        if (Number.isFinite(data.value?.duration)) watchPlayerDuration = data.value.duration;
+      }
+    }
+    updateWatchTimeDisplay();
+  }
+
+  async function updateWatchPartyState(playbackState, position) {
+    if (!canControlWatchParty()) return;
+    await db.collection("chatWatchParty").doc("main").update({
+      PlaybackState: playbackState,
+      Position: Math.max(0, Number(position || 0)),
+      StateUpdatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).catch((error) => {
+      window.alert(readableError(error));
+    });
+  }
+
+  function handleWatchControls(event) {
+    const button = event.target.closest("[data-watch-control]");
+    if (!button || !canControlWatchParty()) return;
+    const current = watchPlayerTime || watchTargetPosition();
+    if (button.dataset.watchControl === "toggle") {
+      const nextState = currentWatchParty.PlaybackState === "playing" ? "paused" : "playing";
+      updateWatchPartyState(nextState, current);
+    }
+    if (button.dataset.watchControl === "back") {
+      updateWatchPartyState(currentWatchParty.PlaybackState, Math.max(0, current - 10));
+    }
+    if (button.dataset.watchControl === "forward") {
+      updateWatchPartyState(currentWatchParty.PlaybackState, current + 10);
+    }
+    if (button.dataset.watchControl === "sync") {
+      updateWatchPartyState(currentWatchParty.PlaybackState, current);
+    }
+  }
+
+  function handleWatchSeek() {
+    if (!canControlWatchParty()) return;
+    updateWatchPartyState(currentWatchParty.PlaybackState, Number(elements.watchSeek.value || 0));
+  }
+
+  function updateWatchTimeDisplay() {
+    if (!currentWatchParty?.Active) return;
+    const position = watchPlayerTime > 0 ? watchPlayerTime : watchTargetPosition();
+    const duration = Math.max(watchPlayerDuration, position, 1);
+    elements.watchSeek.max = String(Math.ceil(duration));
+    elements.watchSeek.value = String(Math.min(duration, Math.max(0, position)));
+    elements.watchTime.textContent = `${formatWatchTime(position)} / ${watchPlayerDuration ? formatWatchTime(watchPlayerDuration) : "--:--"}`;
+  }
+
+  function formatWatchTime(value) {
+    const seconds = Math.max(0, Math.floor(Number(value || 0)));
+    const minutes = Math.floor(seconds / 60);
+    return `${minutes}:${String(seconds % 60).padStart(2, "0")}`;
+  }
+
+  async function parseWatchLink(value) {
+    const url = safeHttpUrl(value);
+    if (!url) throw new Error("Enter a valid video link.");
+    const youtubeId = youtubeVideoId(url);
+    if (youtubeId) return { provider: "youtube", videoId: youtubeId, url };
+    let tiktokId = tiktokVideoId(url);
+    if (!tiktokId && isTikTokShortUrl(url)) tiktokId = await resolveTikTokShortId(url);
+    if (tiktokId) return { provider: "tiktok", videoId: tiktokId, url };
+    const instagram = instagramEmbedData(url);
+    if (instagram) {
+      return {
+        provider: "instagram",
+        videoId: instagram.code,
+        instagramType: instagram.type,
+        url
+      };
+    }
+    throw new Error("Use a YouTube, TikTok, or Instagram video link.");
+  }
+
+  async function submitWatchRequest(event) {
+    event.preventDefault();
+    if (!currentProfile || currentConfig.WatchPartyEnabled === false) return;
+    const button = elements.watchRequestForm.querySelector("button");
+    button.disabled = true;
+    elements.watchRequestMessage.textContent = "Checking video link...";
+    try {
+      const parsed = await parseWatchLink(elements.watchUrl.value);
+      const title = elements.watchRequestTitle.value.trim() || `${parsed.provider} watch party`;
+      if (isWatchStaff()) {
+        await startApprovedWatchParty({
+          RequesterUID: currentProfile.uid,
+          RequesterName: currentProfile.name,
+          Title: title,
+          Provider: parsed.provider,
+          VideoID: parsed.videoId,
+          InstagramType: parsed.instagramType || "",
+          OriginalURL: parsed.url
+        }, "");
+        elements.watchRequestMessage.textContent = "Watch Party started.";
+      } else {
+        await db.collection("chatWatchRequests").doc(currentProfile.uid).set({
+          RequesterUID: currentProfile.uid,
+          RequesterName: currentProfile.name,
+          Title: title,
+          Provider: parsed.provider,
+          VideoID: parsed.videoId,
+          InstagramType: parsed.instagramType || "",
+          OriginalURL: parsed.url,
+          Status: "pending",
+          CreatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        elements.watchRequestMessage.textContent = "Host request sent for approval.";
+      }
+      elements.watchRequestForm.reset();
+    } catch (error) {
+      elements.watchRequestMessage.textContent = readableError(error);
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  function renderWatchQueue() {
+    if (!elements.watchQueue) return;
+    const visible = isWatchStaff() && watchRequests.length > 0;
+    elements.watchQueue.hidden = !visible;
+    elements.watchQueueCount.textContent = visible ? `${watchRequests.length} pending` : "";
+    elements.watchQueueList.innerHTML = watchRequests.map((request) => `
+      <article>
+        <div>
+          <strong>${escapeHtml(request.Title || "Watch request")}</strong>
+          <small>${escapeHtml(request.RequesterName || "Student")} · ${escapeHtml(String(request.Provider || "").toUpperCase())}</small>
+        </div>
+        <div>
+          <button type="button" data-watch-request-action="decline" data-request-id="${request.id}">Decline</button>
+          <button type="button" data-watch-request-action="approve" data-request-id="${request.id}">Approve</button>
+        </div>
+      </article>`).join("");
+  }
+
+  async function handleWatchQueueAction(event) {
+    const button = event.target.closest("[data-watch-request-action]");
+    if (!button || !isWatchStaff()) return;
+    const request = watchRequests.find((entry) => entry.id === button.dataset.requestId);
+    if (!request) return;
+    button.disabled = true;
+    try {
+      if (button.dataset.watchRequestAction === "approve") {
+        await startApprovedWatchParty(request, request.id);
+      } else {
+        await db.collection("chatWatchRequests").doc(request.id).update({
+          Status: "declined",
+          ReviewedBy: currentProfile.uid,
+          ReviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+    } catch (error) {
+      window.alert(readableError(error));
+      button.disabled = false;
+    }
+  }
+
+  async function startApprovedWatchParty(request, requestId) {
+    const now = Date.now();
+    const hostIsStaff = request.RequesterUID === currentProfile.uid && isWatchStaff();
+    const party = {
+      Active: true,
+      Provider: request.Provider,
+      VideoID: request.VideoID,
+      InstagramType: request.InstagramType || "",
+      OriginalURL: request.OriginalURL,
+      Title: request.Title || "SFK Watch Party",
+      PlaybackState: "paused",
+      Position: 0,
+      StateUpdatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      HostUID: request.RequesterUID,
+      HostName: request.RequesterName,
+      HostRole: hostIsStaff ? currentProfile.role : "student",
+      HostExpiresAt: firebase.firestore.Timestamp.fromMillis(now + (hostIsStaff ? 24 * 60 * 60 * 1000 : WATCH_HOST_DURATION_MS)),
+      ApprovedBy: currentProfile.uid,
+      ApprovedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    const batch = db.batch();
+    batch.set(db.collection("chatWatchParty").doc("main"), party);
+    if (requestId) {
+      batch.update(db.collection("chatWatchRequests").doc(requestId), {
+        Status: "approved",
+        ReviewedBy: currentProfile.uid,
+        ReviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+    await batch.commit();
+  }
+
+  async function endWatchParty() {
+    if (!canControlWatchParty()) return;
+    await db.collection("chatWatchParty").doc("main").update({
+      Active: false,
+      PlaybackState: "paused",
+      Position: watchPlayerTime || watchTargetPosition(),
+      EndedBy: currentProfile.uid,
+      EndedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).catch((error) => {
+      window.alert(readableError(error));
+    });
   }
 
   function isCurrentUserMentioned(text) {
@@ -2722,6 +3234,7 @@
         KeywordFilterEnabled: elements.keywordToggle.checked,
         ClickableLinksEnabled: elements.linksToggle.checked,
         AllowMedia: elements.mediaToggle.checked,
+        WatchPartyEnabled: elements.watchToggle.checked,
         BlockedKeywords: String(elements.blockedKeywords.value || "")
           .split(/[,\n]/)
           .map((word) => word.trim().toLowerCase())
@@ -3147,6 +3660,10 @@
     }
     if (!elements.reactionDetails.hidden) {
       closeReactionDetails();
+      return;
+    }
+    if (!elements.watchRoom.hidden) {
+      closeWatchParty();
       return;
     }
     if (!elements.utility.hidden) {
