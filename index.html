@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
   <link rel="stylesheet" href="style.css?v=74-clock-access-menu" />
-  <link rel="stylesheet" href="class-chat.css?v=41-fullscreen-utility-pages" />
+  <link rel="stylesheet" href="class-chat.css?v=42-custom-chat-themes" />
   <script src="orientation-lock.js?v=4-watch-party-landscape" defer></script>
 
   <style id="sfkStartIntroStyle">
@@ -777,6 +777,10 @@
           <span class="classChatMenuIcon" aria-hidden="true">&#9734;</span>
           <span id="classChatSavedLabel">Saved messages</span>
         </button>
+        <button id="classChatAccentOpen" type="button" hidden>
+          <span class="classChatMenuIcon" aria-hidden="true">&#9679;</span>
+          <span>Chat theme</span>
+        </button>
         <button id="classChatColorOpen" type="button" hidden>
           <span class="classChatMenuIcon classChatColorMenuIcon" aria-hidden="true"></span>
           <span>Profile color</span>
@@ -932,6 +936,40 @@
           </label>
           <button id="classChatColorSave" type="submit">Save profile color</button>
           <p id="classChatColorMessage" class="classChatUtilityHint" role="status"></p>
+        </form>
+
+        <form id="classChatAccentPanel" class="classChatUtilityBody classChatAccentPanel" hidden>
+          <div id="classChatAccentPreview" class="classChatAccentPreview">
+            <span>Classmate message</span>
+            <b>Your message</b>
+          </div>
+          <p id="classChatAccentStatus" class="classChatUtilityHint"></p>
+          <div id="classChatAccentChoices" class="classChatColorChoices" role="radiogroup" aria-label="Chat theme color">
+            <label style="--profile-color:#F7C600"><input type="radio" name="classChatAccentColor" value="#F7C600" /><span></span><small>Yellow</small></label>
+            <label style="--profile-color:#E5484D"><input type="radio" name="classChatAccentColor" value="#E5484D" /><span></span><small>Red</small></label>
+            <label style="--profile-color:#D94F9D"><input type="radio" name="classChatAccentColor" value="#D94F9D" /><span></span><small>Pink</small></label>
+            <label style="--profile-color:#7259D6"><input type="radio" name="classChatAccentColor" value="#7259D6" /><span></span><small>Violet</small></label>
+            <label style="--profile-color:#2675D8"><input type="radio" name="classChatAccentColor" value="#2675D8" /><span></span><small>Blue</small></label>
+            <label style="--profile-color:#198754"><input type="radio" name="classChatAccentColor" value="#198754" /><span></span><small>Green</small></label>
+            <label style="--profile-color:#E97820"><input type="radio" name="classChatAccentColor" value="#E97820" /><span></span><small>Orange</small></label>
+            <label style="--profile-color:#242424"><input type="radio" name="classChatAccentColor" value="#242424" /><span></span><small>Black</small></label>
+          </div>
+          <label class="classChatCustomColor" for="classChatAccentCustomColor">
+            <span><strong>Custom color</strong><small>Light and dark colors are both allowed.</small></span>
+            <input id="classChatAccentCustomColor" type="color" value="#F7C600" />
+          </label>
+          <div class="classChatAccentActions">
+            <button type="submit">Save for me</button>
+            <button id="classChatAccentReset" type="button">Use default</button>
+          </div>
+          <section id="classChatAccentAdmin" class="classChatAccentAdmin" hidden>
+            <label class="classChatControlRow">
+              <span><strong>Class-wide theme</strong><small>Overrides personal themes for everyone.</small></span>
+              <input id="classChatAccentForce" type="checkbox" />
+            </label>
+            <button id="classChatAccentApplyClass" type="button">Update class theme</button>
+          </section>
+          <p id="classChatAccentMessage" class="classChatUtilityHint" role="status"></p>
         </form>
 
         <form id="classChatSchedulePanel" class="classChatUtilityBody classChatPollPanel" hidden>
@@ -1201,7 +1239,7 @@
   <script src="firebase-config.js?v=2-secure-auth"></script>
   <script src="firebase-adapter.js?v=15-secure-auth"></script>
   <script src="script.js?v=73-clock-access-menu"></script>
-  <script src="class-chat.js?v=44-admin-audit-history"></script>
+  <script src="class-chat.js?v=45-custom-chat-themes"></script>
   <script src="pwa.js?v=3"></script>
 </body>
 </html>

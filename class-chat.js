@@ -13,6 +13,7 @@
     "#73B9FF", "#68D9B0", "#FF9E45", "#A9B1BD"
   ];
   const CHAT_THEME_KEY = "sfkClassChatTheme";
+  const CHAT_ACCENT_PREFIX = "sfkClassChatAccent:";
   const CHAT_FONT_SIZE_KEY = "sfkClassChatFontSize";
   const CHAT_LAST_COUNT_KEY = "sfkClassChatLastReadCount";
   const CHAT_LAST_TIME_KEY = "sfkClassChatLastReadTime";
@@ -82,6 +83,7 @@
   let suppressChatPopstate = false;
   let profileCustomColorSelected = false;
   let firstCustomColorSelected = false;
+  let accentCustomColorSelected = false;
   let loadingEarlierMessages = false;
   let hasMoreMessages = true;
   let currentWatchParty = null;
@@ -128,6 +130,7 @@
     elements.moreToggle.addEventListener("click", toggleMoreTools);
     elements.searchOpen.addEventListener("click", () => openUtility("search"));
     elements.savedOpen.addEventListener("click", () => openUtility("saved"));
+    elements.accentOpen.addEventListener("click", () => openUtility("accent"));
     elements.colorOpen.addEventListener("click", () => openUtility("color"));
     elements.pollOpen.addEventListener("click", () => openUtility("poll"));
     elements.controlsOpen.addEventListener("click", () => openUtility("controls"));
@@ -147,6 +150,20 @@
     elements.mediaOpen.addEventListener("click", () => openUtility("media"));
     elements.mediaForm.addEventListener("submit", sendMediaMessage);
     elements.colorForm.addEventListener("submit", saveProfileColor);
+    elements.accentForm.addEventListener("submit", savePersonalChatAccent);
+    elements.accentReset.addEventListener("click", resetPersonalChatAccent);
+    elements.accentApplyClass.addEventListener("click", saveClassChatAccent);
+    elements.accentChoices.addEventListener("change", () => {
+      accentCustomColorSelected = false;
+      setCustomColorSelected(elements.accentCustomColor, false);
+      updateChatAccentPreview();
+    });
+    elements.accentCustomColor.addEventListener("input", () => {
+      accentCustomColorSelected = true;
+      setCustomColorSelected(elements.accentCustomColor, true);
+      clearRadioColors(elements.accentChoices.querySelectorAll('input[name="classChatAccentColor"]'));
+      updateChatAccentPreview();
+    });
     elements.profileColors.addEventListener("change", () => {
       profileCustomColorSelected = false;
       setCustomColorSelected(elements.profileCustomColor, false);
@@ -219,6 +236,7 @@
     elements.searchOpen = document.getElementById("classChatSearchOpen");
     elements.savedOpen = document.getElementById("classChatSavedOpen");
     elements.savedLabel = document.getElementById("classChatSavedLabel");
+    elements.accentOpen = document.getElementById("classChatAccentOpen");
     elements.colorOpen = document.getElementById("classChatColorOpen");
     elements.colorMenuIcon = elements.colorOpen?.querySelector(".classChatColorMenuIcon");
     elements.pollOpen = document.getElementById("classChatPollOpen");
@@ -252,6 +270,16 @@
     elements.colorSave = document.getElementById("classChatColorSave");
     elements.colorMessage = document.getElementById("classChatColorMessage");
     elements.profileCustomColor = document.getElementById("classChatProfileCustomColor");
+    elements.accentForm = document.getElementById("classChatAccentPanel");
+    elements.accentPreview = document.getElementById("classChatAccentPreview");
+    elements.accentStatus = document.getElementById("classChatAccentStatus");
+    elements.accentChoices = document.getElementById("classChatAccentChoices");
+    elements.accentCustomColor = document.getElementById("classChatAccentCustomColor");
+    elements.accentReset = document.getElementById("classChatAccentReset");
+    elements.accentAdmin = document.getElementById("classChatAccentAdmin");
+    elements.accentForce = document.getElementById("classChatAccentForce");
+    elements.accentApplyClass = document.getElementById("classChatAccentApplyClass");
+    elements.accentMessage = document.getElementById("classChatAccentMessage");
     elements.scheduleForm = document.getElementById("classChatSchedulePanel");
     elements.scheduleText = document.getElementById("classChatScheduleText");
     elements.scheduleAt = document.getElementById("classChatScheduleAt");
@@ -457,11 +485,13 @@
     event.stopPropagation();
     const willOpen = elements.menu.hidden;
     elements.menu.hidden = !willOpen;
+    elements.panel.classList.toggle("is-menu-open", willOpen);
     elements.logout.setAttribute("aria-expanded", String(willOpen));
   }
 
   function closeChatMenu() {
     elements.menu.hidden = true;
+    elements.panel.classList.remove("is-menu-open");
     elements.logout.setAttribute("aria-expanded", "false");
     elements.moreTools.hidden = true;
     elements.moreToggle.setAttribute("aria-expanded", "false");
@@ -572,6 +602,7 @@
     elements.pollForm.hidden = type !== "poll";
     elements.savedPanel.hidden = type !== "saved";
     elements.colorForm.hidden = type !== "color";
+    elements.accentForm.hidden = type !== "accent";
     elements.scheduleForm.hidden = type !== "schedule";
     elements.reportsPanel.hidden = type !== "reports";
     elements.auditPanel.hidden = type !== "audit";
@@ -613,6 +644,10 @@
     if (type === "color") {
       elements.utilityTitle.textContent = "Profile color";
       prepareProfileColorPanel();
+    }
+    if (type === "accent") {
+      elements.utilityTitle.textContent = "Chat theme";
+      prepareChatAccentPanel();
     }
     if (type === "schedule") {
       elements.utilityTitle.textContent = "Schedule message";
@@ -706,6 +741,7 @@
     elements.moreToggle.hidden = true;
     elements.searchOpen.hidden = true;
     elements.savedOpen.hidden = true;
+    elements.accentOpen.hidden = true;
     elements.colorOpen.hidden = true;
     elements.pollOpen.hidden = true;
     elements.controlsOpen.hidden = true;
@@ -713,6 +749,7 @@
     elements.reportsOpen.hidden = true;
     elements.auditOpen.hidden = true;
     elements.status.textContent = "Sign in to join the conversation";
+    clearAppliedChatAccent();
     elements.messages.innerHTML = "";
     elements.studentPin.value = "";
     elements.staffPin.value = "";
@@ -735,6 +772,7 @@
     elements.moreToggle.hidden = false;
     elements.searchOpen.hidden = false;
     elements.savedOpen.hidden = false;
+    elements.accentOpen.hidden = false;
     elements.colorOpen.hidden = currentProfile.role !== "student";
     elements.colorMenuIcon?.style.setProperty("--profile-color", normalizeProfileColor(currentProfile.avatarColor));
     elements.status.textContent = `${currentProfile.name} · Class member`;
@@ -743,6 +781,7 @@
     elements.scheduleOpen.hidden = currentProfile.role !== "admin";
     elements.reportsOpen.hidden = currentProfile.role !== "admin";
     elements.auditOpen.hidden = currentProfile.role !== "admin";
+    applyEffectiveChatAccent();
     unreadDividerAfter = getStoredNumber(CHAT_LAST_TIME_KEY);
     elements.loginMessage.textContent = "";
     startRealtimeListeners();
@@ -988,6 +1027,141 @@
     return ((red * 299) + (green * 587) + (blue * 114)) / 1000 < 145 ? "#FFFFFF" : "#111111";
   }
 
+  function normalizeChatAccent(value) {
+    const color = String(value || "").trim().toUpperCase();
+    return /^#[0-9A-F]{6}$/.test(color) ? color : "";
+  }
+
+  function personalChatAccent() {
+    if (!currentProfile?.uid) return "";
+    try {
+      return normalizeChatAccent(localStorage.getItem(`${CHAT_ACCENT_PREFIX}${currentProfile.uid}`));
+    } catch (error) {
+      return "";
+    }
+  }
+
+  function selectedChatAccent() {
+    const choices = Array.from(elements.accentChoices.querySelectorAll('input[name="classChatAccentColor"]'));
+    return accentCustomColorSelected
+      ? normalizeProfileColor(elements.accentCustomColor.value)
+      : selectedRadioColor(choices);
+  }
+
+  function updateChatAccentPreview() {
+    const color = selectedChatAccent();
+    elements.accentPreview.style.setProperty("--preview-accent", color);
+    elements.accentPreview.style.setProperty("--preview-ink", profileInkColor(color));
+  }
+
+  function prepareChatAccentPanel() {
+    const forcedColor = normalizeChatAccent(currentConfig.ClassChatThemeColor);
+    const personalColor = personalChatAccent();
+    const selectedColor = currentConfig.ClassChatThemeForced && forcedColor
+      ? forcedColor
+      : personalColor || forcedColor || DEFAULT_PROFILE_COLOR;
+    const presetValues = Array.from(
+      elements.accentChoices.querySelectorAll('input[name="classChatAccentColor"]')
+    ).map((input) => normalizeProfileColor(input.value));
+    const choices = Array.from(elements.accentChoices.querySelectorAll('input[name="classChatAccentColor"]'));
+    accentCustomColorSelected = !presetValues.includes(selectedColor);
+    elements.accentCustomColor.value = selectedColor;
+    setCustomColorSelected(elements.accentCustomColor, accentCustomColorSelected);
+    selectRadioColor(choices, accentCustomColorSelected ? "" : selectedColor);
+    elements.accentAdmin.hidden = currentProfile?.role !== "admin";
+    elements.accentForce.checked = currentConfig.ClassChatThemeForced === true;
+    elements.accentStatus.textContent = elements.panel.classList.contains("is-dark")
+      ? "Official Dark Mode is active. Custom themes remain saved for Light Mode."
+      : currentConfig.ClassChatThemeForced
+        ? "The Admin class-wide theme is currently active."
+        : personalColor
+          ? "Your personal chat theme is active."
+          : "Using the default Light Mode theme.";
+    elements.accentMessage.textContent = "";
+    updateChatAccentPreview();
+  }
+
+  function applyEffectiveChatAccent() {
+    if (!currentProfile) return;
+    const forcedColor = normalizeChatAccent(currentConfig.ClassChatThemeColor);
+    const color = currentConfig.ClassChatThemeForced && forcedColor
+      ? forcedColor
+      : personalChatAccent();
+    if (!color) {
+      clearAppliedChatAccent();
+      return;
+    }
+    elements.panel.classList.add("has-custom-theme");
+    elements.panel.style.setProperty("--chat-accent", color);
+    elements.panel.style.setProperty("--chat-accent-ink", profileInkColor(color));
+    elements.panel.style.setProperty("--chat-accent-soft", `${color}2E`);
+  }
+
+  function clearAppliedChatAccent() {
+    elements.panel.classList.remove("has-custom-theme");
+    elements.panel.style.removeProperty("--chat-accent");
+    elements.panel.style.removeProperty("--chat-accent-ink");
+    elements.panel.style.removeProperty("--chat-accent-soft");
+  }
+
+  function savePersonalChatAccent(event) {
+    event.preventDefault();
+    if (!currentProfile?.uid) return;
+    const color = selectedChatAccent();
+    try {
+      localStorage.setItem(`${CHAT_ACCENT_PREFIX}${currentProfile.uid}`, color);
+      applyEffectiveChatAccent();
+      elements.accentMessage.textContent = currentConfig.ClassChatThemeForced
+        ? "Personal theme saved. It will apply when the class-wide theme is turned off."
+        : "Personal chat theme saved.";
+    } catch (error) {
+      elements.accentMessage.textContent = "This browser could not save the personal theme.";
+    }
+  }
+
+  function resetPersonalChatAccent() {
+    if (!currentProfile?.uid) return;
+    try {
+      localStorage.removeItem(`${CHAT_ACCENT_PREFIX}${currentProfile.uid}`);
+    } catch (error) {
+      // Reset still updates the current view when storage is unavailable.
+    }
+    applyEffectiveChatAccent();
+    prepareChatAccentPanel();
+    elements.accentMessage.textContent = currentConfig.ClassChatThemeForced
+      ? "Personal theme reset. The class-wide theme remains active."
+      : "Default Light Mode theme restored.";
+  }
+
+  async function saveClassChatAccent() {
+    if (currentProfile?.role !== "admin") return;
+    const color = selectedChatAccent();
+    elements.accentApplyClass.disabled = true;
+    elements.accentMessage.textContent = "Updating class theme...";
+    try {
+      const batch = db.batch();
+      batch.set(db.collection("chatConfig").doc("main"), {
+        ClassChatThemeColor: color,
+        ClassChatThemeForced: elements.accentForce.checked,
+        UpdatedBy: currentProfile.uid,
+        UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+      addAuditToBatch(batch, "CLASS_THEME_CHANGED", {
+        Details: elements.accentForce.checked
+          ? `Class-wide theme set to ${color}`
+          : "Class-wide theme override turned off"
+      });
+      await batch.commit();
+      elements.accentMessage.textContent = elements.accentForce.checked
+        ? "Class-wide theme applied to everyone."
+        : "Class-wide override turned off.";
+    } catch (error) {
+      elements.accentMessage.textContent = readableError(error);
+    } finally {
+      elements.accentApplyClass.disabled = false;
+    }
+  }
+
   function profileColorForMessage(message) {
     const directoryProfile = chatDirectory.find((entry) => entry.uid === message.SenderUID);
     if (directoryProfile?.AvatarColor) return normalizeProfileColor(directoryProfile.AvatarColor);
@@ -1121,7 +1295,9 @@
         ClickableLinksEnabled: snapshot.data()?.ClickableLinksEnabled !== false,
         AllowMedia: snapshot.data()?.AllowMedia !== false,
         WatchPartyEnabled: snapshot.data()?.WatchPartyEnabled !== false,
-        WatchPartyFullscreenAllowed: snapshot.data()?.WatchPartyFullscreenAllowed !== false
+        WatchPartyFullscreenAllowed: snapshot.data()?.WatchPartyFullscreenAllowed !== false,
+        ClassChatThemeColor: normalizeChatAccent(snapshot.data()?.ClassChatThemeColor),
+        ClassChatThemeForced: snapshot.data()?.ClassChatThemeForced === true
       };
       applyChatConfig();
       if (previousLinkSetting !== undefined
@@ -1336,6 +1512,7 @@
 
   function applyChatConfig() {
     if (!currentProfile) return;
+    applyEffectiveChatAccent();
     const restricted = isChatRestrictedForUser();
     elements.input.disabled = restricted;
     elements.send.disabled = restricted;
@@ -3765,7 +3942,8 @@
       USER_MUTED: ["&#128263;", "muted a student"],
       REPORT_CREATED: ["&#9873;", "reported a message"],
       WATCH_PARTY_STARTED: ["&#9654;", "started a Watch Party"],
-      WATCH_PARTY_ENDED: ["&#9632;", "ended a Watch Party"]
+      WATCH_PARTY_ENDED: ["&#9632;", "ended a Watch Party"],
+      CLASS_THEME_CHANGED: ["&#9679;", "changed the class theme"]
     };
     const [icon, action] = labels[event] || ["&#8226;", event.toLowerCase().replaceAll("_", " ")];
     const actor = entry.ActorName || "Class member";

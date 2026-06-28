@@ -123,6 +123,23 @@
   animation: classChatEnter .28s cubic-bezier(.22, .8, .25, 1) both;
 }
 
+.classChatPanel.is-menu-open::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 31;
+  background: rgba(12, 12, 12, .38);
+  backdrop-filter: blur(2.5px);
+  -webkit-backdrop-filter: blur(2.5px);
+  pointer-events: auto;
+  animation: classChatMenuShadeIn .12s ease-out both;
+}
+
+@keyframes classChatMenuShadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 .classChatPanel [hidden] {
   display: none !important;
 }
@@ -723,6 +740,113 @@
   opacity: .48;
   box-shadow: none;
   cursor: not-allowed;
+}
+
+.classChatAccentPreview {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+  border: 1px solid #ddd6c8;
+  border-radius: 13px;
+  padding: 16px;
+  background: #fff;
+}
+
+.classChatAccentPreview span,
+.classChatAccentPreview b {
+  max-width: 78%;
+  border-radius: 14px;
+  padding: 10px 12px;
+  font-size: .78rem;
+  line-height: 1.25;
+}
+
+.classChatAccentPreview span {
+  justify-self: start;
+  background: #efede8;
+  color: #111;
+  font-weight: 700;
+}
+
+.classChatAccentPreview b {
+  justify-self: end;
+  background: var(--preview-accent, #f7c600);
+  color: var(--preview-ink, #111);
+}
+
+.classChatAccentActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-top: 14px;
+}
+
+.classChatAccentActions button,
+.classChatAccentAdmin > button {
+  min-height: 42px;
+  border: 2px solid #111;
+  border-radius: 11px;
+  padding: 9px;
+  background: #f7c600;
+  color: #111;
+  font: inherit;
+  font-size: .8rem;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.classChatAccentActions button[type="button"] {
+  background: #fff;
+}
+
+.classChatAccentAdmin {
+  margin-top: 20px;
+  border-top: 1px solid #ded8cd;
+  padding-top: 16px;
+}
+
+.classChatAccentAdmin > button {
+  width: 100%;
+}
+
+.classChatPanel.has-custom-theme:not(.is-dark) .classChatAvatar,
+.classChatPanel.has-custom-theme:not(.is-dark) .classChatWelcomeMark,
+.classChatPanel.has-custom-theme:not(.is-dark) .classChatComposer .classChatMediaOpen,
+.classChatPanel.has-custom-theme:not(.is-dark) .classChatJumpUnread,
+.classChatPanel.has-custom-theme:not(.is-dark) .classChatWatchEmpty > span,
+.classChatPanel.has-custom-theme:not(.is-dark) .classChatWatchControls #classChatWatchPlayPause,
+.classChatPanel.has-custom-theme:not(.is-dark) .classChatWatchRequestCard form button,
+.classChatPanel.has-custom-theme:not(.is-dark) .classChatWatchQueue article button[data-watch-request-action="approve"] {
+  background: var(--chat-accent);
+  color: var(--chat-accent-ink);
+}
+
+.classChatPanel.has-custom-theme:not(.is-dark) .classChatAvatar {
+  outline-color: var(--chat-accent);
+}
+
+.classChatPanel.has-custom-theme:not(.is-dark) .classChatMessage.is-own .classChatBubble {
+  background: var(--chat-accent);
+  color: var(--chat-accent-ink);
+}
+
+.classChatPanel.has-custom-theme:not(.is-dark) .classChatMessage.is-own .classChatLink,
+.classChatPanel.has-custom-theme:not(.is-dark) .classChatMessage.is-own .classChatMention {
+  color: var(--chat-accent-ink);
+}
+
+.classChatPanel.has-custom-theme:not(.is-dark) .classChatComposer textarea:focus {
+  box-shadow: 0 0 0 3px var(--chat-accent-soft);
+}
+
+.classChatPanel.has-custom-theme:not(.is-dark) .classChatComposer button {
+  color: var(--chat-accent);
+}
+
+.classChatPanel.has-custom-theme:not(.is-dark) input[type="checkbox"],
+.classChatPanel.has-custom-theme:not(.is-dark) input[type="radio"],
+.classChatPanel.has-custom-theme:not(.is-dark) input[type="range"] {
+  accent-color: var(--chat-accent);
 }
 
 .classChatColorPreview {
@@ -3133,6 +3257,30 @@ body.classChatIsOpen {
 
 .classChatPanel.is-dark .classChatAuditItem details {
   background: #303030;
+}
+
+.classChatPanel.is-dark .classChatAccentPreview {
+  border-color: #3c3c3c;
+  background: #1d1d1d;
+}
+
+.classChatPanel.is-dark .classChatAccentPreview span {
+  background: #303030;
+  color: #fff;
+}
+
+.classChatPanel.is-dark .classChatAccentActions button,
+.classChatPanel.is-dark .classChatAccentAdmin > button {
+  border-color: #555;
+}
+
+.classChatPanel.is-dark .classChatAccentActions button[type="button"] {
+  background: #292929;
+  color: #fff;
+}
+
+.classChatPanel.is-dark .classChatAccentAdmin {
+  border-color: #383838;
 }
 
 .classChatPanel.is-dark .classChatSearchResult > button {
