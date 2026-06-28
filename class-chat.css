@@ -2074,13 +2074,42 @@
   border: 0;
 }
 
+.classChatWatchPlayer {
+  position: relative;
+}
+
 .classChatWatchFrame {
   object-fit: contain;
+  object-position: center center;
   background: #000;
 }
 
 .classChatWatchDriveVideo {
   color-scheme: dark;
+}
+
+.classChatWatchOpenSite {
+  position: absolute;
+  left: 9px;
+  bottom: 9px;
+  z-index: 3;
+  border: 1px solid rgba(255, 255, 255, .42);
+  border-radius: 999px;
+  padding: 7px 11px;
+  background: rgba(17, 17, 17, .78);
+  color: #fff;
+  font-size: .68rem;
+  font-weight: 900;
+  line-height: 1;
+  text-decoration: none;
+  backdrop-filter: blur(8px);
+}
+
+.classChatWatchStage[data-provider="drive"],
+.classChatWatchStage[data-provider="website"] {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 9;
 }
 
 .classChatWatchEmpty {

@@ -42,6 +42,16 @@ service cloud.firestore {
         || get(/databases/$(database)/documents/chatConfig/main).data.AllowMedia != false;
     }
 
+    function isWatchPartyAllowed() {
+      return !exists(/databases/$(database)/documents/chatConfig/main)
+        || get(/databases/$(database)/documents/chatConfig/main).data.WatchPartyEnabled != false;
+    }
+
+    function isAllowedProfileColor(color) {
+      return color is string
+        && color.matches("^#[0-9A-Fa-f]{6}$");
+    }
+
     function isNotMuted() {
       return isStaff()
         || !("MutedUntil" in get(/databases/$(database)/documents/chatProfiles/$(request.auth.uid)).data)
@@ -136,8 +146,24 @@ service cloud.firestore {
           && request.auth.uid == userId
           && resource.data.MustChangePin == true
           && request.resource.data.MustChangePin == false
+          && isAllowedProfileColor(request.resource.data.AvatarColor)
+          && request.resource.data.ColorChangedAt == request.time
           && request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(["MustChangePin", "UpdatedAt"])
+            .hasOnly(["MustChangePin", "AvatarColor", "ColorChangedAt", "UpdatedAt"])
+        )
+        || (
+          request.auth != null
+          && request.auth.uid == userId
+          && resource.data.MustChangePin == false
+          && request.resource.data.MustChangePin == false
+          && isAllowedProfileColor(request.resource.data.AvatarColor)
+          && request.resource.data.ColorChangedAt == request.time
+          && (
+            !("ColorChangedAt" in resource.data)
+            || resource.data.ColorChangedAt <= request.time - duration.value(3, "d")
+          )
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(["AvatarColor", "ColorChangedAt", "UpdatedAt"])
         );
     }
 
@@ -280,7 +306,20 @@ service cloud.firestore {
 
     match /chatDirectory/{userId} {
       allow read: if isChatMember();
-      allow create, update, delete: if isAdmin();
+      allow create, update: if isAdmin()
+        || (
+          request.auth != null
+          && request.auth.uid == userId
+          && getAfter(/databases/$(database)/documents/chatProfiles/$(userId)).data.Active == true
+          && getAfter(/databases/$(database)/documents/chatProfiles/$(userId)).data.Blocked != true
+          && getAfter(/databases/$(database)/documents/chatProfiles/$(userId)).data.MustChangePin == false
+          && request.resource.data.Name == getAfter(/databases/$(database)/documents/chatProfiles/$(userId)).data.Name
+          && request.resource.data.Role == "student"
+          && request.resource.data.AvatarColor == getAfter(/databases/$(database)/documents/chatProfiles/$(userId)).data.AvatarColor
+          && isAllowedProfileColor(request.resource.data.AvatarColor)
+          && request.resource.data.keys().hasOnly(["Name", "Role", "AvatarColor", "UpdatedAt"])
+        );
+      allow delete: if isAdmin();
     }
 
     match /chatSaved/{userId}/items/{messageId} {
@@ -293,6 +332,55 @@ service cloud.firestore {
       allow create: if isChatMember()
         && request.resource.data.ReporterUID == request.auth.uid;
       allow read, update, delete: if isAdmin();
+    }
+
+    match /chatWatchRequests/{userId} {
+      allow read: if isStaff()
+        || (isChatMember() && request.auth.uid == userId);
+      allow create, update: if isChatMember()
+        && !isStaff()
+        && isWatchPartyAllowed()
+        && request.auth.uid == userId
+        && request.resource.data.RequesterUID == request.auth.uid
+        && request.resource.data.RequesterName is string
+        && request.resource.data.Title is string
+        && request.resource.data.OriginalURL is string
+        && request.resource.data.VideoID is string
+        && request.resource.data.Provider in ["youtube", "tiktok", "instagram", "drive", "website"]
+        && request.resource.data.Status == "pending"
+        && request.resource.data.keys().hasOnly([
+          "RequesterUID", "RequesterName", "Title", "Provider", "VideoID",
+          "InstagramType", "OriginalURL", "Status", "CreatedAt", "UpdatedAt"
+        ]);
+      allow update: if isStaff();
+      allow delete: if isStaff()
+        || (isChatMember() && request.auth.uid == userId);
+    }
+
+    match /chatWatchParty/{docId} {
+      allow read: if isChatMember();
+      allow create: if isStaff() && docId == "main";
+      allow update: if isStaff()
+        || (
+          docId == "main"
+          && isChatMember()
+          && resource.data.Active == true
+          && resource.data.HostRole == "student"
+          && resource.data.HostUID == request.auth.uid
+          && resource.data.HostExpiresAt > request.time
+          && request.resource.data.HostUID == resource.data.HostUID
+          && request.resource.data.VideoID == resource.data.VideoID
+          && request.resource.data.Provider == resource.data.Provider
+          && request.resource.data.OriginalURL == resource.data.OriginalURL
+          && request.resource.data.PlaybackState in ["playing", "paused"]
+          && request.resource.data.Position is number
+          && request.resource.data.Position >= 0
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            "Active", "PlaybackState", "Position", "StateUpdatedAt",
+            "UpdatedAt", "EndedBy", "EndedAt"
+          ])
+        );
+      allow delete: if isStaff();
     }
 
     match /chatScheduled/{messageId} {

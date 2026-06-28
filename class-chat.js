@@ -1870,7 +1870,8 @@
     elements.watchNow.hidden = !active;
     elements.watchControls.hidden = !active || !canControlWatchParty()
       || currentWatchParty.Provider === "instagram"
-      || currentWatchParty.Provider === "drive";
+      || currentWatchParty.Provider === "drive"
+      || currentWatchParty.Provider === "website";
     elements.watchFullscreen.hidden = !active || currentConfig.WatchPartyFullscreenAllowed === false;
     elements.watchRequestForm.querySelector("button").textContent = isWatchStaff()
       ? "Start Watch Party"
@@ -1894,7 +1895,9 @@
     }
 
     const provider = String(currentWatchParty.Provider || "video");
-    const usesIndependentPlayer = provider === "instagram" || provider === "drive";
+    const usesIndependentPlayer = provider === "instagram"
+      || provider === "drive"
+      || provider === "website";
     elements.watchStatus.textContent = currentWatchParty.PlaybackState === "playing"
       ? `Playing with ${currentWatchParty.HostName || "SFK"}`
       : usesIndependentPlayer
@@ -1916,7 +1919,10 @@
     const provider = currentWatchParty.Provider;
     const videoId = currentWatchParty.VideoID || "";
     const instagramType = currentWatchParty.InstagramType || "reel";
-    const nextKey = `${provider}:${instagramType}:${videoId}`;
+    const sourceKey = provider === "website"
+      ? String(currentWatchParty.OriginalURL || "")
+      : videoId;
+    const nextKey = `${provider}:${instagramType}:${sourceKey}`;
     if (watchPlayerKey === nextKey && watchPlayer?.isConnected) {
       applyWatchStateToPlayer(false);
       return;
@@ -1927,10 +1933,14 @@
     watchPlayerProvider = provider;
     watchPlayerTime = Number(currentWatchParty.Position || 0);
     watchPlayerDuration = 0;
-    watchJoined = provider === "instagram" || provider === "drive";
+    watchJoined = provider === "instagram" || provider === "drive" || provider === "website";
 
     if (provider === "drive") {
       mountDriveWatchPlayer(videoId);
+      return;
+    }
+    if (provider === "website") {
+      mountWebsiteWatchPlayer(currentWatchParty.OriginalURL);
       return;
     }
 
@@ -1966,7 +1976,8 @@
     video.controls = true;
     video.playsInline = true;
     video.preload = "metadata";
-    video.src = `https://drive.google.com/uc?export=download&id=${encodeURIComponent(videoId)}`;
+    video.src = `https://drive.usercontent.google.com/download?id=${encodeURIComponent(videoId)}&export=download&confirm=t`;
+    video.referrerPolicy = "no-referrer";
     video.setAttribute("controlslist", "nodownload");
     video.addEventListener("webkitbeginfullscreen", () => {
       window.SFK_WATCH_PARTY_LANDSCAPE = true;
@@ -1995,6 +2006,32 @@
 
     elements.watchPlayer.replaceChildren(video);
     watchPlayer = video;
+    renderWatchParty();
+  }
+
+  function mountWebsiteWatchPlayer(value) {
+    const url = safeWatchWebsiteUrl(value);
+    if (!url) return;
+
+    const frame = document.createElement("iframe");
+    frame.className = "classChatWatchFrame";
+    frame.title = "Shared website";
+    frame.src = url;
+    frame.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
+    frame.allowFullscreen = true;
+    frame.setAttribute("allowfullscreen", "");
+    frame.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-presentation allow-popups");
+    frame.referrerPolicy = "strict-origin-when-cross-origin";
+
+    const openLink = document.createElement("a");
+    openLink.className = "classChatWatchOpenSite";
+    openLink.href = url;
+    openLink.target = "_blank";
+    openLink.rel = "noopener noreferrer";
+    openLink.textContent = "Open website";
+
+    elements.watchPlayer.replaceChildren(frame, openLink);
+    watchPlayer = frame;
     renderWatchParty();
   }
 
@@ -2053,7 +2090,8 @@
     if (!currentWatchParty?.Active
         || !watchPlayer
         || currentWatchParty.Provider === "instagram"
-        || currentWatchParty.Provider === "drive") return;
+        || currentWatchParty.Provider === "drive"
+        || currentWatchParty.Provider === "website") return;
     const target = watchTargetPosition();
     const drift = Math.abs(Number(watchPlayerTime || 0) - target);
     suppressWatchPlayerEvents = true;
@@ -2194,7 +2232,28 @@
     }
     const driveId = googleDriveFileId(url);
     if (driveId) return { provider: "drive", videoId: driveId, url };
-    throw new Error("Use a YouTube, TikTok, Instagram, or public Google Drive video link.");
+    const websiteUrl = safeWatchWebsiteUrl(url);
+    if (websiteUrl) return { provider: "website", videoId: "website", url: websiteUrl };
+    throw new Error("Use a public video or website link.");
+  }
+
+  function safeWatchWebsiteUrl(value) {
+    const url = safeHttpUrl(value);
+    if (!url) return "";
+    try {
+      const parsed = new URL(url);
+      const host = parsed.hostname.toLowerCase();
+      const isPrivateHost = host === "localhost"
+        || host === "0.0.0.0"
+        || host === "::1"
+        || host.startsWith("127.")
+        || host.startsWith("10.")
+        || host.startsWith("192.168.")
+        || /^172\.(1[6-9]|2\d|3[01])\./.test(host);
+      return parsed.protocol === "https:" && !isPrivateHost ? parsed.href : "";
+    } catch (error) {
+      return "";
+    }
   }
 
   async function submitWatchRequest(event) {
