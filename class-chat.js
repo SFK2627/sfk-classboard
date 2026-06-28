@@ -2135,7 +2135,6 @@
 
     if (!active) {
       watchJoined = false;
-      watchSessionJoined = false;
       elements.watchStatus.textContent = "No active watch party";
       elements.watchJoin.hidden = true;
       elements.watchStage.classList.add("is-empty");
