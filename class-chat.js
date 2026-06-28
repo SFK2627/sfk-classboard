@@ -312,6 +312,8 @@
     elements.watchSeek = document.getElementById("classChatWatchSeek");
     elements.watchTime = document.getElementById("classChatWatchTime");
     elements.watchRequestForm = document.getElementById("classChatWatchRequestForm");
+    elements.watchFormTitle = document.getElementById("classChatWatchFormTitle");
+    elements.watchFormHint = document.getElementById("classChatWatchFormHint");
     elements.watchUrl = document.getElementById("classChatWatchUrl");
     elements.watchRequestTitle = document.getElementById("classChatWatchRequestTitle");
     elements.watchRequestMessage = document.getElementById("classChatWatchRequestMessage");
@@ -1908,6 +1910,11 @@
       || currentWatchParty.Provider === "vimeo"
       || currentWatchParty.Provider === "website";
     elements.watchFullscreen.hidden = !active || currentConfig.WatchPartyFullscreenAllowed === false;
+    const staffCanStart = isWatchStaff();
+    elements.watchFormTitle.textContent = staffCanStart ? "Start Watch Party" : "Request to Host";
+    elements.watchFormHint.textContent = staffCanStart
+      ? "Paste a supported video link to start it for the class."
+      : "Send a supported video link for Admin approval.";
     elements.watchRequestForm.querySelector("button").textContent = isWatchStaff()
       ? "Start Watch Party"
       : "Send request";
@@ -1923,7 +1930,9 @@
           <div class="classChatWatchEmpty">
             <span aria-hidden="true">&#9654;</span>
             <strong>No video is playing</strong>
-            <small>Approved host requests will appear here.</small>
+            <small>${staffCanStart
+              ? "Start a Watch Party using the form below."
+              : "Approved host requests will appear here."}</small>
           </div>`;
       }
       return;

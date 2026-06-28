@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-classboard-v159-realtime-reactions";
+const CACHE_NAME = "sfk-classboard-v160-role-aware-watch-form";
 const APP_SHELL = [
   "./",
   "./index.html",
