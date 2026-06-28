@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-classboard-v163-custom-chat-themes";
+const CACHE_NAME = "sfk-classboard-v164-custom-accents-dark-mode";
 const APP_SHELL = [
   "./",
   "./index.html",

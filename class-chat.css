@@ -809,43 +809,41 @@
   width: 100%;
 }
 
-.classChatPanel.has-custom-theme:not(.is-dark) .classChatAvatar,
-.classChatPanel.has-custom-theme:not(.is-dark) .classChatWelcomeMark,
-.classChatPanel.has-custom-theme:not(.is-dark) .classChatComposer .classChatMediaOpen,
-.classChatPanel.has-custom-theme:not(.is-dark) .classChatJumpUnread,
-.classChatPanel.has-custom-theme:not(.is-dark) .classChatWatchEmpty > span,
-.classChatPanel.has-custom-theme:not(.is-dark) .classChatWatchControls #classChatWatchPlayPause,
-.classChatPanel.has-custom-theme:not(.is-dark) .classChatWatchRequestCard form button,
-.classChatPanel.has-custom-theme:not(.is-dark) .classChatWatchQueue article button[data-watch-request-action="approve"] {
+.classChatPanel.has-custom-theme .classChatComposer .classChatMediaOpen,
+.classChatPanel.has-custom-theme .classChatJumpUnread,
+.classChatPanel.has-custom-theme .classChatWatchEmpty > span,
+.classChatPanel.has-custom-theme .classChatWatchControls #classChatWatchPlayPause,
+.classChatPanel.has-custom-theme .classChatWatchRequestCard form button,
+.classChatPanel.has-custom-theme .classChatWatchQueue article button[data-watch-request-action="approve"] {
   background: var(--chat-accent);
   color: var(--chat-accent-ink);
 }
 
-.classChatPanel.has-custom-theme:not(.is-dark) .classChatAvatar {
-  outline-color: var(--chat-accent);
-}
-
-.classChatPanel.has-custom-theme:not(.is-dark) .classChatMessage.is-own .classChatBubble {
+.classChatPanel.has-custom-theme .classChatMessage.is-own .classChatBubble {
   background: var(--chat-accent);
   color: var(--chat-accent-ink);
 }
 
-.classChatPanel.has-custom-theme:not(.is-dark) .classChatMessage.is-own .classChatLink,
-.classChatPanel.has-custom-theme:not(.is-dark) .classChatMessage.is-own .classChatMention {
+.classChatPanel.has-custom-theme .classChatMessage.is-own .classChatLink,
+.classChatPanel.has-custom-theme .classChatMessage.is-own .classChatMention {
   color: var(--chat-accent-ink);
 }
 
-.classChatPanel.has-custom-theme:not(.is-dark) .classChatComposer textarea:focus {
+.classChatPanel.has-custom-theme .classChatComposer textarea:focus {
   box-shadow: 0 0 0 3px var(--chat-accent-soft);
 }
 
-.classChatPanel.has-custom-theme:not(.is-dark) .classChatComposer button {
+.classChatPanel.has-custom-theme .classChatComposer button {
   color: var(--chat-accent);
 }
 
-.classChatPanel.has-custom-theme:not(.is-dark) input[type="checkbox"],
-.classChatPanel.has-custom-theme:not(.is-dark) input[type="radio"],
-.classChatPanel.has-custom-theme:not(.is-dark) input[type="range"] {
+.classChatPanel.has-custom-theme .classChatTopbar .classChatWatchOpen.is-active {
+  color: var(--chat-accent);
+}
+
+.classChatPanel.has-custom-theme input[type="checkbox"],
+.classChatPanel.has-custom-theme input[type="radio"],
+.classChatPanel.has-custom-theme input[type="range"] {
   accent-color: var(--chat-accent);
 }
 
@@ -3583,6 +3581,41 @@ body.classChatIsOpen {
 .classChatPanel.is-dark .classChatReactionPersonName small,
 .classChatPanel.is-dark .classChatReactionDetailsEmpty {
   color: #a9adb3;
+}
+
+.classChatPanel.has-custom-theme.is-dark .classChatComposer .classChatMediaOpen,
+.classChatPanel.has-custom-theme.is-dark .classChatJumpUnread,
+.classChatPanel.has-custom-theme.is-dark .classChatWatchEmpty > span,
+.classChatPanel.has-custom-theme.is-dark .classChatWatchControls #classChatWatchPlayPause,
+.classChatPanel.has-custom-theme.is-dark .classChatWatchRequestCard form button,
+.classChatPanel.has-custom-theme.is-dark .classChatWatchQueue article button[data-watch-request-action="approve"] {
+  background: var(--chat-accent);
+  color: var(--chat-accent-ink);
+}
+
+.classChatPanel.has-custom-theme.is-dark .classChatMessage.is-own .classChatBubble {
+  border-color: var(--chat-accent);
+  background: var(--chat-accent);
+  color: var(--chat-accent-ink);
+}
+
+.classChatPanel.has-custom-theme.is-dark .classChatMessage.is-own .classChatPollOption {
+  color: var(--chat-accent-ink);
+}
+
+.classChatPanel.has-custom-theme.is-dark .classChatQuoted,
+.classChatPanel.has-custom-theme.is-dark .classChatPinned {
+  border-color: var(--chat-accent);
+}
+
+.classChatPanel.has-custom-theme.is-dark .classChatReactionChip.is-mine {
+  border-color: var(--chat-accent);
+}
+
+.classChatPanel.has-custom-theme.is-dark .classChatComposer button,
+.classChatPanel.has-custom-theme.is-dark .classChatWatchOpen.is-active,
+.classChatPanel.has-custom-theme.is-dark .classChatWatchNow > span {
+  color: var(--chat-accent);
 }
 
 @media (max-width: 600px) {

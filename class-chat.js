@@ -1071,7 +1071,7 @@
     elements.accentAdmin.hidden = currentProfile?.role !== "admin";
     elements.accentForce.checked = currentConfig.ClassChatThemeForced === true;
     elements.accentStatus.textContent = elements.panel.classList.contains("is-dark")
-      ? "Official Dark Mode is active. Custom themes remain saved for Light Mode."
+      ? "Dark Mode keeps its black background while your selected accent color still applies."
       : currentConfig.ClassChatThemeForced
         ? "The Admin class-wide theme is currently active."
         : personalColor
