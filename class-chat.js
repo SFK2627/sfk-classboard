@@ -1981,8 +1981,8 @@
     const canRemove = currentProfile.role === "admin" || canDeleteOwn;
     elements.reactionTray.innerHTML = `
       <div class="classChatReactionChoices">
-        ${REACTIONS.map((emoji) => (
-          `<button type="button" data-chat-emoji="${emoji}" aria-label="React ${emoji}">${emoji}</button>`
+        ${REACTIONS.map((emoji, index) => (
+          `<button type="button" data-chat-emoji="${emoji}" aria-label="React ${emoji}" style="--reaction-index:${index}">${emoji}</button>`
         )).join("")}
       </div>
       <div class="classChatTrayActions">
@@ -1998,7 +1998,7 @@
       </div>`;
 
     elements.reactionTray.querySelectorAll("[data-chat-emoji]").forEach((button) => {
-      button.addEventListener("click", () => reactToMessage(messageId, button.dataset.chatEmoji));
+      button.addEventListener("click", () => reactToMessage(messageId, button.dataset.chatEmoji, button));
     });
     elements.reactionTray.querySelectorAll("[data-chat-tray-action]").forEach((button) => {
       button.addEventListener("click", () => {
@@ -2015,6 +2015,7 @@
       });
     });
 
+    elements.reactionTray.classList.remove("is-opening");
     elements.reactionTray.hidden = false;
     const panelRect = elements.layer.querySelector(".classChatPanel").getBoundingClientRect();
     const anchorRect = anchor.getBoundingClientRect();
@@ -2023,10 +2024,13 @@
     const top = Math.max(74, anchorRect.top - panelRect.top - 112);
     elements.reactionTray.style.left = `${left}px`;
     elements.reactionTray.style.top = `${top}px`;
+    void elements.reactionTray.offsetWidth;
+    elements.reactionTray.classList.add("is-opening");
   }
 
   function hideReactionTray() {
     reactionMessageId = "";
+    elements.reactionTray.classList.remove("is-opening");
     elements.reactionTray.hidden = true;
   }
 
@@ -2047,8 +2051,85 @@
     }
   }
 
-  async function reactToMessage(messageId, emoji) {
+  function animateReactionSelection(messageId, emoji, source) {
+    const article = elements.messages.querySelector(`.classChatMessage[data-message-id="${cssEscape(messageId)}"]`);
+    const bubble = article?.querySelector(".classChatBubble");
+    if (!article || !bubble || !source) return;
+    navigator.vibrate?.([10, 18, 10]);
+
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+      showReactionBurst(article, emoji);
+      return;
+    }
+
+    const sourceRect = source.getBoundingClientRect();
+    const targetRect = bubble.getBoundingClientRect();
+    const startX = sourceRect.left + (sourceRect.width / 2);
+    const startY = sourceRect.top + (sourceRect.height / 2);
+    const endX = targetRect.left + (targetRect.width / 2);
+    const endY = targetRect.top + Math.min(targetRect.height * .52, 54);
+    const flying = document.createElement("span");
+    flying.className = "classChatFlyingReaction";
+    flying.textContent = emoji;
+    flying.style.left = `${startX}px`;
+    flying.style.top = `${startY}px`;
+    document.body.appendChild(flying);
+
+    const animation = flying.animate([
+      { opacity: 0, transform: "translate(-50%, -50%) scale(.55) rotate(-10deg)" },
+      { opacity: 1, transform: "translate(-50%, -75%) scale(1.45) rotate(5deg)", offset: .32 },
+      {
+        opacity: .95,
+        transform: `translate(calc(-50% + ${endX - startX}px), calc(-50% + ${endY - startY}px)) scale(.72) rotate(0deg)`
+      }
+    ], {
+      duration: 430,
+      easing: "cubic-bezier(.2,.9,.25,1)",
+      fill: "forwards"
+    });
+    animation.finished.then(() => {
+      flying.remove();
+      showReactionBurst(article, emoji);
+    }).catch(() => flying.remove());
+  }
+
+  function showReactionBurst(article, emoji) {
+    const bubble = article?.querySelector(".classChatBubble");
+    if (!bubble) return;
+    const burst = document.createElement("span");
+    burst.className = "classChatReactionBurst";
+    burst.innerHTML = `<b>${emoji}</b><i></i><i></i><i></i>`;
+    bubble.appendChild(burst);
+    article.classList.remove("is-reaction-pulse");
+    void article.offsetWidth;
+    article.classList.add("is-reaction-pulse");
+    window.setTimeout(() => {
+      burst.remove();
+      article.classList.remove("is-reaction-pulse");
+    }, 700);
+  }
+
+  function isRemovingOwnReaction(messageId, emoji) {
+    const container = elements.messages.querySelector(`[data-reactions-for="${cssEscape(messageId)}"]`);
+    return Array.from(container?.querySelectorAll("[data-existing-reaction]") || [])
+      .some((button) => button.dataset.existingReaction === emoji && button.classList.contains("is-mine"));
+  }
+
+  function animateReactionRemoval(messageId, emoji) {
+    const container = elements.messages.querySelector(`[data-reactions-for="${cssEscape(messageId)}"]`);
+    const chip = Array.from(container?.querySelectorAll("[data-existing-reaction]") || [])
+      .find((button) => button.dataset.existingReaction === emoji && button.classList.contains("is-mine"));
+    chip?.classList.add("is-removing");
+    navigator.vibrate?.(9);
+  }
+
+  async function reactToMessage(messageId, emoji, animationSource = null) {
     if (!REACTIONS.includes(emoji) || !currentProfile) return;
+    const removingIntent = isRemovingOwnReaction(messageId, emoji);
+    if (animationSource) {
+      if (removingIntent) animateReactionRemoval(messageId, emoji);
+      else animateReactionSelection(messageId, emoji, animationSource);
+    }
     hideReactionTray();
 
     const ref = db.collection("chatMessages").doc(messageId).collection("reactions").doc(currentProfile.uid);
@@ -2064,13 +2145,13 @@
           UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
       }
-      await loadReactions(messageId);
+      await loadReactions(messageId, removingIntent ? "" : emoji);
     } catch (error) {
       window.alert(readableError(error));
     }
   }
 
-  async function loadReactions(messageId) {
+  async function loadReactions(messageId, pulseEmoji = "") {
     const container = elements.messages.querySelector(`[data-reactions-for="${cssEscape(messageId)}"]`);
     if (!container || !db) return;
 
@@ -2095,9 +2176,18 @@
 
       container.querySelectorAll("[data-existing-reaction]").forEach((button) => {
         button.addEventListener("click", () => {
-          reactToMessage(button.dataset.messageId, button.dataset.existingReaction);
+          reactToMessage(button.dataset.messageId, button.dataset.existingReaction, button);
         });
       });
+      if (pulseEmoji) {
+        const chip = Array.from(container.querySelectorAll("[data-existing-reaction]"))
+          .find((button) => button.dataset.existingReaction === pulseEmoji);
+        if (chip) {
+          chip.classList.remove("is-new");
+          void chip.offsetWidth;
+          chip.classList.add("is-new");
+        }
+      }
     } catch (error) {
       container.innerHTML = "";
       container.closest(".classChatMessage")?.classList.remove("has-reactions");

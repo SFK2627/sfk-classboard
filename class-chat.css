@@ -1492,10 +1492,30 @@
   font-size: .72rem;
   line-height: 1.2;
   box-shadow: 0 2px 7px rgba(17, 17, 17, .14);
+  cursor: pointer;
+  transform-origin: center;
+  transition: transform .15s ease, border-color .15s ease, background .15s ease;
 }
 
 .classChatReactionChip.is-mine {
   border-color: #111;
+}
+
+.classChatReactionChip:active {
+  transform: scale(.88);
+}
+
+.classChatReactionChip.is-new {
+  animation: classChatReactionChipPop .48s cubic-bezier(.18, 1.25, .35, 1) both;
+}
+
+.classChatReactionChip.is-removing {
+  pointer-events: none;
+  animation: classChatReactionChipRemove .24s ease-in both;
+}
+
+.classChatMessage.is-reaction-pulse .classChatBubble {
+  animation: classChatReactionBubblePulse .42s cubic-bezier(.2, .9, .3, 1);
 }
 
 .classChatMessageActions {
@@ -1699,6 +1719,12 @@
   border-radius: 18px;
   background: #fff;
   box-shadow: 0 12px 32px rgba(17, 17, 17, .24);
+  transform-origin: center bottom;
+  will-change: transform, opacity;
+}
+
+.classChatReactionTray.is-opening {
+  animation: classChatReactionTrayIn .24s cubic-bezier(.18, 1.12, .32, 1) both;
 }
 
 .classChatReactionChoices {
@@ -1714,12 +1740,126 @@
   background: transparent;
   font-size: 1.15rem;
   cursor: pointer;
-  transition: transform .12s ease, background .12s ease;
+  -webkit-tap-highlight-color: transparent;
+  transform-origin: center bottom;
+  transition: transform .14s cubic-bezier(.2, .9, .3, 1), background .14s ease;
+}
+
+.classChatReactionTray.is-opening .classChatReactionChoices button {
+  animation: classChatReactionChoiceIn .34s cubic-bezier(.16, 1.35, .32, 1) both;
+  animation-delay: calc(var(--reaction-index, 0) * 22ms);
 }
 
 .classChatReactionChoices button:hover {
   background: #f4f0e6;
   transform: translateY(-3px) scale(1.08);
+}
+
+.classChatReactionChoices button:active {
+  background: #fff3bd;
+  transform: translateY(1px) scale(.76);
+}
+
+.classChatFlyingReaction {
+  position: fixed;
+  z-index: 200001;
+  display: block;
+  font-size: 1.65rem;
+  line-height: 1;
+  pointer-events: none;
+  will-change: transform, opacity;
+  filter: drop-shadow(0 5px 8px rgba(17, 17, 17, .22));
+}
+
+.classChatReactionBurst {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 4;
+  width: 58px;
+  height: 58px;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.classChatReactionBurst b {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 2rem;
+  font-weight: 400;
+  animation: classChatReactionBurstPop .62s cubic-bezier(.18, 1.2, .32, 1) both;
+  filter: drop-shadow(0 4px 7px rgba(17, 17, 17, .18));
+}
+
+.classChatReactionBurst i {
+  position: absolute;
+  top: 26px;
+  left: 26px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f7c600;
+  animation: classChatReactionSpark .58s ease-out both;
+}
+
+.classChatReactionBurst i:nth-of-type(1) {
+  --spark-x: -26px;
+  --spark-y: -19px;
+}
+
+.classChatReactionBurst i:nth-of-type(2) {
+  --spark-x: 27px;
+  --spark-y: -14px;
+  animation-delay: 35ms;
+}
+
+.classChatReactionBurst i:nth-of-type(3) {
+  --spark-x: 7px;
+  --spark-y: 27px;
+  animation-delay: 65ms;
+}
+
+@keyframes classChatReactionTrayIn {
+  0% { opacity: 0; transform: translateY(8px) scale(.88); }
+  70% { opacity: 1; transform: translateY(-1px) scale(1.015); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes classChatReactionChoiceIn {
+  0% { opacity: 0; transform: translateY(9px) scale(.45); }
+  68% { opacity: 1; transform: translateY(-3px) scale(1.12); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes classChatReactionChipPop {
+  0% { opacity: .45; transform: scale(.65); }
+  55% { opacity: 1; transform: scale(1.18); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes classChatReactionChipRemove {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: .15; transform: scale(.62); }
+}
+
+@keyframes classChatReactionBubblePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.018); }
+}
+
+@keyframes classChatReactionBurstPop {
+  0% { opacity: 0; transform: scale(.3) rotate(-12deg); }
+  42% { opacity: 1; transform: scale(1.24) rotate(5deg); }
+  76% { opacity: 1; transform: scale(.98) rotate(0); }
+  100% { opacity: 0; transform: translateY(-8px) scale(.88); }
+}
+
+@keyframes classChatReactionSpark {
+  0% { opacity: 0; transform: translate(0, 0) scale(.3); }
+  25% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--spark-x), var(--spark-y)) scale(.8); }
 }
 
 .classChatTrayActions {
@@ -2227,5 +2367,15 @@ body.classChatIsOpen {
   .classChatOpen,
   .classChatComposer button {
     transition: none;
+  }
+
+  .classChatReactionTray,
+  .classChatReactionChoices button,
+  .classChatReactionChip,
+  .classChatReactionBurst b,
+  .classChatReactionBurst i,
+  .classChatMessage.is-reaction-pulse .classChatBubble {
+    animation: none !important;
+    transition: none !important;
   }
 }
