@@ -91,6 +91,8 @@
   let watchJoined = false;
   let watchSessionJoined = false;
   let watchPlayer = null;
+  let watchHls = null;
+  let watchHlsReady = false;
   let watchPlayerProvider = "";
   let watchPlayerTime = 0;
   let watchPlayerDuration = 0;
@@ -2038,6 +2040,17 @@
     }
   }
 
+  function hlsVideoUrl(value) {
+    const url = safeHttpUrl(value);
+    if (!url) return "";
+    try {
+      const parsed = new URL(url);
+      return /\.m3u8$/i.test(parsed.pathname) ? parsed.href : "";
+    } catch (error) {
+      return "";
+    }
+  }
+
   function startWatchPartyListeners() {
     watchPartyUnsubscribe = db.collection("chatWatchParty").doc("main").onSnapshot((snapshot) => {
       currentWatchParty = snapshot.exists ? snapshot.data() : null;
@@ -2113,7 +2126,7 @@
       && currentWatchParty.Provider === "drive"
       && !watchPlayerSyncSupported;
     const directVideoUnavailable = active
-      && currentWatchParty.Provider === "direct"
+      && ["direct", "hls"].includes(currentWatchParty.Provider)
       && !watchPlayerSyncSupported;
     elements.watchEnd.hidden = !active || !canControlWatchParty();
     elements.watchNow.hidden = !active;
@@ -2162,7 +2175,9 @@
       || provider === "vimeo"
       || provider === "website";
     elements.watchStatus.textContent = directVideoUnavailable
-      ? "Direct video is unavailable on this device"
+      ? currentWatchParty.Provider === "hls"
+        ? "HLS stream is unavailable on this device"
+        : "Direct video is unavailable on this device"
       : drivePreviewFallback
       ? "Drive Preview fallback · sync unavailable"
       : currentWatchParty.PlaybackState === "playing"
@@ -2186,7 +2201,7 @@
     const provider = currentWatchParty.Provider;
     const videoId = currentWatchParty.VideoID || "";
     const instagramType = currentWatchParty.InstagramType || "reel";
-    const sourceKey = provider === "website" || provider === "direct"
+    const sourceKey = provider === "website" || provider === "direct" || provider === "hls"
       ? String(currentWatchParty.OriginalURL || "")
       : videoId;
     const nextKey = `${provider}:${instagramType}:${sourceKey}`;
@@ -2216,6 +2231,10 @@
     }
     if (provider === "direct") {
       mountDirectWatchPlayer(currentWatchParty.OriginalURL);
+      return;
+    }
+    if (provider === "hls") {
+      mountHlsWatchPlayer(currentWatchParty.OriginalURL);
       return;
     }
 
@@ -2365,6 +2384,73 @@
     renderWatchParty();
   }
 
+  function mountHlsWatchPlayer(value) {
+    const url = hlsVideoUrl(value);
+    if (!url) return;
+    const video = document.createElement("video");
+    video.className = "classChatWatchFrame classChatWatchDriveVideo";
+    video.controls = true;
+    video.playsInline = true;
+    video.preload = "metadata";
+    video.referrerPolicy = "strict-origin-when-cross-origin";
+    video.setAttribute("controlslist", "nodownload");
+    configureSyncedNativeWatchVideo(video);
+    watchHlsReady = false;
+
+    const showFailure = () => {
+      if (watchPlayer !== video) return;
+      watchHls?.destroy();
+      watchHls = null;
+      const notice = document.createElement("div");
+      notice.className = "classChatWatchEmpty";
+      notice.innerHTML = "<strong>HLS stream could not be loaded</strong><small>The stream may be offline or may not allow cross-origin playback.</small>";
+      const openLink = document.createElement("a");
+      openLink.className = "classChatWatchOpenSite";
+      openLink.href = url;
+      openLink.target = "_blank";
+      openLink.rel = "noopener noreferrer";
+      openLink.textContent = "Open stream";
+      notice.appendChild(openLink);
+      elements.watchPlayer.replaceChildren(notice);
+      watchPlayer = notice;
+      watchPlayerProvider = "hls-unavailable";
+      watchPlayerSyncSupported = false;
+      watchJoined = true;
+      renderWatchParty();
+    };
+
+    video.addEventListener("error", showFailure, { once: true });
+    elements.watchPlayer.replaceChildren(video);
+    watchPlayer = video;
+
+    const hasNativeHls = Boolean(video.canPlayType("application/vnd.apple.mpegurl"));
+    if (hasNativeHls) {
+      video.addEventListener("loadedmetadata", () => {
+        watchHlsReady = true;
+        applyWatchStateToPlayer(true);
+      }, { once: true });
+      video.src = url;
+    } else if (window.Hls?.isSupported?.()) {
+      watchHls = new window.Hls({
+        enableWorker: true,
+        lowLatencyMode: true
+      });
+      watchHls.on(window.Hls.Events.MANIFEST_PARSED, () => {
+        watchHlsReady = true;
+        applyWatchStateToPlayer(true);
+      });
+      watchHls.on(window.Hls.Events.ERROR, (_event, data) => {
+        if (data?.fatal) showFailure();
+      });
+      watchHls.loadSource(url);
+      watchHls.attachMedia(video);
+    } else {
+      showFailure();
+      return;
+    }
+    renderWatchParty();
+  }
+
   function mountWebsiteWatchPlayer(value) {
     const url = safeWatchWebsiteUrl(value);
     if (!url) return;
@@ -2384,6 +2470,9 @@
   }
 
   function destroyWatchPlayer() {
+    watchHls?.destroy();
+    watchHls = null;
+    watchHlsReady = false;
     watchPlayer?.remove();
     watchPlayer = null;
     watchPlayerKey = "";
@@ -2454,8 +2543,9 @@
     if (!currentWatchParty?.Active
         || !watchPlayer
         || currentWatchParty.Provider === "instagram"
+        || (currentWatchParty.Provider === "hls" && !watchHlsReady)
         || (currentWatchParty.Provider === "drive" && !watchPlayerSyncSupported)
-        || (currentWatchParty.Provider === "direct" && !watchPlayerSyncSupported)
+        || (["direct", "hls"].includes(currentWatchParty.Provider) && !watchPlayerSyncSupported)
         || currentWatchParty.Provider === "bilibili"
         || currentWatchParty.Provider === "vimeo"
         || currentWatchParty.Provider === "website") return;
@@ -2615,9 +2705,11 @@
     if (bilibiliId) return { provider: "bilibili", videoId: bilibiliId, url };
     const vimeoId = vimeoVideoId(url);
     if (vimeoId) return { provider: "vimeo", videoId: vimeoId, url };
+    const hlsUrl = hlsVideoUrl(url);
+    if (hlsUrl) return { provider: "hls", videoId: "hls", url: hlsUrl };
     const directUrl = directVideoUrl(url);
     if (directUrl) return { provider: "direct", videoId: "direct", url: directUrl };
-    throw new Error("That is a webpage, not a supported video link. Use YouTube, TikTok, Instagram, Drive, Bilibili, Vimeo, or a direct video file.");
+    throw new Error("That is a webpage, not a supported video link. Use YouTube, TikTok, Instagram, Drive, Bilibili, Vimeo, HLS .m3u8, or a direct video file.");
   }
 
   function safeWatchWebsiteUrl(value) {
