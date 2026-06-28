@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-classboard-v140-ig-reaction-menu";
+const CACHE_NAME = "sfk-classboard-v141-focused-reaction-menu";
 const APP_SHELL = [
   "./",
   "./index.html",

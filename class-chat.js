@@ -1858,7 +1858,7 @@
     longPressFeedbackTimer = window.setTimeout(() => {
       if (!messageGesture || messageGesture.messageId !== article.dataset.messageId) return;
       article.classList.add("is-longpress-arming");
-    }, 90);
+    }, 60);
     window.clearTimeout(longPressTimer);
     longPressTimer = window.setTimeout(() => {
       if (!messageGesture || messageGesture.messageId !== article.dataset.messageId) return;
@@ -1869,8 +1869,8 @@
       article.classList.add("is-longpress-triggered");
       window.setTimeout(() => article.classList.remove("is-longpress-triggered"), 260);
       showReactionTray(article.dataset.messageId, article.querySelector(".classChatBubble"));
-      navigator.vibrate?.([14, 24, 18]);
-    }, 440);
+      navigator.vibrate?.(8);
+    }, 350);
   }
 
   function moveMessageGesture(event) {
@@ -1910,7 +1910,7 @@
       const message = findMessage(gesture.messageId);
       if (message && !message.Removed) {
         setReply(message);
-        navigator.vibrate?.(18);
+        navigator.vibrate?.(6);
       }
       return;
     }
@@ -1936,7 +1936,7 @@
     if (!message || message.Removed) return;
     showQuickHeart(gesture.article);
     reactToMessage(gesture.messageId, "🫶");
-    navigator.vibrate?.([18, 22, 18]);
+    navigator.vibrate?.(8);
   }
 
   function cancelMessageGesture() {
@@ -1991,6 +1991,10 @@
   function showReactionTray(messageId, anchor) {
     const message = findMessage(messageId);
     if (!message || message.Removed) return;
+    clearReactionFocus();
+    const focusedArticle = elements.messages.querySelector(`.classChatMessage[data-message-id="${cssEscape(messageId)}"]`);
+    focusedArticle?.classList.add("is-reaction-focus");
+    elements.panel.classList.add("is-reaction-mode");
     reactionMessageId = messageId;
     const own = message.SenderUID === currentProfile.uid;
     const canDeleteOwn = own && Date.now() - timestampToMillis(message.CreatedAt) <= OWN_DELETE_WINDOW_MS;
@@ -2056,6 +2060,14 @@
     reactionMessageId = "";
     elements.reactionTray.classList.remove("is-opening");
     elements.reactionTray.hidden = true;
+    clearReactionFocus();
+  }
+
+  function clearReactionFocus() {
+    elements.panel.classList.remove("is-reaction-mode");
+    elements.messages.querySelectorAll(".is-reaction-focus").forEach((article) => {
+      article.classList.remove("is-reaction-focus");
+    });
   }
 
   function showQuickHeart(article) {
@@ -2086,7 +2098,7 @@
     const article = elements.messages.querySelector(`.classChatMessage[data-message-id="${cssEscape(messageId)}"]`);
     const bubble = article?.querySelector(".classChatBubble");
     if (!article || !bubble || !source) return;
-    navigator.vibrate?.([10, 18, 10]);
+    navigator.vibrate?.(6);
 
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
       showReactionBurst(article, emoji);
@@ -2151,7 +2163,7 @@
     const chip = Array.from(container?.querySelectorAll("[data-existing-reaction]") || [])
       .find((button) => button.dataset.existingReaction === emoji && button.classList.contains("is-mine"));
     chip?.classList.add("is-removing");
-    navigator.vibrate?.(9);
+    navigator.vibrate?.(5);
   }
 
   async function reactToMessage(messageId, emoji, animationSource = null) {

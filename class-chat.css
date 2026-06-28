@@ -127,6 +127,30 @@
   display: none !important;
 }
 
+.classChatPanel.is-reaction-mode::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  background: rgba(8, 8, 8, .56);
+  backdrop-filter: blur(2.2px);
+  -webkit-backdrop-filter: blur(2.2px);
+  pointer-events: none;
+  animation: classChatReactionFocusIn .12s ease-out both;
+}
+
+.classChatMessage.is-reaction-focus {
+  z-index: 12;
+}
+
+.classChatMessage.is-reaction-focus .classChatBubble {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .26);
+}
+
+.classChatPanel.is-reaction-mode .classChatMessages {
+  overflow: hidden;
+}
+
 @keyframes classChatEnter {
   from { transform: translateX(36px); opacity: .6; }
   to { transform: translateX(0); opacity: 1; }
@@ -1728,7 +1752,7 @@
 
 .classChatReactionTray {
   position: absolute;
-  z-index: 5;
+  z-index: 15;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1744,7 +1768,7 @@
 }
 
 .classChatReactionTray.is-opening {
-  animation: classChatReactionTrayIn .24s cubic-bezier(.18, 1.12, .32, 1) both;
+  animation: classChatReactionTrayIn .14s cubic-bezier(.2, .9, .3, 1) both;
 }
 
 .classChatReactionChoices {
@@ -1782,12 +1806,12 @@
 }
 
 .classChatReactionTray.is-opening .classChatReactionChoices button {
-  animation: classChatReactionChoiceIn .34s cubic-bezier(.16, 1.35, .32, 1) both;
-  animation-delay: calc(var(--reaction-index, 0) * 22ms);
+  animation: classChatReactionChoiceIn .18s cubic-bezier(.2, 1.15, .3, 1) both;
+  animation-delay: calc(var(--reaction-index, 0) * 8ms);
 }
 
 .classChatReactionTray.is-opening .classChatTrayActions {
-  animation: classChatActionPanelIn .24s cubic-bezier(.18, 1.08, .32, 1) 55ms both;
+  animation: classChatActionPanelIn .16s cubic-bezier(.2, .9, .3, 1) 18ms both;
 }
 
 .classChatReactionChoices button:hover {
@@ -1862,14 +1886,19 @@
 }
 
 @keyframes classChatReactionTrayIn {
-  0% { opacity: 0; transform: translateY(8px) scale(.88); }
-  70% { opacity: 1; transform: translateY(-1px) scale(1.015); }
+  0% { opacity: 0; transform: translateY(4px) scale(.95); }
+  72% { opacity: 1; transform: translateY(0) scale(1.008); }
   100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @keyframes classChatActionPanelIn {
-  0% { opacity: 0; transform: translateY(-7px) scale(.96); }
+  0% { opacity: 0; transform: translateY(-4px) scale(.975); }
   100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes classChatReactionFocusIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes classChatLongPressRelease {
@@ -1914,7 +1943,7 @@
 }
 
 .classChatTrayActions {
-  width: min(238px, 78vw);
+  width: min(202px, 68vw);
   max-height: min(48vh, 410px);
   align-self: flex-start;
   display: flex;
@@ -1923,8 +1952,8 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   border: 1px solid #ddd7c8;
-  border-radius: 17px;
-  padding: 6px;
+  border-radius: 14px;
+  padding: 5px;
   background: rgba(255, 255, 255, .98);
   box-shadow: 0 12px 30px rgba(17, 17, 17, .22);
   pointer-events: auto;
@@ -1938,17 +1967,17 @@
 
 .classChatTrayActions button {
   width: 100%;
-  min-height: 42px;
+  min-height: 38px;
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 9px;
   border: 0;
-  border-radius: 11px;
-  padding: 9px 12px;
+  border-radius: 9px;
+  padding: 7px 10px;
   background: transparent;
   color: #111;
-  font-size: .82rem;
+  font-size: .77rem;
   font-weight: 900;
   text-align: left;
   cursor: pointer;
@@ -1956,9 +1985,9 @@
 }
 
 .classChatTrayActions button span {
-  width: 24px;
-  flex: 0 0 24px;
-  font-size: 1.12rem;
+  width: 21px;
+  flex: 0 0 21px;
+  font-size: 1rem;
   text-align: center;
 }
 
@@ -2509,6 +2538,7 @@ body.classChatIsOpen {
   }
 
   .classChatReactionTray,
+  .classChatPanel.is-reaction-mode::after,
   .classChatReactionChoices button,
   .classChatTrayActions,
   .classChatReactionChip,
