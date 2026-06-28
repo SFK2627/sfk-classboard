@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-classboard-v173-stop-at-video-end";
+const CACHE_NAME = "sfk-classboard-v174-watch-viewers";
 const APP_SHELL = [
   "./",
   "./index.html",

@@ -134,6 +134,7 @@
     elements.watchFullscreen.addEventListener("click", toggleWatchFullscreen);
     document.addEventListener("fullscreenchange", syncWatchFullscreenButton);
     document.addEventListener("webkitfullscreenchange", syncWatchFullscreenButton);
+    document.addEventListener("visibilitychange", handleWatchVisibilityChange);
     elements.themeToggle.addEventListener("click", toggleChatTheme);
     elements.fontSizeToggle.addEventListener("click", cycleChatFontSize);
     elements.moreToggle.addEventListener("click", toggleMoreTools);
@@ -356,6 +357,7 @@
     elements.watchNow = document.getElementById("classChatWatchNow");
     elements.watchNowTitle = document.getElementById("classChatWatchNowTitle");
     elements.watchHost = document.getElementById("classChatWatchHost");
+    elements.watchViewerCount = document.getElementById("classChatWatchViewerCount");
     elements.watchProvider = document.getElementById("classChatWatchProvider");
     elements.watchControls = document.getElementById("classChatWatchControls");
     elements.watchPlayPause = document.getElementById("classChatWatchPlayPause");
@@ -1409,6 +1411,7 @@
   }
 
   function stopRealtimeListeners() {
+    clearWatchPresence();
     if (messagesUnsubscribe) messagesUnsubscribe();
     if (typingUnsubscribe) typingUnsubscribe();
     if (pinnedUnsubscribe) pinnedUnsubscribe();
@@ -2067,6 +2070,78 @@
     }
   }
 
+  function watchPartySessionId(party = currentWatchParty) {
+    if (!party?.Active) return "";
+    if (party.PartySessionID) return String(party.PartySessionID);
+    return [
+      party.HostUID || "host",
+      party.Provider || "video",
+      party.VideoID || "source",
+      timestampToMillis(party.HostExpiresAt)
+    ].join(":");
+  }
+
+  function renderWatchViewerCount() {
+    if (!elements.watchViewerCount) return;
+    const viewers = currentWatchParty?.Active && Array.isArray(currentWatchParty.ViewerUIDs)
+      ? currentWatchParty.ViewerUIDs
+      : [];
+    const count = new Set(viewers.filter(Boolean)).size;
+    elements.watchViewerCount.textContent = ` · ${count} watching`;
+    elements.watchViewerCount.title = `${count} ${count === 1 ? "viewer" : "viewers"} currently watching`;
+  }
+
+  async function refreshWatchPresence() {
+    if (!db
+        || !currentProfile?.uid
+        || !currentWatchParty?.Active
+        || !watchJoined
+        || elements.watchRoom.hidden
+        || document.hidden) return;
+    const uid = currentProfile.uid;
+    const sessionId = watchPartySessionId();
+    if (!sessionId || currentWatchParty.ViewerUIDs?.includes(uid)) return;
+    const partyRef = db.collection("chatWatchParty").doc("main");
+    await db.runTransaction(async (transaction) => {
+      const snapshot = await transaction.get(partyRef);
+      const party = snapshot.data() || {};
+      if (!party.Active
+          || watchPartySessionId(party) !== sessionId
+          || party.ViewerUIDs?.includes(uid)) return;
+      transaction.update(partyRef, {
+        ViewerUIDs: firebase.firestore.FieldValue.arrayUnion(uid),
+        PresenceUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }).catch(() => {});
+  }
+
+  async function clearWatchPresence() {
+    if (!db || !currentProfile?.uid || !currentWatchParty?.Active) return;
+    const uid = currentProfile.uid;
+    const sessionId = watchPartySessionId();
+    if (!sessionId) return;
+    const partyRef = db.collection("chatWatchParty").doc("main");
+    await db.runTransaction(async (transaction) => {
+      const snapshot = await transaction.get(partyRef);
+      const party = snapshot.data() || {};
+      if (!party.Active
+          || watchPartySessionId(party) !== sessionId
+          || !party.ViewerUIDs?.includes(uid)) return;
+      transaction.update(partyRef, {
+        ViewerUIDs: firebase.firestore.FieldValue.arrayRemove(uid),
+        PresenceUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }).catch(() => {});
+  }
+
+  function handleWatchVisibilityChange() {
+    if (document.hidden) {
+      clearWatchPresence();
+    } else {
+      refreshWatchPresence();
+    }
+  }
+
   function startWatchPartyListeners() {
     watchPartyUnsubscribe = db.collection("chatWatchParty").doc("main").onSnapshot((snapshot) => {
       currentWatchParty = snapshot.exists ? snapshot.data() : null;
@@ -2074,6 +2149,8 @@
       elements.watchBadge.hidden = !active;
       elements.watchOpen.classList.toggle("is-active", active);
       renderWatchParty();
+      if (active) refreshWatchPresence();
+      else clearWatchPresence();
     }, () => {
       currentWatchParty = null;
       elements.watchBadge.hidden = true;
@@ -2102,11 +2179,13 @@
     window.clearInterval(watchSyncTimer);
     watchSyncTimer = window.setInterval(() => {
       updateWatchTimeDisplay();
+      renderWatchViewerCount();
       if (currentWatchParty?.Active && watchJoined && Date.now() - lastWatchDriftSync > 8000) {
         lastWatchDriftSync = Date.now();
         applyWatchStateToPlayer(false);
       }
     }, 1000);
+
   }
 
   function isWatchStaff() {
@@ -2127,11 +2206,13 @@
     closeReactionDetails();
     elements.watchRoom.hidden = false;
     renderWatchParty();
+    refreshWatchPresence();
   }
 
   function closeWatchParty() {
     if (!elements.watchRoom || elements.watchRoom.hidden) return;
     elements.watchRoom.hidden = true;
+    clearWatchPresence();
     destroyWatchPlayer();
   }
 
@@ -2206,6 +2287,7 @@
     elements.watchNowTitle.textContent = currentWatchParty.Title || "Watch Party";
     elements.watchHost.textContent = `Hosted by ${currentWatchParty.HostName || "SFK"}`;
     elements.watchProvider.textContent = drivePreviewFallback ? "DRIVE PREVIEW" : provider.toUpperCase();
+    renderWatchViewerCount();
     elements.watchStage.classList.remove("is-empty");
     elements.watchStage.dataset.provider = provider;
     elements.watchJoin.hidden = usesIndependentPlayer || watchJoined;
@@ -2239,6 +2321,7 @@
       || provider === "vimeo"
       || provider === "website";
     watchJoined = independentPlayer || watchSessionJoined;
+    if (watchJoined && !elements.watchRoom.hidden) refreshWatchPresence();
 
     if (provider === "drive") {
       mountDriveWatchPlayer(videoId);
@@ -2589,6 +2672,7 @@
       sendWatchPlayerCommand("unMute");
     }
     applyWatchStateToPlayer(true);
+    refreshWatchPresence();
   }
 
   function startTikTokMutedAutoplay() {
@@ -2994,6 +3078,8 @@
     const hostIsStaff = request.RequesterUID === currentProfile.uid && isWatchStaff();
     const party = {
       Active: true,
+      PartySessionID: `${now}-${Math.random().toString(36).slice(2, 10)}`,
+      ViewerUIDs: [],
       Provider: request.Provider,
       VideoID: request.VideoID,
       InstagramType: request.InstagramType || "",

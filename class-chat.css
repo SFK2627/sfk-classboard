@@ -2474,6 +2474,15 @@
   font-size: .7rem;
 }
 
+.classChatWatchViewerCount {
+  color: #8a6d00;
+  font-weight: 900;
+}
+
+.classChatPanel.is-dark .classChatWatchViewerCount {
+  color: #f7c600;
+}
+
 .classChatWatchNow > span {
   border-radius: 999px;
   padding: 4px 7px;
