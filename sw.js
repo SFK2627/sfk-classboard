@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-classboard-v150-watch-party-room";
+const CACHE_NAME = "sfk-classboard-v153-menu-over-watch-party";
 const APP_SHELL = [
   "./",
   "./index.html",

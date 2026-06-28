@@ -221,9 +221,12 @@
   position: absolute;
   top: 62px;
   right: 12px;
-  z-index: 12;
+  z-index: 32;
   width: 205px;
-  overflow: hidden;
+  max-height: calc(100dvh - 76px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 6px;
   border: 1px solid #ddd8cc;
   border-radius: 14px;
@@ -776,6 +779,13 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  overflow: hidden;
+}
+
+.classChatIdentity > div {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
 }
 
 .classChatAvatar,
@@ -800,6 +810,7 @@
 
 .classChatIdentity h2,
 .classChatIdentity p {
+  max-width: 100%;
   overflow: hidden;
   margin: 0;
   text-overflow: ellipsis;
@@ -3200,7 +3211,76 @@ body.classChatIsOpen {
   }
 
   .classChatTopbar {
+    min-height: 62px;
+    gap: 6px;
+    overflow: hidden;
+    padding-right: 8px;
+    padding-left: 8px;
     padding-top: max(9px, env(safe-area-inset-top));
+  }
+
+  .classChatBack {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    font-size: 1.35rem;
+  }
+
+  .classChatAvatar {
+    width: 36px;
+    height: 36px;
+    flex-basis: 36px;
+    outline-width: 1.5px;
+    outline-offset: 1px;
+    font-size: .66rem;
+  }
+
+  .classChatIdentity {
+    gap: 8px;
+  }
+
+  .classChatIdentity h2 {
+    font-size: .92rem;
+  }
+
+  .classChatIdentity p {
+    font-size: .66rem;
+  }
+
+  .classChatWatchOpen,
+  .classChatLogout {
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+  }
+
+  .classChatWatchOpen {
+    background: transparent;
+    font-size: .86rem;
+  }
+
+  .classChatWatchOpen.is-active,
+  .classChatPanel.is-dark .classChatWatchOpen.is-active {
+    background: transparent;
+    color: #f7c600;
+  }
+
+  .classChatWatchOpen i {
+    top: 3px;
+    right: 2px;
+    width: 6px;
+    height: 6px;
+    border-width: 1.5px;
+  }
+
+  .classChatLogout {
+    font-size: 1.35rem;
+  }
+
+  .classChatMenu {
+    top: 58px;
+    right: 8px;
+    max-height: calc(100dvh - 70px);
   }
 
   .classChatMessages {
