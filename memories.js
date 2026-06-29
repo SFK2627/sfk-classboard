@@ -5382,21 +5382,26 @@ async function postMemoryApi(type, payload) {
   let authToken = "";
   try {
     // Always request a fresh Firebase ID token for Apps Script writes.
-    // This prevents a stale/expired token from making Admin/Officer posts look unauthorized.
+    // For media uploads, the token is also sent in the URL query so Apps Script
+    // can verify the user before reading a large Base64 payload.
     authToken = await window.SFKAuth?.getIdToken(true);
   } catch (error) {
     authToken = "";
   }
 
   const roleHint = memoryState.auth?.role || payload?.Role || "";
-  const response = await fetch(MEMORIES_API_URL, {
+  const url = new URL(MEMORIES_API_URL);
+  if (authToken) url.searchParams.set("authToken", authToken);
+  if (roleHint) url.searchParams.set("authRoleHint", roleHint);
+
+  const response = await fetch(url.toString(), {
     method: "POST",
     body: JSON.stringify({
       type,
       payload: {
-        ...(payload || {}),
+        ...(authToken ? { AuthToken: authToken } : {}),
         ...(roleHint ? { AuthRoleHint: roleHint } : {}),
-        ...(authToken ? { AuthToken: authToken } : {})
+        ...(payload || {})
       }
     })
   });
