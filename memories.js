@@ -4798,6 +4798,18 @@ async function submitMemoryPost(event) {
     button.textContent = "Sharing...";
     message.textContent = "Sharing this memory with SFK...";
 
+    let uploadSessionId = "";
+    if (mediaFiles.length > 0) {
+      message.textContent = "Securing photo upload...";
+      const session = await postMemoryApi("memoryUploadSession", {
+        Role: memoryState.auth.role
+      });
+      if (!session.success || !session.sessionId) {
+        throw new Error(session.message || "Unable to prepare photo upload. Please refresh and try again.");
+      }
+      uploadSessionId = session.sessionId;
+    }
+
     const payload = {
       Role: memoryState.auth.role,
       Title: title,
@@ -4807,7 +4819,8 @@ async function submitMemoryPost(event) {
       VideoURL: videoUrl,
       MediaFiles: mediaFiles,
       MusicURL: musicUrl,
-      MusicTitle: musicTitle
+      MusicTitle: musicTitle,
+      ...(uploadSessionId ? { UploadSessionID: uploadSessionId } : {})
     };
 
     const result = await postMemoryApi("memoryCreate", payload);
@@ -5390,9 +5403,11 @@ async function postMemoryApi(type, payload) {
   }
 
   const roleHint = memoryState.auth?.role || payload?.Role || "";
+  const uploadSessionId = payload?.UploadSessionID || payload?.MemoryUploadSession || "";
   const url = new URL(MEMORIES_API_URL);
   if (authToken) url.searchParams.set("authToken", authToken);
   if (roleHint) url.searchParams.set("authRoleHint", roleHint);
+  if (uploadSessionId) url.searchParams.set("uploadSessionId", uploadSessionId);
 
   const response = await fetch(url.toString(), {
     method: "POST",
