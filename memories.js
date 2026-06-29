@@ -4810,14 +4810,38 @@ async function submitMemoryPost(event) {
       uploadSessionId = session.sessionId;
     }
 
+    const memoryId = `MEM-${new Date().toISOString().replace(/[-:.TZ]/g, "").slice(0, 14)}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+    let uploadedMedia = [];
+
+    if (mediaFiles.length > 0) {
+      button.textContent = "Uploading photos...";
+      message.textContent = "Uploading photo attachment first...";
+      const uploadResult = await postMemoryApi("memoryUploadAssets", {
+        Role: memoryState.auth.role,
+        MemoryID: memoryId,
+        MediaFiles: mediaFiles,
+        ...(uploadSessionId ? { UploadSessionID: uploadSessionId } : {})
+      });
+      if (!uploadResult.success) {
+        throw new Error(uploadResult.message || "Photo attachment could not be uploaded.");
+      }
+      uploadedMedia = Array.isArray(uploadResult.media) ? uploadResult.media : [];
+    }
+
+    button.textContent = "Posting...";
+    message.textContent = "Saving this memory...";
+
     const payload = {
       Role: memoryState.auth.role,
+      MemoryID: memoryId,
       Title: title,
       Date: document.getElementById("memoryDate").value,
       PostedBy: document.getElementById("memoryPostedBy").value.trim(),
       Caption: caption,
       VideoURL: videoUrl,
-      MediaFiles: mediaFiles,
+      MediaFiles: [],
+      UploadedMedia: uploadedMedia,
+      UploadedMediaJSON: JSON.stringify(uploadedMedia),
       MusicURL: musicUrl,
       MusicTitle: musicTitle,
       ...(uploadSessionId ? { UploadSessionID: uploadSessionId } : {})

@@ -1,4 +1,4 @@
-const CACHE_NAME = "photo-upload-session-fix-sfk-classboard-v112-memory-auth-refresh-fix";
+const CACHE_NAME = "memories-image-diagnostic-split-upload-v113";
 const APP_SHELL = [
   "./",
   "./index.html",
