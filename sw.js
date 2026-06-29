@@ -1,9 +1,14 @@
-const CACHE_NAME = "memories-image-diagnostic-split-upload-v113";
+const CACHE_NAME = "sfk-classboard-v190-capsule-volume-memories-restore";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./style.css",
   "./script.js",
+  "./class-chat.css",
+  "./class-chat.js",
+  "./time-capsule.css",
+  "./time-capsule.js",
+  "./class-chat-admin.js",
   "./pwa.js",
   "./firebase-config.js",
   "./firebase-adapter.js",
