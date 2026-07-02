@@ -6,9 +6,9 @@
   <meta name="theme-color" content="#f7c600" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-title" content="SFK Officers" />
+  <meta name="apple-mobile-web-app-title" content="SFK Admin" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>SFK Officers</title>
+  <title>SFK Admin</title>
   <link rel="manifest" href="manifest.webmanifest?v=route-repair-v1" />
   <link rel="icon" type="image/png" sizes="192x192" href="../icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="../icons/icon-192.png?v=3" />
@@ -53,16 +53,16 @@
 </head>
 <body>
   <div class="card">
-    <h1>Opening Officers...</h1>
-    <p>This shortcut now opens the real officers page directly, without the old iframe/cache layer.</p>
-    <a id="openOfficerLink" href="../officer.html?shortcut=officers&v=route-repair-v1">Open Officers Login</a>
-    <small id="status">Cleaning old officers shortcut cache...</small>
+    <h1>Opening Admin...</h1>
+    <p>This shortcut now opens the real admin page directly, without the old iframe/cache layer.</p>
+    <a id="openAdminLink" href="../admin.html?shortcut=admin&v=route-repair-v1">Open Admin Login</a>
+    <small id="status">Cleaning old admin shortcut cache...</small>
   </div>
   <script>
     (function () {
-      var target = new URL('../officer.html?shortcut=officers&v=route-repair-v1', window.location.href);
+      var target = new URL('../admin.html?shortcut=admin&v=route-repair-v1', window.location.href);
       var statusEl = document.getElementById('status');
-      var link = document.getElementById('openOfficerLink');
+      var link = document.getElementById('openAdminLink');
       link.href = target.toString();
 
       function isShortcutScope(scope) {
