@@ -1,6 +1,11 @@
 (function () {
   const APPS_SCRIPT_MARKER = "script.google.com/macros";
   const TIMEZONE = "Asia/Manila";
+  const ANNOUNCEMENT_MEDIA_COLLECTION = "announcementMedia";
+  const MEMORY_MEDIA_COLLECTION = "memoryMedia";
+  const MEDIA_REF_PREFIX = "sfk-media://";
+  // Keep each Firestore media document safely below the 1 MiB document limit.
+  const NO_BILLING_MEDIA_MAX_BASE64_CHARS = 850000;
 
   const SHEETS = {
     Settings: {
@@ -99,13 +104,8 @@
           return originalFetch(input, options);
         }
 
-        // Do not let the Firestore adapter swallow the Apps Script-only
-        // Memories upload endpoints. These must reach Code.gs because they
-        // create the short upload session and upload the photo to Google Drive.
-        if (body.type === "memoryUploadSession" || body.type === "memoryUploadAssets") {
-          return originalFetch(input, options);
-        }
-
+        // Photo uploads are handled directly in Firestore for this no-billing build.
+        // No Apps Script, Firebase Storage, or paid billing project is required.
         return jsonResponse(await handlePost(body, url));
       }
 
@@ -183,6 +183,18 @@
     if (type === "announcementHeart" || type === "announcementHeartV2") return recordHeart("Announcements", payload.announcementId || payload.AnnouncementID || payload.ID || payload.id, payload.delta, payload);
     if (type === "memoryHeart" || type === "memoryHeartV2") return recordHeart("Memories", payload.memoryId || payload.MemoryID || payload.ID || payload.id, payload.delta, payload);
     if (type === "memoryAuth") return checkMemoryAuth(payload);
+    if (type === "memoryUploadSession") {
+      requireFirebaseRole(["admin", "officer"]);
+      return {
+        success: true,
+        sessionId: generateId("memoryUploadSession"),
+        mode: "firestore-no-billing"
+      };
+    }
+    if (type === "memoryUploadAssets") {
+      requireFirebaseRole(["admin", "officer"]);
+      return uploadMemoryAssetsNoBilling(payload, payload.MemoryID || payload.memoryId || generateId("memory"));
+    }
     if (type === "memoryHide") {
       requireFirebaseRole(["admin", "officer"]);
       return hideMemory(payload.memoryId || payload.MemoryID || payload.ID || payload.id);
@@ -232,7 +244,7 @@
       schedule,
       currentSubject: getCurrentSubject(schedule, now),
       nextSubject: getNextSubject(schedule, now),
-      announcements: await getPublishedRows("Announcements"),
+      announcements: await resolveAnnouncementRows(await getPublishedRows("Announcements")),
       thingsToBring: await getPublishedRows("ThingsToBring"),
       prayerLeader: (await getTodayRows("PrayerLeaders", todayDate))[0] || null,
       adviserReminders: await getPublishedRows("AdviserReminders"),
@@ -261,8 +273,11 @@
   }
 
   async function getMemories() {
-    const memories = (await getPublishedRows("Memories")).map(row => {
+    const rows = await getPublishedRows("Memories");
+    const memories = await Promise.all(rows.map(async row => {
       const count = readHeartCount(row);
+      const rawMedia = Array.isArray(row.media) ? row.media : parseJsonArray(row.MediaJSON);
+      const media = await resolveMemoryMediaItems(rawMedia);
       return {
         ...row,
         ID: row.ID || row.MemoryID || row.memoryId || row.id || row.docId,
@@ -271,10 +286,10 @@
         heartCount: count,
         Hearts: count,
         hearts: count,
-        media: Array.isArray(row.media) ? row.media : parseJsonArray(row.MediaJSON),
+        media,
         music: row.music && typeof row.music === "object" ? row.music : parseJsonObject(row.MusicJSON)
       };
-    });
+    }));
 
     return {
       status: "success",
@@ -361,7 +376,7 @@
       throw new Error("Attachment upload service is not available. Please refresh and try again.");
     }
 
-    const uploadResult = await uploadAnnouncementAttachmentsViaAppsScript(sourceUrl, id, files);
+    const uploadResult = await uploadAnnouncementAttachmentsNoBilling(id, files);
     prepared.AttachmentURLs = uploadResult.urls || "";
     prepared.Attachments = uploadResult.urls || "";
     prepared.AttachmentURL = uploadResult.urls || "";
@@ -371,36 +386,20 @@
     return prepared;
   }
 
-  async function uploadAnnouncementAttachmentsViaAppsScript(sourceUrl, id, files) {
-    const authToken = await getFirebaseAuthToken();
-    const response = await originalFetch(sourceUrl, {
-      method: "POST",
-      body: JSON.stringify({
-        type: "announcementUploadAttachments",
-        payload: {
-          RecordID: id,
-          AttachmentFiles: files,
-          AuthToken: authToken
-        }
-      })
-    });
+  async function uploadAnnouncementAttachmentsNoBilling(recordId, files) {
+    const savedFiles = [];
 
-    const text = await response.text();
-    let result = {};
-    try {
-      result = JSON.parse(text || "{}");
-    } catch (error) {
-      throw new Error(text.slice(0, 180) || "Attachment upload failed.");
+    for (const [index, file] of files.entries()) {
+      const saved = await saveNoBillingMediaFile(ANNOUNCEMENT_MEDIA_COLLECTION, recordId, file, {
+        ownerKind: "announcement",
+        index
+      });
+      savedFiles.push(saved);
     }
 
-    if (!result.success) {
-      throw new Error(result.message || "Attachment upload failed.");
-    }
-
-    const attachments = result.attachments || result.AttachmentFiles || {};
     return {
-      urls: normalizeAttachmentText(result.AttachmentURLs || attachments.urls || result.urls || ""),
-      names: normalizeAttachmentText(result.AttachmentNames || attachments.names || result.names || "")
+      urls: savedFiles.map(file => file.uri).join("\n"),
+      names: savedFiles.map(file => file.name).join("\n")
     };
   }
 
@@ -632,40 +631,189 @@
     return { success: true, id, message: "Memory posted." };
   }
 
-  async function uploadMemoryAssets(payload, memoryId, sourceUrl) {
+  async function uploadMemoryAssets(payload, memoryId) {
     const hasMediaFiles = Array.isArray(payload.MediaFiles) && payload.MediaFiles.length > 0;
     const hasMusicFile = Boolean(payload.MusicFile && payload.MusicFile.data);
     if (!hasMediaFiles && !hasMusicFile) {
       return { media: [], music: null };
     }
 
-    const authToken = await getFirebaseAuthToken(true);
-    const roleHint = currentFirebaseRole() || payload.Role || "";
-    const uploadUrl = new URL(sourceUrl);
-    if (authToken) uploadUrl.searchParams.set("authToken", authToken);
-    if (authToken && roleHint) uploadUrl.searchParams.set("authRoleHint", roleHint);
+    return uploadMemoryAssetsNoBilling(payload, memoryId);
+  }
 
-    const response = await originalFetch(uploadUrl.toString(), {
-      method: "POST",
-      body: JSON.stringify({
-        type: "memoryUploadAssets",
-        payload: {
-          Role: payload.Role || roleHint,
-          AuthToken: authToken,
-          AuthRoleHint: roleHint,
-          MemoryID: memoryId,
-          MediaFiles: payload.MediaFiles || [],
-          MusicFile: payload.MusicFile || null
-        }
-      })
-    });
-    const result = await response.json();
-    if (!result.success) {
-      const safeInline = buildInlineMemoryAssetsFallback(payload);
-      if (safeInline) return safeInline;
-      throw new Error(result.message || "Unable to upload memory media to Drive.");
+  async function uploadMemoryAssetsNoBilling(payload, memoryId) {
+    const files = Array.isArray(payload.MediaFiles) ? payload.MediaFiles : [];
+
+    if (payload.MusicFile && payload.MusicFile.data) {
+      throw new Error("No-billing mode supports music links, not uploaded music files. Use a direct MP3/M4A link instead.");
     }
-    return result;
+
+    const media = [];
+    for (const [index, file] of files.entries()) {
+      const saved = await saveNoBillingMediaFile(MEMORY_MEDIA_COLLECTION, memoryId, file, {
+        ownerKind: "memory",
+        index
+      });
+
+      media.push({
+        kind: "image",
+        url: saved.uri,
+        viewerUrl: saved.uri,
+        fullUrl: saved.uri,
+        downloadUrl: saved.uri,
+        mediaId: saved.id,
+        storage: "firestore",
+        name: saved.name,
+        mimeType: saved.mimeType,
+        muted: true
+      });
+    }
+
+    return { success: true, media, music: null, mode: "firestore-no-billing" };
+  }
+
+  async function saveNoBillingMediaFile(collectionName, ownerId, file, options = {}) {
+    if (!file || !file.data) {
+      throw new Error("Selected photo could not be read. Please choose another image.");
+    }
+
+    const mimeType = String(file.mimeType || file.type || "image/jpeg").trim().toLowerCase();
+    if (!mimeType.startsWith("image/")) {
+      throw new Error("No-billing mode supports photo uploads only. Use a public link for PDFs, videos, or audio.");
+    }
+
+    const base64 = String(file.data || "").trim();
+    if (!base64) {
+      throw new Error("Selected photo is empty. Please choose another image.");
+    }
+
+    if (base64.length > NO_BILLING_MEDIA_MAX_BASE64_CHARS) {
+      throw new Error(`${file.name || "This photo"} is still too large after compression. Try a smaller screenshot/photo.`);
+    }
+
+    const kind = collectionName === MEMORY_MEDIA_COLLECTION ? "memory" : "announcement";
+    const safeOwner = safeMediaDocPart(ownerId || kind);
+    const id = `${safeOwner}_${Date.now()}_${Number(options.index || 0)}_${Math.random().toString(36).slice(2, 8)}`.slice(0, 240);
+    const name = String(file.name || "SFK photo").trim() || "SFK photo";
+
+    await db.collection(collectionName).doc(id).set(withMeta(cleanFirestoreData({
+      OwnerID: String(ownerId || ""),
+      OwnerKind: options.ownerKind || kind,
+      Name: name,
+      MimeType: mimeType,
+      Data: base64,
+      BytesApprox: Math.ceil(base64.length * 0.75),
+      Publish: "YES",
+      CreatedByRole: currentFirebaseRole()
+    })));
+
+    return {
+      id,
+      uri: mediaRef(kind, id),
+      name,
+      mimeType
+    };
+  }
+
+  function mediaRef(kind, id) {
+    return `${MEDIA_REF_PREFIX}${kind}/${id}`;
+  }
+
+  function parseMediaRef(value) {
+    const raw = String(value || "").trim();
+    if (!raw.startsWith(MEDIA_REF_PREFIX)) return null;
+
+    const rest = raw.slice(MEDIA_REF_PREFIX.length);
+    const slashIndex = rest.indexOf("/");
+    if (slashIndex <= 0) return null;
+
+    const kind = rest.slice(0, slashIndex);
+    const id = rest.slice(slashIndex + 1);
+    if (!id || !["announcement", "memory"].includes(kind)) return null;
+
+    return {
+      kind,
+      id,
+      collectionName: kind === "memory" ? MEMORY_MEDIA_COLLECTION : ANNOUNCEMENT_MEDIA_COLLECTION
+    };
+  }
+
+  async function resolveMediaDataUrl(value) {
+    const ref = typeof value === "string" ? parseMediaRef(value) : value;
+    if (!ref) return "";
+
+    try {
+      const doc = await db.collection(ref.collectionName).doc(ref.id).get();
+      if (!doc.exists) return "";
+
+      const data = doc.data() || {};
+      const mimeType = String(data.MimeType || data.mimeType || "image/jpeg").trim();
+      const base64 = String(data.Data || data.data || "").trim();
+      if (!base64 || !mimeType.toLowerCase().startsWith("image/")) return "";
+      return `data:${mimeType};base64,${base64}`;
+    } catch (error) {
+      console.warn("Unable to load no-billing media:", error);
+      return "";
+    }
+  }
+
+  async function resolveMemoryMediaItems(items) {
+    const rawItems = Array.isArray(items) ? items : [];
+    const resolved = await Promise.all(rawItems.map(resolveMemoryMediaItem));
+    return resolved.filter(item => item && typeof item === "object");
+  }
+
+  async function resolveMemoryMediaItem(item) {
+    if (!item || typeof item !== "object") return null;
+
+    const ref = parseMediaRef(item.url || item.viewerUrl || item.fullUrl || item.downloadUrl || "");
+    if (!ref) return item;
+
+    const dataUrl = await resolveMediaDataUrl(ref);
+    if (!dataUrl) return item;
+
+    return {
+      ...item,
+      url: dataUrl,
+      viewerUrl: dataUrl,
+      fullUrl: dataUrl,
+      downloadUrl: dataUrl,
+      firestoreRef: mediaRef(ref.kind, ref.id)
+    };
+  }
+
+  async function resolveAnnouncementRows(rows) {
+    return Promise.all((rows || []).map(async row => {
+      const rawUrls = splitAttachmentText(row.AttachmentURLs || row.Attachments || row.AttachmentURL);
+      if (rawUrls.length === 0) return row;
+
+      const resolvedUrls = await Promise.all(rawUrls.map(async url => {
+        const ref = parseMediaRef(url);
+        if (!ref) return url;
+        return await resolveMediaDataUrl(ref) || url;
+      }));
+
+      return {
+        ...row,
+        AttachmentURLs: resolvedUrls.join("\n"),
+        Attachments: resolvedUrls.join("\n"),
+        AttachmentURL: resolvedUrls.join("\n")
+      };
+    }));
+  }
+
+  function splitAttachmentText(value) {
+    return String(value || "")
+      .split(/\r?\n/)
+      .map(item => item.trim())
+      .filter(Boolean);
+  }
+
+  function safeMediaDocPart(value) {
+    return String(value || "media")
+      .replace(/[^A-Za-z0-9_-]+/g, "_")
+      .replace(/^_+|_+$/g, "")
+      .slice(0, 80) || "media";
   }
 
   function parseUploadedMemoryMedia(payload) {

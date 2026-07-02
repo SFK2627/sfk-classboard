@@ -21,7 +21,8 @@ const TEACHER_OPTIONS = [
 
 const TEXT_FORMAT_OPTIONS = ["center", "left", "right", "bullets", "numbers"];
 const MAX_ANNOUNCEMENT_ATTACHMENTS = 5;
-const MAX_ANNOUNCEMENT_ATTACHMENT_BYTES = 8 * 1024 * 1024;
+const MAX_ANNOUNCEMENT_ATTACHMENT_BYTES = 12 * 1024 * 1024;
+const TARGET_ANNOUNCEMENT_IMAGE_BYTES = 360 * 1024;
 
 document.addEventListener("DOMContentLoaded", () => {
   initAdminToolLauncher();
@@ -1003,38 +1004,88 @@ async function buildAttachmentPayload(inputId, notify) {
   if (files.length === 0) return [];
 
   if (files.length > MAX_ANNOUNCEMENT_ATTACHMENTS) {
-    notify(`Maximum of ${MAX_ANNOUNCEMENT_ATTACHMENTS} attachments only.`);
+    notify(`Maximum of ${MAX_ANNOUNCEMENT_ATTACHMENTS} photos only.`);
+    return null;
+  }
+
+  const unsupported = files.find(file => !String(file.type || "").startsWith("image/"));
+  if (unsupported) {
+    notify("No-billing mode supports image uploads only. Use a public link for PDFs/docs.");
     return null;
   }
 
   const totalBytes = files.reduce((sum, file) => sum + file.size, 0);
 
   if (totalBytes > MAX_ANNOUNCEMENT_ATTACHMENT_BYTES) {
-    notify("Attachments are too large. Keep total size under 8 MB.");
+    notify("Photos are too large. Keep selected photos under 12 MB before compression.");
     return null;
   }
 
-  return Promise.all(files.map(file => readAttachmentFile(file)));
+  try {
+    return await Promise.all(files.map(file => readAttachmentFile(file)));
+  } catch (error) {
+    notify(error.message || "Unable to prepare one of the photos.");
+    return null;
+  }
 }
 
-function readAttachmentFile(file) {
+async function readAttachmentFile(file) {
+  const imageUrl = await readAdminAttachmentDataUrl(file);
+  const image = await loadAdminAttachmentImage(imageUrl);
+  const blob = await compressAdminAttachmentImage(image);
+  const dataUrl = await readAdminAttachmentDataUrl(blob || file);
+
+  return {
+    name: file.name.replace(/\.[^.]+$/, "") + ".jpg",
+    mimeType: "image/jpeg",
+    data: String(dataUrl || "").split(",")[1] || ""
+  };
+}
+
+function readAdminAttachmentDataUrl(fileOrBlob) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-
-    reader.onload = () => {
-      const dataUrl = String(reader.result || "");
-      const base64 = dataUrl.split(",")[1] || "";
-
-      resolve({
-        name: file.name,
-        mimeType: file.type || "application/octet-stream",
-        data: base64
-      });
-    };
-
+    reader.onload = () => resolve(String(reader.result || ""));
     reader.onerror = () => reject(reader.error || new Error("Unable to read attachment."));
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(fileOrBlob);
   });
+}
+
+function loadAdminAttachmentImage(src) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("Unable to prepare one of the photos."));
+    image.src = src;
+  });
+}
+
+async function compressAdminAttachmentImage(image) {
+  const dimensions = [1280, 1100, 900, 760, 640];
+  const qualities = [.74, .66, .58, .5, .42];
+  let bestBlob = null;
+
+  for (const maxDimension of dimensions) {
+    const ratio = Math.min(1, maxDimension / Math.max(image.naturalWidth, image.naturalHeight));
+    const width = Math.max(1, Math.round(image.naturalWidth * ratio));
+    const height = Math.max(1, Math.round(image.naturalHeight * ratio));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    context.fillStyle = "#fff";
+    context.fillRect(0, 0, width, height);
+    context.drawImage(image, 0, 0, width, height);
+
+    for (const quality of qualities) {
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/jpeg", quality));
+      if (!blob) continue;
+      bestBlob = blob;
+      if (blob.size <= TARGET_ANNOUNCEMENT_IMAGE_BYTES) return blob;
+    }
+  }
+
+  return bestBlob;
 }
 
 /* CLASS SCHEDULE */

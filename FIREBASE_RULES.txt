@@ -47,6 +47,59 @@ service cloud.firestore {
         || get(/databases/$(database)/documents/chatConfig/main).data.WatchPartyEnabled != false;
     }
 
+    function isValidNewWatchRequest(userId) {
+      return isChatMember()
+        && !isStaff()
+        && isWatchPartyAllowed()
+        && request.auth.uid == userId
+        && request.resource.data.RequesterUID == request.auth.uid
+        && request.resource.data.RequesterName is string
+        && request.resource.data.Title is string
+        && request.resource.data.OriginalURL is string
+        && request.resource.data.VideoID is string
+        && request.resource.data.Provider in [
+          "youtube", "tiktok", "instagram", "drive", "bilibili",
+          "vimeo", "direct", "hls", "dash"
+        ]
+        && request.resource.data.Status == "pending"
+        && request.resource.data.keys().hasOnly([
+          "RequesterUID", "RequesterName", "Title", "Provider", "VideoID",
+          "InstagramType", "OriginalURL", "Status", "CreatedAt", "UpdatedAt"
+        ]);
+    }
+
+    function capsuleIsUnlocked() {
+      return exists(/databases/$(database)/documents/timeCapsuleSettings/main)
+        && get(/databases/$(database)/documents/timeCapsuleSettings/main).data.UnlockAt <= request.time;
+    }
+
+    function capsuleSubmissionsOpen() {
+      return exists(/databases/$(database)/documents/timeCapsuleSettings/main)
+        && get(/databases/$(database)/documents/timeCapsuleSettings/main).data.AllowSubmissions == true
+        && get(/databases/$(database)/documents/timeCapsuleSettings/main).data.SubmissionDeadline >= request.time;
+    }
+
+    function validCapsuleEntry() {
+      return request.resource.data.AuthorUID == request.auth.uid
+        && request.resource.data.AuthorName is string
+        && request.resource.data.AuthorName.size() > 0
+        && request.resource.data.AuthorName.size() <= 120
+        && request.resource.data.AuthorRole in ["student", "officer", "admin"]
+        && request.resource.data.Type in ["memory", "message", "goal", "prediction", "photo"]
+        && request.resource.data.Text is string
+        && request.resource.data.Text.size() <= 1200
+        && request.resource.data.ImageURL is string
+        && request.resource.data.ImageURL.size() <= 2000
+        && (
+          request.resource.data.ImageURL.size() == 0
+          || request.resource.data.ImageURL.matches("^https://.*")
+        )
+        && (
+          request.resource.data.Text.size() > 0
+          || request.resource.data.ImageURL.size() > 0
+        );
+    }
+
     function isAllowedProfileColor(color) {
       return color is string
         && color.matches("^#[0-9A-Fa-f]{6}$");
@@ -84,6 +137,12 @@ service cloud.firestore {
     }
 
     match /announcements/{docId} {
+      allow read: if true;
+      allow create, update: if isStaff();
+      allow delete: if isAdmin();
+    }
+
+    match /announcementMedia/{docId} {
       allow read: if true;
       allow create, update: if isStaff();
       allow delete: if isAdmin();
@@ -132,6 +191,12 @@ service cloud.firestore {
     }
 
     match /memories/{docId} {
+      allow read: if true;
+      allow create, update: if isStaff();
+      allow delete: if isAdmin();
+    }
+
+    match /memoryMedia/{docId} {
       allow read: if true;
       allow create, update: if isStaff();
       allow delete: if isAdmin();
@@ -337,22 +402,10 @@ service cloud.firestore {
     match /chatWatchRequests/{userId} {
       allow read: if isStaff()
         || (isChatMember() && request.auth.uid == userId);
-      allow create, update: if isChatMember()
-        && !isStaff()
-        && isWatchPartyAllowed()
-        && request.auth.uid == userId
-        && request.resource.data.RequesterUID == request.auth.uid
-        && request.resource.data.RequesterName is string
-        && request.resource.data.Title is string
-        && request.resource.data.OriginalURL is string
-        && request.resource.data.VideoID is string
-        && request.resource.data.Provider in ["youtube", "tiktok", "instagram", "drive", "website"]
-        && request.resource.data.Status == "pending"
-        && request.resource.data.keys().hasOnly([
-          "RequesterUID", "RequesterName", "Title", "Provider", "VideoID",
-          "InstagramType", "OriginalURL", "Status", "CreatedAt", "UpdatedAt"
-        ]);
-      allow update: if isStaff();
+      allow create: if isValidNewWatchRequest(userId);
+      allow update: if isStaff()
+        || (resource.data.Status in ["approved", "declined"]
+          && isValidNewWatchRequest(userId));
       allow delete: if isStaff()
         || (isChatMember() && request.auth.uid == userId);
     }
@@ -375,12 +428,41 @@ service cloud.firestore {
           && request.resource.data.PlaybackState in ["playing", "paused"]
           && request.resource.data.Position is number
           && request.resource.data.Position >= 0
+          && (
+            !("VolumeSyncEnabled" in request.resource.data)
+            || request.resource.data.VolumeSyncEnabled is bool
+          )
+          && (
+            !("VolumeLevel" in request.resource.data)
+            || (
+              request.resource.data.VolumeLevel is number
+              && request.resource.data.VolumeLevel >= 0
+              && request.resource.data.VolumeLevel <= 1
+            )
+          )
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
             "Active", "PlaybackState", "Position", "StateUpdatedAt",
+            "VolumeSyncEnabled", "VolumeLevel",
             "UpdatedAt", "EndedBy", "EndedAt"
           ])
         );
       allow delete: if isStaff();
+    }
+
+    match /chatWatchViewers/{userId} {
+      allow read: if isChatMember();
+      allow create, update: if isChatMember()
+        && request.auth.uid == userId
+        && request.resource.data.UID == request.auth.uid
+        && request.resource.data.Name is string
+        && request.resource.data.PartySessionID is string
+        && request.resource.data.ExpiresAt is timestamp
+        && request.resource.data.UpdatedAt is timestamp
+        && request.resource.data.keys().hasOnly([
+          "UID", "Name", "PartySessionID", "ExpiresAt", "UpdatedAt"
+        ]);
+      allow delete: if isAdmin()
+        || (isChatMember() && request.auth.uid == userId);
     }
 
     match /chatScheduled/{messageId} {
@@ -406,9 +488,91 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    match /chatAuditLogs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isChatMember()
+        && request.resource.data.ActorUID == request.auth.uid
+        && request.resource.data.ActorName is string
+        && request.resource.data.ActorName.size() > 0
+        && request.resource.data.ActorName.size() <= 120
+        && request.resource.data.ActorRole in ["student", "officer", "admin"]
+        && request.resource.data.Event in [
+          "MESSAGE_SENT", "POLL_SENT", "MEDIA_SENT", "MESSAGE_EDITED",
+          "MESSAGE_DELETED", "REACTION_ADDED", "REACTION_CHANGED",
+          "REACTION_REMOVED", "MESSAGE_PINNED", "MESSAGE_UNPINNED",
+          "PRIORITY_CHANGED", "POLL_CLOSED", "USER_MUTED",
+          "REPORT_CREATED", "WATCH_PARTY_STARTED", "WATCH_PARTY_ENDED",
+          "CLASS_THEME_CHANGED"
+        ]
+        && request.resource.data.CreatedAt == request.time
+        && request.resource.data.keys().hasOnly([
+          "Event", "ActorUID", "ActorName", "ActorRole", "MessageID",
+          "TargetUID", "TargetName", "Text", "PreviousText", "NewText",
+          "Emoji", "PreviousEmoji", "MediaType", "Details", "CreatedAt"
+        ]);
+      allow update, delete: if false;
+    }
+
     match /chatModerationLogs/{logId} {
       allow read, create: if isAdmin();
       allow update, delete: if false;
+    }
+
+    match /timeCapsuleSettings/{docId} {
+      allow read: if isChatMember();
+      allow create, update: if isAdmin() && docId == "main";
+      allow delete: if false;
+    }
+
+    match /timeCapsulePublic/{docId} {
+      allow read: if docId == "main";
+      allow create, update: if isAdmin() && docId == "main";
+      allow delete: if false;
+    }
+
+    match /timeCapsuleEntries/{entryId} {
+      allow read: if isAdmin()
+        || (isChatMember() && resource.data.AuthorUID == request.auth.uid)
+        || (
+          isChatMember()
+          && capsuleIsUnlocked()
+          && resource.data.Status == "approved"
+        );
+      allow create: if isChatMember()
+        && validCapsuleEntry()
+        && (
+          (isAdmin() && request.resource.data.Status == "approved")
+          || (!isAdmin() && request.resource.data.Status == "pending")
+        )
+        && request.resource.data.CreatedAt == request.time
+        && request.resource.data.UpdatedAt == request.time
+        && request.resource.data.keys().hasOnly([
+          "AuthorUID", "AuthorName", "AuthorRole", "Type", "Text",
+          "ImageURL", "Status", "CreatedAt", "UpdatedAt"
+        ])
+        && (isAdmin() || capsuleSubmissionsOpen());
+      allow update: if isAdmin()
+        || (
+          isChatMember()
+          && capsuleSubmissionsOpen()
+          && resource.data.AuthorUID == request.auth.uid
+          && resource.data.Status == "pending"
+          && request.resource.data.AuthorUID == resource.data.AuthorUID
+          && request.resource.data.AuthorName == resource.data.AuthorName
+          && request.resource.data.AuthorRole == resource.data.AuthorRole
+          && request.resource.data.Status == "pending"
+          && validCapsuleEntry()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            "Type", "Text", "ImageURL", "UpdatedAt"
+          ])
+        );
+      allow delete: if isAdmin()
+        || (
+          isChatMember()
+          && capsuleSubmissionsOpen()
+          && resource.data.AuthorUID == request.auth.uid
+          && resource.data.Status == "pending"
+        );
     }
 
     match /{document=**} {

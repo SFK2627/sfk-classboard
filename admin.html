@@ -2,15 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#f7c600" />
+  <meta name="description" content="SFK ClassBoard Admin panel for posting announcements, reminders, schedules, prayer leaders, birthdays, and class records." />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="SFK Admin" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
   <title>SFK ClassBoard Admin</title>
 
-  <link rel="manifest" href="admin.webmanifest?v=1" />
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+  <link rel="manifest" href="admin.webmanifest?v=2-pwa-polish" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
   <link rel="stylesheet" href="admin.css?v=phone-orientation-lock" />
@@ -135,10 +138,10 @@
             id="announcementAttachments"
             type="file"
             multiple
-            accept="image/*,.pdf,.doc,.docx,.ppt,.pptx"
+            accept="image/*"
           />
           <small class="fieldHint">
-            Optional. Up to 5 files. Images/files will appear as clickable attachment chips.
+            Optional. Up to 5 photos. No-billing mode compresses images and stores them in Firestore.
           </small>
 
           <label for="announcementPriority">Priority</label>
@@ -536,8 +539,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js?v=2-secure-auth"></script>
   <script src="auth.js?v=2-persistent-login"></script>
-  <script src="firebase-adapter.js?v=17-schedule-color-admin"></script>
-  <script src="pwa.js?v=14"></script>
-  <script src="admin.js?v=schedule-color-admin"></script>
+  <script src="firebase-adapter.js?v=no-billing-upload"></script>
+  <script src="pwa.js?v=15-pwa-polish"></script>
+  <script src="admin.js?v=no-billing-upload"></script>
 </body>
 </html>

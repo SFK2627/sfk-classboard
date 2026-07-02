@@ -6,8 +6,8 @@ const MEMORY_POSTED_BY_KEY = "sfkMemoryPostedByV1";
 const MEMORY_MUSIC_AUTOPLAY_KEY = "sfkMemoryMusicAutoplayV1";
 const MAX_MEDIA_FILES = 6;
 const MAX_VIDEO_BYTES = 12 * 1024 * 1024;
-const MAX_TOTAL_UPLOAD_BYTES = 22 * 1024 * 1024;
-const TARGET_IMAGE_BYTES = 420 * 1024;
+const MAX_TOTAL_UPLOAD_BYTES = 4 * 1024 * 1024;
+const TARGET_IMAGE_BYTES = 380 * 1024;
 const MUSIC_LINK_TEST_TIMEOUT_MS = 8000;
 const MEMORY_SHARE_IMAGE_WIDTH = 1080;
 const MEMORY_SHARE_IMAGE_HEIGHT = 1350;
@@ -4783,8 +4783,8 @@ async function submitMemoryPost(event) {
     let uploadBytes = 0;
 
     for (const file of memoryState.selectedFiles) {
-      if (file.type.startsWith("video/") && file.size > MAX_VIDEO_BYTES) {
-        throw new Error(`${file.name} is too large for Firebase direct upload. Use a Drive or YouTube link for videos.`);
+      if (file.type.startsWith("video/")) {
+        throw new Error(`${file.name}: no-billing upload supports photos only. Paste a Drive, YouTube, or direct video link instead.`);
       }
 
       const prepared = await prepareMediaFile(file);

@@ -479,7 +479,8 @@ function getScheduleItemLink(item = {}) {
 }
 
 function isSafeExternalLink(url) {
-  return /^https?:\/\//i.test(String(url || "").trim());
+  const value = String(url || "").trim();
+  return /^https?:\/\//i.test(value) || /^data:image\/(?:png|jpe?g|gif|webp);base64,/i.test(value);
 }
 
 function renderScheduleSubjectText(item = {}, textColor = "inherit") {
@@ -1583,14 +1584,25 @@ function renderAnnouncementAttachments(item) {
 }
 
 function splitAttachmentField(value) {
-  return String(value || "")
-    .split(/\r?\n|,\s*/)
+  const text = String(value || "").trim();
+  if (!text) return [];
+
+  const lineItems = text
+    .split(/\r?\n/)
+    .map(item => item.trim())
+    .filter(Boolean);
+
+  if (lineItems.length > 1 || /^data:image\//i.test(text)) return lineItems;
+
+  return text
+    .split(/,\s*/)
     .map(item => item.trim())
     .filter(Boolean);
 }
 
 function isImageUrl(url) {
-  return /\.(png|jpe?g|gif|webp|bmp|svg)(\?|#|$)/i.test(String(url || ""));
+  const value = String(url || "").trim();
+  return /^data:image\//i.test(value) || /\.(png|jpe?g|gif|webp|bmp|svg)(\?|#|$)/i.test(value);
 }
 
 function getAnnouncementTextSizeClass(value) {
