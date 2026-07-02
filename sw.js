@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-sw.js-birthday-accordion-portrait-v5";
+const CACHE_NAME = "sfk-sw.js-birthday-accordion-appwide-portrait-v6";
 const APP_SHELL = [
   "./",
   "./index.html",

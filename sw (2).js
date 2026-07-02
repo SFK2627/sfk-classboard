@@ -1,32 +1,47 @@
-{
-  "id": "./sfk-admin",
-  "name": "SFK Admin",
-  "short_name": "SFK Admin",
-  "description": "SFK ClassBoard admin panel",
-  "start_url": "./",
-  "scope": "./",
-  "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#fff8dc",
-  "theme_color": "#f7c600",
-  "icons": [
-    {
-      "src": "../icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "../icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "../icons/icon-maskable-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#f7c600" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="SFK Admin" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>SFK Admin</title>
+  <link rel="manifest" href="manifest.webmanifest?v=3" />
+  <link rel="icon" type="image/png" sizes="192x192" href="../icons/icon-192.png?v=3" />
+  <link rel="apple-touch-icon" href="../icons/icon-192.png?v=3" />
+  <style>
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #fff8dc;
     }
-  ]
-}
+
+    iframe {
+      display: block;
+      width: 100%;
+      height: 100dvh;
+      border: 0;
+      background: #fff8dc;
+    }
+  </style>
+  <script src="../orientation-lock.js?v=appwide-v6" defer></script>
+</head>
+<body>
+  <iframe src="../admin.html?embedded=1&v=appwide-portrait-v6" title="SFK ClassBoard Admin"></iframe>
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch((error) => {
+          console.warn("Admin service worker registration failed:", error);
+        });
+      });
+    }
+  </script>
+</body>
+</html>
