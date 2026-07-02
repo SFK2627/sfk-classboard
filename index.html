@@ -478,6 +478,391 @@
     }
   </style>
 
+
+  <style id="birthdayYearModalStyle">
+    .birthdayCard {
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .birthdayCard:focus-visible {
+      outline: 4px solid rgba(255, 117, 173, .45);
+      outline-offset: 4px;
+    }
+
+    .birthdayCard::after {
+      content: "tap to view birthdays";
+      position: absolute;
+      right: 14px;
+      bottom: 10px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      font-size: .68rem;
+      font-weight: 900;
+      color: #9f2b63;
+      background: rgba(255, 255, 255, .74);
+      border: 1px solid rgba(255, 128, 180, .25);
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity .18s ease, transform .18s ease;
+      pointer-events: none;
+    }
+
+    .birthdayCard:hover::after,
+    .birthdayCard:focus-visible::after {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .birthdayHeaderRight {
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .birthdayViewAllPill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #fff9cc, #ffd7ed);
+      color: #7a1548;
+      border: 1px solid rgba(255, 255, 255, .78);
+      box-shadow: 0 6px 14px rgba(175, 53, 109, .13);
+      font-size: .72rem;
+      font-weight: 950;
+      white-space: nowrap;
+    }
+
+    .birthdayYearModal[hidden] {
+      display: none !important;
+    }
+
+    .birthdayYearModal {
+      position: fixed;
+      inset: 0;
+      z-index: 99970;
+      display: grid;
+      place-items: center;
+      padding: 16px;
+      box-sizing: border-box;
+      font-family: inherit;
+    }
+
+    .birthdayYearBackdrop {
+      position: absolute;
+      inset: 0;
+      border: 0;
+      background:
+        radial-gradient(circle at top left, rgba(255, 214, 102, .33), transparent 36%),
+        radial-gradient(circle at bottom right, rgba(255, 117, 173, .30), transparent 36%),
+        rgba(41, 16, 38, .62);
+      backdrop-filter: blur(9px);
+      -webkit-backdrop-filter: blur(9px);
+      cursor: pointer;
+    }
+
+    .birthdayYearSheet {
+      position: relative;
+      z-index: 1;
+      width: min(760px, 96vw);
+      max-height: min(760px, 88dvh);
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      border-radius: 34px;
+      color: #321325;
+      background:
+        radial-gradient(circle at 10% 12%, rgba(255, 240, 140, .85), transparent 23%),
+        radial-gradient(circle at 92% 16%, rgba(188, 236, 255, .90), transparent 22%),
+        linear-gradient(180deg, #fff8fb 0%, #fff0c9 46%, #ffe3ef 100%);
+      border: 4px solid rgba(255, 255, 255, .92);
+      box-shadow: 0 30px 90px rgba(55, 18, 46, .36);
+      transform: translateY(10px) scale(.98);
+      opacity: 0;
+      transition: opacity .18s ease, transform .18s ease;
+    }
+
+    .birthdayYearModal.isOpen .birthdayYearSheet {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .birthdayYearSheet::before,
+    .birthdayYearSheet::after {
+      content: "";
+      position: absolute;
+      pointer-events: none;
+      opacity: .75;
+    }
+
+    .birthdayYearSheet::before {
+      inset: 12px;
+      border: 2px dashed rgba(255, 139, 188, .36);
+      border-radius: 24px;
+    }
+
+    .birthdayYearSheet::after {
+      width: 170px;
+      height: 170px;
+      right: -52px;
+      top: -54px;
+      border-radius: 999px;
+      background:
+        radial-gradient(circle at 38% 35%, #fff, transparent 9%),
+        radial-gradient(circle, rgba(255, 105, 170, .32), rgba(255, 218, 80, .16));
+    }
+
+    .birthdayYearClose {
+      position: absolute;
+      z-index: 4;
+      top: 14px;
+      right: 14px;
+      width: 46px;
+      height: 46px;
+      display: grid;
+      place-items: center;
+      border: 0;
+      border-radius: 999px;
+      background: #fff;
+      color: #a0145c;
+      font-size: 1.7rem;
+      font-weight: 1000;
+      line-height: 1;
+      cursor: pointer;
+      box-shadow: 0 10px 22px rgba(94, 25, 66, .18);
+    }
+
+    .birthdayYearClose:active {
+      transform: scale(.96);
+    }
+
+    .birthdayYearHeader {
+      position: relative;
+      z-index: 2;
+      padding: 30px 70px 16px 28px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .birthdayYearKicker {
+      margin: 0;
+      width: max-content;
+      max-width: 100%;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .76);
+      color: #a11460;
+      font-size: .78rem;
+      font-weight: 950;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      box-shadow: 0 8px 18px rgba(166, 44, 99, .10);
+    }
+
+    .birthdayYearHeader h2 {
+      margin: 0;
+      color: #351225;
+      font-size: clamp(1.72rem, 4.6vw, 3rem);
+      line-height: .98;
+      font-weight: 1000;
+      letter-spacing: -.04em;
+    }
+
+    .birthdayYearHeader p {
+      margin: 0;
+      color: #7c375c;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .birthdayTodayStrip {
+      position: relative;
+      z-index: 2;
+      margin: 0 22px 12px;
+      padding: 13px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border-radius: 22px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, .88), rgba(255, 229, 158, .72));
+      border: 2px solid rgba(255, 255, 255, .88);
+      box-shadow: 0 10px 22px rgba(163, 69, 112, .10);
+      color: #55203e;
+      font-weight: 850;
+    }
+
+    .birthdayTodayStrip strong {
+      color: #a0145c;
+    }
+
+    .birthdayYearList {
+      position: relative;
+      z-index: 2;
+      overflow: auto;
+      padding: 0 22px 24px;
+      display: grid;
+      gap: 13px;
+      scrollbar-width: thin;
+    }
+
+    .birthdayMonthGroup {
+      border-radius: 24px;
+      background: rgba(255, 255, 255, .66);
+      border: 2px solid rgba(255, 255, 255, .74);
+      box-shadow: 0 10px 26px rgba(145, 53, 96, .10);
+      overflow: hidden;
+    }
+
+    .birthdayMonthTitle {
+      margin: 0;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: #fff;
+      background: linear-gradient(135deg, #ff76ad, #ffbd4a);
+      font-size: 1rem;
+      font-weight: 1000;
+      text-shadow: 0 1px 1px rgba(0, 0, 0, .15);
+    }
+
+    .birthdayMonthTitle span {
+      padding: 4px 9px;
+      border-radius: 999px;
+      color: #7c154d;
+      background: rgba(255, 255, 255, .82);
+      font-size: .74rem;
+      text-shadow: none;
+    }
+
+    .birthdayDayRow {
+      display: grid;
+      grid-template-columns: 78px 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 12px 14px;
+      border-top: 1px solid rgba(126, 47, 92, .10);
+    }
+
+    .birthdayDayRow.isToday {
+      background: linear-gradient(90deg, rgba(255, 242, 164, .78), rgba(255, 212, 236, .62));
+    }
+
+    .birthdayDateBadge {
+      display: grid;
+      place-items: center;
+      min-height: 52px;
+      border-radius: 18px;
+      background: #fff;
+      color: #a0145c;
+      box-shadow: inset 0 -3px 0 rgba(255, 124, 179, .16), 0 8px 16px rgba(125, 46, 92, .09);
+      font-weight: 1000;
+      line-height: 1;
+    }
+
+    .birthdayDateBadge small {
+      display: block;
+      margin-top: 3px;
+      color: #6f5b68;
+      font-size: .64rem;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .birthdayNames {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      min-height: 52px;
+    }
+
+    .birthdayNameChip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      max-width: 100%;
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #fff, #fff5fb);
+      border: 1px solid rgba(255, 121, 178, .22);
+      color: #351225;
+      font-weight: 950;
+      box-shadow: 0 8px 18px rgba(142, 48, 95, .08);
+    }
+
+    .birthdayNameChip.isToday {
+      background: linear-gradient(180deg, #fff1a8, #ffd7ed);
+      color: #7c154d;
+      border-color: rgba(255, 255, 255, .95);
+    }
+
+    .birthdayEmptyYear {
+      padding: 24px;
+      text-align: center;
+      border-radius: 26px;
+      background: rgba(255, 255, 255, .70);
+      color: #713352;
+      font-weight: 900;
+    }
+
+    body.birthdayYearOpen {
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    @media (max-width: 560px) {
+      .birthdayYearModal {
+        padding: 10px;
+      }
+
+      .birthdayYearSheet {
+        width: 100%;
+        max-height: 91dvh;
+        border-radius: 26px;
+      }
+
+      .birthdayYearHeader {
+        padding: 24px 62px 12px 20px;
+      }
+
+      .birthdayTodayStrip {
+        margin-inline: 14px;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .birthdayYearList {
+        padding-inline: 14px;
+      }
+
+      .birthdayDayRow {
+        grid-template-columns: 60px 1fr;
+        padding: 10px;
+      }
+
+      .birthdayDateBadge {
+        min-height: 48px;
+      }
+
+      .birthdayNameChip {
+        border-radius: 16px;
+      }
+
+      .birthdayViewAllPill {
+        font-size: .66rem;
+        padding: 4px 7px;
+      }
+    }
+  </style>
+
 </head>
 
 <body>
@@ -634,10 +1019,13 @@
         </div>
       </div>
 
-      <div class="card birthdayCard">
+      <div class="card birthdayCard" id="birthdayCornerCard" role="button" tabindex="0" aria-haspopup="dialog" aria-controls="birthdayYearModal" title="View all birthdays">
         <div class="birthdayHeader">
           <p class="label">Birthday Corner</p>
-          <span id="birthdayDateText" class="birthdayHeaderDate">--</span>
+          <div class="birthdayHeaderRight">
+            <span id="birthdayDateText" class="birthdayHeaderDate">--</span>
+            <span class="birthdayViewAllPill">View all 🎈</span>
+          </div>
         </div>
 
         <div id="birthdayList" class="birthdayList">
@@ -1343,6 +1731,21 @@
   </div>
 
 
+  <div id="birthdayYearModal" class="birthdayYearModal" hidden>
+    <button id="birthdayYearBackdrop" class="birthdayYearBackdrop" type="button" aria-label="Close birthday list"></button>
+    <section class="birthdayYearSheet" role="dialog" aria-modal="true" aria-labelledby="birthdayYearTitle">
+      <button id="birthdayYearClose" class="birthdayYearClose" type="button" aria-label="Close birthday list">×</button>
+      <header class="birthdayYearHeader">
+        <p class="birthdayYearKicker">🎂 Birthday Corner</p>
+        <h2 id="birthdayYearTitle">Birthday List</h2>
+        <p>All birthday celebrants for the whole year, grouped by month.</p>
+      </header>
+      <div id="birthdayYearToday" class="birthdayTodayStrip"></div>
+      <div id="birthdayYearList" class="birthdayYearList"></div>
+    </section>
+  </div>
+
+
   <script id="sfkStartIntroScript">
     const SFK_INTRO_SESSION_KEY = "sfkClassBoardIntroSeenThisSession";
 
@@ -1386,7 +1789,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js?v=phone-login-v8"></script>
   <script src="firebase-adapter.js?v=media-fix-v8"></script>
-  <script src="script.js?v=schedule-color-fix-v1"></script>
+  <script src="script.js?v=birthday-modal-v1"></script>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.16/dist/hls.min.js"></script>
   <script src="https://cdn.dashjs.org/v5.2.0/legacy/umd/dash.all.min.js"></script>
   <script src="time-capsule.js?v=11-media-fix-v8"></script>

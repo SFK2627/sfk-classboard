@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-sw.js-schedule-color-fix-v1";
+const CACHE_NAME = "sfk-sw.js-birthday-modal-v1";
 const APP_SHELL = [
   "./",
   "./index.html",

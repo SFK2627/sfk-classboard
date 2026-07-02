@@ -105,6 +105,7 @@ const subjectIcons = {
 function initClassBoard() {
   ensureAnnouncementTimerControl();
   initClassBoardAccessMenu();
+  initBirthdayYearModal();
 
   const audioOverlay = document.getElementById("audioStartOverlay");
   if (audioOverlay) {
@@ -429,6 +430,7 @@ function renderDashboard(data) {
   renderReminders(data.adviserReminders || []);
   renderQuote(data.dailyQuote);
   renderBirthdays(data.birthdays || []);
+  refreshBirthdayYearModalIfOpen();
   renderTicker(data.ticker || []);
   updateCountdownAndBell();
 }
@@ -3055,6 +3057,207 @@ function getOrdinalDay(day) {
   if (lastDigit === 3) return `${day}rd`;
 
   return `${day}th`;
+}
+
+
+function initBirthdayYearModal() {
+  const card = document.getElementById("birthdayCornerCard");
+  const modal = document.getElementById("birthdayYearModal");
+  const closeBtn = document.getElementById("birthdayYearClose");
+  const backdrop = document.getElementById("birthdayYearBackdrop");
+
+  if (!card || !modal || card.dataset.birthdayModalReady === "true") return;
+
+  card.dataset.birthdayModalReady = "true";
+  card.addEventListener("click", (event) => {
+    if (event.target?.closest?.("a, button, input, textarea, select")) return;
+    openBirthdayYearModal();
+  });
+  card.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    openBirthdayYearModal();
+  });
+
+  closeBtn?.addEventListener("click", closeBirthdayYearModal);
+  backdrop?.addEventListener("click", closeBirthdayYearModal);
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !modal.hidden) closeBirthdayYearModal();
+  });
+}
+
+function openBirthdayYearModal() {
+  const modal = document.getElementById("birthdayYearModal");
+  if (!modal) return;
+
+  renderBirthdayYearModal(latestData?.birthdays || []);
+  modal.hidden = false;
+  document.body.classList.add("birthdayYearOpen");
+  window.requestAnimationFrame(() => modal.classList.add("isOpen"));
+  window.setTimeout(() => document.getElementById("birthdayYearClose")?.focus(), 80);
+}
+
+function closeBirthdayYearModal() {
+  const modal = document.getElementById("birthdayYearModal");
+  if (!modal || modal.hidden) return;
+
+  modal.classList.remove("isOpen");
+  document.body.classList.remove("birthdayYearOpen");
+  window.setTimeout(() => {
+    modal.hidden = true;
+    document.getElementById("birthdayCornerCard")?.focus();
+  }, 170);
+}
+
+function refreshBirthdayYearModalIfOpen() {
+  const modal = document.getElementById("birthdayYearModal");
+  if (!modal || modal.hidden) return;
+  renderBirthdayYearModal(latestData?.birthdays || []);
+}
+
+function renderBirthdayYearModal(items) {
+  const todayBox = document.getElementById("birthdayYearToday");
+  const listBox = document.getElementById("birthdayYearList");
+  if (!listBox) return;
+
+  const entries = getBirthdayYearEntries(items);
+  const todayMonthDay = getTodayMonthDay();
+  const todayEntries = entries.filter(entry => entry.monthDay === todayMonthDay);
+  const todayText = formatBirthdayDateText(todayMonthDay);
+
+  if (todayBox) {
+    if (todayEntries.length > 0) {
+      todayBox.innerHTML = `
+        <span>🎉 <strong>${escapeHtml(todayText)}</strong> celebrants today</span>
+        <span>${todayEntries.map(entry => escapeHtml(entry.name)).join(", ")}</span>
+      `;
+    } else {
+      todayBox.innerHTML = `
+        <span>🎂 Today is <strong>${escapeHtml(todayText)}</strong></span>
+        <span>No celebrants today</span>
+      `;
+    }
+  }
+
+  if (entries.length === 0) {
+    listBox.innerHTML = `
+      <div class="birthdayEmptyYear">
+        <div style="font-size:2.2rem; line-height:1; margin-bottom:8px;">🎈</div>
+        <p style="margin:0;">No birthdays have been added yet.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const grouped = new Map();
+  entries.forEach(entry => {
+    if (!grouped.has(entry.month)) grouped.set(entry.month, []);
+    grouped.get(entry.month).push(entry);
+  });
+
+  listBox.innerHTML = Array.from(grouped.entries()).map(([month, monthEntries]) => {
+    const dayGroups = new Map();
+    monthEntries.forEach(entry => {
+      if (!dayGroups.has(entry.monthDay)) dayGroups.set(entry.monthDay, []);
+      dayGroups.get(entry.monthDay).push(entry);
+    });
+
+    const rows = Array.from(dayGroups.entries()).map(([monthDay, sameDayEntries]) => {
+      const first = sameDayEntries[0];
+      const isToday = monthDay === todayMonthDay;
+      const names = sameDayEntries
+        .map(entry => `
+          <span class="birthdayNameChip ${isToday ? "isToday" : ""}">
+            <span aria-hidden="true">${isToday ? "🎉" : "🎂"}</span>
+            <span>${escapeHtml(entry.name)}</span>
+          </span>
+        `)
+        .join("");
+
+      return `
+        <div class="birthdayDayRow ${isToday ? "isToday" : ""}">
+          <div class="birthdayDateBadge">
+            ${escapeHtml(String(first.day))}
+            <small>${escapeHtml(first.dayLabel)}</small>
+          </div>
+          <div class="birthdayNames">${names}</div>
+        </div>
+      `;
+    }).join("");
+
+    return `
+      <article class="birthdayMonthGroup">
+        <h3 class="birthdayMonthTitle">
+          ${escapeHtml(monthNamesFull[month] || "Birthday Month")}
+          <span>${monthEntries.length} ${monthEntries.length === 1 ? "celebrant" : "celebrants"}</span>
+        </h3>
+        ${rows}
+      </article>
+    `;
+  }).join("");
+}
+
+const monthNamesFull = [
+  "",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December"
+];
+
+function getBirthdayYearEntries(items) {
+  return (items || [])
+    .map((item, index) => {
+      const monthDay = normalizeBirthdayValue(
+        item.MonthDay ||
+        item.Birthday ||
+        item.Birthdate ||
+        item.Date ||
+        item.BirthdayDate ||
+        ""
+      );
+
+      if (!/^\d{2}-\d{2}$/.test(monthDay)) return null;
+
+      const [monthText, dayText] = monthDay.split("-");
+      const month = Number(monthText);
+      const day = Number(dayText);
+
+      if (!month || !day || month < 1 || month > 12 || day < 1 || day > 31) return null;
+
+      const name =
+        item.Name ||
+        item.StudentName ||
+        item.Student ||
+        item.FullName ||
+        item.Celebrant ||
+        item.Nickname ||
+        "Birthday Celebrant";
+
+      return {
+        item,
+        index,
+        monthDay,
+        month,
+        day,
+        dayLabel: getOrdinalDay(day).replace(String(day), ""),
+        name: String(name).trim() || "Birthday Celebrant"
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => {
+      if (a.month !== b.month) return a.month - b.month;
+      if (a.day !== b.day) return a.day - b.day;
+      return a.name.localeCompare(b.name);
+    });
 }
 
 function renderQuote(item) {
