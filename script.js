@@ -1723,6 +1723,12 @@ async function hydrateAnnouncementMedia(root = document, options = {}) {
 }
 
 async function handlePendingAnnouncementMediaClick(event) {
+  if (Date.now() < announcementImageOverlaySuppressClickUntil) {
+    event.preventDefault();
+    event.stopPropagation();
+    return;
+  }
+
   const link = event.target?.closest?.("[data-announcement-media-ref], .announcement-attachment-chip[data-announcement-media-ready='true'], .announcement-attachment-chip[href^='data:image/']");
   if (!link) return;
 
@@ -1802,15 +1808,35 @@ function waitForAnnouncementImageDecode(src, timeoutMs = 4500) {
   });
 }
 
-function closeAnnouncementImageOverlay() {
+let announcementImageOverlaySuppressClickUntil = 0;
+
+function closeAnnouncementImageOverlay(event) {
+  if (event && typeof event.preventDefault === "function") event.preventDefault();
+  if (event && typeof event.stopPropagation === "function") event.stopPropagation();
+
   const overlay = document.getElementById("announcementImageOverlay");
-  if (!overlay) return;
+  announcementImageOverlaySuppressClickUntil = Date.now() + 650;
+
+  if (!overlay) {
+    document.body.classList.remove("announcementImageOpen");
+    return;
+  }
+
   const image = overlay.querySelector("img");
   if (image) {
+    image.onload = null;
+    image.onerror = null;
     image.removeAttribute("src");
+    image.alt = "";
   }
+
+  const caption = overlay.querySelector("figcaption");
+  if (caption) caption.textContent = "";
+
   overlay.hidden = true;
   overlay.setAttribute("aria-hidden", "true");
+  overlay.style.display = "none";
+  overlay.style.pointerEvents = "none";
   document.body.classList.remove("announcementImageOpen");
 }
 
@@ -1837,28 +1863,29 @@ function showAnnouncementImageOverlay(src, label) {
     const requestClose = (event) => {
       const closeTarget = event.target?.closest?.("[data-close-announcement-image='true']");
       if (!closeTarget) return;
-      event.preventDefault();
-      event.stopPropagation();
-      closeAnnouncementImageOverlay();
+      closeAnnouncementImageOverlay(event);
     };
 
     overlay.addEventListener("click", requestClose, true);
-    overlay.addEventListener("pointerdown", requestClose, true);
     overlay.addEventListener("touchstart", requestClose, { capture: true, passive: false });
 
     document.addEventListener("click", (event) => {
+      if (Date.now() < announcementImageOverlaySuppressClickUntil) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+
       const activeOverlay = document.getElementById("announcementImageOverlay");
       if (!activeOverlay || activeOverlay.hidden) return;
       if (event.target?.closest?.("#announcementImageOverlay [data-close-announcement-image='true']")) {
-        event.preventDefault();
-        event.stopPropagation();
-        closeAnnouncementImageOverlay();
+        closeAnnouncementImageOverlay(event);
       }
     }, true);
 
     document.addEventListener("keydown", (keyEvent) => {
       if (keyEvent.key === "Escape" && !overlay.hidden) {
-        closeAnnouncementImageOverlay();
+        closeAnnouncementImageOverlay(keyEvent);
       }
     });
   }
@@ -1881,6 +1908,8 @@ function showAnnouncementImageOverlay(src, label) {
   if (caption) caption.textContent = "Loading photo...";
   overlay.hidden = false;
   overlay.setAttribute("aria-hidden", "false");
+  overlay.style.display = "grid";
+  overlay.style.pointerEvents = "auto";
   document.body.classList.add("announcementImageOpen");
 
   const closeButton = overlay.querySelector(".announcementImageOverlayClose");
