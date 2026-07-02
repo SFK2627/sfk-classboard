@@ -1386,11 +1386,56 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js?v=phone-login-v8"></script>
   <script src="firebase-adapter.js?v=media-fix-v8"></script>
-  <script src="script.js?v=announcement-close-fix-v2"></script>
+  <script src="script.js?v=announcement-close-fix-v3"></script>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.16/dist/hls.min.js"></script>
   <script src="https://cdn.dashjs.org/v5.2.0/legacy/umd/dash.all.min.js"></script>
   <script src="time-capsule.js?v=11-media-fix-v8"></script>
   <script src="class-chat.js?v=190-capsule-volume-restore"></script>
   <script src="pwa.js?v=media-fix-v8"></script>
+
+  <script>
+    window.sfkAnnouncementCloseEmergencyGuardV3 = true;
+    (function () {
+      function forceCloseAnnouncementPreview(event) {
+        if (event) {
+          event.preventDefault && event.preventDefault();
+          event.stopPropagation && event.stopPropagation();
+          event.stopImmediatePropagation && event.stopImmediatePropagation();
+        }
+        document.querySelectorAll('#announcementImageOverlay, .announcementImageOverlay').forEach(function (overlay) {
+          overlay.querySelectorAll('img').forEach(function (img) {
+            img.onload = null;
+            img.onerror = null;
+            img.removeAttribute('src');
+            img.alt = '';
+          });
+          overlay.hidden = true;
+          overlay.style.display = 'none';
+          overlay.style.pointerEvents = 'none';
+          overlay.remove && overlay.remove();
+        });
+        document.body.classList.remove('announcementImageOpen');
+        return false;
+      }
+      window.forceCloseAnnouncementPreview = forceCloseAnnouncementPreview;
+      ['pointerdown', 'touchstart', 'mousedown', 'click'].forEach(function (type) {
+        document.addEventListener(type, function (event) {
+          var target = event.target;
+          if (!target || !target.closest) return;
+          var overlay = target.closest('#announcementImageOverlay, .announcementImageOverlay');
+          if (!overlay) return;
+          if (target.closest('.announcementImageOverlayClose, [data-close-announcement-image="true"]') || target === overlay || target.classList.contains('announcementImageOverlayBackdrop')) {
+            forceCloseAnnouncementPreview(event);
+          }
+        }, { capture: true, passive: false });
+      });
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && document.querySelector('#announcementImageOverlay, .announcementImageOverlay')) {
+          forceCloseAnnouncementPreview(event);
+        }
+      }, true);
+    })();
+  </script>
+
 </body>
 </html>

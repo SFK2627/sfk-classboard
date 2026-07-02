@@ -1616,21 +1616,38 @@ function renderAnnouncementAttachments(item) {
       const label = item.label;
       const isImage = item.mediaRef?.kind === "announcement" || isImageUrl(item.safeUrl || item.rawUrl) || isImageUrl(label);
       const icon = isImage ? "🖼️" : "📎";
-      const pendingAttrs = item.mediaRef
-        ? ` data-announcement-media-ref="${escapeHtml(item.mediaRef.raw)}" data-announcement-media-label="${escapeHtml(label)}"`
-        : "";
-      const href = item.safeUrl || "#";
       const pendingClass = item.mediaRef ? " is-loading-media" : "";
 
+      // Important: image attachments are buttons, not normal links.
+      // This prevents the browser from opening the file/link again behind the modal
+      // after the user taps X on mobile.
+      if (isImage) {
+        const mediaAttrs = item.mediaRef
+          ? ` data-announcement-media-ref="${escapeHtml(item.mediaRef.raw)}"`
+          : ` data-announcement-media-ready="true" data-announcement-media-url="${escapeHtml(item.safeUrl)}"`;
+
+        return `
+          <button class="announcement-attachment-chip compact-attachment-row announcement-image-preview-chip${pendingClass}"
+             type="button"
+             title="Preview ${escapeHtml(label)}"
+             data-announcement-media-label="${escapeHtml(label)}"${mediaAttrs}>
+            <span class="attachment-file-icon" aria-hidden="true">${icon}</span>
+            <span class="attachment-file-name">${escapeHtml(label)}</span>
+            <span class="attachment-file-open" aria-hidden="true">${item.mediaRef ? "…" : "👁"}</span>
+          </button>
+        `;
+      }
+
+      const href = item.safeUrl || "#";
       return `
-        <a class="announcement-attachment-chip compact-attachment-row${pendingClass}"
+        <a class="announcement-attachment-chip compact-attachment-row"
            href="${escapeHtml(href)}"
            target="_blank"
            rel="noopener noreferrer"
-           title="Open ${escapeHtml(label)}"${pendingAttrs}>
+           title="Open ${escapeHtml(label)}">
           <span class="attachment-file-icon" aria-hidden="true">${icon}</span>
           <span class="attachment-file-name">${escapeHtml(label)}</span>
-          <span class="attachment-file-open" aria-hidden="true">${item.mediaRef ? "…" : "↗"}</span>
+          <span class="attachment-file-open" aria-hidden="true">↗</span>
         </a>
       `;
     })
@@ -1711,7 +1728,7 @@ async function hydrateAnnouncementMedia(root = document, options = {}) {
       return;
     }
 
-    link.href = displayUrl;
+    if (link.tagName === "A") link.href = displayUrl;
     link.classList.remove("is-loading-media", "is-unavailable-media");
     link.classList.add("is-ready-media");
     link.removeAttribute("data-announcement-media-ref");
@@ -1729,10 +1746,11 @@ async function handlePendingAnnouncementMediaClick(event) {
     return;
   }
 
-  const link = event.target?.closest?.("[data-announcement-media-ref], .announcement-attachment-chip[data-announcement-media-ready='true'], .announcement-attachment-chip[href^='data:image/']");
+  const link = event.target?.closest?.("[data-announcement-media-ref], .announcement-attachment-chip[data-announcement-media-ready='true'], .announcement-attachment-chip[data-announcement-media-url], .announcement-attachment-chip[href^='data:image/']");
   if (!link) return;
 
-  const readyUrl = link.dataset.announcementMediaUrl || (link.dataset.announcementMediaReady === "true" || isAnnouncementImageDisplayUrl(link.getAttribute("href") || "") ? link.href : "");
+  const hrefValue = link.tagName === "A" ? link.href : (link.getAttribute("href") || "");
+  const readyUrl = link.dataset.announcementMediaUrl || (link.dataset.announcementMediaReady === "true" || isAnnouncementImageDisplayUrl(link.getAttribute("href") || "") ? hrefValue : "");
   if (readyUrl && isAnnouncementImageDisplayUrl(readyUrl)) {
     event.preventDefault();
     showAnnouncementImageOverlay(readyUrl, link.dataset.announcementMediaLabel || link.textContent || "Announcement photo");
@@ -1759,7 +1777,7 @@ async function handlePendingAnnouncementMediaClick(event) {
     return;
   }
 
-  link.href = displayUrl;
+  if (link.tagName === "A") link.href = displayUrl;
   link.removeAttribute("data-announcement-media-ref");
   link.dataset.announcementMediaReady = "true";
   link.dataset.announcementMediaUrl = displayUrl;
@@ -1809,114 +1827,131 @@ function waitForAnnouncementImageDecode(src, timeoutMs = 4500) {
 }
 
 let announcementImageOverlaySuppressClickUntil = 0;
+let announcementImageOverlayGuardInstalled = false;
 
 function closeAnnouncementImageOverlay(event) {
-  if (event && typeof event.preventDefault === "function") event.preventDefault();
-  if (event && typeof event.stopPropagation === "function") event.stopPropagation();
-
-  const overlay = document.getElementById("announcementImageOverlay");
-  announcementImageOverlaySuppressClickUntil = Date.now() + 650;
-
-  if (!overlay) {
-    document.body.classList.remove("announcementImageOpen");
-    return;
+  if (event) {
+    if (typeof event.preventDefault === "function") event.preventDefault();
+    if (typeof event.stopPropagation === "function") event.stopPropagation();
+    if (typeof event.stopImmediatePropagation === "function") event.stopImmediatePropagation();
   }
 
-  const image = overlay.querySelector("img");
-  if (image) {
-    image.onload = null;
-    image.onerror = null;
-    image.removeAttribute("src");
-    image.alt = "";
-  }
+  announcementImageOverlaySuppressClickUntil = Date.now() + 1100;
 
-  const caption = overlay.querySelector("figcaption");
-  if (caption) caption.textContent = "";
+  const overlays = Array.from(document.querySelectorAll("#announcementImageOverlay, .announcementImageOverlay"));
+  overlays.forEach((overlay) => {
+    overlay.querySelectorAll("img").forEach((image) => {
+      image.onload = null;
+      image.onerror = null;
+      image.removeAttribute("src");
+      image.alt = "";
+    });
+    overlay.hidden = true;
+    overlay.setAttribute("aria-hidden", "true");
+    overlay.style.display = "none";
+    overlay.style.pointerEvents = "none";
+    if (typeof overlay.remove === "function") overlay.remove();
+  });
 
-  overlay.hidden = true;
-  overlay.setAttribute("aria-hidden", "true");
-  overlay.style.display = "none";
-  overlay.style.pointerEvents = "none";
   document.body.classList.remove("announcementImageOpen");
+  return false;
+}
+
+function isAnnouncementImageCloseGesture(event) {
+  const target = event?.target;
+  if (!target || typeof target.closest !== "function") return false;
+  const overlay = target.closest("#announcementImageOverlay, .announcementImageOverlay");
+  if (!overlay) return false;
+
+  return Boolean(
+    target.closest(".announcementImageOverlayClose, [data-close-announcement-image='true']") ||
+    target.classList?.contains("announcementImageOverlayBackdrop") ||
+    target === overlay
+  );
+}
+
+function installAnnouncementImageOverlayCloseGuard() {
+  if (announcementImageOverlayGuardInstalled) return;
+  announcementImageOverlayGuardInstalled = true;
+
+  const guard = (event) => {
+    if (Date.now() < announcementImageOverlaySuppressClickUntil) {
+      event.preventDefault();
+      event.stopPropagation();
+      if (typeof event.stopImmediatePropagation === "function") event.stopImmediatePropagation();
+      return false;
+    }
+
+    if (isAnnouncementImageCloseGesture(event)) {
+      return closeAnnouncementImageOverlay(event);
+    }
+    return undefined;
+  };
+
+  ["pointerdown", "mousedown", "touchstart", "click"].forEach((type) => {
+    document.addEventListener(type, guard, { capture: true, passive: false });
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && document.querySelector("#announcementImageOverlay, .announcementImageOverlay")) {
+      closeAnnouncementImageOverlay(event);
+    }
+  }, true);
 }
 
 function showAnnouncementImageOverlay(src, label) {
   if (!src) return;
-  let overlay = document.getElementById("announcementImageOverlay");
-  if (!overlay) {
-    overlay = document.createElement("div");
-    overlay.id = "announcementImageOverlay";
-    overlay.className = "announcementImageOverlay";
-    overlay.setAttribute("role", "dialog");
-    overlay.setAttribute("aria-modal", "true");
-    overlay.style.cssText = "position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;padding:18px;background:rgba(0,0,0,.78);backdrop-filter:blur(4px);";
-    overlay.innerHTML = `
-      <button class="announcementImageOverlayBackdrop" type="button" data-close-announcement-image="true" aria-label="Close image preview" style="position:absolute;inset:0;border:0;background:transparent;padding:0;margin:0;cursor:zoom-out;"></button>
-      <figure class="announcementImageOverlayFigure" style="position:relative;z-index:1;max-width:min(96vw,1100px);max-height:92vh;margin:0;display:grid;gap:10px;place-items:center;pointer-events:none;">
-        <button class="announcementImageOverlayClose" type="button" data-close-announcement-image="true" aria-label="Close image" style="position:relative;z-index:3;justify-self:end;pointer-events:auto;width:48px;height:48px;border:0;border-radius:999px;background:#fff;color:#111;font-size:30px;font-weight:900;line-height:1;box-shadow:0 8px 30px rgba(0,0,0,.32);cursor:pointer;touch-action:manipulation;">×</button>
-        <img alt="" style="display:block;max-width:96vw;max-height:78vh;object-fit:contain;border-radius:14px;background:#fff;box-shadow:0 18px 60px rgba(0,0,0,.45);pointer-events:auto;" />
-        <figcaption style="color:#fff;text-align:center;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.7);pointer-events:none;"></figcaption>
-      </figure>
-    `;
-    document.body.appendChild(overlay);
+  installAnnouncementImageOverlayCloseGuard();
 
-    const requestClose = (event) => {
-      const closeTarget = event.target?.closest?.("[data-close-announcement-image='true']");
-      if (!closeTarget) return;
-      closeAnnouncementImageOverlay(event);
-    };
+  // Always rebuild the modal from scratch. This avoids stale mobile/browser link layers
+  // and guarantees one tap on X removes everything.
+  closeAnnouncementImageOverlay();
+  announcementImageOverlaySuppressClickUntil = 0;
 
-    overlay.addEventListener("click", requestClose, true);
-    overlay.addEventListener("touchstart", requestClose, { capture: true, passive: false });
-
-    document.addEventListener("click", (event) => {
-      if (Date.now() < announcementImageOverlaySuppressClickUntil) {
-        event.preventDefault();
-        event.stopPropagation();
-        return;
-      }
-
-      const activeOverlay = document.getElementById("announcementImageOverlay");
-      if (!activeOverlay || activeOverlay.hidden) return;
-      if (event.target?.closest?.("#announcementImageOverlay [data-close-announcement-image='true']")) {
-        closeAnnouncementImageOverlay(event);
-      }
-    }, true);
-
-    document.addEventListener("keydown", (keyEvent) => {
-      if (keyEvent.key === "Escape" && !overlay.hidden) {
-        closeAnnouncementImageOverlay(keyEvent);
-      }
-    });
-  }
+  const overlay = document.createElement("div");
+  overlay.id = "announcementImageOverlay";
+  overlay.className = "announcementImageOverlay";
+  overlay.setAttribute("role", "dialog");
+  overlay.setAttribute("aria-modal", "true");
+  overlay.setAttribute("aria-hidden", "false");
+  overlay.style.cssText = "position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;padding:18px;background:rgba(0,0,0,.78);backdrop-filter:blur(4px);pointer-events:auto;";
+  overlay.innerHTML = `
+    <button class="announcementImageOverlayBackdrop" type="button" data-close-announcement-image="true" aria-label="Close image preview" style="position:absolute;inset:0;border:0;background:transparent;padding:0;margin:0;cursor:zoom-out;touch-action:manipulation;"></button>
+    <figure class="announcementImageOverlayFigure" style="position:relative;z-index:1;max-width:min(96vw,1100px);max-height:92vh;margin:0;display:grid;gap:10px;place-items:center;pointer-events:none;">
+      <button class="announcementImageOverlayClose" type="button" data-close-announcement-image="true" aria-label="Close image" onclick="return closeAnnouncementImageOverlay(event);" onpointerdown="return closeAnnouncementImageOverlay(event);" ontouchstart="return closeAnnouncementImageOverlay(event);" style="position:relative;z-index:3;justify-self:center;pointer-events:auto;width:52px;height:52px;border:0;border-radius:999px;background:#fff;color:#111;font-size:32px;font-weight:900;line-height:1;box-shadow:0 8px 30px rgba(0,0,0,.32);cursor:pointer;touch-action:manipulation;">×</button>
+      <img alt="" style="display:block;max-width:96vw;max-height:78vh;object-fit:contain;border-radius:14px;background:#fff;box-shadow:0 18px 60px rgba(0,0,0,.45);pointer-events:auto;" />
+      <figcaption style="color:#fff;text-align:center;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.7);pointer-events:none;"></figcaption>
+    </figure>
+  `;
+  document.body.appendChild(overlay);
+  document.body.classList.add("announcementImageOpen");
 
   const image = overlay.querySelector("img");
   const caption = overlay.querySelector("figcaption");
+  const cleanLabel = String(label || "Announcement photo").replace(/\s+/g, " ").trim();
+
+  if (caption) caption.textContent = "Loading photo...";
   if (image) {
     image.removeAttribute("src");
     image.alt = "Loading announcement photo...";
     image.onerror = () => {
-      image.alt = "Photo could not load. Please close and try again.";
+      image.alt = "";
       if (caption) caption.textContent = "Photo could not load. Tap X or outside the photo to close.";
     };
     image.onload = () => {
-      image.alt = String(label || "Announcement photo").trim();
-      if (caption) caption.textContent = String(label || "Announcement photo").trim();
+      image.alt = cleanLabel;
+      if (caption) caption.textContent = cleanLabel;
     };
     image.src = src;
   }
-  if (caption) caption.textContent = "Loading photo...";
-  overlay.hidden = false;
-  overlay.setAttribute("aria-hidden", "false");
-  overlay.style.display = "grid";
-  overlay.style.pointerEvents = "auto";
-  document.body.classList.add("announcementImageOpen");
 
   const closeButton = overlay.querySelector(".announcementImageOverlayClose");
   if (closeButton && typeof closeButton.focus === "function") {
     window.setTimeout(() => closeButton.focus({ preventScroll: true }), 0);
   }
 }
+
+installAnnouncementImageOverlayCloseGuard();
 
 function parseClassBoardMediaRef(value) {
   const raw = String(value || "").trim();
