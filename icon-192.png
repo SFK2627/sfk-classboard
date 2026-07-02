@@ -1,46 +1,28 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#f7c600" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-title" content="SFK Admin" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>SFK Admin</title>
-  <link rel="manifest" href="manifest.webmanifest?v=2" />
-  <link rel="icon" type="image/png" sizes="192x192" href="../icons/icon-192.png?v=3" />
-  <link rel="apple-touch-icon" href="../icons/icon-192.png?v=3" />
-  <style>
-    html,
-    body {
-      margin: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: #fff8dc;
-    }
+SFK Memories GitHub Music Library
 
-    iframe {
-      display: block;
-      width: 100%;
-      height: 100dvh;
-      border: 0;
-      background: #fff8dc;
-    }
-  </style>
-</head>
-<body>
-  <iframe src="../admin.html?embedded=1&v=tool-launcher-1" title="SFK ClassBoard Admin"></iframe>
-  <script>
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("./sw.js").catch((error) => {
-          console.warn("Admin service worker registration failed:", error);
-        });
-      });
-    }
-  </script>
-</body>
-</html>
+Goal:
+Use GitHub Pages as the music host instead of Google Drive or Apps Script.
+This is faster, simpler, and still no billing.
+
+Best setup for larger songs:
+1. In GitHub, open your sfk-classboard repository.
+2. Go to Releases.
+3. Create or edit a release with tag:
+   music
+4. Upload MP3/M4A files as release assets.
+5. Publish/update the release.
+6. Open Memories. The dropdown auto-lists audio assets from that release.
+
+Small-file setup:
+You may also put MP3 or M4A files inside the music folder.
+Example:
+music/kindness-theme.mp3
+
+Optional fallback:
+If GitHub API is unavailable or rate-limited, you may still list songs manually in music-library.json.
+
+Notes:
+- Avoid spaces in file names. Use dashes instead.
+- The dropdown first reads the GitHub Release tagged `music`.
+- If no release songs exist, it reads the GitHub /music folder automatically.
+- Google Drive links can still be pasted manually, but GitHub music is the recommended path.

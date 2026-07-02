@@ -1,23 +1,24 @@
-SFK Admin/Officers route repair
+SFK ADMIN/OFFICERS RESCUE V2
 
 Problem fixed:
-- Admin or Officers shortcut can show JavaScript service worker code instead of the login page.
-- Mobile admin login can become unresponsive when opened inside the old /admin/ iframe shortcut.
+- manifest.webmanifest had service worker JavaScript instead of JSON.
+- admin.html had service worker JavaScript instead of HTML.
+- admin.css had HTML instead of CSS.
+- admin.js had CSS instead of JavaScript.
+- officer.html had manifest JSON instead of HTML.
 
-What changed:
-- /admin/ now redirects to /admin.html directly.
-- /officers/ now redirects to /officer.html directly.
-- The old /admin/ and /officers/ service workers are self-removing reset workers.
-- admin.html and officer.html clean old admin/officers shortcut caches after loading.
-- Added reset-cache.html for a one-time full cache reset.
-- Bumped the root PWA cache to sfk-classboard-v197-route-repair-v1.
+Those file swaps are why Admin/Officers showed raw code or a blank/broken screen.
 
-Upload these files to the same paths in your GitHub repo.
+What this package changes:
+- Restores the real admin.html, admin.css, admin.js, officer.html, and manifest.webmanifest from your last working uploaded ZIP.
+- Keeps the rest of your current GitHub files as-is.
+- Adds reset-cache.html to clear old PWA/service worker cache.
 
 After uploading:
-1. Wait for GitHub Pages to update.
-2. Open: reset-cache.html?go=admin
-3. It will clear old PWA/service worker cache and redirect to admin.html.
-4. On phone, remove/uninstall the old installed shortcut, then open the site again.
+1. Replace/upload all files in this ZIP to the same GitHub repo locations.
+2. Wait for GitHub Pages to finish updating.
+3. Open: reset-cache.html?go=admin
+4. Test: admin.html and officer.html
+5. On phone, remove/uninstall old PWA shortcut first, then open the site fresh.
 
-If you still see JavaScript code after uploading, the browser is still using the old cached service worker. Open reset-cache.html?go=admin from the same website, then refresh.
+This package does not change Firebase rules, credentials, or database settings.

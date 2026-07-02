@@ -4,43 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#f7c600" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-title" content="SFK Officers" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>SFK Officers</title>
-  <link rel="manifest" href="manifest.webmanifest?v=3" />
-  <link rel="icon" type="image/png" sizes="192x192" href="../icons/icon-192.png?v=3" />
-  <link rel="apple-touch-icon" href="../icons/icon-192.png?v=3" />
+  <link rel="manifest" href="./manifest.webmanifest?v=route-clean-v9" />
+  <link rel="icon" type="image/png" sizes="192x192" href="../icons/icon-192.png?v=route-clean-v9" />
+  <link rel="apple-touch-icon" href="../icons/icon-192.png?v=route-clean-v9" />
+  <meta http-equiv="refresh" content="0; url=../officer.html?from=officers-shortcut&v=route-clean-v9" />
   <style>
-    html,
-    body {
-      margin: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: #fff8dc;
-    }
-
-    iframe {
-      display: block;
-      width: 100%;
-      height: 100dvh;
-      border: 0;
-      background: #fff8dc;
-    }
+    body{margin:0;min-height:100vh;display:grid;place-items:center;background:#fff8dc;font-family:Arial,sans-serif;color:#111;text-align:center}.box{padding:22px;border:2px solid #f7c600;border-radius:18px;background:#fff;box-shadow:0 10px 28px rgba(0,0,0,.10)}a{color:#111;font-weight:800}
   </style>
 </head>
 <body>
-  <iframe src="../officer.html?embedded=1&v=fresh-heart-v2" title="SFK Officers Panel"></iframe>
+  <div class="box">Opening Officers...<br><a href="../officer.html?from=officers-shortcut&v=route-clean-v9">Tap here if it does not open</a></div>
   <script>
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("./sw.js").catch((error) => {
-          console.warn("Officers service worker registration failed:", error);
-        });
-      });
-    }
+    window.location.replace('../officer.html?from=officers-shortcut&v=route-clean-v9');
   </script>
 </body>
 </html>

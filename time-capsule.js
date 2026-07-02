@@ -1,1159 +1,2133 @@
-(function () {
-  "use strict";
-
-  const DEFAULT_UNLOCK_AT = new Date(2027, 3, 3, 12, 0, 0);
-  const DEFAULT_DEADLINE = new Date(2027, 2, 31, 23, 59, 0);
-  const ENTRY_TYPES = {
-    memory: "Favorite Memory",
-    message: "Message",
-    goal: "Goal",
-    prediction: "Prediction",
-    photo: "Photo Memory"
-  };
-  const ENTRY_PROMPTS = {
-    memory: "What moment from this class do you never want to forget?",
-    message: "What would you like to tell your future classmates and yourself?",
-    goal: "What do you hope you will have achieved by unlock day?",
-    prediction: "What do you think will be different when we open this capsule?",
-    photo: "What story or feeling should future-you remember about this photo?"
-  };
-
-  const CAPSULE_MEDIA_COLLECTION = "timeCapsuleMedia";
-  const CAPSULE_MEDIA_REF_PREFIX = "sfk-media://capsule/";
-  const CAPSULE_MEDIA_MAX_BASE64_CHARS = 500000;
-  const CAPSULE_TARGET_IMAGE_BYTES = 320000;
-
-  const state = {
-    context: null,
-    settings: null,
-    entries: [],
-    settingsUnsubscribe: null,
-    entriesUnsubscribe: null,
-    publicUnsubscribe: null,
-    statusUnsubscribe: null,
-    publicStatus: null,
-    entriesLoaded: false,
-    publishedStatusSignature: "",
-    statusRetryTimer: null,
-    countdownTimer: null,
-    presentationTimer: null,
-    presentationEntries: [],
-    slideIndex: 0,
-    settingsCreating: false,
-    selectedImage: null,
-    imageCache: new Map(),
-    initialized: false
-  };
-
-  const elements = {};
-
-  document.addEventListener("DOMContentLoaded", initialize);
-
-  function initialize() {
-    if (state.initialized) return;
-    state.initialized = true;
-    cacheElements();
-    if (!elements.room) return;
-
-    elements.back.addEventListener("click", close);
-    elements.adminToggle.addEventListener("click", toggleAdminPanel);
-    elements.composeToggle.addEventListener("click", toggleCompose);
-    elements.form.addEventListener("submit", submitEntry);
-    elements.cancelEdit.addEventListener("click", resetForm);
-    elements.entries.addEventListener("click", handleEntryAction);
-    elements.reviewList.addEventListener("click", handleEntryAction);
-    elements.settingsForm.addEventListener("submit", saveSettings);
-    elements.unlockNow.addEventListener("click", unlockNow);
-    elements.reviewFilter.addEventListener("change", renderReviewEntries);
-    elements.present.addEventListener("click", openPresentation);
-    elements.presentationClose.addEventListener("click", closePresentation);
-    elements.previous.addEventListener("click", () => showSlide(state.slideIndex - 1));
-    elements.next.addEventListener("click", () => showSlide(state.slideIndex + 1));
-    elements.play.addEventListener("click", togglePresentationPlayback);
-    elements.print.addEventListener("click", printCapsule);
-  }
-
-  function cacheElements() {
-    elements.room = document.getElementById("timeCapsuleRoom");
-    elements.back = document.getElementById("timeCapsuleBack");
-    elements.headerStatus = document.getElementById("timeCapsuleHeaderStatus");
-    elements.adminToggle = document.getElementById("timeCapsuleAdminToggle");
-    elements.eyebrow = document.getElementById("timeCapsuleEyebrow");
-    elements.heroTitle = document.getElementById("timeCapsuleHeroTitle");
-    elements.countdown = document.getElementById("timeCapsuleCountdown");
-    elements.present = document.getElementById("timeCapsulePresent");
-    elements.lockMark = document.getElementById("timeCapsuleLockMark");
-    elements.entryCount = document.getElementById("timeCapsuleEntryCount");
-    elements.classCount = document.getElementById("timeCapsuleClassCount");
-    elements.contributorCount = document.getElementById("timeCapsuleContributorCount");
-    elements.composeCard = document.getElementById("timeCapsuleComposeCard");
-    elements.composeToggle = document.getElementById("timeCapsuleComposeToggle");
-    elements.form = document.getElementById("timeCapsuleForm");
-    elements.editId = document.getElementById("timeCapsuleEditId");
-    elements.type = document.getElementById("timeCapsuleType");
-    elements.promptText = document.getElementById("timeCapsulePromptText");
-    elements.text = document.getElementById("timeCapsuleText");
-    elements.characterCount = document.getElementById("timeCapsuleCharacterCount");
-    elements.imageUrl = document.getElementById("timeCapsuleImageUrl");
-    elements.imageRef = document.getElementById("timeCapsuleImageRef") || { value: "" };
-    elements.imageFile = document.getElementById("timeCapsuleImageFile");
-    elements.imagePreview = document.getElementById("timeCapsuleImagePreview");
-    elements.imagePreviewImg = document.getElementById("timeCapsuleImagePreviewImg");
-    elements.imagePreviewText = document.getElementById("timeCapsuleImagePreviewText");
-    elements.clearImage = document.getElementById("timeCapsuleClearImage");
-    elements.cancelEdit = document.getElementById("timeCapsuleCancelEdit");
-    elements.submit = document.getElementById("timeCapsuleSubmit");
-    elements.formMessage = document.getElementById("timeCapsuleFormMessage");
-    elements.entriesTitle = document.getElementById("timeCapsuleEntriesTitle");
-    elements.entriesHint = document.getElementById("timeCapsuleEntriesHint");
-    elements.entries = document.getElementById("timeCapsuleEntries");
-    elements.adminPanel = document.getElementById("timeCapsuleAdminPanel");
-    elements.settingsForm = document.getElementById("timeCapsuleSettingsForm");
-    elements.deadline = document.getElementById("timeCapsuleDeadline");
-    elements.unlockAt = document.getElementById("timeCapsuleUnlockAt");
-    elements.allowSubmissions = document.getElementById("timeCapsuleAllowSubmissions");
-    elements.unlockNow = document.getElementById("timeCapsuleUnlockNow");
-    elements.settingsMessage = document.getElementById("timeCapsuleSettingsMessage");
-    elements.reviewFilter = document.getElementById("timeCapsuleReviewFilter");
-    elements.reviewList = document.getElementById("timeCapsuleReviewList");
-    elements.presentation = document.getElementById("timeCapsulePresentation");
-    elements.presentationClose = document.getElementById("timeCapsulePresentationClose");
-    elements.slideCount = document.getElementById("timeCapsuleSlideCount");
-    elements.slide = document.getElementById("timeCapsuleSlide");
-    elements.previous = document.getElementById("timeCapsulePrevious");
-    elements.play = document.getElementById("timeCapsulePlay");
-    elements.next = document.getElementById("timeCapsuleNext");
-    elements.print = document.getElementById("timeCapsulePrint");
-    elements.type.addEventListener("change", updateEntryPrompt);
-    elements.text.addEventListener("input", updateCharacterCount);
-    elements.imageFile?.addEventListener("change", handleImageFileChange);
-    elements.imageUrl?.addEventListener("input", handleImageUrlInput);
-    elements.clearImage?.addEventListener("click", clearImageSelection);
-  }
-
-  function open(context) {
-    initialize();
-    if (!elements.room || !context?.profile || !context?.db) return;
-    destroyListeners();
-    state.context = context;
-    state.settings = null;
-    state.entries = [];
-    state.slideIndex = 0;
-    state.publicStatus = null;
-    state.entriesLoaded = false;
-    state.selectedImage = null;
-    state.imageCache.clear();
-    state.publishedStatusSignature = "";
-    window.clearTimeout(state.statusRetryTimer);
-    state.statusRetryTimer = null;
-    elements.room.hidden = false;
-    elements.adminPanel.hidden = true;
-    elements.adminToggle.hidden = context.profile.role !== "admin";
-    elements.adminToggle.textContent = "Manage";
-    elements.headerStatus.textContent = `${context.profile.name} · Capsule contributor`;
-    context.panel?.classList.add("is-time-capsule-open");
-    resetForm();
-    startPublicStatusListener();
-    startSettingsListener();
-    startCountdown();
-  }
-
-  function close() {
-    closePresentation();
-    destroyListeners();
-    elements.room.hidden = true;
-    state.context?.panel?.classList.remove("is-time-capsule-open");
-    const callback = state.context?.onClose;
-    state.context = null;
-    if (typeof callback === "function") callback();
-  }
-
-  function destroy() {
-    closePresentation();
-    destroyListeners();
-    if (elements.room) elements.room.hidden = true;
-    state.context?.panel?.classList.remove("is-time-capsule-open");
-    state.context = null;
-  }
-
-  function destroyListeners() {
-    state.settingsUnsubscribe?.();
-    state.entriesUnsubscribe?.();
-    state.publicUnsubscribe?.();
-    state.statusUnsubscribe?.();
-    state.settingsUnsubscribe = null;
-    state.entriesUnsubscribe = null;
-    state.publicUnsubscribe = null;
-    state.statusUnsubscribe = null;
-    window.clearInterval(state.countdownTimer);
-    window.clearTimeout(state.statusRetryTimer);
-    state.countdownTimer = null;
-    state.statusRetryTimer = null;
-  }
-
-  function startSettingsListener() {
-    const settingsRef = state.context.db.collection("timeCapsuleSettings").doc("main");
-    state.settingsUnsubscribe = settingsRef.onSnapshot(async (snapshot) => {
-      if (snapshot.exists) {
-        state.settings = snapshot.data() || {};
-      } else if (isAdmin() && !state.settingsCreating) {
-        state.settingsCreating = true;
-        await settingsRef.set(defaultSettings()).catch((error) => {
-          elements.settingsMessage.textContent = readableError(error);
-        });
-        state.settingsCreating = false;
-        return;
-      } else {
-        state.settings = null;
-      }
-      renderSettings();
-      startEntriesListeners();
-      renderAll();
-      syncPublicStatus();
-    }, (error) => {
-      elements.headerStatus.textContent = readableError(error);
-    });
-  }
-
-  function startPublicStatusListener() {
-    state.statusUnsubscribe?.();
-    state.statusUnsubscribe = state.context.db.collection("settings").doc("timeCapsulePublic")
-      .onSnapshot((snapshot) => {
-        state.publicStatus = snapshot.exists ? snapshot.data() || {} : null;
-        renderStats();
-        if (isAdmin() && !snapshot.exists) syncPublicStatus();
-      }, () => {
-        state.publicStatus = null;
-        renderStats();
-        if (isAdmin()) schedulePublicStatusRetry();
-      });
-  }
-
-  function defaultSettings() {
-    return {
-      Title: "SFK Time Capsule",
-      UnlockAt: firebase.firestore.Timestamp.fromDate(DEFAULT_UNLOCK_AT),
-      SubmissionDeadline: firebase.firestore.Timestamp.fromDate(DEFAULT_DEADLINE),
-      AllowSubmissions: true,
-      UpdatedBy: state.context.profile.uid,
-      UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    };
-  }
-
-  function startEntriesListeners() {
-    state.entriesUnsubscribe?.();
-    state.publicUnsubscribe?.();
-    state.entriesUnsubscribe = null;
-    state.publicUnsubscribe = null;
-    state.entries = [];
-
-    if (isAdmin()) {
-      state.entriesUnsubscribe = state.context.db.collection("timeCapsuleEntries")
-        .onSnapshot((snapshot) => {
-          state.entries = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-          state.entriesLoaded = true;
-          renderAll();
-          syncPublicStatus();
-        }, showEntriesError);
-      return;
-    }
-
-    state.entriesUnsubscribe = state.context.db.collection("timeCapsuleEntries")
-      .where("AuthorUID", "==", state.context.profile.uid)
-      .onSnapshot((snapshot) => {
-        mergeEntries(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })), true);
-      }, showEntriesError);
-
-    if (isUnlocked()) {
-      state.publicUnsubscribe = state.context.db.collection("timeCapsuleEntries")
-        .where("Status", "==", "approved")
-        .onSnapshot((snapshot) => {
-          mergeEntries(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })), false);
-        }, showEntriesError);
-    }
-  }
-
-  function mergeEntries(incoming, replaceOwn) {
-    const ownUid = state.context.profile.uid;
-    const retained = state.entries.filter((entry) => (
-      replaceOwn ? entry.AuthorUID !== ownUid : entry.Status !== "approved"
-    ));
-    const merged = new Map(retained.concat(incoming).map((entry) => [entry.id, entry]));
-    state.entries = Array.from(merged.values());
-    renderAll();
-  }
-
-  function showEntriesError(error) {
-    elements.entries.innerHTML = `<p class="timeCapsuleEmpty">${escapeHtml(readableError(error))}</p>`;
-  }
-
-  function renderAll() {
-    if (!state.context) return;
-    renderHero();
-    renderStats();
-    renderComposeState();
-    renderMainEntries();
-    if (isAdmin()) renderReviewEntries();
-  }
-
-  function renderHero() {
-    const unlocked = isUnlocked();
-    const deadline = settingsDate("SubmissionDeadline", DEFAULT_DEADLINE);
-    elements.present.hidden = !unlocked && !isAdmin();
-    elements.present.textContent = unlocked ? "View Capsule" : "Preview";
-    elements.lockMark.classList.toggle("is-unlocked", unlocked);
-    elements.eyebrow.textContent = unlocked ? "CAPSULE UNLOCKED" : "SEALED FOR NOW";
-    elements.heroTitle.textContent = unlocked
-      ? "Our SFK memories are ready."
-      : "Our memories are growing.";
-    if (!state.settings) {
-      elements.countdown.textContent = isAdmin()
-        ? "Creating capsule settings..."
-        : "The Adviser is still preparing the capsule.";
-    } else if (unlocked) {
-      elements.countdown.textContent = `Unlocked ${formatDate(settingsDate("UnlockAt", DEFAULT_UNLOCK_AT), true)}`;
-    } else if (Date.now() > deadline.getTime()) {
-      elements.countdown.textContent = "Submissions are closed. Waiting for unlock day.";
-    }
-  }
-
-  function renderStats() {
-    const own = state.entries.filter((entry) => entry.AuthorUID === state.context.profile.uid);
-    const visibleClassEntries = isAdmin() || isUnlocked()
-      ? state.entries.filter((entry) => entry.Status === "approved")
-      : null;
-    const contributors = visibleClassEntries
-      ? new Set(visibleClassEntries.map((entry) => entry.AuthorUID).filter(Boolean)).size
-      : null;
-    elements.entryCount.textContent = String(own.length);
-    const publicSealedCount = safeCount(state.publicStatus?.SealedCount);
-    const publicContributorCount = safeCount(state.publicStatus?.ContributorCount);
-    const ownApprovedCount = own.filter((entry) => entry.Status === "approved").length;
-    const sealedCount = Math.max(publicSealedCount, ownApprovedCount);
-    const contributorCount = Math.max(publicContributorCount, ownApprovedCount > 0 ? 1 : 0);
-    elements.classCount.textContent = visibleClassEntries
-      ? String(visibleClassEntries.length)
-      : String(sealedCount);
-    elements.contributorCount.textContent = contributors == null
-      ? String(contributorCount)
-      : String(contributors);
-  }
-
-  function safeCount(value) {
-    const count = Number(value);
-    return Number.isFinite(count) && count >= 0 ? Math.floor(count) : 0;
-  }
-
-  function syncPublicStatus() {
-    if (!isAdmin() || !state.settings || !state.entriesLoaded) return;
-    const sealedEntries = state.entries.filter((entry) => entry.Status === "approved");
-    const contributorCount = new Set(
-      sealedEntries.map((entry) => entry.AuthorUID).filter(Boolean)
-    ).size;
-    const unlockAt = settingsDate("UnlockAt", DEFAULT_UNLOCK_AT);
-    const deadline = settingsDate("SubmissionDeadline", DEFAULT_DEADLINE);
-    const signature = [
-      unlockAt.getTime(),
-      deadline.getTime(),
-      sealedEntries.length,
-      contributorCount
-    ].join(":");
-    if (state.publishedStatusSignature === signature) return;
-    state.publishedStatusSignature = signature;
-    state.context.db.collection("settings").doc("timeCapsulePublic").set({
-      UnlockAt: firebase.firestore.Timestamp.fromDate(unlockAt),
-      SubmissionDeadline: firebase.firestore.Timestamp.fromDate(deadline),
-      SealedCount: sealedEntries.length,
-      ContributorCount: contributorCount,
-      UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true }).then(() => {
-      window.clearTimeout(state.statusRetryTimer);
-      state.statusRetryTimer = null;
-      state.publicStatus = {
-        ...(state.publicStatus || {}),
-        SealedCount: sealedEntries.length,
-        ContributorCount: contributorCount,
-        UnlockAt: firebase.firestore.Timestamp.fromDate(unlockAt)
-      };
-      renderStats();
-    }).catch((error) => {
-      state.publishedStatusSignature = "";
-      console.warn("Time Capsule totals could not be published:", error);
-      schedulePublicStatusRetry();
-    });
-  }
-
-  function schedulePublicStatusRetry() {
-    if (!isAdmin() || state.statusRetryTimer) return;
-    state.statusRetryTimer = window.setTimeout(() => {
-      state.statusRetryTimer = null;
-      syncPublicStatus();
-    }, 3000);
-  }
-
-  function renderComposeState() {
-    const available = isSubmissionOpen();
-    elements.composeCard.hidden = !available;
-    if (!available && !elements.form.hidden) resetForm();
-  }
-
-  function renderMainEntries() {
-    const unlocked = isUnlocked();
-    let entries;
-    if (unlocked) {
-      entries = state.entries.filter((entry) => entry.Status === "approved");
-      elements.entriesTitle.textContent = "Unlocked Entries";
-      elements.entriesHint.textContent = "Approved memories from the SFK class.";
-    } else {
-      entries = state.entries.filter((entry) => entry.AuthorUID === state.context.profile.uid);
-      elements.entriesTitle.textContent = "My Sealed Entries";
-      elements.entriesHint.textContent = "Only you and the Adviser can view these before unlock day.";
-    }
-    entries.sort(sortEntriesNewest);
-    elements.entries.innerHTML = entries.length
-      ? entries.map((entry) => entryCard(entry, false)).join("")
-      : `<p class="timeCapsuleEmpty">${unlocked ? "No approved entries yet." : "You have not sealed an entry yet."}</p>`;
-    hydrateCapsuleImages(elements.entries);
-  }
-
-  function renderReviewEntries() {
-    if (!isAdmin()) return;
-    const filter = elements.reviewFilter.value;
-    const entries = state.entries
-      .filter((entry) => filter === "all" || entry.Status === filter)
-      .sort(sortEntriesNewest);
-    elements.reviewList.innerHTML = entries.length
-      ? entries.map((entry) => entryCard(entry, true)).join("")
-      : `<p class="timeCapsuleEmpty">No ${escapeHtml(filter)} entries.</p>`;
-    hydrateCapsuleImages(elements.reviewList);
-  }
-
-  function entryCard(entry, forReview) {
-    const imageMarkup = capsuleImageMarkup(entry.ImageURL, `Time capsule photo by ${entry.AuthorName || "SFK"}`, true);
-    const ownPending = entry.AuthorUID === state.context.profile.uid
-      && entry.Status === "pending"
-      && isSubmissionOpen();
-    const actions = forReview
-      ? `<div class="timeCapsuleEntryActions">
-          <button type="button" data-capsule-action="edit" data-entry-id="${entry.id}">Edit</button>
-          ${entry.Status !== "approved" ? `<button type="button" data-capsule-action="approve" data-entry-id="${entry.id}">Approve</button>` : ""}
-          ${entry.Status !== "rejected" ? `<button type="button" data-capsule-action="reject" data-entry-id="${entry.id}">Reject</button>` : ""}
-          <button type="button" data-capsule-action="delete" data-entry-id="${entry.id}">Delete</button>
-        </div>`
-      : ownPending
-        ? `<div class="timeCapsuleEntryActions">
-            <button type="button" data-capsule-action="edit" data-entry-id="${entry.id}">Edit</button>
-            <button type="button" data-capsule-action="delete" data-entry-id="${entry.id}">Delete</button>
-          </div>`
-        : "";
-    return `<article class="timeCapsuleEntry" data-status="${escapeHtml(entry.Status || "pending")}">
-      ${imageMarkup}
-      <div class="timeCapsuleEntryBody">
-        <div class="timeCapsuleEntryMeta">
-          <span>${escapeHtml(ENTRY_TYPES[entry.Type] || "Memory")}</span>
-          <b>${escapeHtml(entry.Status || "pending")}</b>
-        </div>
-        ${entry.Text ? `<p>${escapeHtml(entry.Text)}</p>` : ""}
-        <footer><strong>${escapeHtml(entry.AuthorName || "SFK")}</strong><time>${escapeHtml(formatDate(timestampDate(entry.CreatedAt), false))}</time></footer>
-        ${actions}
-      </div>
-    </article>`;
-  }
-
-  function toggleCompose() {
-    if (!isSubmissionOpen()) return;
-    const opening = elements.form.hidden;
-    elements.form.hidden = !opening;
-    elements.composeToggle.setAttribute("aria-expanded", String(opening));
-    elements.composeCard.classList.toggle("is-composing", opening);
-    if (opening) {
-      updateEntryPrompt();
-      updateCharacterCount();
-      window.setTimeout(() => elements.text.focus(), 50);
-    }
-  }
-
-  function updateEntryPrompt() {
-    if (!elements.promptText) return;
-    elements.promptText.textContent = ENTRY_PROMPTS[elements.type.value] || ENTRY_PROMPTS.memory;
-  }
-
-  function updateCharacterCount() {
-    if (!elements.characterCount) return;
-    elements.characterCount.textContent = `${elements.text.value.length} / 1200`;
-  }
-
-  async function submitEntry(event) {
-    event.preventDefault();
-    if (!state.context || !isSubmissionOpen()) return;
-
-    const text = elements.text.value.trim();
-    let imageUrl = getCurrentImageReference();
-
-    if (!text && !imageUrl && !state.selectedImage) {
-      elements.formMessage.textContent = "Add a message, attach a photo, or paste a valid photo link.";
-      return;
-    }
-
-    if (elements.imageUrl.value.trim() && !safeImageUrl(elements.imageUrl.value)) {
-      elements.formMessage.textContent = "Photo link must be a valid public HTTPS image link.";
-      return;
-    }
-
-    elements.submit.disabled = true;
-    elements.formMessage.textContent = elements.editId.value ? "Updating entry..." : "Sealing entry...";
-
-    try {
-      const collection = state.context.db.collection("timeCapsuleEntries");
-      const reference = elements.editId.value ? collection.doc(elements.editId.value) : collection.doc();
-
-      if (state.selectedImage) {
-        elements.formMessage.textContent = "Saving photo safely without billing...";
-        imageUrl = await saveCapsuleImageNoBilling(reference.id, state.selectedImage);
-      }
-
-      const payload = {
-        Type: ENTRY_TYPES[elements.type.value] ? elements.type.value : "memory",
-        Text: text,
-        ImageURL: imageUrl,
-        UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      };
-
-      if (elements.editId.value) {
-        await reference.update(payload);
-        elements.formMessage.textContent = "Entry updated.";
-      } else {
-        await reference.set({
-          ...payload,
-          AuthorUID: state.context.profile.uid,
-          AuthorName: state.context.profile.name,
-          AuthorRole: state.context.profile.role,
-          Status: isAdmin() ? "approved" : "pending",
-          CreatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        elements.formMessage.textContent = "Entry sealed.";
-      }
-      window.setTimeout(resetForm, 450);
-    } catch (error) {
-      elements.formMessage.textContent = readableError(error);
-    } finally {
-      elements.submit.disabled = false;
-    }
-  }
-
-  async function handleEntryAction(event) {
-    const button = event.target.closest("[data-capsule-action]");
-    if (!button || !state.context) return;
-    const entry = state.entries.find((item) => item.id === button.dataset.entryId);
-    if (!entry) return;
-    const action = button.dataset.capsuleAction;
-    if (action === "edit") {
-      elements.editId.value = entry.id;
-      elements.type.value = ENTRY_TYPES[entry.Type] ? entry.Type : "memory";
-      elements.text.value = entry.Text || "";
-      setFormImageFromEntry(entry.ImageURL || "");
-      elements.cancelEdit.hidden = false;
-      elements.submit.textContent = "Update Entry";
-      elements.form.hidden = false;
-      elements.composeCard.classList.add("is-composing");
-      elements.composeToggle.setAttribute("aria-expanded", "true");
-      updateEntryPrompt();
-      updateCharacterCount();
-      elements.form.scrollIntoView({ behavior: "smooth", block: "center" });
-      return;
-    }
-    if (action === "delete" && !window.confirm("Delete this capsule entry?")) return;
-
-    button.disabled = true;
-    try {
-      const reference = state.context.db.collection("timeCapsuleEntries").doc(entry.id);
-      if (action === "approve") {
-        await reference.update({
-          Status: "approved",
-          ReviewedBy: state.context.profile.uid,
-          ReviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
-          UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      } else if (action === "reject") {
-        await reference.update({
-          Status: "rejected",
-          ReviewedBy: state.context.profile.uid,
-          ReviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
-          UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      } else if (action === "delete") {
-        await reference.delete();
-        if (elements.editId.value === entry.id) resetForm();
-      }
-    } catch (error) {
-      window.alert(readableError(error));
-      button.disabled = false;
-    }
-  }
-
-  function resetForm() {
-    if (!elements.form) return;
-    elements.form.reset();
-    elements.editId.value = "";
-    clearImageSelection(null, { keepMessage: true });
-    elements.cancelEdit.hidden = true;
-    elements.submit.textContent = "Seal Entry";
-    elements.formMessage.textContent = "";
-    elements.form.hidden = true;
-    elements.composeCard.classList.remove("is-composing");
-    elements.composeToggle.setAttribute("aria-expanded", "false");
-    updateEntryPrompt();
-    updateCharacterCount();
-  }
-
-  function toggleAdminPanel() {
-    if (!isAdmin()) return;
-    const opening = elements.adminPanel.hidden;
-    elements.adminPanel.hidden = !opening;
-    elements.adminToggle.textContent = opening ? "Close" : "Manage";
-    if (opening) {
-      renderReviewEntries();
-      elements.adminPanel.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  }
-
-  function renderSettings() {
-    const deadline = settingsDate("SubmissionDeadline", DEFAULT_DEADLINE);
-    const unlockAt = settingsDate("UnlockAt", DEFAULT_UNLOCK_AT);
-    elements.deadline.value = toLocalInputValue(deadline);
-    elements.unlockAt.value = toLocalInputValue(unlockAt);
-    elements.allowSubmissions.checked = state.settings?.AllowSubmissions !== false;
-  }
-
-  async function saveSettings(event) {
-    event.preventDefault();
-    if (!isAdmin()) return;
-    const deadline = new Date(elements.deadline.value);
-    const unlockAt = new Date(elements.unlockAt.value);
-    if (!Number.isFinite(deadline.getTime()) || !Number.isFinite(unlockAt.getTime())) {
-      elements.settingsMessage.textContent = "Enter valid dates.";
-      return;
-    }
-    elements.settingsMessage.textContent = "Saving settings...";
-    try {
-      await state.context.db.collection("timeCapsuleSettings").doc("main").set({
-        Title: "SFK Time Capsule",
-        SubmissionDeadline: firebase.firestore.Timestamp.fromDate(deadline),
-        UnlockAt: firebase.firestore.Timestamp.fromDate(unlockAt),
-        AllowSubmissions: elements.allowSubmissions.checked,
-        UpdatedBy: state.context.profile.uid,
-        UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge: true });
-      elements.settingsMessage.textContent = "Settings saved.";
-    } catch (error) {
-      elements.settingsMessage.textContent = readableError(error);
-    }
-  }
-
-  async function unlockNow() {
-    if (!isAdmin() || !window.confirm("Unlock the SFK Time Capsule now?")) return;
-    elements.settingsMessage.textContent = "Unlocking capsule...";
-    await state.context.db.collection("timeCapsuleSettings").doc("main").set({
-      UnlockAt: firebase.firestore.FieldValue.serverTimestamp(),
-      UpdatedBy: state.context.profile.uid,
-      UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, { merge: true }).catch((error) => {
-      elements.settingsMessage.textContent = readableError(error);
-    });
-  }
-
-  function startCountdown() {
-    window.clearInterval(state.countdownTimer);
-    updateCountdown();
-    state.countdownTimer = window.setInterval(updateCountdown, 1000);
-  }
-
-  function updateCountdown() {
-    if (!state.context || !state.settings) return;
-    if (isUnlocked()) {
-      if (elements.eyebrow.textContent !== "CAPSULE UNLOCKED") {
-        startEntriesListeners();
-        renderAll();
-      }
-      return;
-    }
-    const difference = settingsDate("UnlockAt", DEFAULT_UNLOCK_AT).getTime() - Date.now();
-    if (difference <= 0) {
-      renderAll();
-      return;
-    }
-    const days = Math.floor(difference / 86400000);
-    const hours = Math.floor((difference % 86400000) / 3600000);
-    const minutes = Math.floor((difference % 3600000) / 60000);
-    const seconds = Math.floor((difference % 60000) / 1000);
-    elements.countdown.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s until unlock`;
-  }
-
-  function openPresentation() {
-    const approved = state.entries.filter((entry) => entry.Status === "approved").sort(sortEntriesOldest);
-    if (!approved.length) {
-      window.alert("No approved capsule entries yet.");
-      return;
-    }
-    state.presentationEntries = approved;
-    state.slideIndex = 0;
-    elements.presentation.hidden = false;
-    showSlide(0);
-  }
-
-  function closePresentation() {
-    window.clearInterval(state.presentationTimer);
-    state.presentationTimer = null;
-    if (elements.presentation) elements.presentation.hidden = true;
-    if (elements.play) elements.play.innerHTML = "&#9654;";
-  }
-
-  function showSlide(index) {
-    const entries = state.presentationEntries;
-    if (!entries.length) return;
-    state.slideIndex = (index + entries.length) % entries.length;
-    const entry = entries[state.slideIndex];
-    const imageMarkup = capsuleImageMarkup(entry.ImageURL, "SFK Time Capsule memory", false);
-    elements.slideCount.textContent = `${state.slideIndex + 1} / ${entries.length}`;
-    elements.slide.innerHTML = `<article class="timeCapsuleSlideCard">
-      ${imageMarkup}
-      <div>
-        <span>${escapeHtml(ENTRY_TYPES[entry.Type] || "Memory")}</span>
-        ${entry.Text ? `<p>${escapeHtml(entry.Text)}</p>` : ""}
-        <footer>${escapeHtml(entry.AuthorName || "SFK")} · ${escapeHtml(formatDate(timestampDate(entry.CreatedAt), false))}</footer>
-      </div>
-    </article>`;
-    hydrateCapsuleImages(elements.slide);
-  }
-
-  function togglePresentationPlayback() {
-    if (state.presentationTimer) {
-      window.clearInterval(state.presentationTimer);
-      state.presentationTimer = null;
-      elements.play.innerHTML = "&#9654;";
-      return;
-    }
-    elements.play.innerHTML = "&#10074;&#10074;";
-    state.presentationTimer = window.setInterval(() => showSlide(state.slideIndex + 1), 7000);
-  }
-
-  async function printCapsule() {
-    const original = elements.slide.innerHTML;
-    elements.slide.innerHTML = state.presentationEntries.map((entry) => {
-      const imageMarkup = capsuleImageMarkup(entry.ImageURL, "SFK Time Capsule memory", false);
-      return `<article class="timeCapsuleSlideCard">
-        ${imageMarkup}
-        <div><span>${escapeHtml(ENTRY_TYPES[entry.Type] || "Memory")}</span>
-        ${entry.Text ? `<p>${escapeHtml(entry.Text)}</p>` : ""}
-        <footer>${escapeHtml(entry.AuthorName || "SFK")}</footer></div>
-      </article>`;
-    }).join("");
-    await hydrateCapsuleImages(elements.slide);
-    document.body.classList.add("timeCapsulePrinting");
-    window.print();
-    document.body.classList.remove("timeCapsulePrinting");
-    elements.slide.innerHTML = original;
-  }
-
-  function isAdmin() {
-    return state.context?.profile?.role === "admin";
-  }
-
-  function isUnlocked() {
-    if (!state.settings) return false;
-    return Date.now() >= settingsDate("UnlockAt", DEFAULT_UNLOCK_AT).getTime();
-  }
-
-  function isSubmissionOpen() {
-    if (!state.context || !state.settings) return false;
-    if (isAdmin()) return true;
-    return state.settings.AllowSubmissions !== false
-      && Date.now() <= settingsDate("SubmissionDeadline", DEFAULT_DEADLINE).getTime();
-  }
-
-  function settingsDate(field, fallback) {
-    return timestampDate(state.settings?.[field]) || new Date(fallback);
-  }
-
-  function timestampDate(value) {
-    if (!value) return null;
-    if (typeof value.toDate === "function") return value.toDate();
-    if (value instanceof Date) return value;
-    const date = new Date(value);
-    return Number.isFinite(date.getTime()) ? date : null;
-  }
-
-  function toLocalInputValue(date) {
-    const offset = date.getTimezoneOffset() * 60000;
-    return new Date(date.getTime() - offset).toISOString().slice(0, 16);
-  }
-
-  function formatDate(date, includeTime) {
-    if (!date || !Number.isFinite(date.getTime())) return "Just now";
-    return new Intl.DateTimeFormat("en-PH", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      ...(includeTime ? { hour: "numeric", minute: "2-digit" } : {})
-    }).format(date);
-  }
-
-  function sortEntriesNewest(a, b) {
-    return (timestampDate(b.CreatedAt)?.getTime() || 0) - (timestampDate(a.CreatedAt)?.getTime() || 0);
-  }
-
-  function sortEntriesOldest(a, b) {
-    return (timestampDate(a.CreatedAt)?.getTime() || 0) - (timestampDate(b.CreatedAt)?.getTime() || 0);
-  }
-
-  function capsuleImageMarkup(value, alt, lazy) {
-    const raw = String(value || "").trim();
-    if (!raw) return "";
-
-    const ref = parseCapsuleMediaRef(raw);
-    if (ref) {
-      return `<img data-capsule-image-ref="${escapeHtml(raw)}" alt="${escapeHtml(alt)}" ${lazy ? 'loading="lazy"' : ""} decoding="async" hidden />`;
-    }
-
-    const imageUrl = safeImageUrl(raw);
-    return imageUrl
-      ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(alt)}" ${lazy ? 'loading="lazy"' : ""} decoding="async" referrerpolicy="no-referrer" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'timeCapsuleImageFallback',textContent:'Photo could not load.'}))" />`
-      : "";
-  }
-
-  async function hydrateCapsuleImages(root, options = {}) {
-    if (!root) return;
-    const retryCount = Number(options.retryCount || 0);
-    const images = Array.from(root.querySelectorAll('img[data-capsule-image-ref], img[src^="sfk-media://capsule/"], img[src^="sfk-media://timeCapsule/"], img[src^="sfk-media://time-capsule/"]'));
-    await Promise.all(images.map(async (image) => {
-      const reference = image.getAttribute("data-capsule-image-ref") || image.getAttribute("src") || "";
-      const parsed = parseCapsuleMediaRef(reference);
-      if (!parsed) return;
-
-      if ((image.getAttribute("src") || "").startsWith("sfk-media://")) {
-        image.removeAttribute("src");
-        image.hidden = true;
-      }
-
-      const src = await resolveCapsuleImage(parsed.uri);
-      if (src) {
-        image.src = src;
-        image.hidden = false;
-        image.removeAttribute("data-capsule-image-ref");
-        image.onerror = () => {
-          image.replaceWith(capsuleImageFallback("Photo could not load."));
-        };
-        return;
-      }
-
-      if (retryCount < 3 && image.isConnected) {
-        window.setTimeout(() => {
-          hydrateCapsuleImages(image.parentElement || root, { retryCount: retryCount + 1 }).catch(() => {});
-        }, 700 + retryCount * 900);
-        return;
-      }
-
-      image.replaceWith(capsuleImageFallback("Photo is saved, but cannot load yet. Publish the latest Firebase rules, then refresh."));
-    }));
-  }
-
-  function capsuleImageFallback(message) {
-    const fallback = document.createElement("div");
-    fallback.className = "timeCapsuleImageFallback";
-    fallback.textContent = message || "Photo could not load.";
-    return fallback;
-  }
-
-  function parseCapsuleMediaRef(value) {
-    const raw = String(value || "").trim();
-    if (!raw) return null;
-
-    const build = (id) => {
-      const cleanId = String(id || "").trim();
-      if (!/^[A-Za-z0-9_-]{1,240}$/.test(cleanId)) return null;
-      return { id: cleanId, uri: `${CAPSULE_MEDIA_REF_PREFIX}${cleanId}` };
-    };
-
-    if (raw.startsWith(CAPSULE_MEDIA_REF_PREFIX)) {
-      return build(raw.slice(CAPSULE_MEDIA_REF_PREFIX.length));
-    }
-
-    if (raw.startsWith("sfk-media://")) {
-      const rest = raw.slice("sfk-media://".length);
-      const slashIndex = rest.indexOf("/");
-      if (slashIndex <= 0) return null;
-      const kind = rest.slice(0, slashIndex);
-      const id = rest.slice(slashIndex + 1);
-      if (!["capsule", "timeCapsule", "time-capsule"].includes(kind)) return null;
-      return build(id);
-    }
-
-    return null;
-  }
-
-  async function resolveCapsuleImage(value) {
-    const raw = String(value || "").trim();
-    const direct = safeImageUrl(raw);
-    if (direct) return direct;
-
-    const reference = parseCapsuleMediaRef(raw);
-    if (!reference || !state.context?.db) return "";
-    if (state.imageCache.has(reference.uri)) return state.imageCache.get(reference.uri);
-
-    try {
-      const snapshot = await state.context.db.collection(CAPSULE_MEDIA_COLLECTION).doc(reference.id).get();
-      if (!snapshot.exists) return "";
-      const data = snapshot.data() || {};
-      const directDataUrl = String(data.DataURL || data.dataUrl || data.Url || data.url || data.PreviewURL || data.previewUrl || "").trim();
-      if (/^data:image\//i.test(directDataUrl)) {
-        state.imageCache.set(reference.uri, directDataUrl);
-        return directDataUrl;
-      }
-      const mimeType = String(data.MimeType || data.mimeType || "image/jpeg").trim().toLowerCase();
-      const base64 = String(data.Data || data.data || data.Base64 || data.base64 || "").trim();
-      if (!base64 || !mimeType.startsWith("image/")) return "";
-      const dataUrl = `data:${mimeType};base64,${base64}`;
-      state.imageCache.set(reference.uri, dataUrl);
-      return dataUrl;
-    } catch (error) {
-      console.warn("Unable to load Time Capsule photo:", error);
-      return "";
-    }
-  }
-
-  async function handleImageFileChange(event) {
-    const file = event.target.files && event.target.files[0];
-    if (!file) {
-      clearSelectedFileOnly();
-      return;
-    }
-
-    elements.formMessage.textContent = "Preparing photo preview...";
-    try {
-      const prepared = await prepareCapsuleImageFile(file);
-      state.selectedImage = prepared;
-      elements.imageRef.value = "";
-      elements.imageUrl.value = "";
-      showImagePreview(prepared.previewUrl, prepared.name, "Ready to attach");
-      elements.formMessage.textContent = "Photo ready. It will be compressed and saved without billing.";
-    } catch (error) {
-      clearSelectedFileOnly();
-      elements.formMessage.textContent = readableError(error);
-    }
-  }
-
-  function handleImageUrlInput() {
-    if (!elements.imageUrl.value.trim()) {
-      if (!elements.imageRef.value) hideImagePreview();
-      return;
-    }
-    state.selectedImage = null;
-    elements.imageRef.value = "";
-    if (elements.imageFile) elements.imageFile.value = "";
-    const imageUrl = safeImageUrl(elements.imageUrl.value);
-    if (imageUrl) {
-      showImagePreview(imageUrl, "Linked photo", "This link will be used");
-    } else {
-      hideImagePreview();
-    }
-  }
-
-  function clearImageSelection(event, options = {}) {
-    if (event && typeof event.preventDefault === "function") event.preventDefault();
-    state.selectedImage = null;
-    if (elements.imageFile) elements.imageFile.value = "";
-    if (elements.imageUrl) elements.imageUrl.value = "";
-    if (elements.imageRef) elements.imageRef.value = "";
-    hideImagePreview();
-    if (!options.keepMessage && elements.formMessage) elements.formMessage.textContent = "Photo removed.";
-  }
-
-  function clearSelectedFileOnly() {
-    state.selectedImage = null;
-    if (elements.imageFile) elements.imageFile.value = "";
-  }
-
-  function showImagePreview(src, name, status) {
-    if (!elements.imagePreview || !elements.imagePreviewImg) return;
-    elements.imagePreview.hidden = false;
-    elements.imagePreviewImg.onerror = () => {
-      if (elements.imagePreviewText) elements.imagePreviewText.textContent = "Preview could not load, but you can try another JPG/PNG.";
-    };
-    elements.imagePreviewImg.src = src;
-    elements.imagePreviewImg.alt = name || "Selected Time Capsule photo";
-    if (elements.imagePreviewText) {
-      elements.imagePreviewText.textContent = `${status || "Photo selected"}: ${name || "photo"}`;
-    }
-  }
-
-  function hideImagePreview() {
-    if (elements.imagePreview) elements.imagePreview.hidden = true;
-    if (elements.imagePreviewImg) {
-      elements.imagePreviewImg.removeAttribute("src");
-      elements.imagePreviewImg.alt = "";
-    }
-    if (elements.imagePreviewText) elements.imagePreviewText.textContent = "";
-  }
-
-  function setFormImageFromEntry(value) {
-    const raw = String(value || "").trim();
-    state.selectedImage = null;
-    if (elements.imageFile) elements.imageFile.value = "";
-    if (parseCapsuleMediaRef(raw)) {
-      elements.imageRef.value = raw;
-      elements.imageUrl.value = "";
-      resolveCapsuleImage(raw).then((src) => {
-        if (src && elements.imageRef.value === raw) showImagePreview(src, "Attached photo", "Saved photo");
-      });
-      return;
-    }
-
-    elements.imageRef.value = "";
-    elements.imageUrl.value = raw;
-    const imageUrl = safeImageUrl(raw);
-    if (imageUrl) showImagePreview(imageUrl, "Linked photo", "Saved link");
-    else hideImagePreview();
-  }
-
-  function getCurrentImageReference() {
-    const savedRef = String(elements.imageRef?.value || "").trim();
-    if (parseCapsuleMediaRef(savedRef)) return savedRef;
-    return safeImageUrl(elements.imageUrl?.value || "");
-  }
-
-  async function saveCapsuleImageNoBilling(entryId, prepared) {
-    if (!prepared || !prepared.data) throw new Error("Selected photo could not be read. Choose another image.");
-
-    // New no-billing Time Capsule photos are stored directly in ImageURL.
-    // This avoids a second media-document fetch, which was causing blank/broken preview strips.
-    if (prepared.data.length > CAPSULE_MEDIA_MAX_BASE64_CHARS) {
-      throw new Error("This photo is still too large after compression. Try a smaller screenshot/photo.");
-    }
-
-    const dataUrl = `data:${prepared.mimeType || "image/jpeg"};base64,${prepared.data}`;
-    state.imageCache.set(dataUrl, dataUrl);
-    return dataUrl;
-  }
-
-  async function prepareCapsuleImageFile(file) {
-    if (!file || !String(file.type || "").toLowerCase().startsWith("image/")) {
-      throw new Error("Time Capsule no-billing upload supports photos only.");
-    }
-
-    const originalDataUrl = await readFileAsDataUrl(file);
-    const image = await loadCapsuleImage(originalDataUrl);
-    const blob = await compressCapsuleImage(image);
-    if (!blob) throw new Error("Unable to compress this photo. Try a smaller image.");
-
-    const dataUrl = await readFileAsDataUrl(blob);
-    const base64 = String(dataUrl).split(",")[1] || "";
-    if (!base64 || base64.length > CAPSULE_MEDIA_MAX_BASE64_CHARS) {
-      throw new Error("This photo is still too large after compression. Try a smaller screenshot/photo.");
-    }
-
-    return {
-      name: `${String(file.name || "time-capsule-photo").replace(/\.[^.]+$/, "") || "time-capsule-photo"}.jpg`,
-      mimeType: "image/jpeg",
-      data: base64,
-      previewUrl: dataUrl
-    };
-  }
-
-  async function compressCapsuleImage(image) {
-    const dimensions = [1200, 1000, 820, 680, 560];
-    const qualities = [0.72, 0.64, 0.56, 0.48, 0.4, 0.34];
-    let fallback = null;
-
-    for (const maxDimension of dimensions) {
-      const ratio = Math.min(1, maxDimension / Math.max(image.naturalWidth || image.width, image.naturalHeight || image.height));
-      const width = Math.max(1, Math.round((image.naturalWidth || image.width) * ratio));
-      const height = Math.max(1, Math.round((image.naturalHeight || image.height) * ratio));
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-      const context = canvas.getContext("2d");
-      context.fillStyle = "#fff";
-      context.fillRect(0, 0, width, height);
-      context.drawImage(image, 0, 0, width, height);
-
-      for (const quality of qualities) {
-        const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
-        if (!blob) continue;
-        fallback = blob;
-        if (blob.size <= CAPSULE_TARGET_IMAGE_BYTES) return blob;
-      }
-    }
-    return fallback;
-  }
-
-  function readFileAsDataUrl(fileOrBlob) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result || ""));
-      reader.onerror = () => reject(new Error("Unable to read selected photo."));
-      reader.readAsDataURL(fileOrBlob);
-    });
-  }
-
-  function loadCapsuleImage(src) {
-    return new Promise((resolve, reject) => {
-      const image = new Image();
-      image.onload = () => resolve(image);
-      image.onerror = () => reject(new Error("Unable to preview this photo. Try a JPG or PNG."));
-      image.src = src;
-    });
-  }
-
-  function safeDocPart(value) {
-    return String(value || "capsule")
-      .replace(/[^A-Za-z0-9_-]+/g, "_")
-      .replace(/^_+|_+$/g, "")
-      .slice(0, 80) || "capsule";
-  }
-
-  function safeImageUrl(value) {
-    const text = String(value || "").trim();
-    if (!text) return "";
-    if (/^data:image\//i.test(text)) return text;
-    if (parseCapsuleMediaRef(text)) return "";
-
-    try {
-      const url = new URL(text);
-      if (url.protocol !== "https:") return "";
-      const driveId = getDriveFileId(url.href);
-      if (driveId) return `https://drive.google.com/thumbnail?id=${encodeURIComponent(driveId)}&sz=w2000`;
-      return url.href;
-    } catch (error) {
-      return "";
-    }
-  }
-
-  function getDriveFileId(value) {
-    const text = String(value || "").trim();
-    if (!/drive\.google\.com|drive\.usercontent\.google\.com/i.test(text)) return "";
-    const pathMatch = text.match(/\/file\/d\/([^/?#]+)/i);
-    if (pathMatch) return decodeURIComponent(pathMatch[1]);
-    const openMatch = text.match(/[?&]id=([^&#]+)/i);
-    if (openMatch) return decodeURIComponent(openMatch[1]);
-    const ucMatch = text.match(/\/uc\?[^#]*id=([^&#]+)/i);
-    if (ucMatch) return decodeURIComponent(ucMatch[1]);
-    return "";
-  }
-
-  function escapeHtml(value) {
-    return String(value ?? "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  }
-
-  function readableError(error) {
-    const message = String(error?.message || error || "Something went wrong.");
-    if (message.includes("permission")) return "This action is not allowed. Publish the latest Firebase rules, including timeCapsuleMedia.";
-    return message.replace(/^Firebase:\s*/i, "").replace(/\s*\([^)]*\)\.?$/, "");
-  }
-
-  window.SFKTimeCapsule = { open, close, destroy };
-})();
+.adviserHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.timeCapsuleOpen {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #f7c600;
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.timeCapsuleOpen > span {
+  -webkit-text-stroke: 1.5px #111;
+  filter: drop-shadow(1px 2px 0 rgba(0, 0, 0, .28));
+  transition: transform 150ms ease, filter 150ms ease;
+}
+
+.timeCapsuleOpen > i,
+.timeCapsuleHeart i,
+.timeCapsuleLockMark i {
+  position: absolute;
+  width: 9px;
+  height: 7px;
+  border: 2px solid #111;
+  border-radius: 2px;
+  background: #fffdf3;
+}
+
+.timeCapsuleOpen > i {
+  right: 0;
+  bottom: 3px;
+}
+
+.timeCapsuleOpen > i::before,
+.timeCapsuleHeart i::before,
+.timeCapsuleLockMark i::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  width: 5px;
+  height: 5px;
+  border: 2px solid #111;
+  border-bottom: 0;
+  border-radius: 5px 5px 0 0;
+  transform: translateX(-50%);
+}
+
+.timeCapsuleOpen:hover > span,
+.timeCapsuleOpen:focus-visible > span {
+  transform: scale(1.08);
+  filter: drop-shadow(1px 3px 0 rgba(0, 0, 0, .34));
+}
+
+.timeCapsuleOpen:active > span {
+  transform: scale(.9);
+}
+
+.timeCapsuleOpen:focus {
+  outline: none;
+}
+
+.classChatPanel.is-time-capsule-login .classChatAvatar,
+.classChatPanel.is-time-capsule-login .classChatWelcomeMark {
+  border: 0;
+  border-radius: 0;
+  outline: 0;
+  clip-path: polygon(
+    50% 100%,
+    10% 63%,
+    3% 52%,
+    0 38%,
+    2% 24%,
+    9% 12%,
+    20% 4%,
+    33% 2%,
+    43% 7%,
+    50% 16%,
+    57% 7%,
+    67% 2%,
+    80% 4%,
+    91% 12%,
+    98% 24%,
+    100% 38%,
+    97% 52%,
+    90% 63%
+  );
+  background: #f7c600;
+  filter: drop-shadow(2px 3px 0 rgba(17, 17, 17, .72));
+}
+
+.classChatPanel.is-time-capsule-login .classChatAvatar {
+  width: 46px;
+  height: 43px;
+  flex-basis: 46px;
+  padding-bottom: 4px;
+  font-size: .72rem;
+}
+
+.classChatPanel.is-time-capsule-login .classChatWelcomeMark {
+  width: 82px;
+  height: 76px;
+  padding-bottom: 7px;
+  box-shadow: none;
+  transform-origin: center 58%;
+  animation: timeCapsuleHeartBeat 1.9s ease-in-out infinite;
+}
+
+.classChatPanel.is-time-capsule-login .classChatWelcome h3 {
+  font-size: 1.55rem;
+}
+
+@keyframes timeCapsuleHeartBeat {
+  0%, 38%, 100% { transform: scale(1); }
+  10% { transform: scale(1.075); }
+  18% { transform: scale(.985); }
+  26% { transform: scale(1.045); }
+}
+
+.classChatPanel.is-time-capsule-open > .classChatTopbar,
+.classChatPanel.is-time-capsule-open > .classChatMenu {
+  display: none !important;
+}
+
+.classChatPanel.is-time-capsule-open {
+  width: min(1000px, 100%);
+}
+
+.timeCapsuleRoom {
+  position: absolute;
+  inset: 0;
+  z-index: 35;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background:
+    linear-gradient(rgba(247, 198, 0, .065) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(247, 198, 0, .065) 1px, transparent 1px),
+    #fffdf7;
+  background-size: 28px 28px;
+  color: #111;
+}
+
+.timeCapsuleRoom[hidden] {
+  display: none !important;
+}
+
+.timeCapsuleHeader {
+  flex: 0 0 auto;
+  min-height: 70px;
+  display: grid;
+  grid-template-columns: 42px 48px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid #ded8ca;
+  padding: 9px 16px;
+  background: rgba(255, 253, 247, .96);
+  backdrop-filter: blur(14px);
+}
+
+.timeCapsuleHeader > button {
+  border: 0;
+  background: transparent;
+  color: #111;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+#timeCapsuleBack {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 1.35rem;
+}
+
+#timeCapsuleBack:hover,
+#timeCapsuleBack:focus-visible {
+  background: rgba(247, 198, 0, .18);
+}
+
+.timeCapsuleHeart {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  color: #f7c600;
+  font-size: 2.9rem;
+  line-height: 1;
+  -webkit-text-stroke: 1.5px #111;
+  filter: drop-shadow(2px 3px 0 rgba(0, 0, 0, .18));
+}
+
+.timeCapsuleHeart i {
+  right: -1px;
+  bottom: 2px;
+  -webkit-text-stroke: 0;
+}
+
+.timeCapsuleHeader h2,
+.timeCapsuleHeader p {
+  margin: 0;
+}
+
+.timeCapsuleHeader h2 {
+  overflow: hidden;
+  font-size: 1.05rem;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.timeCapsuleHeader p {
+  margin-top: 3px;
+  overflow: hidden;
+  color: #716c63;
+  font-size: .7rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.timeCapsuleAdminToggle {
+  min-height: 34px;
+  border: 1px solid #111 !important;
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: #111 !important;
+  color: #f7c600 !important;
+  font-size: .68rem !important;
+}
+
+.timeCapsuleBody {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+  padding: 16px;
+}
+
+.timeCapsuleHero {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  max-width: 880px;
+  margin: 0 auto;
+  border: 2px solid #111;
+  border-radius: 14px;
+  padding: 18px;
+  background: linear-gradient(135deg, #fff7c7, #f7c600);
+  box-shadow: 5px 6px 0 rgba(0, 0, 0, .15);
+}
+
+.timeCapsuleLockMark {
+  position: relative;
+  width: 70px;
+  height: 70px;
+  display: grid;
+  place-items: center;
+}
+
+.timeCapsuleLockMark span {
+  color: #f7c600;
+  font-size: 5rem;
+  line-height: 1;
+  -webkit-text-stroke: 2px #111;
+  filter: drop-shadow(2px 4px 0 rgba(0, 0, 0, .2));
+}
+
+.timeCapsuleLockMark i {
+  right: 0;
+  bottom: 4px;
+  width: 15px;
+  height: 12px;
+}
+
+.timeCapsuleLockMark.is-unlocked i::before {
+  left: 28%;
+  transform: translateX(-50%) rotate(-28deg);
+  transform-origin: left bottom;
+}
+
+.timeCapsuleHero > div:nth-child(2) > span {
+  display: block;
+  margin-bottom: 4px;
+  font-size: .67rem;
+  font-weight: 950;
+  letter-spacing: .08em;
+}
+
+.timeCapsuleHero h3,
+.timeCapsuleHero p {
+  margin: 0;
+}
+
+.timeCapsuleHero h3 {
+  font-size: clamp(1.25rem, 3vw, 2rem);
+  line-height: 1.05;
+}
+
+.timeCapsuleHero p {
+  margin-top: 7px;
+  font-size: .82rem;
+  font-weight: 800;
+}
+
+.timeCapsuleHero > button,
+.timeCapsuleFormActions button,
+.timeCapsuleAdminPanel button {
+  min-height: 40px;
+  border: 2px solid #111;
+  border-radius: 10px;
+  padding: 8px 12px;
+  background: #111;
+  color: #f7c600;
+  font: inherit;
+  font-size: .75rem;
+  font-weight: 950;
+  cursor: pointer;
+  box-shadow: 2px 3px 0 rgba(0, 0, 0, .2);
+}
+
+.timeCapsuleStats {
+  max-width: 880px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+  margin: 14px auto;
+}
+
+.timeCapsuleStats span {
+  min-width: 0;
+  border: 1px solid #ded8ca;
+  border-radius: 10px;
+  padding: 10px;
+  background: rgba(255, 255, 255, .92);
+  text-align: center;
+}
+
+.timeCapsuleStats strong,
+.timeCapsuleStats small {
+  display: block;
+}
+
+.timeCapsuleStats strong {
+  font-size: 1.2rem;
+}
+
+.timeCapsuleStats small {
+  margin-top: 2px;
+  color: #716c63;
+  font-size: .66rem;
+  font-weight: 800;
+}
+
+.timeCapsuleComposeCard,
+.timeCapsuleEntriesSection,
+.timeCapsuleAdminPanel {
+  max-width: 880px;
+  margin: 12px auto;
+  border: 1px solid #ded8ca;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .94);
+}
+
+.timeCapsuleComposeCard > header,
+.timeCapsuleEntriesSection > header,
+.timeCapsuleAdminPanel > header {
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 11px 13px;
+}
+
+.timeCapsuleComposeCard header strong,
+.timeCapsuleComposeCard header small,
+.timeCapsuleEntriesSection header strong,
+.timeCapsuleEntriesSection header small,
+.timeCapsuleAdminPanel header strong,
+.timeCapsuleAdminPanel header small {
+  display: block;
+}
+
+.timeCapsuleComposeCard header small,
+.timeCapsuleEntriesSection header small,
+.timeCapsuleAdminPanel header small {
+  margin-top: 3px;
+  color: #716c63;
+  font-size: .68rem;
+}
+
+#timeCapsuleComposeToggle {
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: #f7c600;
+  color: #111;
+  font-size: 1.6rem;
+  line-height: 1;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 160ms ease;
+}
+
+#timeCapsuleComposeToggle[aria-expanded="true"] {
+  transform: rotate(45deg);
+}
+
+#timeCapsuleForm,
+#timeCapsuleSettingsForm {
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid #e6e0d5;
+  padding: 13px;
+}
+
+#timeCapsuleForm[hidden] {
+  display: none;
+}
+
+#timeCapsuleForm label,
+#timeCapsuleSettingsForm label {
+  display: grid;
+  gap: 5px;
+  color: #302e29;
+  font-size: .72rem;
+  font-weight: 900;
+}
+
+#timeCapsuleForm label > small {
+  display: inline;
+  color: #777168;
+  font-weight: 700;
+}
+
+#timeCapsuleForm input,
+#timeCapsuleForm textarea,
+#timeCapsuleForm select,
+#timeCapsuleSettingsForm input,
+#timeCapsuleReviewFilter {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #cfc8ba;
+  border-radius: 9px;
+  padding: 9px 10px;
+  background: #fff;
+  color: #111;
+  font: inherit;
+}
+
+#timeCapsuleForm textarea {
+  min-height: 104px;
+  resize: vertical;
+  line-height: 1.4;
+}
+
+.timeCapsuleFormActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.timeCapsuleFormActions button:first-child {
+  background: #fff;
+  color: #111;
+}
+
+#timeCapsuleFormMessage,
+#timeCapsuleSettingsMessage {
+  min-height: 17px;
+  margin: 0;
+  color: #806800;
+  font-size: .7rem;
+  font-weight: 800;
+}
+
+.timeCapsuleEntriesSection > header {
+  border-bottom: 1px solid #e6e0d5;
+}
+
+.timeCapsuleEntries,
+.timeCapsuleReviewList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 10px;
+  padding: 12px;
+}
+
+.timeCapsuleEntry {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #d7d0c2;
+  border-radius: 10px;
+  background: #fffdf7;
+}
+
+.timeCapsuleEntry img {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  display: block;
+  object-fit: cover;
+  background: #111;
+}
+
+.timeCapsuleEntryBody {
+  padding: 11px;
+}
+
+.timeCapsuleEntryMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 7px;
+}
+
+.timeCapsuleEntryMeta span {
+  overflow: hidden;
+  color: #7a6500;
+  font-size: .62rem;
+  font-weight: 950;
+  text-transform: uppercase;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.timeCapsuleEntryMeta b {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 3px 6px;
+  background: #eeeae1;
+  color: #555047;
+  font-size: .56rem;
+  text-transform: uppercase;
+}
+
+.timeCapsuleEntry[data-status="approved"] .timeCapsuleEntryMeta b {
+  background: #dff6e7;
+  color: #126b33;
+}
+
+.timeCapsuleEntry[data-status="rejected"] .timeCapsuleEntryMeta b {
+  background: #ffe2e2;
+  color: #a10f16;
+}
+
+.timeCapsuleEntry p {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: .8rem;
+  line-height: 1.42;
+  white-space: pre-wrap;
+}
+
+.timeCapsuleEntry footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 7px;
+  margin-top: 10px;
+  color: #777168;
+  font-size: .61rem;
+}
+
+.timeCapsuleEntryActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.timeCapsuleEntryActions button {
+  border: 1px solid #111;
+  border-radius: 7px;
+  padding: 5px 7px;
+  background: #fff;
+  color: #111;
+  font-size: .62rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.timeCapsuleEntryActions button[data-capsule-action="approve"] {
+  background: #f7c600;
+}
+
+.timeCapsuleEmpty {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 24px 12px;
+  color: #777168;
+  font-size: .75rem;
+  text-align: center;
+}
+
+.timeCapsuleAdminPanel {
+  border-color: #111;
+  box-shadow: 4px 5px 0 rgba(0, 0, 0, .13);
+}
+
+.timeCapsuleAdminPanel > header {
+  background: #111;
+  color: #fff;
+}
+
+.timeCapsuleAdminPanel > header small {
+  color: #f7c600;
+}
+
+#timeCapsuleSettingsForm {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.timeCapsuleSwitch {
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center;
+}
+
+.timeCapsuleSwitch span strong,
+.timeCapsuleSwitch span small {
+  display: block;
+}
+
+.timeCapsuleSwitch span small {
+  margin-top: 3px;
+  color: #716c63;
+  font-size: .65rem;
+}
+
+.timeCapsuleSwitch input {
+  width: 20px !important;
+  height: 20px;
+}
+
+#timeCapsuleSettingsForm .timeCapsuleFormActions,
+#timeCapsuleSettingsMessage {
+  grid-column: 1 / -1;
+}
+
+.timeCapsuleReviewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-top: 1px solid #ded8ca;
+  padding: 10px 13px;
+}
+
+#timeCapsuleReviewFilter {
+  width: auto;
+  min-width: 130px;
+  padding: 7px 9px;
+  font-size: .7rem;
+}
+
+.timeCapsulePresentation {
+  position: absolute;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  background: #080808;
+  color: #fff;
+}
+
+.timeCapsulePresentation[hidden] {
+  display: none;
+}
+
+.timeCapsulePresentation > header,
+.timeCapsulePresentation > footer {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) 70px;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: rgba(8, 8, 8, .95);
+}
+
+.timeCapsulePresentation > header button,
+.timeCapsulePresentation > footer button {
+  min-height: 40px;
+  border: 1px solid #4b4b4b;
+  border-radius: 999px;
+  background: #202020;
+  color: #fff;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.timeCapsulePresentation > header > div {
+  text-align: center;
+}
+
+.timeCapsulePresentation > header strong,
+.timeCapsulePresentation > header small {
+  display: block;
+}
+
+.timeCapsulePresentation > header small {
+  margin-top: 2px;
+  color: #aaa;
+  font-size: .65rem;
+}
+
+.timeCapsulePresentation > footer {
+  grid-template-columns: repeat(3, 48px);
+  justify-content: center;
+}
+
+#timeCapsulePlay {
+  background: #f7c600;
+  color: #111;
+}
+
+.timeCapsuleSlide {
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.timeCapsuleSlideCard {
+  width: min(720px, 100%);
+  overflow: hidden;
+  border: 1px solid #444;
+  border-radius: 14px;
+  background: #181818;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, .5);
+}
+
+.timeCapsuleSlideCard img {
+  width: 100%;
+  max-height: 58vh;
+  display: block;
+  object-fit: contain;
+  background: #000;
+}
+
+.timeCapsuleSlideCard > div {
+  padding: clamp(18px, 4vw, 34px);
+}
+
+.timeCapsuleSlideCard span {
+  color: #f7c600;
+  font-size: .72rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.timeCapsuleSlideCard p {
+  margin: 12px 0 18px;
+  overflow-wrap: anywhere;
+  font-size: clamp(1.1rem, 3vw, 2rem);
+  line-height: 1.3;
+  white-space: pre-wrap;
+}
+
+.timeCapsuleSlideCard footer {
+  color: #aaa;
+  font-size: .78rem;
+  font-weight: 800;
+}
+
+.classChatPanel.is-dark .timeCapsuleRoom {
+  background:
+    linear-gradient(rgba(247, 198, 0, .055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(247, 198, 0, .055) 1px, transparent 1px),
+    #101010;
+  color: #fff;
+}
+
+.classChatPanel.is-dark .timeCapsuleHeader,
+.classChatPanel.is-dark .timeCapsuleComposeCard,
+.classChatPanel.is-dark .timeCapsuleEntriesSection,
+.classChatPanel.is-dark .timeCapsuleAdminPanel {
+  border-color: #3b3b3b;
+  background: rgba(27, 27, 27, .97);
+}
+
+.classChatPanel.is-dark .timeCapsuleHeader > button,
+.classChatPanel.is-dark .timeCapsuleHeader h2 {
+  color: #fff;
+}
+
+.classChatPanel.is-dark .timeCapsuleHeader p,
+.classChatPanel.is-dark .timeCapsuleStats small,
+.classChatPanel.is-dark .timeCapsuleComposeCard header small,
+.classChatPanel.is-dark .timeCapsuleEntriesSection header small,
+.classChatPanel.is-dark .timeCapsuleAdminPanel header small {
+  color: #aaa;
+}
+
+.classChatPanel.is-dark .timeCapsuleStats span,
+.classChatPanel.is-dark .timeCapsuleEntry {
+  border-color: #3b3b3b;
+  background: #202020;
+}
+
+.classChatPanel.is-dark #timeCapsuleForm,
+.classChatPanel.is-dark #timeCapsuleSettingsForm,
+.classChatPanel.is-dark .timeCapsuleEntriesSection > header,
+.classChatPanel.is-dark .timeCapsuleReviewHeader {
+  border-color: #3b3b3b;
+}
+
+.classChatPanel.is-dark #timeCapsuleForm label,
+.classChatPanel.is-dark #timeCapsuleSettingsForm label {
+  color: #eee;
+}
+
+.classChatPanel.is-dark #timeCapsuleForm input,
+.classChatPanel.is-dark #timeCapsuleForm textarea,
+.classChatPanel.is-dark #timeCapsuleForm select,
+.classChatPanel.is-dark #timeCapsuleSettingsForm input,
+.classChatPanel.is-dark #timeCapsuleReviewFilter {
+  border-color: #4b4b4b;
+  background: #282828;
+  color: #fff;
+}
+
+@media (max-width: 680px) {
+  .adviserHeaderActions {
+    gap: 4px;
+  }
+
+  .timeCapsuleOpen {
+    width: 31px;
+    height: 31px;
+    font-size: 1.75rem;
+  }
+
+  .timeCapsuleHeader {
+    min-height: 62px;
+    grid-template-columns: 36px 40px minmax(0, 1fr) auto;
+    gap: 7px;
+    padding: 7px 10px;
+  }
+
+  #timeCapsuleBack {
+    width: 34px;
+    height: 34px;
+  }
+
+  .timeCapsuleHeart {
+    width: 38px;
+    height: 38px;
+    font-size: 2.4rem;
+  }
+
+  .timeCapsuleHeader h2 {
+    font-size: .95rem;
+  }
+
+  .timeCapsuleBody {
+    padding: 11px;
+  }
+
+  .timeCapsuleHero {
+    grid-template-columns: 58px minmax(0, 1fr);
+    gap: 11px;
+    padding: 14px;
+  }
+
+  .timeCapsuleLockMark {
+    width: 56px;
+    height: 56px;
+  }
+
+  .timeCapsuleLockMark span {
+    font-size: 4rem;
+  }
+
+  .timeCapsuleHero > button {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .timeCapsuleStats {
+    gap: 6px;
+  }
+
+  .timeCapsuleStats span {
+    padding: 8px 5px;
+  }
+
+  .timeCapsuleEntries,
+  .timeCapsuleReviewList {
+    grid-template-columns: 1fr;
+  }
+
+  #timeCapsuleSettingsForm {
+    grid-template-columns: 1fr;
+  }
+
+  #timeCapsuleSettingsForm > * {
+    grid-column: 1 !important;
+  }
+
+  .timeCapsulePresentation > header {
+    grid-template-columns: 42px minmax(0, 1fr) 54px;
+    padding: 8px;
+  }
+
+  .timeCapsuleSlide {
+    padding: 12px;
+  }
+}
+
+/* Light yearbook-style Time Capsule visual system */
+.timeCapsuleRoom {
+  --tc-bg: #f6f3ea;
+  --tc-surface: #fffefb;
+  --tc-surface-2: #f0ece1;
+  --tc-text: #111;
+  --tc-muted: #716c63;
+  --tc-line: rgba(17, 17, 17, .14);
+  --tc-gold: #f7c600;
+  --tc-gold-soft: #fff2a8;
+  background:
+    linear-gradient(rgba(17, 17, 17, .035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(17, 17, 17, .035) 1px, transparent 1px),
+    var(--tc-bg);
+  background-size: 30px 30px;
+  color: var(--tc-text);
+}
+
+.classChatPanel.is-dark .timeCapsuleRoom {
+  --tc-bg: #f6f3ea;
+  --tc-surface: #fffefb;
+  --tc-surface-2: #f0ece1;
+  --tc-text: #111;
+  --tc-muted: #716c63;
+  --tc-line: rgba(17, 17, 17, .14);
+  --tc-gold-soft: #fff2a8;
+  background:
+    linear-gradient(rgba(17, 17, 17, .035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(17, 17, 17, .035) 1px, transparent 1px),
+    var(--tc-bg);
+  background-size: 30px 30px;
+}
+
+.classChatPanel.is-time-capsule-login,
+.classChatPanel.is-dark.is-time-capsule-login {
+  background: #fffdf7;
+  color: #111;
+}
+
+.classChatPanel.is-time-capsule-login .classChatTopbar,
+.classChatPanel.is-dark.is-time-capsule-login .classChatTopbar {
+  border-bottom-color: #e4dece;
+  background: rgba(255, 253, 247, .97);
+}
+
+.classChatPanel.is-time-capsule-login .classChatBack,
+.classChatPanel.is-time-capsule-login .classChatLogout,
+.classChatPanel.is-time-capsule-login .classChatIdentity h2,
+.classChatPanel.is-dark.is-time-capsule-login .classChatBack,
+.classChatPanel.is-dark.is-time-capsule-login .classChatLogout,
+.classChatPanel.is-dark.is-time-capsule-login .classChatIdentity h2 {
+  color: #111;
+}
+
+.classChatPanel.is-time-capsule-login .classChatIdentity p,
+.classChatPanel.is-time-capsule-login .classChatWelcome p,
+.classChatPanel.is-dark.is-time-capsule-login .classChatIdentity p,
+.classChatPanel.is-dark.is-time-capsule-login .classChatWelcome p {
+  color: #716c63;
+}
+
+.classChatPanel.is-time-capsule-login .classChatLogin,
+.classChatPanel.is-dark.is-time-capsule-login .classChatLogin {
+  background:
+    linear-gradient(rgba(247, 198, 0, .065) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(247, 198, 0, .065) 1px, transparent 1px),
+    #fffdf7;
+  background-size: 28px 28px;
+}
+
+.classChatPanel.is-time-capsule-login .classChatRoleTabs,
+.classChatPanel.is-dark.is-time-capsule-login .classChatRoleTabs {
+  background: #eee9dc;
+}
+
+.classChatPanel.is-time-capsule-login .classChatRoleTabs button,
+.classChatPanel.is-dark.is-time-capsule-login .classChatRoleTabs button {
+  color: #6b665c;
+}
+
+.classChatPanel.is-time-capsule-login .classChatRoleTabs button.is-active,
+.classChatPanel.is-dark.is-time-capsule-login .classChatRoleTabs button.is-active {
+  background: #fff;
+  color: #111;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .08);
+}
+
+.classChatPanel.is-time-capsule-login .classChatAuthForm,
+.classChatPanel.is-dark.is-time-capsule-login .classChatAuthForm {
+  color: #111;
+}
+
+.classChatPanel.is-time-capsule-login .classChatAuthForm input,
+.classChatPanel.is-time-capsule-login .classChatAuthForm select,
+.classChatPanel.is-dark.is-time-capsule-login .classChatAuthForm input,
+.classChatPanel.is-dark.is-time-capsule-login .classChatAuthForm select {
+  border-color: #cfc8ba;
+  background: #fff;
+  color: #111;
+  color-scheme: light;
+}
+
+.classChatPanel.is-time-capsule-login .classChatPinNotice,
+.classChatPanel.is-dark.is-time-capsule-login .classChatPinNotice {
+  background: #fff3b5;
+  color: #111;
+}
+
+.classChatPanel.is-time-capsule-dark.is-time-capsule-login {
+  background: #121212;
+  color: #fff;
+}
+
+.classChatPanel.is-time-capsule-dark.is-time-capsule-login .classChatTopbar {
+  border-bottom-color: #333;
+  background: rgba(18, 18, 18, .97);
+}
+
+.classChatPanel.is-time-capsule-dark.is-time-capsule-login .classChatBack,
+.classChatPanel.is-time-capsule-dark.is-time-capsule-login .classChatLogout,
+.classChatPanel.is-time-capsule-dark.is-time-capsule-login .classChatIdentity h2,
+.classChatPanel.is-time-capsule-dark.is-time-capsule-login .classChatWelcome h3 {
+  color: #fff;
+}
+
+.classChatPanel.is-time-capsule-dark.is-time-capsule-login .classChatIdentity p,
+.classChatPanel.is-time-capsule-dark.is-time-capsule-login .classChatWelcome p {
+  color: #b8b3aa;
+}
+
+.classChatPanel.is-time-capsule-dark.is-time-capsule-login .classChatLogin {
+  background:
+    linear-gradient(rgba(247, 198, 0, .055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(247, 198, 0, .055) 1px, transparent 1px),
+    #121212;
+  background-size: 28px 28px;
+}
+
+.classChatPanel.is-time-capsule-dark.is-time-capsule-login .classChatRoleTabs {
+  background: #292929;
+}
+
+.classChatPanel.is-time-capsule-dark.is-time-capsule-login .classChatRoleTabs button {
+  color: #b8b3aa;
+}
+
+.classChatPanel.is-time-capsule-dark.is-time-capsule-login .classChatRoleTabs button.is-active {
+  background: #414141;
+  color: #fff;
+}
+
+.classChatPanel.is-time-capsule-dark.is-time-capsule-login .classChatAuthForm {
+  color: #fff;
+}
+
+.classChatPanel.is-time-capsule-dark.is-time-capsule-login .classChatAuthForm input,
+.classChatPanel.is-time-capsule-dark.is-time-capsule-login .classChatAuthForm select {
+  border-color: #4a4a4a;
+  background: #222;
+  color: #fff;
+  color-scheme: dark;
+}
+
+.classChatPanel.is-time-capsule-dark .classChatCapsuleSeal {
+  border-color: #8c7200;
+  background: #29240e;
+}
+
+.classChatPanel.is-time-capsule-dark .classChatCapsuleSeal strong {
+  color: #f7c600;
+}
+
+.classChatPanel.is-time-capsule-dark .classChatCapsuleSeal small {
+  color: #eee8cb;
+}
+
+.classChatPanel.is-time-capsule-dark .timeCapsuleRoom {
+  --tc-bg: #101010;
+  --tc-surface: #1c1c1c;
+  --tc-surface-2: #252525;
+  --tc-text: #fff;
+  --tc-muted: #aaa59c;
+  --tc-line: rgba(255, 255, 255, .14);
+  --tc-gold-soft: rgba(247, 198, 0, .15);
+  background:
+    linear-gradient(rgba(247, 198, 0, .05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(247, 198, 0, .05) 1px, transparent 1px),
+    var(--tc-bg);
+  background-size: 30px 30px;
+}
+
+.classChatPanel.is-time-capsule-dark .timeCapsuleHeader {
+  border-color: var(--tc-line);
+  background: rgba(16, 16, 16, .96);
+  color: var(--tc-text);
+}
+
+.classChatPanel.is-time-capsule-dark .timeCapsuleHeader > button,
+.classChatPanel.is-time-capsule-dark .timeCapsuleHeader h2 {
+  color: #fff;
+}
+
+.classChatPanel.is-time-capsule-dark .timeCapsuleHeader p {
+  color: var(--tc-muted);
+}
+
+.classChatPanel.is-time-capsule-dark .timeCapsuleStats span,
+.classChatPanel.is-time-capsule-dark .timeCapsuleComposeCard,
+.classChatPanel.is-time-capsule-dark .timeCapsuleEntriesSection,
+.classChatPanel.is-time-capsule-dark .timeCapsuleAdminPanel,
+.classChatPanel.is-time-capsule-dark .timeCapsuleEntry {
+  border-color: var(--tc-line);
+  background: var(--tc-surface);
+  color: var(--tc-text);
+}
+
+.classChatPanel.is-time-capsule-dark #timeCapsuleForm,
+.classChatPanel.is-time-capsule-dark #timeCapsuleSettingsForm {
+  border-color: var(--tc-line);
+  background: var(--tc-surface-2);
+}
+
+.classChatPanel.is-time-capsule-dark #timeCapsuleForm label,
+.classChatPanel.is-time-capsule-dark #timeCapsuleSettingsForm label {
+  color: #fff;
+}
+
+.classChatPanel.is-time-capsule-dark #timeCapsuleForm input,
+.classChatPanel.is-time-capsule-dark #timeCapsuleForm textarea,
+.classChatPanel.is-time-capsule-dark #timeCapsuleForm select,
+.classChatPanel.is-time-capsule-dark #timeCapsuleSettingsForm input,
+.classChatPanel.is-time-capsule-dark #timeCapsuleReviewFilter {
+  border-color: #4a4a4a;
+  background: #252525;
+  color: #fff;
+  color-scheme: dark;
+}
+
+.classChatPanel.is-time-capsule-dark .timeCapsuleEntryActions button {
+  border-color: #4a4a4a;
+  background: #292929;
+  color: #fff;
+}
+
+.classChatPanel.is-time-capsule-dark .classChatExitCard {
+  border-color: #555;
+  background: #1d1d1d;
+  color: #fff;
+}
+
+.classChatPanel.capsule-font-small .timeCapsuleRoom,
+.classChatPanel.capsule-font-small.is-time-capsule-login {
+  --tc-font-adjust: -.08rem;
+}
+
+.classChatPanel.capsule-font-large .timeCapsuleRoom,
+.classChatPanel.capsule-font-large.is-time-capsule-login {
+  --tc-font-adjust: .1rem;
+}
+
+.classChatPanel.capsule-font-small.is-time-capsule-login .classChatWelcome h3 {
+  font-size: 1.4rem;
+}
+
+.classChatPanel.capsule-font-large.is-time-capsule-login .classChatWelcome h3 {
+  font-size: 1.72rem;
+}
+
+.classChatPanel.capsule-font-small.is-time-capsule-login .classChatWelcome p,
+.classChatPanel.capsule-font-small.is-time-capsule-login .classChatAuthForm {
+  font-size: .8rem;
+}
+
+.classChatPanel.capsule-font-large.is-time-capsule-login .classChatWelcome p,
+.classChatPanel.capsule-font-large.is-time-capsule-login .classChatAuthForm {
+  font-size: .98rem;
+}
+
+.classChatPanel.capsule-font-small .timeCapsuleRoom :is(p, small, label, input, textarea, select, button) {
+  font-size: .7rem;
+}
+
+.classChatPanel.capsule-font-large .timeCapsuleRoom :is(p, small, label, input, textarea, select, button) {
+  font-size: .9rem;
+}
+
+.classChatPanel.capsule-font-small .timeCapsuleHero h3 {
+  font-size: 1.25rem;
+}
+
+.classChatPanel.capsule-font-large .timeCapsuleHero h3 {
+  font-size: 2.15rem;
+}
+
+.classChatPanel.capsule-font-small .timeCapsuleEntry p {
+  font-size: .75rem;
+}
+
+.classChatPanel.capsule-font-large .timeCapsuleEntry p {
+  font-size: .94rem;
+}
+
+.classChatCapsuleSeal {
+  width: min(330px, 100%);
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  box-sizing: border-box;
+  margin: 17px auto 0;
+  border: 1px solid #d9ae00;
+  border-radius: 13px;
+  padding: 10px 12px;
+  background: rgba(255, 242, 168, .86);
+  text-align: left;
+  box-shadow: 0 6px 16px rgba(126, 97, 0, .09);
+}
+
+.classChatCapsuleSeal[hidden] {
+  display: none !important;
+}
+
+.classChatCapsuleSeal > div {
+  min-width: 0;
+}
+
+.classChatCapsuleSeal strong,
+.classChatCapsuleSeal small {
+  display: block;
+}
+
+.classChatCapsuleSeal strong {
+  margin-bottom: 3px;
+  color: #6f5800;
+  font-size: .65rem;
+  letter-spacing: .07em;
+}
+
+.classChatCapsuleSeal small {
+  color: #292400;
+  font-size: .76rem;
+  font-weight: 850;
+  line-height: 1.25;
+}
+
+.classChatCapsuleLock {
+  position: relative;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  display: block;
+  border-radius: 50%;
+  background: #f7c600;
+}
+
+.classChatCapsuleLock::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 8px;
+  width: 12px;
+  height: 11px;
+  border: 3px solid #111;
+  border-bottom: 0;
+  border-radius: 8px 8px 0 0;
+  transform: translateX(-50%);
+}
+
+.classChatCapsuleLock i {
+  position: absolute;
+  left: 50%;
+  top: 17px;
+  width: 18px;
+  height: 14px;
+  border-radius: 3px;
+  background: #111;
+  transform: translateX(-50%);
+}
+
+.classChatCapsuleLock i::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 4px;
+  width: 3px;
+  height: 6px;
+  border-radius: 3px;
+  background: #f7c600;
+  transform: translateX(-50%);
+}
+
+.classChatCapsuleSeal.is-unlocked .classChatCapsuleLock::before {
+  left: 42%;
+  transform: translateX(-50%) rotate(-28deg);
+  transform-origin: left bottom;
+}
+
+.timeCapsuleHeader,
+.classChatPanel.is-dark .timeCapsuleHeader {
+  min-height: 76px;
+  border-color: var(--tc-line);
+  padding: 10px 18px;
+  background: color-mix(in srgb, var(--tc-bg) 92%, transparent);
+  color: var(--tc-text);
+  box-shadow: 0 1px 0 rgba(247, 198, 0, .18);
+}
+
+.timeCapsuleHeader > button,
+.timeCapsuleHeader h2,
+.classChatPanel.is-dark .timeCapsuleHeader > button,
+.classChatPanel.is-dark .timeCapsuleHeader h2 {
+  color: var(--tc-text);
+}
+
+.timeCapsuleHeader h2 {
+  font-size: 1.1rem;
+  letter-spacing: 0;
+}
+
+.timeCapsuleHeader p,
+.classChatPanel.is-dark .timeCapsuleHeader p {
+  color: var(--tc-muted);
+  font-size: .72rem;
+}
+
+#timeCapsuleBack {
+  transition: background 120ms ease, transform 120ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#timeCapsuleBack:hover,
+#timeCapsuleBack:focus-visible {
+  background: var(--tc-gold-soft);
+  outline: none;
+}
+
+#timeCapsuleBack:active {
+  transform: scale(.88);
+}
+
+.timeCapsuleHeart {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--tc-gold);
+  color: #111;
+  font-size: 2rem;
+  -webkit-text-stroke: 0;
+  filter: none;
+  box-shadow: 0 0 0 2px #111, 0 0 0 4px var(--tc-gold);
+}
+
+.timeCapsuleHeart i {
+  right: -2px;
+  bottom: 0;
+  transform: scale(.82);
+}
+
+.timeCapsuleAdminToggle {
+  border-color: var(--tc-gold) !important;
+  background: var(--tc-gold) !important;
+  color: #111 !important;
+  box-shadow: none;
+  transition: transform 120ms ease, filter 120ms ease;
+}
+
+.timeCapsuleAdminToggle:active {
+  transform: scale(.93);
+}
+
+.timeCapsuleBody {
+  padding: 22px 18px 34px;
+  scrollbar-color: var(--tc-gold) transparent;
+}
+
+.timeCapsuleHero {
+  position: relative;
+  min-height: 150px;
+  overflow: hidden;
+  border: 1px solid #d9ae00;
+  border-radius: 18px;
+  padding: 24px;
+  background:
+    linear-gradient(rgba(255, 255, 255, .24) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, .24) 1px, transparent 1px),
+    #f7c600;
+  background-size: 24px 24px;
+  color: #111;
+  box-shadow: 0 16px 34px rgba(126, 97, 0, .18);
+}
+
+.timeCapsuleHero::after {
+  content: "";
+  position: absolute;
+  right: -38px;
+  bottom: -55px;
+  width: 180px;
+  height: 180px;
+  border: 34px solid rgba(255, 255, 255, .22);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.timeCapsuleLockMark {
+  z-index: 1;
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .76);
+  box-shadow: inset 0 0 0 1px rgba(17, 17, 17, .11);
+}
+
+.timeCapsuleLockMark span {
+  color: #111;
+  font-size: 4.4rem;
+  -webkit-text-stroke: 0;
+  filter: drop-shadow(0 6px 12px rgba(126, 97, 0, .16));
+}
+
+.timeCapsuleLockMark i {
+  right: 1px;
+  bottom: 2px;
+  background: var(--tc-gold);
+}
+
+.timeCapsuleHero > div:nth-child(2) {
+  position: relative;
+  z-index: 1;
+}
+
+.timeCapsuleHero > div:nth-child(2) > span {
+  width: fit-content;
+  margin-bottom: 7px;
+  border-radius: 999px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, .7);
+  color: #111;
+  font-size: .63rem;
+}
+
+.timeCapsuleHero h3 {
+  font-size: clamp(1.4rem, 3vw, 2.15rem);
+  letter-spacing: 0;
+}
+
+.timeCapsuleHero p {
+  color: #4f4200;
+  font-size: .84rem;
+}
+
+.timeCapsuleHero > button {
+  position: relative;
+  z-index: 1;
+  border-color: #111;
+  border-radius: 999px;
+  background: #111;
+  color: #f7c600;
+  box-shadow: none;
+  transition: transform 120ms ease, filter 120ms ease;
+}
+
+.timeCapsuleHero > button:active {
+  transform: scale(.94);
+}
+
+.timeCapsuleStats {
+  position: relative;
+  z-index: 2;
+  gap: 8px;
+  margin: -17px auto 18px;
+  padding: 0 16px;
+}
+
+.timeCapsuleStats span,
+.classChatPanel.is-dark .timeCapsuleStats span {
+  border: 1px solid var(--tc-line);
+  border-radius: 13px;
+  padding: 11px 8px;
+  background: var(--tc-surface);
+  color: var(--tc-text);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, .10);
+}
+
+.timeCapsuleStats strong {
+  color: var(--tc-gold);
+  font-size: 1.28rem;
+}
+
+.timeCapsuleStats small,
+.classChatPanel.is-dark .timeCapsuleStats small {
+  color: var(--tc-muted);
+}
+
+.timeCapsuleComposeCard,
+.timeCapsuleEntriesSection,
+.timeCapsuleAdminPanel,
+.classChatPanel.is-dark .timeCapsuleComposeCard,
+.classChatPanel.is-dark .timeCapsuleEntriesSection,
+.classChatPanel.is-dark .timeCapsuleAdminPanel {
+  overflow: hidden;
+  border: 1px solid var(--tc-line);
+  border-radius: 16px;
+  background: var(--tc-surface);
+  color: var(--tc-text);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, .08);
+}
+
+.timeCapsuleComposeCard {
+  border-color: color-mix(in srgb, var(--tc-gold) 58%, var(--tc-line));
+}
+
+.timeCapsuleComposeCard > header {
+  min-height: 72px;
+  justify-content: flex-start;
+  padding: 13px 15px;
+}
+
+.timeCapsuleComposeCard > header::before {
+  content: "\2665";
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--tc-gold);
+  color: #111;
+  font-size: 1.45rem;
+}
+
+.timeCapsuleComposeCard > header > div {
+  min-width: 0;
+  flex: 1;
+}
+
+.timeCapsuleComposeCard header strong {
+  font-size: .9rem;
+  line-height: 1.2;
+}
+
+.timeCapsuleComposeCard header small,
+.timeCapsuleEntriesSection header small,
+.timeCapsuleAdminPanel header small,
+.classChatPanel.is-dark .timeCapsuleComposeCard header small,
+.classChatPanel.is-dark .timeCapsuleEntriesSection header small,
+.classChatPanel.is-dark .timeCapsuleAdminPanel header small {
+  color: var(--tc-muted);
+  line-height: 1.25;
+}
+
+#timeCapsuleComposeToggle {
+  flex-basis: 40px;
+  width: 40px;
+  height: 40px;
+  margin-left: auto;
+  border: 1px solid var(--tc-line);
+  background: var(--tc-surface-2);
+  color: var(--tc-text);
+  font-size: 1.7rem;
+  transition: transform 160ms cubic-bezier(.2, .8, .2, 1), background 120ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#timeCapsuleComposeToggle:hover,
+#timeCapsuleComposeToggle:focus-visible,
+.timeCapsuleComposeCard.is-composing #timeCapsuleComposeToggle {
+  background: var(--tc-gold);
+  color: #111;
+  outline: none;
+}
+
+#timeCapsuleComposeToggle:active {
+  transform: scale(.88);
+}
+
+#timeCapsuleComposeToggle[aria-expanded="true"] {
+  transform: rotate(45deg);
+}
+
+#timeCapsuleForm,
+#timeCapsuleSettingsForm,
+.classChatPanel.is-dark #timeCapsuleForm,
+.classChatPanel.is-dark #timeCapsuleSettingsForm {
+  border-color: var(--tc-line);
+  padding: 16px;
+  background: color-mix(in srgb, var(--tc-surface-2) 46%, transparent);
+}
+
+#timeCapsuleForm:not([hidden]) {
+  animation: timeCapsuleFormIn 180ms cubic-bezier(.2, .8, .2, 1) both;
+}
+
+@keyframes timeCapsuleFormIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+#timeCapsuleForm label,
+#timeCapsuleSettingsForm label,
+.classChatPanel.is-dark #timeCapsuleForm label,
+.classChatPanel.is-dark #timeCapsuleSettingsForm label {
+  position: relative;
+  color: var(--tc-text);
+  font-size: .72rem;
+}
+
+#timeCapsuleForm input,
+#timeCapsuleForm textarea,
+#timeCapsuleForm select,
+#timeCapsuleSettingsForm input,
+#timeCapsuleReviewFilter,
+.classChatPanel.is-dark #timeCapsuleForm input,
+.classChatPanel.is-dark #timeCapsuleForm textarea,
+.classChatPanel.is-dark #timeCapsuleForm select,
+.classChatPanel.is-dark #timeCapsuleSettingsForm input,
+.classChatPanel.is-dark #timeCapsuleReviewFilter {
+  min-height: 46px;
+  border: 1px solid var(--tc-line);
+  border-radius: 12px;
+  background: var(--tc-surface);
+  color: var(--tc-text);
+  outline: none;
+  transition: border 120ms ease, box-shadow 120ms ease;
+}
+
+#timeCapsuleForm input:focus,
+#timeCapsuleForm textarea:focus,
+#timeCapsuleForm select:focus,
+#timeCapsuleSettingsForm input:focus,
+#timeCapsuleReviewFilter:focus {
+  border-color: var(--tc-gold);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--tc-gold) 22%, transparent);
+}
+
+#timeCapsuleForm textarea {
+  min-height: 132px;
+  padding: 13px;
+}
+
+.timeCapsulePrompt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-left: 3px solid var(--tc-gold);
+  border-radius: 0 10px 10px 0;
+  padding: 10px 12px;
+  background: var(--tc-gold-soft);
+}
+
+.timeCapsulePrompt > span {
+  color: var(--tc-gold);
+  font-size: 1.25rem;
+}
+
+.timeCapsulePrompt strong,
+.timeCapsulePrompt small {
+  display: block;
+}
+
+.timeCapsulePrompt strong {
+  margin-bottom: 2px;
+  font-size: .68rem;
+}
+
+.timeCapsulePrompt small {
+  color: var(--tc-muted);
+  font-size: .7rem;
+  line-height: 1.3;
+}
+
+#timeCapsuleForm .timeCapsuleCharacterCount {
+  justify-self: end;
+  margin-top: -2px;
+  color: var(--tc-muted);
+  font-size: .62rem;
+}
+
+.timeCapsuleFormActions button,
+.timeCapsuleAdminPanel button {
+  border-radius: 999px;
+  box-shadow: none;
+  transition: transform 120ms ease, filter 120ms ease;
+}
+
+.timeCapsuleFormActions button:last-child,
+#timeCapsuleSettingsForm .timeCapsuleFormActions button:last-child {
+  border-color: var(--tc-gold);
+  background: var(--tc-gold);
+  color: #111;
+}
+
+.timeCapsuleFormActions button:active,
+.timeCapsuleAdminPanel button:active {
+  transform: scale(.94);
+}
+
+.timeCapsuleEntriesSection > header {
+  min-height: 66px;
+  border-color: var(--tc-line);
+  padding: 13px 15px;
+}
+
+.timeCapsuleEntriesSection header strong {
+  font-size: .92rem;
+}
+
+.timeCapsuleEntries,
+.timeCapsuleReviewList {
+  gap: 12px;
+  padding: 14px;
+}
+
+.timeCapsuleEntry,
+.classChatPanel.is-dark .timeCapsuleEntry {
+  overflow: visible;
+  border: 1px solid var(--tc-line);
+  border-radius: 14px;
+  background: var(--tc-surface-2);
+  color: var(--tc-text);
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.timeCapsuleEntry:hover {
+  z-index: 1;
+  border-color: color-mix(in srgb, var(--tc-gold) 65%, var(--tc-line));
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, .12);
+}
+
+.timeCapsuleEntry img {
+  border-radius: 13px 13px 0 0;
+}
+
+.timeCapsuleEntryBody {
+  padding: 13px;
+}
+
+.timeCapsuleEntryMeta span {
+  color: var(--tc-gold);
+}
+
+.timeCapsuleEntryMeta b {
+  background: color-mix(in srgb, var(--tc-muted) 14%, transparent);
+  color: var(--tc-muted);
+}
+
+.timeCapsuleEntry p {
+  font-size: .84rem;
+  line-height: 1.5;
+}
+
+.timeCapsuleEntry footer {
+  color: var(--tc-muted);
+}
+
+.timeCapsuleEntryActions button {
+  border-color: var(--tc-line);
+  border-radius: 999px;
+  background: var(--tc-surface);
+  color: var(--tc-text);
+}
+
+.timeCapsuleEmpty {
+  min-height: 120px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 7px;
+  color: var(--tc-muted);
+}
+
+.timeCapsuleEmpty::before {
+  content: "\2665";
+  display: block;
+  color: var(--tc-gold);
+  font-size: 2rem;
+  line-height: 1;
+  opacity: .7;
+}
+
+.timeCapsuleAdminPanel {
+  border-color: var(--tc-gold);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .12);
+}
+
+.timeCapsuleAdminPanel > header,
+.classChatPanel.is-dark .timeCapsuleAdminPanel > header {
+  background: #111;
+  color: #fff;
+}
+
+.timeCapsuleReviewHeader,
+.classChatPanel.is-dark .timeCapsuleReviewHeader {
+  border-color: var(--tc-line);
+}
+
+.timeCapsulePresentation {
+  background: #f6f3ea;
+  color: #111;
+}
+
+.timeCapsulePresentation > header,
+.timeCapsulePresentation > footer {
+  border-color: #ded8ca;
+  background: rgba(255, 253, 247, .97);
+}
+
+.timeCapsulePresentation > header button,
+.timeCapsulePresentation > footer button {
+  border-color: #d7d0c2;
+  background: #fff;
+  color: #111;
+}
+
+.timeCapsuleSlideCard {
+  border-color: #d9ae00;
+  border-radius: 18px;
+  background: #fff;
+  color: #111;
+  box-shadow: 0 18px 45px rgba(126, 97, 0, .16);
+}
+
+.timeCapsuleSlideCard span {
+  color: #8b6f00;
+}
+
+.timeCapsuleSlideCard footer {
+  color: #716c63;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .timeCapsuleRoom *,
+  .timeCapsuleRoom *::before,
+  .timeCapsuleRoom *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+
+  .classChatPanel.is-time-capsule-login .classChatWelcomeMark {
+    animation: none !important;
+  }
+}
+
+@media (max-width: 680px) {
+  .timeCapsuleHeader,
+  .classChatPanel.is-dark .timeCapsuleHeader {
+    min-height: 68px;
+    grid-template-columns: 36px 40px minmax(0, 1fr) auto;
+    padding: 8px 11px;
+  }
+
+  .timeCapsuleHeart {
+    width: 38px;
+    height: 38px;
+    font-size: 1.55rem;
+  }
+
+  .timeCapsuleBody {
+    padding: 13px 10px 26px;
+  }
+
+  .classChatCapsuleSeal {
+    margin-top: 14px;
+    padding: 9px 10px;
+  }
+
+  .timeCapsuleHero {
+    min-height: 128px;
+    grid-template-columns: 56px minmax(0, 1fr);
+    border-radius: 15px;
+    padding: 16px 14px 22px;
+  }
+
+  .timeCapsuleLockMark {
+    width: 54px;
+    height: 54px;
+  }
+
+  .timeCapsuleLockMark span {
+    font-size: 3.35rem;
+  }
+
+  .timeCapsuleHero h3 {
+    font-size: 1.28rem;
+  }
+
+  .timeCapsuleHero p {
+    font-size: .74rem;
+  }
+
+  .timeCapsuleStats {
+    margin-top: -13px;
+    padding: 0 8px;
+  }
+
+  .timeCapsuleStats strong {
+    font-size: 1.08rem;
+  }
+
+  .timeCapsuleStats small {
+    font-size: .58rem;
+  }
+
+  .timeCapsuleComposeCard,
+  .timeCapsuleEntriesSection,
+  .timeCapsuleAdminPanel,
+  .classChatPanel.is-dark .timeCapsuleComposeCard,
+  .classChatPanel.is-dark .timeCapsuleEntriesSection,
+  .classChatPanel.is-dark .timeCapsuleAdminPanel {
+    border-radius: 14px;
+  }
+
+  .timeCapsuleComposeCard > header {
+    min-height: 67px;
+    padding: 11px 12px;
+  }
+
+  .timeCapsuleComposeCard > header::before {
+    flex-basis: 36px;
+    width: 36px;
+    height: 36px;
+    font-size: 1.2rem;
+  }
+
+  .timeCapsuleComposeCard header strong {
+    font-size: .8rem;
+  }
+
+  #timeCapsuleComposeToggle {
+    flex-basis: 36px;
+    width: 36px;
+    height: 36px;
+  }
+
+  #timeCapsuleForm,
+  #timeCapsuleSettingsForm {
+    padding: 13px;
+  }
+
+  .timeCapsuleEntries,
+  .timeCapsuleReviewList {
+    padding: 11px;
+  }
+
+  .timeCapsuleEntry:hover {
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+@media print {
+  body.timeCapsulePrinting * {
+    visibility: hidden !important;
+  }
+
+  body.timeCapsulePrinting #timeCapsulePresentation,
+  body.timeCapsulePrinting #timeCapsulePresentation * {
+    visibility: visible !important;
+  }
+
+  body.timeCapsulePrinting #timeCapsulePresentation {
+    position: absolute;
+    inset: 0;
+    height: auto;
+    overflow: visible;
+    background: #fff;
+    color: #111;
+  }
+
+  body.timeCapsulePrinting #timeCapsulePresentation > header,
+  body.timeCapsulePrinting #timeCapsulePresentation > footer {
+    display: none !important;
+  }
+
+  body.timeCapsulePrinting .timeCapsuleSlideCard {
+    width: 100%;
+    margin: 0 0 18px;
+    border-color: #111;
+    background: #fff;
+    color: #111;
+    box-shadow: none;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  body.timeCapsulePrinting .timeCapsuleSlide {
+    display: block;
+    overflow: visible;
+  }
+}
+
+.timeCapsuleImagePreview {
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border: 1.5px solid rgba(17, 17, 17, .18);
+  border-radius: 14px;
+  padding: 10px;
+  background: rgba(255, 255, 255, .82);
+}
+
+.timeCapsuleImagePreview[hidden] {
+  display: none !important;
+}
+
+.timeCapsuleImagePreview img {
+  width: 86px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 11px;
+  border: 1.5px solid rgba(17, 17, 17, .22);
+  background: rgba(255, 255, 255, .8);
+}
+
+.timeCapsuleImagePreview strong,
+.timeCapsuleImagePreview small {
+  display: block;
+}
+
+.timeCapsuleImagePreview small {
+  margin-top: 2px;
+  color: #716c63;
+  font-size: .74rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.timeCapsuleImagePreview button {
+  border: 1.5px solid #111;
+  border-radius: 999px;
+  padding: 7px 10px;
+  background: #fff;
+  color: #111;
+  font-size: .72rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.classChatPanel.is-dark .timeCapsuleImagePreview,
+.classChatPanel.is-time-capsule-dark .timeCapsuleImagePreview {
+  border-color: rgba(255, 255, 255, .18);
+  background: rgba(255, 255, 255, .07);
+}
+
+.classChatPanel.is-dark .timeCapsuleImagePreview small,
+.classChatPanel.is-time-capsule-dark .timeCapsuleImagePreview small {
+  color: rgba(255, 255, 255, .66);
+}
+
+.classChatPanel.is-dark .timeCapsuleImagePreview button,
+.classChatPanel.is-time-capsule-dark .timeCapsuleImagePreview button {
+  border-color: rgba(255, 255, 255, .28);
+  background: rgba(255, 255, 255, .1);
+  color: #fff;
+}
+
+@media (max-width: 560px) {
+  .timeCapsuleImagePreview {
+    grid-template-columns: 72px minmax(0, 1fr);
+  }
+
+  .timeCapsuleImagePreview img {
+    width: 72px;
+    height: 58px;
+  }
+
+  .timeCapsuleImagePreview button {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
+.timeCapsuleImageFallback {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(17, 17, 17, .92);
+  color: #ffe08a;
+  text-align: center;
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  border-radius: 13px 13px 0 0;
+}
+
+.timeCapsuleSlideCard .timeCapsuleImageFallback {
+  min-height: 220px;
+  border-radius: 16px 16px 0 0;
+  border-bottom: 1px solid rgba(255, 255, 255, .12);
+}
+
+/* Media fix v4: keep Firestore placeholders hidden until the real photo is hydrated. */
+.timeCapsuleEntry img[hidden],
+.timeCapsuleSlideCard img[hidden] {
+  display: none !important;
+}
+
+.timeCapsuleImageFallback {
+  min-height: 180px;
+}

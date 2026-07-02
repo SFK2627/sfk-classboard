@@ -1,23 +1,30 @@
-SFK ClassBoard - Memories image display fix
+SFK ClassBoard media + phone admin fix v8 - needed files only
 
-Replace/upload these files in the same locations in your GitHub Pages repo:
+Fixes included:
+1. Phone Admin login button not responding.
+   - /admin/ no longer keeps the admin page inside an iframe on phones.
+   - Login uses a real form submit plus click/touch fallback.
+   - auth.js waits for Firebase Auth on slower phones.
+2. Memories photo posting no longer uses the old Google Apps Script upload path.
+   - This should stop: "Your login is invalid or you are not authorized for this action."
+   - Photos are saved in Firestore memoryMedia docs, not Firebase Storage.
+3. Subject Announcement photos use Firestore refs and retry hydration on the public board.
+   - This targets the blank/black photo until refresh issue.
+4. Time Capsule no-billing image support/rules are kept.
+5. No Firebase Storage. No billing.
 
-1. memories.js
-2. memories.html
-3. sw.js
-4. firebase-adapter.js  (included only to keep your no-billing upload adapter together)
+Install exactly:
+1. Upload/replace EVERY file in this ZIP to the same paths in your GitHub repo.
+2. Firebase Console > Firestore Database > Rules.
+3. Paste the whole FIREBASE_RULES.txt from this ZIP.
+4. Click Publish.
+5. Wait for GitHub Pages to update.
+6. On phone/PWA: remove/uninstall the old shortcut/app first, then open the site again.
+7. Test with one small photo first.
 
-Firebase rules:
-- Your latest rules already have memoryMedia read/write permissions.
-- FIREBASE_RULES.txt is included only as a backup/reference.
-
-What was fixed:
-- Uploaded no-billing memory photos are saved in Firestore as memoryMedia documents.
-- The memories page was reading the memories collection directly, so it saw sfk-media://memory/... references but did not convert them into displayable data:image URLs.
-- memories.js now resolves those memoryMedia references before rendering.
-- LocalStorage cache failures from large inline image data no longer stop rendering.
-- sw.js and memories.html were bumped so the old cached memories.js is less likely to remain stuck.
-
-After uploading:
-- Hard refresh the site.
-- On phone/PWA, remove the old installed shortcut/app, then open/install again.
+Important:
+- Do not enable Firebase Storage.
+- No-billing upload supports photos only.
+- For videos, use Drive/YouTube/direct links.
+- For Memories music, use YouTube/JukeHost/Drive/direct audio links. Do not upload audio files.
+- Staff posting requires the Firebase Auth emails in your rules: admin@sfk-classboard.app or officers@sfk-classboard.app.

@@ -1,13 +1,23 @@
-Announcement image close fix v2
+SFK Admin/Officers route repair
 
-Replace these files in the GitHub repo:
-- index.html
-- script.js
-- sw.js
+Problem fixed:
+- Admin or Officers shortcut can show JavaScript service worker code instead of the login page.
+- Mobile admin login can become unresponsive when opened inside the old /admin/ iframe shortcut.
 
-This fixes the issue where tapping X only removed the photo but left the dark overlay/filename behind or reopened the attachment underneath.
+What changed:
+- /admin/ now redirects to /admin.html directly.
+- /officers/ now redirects to /officer.html directly.
+- The old /admin/ and /officers/ service workers are self-removing reset workers.
+- admin.html and officer.html clean old admin/officers shortcut caches after loading.
+- Added reset-cache.html for a one-time full cache reset.
+- Bumped the root PWA cache to sfk-classboard-v197-route-repair-v1.
 
-After upload:
-1. Wait for GitHub Pages to finish updating.
-2. Hard refresh.
-3. On phone/PWA, remove the old installed shortcut/app, then open the site again.
+Upload these files to the same paths in your GitHub repo.
+
+After uploading:
+1. Wait for GitHub Pages to update.
+2. Open: reset-cache.html?go=admin
+3. It will clear old PWA/service worker cache and redirect to admin.html.
+4. On phone, remove/uninstall the old installed shortcut, then open the site again.
+
+If you still see JavaScript code after uploading, the browser is still using the old cached service worker. Open reset-cache.html?go=admin from the same website, then refresh.

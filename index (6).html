@@ -1,16 +1,48 @@
-Put MP3 or M4A files in this folder.
+const CACHE_NAME = "sfk-admin-sw.js-portrait-freeze-v2";
+const APP_SHELL = [
+  "./",
+  "./index.html",
+  "./manifest.webmanifest",
+  "./sw.js",
+  "../admin.html?embedded=1&v=heart-ledger-v3",
+  "../admin.css?v=heart-ledger-v3",
+  "../admin.js?v=heart-ledger-v3",
+  "../firebase-config.js",
+  "../firebase-adapter.js?v=9-heart-ledger-v3",
+  "../icons/icon-192.png",
+  "../icons/icon-512.png",
+  "../icons/icon-maskable-512.png"
+];
 
-Then list them in ../music-library.json like this:
+self.addEventListener("install", (event) => {
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
+  self.skipWaiting();
+});
 
-{
-  "songs": [
-    {
-      "name": "Kindness Theme",
-      "file": "kindness-theme.mp3"
-    },
-    {
-      "name": "SFK Memories Song",
-      "file": "sfk-memories-song.m4a"
-    }
-  ]
-}
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) => Promise.all(
+      keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+    ))
+  );
+  self.clients.claim();
+});
+
+self.addEventListener("fetch", (event) => {
+  const request = event.request;
+  const url = new URL(request.url);
+
+  if (request.method !== "GET" || url.origin !== self.location.origin) return;
+
+  event.respondWith(
+    fetch(request)
+      .then((response) => {
+        if (response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+        }
+        return response;
+      })
+      .catch(() => caches.match(request).then((cached) => cached || caches.match("./index.html")))
+  );
+});
