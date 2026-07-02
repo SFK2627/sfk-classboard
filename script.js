@@ -55,6 +55,8 @@ let announcementMediaHydrationRun = 0;
 let announcementFastRefreshTimer = null;
 let announcementFastRefreshStartedAt = 0;
 let lastBirthdayDisplayKey = "";
+let birthdayYearModalReady = false;
+let lastBirthdayModalFocus = null;
 let weeklyScheduleData = [];
 let weeklyDailyInfoData = [];
 let activeWeeklyDay = "Monday";
@@ -105,6 +107,7 @@ const subjectIcons = {
 function initClassBoard() {
   ensureAnnouncementTimerControl();
   initClassBoardAccessMenu();
+  initBirthdayYearModal();
 
   const audioOverlay = document.getElementById("audioStartOverlay");
   if (audioOverlay) {
@@ -2857,6 +2860,8 @@ function renderBirthdays(items) {
 
   if (dateText) {
     dateText.textContent = formatBirthdayDateText(todayMonthDay);
+    dateText.setAttribute("aria-label", "Open full year birthday list");
+    dateText.title = "View all birthdays";
   }
 
   if (!items || items.length === 0) {
@@ -2927,13 +2932,207 @@ box.innerHTML = `
         </strong>
 
         <h3 class="birthdayNameMarquee">
-          <span>${name}</span>
+          <span>${escapeHTML(name)}</span>
         </h3>
 
         <p>Have a joyful day! 🐨💛</p>
       </div>
     </div>
   `;
+}
+
+function initBirthdayYearModal() {
+  if (birthdayYearModalReady) return;
+
+  const trigger = document.getElementById("birthdayDateText");
+  const modal = document.getElementById("birthdayYearModal");
+  const closeBtn = document.getElementById("birthdayYearClose");
+
+  if (!trigger || !modal) return;
+
+  birthdayYearModalReady = true;
+
+  trigger.addEventListener("click", openBirthdayYearModal);
+  trigger.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    openBirthdayYearModal();
+  });
+
+  closeBtn?.addEventListener("click", closeBirthdayYearModal);
+  modal.querySelector("[data-birthday-modal-close]")?.addEventListener("click", closeBirthdayYearModal);
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && modal.classList.contains("isOpen")) {
+      closeBirthdayYearModal();
+    }
+  });
+}
+
+function openBirthdayYearModal() {
+  const modal = document.getElementById("birthdayYearModal");
+  if (!modal) return;
+
+  lastBirthdayModalFocus = document.activeElement;
+  renderBirthdayYearModal(latestData?.birthdays || []);
+  modal.setAttribute("aria-hidden", "false");
+  document.body.classList.add("birthdayYearModalOpen");
+
+  requestAnimationFrame(() => {
+    modal.classList.add("isOpen");
+    document.getElementById("birthdayYearClose")?.focus({ preventScroll: true });
+  });
+}
+
+function closeBirthdayYearModal() {
+  const modal = document.getElementById("birthdayYearModal");
+  if (!modal || !modal.classList.contains("isOpen")) return;
+
+  modal.classList.remove("isOpen");
+  document.body.classList.remove("birthdayYearModalOpen");
+
+  window.setTimeout(() => {
+    modal.setAttribute("aria-hidden", "true");
+    if (lastBirthdayModalFocus && typeof lastBirthdayModalFocus.focus === "function") {
+      lastBirthdayModalFocus.focus({ preventScroll: true });
+    }
+  }, 160);
+}
+
+function renderBirthdayYearModal(items) {
+  const list = document.getElementById("birthdayYearList");
+  const count = document.getElementById("birthdayYearCount");
+  const todayBox = document.getElementById("birthdayYearToday");
+  if (!list) return;
+
+  const records = getSortedBirthdayRecords(items || []);
+  const todayMonthDay = getTodayMonthDay();
+  const todayMonth = Number((todayMonthDay || "").split("-")[0] || 0);
+  const todayRecords = records.filter(record => record.monthDay === todayMonthDay);
+
+  if (count) {
+    count.textContent = `${records.length} ${records.length === 1 ? "birthday" : "birthdays"}`;
+  }
+
+  if (todayBox) {
+    if (todayRecords.length > 0) {
+      todayBox.hidden = false;
+      todayBox.innerHTML = `
+        <span>Today’s Celebrants</span>
+        <strong>${todayRecords.map(record => escapeHTML(record.name)).join(", ")}</strong>
+        <small>Make their day extra special! 🎉</small>
+      `;
+    } else {
+      todayBox.hidden = true;
+      todayBox.innerHTML = "";
+    }
+  }
+
+  if (records.length === 0) {
+    list.innerHTML = `
+      <div class="birthdayYearEmpty">
+        <span>🎂</span>
+        <p>No saved birthday greetings yet.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const grouped = new Map();
+  records.forEach(record => {
+    if (!grouped.has(record.month)) grouped.set(record.month, []);
+    grouped.get(record.month).push(record);
+  });
+
+  list.innerHTML = Array.from(grouped.entries()).map(([month, monthRecords], groupIndex) => {
+    const monthName = getBirthdayMonthName(month);
+    const monthIcon = getBirthdayMonthIcon(month);
+    const isCurrentMonth = Number(month) === todayMonth;
+    const celebrantLabel = `${monthRecords.length} ${monthRecords.length === 1 ? "celebrant" : "celebrants"}`;
+
+    return `
+      <section class="birthdayMonthGroup ${isCurrentMonth ? "isCurrentMonth" : ""}" style="--group-index:${groupIndex};">
+        <div class="birthdayMonthHeader">
+          <div class="birthdayMonthBadge" aria-hidden="true">${escapeHTML(monthIcon)}</div>
+          <div class="birthdayMonthHeading">
+            <h3>${escapeHTML(monthName)}</h3>
+            <p>${celebrantLabel}${isCurrentMonth ? ' <span>This month</span>' : ''}</p>
+          </div>
+          <div class="birthdayMonthCount" aria-label="${celebrantLabel}">${monthRecords.length}</div>
+        </div>
+
+        <div class="birthdayMonthPeople">
+          ${monthRecords.map((record, itemIndex) => `
+            <div class="birthdayYearPerson ${record.monthDay === todayMonthDay ? "isToday" : ""}" style="--item-index:${itemIndex};">
+              <span class="birthdayYearSparkle" aria-hidden="true">${record.monthDay === todayMonthDay ? "🎉" : "🎂"}</span>
+              <span class="birthdayYearDate">${escapeHTML(getOrdinalDay(record.day))}</span>
+              <div class="birthdayYearMeta">
+                <strong>${escapeHTML(record.name)}</strong>
+                <small>${record.monthDay === todayMonthDay ? "Celebrating today" : "Birthday celebrant"}</small>
+              </div>
+              ${record.monthDay === todayMonthDay ? '<em>Today</em>' : ''}
+            </div>
+          `).join("")}
+        </div>
+      </section>
+    `;
+  }).join("");
+}
+
+function getSortedBirthdayRecords(items) {
+  return (items || [])
+    .map(item => {
+      const birthdayValue = item?.MonthDay || item?.Birthday || item?.Birthdate || item?.Date || "";
+      const monthDay = normalizeBirthdayValue(birthdayValue);
+      if (!monthDay || !monthDay.includes("-")) return null;
+
+      const [monthText, dayText] = monthDay.split("-");
+      const month = Number(monthText);
+      const day = Number(dayText);
+      if (!month || !day) return null;
+
+      const name = item?.Name || item?.StudentName || item?.Student || "Birthday Celebrant";
+      return { monthDay, month, day, name: String(name).trim() || "Birthday Celebrant" };
+    })
+    .filter(Boolean)
+    .sort((a, b) => (a.month - b.month) || (a.day - b.day) || a.name.localeCompare(b.name));
+}
+
+function getBirthdayMonthName(month) {
+  const monthNames = [
+    "",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December"
+  ];
+  return monthNames[Number(month)] || "Birthday Month";
+}
+
+function getBirthdayMonthIcon(month) {
+  const icons = {
+    1: "🎈",
+    2: "💝",
+    3: "🌸",
+    4: "🌼",
+    5: "🌞",
+    6: "🌺",
+    7: "🎆",
+    8: "🍭",
+    9: "🍎",
+    10: "🎃",
+    11: "🦃",
+    12: "🎄"
+  };
+  return icons[Number(month)] || "🎂";
 }
 
 function rotateBirthdays() {

@@ -10,13 +10,13 @@
 
   <title>SFK ClassBoard</title>
 
-  <link rel="manifest" href="manifest.webmanifest?v=portrait-freeze-v2" />
+  <link rel="manifest" href="manifest.webmanifest?v=portrait-reminder-v1" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
-  <link rel="stylesheet" href="style.css?v=74-clock-access-menu" />
+  <link rel="stylesheet" href="style.css?v=75-birthday-modal" />
   <link rel="stylesheet" href="class-chat.css?v=46-watch-request-queue" />
   <link rel="stylesheet" href="time-capsule.css?v=11-media-fix-v8" />
-  <script src="orientation-lock.js?v=portrait-freeze-v2" defer></script>
+  <script src="orientation-lock.js?v=portrait-reminder-v1" defer></script>
 
   <style id="sfkStartIntroStyle">
     #sfkIntroOverlay.sfkStartIntro {
@@ -637,7 +637,8 @@
       <div class="card birthdayCard">
         <div class="birthdayHeader">
           <p class="label">Birthday Corner</p>
-          <span id="birthdayDateText" class="birthdayHeaderDate">--</span>
+          <span id="birthdayDateText" class="birthdayHeaderDate" role="button" tabindex="0"
+                aria-label="Open full year birthday list" title="View all birthdays">--</span>
         </div>
 
         <div id="birthdayList" class="birthdayList">
@@ -648,6 +649,24 @@
         </div>
       </div>
     </section>
+
+    <div id="birthdayYearModal" class="birthdayYearModal" aria-hidden="true">
+      <div class="birthdayYearBackdrop" data-birthday-modal-close></div>
+      <div class="birthdayYearPanel" role="dialog" aria-modal="true" aria-labelledby="birthdayYearTitle">
+        <button id="birthdayYearClose" class="birthdayYearClose" type="button" aria-label="Close birthday list">×</button>
+
+        <div class="birthdayYearTop">
+          <div>
+            <p class="birthdayYearKicker">SFK Birthday Corner</p>
+            <h2 id="birthdayYearTitle">Full Year Birthday List</h2>
+          </div>
+          <span id="birthdayYearCount" class="birthdayYearCount">0 birthdays</span>
+        </div>
+
+        <div id="birthdayYearToday" class="birthdayYearToday" hidden></div>
+        <div id="birthdayYearList" class="birthdayYearList"></div>
+      </div>
+    </div>
 
     <section class="mainGrid">
 	<div class="card scheduleCard todayScheduleCollapsed">
@@ -1386,7 +1405,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js?v=phone-login-v8"></script>
   <script src="firebase-adapter.js?v=media-fix-v8"></script>
-  <script src="script.js?v=schedule-color-fix-v1"></script>
+  <script src="script.js?v=birthday-modal-v1"></script>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.16/dist/hls.min.js"></script>
   <script src="https://cdn.dashjs.org/v5.2.0/legacy/umd/dash.all.min.js"></script>
   <script src="time-capsule.js?v=11-media-fix-v8"></script>
