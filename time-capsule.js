@@ -20,8 +20,8 @@
 
   const CAPSULE_MEDIA_COLLECTION = "timeCapsuleMedia";
   const CAPSULE_MEDIA_REF_PREFIX = "sfk-media://capsule/";
-  const CAPSULE_MEDIA_MAX_BASE64_CHARS = 850000;
-  const CAPSULE_TARGET_IMAGE_BYTES = 620000;
+  const CAPSULE_MEDIA_MAX_BASE64_CHARS = 500000;
+  const CAPSULE_TARGET_IMAGE_BYTES = 320000;
 
   const state = {
     context: null,
@@ -142,6 +142,7 @@
     state.publicStatus = null;
     state.entriesLoaded = false;
     state.selectedImage = null;
+    state.imageCache.clear();
     state.publishedStatusSignature = "";
     window.clearTimeout(state.statusRetryTimer);
     state.statusRetryTimer = null;
@@ -811,37 +812,83 @@
 
     const ref = parseCapsuleMediaRef(raw);
     if (ref) {
-      return `<img data-capsule-image-ref="${escapeHtml(raw)}" alt="${escapeHtml(alt)}" ${lazy ? 'loading="lazy"' : ""} hidden />`;
+      return `<img data-capsule-image-ref="${escapeHtml(raw)}" alt="${escapeHtml(alt)}" ${lazy ? 'loading="lazy"' : ""} decoding="async" hidden />`;
     }
 
     const imageUrl = safeImageUrl(raw);
     return imageUrl
-      ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(alt)}" ${lazy ? 'loading="lazy"' : ""} referrerpolicy="no-referrer" />`
+      ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(alt)}" ${lazy ? 'loading="lazy"' : ""} decoding="async" referrerpolicy="no-referrer" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'timeCapsuleImageFallback',textContent:'Photo could not load.'}))" />`
       : "";
   }
 
-  async function hydrateCapsuleImages(root) {
+  async function hydrateCapsuleImages(root, options = {}) {
     if (!root) return;
-    const images = Array.from(root.querySelectorAll("img[data-capsule-image-ref]"));
+    const retryCount = Number(options.retryCount || 0);
+    const images = Array.from(root.querySelectorAll('img[data-capsule-image-ref], img[src^="sfk-media://capsule/"], img[src^="sfk-media://timeCapsule/"], img[src^="sfk-media://time-capsule/"]'));
     await Promise.all(images.map(async (image) => {
-      const reference = image.getAttribute("data-capsule-image-ref") || "";
-      const src = await resolveCapsuleImage(reference);
+      const reference = image.getAttribute("data-capsule-image-ref") || image.getAttribute("src") || "";
+      const parsed = parseCapsuleMediaRef(reference);
+      if (!parsed) return;
+
+      if ((image.getAttribute("src") || "").startsWith("sfk-media://")) {
+        image.removeAttribute("src");
+        image.hidden = true;
+      }
+
+      const src = await resolveCapsuleImage(parsed.uri);
       if (src) {
         image.src = src;
         image.hidden = false;
         image.removeAttribute("data-capsule-image-ref");
-      } else {
-        image.remove();
+        image.onerror = () => {
+          image.replaceWith(capsuleImageFallback("Photo could not load."));
+        };
+        return;
       }
+
+      if (retryCount < 3 && image.isConnected) {
+        window.setTimeout(() => {
+          hydrateCapsuleImages(image.parentElement || root, { retryCount: retryCount + 1 }).catch(() => {});
+        }, 700 + retryCount * 900);
+        return;
+      }
+
+      image.replaceWith(capsuleImageFallback("Photo is saved, but cannot load yet. Publish the latest Firebase rules, then refresh."));
     }));
+  }
+
+  function capsuleImageFallback(message) {
+    const fallback = document.createElement("div");
+    fallback.className = "timeCapsuleImageFallback";
+    fallback.textContent = message || "Photo could not load.";
+    return fallback;
   }
 
   function parseCapsuleMediaRef(value) {
     const raw = String(value || "").trim();
-    if (!raw.startsWith(CAPSULE_MEDIA_REF_PREFIX)) return null;
-    const id = raw.slice(CAPSULE_MEDIA_REF_PREFIX.length).trim();
-    if (!/^[A-Za-z0-9_-]{1,240}$/.test(id)) return null;
-    return { id, uri: `${CAPSULE_MEDIA_REF_PREFIX}${id}` };
+    if (!raw) return null;
+
+    const build = (id) => {
+      const cleanId = String(id || "").trim();
+      if (!/^[A-Za-z0-9_-]{1,240}$/.test(cleanId)) return null;
+      return { id: cleanId, uri: `${CAPSULE_MEDIA_REF_PREFIX}${cleanId}` };
+    };
+
+    if (raw.startsWith(CAPSULE_MEDIA_REF_PREFIX)) {
+      return build(raw.slice(CAPSULE_MEDIA_REF_PREFIX.length));
+    }
+
+    if (raw.startsWith("sfk-media://")) {
+      const rest = raw.slice("sfk-media://".length);
+      const slashIndex = rest.indexOf("/");
+      if (slashIndex <= 0) return null;
+      const kind = rest.slice(0, slashIndex);
+      const id = rest.slice(slashIndex + 1);
+      if (!["capsule", "timeCapsule", "time-capsule"].includes(kind)) return null;
+      return build(id);
+    }
+
+    return null;
   }
 
   async function resolveCapsuleImage(value) {
@@ -857,8 +904,13 @@
       const snapshot = await state.context.db.collection(CAPSULE_MEDIA_COLLECTION).doc(reference.id).get();
       if (!snapshot.exists) return "";
       const data = snapshot.data() || {};
+      const directDataUrl = String(data.DataURL || data.dataUrl || data.Url || data.url || data.PreviewURL || data.previewUrl || "").trim();
+      if (/^data:image\//i.test(directDataUrl)) {
+        state.imageCache.set(reference.uri, directDataUrl);
+        return directDataUrl;
+      }
       const mimeType = String(data.MimeType || data.mimeType || "image/jpeg").trim().toLowerCase();
-      const base64 = String(data.Data || data.data || "").trim();
+      const base64 = String(data.Data || data.data || data.Base64 || data.base64 || "").trim();
       if (!base64 || !mimeType.startsWith("image/")) return "";
       const dataUrl = `data:${mimeType};base64,${base64}`;
       state.imageCache.set(reference.uri, dataUrl);
@@ -924,6 +976,9 @@
   function showImagePreview(src, name, status) {
     if (!elements.imagePreview || !elements.imagePreviewImg) return;
     elements.imagePreview.hidden = false;
+    elements.imagePreviewImg.onerror = () => {
+      if (elements.imagePreviewText) elements.imagePreviewText.textContent = "Preview could not load, but you can try another JPG/PNG.";
+    };
     elements.imagePreviewImg.src = src;
     elements.imagePreviewImg.alt = name || "Selected Time Capsule photo";
     if (elements.imagePreviewText) {
@@ -967,25 +1022,17 @@
   }
 
   async function saveCapsuleImageNoBilling(entryId, prepared) {
-    if (!state.context?.db) throw new Error("Firebase is not ready. Refresh and try again.");
     if (!prepared || !prepared.data) throw new Error("Selected photo could not be read. Choose another image.");
 
-    const id = `${safeDocPart(entryId)}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`.slice(0, 240);
-    await state.context.db.collection(CAPSULE_MEDIA_COLLECTION).doc(id).set({
-      EntryID: String(entryId || ""),
-      OwnerUID: state.context.profile.uid,
-      OwnerName: state.context.profile.name,
-      OwnerRole: state.context.profile.role,
-      Name: prepared.name,
-      MimeType: prepared.mimeType,
-      Data: prepared.data,
-      BytesApprox: Math.ceil(prepared.data.length * 0.75),
-      CreatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    const uri = `${CAPSULE_MEDIA_REF_PREFIX}${id}`;
-    state.imageCache.set(uri, `data:${prepared.mimeType};base64,${prepared.data}`);
-    return uri;
+    // New no-billing Time Capsule photos are stored directly in ImageURL.
+    // This avoids a second media-document fetch, which was causing blank/broken preview strips.
+    if (prepared.data.length > CAPSULE_MEDIA_MAX_BASE64_CHARS) {
+      throw new Error("This photo is still too large after compression. Try a smaller screenshot/photo.");
+    }
+
+    const dataUrl = `data:${prepared.mimeType || "image/jpeg"};base64,${prepared.data}`;
+    state.imageCache.set(dataUrl, dataUrl);
+    return dataUrl;
   }
 
   async function prepareCapsuleImageFile(file) {
@@ -1104,7 +1151,7 @@
 
   function readableError(error) {
     const message = String(error?.message || error || "Something went wrong.");
-    if (message.includes("permission")) return "This action is not allowed. Publish the latest Firebase rules.";
+    if (message.includes("permission")) return "This action is not allowed. Publish the latest Firebase rules, including timeCapsuleMedia.";
     return message.replace(/^Firebase:\s*/i, "").replace(/\s*\([^)]*\)\.?$/, "");
   }
 

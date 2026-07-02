@@ -1,43 +1,23 @@
-SFK ClassBoard - Media Fix v2 (no billing)
+SFK ClassBoard media repair v5 - needed files only
 
-Replace/upload these files to the same paths in your GitHub Pages repo:
+This keeps the original loading screen and uses NO Firebase Storage, so no billing is needed.
 
-Root files:
-- index.html
-- script.js
-- firebase-adapter.js
-- memories.html
-- memories.js
-- memories.css
-- time-capsule.js
-- time-capsule.css
-- sw.js
-- admin.html
-- admin.js
-- officer.html
-- officer.js
+Fixes included:
+- Time Capsule attached photos now save as compressed inline images, so preview/presentation should not show a broken black strip.
+- Old sfk-media://capsule/... Time Capsule entries still have backward-compatible loader/rules support.
+- Memories image rendering is fixed for no-billing Firestore media refs, preview URLs, mediaRef/mediaId variants, and cached posts.
+- A runtime bug in Memories where previewUrl could stop rendering has been fixed.
+- Subject Announcement photo attachments now use safer blob/data display URLs and retry hydration, so images should not stay black/blank before refresh.
+- Service workers now fetch JS/CSS/HTML network-first, so the PWA will not keep showing old broken media code just because the old cache ignores query strings.
 
-Folder files:
-- admin/index.html
-- admin/sw.js
-- officers/index.html
-- officers/sw.js
+How to apply:
+1. Upload/replace every file in this ZIP to the same path in your GitHub Pages repo.
+2. In Firebase Console > Firestore Database > Rules, copy the full FIREBASE_RULES.txt and Publish.
+3. Wait for GitHub Pages to update.
+4. Hard refresh your browser.
+5. On phone/PWA, remove the old installed shortcut/app first, then open/install again.
 
-Firebase rules:
-1. Open Firebase Console > Firestore Database > Rules.
-2. Copy the whole FIREBASE_RULES.txt from this folder.
-3. Paste and Publish.
-
-What this fixes:
-- Memories photos saved as sfk-media://memory/... are resolved from Firestore and shown in the feed and viewer.
-- Cached Memories posts with only firestoreRef are hydrated instead of disappearing.
-- Memories loader now also reads MediaItems/MediaJSON fallback fields.
-- Subject Announcement image attachments saved as sfk-media://announcement/... are resolved on the page without needing a refresh.
-- ClassBoard cache failures from large no-billing images no longer stop rendering.
-- Keeps the Time Capsule no-billing image attach fix.
-- No Firebase Storage and no billing required.
-
-After upload:
-- Hard refresh on browser.
-- On phone/PWA, remove the old installed shortcut/app first, then open the site again.
-- Test with one small photo first.
+Notes:
+- Do not enable Firebase Storage. This build stays no-billing.
+- Existing broken Time Capsule/Memories entries can only be recovered if their media document/data was saved before. If an old entry only saved a broken reference, re-upload/re-edit the image.
+- Test with a small JPG/PNG first.

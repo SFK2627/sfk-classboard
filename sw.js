@@ -1,28 +1,28 @@
-const CACHE_NAME = "sfk-classboard-v196-media-fix-v2";
+const CACHE_NAME = "sfk-classboard-v197-media-fix-v5";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css",
-  "./script.js",
+  "./style.css?v=media-fix-v5",
+  "./script.js?v=media-fix-v5",
   "./class-chat.css",
   "./class-chat.js",
-  "./time-capsule.css",
-  "./time-capsule.js",
+  "./time-capsule.css?v=10-media-fix-v5",
+  "./time-capsule.js?v=10-media-fix-v5",
   "./class-chat-admin.js",
   "./pwa.js",
   "./firebase-config.js",
-  "./firebase-adapter.js",
+  "./firebase-adapter.js?v=media-fix-v5",
   "./auth.js",
   "./orientation-lock.js",
   "./memories.html",
-  "./memories.css",
-  "./memories.js",
+  "./memories.css?v=72-media-fix-v5",
+  "./memories.js?v=media-fix-v5",
   "./admin.html",
   "./admin.css",
-  "./admin.js",
+  "./admin.js?v=media-fix-v5",
   "./officer.html",
   "./officer.css",
-  "./officer.js",
+  "./officer.js?v=media-fix-v5",
   "./manifest.webmanifest",
   "./class-photo.jpg",
   "./icons/icon-192.png",
@@ -48,9 +48,17 @@ function shouldCache(response) {
   return response && response.ok && response.type === "basic";
 }
 
-async function cacheMatch(request) {
-  const cached = await caches.match(request, { ignoreSearch: true });
-  if (cached) return cached;
+function isStaticCodeRequest(request, url) {
+  return ["script", "style", "worker", "document"].includes(request.destination)
+    || /\.(?:html|js|css|mjs)$/i.test(url.pathname);
+}
+
+async function cacheMatchExactThenLegacy(request) {
+  const exact = await caches.match(request);
+  if (exact) return exact;
+
+  const legacy = await caches.match(request, { ignoreSearch: true });
+  if (legacy) return legacy;
 
   const url = new URL(request.url);
   if (url.pathname.endsWith("/")) {
@@ -62,23 +70,21 @@ async function cacheMatch(request) {
 async function networkFirst(request) {
   const cache = await caches.open(CACHE_NAME);
   try {
-    const response = await fetch(request);
+    const response = await fetch(request, { cache: "no-store" });
     if (shouldCache(response)) await cache.put(request, response.clone());
     return response;
   } catch (error) {
-    const cached = await cacheMatch(request);
+    const cached = await cacheMatchExactThenLegacy(request);
     return cached || caches.match("./index.html", { ignoreSearch: true });
   }
 }
 
 async function staleWhileRevalidate(request, event) {
   const cache = await caches.open(CACHE_NAME);
-  const cached = await cacheMatch(request);
+  const cached = await cacheMatchExactThenLegacy(request);
   const fetchPromise = fetch(request)
     .then((response) => {
-      if (shouldCache(response)) {
-        event.waitUntil(cache.put(request, response.clone()));
-      }
+      if (shouldCache(response)) event.waitUntil(cache.put(request, response.clone()));
       return response;
     })
     .catch(() => cached || Response.error());
@@ -102,7 +108,7 @@ self.addEventListener("fetch", (event) => {
 
   if (request.method !== "GET" || url.origin !== self.location.origin) return;
 
-  if (request.mode === "navigate" || request.destination === "document") {
+  if (request.mode === "navigate" || isStaticCodeRequest(request, url)) {
     event.respondWith(networkFirst(request));
     return;
   }

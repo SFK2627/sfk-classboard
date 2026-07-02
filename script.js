@@ -3,6 +3,7 @@ const CLASSBOARD_MEDIA_REF_PREFIX = "sfk-media://";
 const ANNOUNCEMENT_MEDIA_COLLECTION = "announcementMedia";
 const MEMORY_MEDIA_COLLECTION = "memoryMedia";
 const CLASSBOARD_MEDIA_DATA_CACHE = new Map();
+const CLASSBOARD_MEDIA_BLOB_URL_CACHE = new Map();
 
 const DATA_REFRESH_MS = 5000;
 const ANNOUNCEMENT_ROTATE_MS = 10000;
@@ -1352,6 +1353,20 @@ function getClassBoardFirestore() {
   }
 }
 
+async function waitForClassBoardFirestore(timeoutMs = 7000) {
+  const started = Date.now();
+  let delay = 80;
+
+  while (Date.now() - started < timeoutMs) {
+    const db = getClassBoardFirestore();
+    if (db) return db;
+    await new Promise(resolve => setTimeout(resolve, delay));
+    delay = Math.min(500, Math.round(delay * 1.45));
+  }
+
+  return getClassBoardFirestore();
+}
+
 function applyAnnouncementHeartResult(id, count, hearted, heartUsers) {
   if (!latestData || !Array.isArray(latestData.announcements)) return;
 
@@ -1560,7 +1575,7 @@ function shouldDisplayAnnouncementDeadline(showDeadlineValue, deadline) {
 }
 
 function renderAnnouncementAttachments(item) {
-  const urls = splitAttachmentField(item.AttachmentURLs || item.Attachments || item.AttachmentURL);
+  const urls = splitAttachmentField(item.AttachmentURLs || item.Attachments || item.AttachmentURL || item.AttachmentRefs || item.attachmentRefs);
   const labels = splitAttachmentField(item.AttachmentNames || item.AttachmentLabels || item.AttachmentName);
 
   if (urls.length === 0) return "";
@@ -1619,8 +1634,9 @@ function renderAnnouncementAttachments(item) {
   `;
 }
 
-async function hydrateAnnouncementMedia(root = document) {
+async function hydrateAnnouncementMedia(root = document, options = {}) {
   if (!root) return;
+  const retryCount = Number(options.retryCount || 0);
   const links = Array.from(root.querySelectorAll("[data-announcement-media-ref]"));
   await Promise.all(links.map(async (link) => {
     const rawRef = link.getAttribute("data-announcement-media-ref") || "";
@@ -1629,29 +1645,106 @@ async function hydrateAnnouncementMedia(root = document) {
       link.classList.remove("is-loading-media");
       link.classList.add("is-unavailable-media");
       const open = link.querySelector(".attachment-file-open");
-      if (open) open.textContent = "!";
+      if (open) open.textContent = retryCount < 3 ? "…" : "!";
+      if (retryCount < 3 && link.isConnected) {
+        window.setTimeout(() => {
+          hydrateAnnouncementMedia(link.closest(".announcement-attachment-list") || link.parentElement || link, { retryCount: retryCount + 1 }).catch(() => {});
+        }, 700 + retryCount * 900);
+      }
       return;
     }
 
-    link.href = dataUrl;
+    const displayUrl = classBoardMediaDisplayUrl(dataUrl, rawRef);
+    link.href = displayUrl;
     link.classList.remove("is-loading-media", "is-unavailable-media");
     link.classList.add("is-ready-media");
     link.removeAttribute("data-announcement-media-ref");
     link.dataset.announcementMediaReady = "true";
+    link.dataset.announcementMediaUrl = displayUrl;
     const open = link.querySelector(".attachment-file-open");
     if (open) open.textContent = "↗";
   }));
 }
 
-function handlePendingAnnouncementMediaClick(event) {
-  const link = event.target?.closest?.("[data-announcement-media-ref]");
+async function handlePendingAnnouncementMediaClick(event) {
+  const link = event.target?.closest?.("[data-announcement-media-ref], .announcement-attachment-chip[data-announcement-media-ready='true'], .announcement-attachment-chip[href^='data:image/']");
   if (!link) return;
+
+  const readyUrl = link.dataset.announcementMediaUrl || (link.dataset.announcementMediaReady === "true" || isAnnouncementImageDisplayUrl(link.getAttribute("href") || "") ? link.href : "");
+  if (readyUrl && isAnnouncementImageDisplayUrl(readyUrl)) {
+    event.preventDefault();
+    showAnnouncementImageOverlay(readyUrl, link.dataset.announcementMediaLabel || link.textContent || "Announcement photo");
+    return;
+  }
+
+  const rawRef = link.getAttribute("data-announcement-media-ref") || "";
+  if (!rawRef) return;
+
   event.preventDefault();
   const open = link.querySelector(".attachment-file-open");
   if (open) open.textContent = "…";
-  hydrateAnnouncementMedia(link.parentElement || link).catch(() => {
+
+  const dataUrl = await resolveClassBoardMediaDataUrl(rawRef);
+  if (!dataUrl) {
+    hydrateAnnouncementMedia(link.parentElement || link).catch(() => {});
     if (open) open.textContent = "!";
-  });
+    return;
+  }
+
+  const displayUrl = classBoardMediaDisplayUrl(dataUrl, rawRef);
+  link.href = displayUrl;
+  link.removeAttribute("data-announcement-media-ref");
+  link.dataset.announcementMediaReady = "true";
+  link.dataset.announcementMediaUrl = displayUrl;
+  link.classList.remove("is-loading-media", "is-unavailable-media");
+  link.classList.add("is-ready-media");
+  if (open) open.textContent = "↗";
+  showAnnouncementImageOverlay(displayUrl, link.dataset.announcementMediaLabel || link.textContent || "Announcement photo");
+}
+
+function showAnnouncementImageOverlay(src, label) {
+  if (!src) return;
+  let overlay = document.getElementById("announcementImageOverlay");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "announcementImageOverlay";
+    overlay.className = "announcementImageOverlay";
+    overlay.style.cssText = "position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:18px;background:rgba(0,0,0,.78);backdrop-filter:blur(4px);";
+    overlay.innerHTML = `
+      <div class="announcementImageOverlayBackdrop" data-close-announcement-image="true" style="position:absolute;inset:0;"></div>
+      <figure class="announcementImageOverlayFigure" style="position:relative;z-index:1;max-width:min(96vw,1100px);max-height:92vh;margin:0;display:grid;gap:10px;">
+        <button class="announcementImageOverlayClose" type="button" data-close-announcement-image="true" aria-label="Close image" style="justify-self:end;width:42px;height:42px;border:0;border-radius:999px;background:#fff;color:#111;font-size:28px;font-weight:800;line-height:1;box-shadow:0 8px 30px rgba(0,0,0,.32);">×</button>
+        <img alt="" style="display:block;max-width:96vw;max-height:78vh;object-fit:contain;border-radius:14px;background:#fff;box-shadow:0 18px 60px rgba(0,0,0,.45);" />
+        <figcaption style="color:#fff;text-align:center;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.7);"></figcaption>
+      </figure>
+    `;
+    document.body.appendChild(overlay);
+    overlay.addEventListener("click", (clickEvent) => {
+      if (clickEvent.target?.dataset?.closeAnnouncementImage === "true") {
+        overlay.hidden = true;
+        document.body.classList.remove("announcementImageOpen");
+      }
+    });
+    document.addEventListener("keydown", (keyEvent) => {
+      if (keyEvent.key === "Escape" && !overlay.hidden) {
+        overlay.hidden = true;
+        document.body.classList.remove("announcementImageOpen");
+      }
+    });
+  }
+
+  const image = overlay.querySelector("img");
+  const caption = overlay.querySelector("figcaption");
+  if (image) {
+    image.onerror = () => {
+      image.alt = "Photo could not load.";
+    };
+    image.src = src;
+    image.alt = String(label || "Announcement photo").trim();
+  }
+  if (caption) caption.textContent = String(label || "Announcement photo").trim();
+  overlay.hidden = false;
+  document.body.classList.add("announcementImageOpen");
 }
 
 function parseClassBoardMediaRef(value) {
@@ -1661,34 +1754,80 @@ function parseClassBoardMediaRef(value) {
   const slashIndex = rest.indexOf("/");
   if (slashIndex <= 0) return null;
 
-  const kind = rest.slice(0, slashIndex);
+  const rawKind = rest.slice(0, slashIndex);
   const id = rest.slice(slashIndex + 1);
   if (!id || !/^[A-Za-z0-9_-]{1,240}$/.test(id)) return null;
-  if (!["announcement", "memory"].includes(kind)) return null;
+  const kindMap = {
+    announcement: "announcement",
+    announcements: "announcement",
+    announcementMedia: "announcement",
+    memory: "memory",
+    memories: "memory",
+    memoryMedia: "memory"
+  };
+  const kind = kindMap[rawKind];
+  if (!kind) return null;
 
   return {
-    raw,
+    raw: `${CLASSBOARD_MEDIA_REF_PREFIX}${kind}/${id}`,
     kind,
     id,
     collectionName: kind === "announcement" ? ANNOUNCEMENT_MEDIA_COLLECTION : MEMORY_MEDIA_COLLECTION
   };
 }
 
+function isAnnouncementImageDisplayUrl(value) {
+  return /^(data:image\/|blob:)/i.test(String(value || "").trim());
+}
+
+function classBoardMediaDisplayUrl(dataUrl, cacheKey) {
+  const raw = String(dataUrl || "").trim();
+  if (!/^data:image\//i.test(raw)) return raw;
+  const key = String(cacheKey || raw.slice(0, 96)).trim();
+  if (CLASSBOARD_MEDIA_BLOB_URL_CACHE.has(key)) return CLASSBOARD_MEDIA_BLOB_URL_CACHE.get(key);
+
+  try {
+    const comma = raw.indexOf(",");
+    if (comma < 0) return raw;
+    const header = raw.slice(0, comma);
+    const mimeMatch = header.match(/^data:([^;]+);base64$/i);
+    if (!mimeMatch) return raw;
+    const binary = atob(raw.slice(comma + 1));
+    const bytes = new Uint8Array(binary.length);
+    for (let index = 0; index < binary.length; index += 1) {
+      bytes[index] = binary.charCodeAt(index);
+    }
+    const blobUrl = URL.createObjectURL(new Blob([bytes], { type: mimeMatch[1] || "image/jpeg" }));
+    CLASSBOARD_MEDIA_BLOB_URL_CACHE.set(key, blobUrl);
+    return blobUrl;
+  } catch (error) {
+    return raw;
+  }
+}
+
 async function resolveClassBoardMediaDataUrl(value) {
-  const ref = parseClassBoardMediaRef(value);
+  const directValue = String(value || "").trim();
+  if (/^data:image\//i.test(directValue)) return directValue;
+
+  const ref = parseClassBoardMediaRef(directValue);
   if (!ref) return "";
   const cacheKey = `${ref.kind}/${ref.id}`;
   if (CLASSBOARD_MEDIA_DATA_CACHE.has(cacheKey)) return CLASSBOARD_MEDIA_DATA_CACHE.get(cacheKey);
 
-  const db = getClassBoardFirestore();
+  const db = await waitForClassBoardFirestore();
   if (!db) return "";
 
   try {
     const doc = await db.collection(ref.collectionName).doc(ref.id).get();
     if (!doc.exists) return "";
     const data = doc.data() || {};
-    const mimeType = String(data.MimeType || data.mimeType || "image/jpeg").trim();
-    const base64 = String(data.Data || data.data || "").trim();
+    const mimeType = String(data.MimeType || data.mimeType || data.Type || "image/jpeg").trim();
+    const directDataUrl = String(data.DataURL || data.dataUrl || data.Url || data.url || data.PreviewURL || data.previewUrl || "").trim();
+    if (/^data:image\//i.test(directDataUrl)) {
+      CLASSBOARD_MEDIA_DATA_CACHE.set(cacheKey, directDataUrl);
+      return directDataUrl;
+    }
+    const base64 = String(data.Data || data.data || data.Base64 || data.base64 || data.Content || data.content || "").trim();
     if (!base64 || !mimeType.toLowerCase().startsWith("image/")) return "";
     const dataUrl = `data:${mimeType};base64,${base64}`;
     CLASSBOARD_MEDIA_DATA_CACHE.set(cacheKey, dataUrl);

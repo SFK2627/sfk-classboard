@@ -1,14 +1,14 @@
-const CACHE_NAME = "sfk-officers-pwa-v22-media-fix-v2";
+const CACHE_NAME = "sfk-officers-pwa-v23-media-fix-v5";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./sw.js",
-  "../officer.html?embedded=1&v=no-billing-upload",
-  "../officer.css?v=no-billing-upload",
-  "../officer.js?v=no-billing-upload",
+  "../officer.html?embedded=1&v=media-fix-v5",
+  "../officer.css?v=media-fix-v5",
+  "../officer.js?v=media-fix-v5",
   "../firebase-config.js",
-  "../firebase-adapter.js",
+  "../firebase-adapter.js?v=media-fix-v5",
   "../auth.js",
   "../icons/icon-192.png",
   "../icons/icon-512.png",
@@ -33,9 +33,17 @@ function shouldCache(response) {
   return response && response.ok && response.type === "basic";
 }
 
-async function cacheMatch(request) {
-  const cached = await caches.match(request, { ignoreSearch: true });
-  if (cached) return cached;
+function isStaticCodeRequest(request, url) {
+  return ["script", "style", "worker", "document"].includes(request.destination)
+    || /\.(?:html|js|css|mjs)$/i.test(url.pathname);
+}
+
+async function cacheMatchExactThenLegacy(request) {
+  const exact = await caches.match(request);
+  if (exact) return exact;
+
+  const legacy = await caches.match(request, { ignoreSearch: true });
+  if (legacy) return legacy;
 
   const url = new URL(request.url);
   if (url.pathname.endsWith("/")) {
@@ -47,24 +55,25 @@ async function cacheMatch(request) {
 async function networkFirst(request) {
   const cache = await caches.open(CACHE_NAME);
   try {
-    const response = await fetch(request);
+    const response = await fetch(request, { cache: "no-store" });
     if (shouldCache(response)) await cache.put(request, response.clone());
     return response;
   } catch (error) {
-    const cached = await cacheMatch(request);
+    const cached = await cacheMatchExactThenLegacy(request);
     return cached || caches.match("./index.html", { ignoreSearch: true });
   }
 }
 
 async function staleWhileRevalidate(request, event) {
   const cache = await caches.open(CACHE_NAME);
-  const cached = await cacheMatch(request);
+  const cached = await cacheMatchExactThenLegacy(request);
   const fetchPromise = fetch(request)
     .then((response) => {
       if (shouldCache(response)) event.waitUntil(cache.put(request, response.clone()));
       return response;
     })
     .catch(() => cached || Response.error());
+
   return cached || fetchPromise;
 }
 
@@ -84,7 +93,7 @@ self.addEventListener("fetch", (event) => {
 
   if (request.method !== "GET" || url.origin !== self.location.origin) return;
 
-  if (request.mode === "navigate" || request.destination === "document") {
+  if (request.mode === "navigate" || isStaticCodeRequest(request, url)) {
     event.respondWith(networkFirst(request));
     return;
   }
