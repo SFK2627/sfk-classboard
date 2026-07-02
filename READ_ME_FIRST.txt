@@ -1,43 +1,30 @@
-SFK ClassBoard - Media Fix v2 (no billing)
+SFK ClassBoard media + phone admin fix v8 - needed files only
 
-Replace/upload these files to the same paths in your GitHub Pages repo:
+Fixes included:
+1. Phone Admin login button not responding.
+   - /admin/ no longer keeps the admin page inside an iframe on phones.
+   - Login uses a real form submit plus click/touch fallback.
+   - auth.js waits for Firebase Auth on slower phones.
+2. Memories photo posting no longer uses the old Google Apps Script upload path.
+   - This should stop: "Your login is invalid or you are not authorized for this action."
+   - Photos are saved in Firestore memoryMedia docs, not Firebase Storage.
+3. Subject Announcement photos use Firestore refs and retry hydration on the public board.
+   - This targets the blank/black photo until refresh issue.
+4. Time Capsule no-billing image support/rules are kept.
+5. No Firebase Storage. No billing.
 
-Root files:
-- index.html
-- script.js
-- firebase-adapter.js
-- memories.html
-- memories.js
-- memories.css
-- time-capsule.js
-- time-capsule.css
-- sw.js
-- admin.html
-- admin.js
-- officer.html
-- officer.js
+Install exactly:
+1. Upload/replace EVERY file in this ZIP to the same paths in your GitHub repo.
+2. Firebase Console > Firestore Database > Rules.
+3. Paste the whole FIREBASE_RULES.txt from this ZIP.
+4. Click Publish.
+5. Wait for GitHub Pages to update.
+6. On phone/PWA: remove/uninstall the old shortcut/app first, then open the site again.
+7. Test with one small photo first.
 
-Folder files:
-- admin/index.html
-- admin/sw.js
-- officers/index.html
-- officers/sw.js
-
-Firebase rules:
-1. Open Firebase Console > Firestore Database > Rules.
-2. Copy the whole FIREBASE_RULES.txt from this folder.
-3. Paste and Publish.
-
-What this fixes:
-- Memories photos saved as sfk-media://memory/... are resolved from Firestore and shown in the feed and viewer.
-- Cached Memories posts with only firestoreRef are hydrated instead of disappearing.
-- Memories loader now also reads MediaItems/MediaJSON fallback fields.
-- Subject Announcement image attachments saved as sfk-media://announcement/... are resolved on the page without needing a refresh.
-- ClassBoard cache failures from large no-billing images no longer stop rendering.
-- Keeps the Time Capsule no-billing image attach fix.
-- No Firebase Storage and no billing required.
-
-After upload:
-- Hard refresh on browser.
-- On phone/PWA, remove the old installed shortcut/app first, then open the site again.
-- Test with one small photo first.
+Important:
+- Do not enable Firebase Storage.
+- No-billing upload supports photos only.
+- For videos, use Drive/YouTube/direct links.
+- For Memories music, use YouTube/JukeHost/Drive/direct audio links. Do not upload audio files.
+- Staff posting requires the Firebase Auth emails in your rules: admin@sfk-classboard.app or officers@sfk-classboard.app.

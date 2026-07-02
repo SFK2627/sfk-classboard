@@ -1,5 +1,5 @@
 const MEMORIES_API_URL = "https://script.google.com/macros/s/AKfycbzCjWVnO-ZNvKTNqKN1zVscNsfPox0uDnO1QTSbBCrMFaS79tfL3mopHa2pH7gHczYeOA/exec";
-const MEMORY_CACHE_KEY = "sfkMemoriesCacheV1";
+const MEMORY_CACHE_KEY = "sfkMemoriesCacheV4";
 const HEARTED_MEMORY_KEY = "sfkHeartedMemoriesV1";
 const MEMORIES_SEEN_IDS_KEY = "sfkMemoriesSeenPostIdsV1";
 const MEMORY_POSTED_BY_KEY = "sfkMemoryPostedByV1";
@@ -280,21 +280,31 @@ async function resolveNoBillingMemoryMediaRefsInRow(row) {
   if (!mediaItems.some(hasNoBillingMemoryMediaRef)) return row;
 
   const media = await Promise.all(mediaItems.map(resolveNoBillingMemoryMediaItem));
+  const resolved = media.filter(Boolean);
   return {
     ...row,
-    media: media.filter(Boolean),
-    MediaJSON: JSON.stringify(media.filter(Boolean))
+    media: resolved,
+    MediaJSON: JSON.stringify(resolved),
+    MediaItems: JSON.stringify(resolved)
   };
 }
 
 function getRawMemoryMediaItems(row) {
   if (Array.isArray(row?.media)) return row.media;
 
-  const jsonCandidates = [row?.MediaJSON, row?.mediaJSON, row?.MediaItems, row?.mediaItems, row?.Media, row?.media, row?.UploadedMediaJSON, row?.uploadedMediaJSON];
+  const jsonCandidates = [
+    row?.MediaJSON, row?.mediaJSON,
+    row?.MediaItems, row?.mediaItems,
+    row?.Media, row?.media,
+    row?.UploadedMedia, row?.uploadedMedia,
+    row?.UploadedMediaJSON, row?.uploadedMediaJSON
+  ];
   for (const value of jsonCandidates) {
+    if (Array.isArray(value)) return value;
     try {
       const parsed = JSON.parse(String(value || "[]"));
       if (Array.isArray(parsed)) return parsed;
+      if (parsed && typeof parsed === "object") return [parsed];
     } catch (error) {
       // Ignore invalid legacy JSON and try the next field.
     }
@@ -308,12 +318,30 @@ function hasNoBillingMemoryMediaRef(item) {
 }
 
 function getNoBillingMemoryMediaRef(item) {
-  if (!item || typeof item !== "object") return null;
+  if (!item) return null;
+  if (typeof item === "string") return parseNoBillingMemoryMediaRef(item);
+  if (typeof item !== "object") return null;
 
-  const candidates = [item.url, item.viewerUrl, item.fullUrl, item.downloadUrl, item.firestoreRef];
+  const candidates = [
+    item.firestoreRef,
+    item.url,
+    item.viewerUrl,
+    item.fullUrl,
+    item.downloadUrl,
+    item.href,
+    item.mediaRef,
+    item.MediaRef,
+    item.Ref,
+    item.ref
+  ];
   for (const value of candidates) {
     const ref = parseNoBillingMemoryMediaRef(value);
     if (ref) return ref;
+  }
+
+  const mediaId = String(item.mediaId || item.MediaID || item.id || item.ID || "").trim();
+  if (/^[A-Za-z0-9_-]{1,240}$/.test(mediaId) && String(item.storage || item.OwnerKind || item.ownerKind || "").toLowerCase().includes("firestore")) {
+    return { raw: `${NO_BILLING_MEDIA_REF_PREFIX}memory/${mediaId}`, id: mediaId };
   }
 
   return null;
@@ -328,10 +356,10 @@ function parseNoBillingMemoryMediaRef(value) {
   if (slashIndex <= 0) return null;
 
   const kind = rest.slice(0, slashIndex);
-  const id = rest.slice(slashIndex + 1);
-  if (kind !== "memory" || !id) return null;
+  const id = rest.slice(slashIndex + 1).trim();
+  if (!["memory", "memories", "memoryMedia"].includes(kind) || !/^[A-Za-z0-9_-]{1,240}$/.test(id)) return null;
 
-  return { raw, id };
+  return { raw: `${NO_BILLING_MEDIA_REF_PREFIX}memory/${id}`, id };
 }
 
 async function resolveNoBillingMemoryMediaItem(item) {
@@ -357,7 +385,7 @@ async function loadNoBillingMemoryMediaDataUrl(mediaId) {
   if (!cleanId) return "";
   if (NO_BILLING_MEMORY_MEDIA_CACHE.has(cleanId)) return NO_BILLING_MEMORY_MEDIA_CACHE.get(cleanId);
 
-  const db = getClassBoardFirestore();
+  const db = await waitForClassBoardFirestore();
   if (!db) return "";
 
   try {
@@ -365,8 +393,14 @@ async function loadNoBillingMemoryMediaDataUrl(mediaId) {
     if (!doc.exists) return "";
 
     const data = doc.data() || {};
-    const mimeType = String(data.MimeType || data.mimeType || "image/jpeg").trim();
-    const base64 = String(data.Data || data.data || "").trim();
+    const mimeType = String(data.MimeType || data.mimeType || data.Type || "image/jpeg").trim();
+    const directDataUrl = String(data.DataURL || data.dataUrl || data.Url || data.url || data.PreviewURL || data.previewUrl || "").trim();
+    if (/^data:image\//i.test(directDataUrl)) {
+      NO_BILLING_MEMORY_MEDIA_CACHE.set(cleanId, directDataUrl);
+      return directDataUrl;
+    }
+
+    const base64 = String(data.Data || data.data || data.Base64 || data.base64 || data.Content || data.content || "").trim();
     if (!base64 || !mimeType.toLowerCase().startsWith("image/")) return "";
 
     const dataUrl = `data:${mimeType};base64,${base64}`;
@@ -425,6 +459,20 @@ function getClassBoardFirestore() {
     console.warn("Firebase database is unavailable:", error);
     return null;
   }
+}
+
+async function waitForClassBoardFirestore(timeoutMs = 7000) {
+  const started = Date.now();
+  let delay = 80;
+
+  while (Date.now() - started < timeoutMs) {
+    const db = getClassBoardFirestore();
+    if (db) return db;
+    await new Promise(resolve => setTimeout(resolve, delay));
+    delay = Math.min(500, Math.round(delay * 1.45));
+  }
+
+  return getClassBoardFirestore();
 }
 
 function convertFirestoreData(data) {
@@ -512,7 +560,7 @@ function normalizeMemoryPost(raw) {
 
   if (uploadedMedia.length === 0) {
     try {
-      const parsed = JSON.parse(raw.MediaJSON || raw.mediaJSON || raw.MediaItems || raw.mediaItems || raw.Media || "[]");
+      const parsed = JSON.parse(raw.MediaJSON || raw.mediaJSON || raw.MediaItems || raw.mediaItems || raw.UploadedMedia || raw.uploadedMedia || raw.Media || "[]");
       uploadedMedia = Array.isArray(parsed) ? parsed : [];
     } catch (error) {
       uploadedMedia = [];
@@ -674,10 +722,64 @@ function deriveMusicNameFromUrl(value) {
 }
 
 function normalizeStoredMedia(item) {
-  if (!item || typeof item !== "object") return null;
+  if (!item) return null;
+
+  if (typeof item === "string") {
+    const ref = parseNoBillingMemoryMediaRef(item);
+    if (ref) {
+      return {
+        kind: "image",
+        url: "",
+        viewerUrl: "",
+        fullUrl: "",
+        downloadUrl: "",
+        previewUrl: "",
+        firestoreRef: ref.raw,
+        mediaId: ref.id,
+        name: "SFK memory",
+        mimeType: "image/jpeg",
+        fileId: "",
+        ratio: 0,
+        streamUrl: "",
+        muted: true
+      };
+    }
+    const url = safeHttpUrl(item);
+    return url ? {
+      kind: "image",
+      url,
+      viewerUrl: url,
+      fullUrl: url,
+      downloadUrl: "",
+      previewUrl: url,
+      firestoreRef: "",
+      name: "SFK memory",
+      mimeType: "",
+      fileId: getDriveFileId(url),
+      ratio: 0,
+      streamUrl: "",
+      muted: true
+    } : null;
+  }
+
+  if (typeof item !== "object") return null;
 
   const noBillingRef = getNoBillingMemoryMediaRef(item);
-  const primaryUrl = safeHttpUrl(item.url) || safeHttpUrl(item.viewerUrl) || safeHttpUrl(item.fullUrl) || safeHttpUrl(item.downloadUrl);
+  const previewUrl = [
+    item.previewUrl,
+    item.PreviewURL,
+    item.inlinePreviewUrl,
+    item.InlinePreviewURL,
+    item.thumbnailUrl,
+    item.ThumbnailURL,
+    item.thumbUrl,
+    item.ThumbURL,
+    item.dataUrl,
+    item.DataURL
+  ].map(safeHttpUrl).find(Boolean) || "";
+  const primaryUrl = [item.url, item.viewerUrl, item.fullUrl, item.downloadUrl]
+    .map(safeHttpUrl)
+    .find(Boolean) || previewUrl;
   if (!primaryUrl && !noBillingRef) return null;
 
   const allowedKinds = ["image", "drive-video", "direct-video", "embed-video"];
@@ -688,8 +790,8 @@ function normalizeStoredMedia(item) {
     ? `https://drive.google.com/thumbnail?id=${encodeURIComponent(fileId)}&sz=w4000`
     : "";
 
-  const normalizedUrl = safeHttpUrl(item.url) || (noBillingRef ? "" : primaryUrl);
-  const normalizedViewerUrl = safeHttpUrl(item.viewerUrl) || derivedViewerUrl || normalizedUrl;
+  const normalizedUrl = safeHttpUrl(item.url) || previewUrl || (noBillingRef ? "" : primaryUrl);
+  const normalizedViewerUrl = safeHttpUrl(item.viewerUrl) || previewUrl || derivedViewerUrl || normalizedUrl;
   const normalizedFullUrl = safeHttpUrl(item.fullUrl) || normalizedUrl || normalizedViewerUrl;
 
   return {
@@ -697,10 +799,12 @@ function normalizeStoredMedia(item) {
     url: normalizedUrl,
     viewerUrl: normalizedViewerUrl,
     fullUrl: normalizedFullUrl,
-    downloadUrl: safeHttpUrl(item.downloadUrl),
-    firestoreRef: noBillingRef?.raw || String(item.firestoreRef || "").trim(),
-    name: String(item.name || "SFK memory"),
-    mimeType: String(item.mimeType || ""),
+    downloadUrl: noBillingRef ? "" : safeHttpUrl(item.downloadUrl),
+    previewUrl,
+    firestoreRef: noBillingRef?.raw || String(item.firestoreRef || item.mediaRef || "").trim(),
+    mediaId: noBillingRef?.id || String(item.mediaId || item.MediaID || "").trim(),
+    name: String(item.name || item.Name || "SFK memory"),
+    mimeType: String(item.mimeType || item.MimeType || ""),
     fileId,
     ratio: Number(item.ratio) > 0 ? Number(item.ratio) : 0,
     streamUrl: kind === "drive-video"
@@ -1132,7 +1236,9 @@ function renderMediaSlide(media, postId, index) {
   const common = `data-action="view" data-id="${escapeAttr(postId)}" data-index="${index}"`;
 
   if (media.kind === "image") {
-    const imageUrl = safeHttpUrl(media.url || media.viewerUrl || media.fullUrl || "");
+    const imageUrl = [media.viewerUrl, media.previewUrl, media.url, media.fullUrl, media.downloadUrl]
+      .map(safeHttpUrl)
+      .find(Boolean) || "";
     const firestoreRef = getNoBillingMemoryMediaRef(media)?.raw || "";
     const imageAttrs = firestoreRef
       ? `data-memory-media-ref="${escapeAttr(firestoreRef)}" data-post-id="${escapeAttr(postId)}" data-media-index="${index}"`
@@ -1143,7 +1249,7 @@ function renderMediaSlide(media, postId, index) {
     return `
       <div class="mediaSlide ${imageUrl ? "" : "mediaSlideLoading"}">
         ${imageUrl ? `<img class="mediaBackdrop" src="${escapeAttr(imageUrl)}" alt="" aria-hidden="true" loading="lazy" />` : `<div class="mediaBackdrop memoryMediaLoadingBackdrop" aria-hidden="true"></div>`}
-        <img class="mediaMain" ${srcAttr} ${imageAttrs} alt="${escapeAttr(media.name)}" loading="lazy" ${hiddenAttr} ${common} />
+        <img class="mediaMain" ${srcAttr} ${imageAttrs} alt="${escapeAttr(media.name)}" loading="lazy" decoding="async" ${hiddenAttr} ${common} />
         ${imageUrl ? "" : `<span class="memoryMediaLoadingText">Loading photo...</span>`}
       </div>
     `;
@@ -1178,19 +1284,42 @@ function renderMediaSlide(media, postId, index) {
   `;
 }
 
-async function hydrateNoBillingMemoryImages(root = document) {
+async function hydrateNoBillingMemoryImages(root = document, options = {}) {
   if (!root) return;
-  const images = Array.from(root.querySelectorAll("img[data-memory-media-ref]"));
+  const retryCount = Number(options.retryCount || 0);
+  const images = Array.from(root.querySelectorAll('img[data-memory-media-ref], img[src^="sfk-media://memory/"], img[src^="sfk-media://memories/"], img[src^="sfk-media://memoryMedia/"]'));
   await Promise.all(images.map(async (image) => {
-    const ref = parseNoBillingMemoryMediaRef(image.dataset.memoryMediaRef || "");
+    const rawRef = image.dataset.memoryMediaRef || image.getAttribute("src") || "";
+    const ref = parseNoBillingMemoryMediaRef(rawRef);
     if (!ref) return;
 
+    if ((image.getAttribute("src") || "").startsWith("sfk-media://")) {
+      image.removeAttribute("src");
+      image.hidden = true;
+    }
+
     const dataUrl = await loadNoBillingMemoryMediaDataUrl(ref.id);
-    if (!dataUrl) return;
+    if (!dataUrl) {
+      if (retryCount < 3 && image.isConnected) {
+        window.setTimeout(() => {
+          hydrateNoBillingMemoryImages(image.closest(".mediaSlide") || image.parentElement || image, { retryCount: retryCount + 1 }).catch(() => {});
+        }, 600 + retryCount * 900);
+      } else {
+        const slide = image.closest(".mediaSlide");
+        const text = slide?.querySelector(".memoryMediaLoadingText");
+        if (text) text.textContent = "Photo is saved, but cannot load yet. Refresh or publish the latest Firebase rules.";
+      }
+      return;
+    }
 
     image.src = dataUrl;
     image.hidden = false;
     image.removeAttribute("data-memory-media-ref");
+    image.onerror = () => {
+      const slide = image.closest(".mediaSlide");
+      const text = slide?.querySelector(".memoryMediaLoadingText");
+      if (text) text.textContent = "This photo could not be displayed.";
+    };
 
     const slide = image.closest(".mediaSlide");
     slide?.classList.remove("mediaSlideLoading");
@@ -1220,6 +1349,7 @@ async function hydrateNoBillingMemoryImages(root = document) {
       media.fullUrl = dataUrl;
       media.downloadUrl = dataUrl;
       media.firestoreRef = ref.raw;
+      media.mediaId = ref.id;
     }
   }));
 }
@@ -5396,11 +5526,18 @@ function renderViewerMedia(media, options = {}) {
   const active = options.active !== false;
 
   if (media.kind === "image") {
-    const imageUrl = safeHttpUrl(media.viewerUrl || media.url || media.fullUrl || "");
+    const imageUrl = [media.viewerUrl, media.previewUrl, media.url, media.fullUrl, media.downloadUrl]
+      .map(safeHttpUrl)
+      .find(Boolean) || "";
     const firestoreRef = getNoBillingMemoryMediaRef(media)?.raw || "";
-    return imageUrl
-      ? `<img src="${escapeAttr(imageUrl)}" alt="${escapeAttr(media.name)}" draggable="false" />`
-      : `<img data-memory-media-ref="${escapeAttr(firestoreRef)}" alt="${escapeAttr(media.name)}" draggable="false" hidden />`;
+    const hydrationAttrs = firestoreRef ? ` data-memory-media-ref="${escapeAttr(firestoreRef)}"` : "";
+    if (imageUrl) {
+      return `<img src="${escapeAttr(imageUrl)}"${hydrationAttrs} alt="${escapeAttr(media.name)}" draggable="false" decoding="async" />`;
+    }
+    if (firestoreRef) {
+      return `<img data-memory-media-ref="${escapeAttr(firestoreRef)}" alt="${escapeAttr(media.name)}" draggable="false" decoding="async" hidden />`;
+    }
+    return `<div class="viewerMediaUnavailable">Photo is saved, but cannot load yet.</div>`;
   }
 
   if (media.kind === "direct-video" || media.kind === "drive-video") {
@@ -5672,6 +5809,15 @@ function isUnsupportedMemoryApiType(message) {
 }
 
 async function postMemoryApi(type, payload) {
+  // For memory create/update/photo upload, bypass the old Google Apps Script
+  // upload endpoint completely. That endpoint is what shows:
+  // "Your login is invalid or you are not authorized for this action."
+  // This direct Firestore path works on Firebase Spark/no-billing because it stores
+  // compressed photos in Firestore media documents, not Firebase Storage.
+  if (isDirectFirebaseMemoryApiType(type)) {
+    return postMemoryApiDirect(type, payload || {});
+  }
+
   const uploadSessionId = payload?.UploadSessionID || payload?.MemoryUploadSession || "";
   const usingUploadSession = Boolean(uploadSessionId) && (type === "memoryUploadAssets" || type === "memoryCreate");
   let authToken = "";
@@ -5709,6 +5855,371 @@ async function postMemoryApi(type, payload) {
   } catch (error) {
     throw new Error(text.slice(0, 160) || "Invalid server response.");
   }
+}
+
+function isDirectFirebaseMemoryApiType(type) {
+  return [
+    "memoryAuth",
+    "memoryUploadSession",
+    "memoryUploadAssets",
+    "memoryCreate",
+    "memoryHide",
+    "memoryDelete",
+    "memoryUpdate"
+  ].includes(String(type || ""));
+}
+
+async function postMemoryApiDirect(type, payload) {
+  const db = await waitForClassBoardFirestore(9000);
+  if (!db) {
+    throw new Error("Firebase is not ready. Refresh the page, then sign in again.");
+  }
+
+  const role = getDirectFirebaseMemoryRole();
+  if (!role) {
+    throw new Error("Please sign in again as Admin or Officer before sharing a memory.");
+  }
+
+  if (type === "memoryAuth") {
+    return { success: true, role: role === "admin" ? "Admin" : "Officer" };
+  }
+
+  if (type === "memoryUploadSession") {
+    return {
+      success: true,
+      sessionId: directMemoryGenerateId("memoryUploadSession"),
+      mode: "firestore-direct-no-billing"
+    };
+  }
+
+  if (type === "memoryUploadAssets") {
+    return directUploadMemoryAssets(db, payload);
+  }
+
+  if (type === "memoryCreate") {
+    return directCreateMemory(db, payload, role);
+  }
+
+  if (type === "memoryHide") {
+    const id = getDirectMemoryPayloadId(payload);
+    if (!id) throw new Error("Missing memory ID.");
+    await db.collection("memories").doc(id).set({
+      Publish: "NO",
+      UpdatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      UpdatedAtText: new Date().toISOString(),
+      UpdatedBy: role
+    }, { merge: true });
+    return { success: true, message: "Memory hidden." };
+  }
+
+  if (type === "memoryDelete") {
+    const id = getDirectMemoryPayloadId(payload);
+    if (!id) throw new Error("Missing memory ID.");
+    await db.collection("memories").doc(id).delete();
+    return { success: true, message: "Memory deleted." };
+  }
+
+  if (type === "memoryUpdate") {
+    const id = getDirectMemoryPayloadId(payload);
+    if (!id) throw new Error("Missing memory ID.");
+
+    const next = directCleanFirestoreData({
+      Title: payload.Title || "Untitled Memory",
+      Date: payload.Date || "",
+      Caption: payload.Caption || "",
+      PostedBy: payload.PostedBy || "SFK",
+      VideoURL: payload.VideoURL || "",
+      MusicURL: payload.MusicURL || "",
+      MusicTitle: String(payload.MusicTitle || payload.MusicDisplayTitle || payload.MusicName || "").trim(),
+      UpdatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      UpdatedAtText: new Date().toISOString(),
+      UpdatedBy: role
+    });
+
+    const music = directBuildMemoryMusic(payload);
+    if (music) {
+      next.music = music;
+      next.MusicJSON = JSON.stringify(music);
+    }
+
+    await db.collection("memories").doc(id).set(next, { merge: true });
+    return { success: true, message: "Memory updated." };
+  }
+
+  throw new Error(`Unsupported memory action: ${type}`);
+}
+
+function getDirectFirebaseMemoryRole() {
+  try {
+    const role = String(window.SFKAuth?.currentRole?.() || "").trim().toLowerCase();
+    if (role === "admin") return "Admin";
+    if (role === "officer") return "Officer";
+  } catch (error) {
+    // Fall back to the page auth state below.
+  }
+
+  const pageRole = String(memoryState.auth?.role || "").trim().toLowerCase();
+  if (pageRole === "admin") return "Admin";
+  if (pageRole === "officer") return "Officer";
+  return "";
+}
+
+function getDirectMemoryPayloadId(payload) {
+  return String(payload?.memoryId || payload?.MemoryID || payload?.ID || payload?.id || "").trim();
+}
+
+async function directUploadMemoryAssets(db, payload) {
+  const files = Array.isArray(payload.MediaFiles) ? payload.MediaFiles : [];
+  if (payload.MusicFile && payload.MusicFile.data) {
+    throw new Error("No-billing mode supports music links, not uploaded music files. Use YouTube, JukeHost, or a direct MP3/M4A link instead.");
+  }
+
+  const memoryId = getDirectMemoryPayloadId(payload) || directMemoryGenerateId("MEM");
+  const media = [];
+  for (const [index, file] of files.entries()) {
+    media.push(await directSaveMemoryMediaFile(db, memoryId, file, index));
+  }
+
+  return { success: true, media, music: null, mode: "firestore-direct-no-billing" };
+}
+
+async function directCreateMemory(db, payload, role) {
+  const id = getDirectMemoryPayloadId(payload) || directMemoryGenerateId("MEM");
+  const suppliedMedia = parseDirectUploadedMemoryMedia(payload);
+  let uploadedMedia = [];
+
+  if (Array.isArray(payload.MediaFiles) && payload.MediaFiles.length > 0) {
+    const uploaded = await directUploadMemoryAssets(db, { ...payload, MemoryID: id });
+    uploadedMedia = Array.isArray(uploaded.media) ? uploaded.media : [];
+  }
+
+  const media = suppliedMedia.concat(uploadedMedia).filter(Boolean).slice(0, MAX_MEDIA_FILES);
+  const music = directBuildMemoryMusic(payload);
+  const now = new Date();
+  const postedBy = String(payload.PostedBy || "SFK").trim() || "SFK";
+  const title = String(payload.Title || "Untitled Memory").trim() || "Untitled Memory";
+
+  const doc = directCleanFirestoreData({
+    ID: id,
+    MemoryID: id,
+    Title: title,
+    Date: payload.Date || "",
+    Caption: payload.Caption || "",
+    PostedBy: postedBy,
+    Author: postedBy,
+    Role: role,
+    VideoURL: String(payload.VideoURL || "").trim(),
+    media,
+    MediaJSON: JSON.stringify(media),
+    MediaItems: JSON.stringify(media),
+    MusicURL: String(payload.MusicURL || "").trim(),
+    MusicTitle: String(payload.MusicTitle || payload.MusicDisplayTitle || payload.MusicName || "").trim(),
+    music: music || null,
+    MusicJSON: music ? JSON.stringify(music) : "",
+    Publish: "YES",
+    HeartCount: 0,
+    CreatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    UpdatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    CreatedAtText: now.toISOString(),
+    UpdatedAtText: now.toISOString()
+  });
+
+  await db.collection("memories").doc(id).set(doc, { merge: true });
+  return { success: true, id, memoryId: id, message: "Memory shared.", mode: "firestore-direct-no-billing" };
+}
+
+async function directSaveMemoryMediaFile(db, memoryId, file, index) {
+  if (!file || !file.data) {
+    throw new Error("Selected photo could not be read. Please choose another image.");
+  }
+
+  const mimeType = String(file.mimeType || file.type || "image/jpeg").trim().toLowerCase();
+  if (!mimeType.startsWith("image/")) {
+    throw new Error("No-billing mode supports photo uploads only. Use a Drive/YouTube/direct link for videos or audio.");
+  }
+
+  const base64 = String(file.data || "").trim();
+  if (!base64) throw new Error("Selected photo is empty. Please choose another image.");
+  if (base64.length > 850000) {
+    throw new Error(`${file.name || "This photo"} is still too large after compression. Try a smaller screenshot/photo.`);
+  }
+
+  const id = `${directSafeDocPart(memoryId || "memory")}_${Date.now()}_${Number(index || 0)}_${Math.random().toString(36).slice(2, 8)}`.slice(0, 240);
+  const name = String(file.name || "SFK memory photo").trim() || "SFK memory photo";
+  const uri = `${NO_BILLING_MEDIA_REF_PREFIX}memory/${id}`;
+  const smallDataUrl = base64.length <= 120000 ? `data:${mimeType};base64,${base64}` : "";
+
+  await db.collection(NO_BILLING_MEMORY_MEDIA_COLLECTION).doc(id).set(directCleanFirestoreData({
+    OwnerID: String(memoryId || ""),
+    OwnerKind: "memory",
+    Name: name,
+    MimeType: mimeType,
+    Data: base64,
+    DataURL: smallDataUrl,
+    PreviewURL: smallDataUrl,
+    BytesApprox: Math.ceil(base64.length * 0.75),
+    Publish: "YES",
+    CreatedByRole: getDirectFirebaseMemoryRole(),
+    CreatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    CreatedAtText: new Date().toISOString()
+  }));
+
+  return {
+    kind: "image",
+    url: uri,
+    viewerUrl: uri,
+    fullUrl: uri,
+    downloadUrl: uri,
+    firestoreRef: uri,
+    mediaId: id,
+    storage: "firestore",
+    name,
+    mimeType,
+    muted: true
+  };
+}
+
+function parseDirectUploadedMemoryMedia(payload) {
+  const rawCandidates = [payload?.UploadedMedia, payload?.uploadedMedia, payload?.MediaUploaded];
+  const jsonCandidates = [payload?.UploadedMediaJSON, payload?.uploadedMediaJSON, payload?.MediaUploadedJSON, payload?.MediaJSON, payload?.MediaItems];
+  const media = [];
+
+  for (const raw of rawCandidates) {
+    if (Array.isArray(raw)) media.push(...raw);
+    else if (typeof raw === "string" && raw.trim()) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) media.push(...parsed);
+        else if (parsed && typeof parsed === "object") media.push(parsed);
+      } catch (error) {
+        const ref = parseNoBillingMemoryMediaRef(raw);
+        if (ref) media.push(raw);
+      }
+    }
+  }
+
+  for (const raw of jsonCandidates) {
+    if (typeof raw !== "string" || !raw.trim()) continue;
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) media.push(...parsed);
+      else if (parsed && typeof parsed === "object") media.push(parsed);
+    } catch (error) {
+      const ref = parseNoBillingMemoryMediaRef(raw);
+      if (ref) media.push(raw);
+    }
+  }
+
+  return media.map(normalizeDirectMemoryMediaItem).filter(Boolean).slice(0, MAX_MEDIA_FILES);
+}
+
+function normalizeDirectMemoryMediaItem(item) {
+  if (!item) return null;
+  if (typeof item === "string") {
+    const ref = parseNoBillingMemoryMediaRef(item);
+    return ref ? {
+      kind: "image",
+      url: ref.raw,
+      viewerUrl: ref.raw,
+      fullUrl: ref.raw,
+      downloadUrl: ref.raw,
+      firestoreRef: ref.raw,
+      mediaId: ref.id,
+      storage: "firestore",
+      name: "SFK memory",
+      muted: true
+    } : null;
+  }
+
+  if (typeof item !== "object") return null;
+  const ref = getNoBillingMemoryMediaRef(item);
+  if (ref) {
+    return {
+      ...item,
+      kind: item.kind || "image",
+      url: item.url || ref.raw,
+      viewerUrl: item.viewerUrl || ref.raw,
+      fullUrl: item.fullUrl || ref.raw,
+      downloadUrl: item.downloadUrl || ref.raw,
+      firestoreRef: item.firestoreRef || ref.raw,
+      mediaId: item.mediaId || ref.id,
+      storage: item.storage || "firestore",
+      muted: item.muted !== false
+    };
+  }
+
+  return item;
+}
+
+function directBuildMemoryMusic(payload) {
+  const musicTitle = String(payload?.MusicTitle || payload?.MusicDisplayTitle || payload?.MusicName || "").trim();
+  const url = safeHttpUrl(payload?.MusicURL || payload?.musicUrl || "");
+  if (!url) return null;
+
+  const youtubeId = getYouTubeId(url);
+  if (youtubeId) {
+    return {
+      kind: "youtube-audio",
+      videoId: youtubeId,
+      url: `https://www.youtube.com/watch?v=${youtubeId}`,
+      name: musicTitle || "YouTube music",
+      customTitle: musicTitle,
+      muted: true,
+      started: false
+    };
+  }
+
+  const driveId = getDriveFileId(url);
+  if (driveId) {
+    return {
+      kind: "drive-audio",
+      fileId: driveId,
+      url: getDriveStreamUrl(driveId) || getDriveAudioStreamUrl(driveId),
+      fallbackUrl: getDriveAudioStreamUrl(driveId),
+      previewUrl: url,
+      name: musicTitle || deriveMusicNameFromUrl(url) || "Google Drive music",
+      customTitle: musicTitle,
+      muted: true,
+      started: false
+    };
+  }
+
+  return {
+    kind: "direct-audio",
+    url,
+    name: musicTitle || deriveMusicNameFromUrl(url) || "Background music",
+    customTitle: musicTitle,
+    muted: true,
+    started: false
+  };
+}
+
+function directMemoryGenerateId(prefix) {
+  const stamp = new Date().toISOString().replace(/[-:.TZ]/g, "").slice(0, 14);
+  return `${prefix}-${stamp}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+}
+
+function directSafeDocPart(value) {
+  return String(value || "media")
+    .replace(/[^A-Za-z0-9_-]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 80) || "media";
+}
+
+function directCleanFirestoreData(value) {
+  if (value === undefined) return "";
+  if (value === null) return null;
+  if (Array.isArray(value)) return value.map(directCleanFirestoreData).filter(item => item !== undefined);
+  if (value && typeof value === "object" && typeof value.toMillis !== "function" && typeof value.isEqual !== "function") {
+    const clean = {};
+    Object.entries(value).forEach(([key, item]) => {
+      if (!key) return;
+      const next = directCleanFirestoreData(item);
+      if (next !== undefined) clean[key] = next;
+    });
+    return clean;
+  }
+  return value;
 }
 
 let toastTimer = null;

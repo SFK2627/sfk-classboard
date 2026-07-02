@@ -81,11 +81,12 @@ service cloud.firestore {
 
     function validCapsuleImageURL() {
       return request.resource.data.ImageURL is string
-        && request.resource.data.ImageURL.size() <= 2000
+        && request.resource.data.ImageURL.size() <= 560000
         && (
           request.resource.data.ImageURL.size() == 0
           || request.resource.data.ImageURL.matches("^https://.*")
           || request.resource.data.ImageURL.matches("^sfk-media://capsule/[A-Za-z0-9_-]{1,240}$")
+          || request.resource.data.ImageURL.matches("^data:image/(jpeg|jpg|png|webp);base64,[A-Za-z0-9+/=]+$")
         );
     }
 

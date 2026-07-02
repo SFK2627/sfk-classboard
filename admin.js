@@ -1,2130 +1,2056 @@
-const ADMIN_API_URL = "https://script.google.com/macros/s/AKfycbzCjWVnO-ZNvKTNqKN1zVscNsfPox0uDnO1QTSbBCrMFaS79tfL3mopHa2pH7gHczYeOA/exec";
-
-let currentAdminSheet = "";
-let editingRecord = null;
-let latestAdminTableData = null;
-let selectedAdminRows = new Set();
-let activeAdminTool = null;
-let currentAdminFilteredRows = [];
-
-const TEACHER_OPTIONS = [
-  "Mr. John Rey Tubello",
-  "Ms. Chiarah De Castro",
-  "Mrs. Melanie Sebastian",
-  "Ms. Hannah Lee Cillo",
-  "Ms Christine Tolentino",
-  "Ms. Kamille Lajom",
-  "Mr. Alexis Pastrana",
-  "Ms. Gina Soriano",
-  "Mr. Runmar Quipanes"
-];
-
-const TEXT_FORMAT_OPTIONS = ["center", "left", "right", "bullets", "numbers"];
-const MAX_ANNOUNCEMENT_ATTACHMENTS = 5;
-const MAX_ANNOUNCEMENT_ATTACHMENT_BYTES = 12 * 1024 * 1024;
-const TARGET_ANNOUNCEMENT_IMAGE_BYTES = 360 * 1024;
-
-document.addEventListener("DOMContentLoaded", () => {
-  initAdminToolLauncher();
-  initRichTextEditors();
-
-  window.SFKAuth?.onAuthStateChanged((user, role) => {
-    if (user && role === "admin") showAdminPanel();
-    else showAdminLogin();
-  });
-
-  const pinInput = document.getElementById("adminPin");
-  if (pinInput) {
-    pinInput.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") {
-        loginAdmin();
-      }
-    });
-  }
-
-  setTodayForDateInputs();
-});
-
-async function loginAdmin() {
-  const pinInput = document.getElementById("adminPin");
-  const message = document.getElementById("loginMessage");
-  const pin = pinInput.value.trim();
-
-  if (!pin) {
-    message.textContent = "Enter the Admin PIN.";
-    pinInput.focus();
-    return;
-  }
-
-  message.textContent = "Checking access...";
-  try {
-    await window.SFKAuth.signInWithPin("admin", pin);
-    pinInput.value = "";
-    message.textContent = "";
-  } catch (error) {
-    message.textContent = "Incorrect PIN. Please try again.";
-    pinInput.value = "";
-    pinInput.focus();
-  }
-}
-
-async function logoutAdmin() {
-  closeAdminTool();
-  await window.SFKAuth?.signOut();
-  showAdminLogin();
-}
-
-function showAdminLogin() {
-  document.getElementById("loginScreen").classList.remove("hidden");
-  document.getElementById("adminPanel").classList.add("hidden");
-}
-
-function showAdminPanel() {
-  document.getElementById("loginScreen").classList.add("hidden");
-  document.getElementById("adminPanel").classList.remove("hidden");
-
-  initAdminToolLauncher();
-  initRichTextEditors();
-  setTodayForDateInputs();
-}
-
-function initAdminToolLauncher() {
-  const panel = document.getElementById("adminPanel");
-  const grid = document.querySelector(".adminGrid");
-  const managePanel = document.querySelector(".managePanel");
-  if (!panel || !grid || panel.dataset.toolsReady === "true") return;
-
-  panel.dataset.toolsReady = "true";
-  panel.classList.add("toolsReady");
-
-  const launcher = document.createElement("section");
-  launcher.className = "toolLauncher";
-  launcher.setAttribute("aria-label", "Admin tools");
-  launcher.innerHTML = `
-    <div class="toolLauncherHeader">
-      <div>
-        <p class="toolEyebrow">Choose action</p>
-        <h2>What do you want to open?</h2>
-      </div>
-      <span>Forms are hidden until needed.</span>
-    </div>
-    <div class="toolLauncherGrid"></div>
-  `;
-
-  const launcherGrid = launcher.querySelector(".toolLauncherGrid");
-  Array.from(grid.querySelectorAll(".formCard")).forEach((card, index) => {
-    const title = card.querySelector("h2")?.textContent?.trim() || `Tool ${index + 1}`;
-    const button = document.createElement("button");
-    button.className = "toolLaunchButton";
-    button.type = "button";
-    button.innerHTML = `<strong>${escapeAdminText(title)}</strong><small>Create or publish this item</small>`;
-    button.addEventListener("click", () => openAdminTool(card, title));
-    launcherGrid.appendChild(button);
-  });
-
-  if (managePanel) {
-    const button = document.createElement("button");
-    button.className = "toolLaunchButton manageLaunchButton";
-    button.type = "button";
-    button.innerHTML = `<strong>🗂 Manage Existing Data</strong><small>View, edit, hide, or delete records</small>`;
-    button.addEventListener("click", () => openAdminTool(managePanel, "Manage Existing Data"));
-    launcherGrid.appendChild(button);
-  }
-
-  panel.insertBefore(launcher, grid);
-
-  const modal = document.createElement("div");
-  modal.id = "adminToolModal";
-  modal.className = "toolModal hidden";
-  modal.innerHTML = `
-    <div class="toolModalBackdrop" data-admin-tool-close></div>
-    <section class="toolModalCard" role="dialog" aria-modal="true" aria-labelledby="adminToolModalTitle">
-      <header class="toolModalHeader">
-        <div>
-          <p class="toolEyebrow">SFK Admin</p>
-          <h2 id="adminToolModalTitle">Tool</h2>
-        </div>
-        <button class="toolModalClose" type="button" data-admin-tool-close aria-label="Close">×</button>
-      </header>
-      <div id="adminToolModalContent" class="toolModalContent"></div>
-    </section>
-  `;
-  document.body.appendChild(modal);
-  modal.addEventListener("click", (event) => {
-    if (event.target.closest("[data-admin-tool-close]")) closeAdminTool();
-  });
-
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && !modal.classList.contains("hidden")) closeAdminTool();
-  });
-}
-
-function openAdminTool(element, title) {
-  if (!element) return;
-  closeAdminTool();
-
-  const modal = document.getElementById("adminToolModal");
-  const content = document.getElementById("adminToolModalContent");
-  const titleElement = document.getElementById("adminToolModalTitle");
-  if (!modal || !content || !titleElement) return;
-
-  activeAdminTool = {
-    element,
-    parent: element.parentNode,
-    nextSibling: element.nextSibling
-  };
-
-  titleElement.textContent = title.replace(/^[^\w]+/, "").trim() || title;
-  content.appendChild(element);
-  element.classList.add("toolModalPanel");
-  modal.classList.toggle("toolModalManage", element.classList.contains("managePanel"));
-  modal.classList.remove("hidden");
-  document.body.classList.add("toolModalOpen");
-
-  const firstInput = element.querySelector("input, textarea, select, button");
-  window.setTimeout(() => firstInput?.focus({ preventScroll: true }), 80);
-}
-
-function closeAdminTool() {
-  const modal = document.getElementById("adminToolModal");
-  const content = document.getElementById("adminToolModalContent");
-
-  if (activeAdminTool?.element && activeAdminTool.parent) {
-    activeAdminTool.element.classList.remove("toolModalPanel");
-    activeAdminTool.parent.insertBefore(activeAdminTool.element, activeAdminTool.nextSibling);
-  }
-
-  activeAdminTool = null;
-  if (content) content.innerHTML = "";
-  modal?.classList.add("hidden");
-  modal?.classList.remove("toolModalManage");
-  document.body.classList.remove("toolModalOpen");
-}
-
-function escapeAdminText(value) {
-  return String(value || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-function setTodayForDateInputs() {
-  const today = new Date().toLocaleDateString("en-CA", {
-    timeZone: "Asia/Manila"
-  });
-
-  const dateInputs = [
-    "announcementDeadline",
-    "announcementPublishDate",
-    "thingsDate",
-    "adviserDate",
-    "prayerDate",
-    "quoteDateInput",
-    "birthdayDate"
-  ];
-
-  dateInputs.forEach(id => {
-    const input = document.getElementById(id);
-    if (input && !input.value) {
-      input.value = today;
-    }
-  });
-}
-
-async function sendAdminData(type, payload) {
-  showToast("Saving...");
-
-  try {
-    const response = await fetch(ADMIN_API_URL, {
-      method: "POST",
-      body: JSON.stringify({
-        type,
-        payload
-      })
-    });
-
-    const responseText = await response.text();
-    let result = {};
-
-    try {
-      result = JSON.parse(responseText);
-    } catch (parseError) {
-      throw new Error(responseText.slice(0, 180) || "Invalid server response.");
-    }
-
-    if (result.success) {
-      showToast("Saved successfully.");
-
-      if (currentAdminSheet) {
-        refreshCurrentAdminTable();
-      }
-
-      return true;
-    }
-
-    showToast(result.message || "Failed to save.");
-    return false;
-
-  } catch (error) {
-    console.error(error);
-    showToast("Error saving data.");
-    return false;
-  }
-}
-
-function showToast(message) {
-  const toast = document.getElementById("adminToast");
-  if (!toast) return;
-
-  toast.textContent = message;
-  toast.classList.remove("hidden");
-
-  clearTimeout(window.adminToastTimer);
-  window.adminToastTimer = setTimeout(() => {
-    toast.classList.add("hidden");
-  }, 2500);
-}
-
-function showToastAction(message, actionLabel, callback) {
-  const toast = document.getElementById("adminToast");
-  if (!toast) return;
-
-  toast.innerHTML = `<span>${escapeHtml(message)}</span><button type="button">${escapeHtml(actionLabel)}</button>`;
-  toast.classList.remove("hidden");
-
-  const button = toast.querySelector("button");
-  button?.addEventListener("click", () => {
-    toast.classList.add("hidden");
-    callback?.();
-  });
-
-  clearTimeout(window.adminToastTimer);
-  window.adminToastTimer = setTimeout(() => {
-    toast.classList.add("hidden");
-  }, 6500);
-}
-
-function clearFields(ids) {
-  ids.forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-
-    if (el.classList && el.classList.contains("richHiddenTextarea")) {
-      clearRichEditorForTarget(id);
-    } else if (el.tagName === "SELECT") {
-      el.selectedIndex = 0;
-    } else {
-      el.value = "";
-    }
-  });
-
-  setTodayForDateInputs();
-}
-
-
-/* RICH TEXT EDITOR FOR ANNOUNCEMENTS / THINGS TO BRING */
-const RICH_TEXT_PREFIX = "[rich]";
-const RICH_LIST_STYLES = ["disc", "circle", "square", "decimal", "lower-alpha", "upper-alpha", "lower-roman", "upper-roman"];
-const RICH_ALIGNMENTS = ["left", "center", "right"];
-const RICH_INDENT_STEP_EM = 1.25;
-const RICH_MAX_INDENT_LEVEL = 6;
-
-function initRichTextEditors() {
-  if (!window.__sfkRichSelectionWatcherAttached) {
-    window.__sfkRichSelectionWatcherAttached = true;
-    document.addEventListener("selectionchange", () => {
-      const activeComposer = document.activeElement && document.activeElement.closest ? document.activeElement.closest(".richComposer") : null;
-      if (activeComposer) saveRichSelection(activeComposer);
-    });
-  }
-
-  document.querySelectorAll(".richComposer").forEach(composer => {
-    if (composer.dataset.richReady === "true") return;
-    const targetId = composer.dataset.richTarget;
-    const editor = composer.querySelector(".richEditor");
-    if (!targetId || !editor) return;
-
-    composer.dataset.richReady = "true";
-
-    editor.addEventListener("input", () => syncRichEditorToTextarea(targetId));
-    editor.addEventListener("blur", () => {
-      saveRichSelection(composer);
-      syncRichEditorToTextarea(targetId);
-    });
-    editor.addEventListener("keyup", () => saveRichSelection(composer));
-    editor.addEventListener("mouseup", () => saveRichSelection(composer));
-    editor.addEventListener("touchend", () => setTimeout(() => saveRichSelection(composer), 0));
-    editor.addEventListener("paste", (event) => handleRichEditorPaste(event, targetId));
-
-    composer.querySelectorAll("[data-rich-command], [data-rich-list], [data-rich-align], [data-rich-indent], [data-rich-color]").forEach(button => {
-      button.addEventListener("mousedown", event => event.preventDefault());
-      button.addEventListener("click", () => runRichEditorToolbarAction(composer, button));
-    });
-
-    composer.querySelectorAll("[data-rich-color-picker]").forEach(input => {
-      input.addEventListener("mousedown", () => saveRichSelection(composer));
-      input.addEventListener("input", () => runRichEditorColorPickerAction(composer, input.value));
-      input.addEventListener("change", () => runRichEditorColorPickerAction(composer, input.value));
-    });
-
-    syncRichEditorToTextarea(targetId);
-  });
-}
-
-function getRichEditorToolbarMarkup(label = "Formatting tools") {
-  return `
-    <div class="richToolbar" aria-label="${escapeHtml(label)}">
-      <div class="richToolbarGroup" aria-label="Text style">
-        <button type="button" data-rich-command="bold" title="Bold selected text"><b>B</b></button>
-        <button type="button" data-rich-command="italic" title="Italic selected text"><i>I</i></button>
-        <button type="button" data-rich-command="underline" title="Underline selected text"><u>U</u></button>
-      </div>
-      <div class="richToolbarGroup" aria-label="Bullets and numbering">
-        <button type="button" data-rich-list="disc" title="Bullet list">•</button>
-        <button type="button" data-rich-list="circle" title="Circle bullet">○</button>
-        <button type="button" data-rich-list="square" title="Square bullet">▪</button>
-        <button type="button" data-rich-list="decimal" title="Numbered list">1.</button>
-        <button type="button" data-rich-list="lower-alpha" title="Letter list">a.</button>
-        <button type="button" data-rich-list="upper-alpha" title="Capital letter list">A.</button>
-      </div>
-      <div class="richToolbarGroup" aria-label="Indent">
-        <button type="button" data-rich-indent="out" title="Decrease indent">⇤</button>
-        <button type="button" data-rich-indent="in" title="Increase indent">⇥</button>
-      </div>
-      <div class="richToolbarGroup" aria-label="Text color">
-        <button type="button" class="richColorChip richColorBlack" data-rich-color="#111111" title="Black text">A</button>
-        <button type="button" class="richColorChip richColorRed" data-rich-color="#d62828" title="Red text">A</button>
-        <button type="button" class="richColorChip richColorBlue" data-rich-color="#2563eb" title="Blue text">A</button>
-        <button type="button" class="richColorChip richColorGreen" data-rich-color="#0f766e" title="Green text">A</button>
-        <button type="button" class="richColorChip richColorPurple" data-rich-color="#7c3aed" title="Purple text">A</button>
-        <label class="richColorPickerLabel" title="Custom text color"><span>Color</span><input type="color" data-rich-color-picker value="#111111" aria-label="Custom text color"></label>
-      </div>
-      <div class="richToolbarGroup" aria-label="Alignment">
-        <button type="button" data-rich-align="left" title="Align left">Left</button>
-        <button type="button" data-rich-align="center" title="Align center">Center</button>
-        <button type="button" data-rich-align="right" title="Align right">Right</button>
-        <button type="button" data-rich-command="removeFormat" title="Clear selected formatting">Clear</button>
-      </div>
-    </div>`;
-}
-
-function runRichEditorToolbarAction(composer, button) {
-  const targetId = composer.dataset.richTarget;
-  const editor = composer.querySelector(".richEditor");
-  if (!editor) return;
-
-  editor.focus();
-  restoreRichSelection(composer);
-
-  const command = button.dataset.richCommand;
-  const listStyle = button.dataset.richList;
-  const align = button.dataset.richAlign;
-  const indent = button.dataset.richIndent;
-  const color = button.dataset.richColor;
-
-  if (command) {
-    document.execCommand(command, false, null);
-  }
-
-  if (align && RICH_ALIGNMENTS.includes(align)) {
-    const commandName = align === "center" ? "justifyCenter" : align === "right" ? "justifyRight" : "justifyLeft";
-    document.execCommand(commandName, false, null);
-    applyAlignmentToSelectedBlocks(editor, align);
-  }
-
-  if (listStyle && RICH_LIST_STYLES.includes(listStyle)) {
-    applyListStyleToSelection(editor, listStyle);
-  }
-
-  if (indent === "in" || indent === "out") {
-    applyRichIndentToSelection(editor, indent === "in" ? 1 : -1);
-  }
-
-  if (color) {
-    applyRichTextColor(editor, color);
-  }
-
-  saveRichSelection(composer);
-  syncRichEditorToTextarea(targetId);
-}
-
-function runRichEditorColorPickerAction(composer, color) {
-  const targetId = composer.dataset.richTarget;
-  const editor = composer.querySelector(".richEditor");
-  if (!editor) return;
-
-  editor.focus();
-  restoreRichSelection(composer);
-  applyRichTextColor(editor, color);
-  saveRichSelection(composer);
-  syncRichEditorToTextarea(targetId);
-}
-
-function saveRichSelection(composer) {
-  const editor = composer.querySelector(".richEditor");
-  const selection = window.getSelection && window.getSelection();
-  if (!editor || !selection || !selection.rangeCount) return;
-
-  const anchor = selection.anchorNode;
-  const focus = selection.focusNode;
-  if ((anchor && editor.contains(anchor)) || (focus && editor.contains(focus))) {
-    composer.__savedRichRange = selection.getRangeAt(0).cloneRange();
-  }
-}
-
-function restoreRichSelection(composer) {
-  const editor = composer.querySelector(".richEditor");
-  const selection = window.getSelection && window.getSelection();
-  const range = composer.__savedRichRange;
-  if (!editor || !selection || !range) return;
-
-  const startInside = range.startContainer === editor || editor.contains(range.startContainer);
-  const endInside = range.endContainer === editor || editor.contains(range.endContainer);
-  if (!startInside || !endInside) return;
-
-  selection.removeAllRanges();
-  selection.addRange(range);
-}
-
-function handleRichEditorPaste(event, targetId) {
-  event.preventDefault();
-  const text = (event.clipboardData || window.clipboardData)?.getData("text/plain") || "";
-  document.execCommand("insertText", false, text);
-  syncRichEditorToTextarea(targetId);
-}
-
-function applyListStyleToSelection(editor, listStyle) {
-  const needsOrdered = ["decimal", "lower-alpha", "upper-alpha", "lower-roman", "upper-roman"].includes(listStyle);
-  const desiredTag = needsOrdered ? "OL" : "UL";
-  let list = getCurrentListElement(editor);
-
-  if (!list || list.tagName !== desiredTag) {
-    document.execCommand(needsOrdered ? "insertOrderedList" : "insertUnorderedList", false, null);
-    list = getCurrentListElement(editor);
-  }
-
-  if (list && RICH_LIST_STYLES.includes(listStyle)) {
-    list.style.listStyleType = listStyle;
-  }
-}
-
-function getCurrentListElement(editor) {
-  const selection = window.getSelection && window.getSelection();
-  let node = selection && selection.rangeCount ? selection.anchorNode : null;
-
-  if (!node || !editor.contains(node)) {
-    node = editor;
-  }
-
-  if (node.nodeType === Node.TEXT_NODE) {
-    node = node.parentElement;
-  }
-
-  while (node && node !== editor) {
-    if (node.tagName === "UL" || node.tagName === "OL") return node;
-    node = node.parentElement;
-  }
-
-  return editor.querySelector("ul, ol");
-}
-
-function applyAlignmentToSelectedBlocks(editor, align) {
-  const blocks = getSelectedRichBlocks(editor);
-  const listTargets = new Set();
-
-  blocks.forEach(block => {
-    const list = getClosestRichList(editor, block);
-    if (list) {
-      listTargets.add(list);
-    } else {
-      block.style.textAlign = align;
-    }
-  });
-
-  listTargets.forEach(list => applyRichListAlignment(list, align));
-}
-
-function applyRichListAlignment(list, align) {
-  list.style.textAlign = align;
-
-  if (align === "left") {
-    list.style.width = "100%";
-    list.style.marginLeft = "0";
-    list.style.marginRight = "0";
-  } else if (align === "center") {
-    list.style.width = "fit-content";
-    list.style.marginLeft = "auto";
-    list.style.marginRight = "auto";
-  } else if (align === "right") {
-    list.style.width = "100%";
-    list.style.marginLeft = "0";
-    list.style.marginRight = "0";
-  }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
-
-function applyRichIndentToSelection(editor, direction) {
-  const blocks = getSelectedRichBlocks(editor);
-  if (!blocks.length) return;
-
-  const targets = [];
-  const seen = new Set();
-
-  blocks.forEach(block => {
-    const target = getRichIndentTarget(editor, block);
-    if (target && !seen.has(target)) {
-      seen.add(target);
-      targets.push(target);
-    }
-  });
-
-  targets.forEach(target => {
-    const current = parseRichIndentValue(target.style.marginLeft);
-    const next = Math.max(0, Math.min(RICH_MAX_INDENT_LEVEL * RICH_INDENT_STEP_EM, current + (direction * RICH_INDENT_STEP_EM)));
-
-    if (next <= 0.01) {
-      target.style.removeProperty("margin-left");
-    } else {
-      target.style.marginLeft = formatRichIndentValue(next);
-    }
-  });
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background: linear-gradient(135deg, #f7c600, #ffdf3a);
+  color: #111;
+  min-height: 100vh;
 }
 
-function getRichIndentTarget(editor, block) {
-  const list = getClosestRichList(editor, block);
-  return list || block;
+.adminApp {
+  min-height: 100vh;
+  padding: 18px;
 }
-
-function getClosestRichList(editor, node) {
-  if (!node) return null;
-  if (node.nodeType === Node.TEXT_NODE) node = node.parentElement;
-
-  while (node && node !== editor) {
-    if (node.tagName === "UL" || node.tagName === "OL") return node;
-    node = node.parentElement;
-  }
 
-  return null;
+/* LOGIN */
+.loginScreen {
+  min-height: calc(100vh - 36px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-function applyRichTextColor(editor, color) {
-  const cleanColor = normalizeRichColor(color);
-  if (!cleanColor) return;
-  document.execCommand("foreColor", false, cleanColor);
+.loginCard {
+  width: min(430px, 100%);
+  background: #111;
+  color: white;
+  border: 4px solid white;
+  border-radius: 22px;
+  padding: 28px;
+  text-align: center;
+  box-shadow: 7px 7px 0 rgba(0,0,0,.35);
 }
-
-function getSelectedRichBlocks(editor) {
-  const selection = window.getSelection && window.getSelection();
-  if (!selection || !selection.rangeCount) return [];
 
-  const range = selection.getRangeAt(0);
-  const anchor = selection.anchorNode;
-  const focus = selection.focusNode;
-  if ((!anchor || !editor.contains(anchor)) && (!focus || !editor.contains(focus))) return [];
-
-  const candidates = Array.from(editor.querySelectorAll("p, div, li"))
-    .filter(el => {
-      try {
-        return range.intersectsNode(el);
-      } catch (error) {
-        return false;
-      }
-    });
+.koalaMark {
+  font-size: 3rem;
+  margin-bottom: 8px;
+}
 
-  const smallestBlocks = candidates.filter(el => !candidates.some(other => other !== el && el.contains(other)));
-  if (smallestBlocks.length) return smallestBlocks;
+.loginCard h1 {
+  font-size: 2rem;
+  line-height: 1.05;
+  margin-bottom: 8px;
+}
 
-  const closest = getClosestRichBlock(editor, anchor || focus);
-  if (closest) return [closest];
+.loginCard p {
+  color: #ffd700;
+  font-size: .95rem;
+  line-height: 1.35;
+  margin-bottom: 18px;
+}
 
-  document.execCommand("formatBlock", false, "div");
-  const created = getClosestRichBlock(editor, selection.anchorNode);
-  return created ? [created] : [];
+.loginCard input {
+  width: 100%;
+  padding: 13px 14px;
+  border: 3px solid #ffd700;
+  border-radius: 14px;
+  font-size: 1rem;
+  font-weight: 800;
+  outline: none;
+  margin-bottom: 12px;
+  text-align: center;
 }
 
-function getClosestRichBlock(editor, node) {
-  if (!node) return null;
-  if (node.nodeType === Node.TEXT_NODE) node = node.parentElement;
+.loginCard button {
+  width: 100%;
+  background: #ffd700;
+  color: #111;
+  border: none;
+  border-radius: 14px;
+  padding: 13px;
+  font-size: 1rem;
+  font-weight: 900;
+  cursor: pointer;
+}
 
-  while (node && node !== editor) {
-    if (["P", "DIV", "LI"].includes(node.tagName)) return node;
-    node = node.parentElement;
-  }
+.loginCard button:hover {
+  filter: brightness(.95);
+}
 
-  return null;
+#loginMessage {
+  display: block;
+  margin-top: 12px;
+  color: #ff6b6b;
+  font-weight: 800;
 }
 
-function parseRichIndentValue(value) {
-  const raw = String(value || "").trim().toLowerCase();
-  if (!raw) return 0;
+/* ADMIN PANEL */
+.adminPanel {
+  min-height: calc(100vh - 36px);
+}
 
-  if (raw.endsWith("em")) return Number.parseFloat(raw) || 0;
-  if (raw.endsWith("px")) return (Number.parseFloat(raw) || 0) / 16;
-  return Number.parseFloat(raw) || 0;
+.adminTopbar {
+  background: #111;
+  color: white;
+  border: 4px solid white;
+  border-radius: 20px;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 6px 6px 0 rgba(0,0,0,.35);
+  margin-bottom: 18px;
 }
 
-function formatRichIndentValue(value) {
-  const rounded = Math.round(value * 100) / 100;
-  return `${String(rounded).replace(/\.00$/, "").replace(/(\.\d)0$/, "$1")}em`;
+.adminTopbar h1 {
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  line-height: 1;
 }
 
-function normalizeRichColor(value) {
-  const raw = String(value || "").trim().toLowerCase();
+.adminTopbar p {
+  margin-top: 5px;
+  color: #ffd700;
+  font-weight: 800;
+  font-size: .95rem;
+}
 
-  const shortHex = raw.match(/^#([0-9a-f]{3})$/i);
-  if (shortHex) {
-    return `#${shortHex[1].split("").map(char => char + char).join("")}`.toLowerCase();
-  }
+.logoutBtn {
+  background: #ffd700;
+  color: #111;
+  border: none;
+  border-radius: 999px;
+  padding: 11px 18px;
+  font-weight: 900;
+  cursor: pointer;
+  white-space: nowrap;
+}
 
-  if (/^#[0-9a-f]{6}$/i.test(raw)) return raw.toLowerCase();
+.logoutBtn:hover {
+  filter: brightness(.94);
+}
 
-  const rgb = raw.match(/^rgba?\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})(?:,\s*(?:0|1|0?\.\d+))?\)$/i);
-  if (rgb) {
-    const parts = rgb.slice(1, 4).map(part => Math.max(0, Math.min(255, Number(part) || 0)));
-    return `#${parts.map(part => part.toString(16).padStart(2, "0")).join("")}`;
-  }
+/* GRID */
+.adminGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  align-items: start;
+}
 
-  return "";
+.formCard {
+  background: rgba(255,255,255,.96);
+  border: 3px solid #111;
+  border-left: 7px solid #111;
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 5px 5px 0 rgba(0,0,0,.25);
 }
 
-function normalizeRichIndent(value) {
-  const parsed = parseRichIndentValue(value);
-  if (!Number.isFinite(parsed) || parsed <= 0) return "";
-  const max = RICH_MAX_INDENT_LEVEL * RICH_INDENT_STEP_EM;
-  return formatRichIndentValue(Math.min(max, parsed));
+.formCard h2 {
+  font-size: 1.25rem;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 3px solid #ffd700;
 }
 
-function syncRichEditorToTextarea(targetId) {
-  const hidden = document.getElementById(targetId);
-  const editor = document.querySelector(`.richComposer[data-rich-target="${targetId}"] .richEditor`);
-  if (!hidden || !editor) return;
+.highlightCard {
+  background: #111;
+  color: white;
+  border-color: white;
+  border-left-color: #ffd700;
+}
 
-  const html = sanitizeRichEditorHtml(editor.innerHTML);
-  const plainText = getRichEditorPlainText(targetId);
-  hidden.value = plainText ? `${RICH_TEXT_PREFIX}\n${html}` : "";
+.highlightCard h2 {
+  color: #ffd700;
 }
 
-function getRichEditorStorageValue(targetId) {
-  syncRichEditorToTextarea(targetId);
-  const hidden = document.getElementById(targetId);
-  return hidden ? hidden.value.trim() : "";
+.highlightCard label {
+  color: #ffd700;
 }
 
-function isRichTextStorageValue(value) {
-  return /^\[rich\]\s*\n/i.test(String(value || "").replace(/\r/g, ""));
+label {
+  display: block;
+  font-size: .78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin: 10px 0 5px;
 }
 
-function getRichTextStorageHtml(value) {
-  return String(value || "")
-    .replace(/\r/g, "")
-    .replace(/^\[rich\]\s*\n?/i, "")
-    .trim();
+input,
+textarea,
+select {
+  width: 100%;
+  border: 2px solid #111;
+  border-radius: 12px;
+  padding: 10px 11px;
+  font-size: .95rem;
+  font-weight: 700;
+  outline: none;
+  background: white;
+  color: #111;
 }
 
-function getRichEditorPlainText(targetId) {
-  const editor = document.querySelector(`.richComposer[data-rich-target="${targetId}"] .richEditor`);
-  return editor ? String(editor.innerText || "").replace(/\u00a0/g, " ").trim() : "";
+textarea {
+  min-height: 82px;
+  resize: vertical;
+  line-height: 1.3;
 }
 
-function clearRichEditorForTarget(targetId) {
-  const hidden = document.getElementById(targetId);
-  const editor = document.querySelector(`.richComposer[data-rich-target="${targetId}"] .richEditor`);
-  if (hidden) hidden.value = "";
-  if (editor) editor.innerHTML = "";
+input[type="file"] {
+  cursor: pointer;
 }
 
-function sanitizeRichEditorHtml(html) {
-  const template = document.createElement("template");
-  template.innerHTML = String(html || "");
-  const fragment = sanitizeRichNode(template.content);
-  const wrapper = document.createElement("div");
-  wrapper.appendChild(fragment);
-  return wrapper.innerHTML
-    .replace(/<div><br><\/div>/gi, "")
-    .replace(/<p><br><\/p>/gi, "")
-    .trim();
+.fieldHint {
+  display: block;
+  margin: -2px 0 10px;
+  color: #444;
+  font-size: .82rem;
+  font-weight: 800;
+  line-height: 1.25;
 }
 
-function sanitizeRichNode(node) {
-  const fragment = document.createDocumentFragment();
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: #ffd700;
+  box-shadow: 0 0 0 3px rgba(255,215,0,.35);
+}
 
-  node.childNodes.forEach(child => {
-    if (child.nodeType === Node.TEXT_NODE) {
-      fragment.appendChild(document.createTextNode(child.textContent || ""));
-      return;
-    }
+.formCard button {
+  width: 100%;
+  margin-top: 14px;
+  background: #111;
+  color: #ffd700;
+  border: 2px solid #111;
+  border-radius: 14px;
+  padding: 12px;
+  font-size: .95rem;
+  font-weight: 900;
+  cursor: pointer;
+}
 
-    if (child.nodeType !== Node.ELEMENT_NODE) return;
+.formCard button:hover {
+  background: #ffd700;
+  color: #111;
+}
 
-    const tag = child.tagName.toLowerCase();
-    const allowed = ["b", "strong", "i", "em", "u", "br", "div", "p", "ul", "ol", "li", "span", "font"];
+.highlightCard button {
+  background: #ffd700;
+  color: #111;
+  border-color: #ffd700;
+}
 
-    if (!allowed.includes(tag)) {
-      fragment.appendChild(sanitizeRichNode(child));
-      return;
-    }
+.highlightCard button:hover {
+  background: white;
+  color: #111;
+}
 
-    const cleanTag = tag === "font" ? "span" : tag;
-    const clean = document.createElement(cleanTag);
-    const styleParts = [];
-    const textAlign = String(child.style?.textAlign || "").toLowerCase();
-    const listStyleType = String(child.style?.listStyleType || "").toLowerCase();
-    const fontWeight = String(child.style?.fontWeight || "").toLowerCase();
-    const fontStyle = String(child.style?.fontStyle || "").toLowerCase();
-    const textDecoration = String(child.style?.textDecoration || "").toLowerCase();
-    const color = normalizeRichColor(child.getAttribute("color") || child.style?.color || "");
-    const indent = normalizeRichIndent(child.style?.marginLeft || "");
+/* TOOL LAUNCHER */
+.adminPanel.toolsReady .adminGrid,
+.adminPanel.toolsReady > .managePanel {
+  display: none;
+}
 
-    if (RICH_ALIGNMENTS.includes(textAlign)) styleParts.push(`text-align:${textAlign}`);
-    if ((cleanTag === "ul" || cleanTag === "ol") && RICH_LIST_STYLES.includes(listStyleType)) {
-      styleParts.push(`list-style-type:${listStyleType}`);
-    }
-    if (["div", "p", "li", "ul", "ol"].includes(cleanTag) && indent) styleParts.push(`margin-left:${indent}`);
-    if (cleanTag === "span" && (fontWeight === "bold" || Number(fontWeight) >= 600)) styleParts.push("font-weight:700");
-    if (cleanTag === "span" && fontStyle === "italic") styleParts.push("font-style:italic");
-    if (cleanTag === "span" && textDecoration.includes("underline")) styleParts.push("text-decoration:underline");
-    if (cleanTag === "span" && color) styleParts.push(`color:${color}`);
-    if (styleParts.length) clean.setAttribute("style", styleParts.join(";"));
+.toolLauncher {
+  margin-bottom: 18px;
+  background: rgba(255,255,255,.97);
+  border: 3px solid #111;
+  border-left: 7px solid #111;
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: 5px 5px 0 rgba(0,0,0,.25);
+}
 
-    clean.appendChild(sanitizeRichNode(child));
-    fragment.appendChild(clean);
-  });
+.toolLauncherHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 14px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 3px solid #ffd700;
+}
 
-  return fragment;
+.toolLauncherHeader h2 {
+  font-size: clamp(1.35rem, 2vw, 1.85rem);
+  line-height: 1;
 }
 
-/* SUBJECT ANNOUNCEMENT */
-async function saveAnnouncement() {
-  const announcementText = getRichEditorStorageValue("announcementText");
-  const attachmentFiles = await buildAttachmentPayload("announcementAttachments", showToast);
+.toolLauncherHeader span,
+.toolEyebrow {
+  color: #444;
+  font-size: .78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}
 
-  if (attachmentFiles === null) return;
+.toolEyebrow {
+  margin-bottom: 4px;
+  color: #7a6500;
+}
 
-  const payload = {
-    Date: document.getElementById("announcementPublishDate").value,
-    Subject: document.getElementById("announcementSubject").value,
-    Announcement: announcementText,
-    Teacher: document.getElementById("announcementTeacher").value,
-    Deadline: document.getElementById("announcementDeadline").value,
-    PublishDate: document.getElementById("announcementPublishDate").value,
-    ExpiryDate: document.getElementById("announcementExpiryDate").value,
-    ShowDeadline: document.getElementById("announcementShowDeadline").value,
-    AttachmentFiles: attachmentFiles,
-    Priority: document.getElementById("announcementPriority").value,
-    Publish: document.getElementById("announcementPublish").value
-  };
+.toolLauncherGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+}
 
-  if (!payload.PublishDate || !payload.Subject || !payload.Announcement || !payload.Teacher) {
-    showToast("Publish date, subject, teacher, and announcement are required.");
-    return;
-  }
+.chatRosterToolbar {
+  margin-top: 12px;
+}
 
-  if (payload.PublishDate && payload.ExpiryDate && payload.ExpiryDate <= payload.PublishDate) {
-    showToast("Expiry Date must be after the Publish Date.");
-    return;
-  }
+.chatRosterList {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
 
-  const saved = await sendAdminData("announcement", payload);
+.chatRosterRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 11px;
+  border: 1px solid #d9d1bb;
+  border-radius: 10px;
+  background: #fff;
+}
 
-  if (saved) {
-    clearFields([
-      "announcementSubject",
-      "announcementText",
-      "announcementFormat",
-      "announcementAttachments",
-      "announcementTeacher",
-      "announcementDeadline",
-      "announcementPublishDate",
-      "announcementExpiryDate",
-      "announcementShowDeadline",
-      "announcementPriority",
-      "announcementPublish"
-    ]);
-  }
+.chatRosterRow strong,
+.chatRosterRow small {
+  display: block;
 }
 
-/* THINGS TO BRING */
-async function saveThingsToBring() {
-  const itemText = getRichEditorStorageValue("thingsItem");
+.chatRosterRow small {
+  margin-top: 3px;
+  color: #5f5a50;
+}
 
-  const payload = {
-    Date: document.getElementById("thingsDate").value,
-    Subject: document.getElementById("thingsSubject").value,
-    Item: itemText,
-    Publish: document.getElementById("thingsPublish").value
-  };
+.chatRosterRow button {
+  width: auto;
+  min-width: 82px;
+  margin: 0;
+  padding: 8px 10px;
+}
 
-  if (!payload.Date || !payload.Subject || !payload.Item) {
-    showToast("Date needed, subject, and item are required.");
-    return;
-  }
+.chatDangerZone {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 18px;
+  padding: 13px;
+  border: 2px solid #c92727;
+  border-radius: 12px;
+  background: #fff4f4;
+}
 
-  const saved = await sendAdminData("things", payload);
+.chatDangerZone strong,
+.chatDangerZone small {
+  display: block;
+}
 
-  if (saved) {
-    clearFields([
-      "thingsDate",
-      "thingsSubject",
-      "thingsItem",
-      "thingsFormat",
-      "thingsPublish"
-    ]);
-  }
+.chatDangerZone small {
+  margin-top: 4px;
+  color: #625656;
+  line-height: 1.3;
 }
 
-/* ADVISER REMINDER */
-async function saveAdviserReminder() {
-  const reminderText = document.getElementById("adviserReminder").value.trim();
-  const reminderFormat = document.getElementById("adviserFormat").value;
+.chatDangerZone button {
+  width: auto;
+  min-width: 150px;
+  margin: 0;
+  border-color: #b00020;
+  background: #b00020;
+  color: #fff;
+  box-shadow: 3px 3px 0 #111;
+}
 
-  const payload = {
-    Date: document.getElementById("adviserDate").value,
-    Reminder: applyTextFormat(reminderText, reminderFormat),
-    Publish: document.getElementById("adviserPublish").value
-  };
+.chatDangerZone button:hover {
+  background: #8e001a;
+  color: #fff;
+}
 
-  if (!payload.Date || !payload.Reminder) {
-    showToast("Date and reminder are required.");
-    return;
+@media (max-width: 620px) {
+  .chatDangerZone {
+    align-items: stretch;
+    flex-direction: column;
   }
 
-  const saved = await sendAdminData("reminder", payload);
-
-  if (saved) {
-    clearFields([
-      "adviserDate",
-      "adviserReminder",
-      "adviserFormat",
-      "adviserPublish"
-    ]);
+  .chatDangerZone button {
+    width: 100%;
   }
 }
-
-/* PRAYER LEADER */
-async function savePrayerLeader() {
-  const payload = {
-    Date: document.getElementById("prayerDate").value,
-    PrayerLeader: document.getElementById("prayerName").value.trim(),
-    Publish: document.getElementById("prayerPublish").value
-  };
-
-  if (!payload.Date || !payload.PrayerLeader) {
-    showToast("Date and prayer leader are required.");
-    return;
-  }
-
-  const saved = await sendAdminData("prayer", payload);
 
-  if (saved) {
-    clearFields([
-      "prayerDate",
-      "prayerName",
-      "prayerPublish"
-    ]);
-  }
+.toolLaunchButton {
+  min-height: 82px;
+  border: 2px solid #111;
+  border-radius: 14px;
+  background: #fff8dc;
+  color: #111;
+  padding: 12px;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 rgba(0,0,0,.22);
 }
 
-/* DAILY KINDNESS QUOTE */
-async function saveQuote() {
-  const payload = {
-    Date: document.getElementById("quoteDateInput").value,
-    Quote: document.getElementById("quoteTextInput").value.trim(),
-    Author: document.getElementById("quoteAuthorInput").value.trim(),
-    Publish: document.getElementById("quotePublishInput").value
-  };
+.toolLaunchButton strong,
+.toolLaunchButton small {
+  display: block;
+}
 
-  if (!payload.Date || !payload.Quote) {
-    showToast("Date and quote are required.");
-    return;
-  }
+.toolLaunchButton strong {
+  margin-bottom: 5px;
+  font-size: .98rem;
+  line-height: 1.1;
+}
 
-  const saved = await sendAdminData("quote", payload);
+.toolLaunchButton small {
+  color: #444;
+  font-size: .74rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
 
-  if (saved) {
-    clearFields([
-      "quoteDateInput",
-      "quoteTextInput",
-      "quoteAuthorInput",
-      "quotePublishInput"
-    ]);
-  }
+.toolLaunchButton:hover,
+.toolLaunchButton:focus-visible {
+  background: #ffd700;
+  outline: none;
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 rgba(0,0,0,.24);
 }
 
-/* BIRTHDAY */
-async function saveBirthday() {
-  const payload = {
-    Name: document.getElementById("birthdayName").value.trim(),
-    Birthday: document.getElementById("birthdayDate").value,
-    Publish: document.getElementById("birthdayPublish").value
-  };
+.manageLaunchButton {
+  background: #111;
+  color: #ffd700;
+}
 
-  if (!payload.Name || !payload.Birthday) {
-    showToast("Name and birthday are required.");
-    return;
-  }
+.manageLaunchButton small {
+  color: white;
+}
 
-  const saved = await sendAdminData("birthday", payload);
+.toolModal {
+  position: fixed;
+  inset: 0;
+  z-index: 9997;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
 
-  if (saved) {
-    clearFields([
-      "birthdayName",
-      "birthdayDate",
-      "birthdayPublish"
-    ]);
-  }
+.toolModal.hidden {
+  display: none;
 }
 
-/* TICKER MESSAGE */
-async function saveTickerMessage() {
-  const payload = {
-    Message: document.getElementById("tickerMessage").value.trim(),
-    Priority: "Normal",
-    Publish: document.getElementById("tickerPublish").value
-  };
+.toolModalBackdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.62);
+}
 
-  if (!payload.Message) {
-    showToast("Ticker message is required.");
-    return;
-  }
+.toolModalCard {
+  position: relative;
+  z-index: 1;
+  width: min(820px, 100%);
+  max-height: min(90vh, 860px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: white;
+  border: 4px solid #111;
+  border-radius: 22px;
+  box-shadow: 8px 8px 0 rgba(0,0,0,.35);
+}
 
-  const saved = await sendAdminData("ticker", payload);
+.toolModalHeader {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px;
+  border-bottom: 3px solid #ffd700;
+}
 
-  if (saved) {
-    clearFields([
-      "tickerMessage",
-      "tickerPublish"
-    ]);
-  }
+.toolModalHeader h2 {
+  font-size: 1.45rem;
+  line-height: 1;
 }
 
-async function buildAttachmentPayload(inputId, notify) {
-  const input = document.getElementById(inputId);
-  const files = input && input.files ? Array.from(input.files) : [];
+.toolModalClose {
+  width: 38px;
+  height: 38px;
+  border: 2px solid #111;
+  border-radius: 999px;
+  background: #111;
+  color: #ffd700;
+  font-size: 1.3rem;
+  font-weight: 900;
+  cursor: pointer;
+}
 
-  if (files.length === 0) return [];
+.toolModalClose:hover {
+  background: #ffd700;
+  color: #111;
+}
 
-  if (files.length > MAX_ANNOUNCEMENT_ATTACHMENTS) {
-    notify(`Maximum of ${MAX_ANNOUNCEMENT_ATTACHMENTS} photos only.`);
-    return null;
-  }
+.toolModalContent {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px;
+}
 
-  const unsupported = files.find(file => !String(file.type || "").startsWith("image/"));
-  if (unsupported) {
-    notify("No-billing mode supports image uploads only. Use a public link for PDFs/docs.");
-    return null;
-  }
+.toolModalContent .toolModalPanel {
+  display: block;
+  width: 100%;
+  margin: 0;
+  box-shadow: none;
+}
 
-  const totalBytes = files.reduce((sum, file) => sum + file.size, 0);
+body.toolModalOpen {
+  overflow: hidden;
+}
 
-  if (totalBytes > MAX_ANNOUNCEMENT_ATTACHMENT_BYTES) {
-    notify("Photos are too large. Keep selected photos under 12 MB before compression.");
-    return null;
-  }
+/* MANAGE EXISTING DATA */
+.managePanel {
+  margin-top: 18px;
+  background: rgba(255,255,255,.97);
+  border: 3px solid #111;
+  border-left: 7px solid #111;
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: 5px 5px 0 rgba(0,0,0,.25);
+}
 
-  try {
-    return await Promise.all(files.map(file => readAttachmentFile(file)));
-  } catch (error) {
-    notify(error.message || "Unable to prepare one of the photos.");
-    return null;
-  }
+.manageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 3px solid #ffd700;
 }
 
-async function readAttachmentFile(file) {
-  const imageUrl = await readAdminAttachmentDataUrl(file);
-  const image = await loadAdminAttachmentImage(imageUrl);
-  const blob = await compressAdminAttachmentImage(image);
-  const dataUrl = await readAdminAttachmentDataUrl(blob || file);
+.manageHeader h2 {
+  font-size: clamp(1.35rem, 2vw, 1.8rem);
+  line-height: 1;
+}
 
-  return {
-    name: file.name.replace(/\.[^.]+$/, "") + ".jpg",
-    mimeType: "image/jpeg",
-    data: String(dataUrl || "").split(",")[1] || ""
-  };
+.manageHeader p {
+  margin-top: 5px;
+  font-size: .9rem;
+  font-weight: 800;
+  color: #444;
+  line-height: 1.3;
 }
 
-function readAdminAttachmentDataUrl(fileOrBlob) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ""));
-    reader.onerror = () => reject(reader.error || new Error("Unable to read attachment."));
-    reader.readAsDataURL(fileOrBlob);
-  });
+.refreshBtn {
+  background: #111;
+  color: #ffd700;
+  border: 2px solid #111;
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-size: .9rem;
+  font-weight: 900;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 3px 3px 0 rgba(0,0,0,.2);
 }
 
-function loadAdminAttachmentImage(src) {
-  return new Promise((resolve, reject) => {
-    const image = new Image();
-    image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error("Unable to prepare one of the photos."));
-    image.src = src;
-  });
+.refreshBtn:hover {
+  background: #ffd700;
+  color: #111;
 }
 
-async function compressAdminAttachmentImage(image) {
-  const dimensions = [1280, 1100, 900, 760, 640];
-  const qualities = [.74, .66, .58, .5, .42];
-  let bestBlob = null;
+.manageTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
 
-  for (const maxDimension of dimensions) {
-    const ratio = Math.min(1, maxDimension / Math.max(image.naturalWidth, image.naturalHeight));
-    const width = Math.max(1, Math.round(image.naturalWidth * ratio));
-    const height = Math.max(1, Math.round(image.naturalHeight * ratio));
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-    const context = canvas.getContext("2d");
-    context.fillStyle = "#fff";
-    context.fillRect(0, 0, width, height);
-    context.drawImage(image, 0, 0, width, height);
+.manageTabs button {
+  background: #ffd700;
+  color: #111;
+  border: 2px solid #111;
+  border-radius: 999px;
+  padding: 9px 13px;
+  font-size: .85rem;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 rgba(0,0,0,.22);
+}
 
-    for (const quality of qualities) {
-      const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/jpeg", quality));
-      if (!blob) continue;
-      bestBlob = blob;
-      if (blob.size <= TARGET_ANNOUNCEMENT_IMAGE_BYTES) return blob;
-    }
-  }
+.manageTabs button:hover,
+.manageTabs button.active {
+  background: #111;
+  color: #ffd700;
+}
 
-  return bestBlob;
+.manageFilters {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(150px, .8fr);
+  gap: 8px 10px;
+  align-items: end;
+  margin-bottom: 12px;
 }
 
-/* CLASS SCHEDULE */
-async function saveClassSchedule() {
-  const payload = {
-    Day: document.getElementById("scheduleDay").value,
-    StartTime: normalizeScheduleTimeInput(document.getElementById("scheduleStartTime").value),
-    EndTime: normalizeScheduleTimeInput(document.getElementById("scheduleEndTime").value),
-    Subject: document.getElementById("scheduleSubject").value.trim(),
-    Teacher: document.getElementById("scheduleTeacher").value.trim(),
-    Room: document.getElementById("scheduleRoom").value.trim(),
-    Color: normalizeScheduleColorInput(document.getElementById("scheduleColor").value),
-    Publish: document.getElementById("schedulePublish").value
-  };
+.manageFilters label {
+  display: block;
+  margin-bottom: 4px;
+  color: #333;
+  font-size: .7rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
 
-  if (!payload.Day || !payload.StartTime || !payload.EndTime || !payload.Subject) {
-    showToast("Day, start time, end time, and subject/block are required.");
-    return;
-  }
+.manageFilters input,
+.manageFilters select {
+  width: 100%;
+  min-height: 42px;
+  border: 2px solid #d9c766;
+  border-radius: 12px;
+  background: white;
+  color: #111;
+  padding: 9px 11px;
+  font: inherit;
+  font-size: .9rem;
+  font-weight: 850;
+}
 
-  if (scheduleTimeToMinutes(payload.EndTime) <= scheduleTimeToMinutes(payload.StartTime)) {
-    showToast("End time must be after the start time.");
-    return;
-  }
+.manageStatus {
+  background: #111;
+  color: #ffd700;
+  border: 3px solid #ffd700;
+  border-radius: 14px;
+  padding: 10px 12px;
+  font-size: .9rem;
+  font-weight: 900;
+  margin-bottom: 12px;
+}
 
-  const saved = await sendAdminData("schedule", payload);
+.batchActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
 
-  if (saved) {
-    clearFields([
-      "scheduleStartTime",
-      "scheduleEndTime",
-      "scheduleSubject",
-      "scheduleTeacher",
-      "scheduleRoom",
-      "scheduleColor",
-      "schedulePublish"
-    ]);
-  }
+.batchActions button {
+  background: white;
+  color: #111;
+  border: 2px solid #111;
+  border-radius: 999px;
+  padding: 9px 13px;
+  font-size: .82rem;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 rgba(0,0,0,.18);
 }
 
-function normalizeScheduleColorInput(value) {
-  const text = String(value || "").trim();
-  if (!text) return "";
+.batchActions button:hover {
+  background: #ffd700;
+}
 
-  const hex = text.match(/^#?([0-9a-fA-F]{6})$/);
-  if (hex) return `#${hex[1].toUpperCase()}`;
+.batchActions .dangerBatchBtn {
+  background: #ff4d4d;
+  color: white;
+  border-color: #8b0000;
+}
 
-  return text.replace(/\s+/g, " ");
+.tableWrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 3px solid #111;
+  border-radius: 16px;
+  background: white;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.08);
 }
 
-function normalizeScheduleTimeInput(value) {
-  const text = String(value || "").trim();
-  if (!text) return "";
+#adminDataTable {
+  width: 100%;
+  min-width: 1050px;
+  border-collapse: collapse;
+}
 
-  const match = text.match(/^(\d{1,2}):(\d{2})$/);
-  if (!match) return text;
+#adminDataTable th,
+#adminDataTable td {
+  border-bottom: 1px solid #ddd;
+  border-right: 1px solid #eee;
+  padding: 10px 11px;
+  text-align: left;
+  vertical-align: top;
+  font-size: .88rem;
+  line-height: 1.3;
+}
 
-  let hour = Number(match[1]);
-  const minute = match[2];
-  const meridiem = hour >= 12 ? "PM" : "AM";
-  if (hour === 0) hour = 12;
-  else if (hour > 12) hour -= 12;
-  return `${hour}:${minute} ${meridiem}`;
+#adminDataTable th {
+  background: #111;
+  color: #ffd700;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
-function scheduleTimeToMinutes(value) {
-  const text = String(value || "").trim();
-  const match = text.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
-  if (!match) return 99999;
+#adminDataTable td {
+  color: #111;
+  font-weight: 700;
+  background: white;
+}
 
-  let hour = Number(match[1]);
-  const minute = Number(match[2]);
-  const meridiem = String(match[3] || "").toUpperCase();
-  if (meridiem === "PM" && hour < 12) hour += 12;
-  if (meridiem === "AM" && hour === 12) hour = 0;
-  return hour * 60 + minute;
+#adminDataTable tbody tr:hover td {
+  background: #fff7c7;
 }
 
-/* DAILY SCHEDULE INFO */
-async function saveDailyInfo() {
-  const payload = {
-    Day: document.getElementById("dailyInfoDay").value,
-    EntryGate: document.getElementById("dailyInfoEntryGate").value.trim(),
-    ExitGate: document.getElementById("dailyInfoExitGate").value.trim(),
-    Uniform: document.getElementById("dailyInfoUniform").value.trim(),
-    Publish: document.getElementById("dailyInfoPublish").value
-  };
+#adminDataTable tbody tr.selectedRow td {
+  background: #fff2a8;
+  outline: 2px solid rgba(0,0,0,.12);
+}
 
-  if (!payload.Day || !payload.EntryGate || !payload.ExitGate || !payload.Uniform) {
-    showToast("Day, entry gate, exit gate, and uniform are required.");
-    return;
-  }
+.selectCell {
+  text-align: center !important;
+  vertical-align: middle !important;
+}
 
-  const saved = await sendAdminData("dailyInfo", payload);
+.rowSelectInput {
+  width: 20px;
+  height: 20px;
+  accent-color: #111;
+}
 
-  if (saved) {
-    clearFields([
-      "dailyInfoEntryGate",
-      "dailyInfoExitGate",
-      "dailyInfoUniform",
-      "dailyInfoPublish"
-    ]);
-  }
+.rowNumberCell {
+  color: #777 !important;
+  font-size: .78rem !important;
+  font-weight: 900 !important;
+  white-space: nowrap;
+  background: #f5f5f5 !important;
 }
 
-/* MANAGE EXISTING DATA - EDIT / HIDE / DELETE */
-async function loadAdminTable(sheetName, buttonEl) {
-  currentAdminSheet = sheetName;
-  selectedAdminRows = new Set();
+.emptyCell {
+  color: #999 !important;
+  font-style: italic;
+  font-weight: 700 !important;
+}
 
-  setActiveManageTab(buttonEl);
-  setManageStatus(`Loading ${formatSheetLabel(sheetName)}...`);
+/* TABLE ACTION BUTTONS */
+.actionCell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 210px;
+}
 
-  const tableHead = document.querySelector("#adminDataTable thead");
-  const tableBody = document.querySelector("#adminDataTable tbody");
+.tableActionBtn {
+  border: 2px solid #111;
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-size: .74rem;
+  font-weight: 900;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 2px 2px 0 rgba(0,0,0,.18);
+}
 
-  if (!tableHead || !tableBody) {
-    showToast("Manage table not found in admin.html.");
-    return;
-  }
+.tableActionBtn:hover {
+  filter: brightness(.93);
+  transform: translateY(1px);
+}
 
-  tableHead.innerHTML = "";
-  tableBody.innerHTML = "";
+.editBtn {
+  background: #ffd700;
+  color: #111;
+}
 
-  try {
-    const response = await fetch(`${ADMIN_API_URL}?type=adminList&sheet=${encodeURIComponent(sheetName)}`, {
-      cache: "no-store"
-    });
+.hideBtn {
+  background: #111;
+  color: #ffd700;
+}
 
-    const result = await response.json();
+.deleteBtn {
+  background: #ff4d4d;
+  color: white;
+  border-color: #8b0000;
+}
 
-    if (result.status !== "success") {
-      setManageStatus(result.message || "Unable to load data.");
-      return;
-    }
+/* EDIT MODAL */
+.editModal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.62);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 18px;
+  z-index: 9998;
+}
 
-    latestAdminTableData = result;
-    resetAdminManageFilters();
-    renderAdminTable(getAdminFilteredTableData());
+.editModalCard {
+  width: min(720px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  background: white;
+  border: 4px solid #111;
+  border-radius: 22px;
+  padding: 18px;
+  box-shadow: 8px 8px 0 rgba(0,0,0,.35);
+}
 
-  } catch (error) {
-    console.error(error);
-    setManageStatus("Error loading data.");
-  }
+.editModalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  border-bottom: 3px solid #ffd700;
+  padding-bottom: 12px;
+  margin-bottom: 14px;
 }
 
+.editModalHeader h2 {
+  font-size: 1.55rem;
+  line-height: 1;
+}
 
-function getVisibleManageColumnIndexes(headers) {
-  const seen = new Set();
+.editModalHeader p {
+  margin-top: 5px;
+  font-size: .88rem;
+  font-weight: 800;
+  color: #444;
+}
 
-  return (headers || [])
-    .map((header, index) => ({ header, index }))
-    .filter(item => {
-      const key = normalizeManageHeaderKey(item.header);
+.modalCloseBtn {
+  background: #111;
+  color: #ffd700;
+  border: 2px solid #111;
+  border-radius: 999px;
+  width: 38px;
+  height: 38px;
+  font-size: 1.35rem;
+  font-weight: 900;
+  cursor: pointer;
+  line-height: 1;
+  flex-shrink: 0;
+}
 
-      if (!key) return true;
+.modalCloseBtn:hover {
+  background: #ffd700;
+  color: #111;
+}
 
-      if (seen.has(key)) return false;
+.editFields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 12px;
+}
 
-      seen.add(key);
-      return true;
-    })
-    .map(item => item.index);
+.editField {
+  min-width: 0;
 }
 
-function normalizeManageHeaderKey(header) {
-  return String(header || "")
-    .trim()
-    .toLowerCase()
-    .replace(/[\s_\-]+/g, "")
-    .replace(/[^a-z0-9]/g, "");
+.editFieldFull {
+  grid-column: span 2;
 }
 
-function getAdminManageFilters() {
-  return {
-    search: document.getElementById("adminManageSearch")?.value.trim().toLowerCase() || "",
-    publish: document.getElementById("adminPublishFilter")?.value || "all"
-  };
+.editField label {
+  margin-top: 0;
 }
 
-function resetAdminManageFilters() {
-  const search = document.getElementById("adminManageSearch");
-  const publish = document.getElementById("adminPublishFilter");
-  if (search) search.value = "";
-  if (publish) publish.value = "all";
+.editField input,
+.editField textarea,
+.editField select,
+.editFormatSelect {
+  width: 100%;
 }
 
-function getRowPublishValue(headers, row) {
-  const publishIndex = (headers || []).findIndex(header => {
-    const key = normalizeManageHeaderKey(header);
-    return key === "publish" || key === "published";
-  });
+.editFormatSelect {
+  margin-bottom: 8px;
+}
 
-  if (publishIndex === -1) return "YES";
-  return String(row?.cells?.[publishIndex] || "YES").trim().toUpperCase();
+.editField textarea {
+  min-height: 92px;
 }
 
-function rowMatchesManageFilters(headers, row, filters) {
-  const publish = getRowPublishValue(headers, row);
+.readOnlyField {
+  background: #eeeeee !important;
+  color: #777 !important;
+  cursor: not-allowed;
+}
 
-  if (filters.publish === "published" && publish === "NO") return false;
-  if (filters.publish === "hidden" && publish !== "NO") return false;
+.editModalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+  border-top: 3px solid #ffd700;
+  padding-top: 14px;
+}
 
-  if (!filters.search) return true;
+.cancelEditBtn,
+.saveEditBtn {
+  border: 2px solid #111;
+  border-radius: 999px;
+  padding: 11px 16px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 rgba(0,0,0,.18);
+}
 
-  const haystack = [
-    row.rowNumber,
-    ...(row.cells || [])
-  ].join(" ").toLowerCase();
+.cancelEditBtn {
+  background: white;
+  color: #111;
+}
 
-  return haystack.includes(filters.search);
+.saveEditBtn {
+  background: #111;
+  color: #ffd700;
 }
 
-function getAdminFilteredTableData() {
-  if (!latestAdminTableData) return null;
+.cancelEditBtn:hover {
+  background: #eeeeee;
+}
 
-  const filters = getAdminManageFilters();
-  const allRows = latestAdminTableData.rows || [];
-  const rows = allRows.filter(row => rowMatchesManageFilters(latestAdminTableData.headers || [], row, filters));
+.saveEditBtn:hover {
+  background: #ffd700;
+  color: #111;
+}
 
-  currentAdminFilteredRows = rows;
+/* TOAST */
+.adminToast {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  background: #111;
+  color: #ffd700;
+  border: 3px solid white;
+  border-radius: 999px;
+  padding: 12px 18px;
+  font-weight: 900;
+  box-shadow: 5px 5px 0 rgba(0,0,0,.3);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(92vw, 460px);
+  line-height: 1.25;
+}
 
-  return {
-    ...latestAdminTableData,
-    rows,
-    totalRows: allRows.length
-  };
+.adminToast button {
+  border: 2px solid #ffd700;
+  border-radius: 999px;
+  background: white;
+  color: #111;
+  padding: 6px 10px;
+  font: inherit;
+  font-size: .78rem;
+  cursor: pointer;
 }
 
-function applyAdminManageFilters() {
-  if (!latestAdminTableData) return;
+/* HELPERS */
+.hidden {
+  display: none !important;
+}
 
-  const filteredData = getAdminFilteredTableData();
-  const visibleRows = new Set(currentAdminFilteredRows.map(row => Number(row.rowNumber)));
-  selectedAdminRows = new Set([...selectedAdminRows].filter(rowNumber => visibleRows.has(Number(rowNumber))));
-  renderAdminTable(filteredData);
-  syncAdminSelectedRows();
+/* TABLET */
+@media (max-width: 1100px) {
+  .adminGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
-function renderAdminTable(result) {
-  const tableHead = document.querySelector("#adminDataTable thead");
-  const tableBody = document.querySelector("#adminDataTable tbody");
+/* PHONE */
+@media (max-width: 720px) {
+  .adminApp {
+    padding: 8px;
+  }
+
+  .adminTopbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    flex-direction: row;
+    text-align: left;
+    padding: 9px 10px;
+    border-width: 2px;
+    border-radius: 12px;
+    gap: 8px;
+    box-shadow: 3px 3px 0 rgba(0,0,0,.26);
+    margin-bottom: 9px;
+  }
 
-  if (!result) return;
+  .adminTopbar h1 {
+    font-size: 1.15rem;
+  }
 
-  const headers = result.headers || [];
-  const rows = result.rows || [];
-  const totalRows = Number.isFinite(result.totalRows) ? result.totalRows : rows.length;
-  const isAnnouncementsSheet = result.sheetName === "Announcements";
-  const visibleColumnIndexes = getVisibleManageColumnIndexes(headers);
+  .adminTopbar p {
+    margin-top: 2px;
+    font-size: .68rem;
+    line-height: 1.15;
+  }
 
-  if (!tableHead || !tableBody) return;
+  .logoutBtn {
+    width: auto;
+    padding: 8px 10px;
+    font-size: .72rem;
+  }
 
-  if (headers.length === 0) {
-    tableHead.innerHTML = "";
-    tableBody.innerHTML = "";
-    setManageStatus(`${formatSheetLabel(result.sheetName)} has no headers.`);
-    return;
+  .adminGrid {
+    grid-template-columns: 1fr;
+    gap: 8px;
   }
 
-  tableHead.innerHTML = `
-    <tr>
-      <th>Select</th>
-      <th>Actions</th>
-      <th>Row</th>
-      ${isAnnouncementsSheet ? "<th>Noted</th>" : ""}
-      ${visibleColumnIndexes.map(index => `<th>${escapeHtml(getManageHeaderLabel(result.sheetName, headers[index]))}</th>`).join("")}
-    </tr>
-  `;
+  .formCard {
+    border-width: 2px;
+    border-left-width: 5px;
+    border-radius: 12px;
+    padding: 10px;
+    box-shadow: 3px 3px 0 rgba(0,0,0,.2);
+  }
 
-  if (rows.length === 0) {
-    tableBody.innerHTML = `
-      <tr>
-        <td colspan="${visibleColumnIndexes.length + 3 + (isAnnouncementsSheet ? 1 : 0)}" class="emptyCell">
-          ${totalRows > 0 ? "No matching records found." : "No data found."}
-        </td>
-      </tr>
-    `;
+  .formCard h2 {
+    margin-bottom: 7px;
+    padding-bottom: 5px;
+    border-bottom-width: 2px;
+    font-size: 1rem;
+  }
 
-    setManageStatus(totalRows > 0
-      ? `${formatSheetLabel(result.sheetName)} loaded. Showing 0 of ${totalRows} record(s).`
-      : `${formatSheetLabel(result.sheetName)} loaded. No records yet.`
-    );
-    return;
+  label {
+    margin: 7px 0 3px;
+    font-size: .66rem;
+    letter-spacing: .25px;
   }
 
-  tableBody.innerHTML = rows.map(row => {
-    return `
-      <tr>
-        <td class="selectCell" data-label="Select">
-          <input type="checkbox" class="rowSelectInput" data-row="${row.rowNumber}" onchange="toggleAdminRowSelection(${row.rowNumber}, this.checked)" />
-        </td>
+  input,
+  textarea,
+  select {
+    min-height: 38px;
+    border-radius: 9px;
+    padding: 7px 9px;
+    font-size: .86rem;
+  }
 
-        <td class="actionsDataCell" data-label="Actions">
-          <div class="actionCell">
-            <button class="tableActionBtn editBtn" onclick="openEditModal(${row.rowNumber})">Edit</button>
-            <button class="tableActionBtn hideBtn" onclick="hideAdminRecord(${row.rowNumber})">Hide</button>
-            <button class="tableActionBtn deleteBtn" onclick="deleteAdminRecord(${row.rowNumber})">Delete</button>
-          </div>
-        </td>
+  textarea {
+    min-height: 62px;
+    line-height: 1.25;
+  }
 
-        <td class="rowNumberCell" data-label="Row">#${row.rowNumber}</td>
+  .fieldHint {
+    margin: 1px 0 6px;
+    font-size: .68rem;
+  }
 
-        ${isAnnouncementsSheet ? renderAdminNotedCountCell(row) : ""}
+  .formCard button {
+    position: sticky;
+    bottom: 8px;
+    z-index: 5;
+    min-height: 40px;
+    margin-top: 9px;
+    border-radius: 10px;
+    padding: 8px 10px;
+    font-size: .82rem;
+    box-shadow: 0 -2px 10px rgba(255,255,255,.7), 3px 3px 0 rgba(0,0,0,.18);
+  }
 
-        ${visibleColumnIndexes.map(index => {
-          const header = headers[index];
-          const value = row.cells[index] || "";
-          return `
-            <td class="${value ? "" : "emptyCell"}" data-label="${escapeAttribute(getManageHeaderLabel(result.sheetName, header))}">
-              ${formatManageCellDisplay(value)}
-            </td>
-          `;
-        }).join("")}
-      </tr>
-    `;
-  }).join("");
+  .toolLauncher {
+    margin-bottom: 10px;
+    padding: 10px;
+    border-width: 2px;
+    border-left-width: 5px;
+    border-radius: 12px;
+    box-shadow: 3px 3px 0 rgba(0,0,0,.2);
+  }
 
-  setManageStatus(`${formatSheetLabel(result.sheetName)} loaded. ${rows.length}${totalRows !== rows.length ? ` of ${totalRows}` : ""} record(s) shown.`);
-  attachAdminLongPressSelection();
-}
+  .toolLauncherHeader {
+    align-items: start;
+    margin-bottom: 9px;
+    padding-bottom: 8px;
+    border-bottom-width: 2px;
+  }
 
+  .toolLauncherHeader h2 {
+    font-size: 1.05rem;
+  }
 
-function formatManageCellDisplay(value) {
-  if (!value) return "—";
+  .toolLauncherHeader span,
+  .toolEyebrow {
+    font-size: .64rem;
+  }
 
-  if (typeof isRichTextStorageValue === "function" && isRichTextStorageValue(value)) {
-    const safeHtml = sanitizeRichEditorHtml(getRichTextStorageHtml(value));
-    return safeHtml ? `<div class="manageRichPreview">${safeHtml}</div>` : "—";
+  .toolLauncherHeader > span {
+    max-width: 110px;
+    text-align: right;
+    line-height: 1.2;
   }
 
-  return escapeHtml(stripTextFormatTag(value));
-}
+  .toolLauncherGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+  }
 
-function renderAdminNotedCountCell(row) {
-  const count = getManageHeartCount(row);
+  .toolLaunchButton {
+    min-height: 68px;
+    border-radius: 10px;
+    padding: 9px;
+    box-shadow: 2px 2px 0 rgba(0,0,0,.2);
+  }
 
-  return `
-    <td class="adminNotedCountCell" data-label="Noted" title="Students who clicked Noted / Heart">
-      <span class="adminNotedPill">❤️ ${count}</span>
-    </td>
-  `;
-}
+  .toolLaunchButton strong {
+    font-size: .78rem;
+    line-height: 1.1;
+  }
 
+  .toolLaunchButton small {
+    margin-top: 4px;
+    font-size: .6rem;
+    line-height: 1.18;
+  }
 
-function getManageHeartCount(row) {
-  const users = normalizeManageHeartUsers(row?.HeartUsersV2 || row?.heartUsersV2 || row?.NotedDevicesV2 || row?.notedDevicesV2);
-  const mapCount = Object.keys(users).length;
-  if (mapCount > 0) return mapCount;
-  const values = [row?.NotedCountV2, row?.notedCountV2, row?.HeartCountV2, row?.heartCountV2]
-    .map(value => Number(value))
-    .filter(value => Number.isFinite(value) && value >= 0);
-  return values.length ? Math.max(...values) : 0;
-}
+  .manageLaunchButton {
+    grid-column: span 2;
+  }
 
-function normalizeManageHeartUsers(value) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
-  return Object.fromEntries(Object.entries(value).filter(([key, isHearted]) => key && Boolean(isHearted)));
-}
+  .toolModal {
+    align-items: end;
+    padding: 8px;
+  }
 
-function toggleAdminRowSelection(rowNumber, checked) {
-  const numericRow = Number(rowNumber);
+  .toolModalCard {
+    width: 100%;
+    max-height: calc(100dvh - 16px);
+    border-width: 2px;
+    border-radius: 14px;
+    box-shadow: 4px 4px 0 rgba(0,0,0,.3);
+  }
 
-  if (checked) {
-    selectedAdminRows.add(numericRow);
-  } else {
-    selectedAdminRows.delete(numericRow);
+  .toolModalHeader {
+    padding: 10px;
+    border-bottom-width: 2px;
   }
 
-  syncAdminSelectedRows();
-}
+  .toolModalHeader h2 {
+    font-size: 1.05rem;
+  }
 
-function syncAdminSelectedRows() {
-  document.querySelectorAll("#adminDataTable tbody tr").forEach(row => {
-    const checkbox = row.querySelector(".rowSelectInput");
-    if (!checkbox) return;
+  .toolModalClose {
+    width: 32px;
+    height: 32px;
+    font-size: 1.05rem;
+  }
 
-    const rowNumber = Number(checkbox.dataset.row);
-    const selected = selectedAdminRows.has(rowNumber);
-    checkbox.checked = selected;
-    row.classList.toggle("selectedRow", selected);
-  });
+  .toolModalContent {
+    padding: 10px;
+  }
 
-  const count = selectedAdminRows.size;
-  if (currentAdminSheet && latestAdminTableData) {
-    const visibleCount = currentAdminFilteredRows.length || 0;
-    const totalCount = latestAdminTableData.rows.length;
-    setManageStatus(`${formatSheetLabel(currentAdminSheet)} loaded. ${visibleCount}${visibleCount !== totalCount ? ` of ${totalCount}` : ""} record(s) shown. ${count} selected.`);
+  .toolModalContent .toolModalPanel {
+    border-width: 0;
+    border-left-width: 0;
+    padding: 0;
   }
-}
 
-function selectAllAdminRows() {
-  if (!latestAdminTableData || !latestAdminTableData.rows) return;
-  const rows = getAdminFilteredTableData()?.rows || [];
-  selectedAdminRows = new Set(rows.map(row => Number(row.rowNumber)));
-  syncAdminSelectedRows();
-}
+  .toolModalContent .toolModalPanel > h2 {
+    display: none;
+  }
 
-function clearAdminSelection() {
-  selectedAdminRows = new Set();
-  syncAdminSelectedRows();
-}
+  .loginCard {
+    padding: 18px;
+    border-width: 3px;
+    border-radius: 16px;
+  }
 
-function attachAdminLongPressSelection() {
-  document.querySelectorAll("#adminDataTable tbody tr").forEach(row => {
-    const checkbox = row.querySelector(".rowSelectInput");
-    if (!checkbox) return;
+  .koalaMark {
+    font-size: 2.3rem;
+  }
 
-    const rowNumber = Number(checkbox.dataset.row);
-    let timer = null;
+  .loginCard h1 {
+    font-size: 1.45rem;
+  }
 
-    row.addEventListener("touchstart", () => {
-      timer = setTimeout(() => {
-        toggleAdminRowSelection(rowNumber, !selectedAdminRows.has(rowNumber));
-      }, 550);
-    }, { passive: true });
+  .loginCard p {
+    font-size: .82rem;
+    margin-bottom: 12px;
+  }
 
-    row.addEventListener("touchend", () => clearTimeout(timer));
-    row.addEventListener("touchmove", () => clearTimeout(timer));
-    row.addEventListener("touchcancel", () => clearTimeout(timer));
-  });
-}
+  .managePanel {
+    margin-top: 10px;
+    padding: 10px;
+    border-width: 2px;
+    border-left-width: 5px;
+    border-radius: 12px;
+  }
 
-async function hideSelectedAdminRecords() {
-  await runAdminBatchAction("adminBatchUnpublish", "hide");
-}
+  .manageHeader {
+    flex-direction: row;
+    align-items: stretch;
+    text-align: left;
+    gap: 8px;
+    margin-bottom: 9px;
+    padding-bottom: 8px;
+    border-bottom-width: 2px;
+  }
 
-async function deleteSelectedAdminRecords() {
-  await runAdminBatchAction("adminBatchDelete", "delete");
-}
+  .manageHeader h2 {
+    font-size: 1.05rem;
+  }
 
-async function runAdminBatchAction(type, actionLabel) {
-  if (!currentAdminSheet) {
-    showToast("Select a category first.");
-    return;
+  .manageHeader p {
+    font-size: .7rem;
+    line-height: 1.2;
   }
 
-  const rowNumbers = Array.from(selectedAdminRows).sort((a, b) => a - b);
+  .refreshBtn {
+    align-self: start;
+    width: auto;
+    padding: 7px 10px;
+    font-size: .72rem;
+  }
 
-  if (rowNumbers.length === 0) {
-    showToast("Select at least one record.");
-    return;
+  .manageTabs {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: thin;
   }
 
-  const confirmed = confirm(`${actionLabel === "delete" ? "Delete" : "Hide"} ${rowNumbers.length} selected record(s)?`);
-  if (!confirmed) return;
+  .manageTabs button {
+    flex: 0 0 auto;
+    font-size: .72rem;
+    padding: 7px 9px;
+    box-shadow: none;
+  }
 
-  if (actionLabel === "delete") {
-    const secondConfirm = confirm("Last check: delete permanently? This cannot be undone.");
-    if (!secondConfirm) return;
+  .manageStatus {
+    border-width: 2px;
+    border-radius: 10px;
+    padding: 8px 9px;
+    text-align: left;
+    font-size: .75rem;
   }
 
-  showToast(`${actionLabel === "delete" ? "Deleting" : "Hiding"} selected records...`);
+  .batchActions {
+    flex-wrap: nowrap;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 5px;
+  }
 
-  try {
-    const response = await fetch(ADMIN_API_URL, {
-      method: "POST",
-      body: JSON.stringify({
-        type,
-        payload: {
-          sheetName: currentAdminSheet,
-          rowNumbers
-        }
-      })
-    });
+  .batchActions button {
+    flex: 0 0 auto;
+    padding: 7px 9px;
+    font-size: .7rem;
+    box-shadow: none;
+  }
 
-    const responseText = await response.text();
-    let result = {};
+  .tableWrap {
+    border-width: 2px;
+    border-radius: 10px;
+  }
 
-    try {
-      result = JSON.parse(responseText);
-    } catch (parseError) {
-      throw new Error(responseText.slice(0, 180) || "Invalid server response.");
-    }
+  #adminDataTable {
+    min-width: 960px;
+  }
 
-    if (result.success) {
-      if (actionLabel === "hide") {
-        showToastAction(result.message || "Selected records hidden.", "Undo", () => restoreAdminRecords(rowNumbers));
-      } else {
-        showToast(result.message || "Batch action complete.");
-      }
-      selectedAdminRows = new Set();
-      refreshCurrentAdminTable();
-      return;
-    }
+  #adminDataTable th,
+  #adminDataTable td {
+    font-size: .82rem;
+    padding: 9px 10px;
+  }
 
-    showToast(result.message || "Batch action failed.");
-  } catch (error) {
-    console.error(error);
-    showToast("Error running batch action.");
+  .actionCell {
+    min-width: 230px;
   }
-}
 
-function openEditModal(rowNumber) {
-  if (!latestAdminTableData) {
-    showToast("Load a category first.");
-    return;
+  .editModal {
+    align-items: flex-start;
+    padding: 8px;
+    overflow-y: auto;
   }
 
-  const row = latestAdminTableData.rows.find(item => Number(item.rowNumber) === Number(rowNumber));
+  .editModalCard {
+    max-height: none;
+    padding: 10px;
+    border-width: 2px;
+    border-radius: 14px;
+    box-shadow: 4px 4px 0 rgba(0,0,0,.3);
+  }
 
-  if (!row) {
-    showToast("Record not found.");
-    return;
+  .editModalHeader {
+    align-items: flex-start;
+    padding-bottom: 8px;
+    margin-bottom: 9px;
+    border-bottom-width: 2px;
   }
 
-  editingRecord = {
-    sheetName: latestAdminTableData.sheetName,
-    rowNumber: row.rowNumber,
-    headers: latestAdminTableData.headers,
-    cells: row.cells
-  };
+  .editModalHeader h2 {
+    font-size: 1.15rem;
+  }
 
-  const modalTitle = document.getElementById("editModalTitle");
-  const modalSubtitle = document.getElementById("editModalSubtitle");
-  const editFields = document.getElementById("editFields");
-  const editModal = document.getElementById("editModal");
+  .editModalHeader p {
+    font-size: .72rem;
+  }
 
-  if (!modalTitle || !modalSubtitle || !editFields || !editModal) {
-    showToast("Edit modal not found in admin.html.");
-    return;
+  .modalCloseBtn {
+    width: 32px;
+    height: 32px;
+    font-size: 1.05rem;
   }
 
-  modalTitle.textContent = `Edit ${formatSheetLabel(editingRecord.sheetName)}`;
-  modalSubtitle.textContent = `Editing row #${editingRecord.rowNumber}`;
+  .editFields {
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
 
-  editFields.innerHTML = editingRecord.headers.map((header, index) => {
-    const value = editingRecord.cells[index] || "";
-    const lowerHeader = String(header).trim().toLowerCase();
-    const labelText = getManageHeaderLabel(editingRecord.sheetName, header);
+  .editFieldFull {
+    grid-column: span 1;
+  }
 
-    const isLongText = isFormattedTextField(
-      editingRecord.sheetName,
-      header,
-      index,
-      editingRecord.headers
-    );
-    const isDuplicateAnnouncementField =
-      editingRecord.sheetName === "Announcements" &&
-      normalizeFieldName(header) === "announcement" &&
-      !isLongText;
+  .editModalActions {
+    position: sticky;
+    bottom: -10px;
+    z-index: 8;
+    flex-direction: row;
+    gap: 8px;
+    margin: 8px -10px -10px;
+    padding: 9px 10px calc(9px + env(safe-area-inset-bottom));
+    border-top-width: 2px;
+    background: white;
+    box-shadow: 0 -5px 16px rgba(0,0,0,.12);
+  }
 
-    if (isDuplicateAnnouncementField) {
-      return "";
-    }
+  .cancelEditBtn,
+  .saveEditBtn {
+    flex: 1;
+    width: auto;
+    padding: 9px 10px;
+    font-size: .8rem;
+  }
 
-    const isPublish =
-	  lowerHeader === "publish" ||
-	  lowerHeader === "published";
+  .adminToast {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    text-align: center;
+  }
+}
 
-	const isTeacher =
-	  lowerHeader === "teacher";
 
-	const isId =
-	  lowerHeader === "id";
-    const isAnnouncementScheduleDate =
-      editingRecord.sheetName === "Announcements" &&
-      ["publishdate", "expirydate"].includes(normalizeFieldName(header));
+.adminNotedCountCell {
+  text-align: center;
+  white-space: nowrap;
+}
 
-    const fieldClass = isLongText ? "editField editFieldFull" : "editField";
+.adminNotedPill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: #111;
+  color: #ffd700;
+  border: 2px solid #ffd700;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-weight: 900;
+  font-size: .85rem;
+  box-shadow: 2px 2px 0 rgba(0,0,0,.18);
+}
 
-    if (isId) {
-  return `
-    <div class="${fieldClass}">
-      <label>${escapeHtml(labelText)}</label>
-      <input 
-        class="editInput readOnlyField"
-        data-index="${index}"
-        value="${escapeAttribute(value)}"
-        readonly
-      />
-    </div>
-  `;
+/* Cleaner manage modal/table layout */
+.toolModal.toolModalManage .toolModalCard {
+  width: min(1180px, calc(100vw - 28px));
 }
 
-if (isPublish) {
-  return `
-    <div class="${fieldClass}">
-      <label>${escapeHtml(labelText)}</label>
-      <select class="editInput" data-index="${index}">
-        <option value="YES" ${String(value).toUpperCase() === "YES" ? "selected" : ""}>YES</option>
-        <option value="NO" ${String(value).toUpperCase() === "NO" ? "selected" : ""}>NO</option>
-      </select>
-    </div>
-  `;
+.toolModal.toolModalManage .toolModalContent {
+  padding: 18px;
 }
 
-if (isAnnouncementScheduleDate) {
-  return `
-    <div class="${fieldClass}">
-      <label>${escapeHtml(labelText)}</label>
-      <input
-        class="editInput"
-        type="date"
-        data-index="${index}"
-        value="${escapeAttribute(toDateInputValue(value))}"
-      />
-    </div>
-  `;
+.toolModal.toolModalManage .managePanel {
+  max-width: none;
 }
 
-if (isTeacher) {
-  return `
-    <div class="${fieldClass}">
-      <label>${escapeHtml(labelText)}</label>
-      <select class="editInput" data-index="${index}">
-        ${renderTeacherOptions(value)}
-      </select>
-    </div>
-  `;
+.actionsDataCell {
+  min-width: 220px;
 }
 
-    if (isLongText) {
-      if (isRichTextStorageValue(value)) {
-        const targetId = `editRichText_${index}`;
-        const safeHtml = sanitizeRichEditorHtml(getRichTextStorageHtml(value));
+@media (max-width: 980px), (pointer: coarse) {
+  .toolModal.toolModalManage {
+    align-items: stretch;
+    padding: 6px;
+  }
 
-        return `
-          <div class="${fieldClass}">
-            <label>${escapeHtml(labelText)}</label>
-            <div class="richComposer editRichComposer" data-rich-target="${targetId}">
-              ${getRichEditorToolbarMarkup("Edit formatting tools")}
-              <div class="richEditor" contenteditable="true" data-placeholder="Edit formatted text here...">${safeHtml}</div>
-              <textarea id="${targetId}" class="editInput richHiddenTextarea" data-rich-storage="YES" data-index="${index}" aria-hidden="true" tabindex="-1"></textarea>
-            </div>
-          </div>
-        `;
-      }
+  .toolModal.toolModalManage .toolModalCard {
+    width: 100%;
+    max-height: calc(100dvh - 12px);
+    border-radius: 16px;
+  }
 
-      const parsedFormat = parseTextFormat(value);
+  .toolModal.toolModalManage .toolModalHeader {
+    padding: 12px 14px;
+  }
 
-      return `
-        <div class="${fieldClass}">
-          <label>${escapeHtml(labelText)}</label>
-          <select class="editFormatSelect" data-index="${index}">
-            ${renderTextFormatOptions(parsedFormat.format)}
-          </select>
-          <textarea class="editInput textFormatInput" data-format-enabled="YES" data-index="${index}">${escapeHtml(parsedFormat.text)}</textarea>
-        </div>
-      `;
-    }
+  .toolModal.toolModalManage .toolModalHeader h2 {
+    font-size: 1.35rem;
+  }
 
-    return `
-      <div class="${fieldClass}">
-        <label>${escapeHtml(labelText)}</label>
-        <input 
-          class="editInput"
-          data-index="${index}"
-          value="${escapeAttribute(stripTextFormatTag(value))}"
-        />
-      </div>
-    `;
-  }).join("");
+  .toolModal.toolModalManage .toolModalContent {
+    padding: 12px;
+  }
 
-  editModal.classList.remove("hidden");
-  initRichTextEditors();
-}
+  .toolModal.toolModalManage .managePanel {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: white;
+  }
 
-function closeEditModal() {
-  const modal = document.getElementById("editModal");
-  if (modal) {
-    modal.classList.add("hidden");
+  .toolModal.toolModalManage .manageHeader {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: start;
   }
 
-  editingRecord = null;
-}
+  .toolModal.toolModalManage .manageHeader h2 {
+    font-size: 1.45rem;
+    line-height: 1.05;
+  }
 
-async function saveEditedRecord() {
-  if (!editingRecord) {
-    showToast("No record selected.");
-    return;
+  .toolModal.toolModalManage .manageHeader p {
+    font-size: .88rem;
+    line-height: 1.25;
   }
 
-  const inputs = document.querySelectorAll(".editInput");
-  const updatedValues = [...editingRecord.cells];
+  .toolModal.toolModalManage .refreshBtn {
+    padding: 10px 13px;
+    font-size: .85rem;
+  }
 
-  inputs.forEach(input => {
-    const index = Number(input.dataset.index);
-    if (input.dataset.richStorage === "YES") {
-      updatedValues[index] = getRichEditorStorageValue(input.id);
-    } else if (input.dataset.formatEnabled === "YES") {
-      const formatSelect = document.querySelector(`.editFormatSelect[data-index="${index}"]`);
-      updatedValues[index] = applyTextFormat(input.value.trim(), formatSelect ? formatSelect.value : "left");
-    } else {
-      updatedValues[index] = input.value;
-    }
-  });
+  .toolModal.toolModalManage .manageTabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    overflow: visible;
+    padding-bottom: 0;
+  }
 
-  showToast("Saving changes...");
+  .toolModal.toolModalManage .manageTabs button {
+    width: 100%;
+    min-height: 44px;
+    border-radius: 14px;
+    padding: 10px 8px;
+    font-size: .82rem;
+    line-height: 1.05;
+    white-space: normal;
+  }
 
-  try {
-    const response = await fetch(ADMIN_API_URL, {
-      method: "POST",
-      body: JSON.stringify({
-        type: "adminUpdate",
-        payload: {
-          sheetName: editingRecord.sheetName,
-          rowNumber: editingRecord.rowNumber,
-          values: updatedValues
-        }
-      })
-    });
+  .toolModal.toolModalManage .manageFilters {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
 
-    const responseText = await response.text();
-    let result = {};
+  .toolModal.toolModalManage .manageFilters input,
+  .toolModal.toolModalManage .manageFilters select {
+    min-height: 44px;
+    font-size: .9rem;
+  }
 
-    try {
-      result = JSON.parse(responseText);
-    } catch (parseError) {
-      throw new Error(responseText.slice(0, 180) || "Invalid server response.");
-    }
+  .toolModal.toolModalManage .batchActions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    overflow: visible;
+    padding-bottom: 0;
+  }
 
-    if (result.success) {
-      showToast("Record updated.");
-      closeEditModal();
-      refreshCurrentAdminTable();
-      return;
-    }
+  .toolModal.toolModalManage .batchActions button {
+    width: 100%;
+    min-height: 42px;
+    padding: 10px 8px;
+    font-size: .78rem;
+    line-height: 1.05;
+    white-space: normal;
+  }
 
-    showToast(result.message || "Failed to update record.");
+  .toolModal.toolModalManage .manageStatus {
+    font-size: .9rem;
+    line-height: 1.25;
+    padding: 11px 12px;
+    border-radius: 14px;
+  }
 
-  } catch (error) {
-    console.error(error);
-    showToast(`Error updating record: ${error.message || "unknown error"}`);
+  .toolModal.toolModalManage .tableWrap {
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
   }
-}
 
-async function hideAdminRecord(rowNumber) {
-  if (!currentAdminSheet) {
-    showToast("Select a category first.");
-    return;
+  #adminDataTable,
+  #adminDataTable thead,
+  #adminDataTable tbody,
+  #adminDataTable tr,
+  #adminDataTable td {
+    display: block;
+    width: 100%;
+    min-width: 0;
   }
 
-  const confirmed = confirm("Hide this record? This will set Publish to NO.");
+  #adminDataTable {
+    border-collapse: separate;
+    border-spacing: 0;
+  }
 
-  if (!confirmed) return;
+  #adminDataTable thead {
+    display: none;
+  }
 
-  showToast("Hiding record...");
+  #adminDataTable tbody {
+    display: grid;
+    gap: 12px;
+  }
 
-  try {
-    const response = await fetch(ADMIN_API_URL, {
-      method: "POST",
-      body: JSON.stringify({
-        type: "adminUnpublish",
-        payload: {
-          sheetName: currentAdminSheet,
-          rowNumber
-        }
-      })
-    });
+  #adminDataTable tbody tr {
+    border: 3px solid #111;
+    border-radius: 16px;
+    overflow: hidden;
+    background: white;
+    box-shadow: 3px 3px 0 rgba(0,0,0,.18);
+  }
 
-    const result = await response.json();
+  #adminDataTable tbody tr.selectedRow {
+    border-color: #c9a600;
+    background: #fff7c7;
+  }
 
-    if (result.success) {
-      showToastAction("Record hidden.", "Undo", () => restoreAdminRecords([rowNumber]));
-      refreshCurrentAdminTable();
-      return;
-    }
+  #adminDataTable tbody tr.selectedRow td {
+    background: transparent;
+    outline: none;
+  }
 
-    showToast(result.message || "Failed to hide record.");
+  #adminDataTable td {
+    display: grid;
+    grid-template-columns: minmax(92px, 34%) 1fr;
+    gap: 10px;
+    align-items: start;
+    border-right: 0;
+    border-bottom: 1px solid #ece4b5;
+    padding: 11px 12px;
+    font-size: .92rem;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
 
-  } catch (error) {
-    console.error(error);
-    showToast("Error hiding record.");
+  #adminDataTable td::before {
+    content: attr(data-label);
+    color: #6e5a00;
+    font-size: .72rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: .35px;
   }
-}
 
-async function deleteAdminRecord(rowNumber) {
-  if (!currentAdminSheet) {
-    showToast("Select a category first.");
-    return;
+  #adminDataTable td:last-child {
+    border-bottom: 0;
   }
 
-  const confirmed = confirm("Delete this record permanently? This cannot be undone.");
+  #adminDataTable td[colspan] {
+    display: block;
+    text-align: center;
+  }
 
-  if (!confirmed) return;
+  #adminDataTable td[colspan]::before {
+    content: "";
+  }
 
-  const secondConfirm = confirm("Last check: delete this record now?");
-  if (!secondConfirm) return;
+  #adminDataTable .selectCell,
+  #adminDataTable .actionsDataCell {
+    grid-template-columns: 1fr;
+  }
 
-  showToast("Deleting record...");
+  #adminDataTable .selectCell::before,
+  #adminDataTable .actionsDataCell::before {
+    margin-bottom: 4px;
+  }
 
-  try {
-    const response = await fetch(ADMIN_API_URL, {
-      method: "POST",
-      body: JSON.stringify({
-        type: "adminDelete",
-        payload: {
-          sheetName: currentAdminSheet,
-          rowNumber
-        }
-      })
-    });
+  .rowSelectInput {
+    width: 28px;
+    height: 28px;
+  }
 
-    const result = await response.json();
+  .rowNumberCell {
+    background: #fff8dc !important;
+  }
 
-    if (result.success) {
-      showToast("Record deleted.");
-      refreshCurrentAdminTable();
-      return;
-    }
+  .actionCell {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    min-width: 0;
+    width: 100%;
+  }
 
-    showToast(result.message || "Failed to delete record.");
+  .tableActionBtn {
+    width: 100%;
+    padding: 10px 8px;
+    font-size: .82rem;
+    text-align: center;
+  }
 
-  } catch (error) {
-    console.error(error);
-    showToast("Error deleting record.");
+  .adminNotedCountCell {
+    text-align: left;
   }
 }
 
-async function restoreAdminRecords(rowNumbers) {
-  if (!currentAdminSheet) {
-    showToast("Select a category first.");
-    return;
-  }
+/* =========================================================
+   RICH TEXT MINI EDITOR - ANNOUNCEMENTS / THINGS TO BRING
+========================================================= */
+.richComposer {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.richHiddenTextarea {
+  display: none !important;
+}
+
+.richToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  border: 2px solid #111;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #fff7c7, #fff0a3);
+  box-shadow: 0 4px 0 rgba(0, 0, 0, .14);
+}
 
-  const rows = (rowNumbers || []).map(Number).filter(rowNumber => rowNumber >= 2);
-  if (rows.length === 0) return;
+.richToolbarGroup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  padding: 5px;
+  border: 1px solid rgba(0, 0, 0, .12);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, .52);
+}
 
-  showToast("Restoring record...");
+.richToolbar button,
+.richColorPickerLabel {
+  width: auto;
+  min-width: 36px;
+  min-height: 34px;
+  margin: 0;
+  padding: 7px 10px;
+  border-radius: 11px;
+  border: 2px solid #111;
+  background: #fff;
+  color: #111;
+  font-size: .84rem;
+  font-weight: 950;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, .18);
+}
 
-  try {
-    await Promise.all(rows.map(rowNumber => fetch(ADMIN_API_URL, {
-      method: "POST",
-      body: JSON.stringify({
-        type: "adminRestore",
-        payload: {
-          sheetName: currentAdminSheet,
-          rowNumber
-        }
-      })
-    }).then(async response => {
-      const result = await response.json();
-      if (!result.success) throw new Error(result.message || "Restore failed.");
-      return result;
-    })));
+.richToolbar button:active,
+.richColorPickerLabel:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, .18);
+}
 
-    showToast(rows.length === 1 ? "Record restored." : `${rows.length} records restored.`);
-    refreshCurrentAdminTable();
-  } catch (error) {
-    console.error(error);
-    showToast(error.message || "Error restoring record.");
-  }
+.richToolbarDivider {
+  display: none;
 }
 
-function refreshCurrentAdminTable() {
-  if (!currentAdminSheet) {
-    setManageStatus("Select a category first.");
-    return;
-  }
+.richColorChip {
+  position: relative;
+  overflow: hidden;
+}
 
-  loadAdminTable(currentAdminSheet);
+.richColorChip::after {
+  content: "";
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 5px;
+  height: 4px;
+  border-radius: 999px;
+  background: currentColor;
 }
 
-function setActiveManageTab(buttonEl) {
-  document.querySelectorAll(".manageTabs button").forEach(btn => {
-    btn.classList.remove("active");
-  });
+.richColorBlack { color: #111111 !important; }
+.richColorRed { color: #d62828 !important; }
+.richColorBlue { color: #2563eb !important; }
+.richColorGreen { color: #0f766e !important; }
+.richColorPurple { color: #7c3aed !important; }
 
-  if (buttonEl) {
-    buttonEl.classList.add("active");
-    return;
-  }
+.richColorPickerLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 78px;
+}
 
-  const buttons = document.querySelectorAll(".manageTabs button");
+.richColorPickerLabel span {
+  font-size: .78rem;
+}
 
-  buttons.forEach(btn => {
-    const onclickValue = btn.getAttribute("onclick") || "";
+.richColorPickerLabel input[type="color"] {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid #111;
+  border-radius: 7px;
+  background: transparent;
+  cursor: pointer;
+}
 
-    if (onclickValue.includes(currentAdminSheet)) {
-      btn.classList.add("active");
-    }
-  });
+.richEditor {
+  width: 100%;
+  min-height: 185px;
+  max-height: 430px;
+  overflow: auto;
+  border: 2px solid #111;
+  border-radius: 18px;
+  padding: 16px;
+  background: #fff;
+  color: #111;
+  font-size: 1.04rem;
+  font-weight: 700;
+  line-height: 1.52;
+  outline: none;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
-function setManageStatus(message) {
-  const status = document.getElementById("manageStatus");
-  if (status) {
-    status.textContent = message;
-  }
+.richEditor:focus {
+  box-shadow: 0 0 0 5px rgba(247, 198, 0, .24);
+}
+
+.richEditor:empty::before {
+  content: attr(data-placeholder);
+  color: #7b6b28;
+  font-weight: 750;
+  pointer-events: none;
+}
+
+.richEditor ul,
+.richEditor ol {
+  margin: .35em 0 .55em;
+  padding-left: 1.5em;
+}
+
+.richEditor li {
+  margin: .2em 0;
 }
 
-function isFormattedTextField(sheetName, header, index, headers = []) {
-  const cleanHeader = normalizeFieldName(header);
-  const hasIdColumn = normalizeFieldName(headers[0] || "") === "id";
+.richEditor [style*="margin-left"] {
+  display: block;
+}
+
+.editRichComposer .richEditor {
+  min-height: 210px;
+  max-height: 52vh;
+}
+
+@media (max-width: 760px), (pointer: coarse) {
+  .richComposer {
+    gap: 9px;
+  }
+
+  .richToolbar {
+    gap: 7px;
+    padding: 8px;
+    border-radius: 16px;
+  }
 
-  if (sheetName === "Announcements") {
-    return hasIdColumn ? index === 3 : index === 2;
+  .richToolbarGroup {
+    gap: 4px;
+    padding: 4px;
+    border-radius: 12px;
   }
 
-  if (sheetName === "ThingsToBring") {
-    return index === 2;
+  .richToolbar button,
+  .richColorPickerLabel {
+    min-width: 33px;
+    min-height: 32px;
+    padding: 6px 8px;
+    font-size: .78rem;
+    border-radius: 10px;
   }
 
-  if (sheetName === "AdviserReminders") {
-    return index === 1;
+  .richColorPickerLabel {
+    min-width: 68px;
   }
 
-  if (sheetName === "DailyQuotes") {
-    return index === 1;
+  .richColorPickerLabel span {
+    font-size: .7rem;
   }
 
-  if (sheetName === "TickerMessages") {
-    return index === 0;
+  .richColorPickerLabel input[type="color"] {
+    width: 22px;
+    height: 22px;
   }
 
-  const formattedFields = {
-    ThingsToBring: ["item", "things", "materials", "reminder", "description", "task"],
-    AdviserReminders: ["reminder", "message", "description"],
-    DailyQuotes: ["quote"],
-    TickerMessages: ["message"]
-  };
+  .richEditor {
+    min-height: 175px;
+    max-height: 42vh;
+    padding: 14px;
+    font-size: 1rem;
+    line-height: 1.48;
+    border-radius: 16px;
+  }
 
-  return (formattedFields[sheetName] || []).includes(cleanHeader);
+  .editRichComposer .richEditor {
+    min-height: 185px;
+    max-height: 45vh;
+  }
 }
 
-function normalizeFieldName(value) {
-  return String(value || "")
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "")
-    .replace(/[^a-z0-9]/g, "");
+.manageRichPreview {
+  display: block;
+  max-height: 140px;
+  overflow: auto;
+  line-height: 1.28;
+  text-align: left;
 }
 
-function applyTextFormat(text, format) {
-  const cleanText = stripTextFormatTag(text).trim();
-  const cleanFormat = TEXT_FORMAT_OPTIONS.includes(format) ? format : "left";
+.manageRichPreview ul,
+.manageRichPreview ol {
+  margin: .2em 0 .35em;
+  padding-left: 1.25em;
+}
 
-  if (!cleanText) return "";
+.manageRichPreview li {
+  margin: .1em 0;
+}
 
-  return `[${cleanFormat}]\n${cleanText}`;
+.editRichComposer .richEditor {
+  min-height: 130px;
+  max-height: 260px;
 }
 
-function parseTextFormat(value) {
-  const raw = String(value || "").replace(/\r/g, "").trim();
-  const match = raw.match(/^\[(center|left|right|bullets|numbers)\]\s*\n?/i);
+/* =========================================================
+   PHONE RICH EDITOR RESCUE - COMPACT HORIZONTAL TOOLBAR
+   Keeps all formatting tools, but prevents the toolbar from eating the modal.
+========================================================= */
+@media (max-width: 820px), (hover: none) and (pointer: coarse) {
+  .toolModalContent .richComposer,
+  .editRichComposer.richComposer {
+    gap: 6px !important;
+  }
 
-  if (!match) {
-    return {
-      format: "left",
-      text: raw
-    };
+  .toolModalContent .richToolbar,
+  .editRichComposer .richToolbar,
+  .richToolbar {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 6px !important;
+    width: 100% !important;
+    max-height: 54px !important;
+    padding: 6px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    border-width: 2px !important;
+    border-radius: 14px !important;
+    scroll-snap-type: x proximity;
   }
 
-  return {
-    format: match[1].toLowerCase(),
-    text: raw.replace(match[0], "").trim()
-  };
-}
+  .toolModalContent .richToolbar::-webkit-scrollbar,
+  .editRichComposer .richToolbar::-webkit-scrollbar,
+  .richToolbar::-webkit-scrollbar {
+    height: 4px;
+  }
 
-function stripTextFormatTag(value) {
-  return String(value || "")
-    .replace(/\r/g, "")
-    .replace(/^\[(center|left|right|bullets|numbers)\]\s*\n?/i, "");
-}
+  .toolModalContent .richToolbarGroup,
+  .editRichComposer .richToolbarGroup,
+  .richToolbarGroup {
+    flex: 0 0 auto !important;
+    display: inline-flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 3px !important;
+    padding: 3px !important;
+    border-radius: 10px !important;
+    scroll-snap-align: start;
+  }
 
-function renderTextFormatOptions(selectedValue) {
-  const labels = {
-    center: "Center",
-    left: "Left",
-    right: "Right",
-    bullets: "Bullets",
-    numbers: "Numbers"
-  };
+  .toolModalContent .richToolbar button,
+  .editRichComposer .richToolbar button,
+  .richToolbar button,
+  .toolModalContent .richColorPickerLabel,
+  .editRichComposer .richColorPickerLabel,
+  .richColorPickerLabel {
+    flex: 0 0 auto !important;
+    min-width: 30px !important;
+    min-height: 30px !important;
+    padding: 5px 7px !important;
+    border-width: 2px !important;
+    border-radius: 9px !important;
+    font-size: .72rem !important;
+    line-height: 1 !important;
+    box-shadow: 0 2px 0 rgba(0,0,0,.18) !important;
+  }
 
-  return TEXT_FORMAT_OPTIONS.map(value => {
-    const selected = value === selectedValue ? "selected" : "";
-    return `<option value="${value}" ${selected}>${labels[value]}</option>`;
-  }).join("");
-}
+  .toolModalContent .richToolbar button[data-rich-align],
+  .editRichComposer .richToolbar button[data-rich-align],
+  .richToolbar button[data-rich-align],
+  .toolModalContent .richToolbar button[data-rich-command="removeFormat"],
+  .editRichComposer .richToolbar button[data-rich-command="removeFormat"],
+  .richToolbar button[data-rich-command="removeFormat"] {
+    min-width: auto !important;
+    padding-inline: 9px !important;
+  }
 
-function formatSheetLabel(sheetName) {
-  const labels = {
-    Announcements: "Announcements",
-    ThingsToBring: "Things to Bring",
-    AdviserReminders: "Adviser Reminders",
-    PrayerLeaders: "Prayer Leaders",
-    DailyQuotes: "Daily Quotes",
-    Birthdays: "Birthdays",
-    TickerMessages: "Ticker Messages",
-    DailyInfo: "Daily Info"
-  };
+  .toolModalContent .richColorPickerLabel,
+  .editRichComposer .richColorPickerLabel,
+  .richColorPickerLabel {
+    min-width: 34px !important;
+    width: 34px !important;
+    justify-content: center !important;
+    gap: 0 !important;
+  }
 
-  return labels[sheetName] || sheetName;
-}
+  .toolModalContent .richColorPickerLabel span,
+  .editRichComposer .richColorPickerLabel span,
+  .richColorPickerLabel span {
+    display: none !important;
+  }
 
-function getManageHeaderLabel(sheetName, header) {
-  const rawHeader = String(header || "").trim();
-  const key = normalizeManageHeaderKey(rawHeader);
+  .toolModalContent .richColorPickerLabel input[type="color"],
+  .editRichComposer .richColorPickerLabel input[type="color"],
+  .richColorPickerLabel input[type="color"] {
+    width: 20px !important;
+    height: 20px !important;
+    border-radius: 6px !important;
+  }
+
+  .toolModalContent .richEditor,
+  .editRichComposer .richEditor,
+  .richEditor {
+    min-height: 185px !important;
+    max-height: 36dvh !important;
+    padding: 12px !important;
+    border-width: 2px !important;
+    border-radius: 14px !important;
+    font-size: .95rem !important;
+    line-height: 1.42 !important;
+  }
+
+  .toolModalContent .fieldHint,
+  .fieldHint {
+    margin-top: -2px !important;
+    font-size: .74rem !important;
+    line-height: 1.25 !important;
+  }
+}
 
-  if (sheetName === "ThingsToBring" && key === "date") {
-    return "Date Needed";
+@media (max-width: 420px) {
+  .toolModalContent .richEditor,
+  .editRichComposer .richEditor,
+  .richEditor {
+    min-height: 165px !important;
+    max-height: 31dvh !important;
   }
+}
 
-  return rawHeader || header;
+/* v10: Rich editor list alignment + list indentation fix */
+.richEditor ul,
+.richEditor ol {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: 1.55em;
+  list-style-position: outside;
+  text-align: left;
 }
 
-function escapeHtml(value) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+.richEditor ul[style*="text-align:center"],
+.richEditor ol[style*="text-align:center"] {
+  width: fit-content;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: left;
 }
 
-function escapeAttribute(value) {
-  return escapeHtml(value).replaceAll("`", "&#096;");
+.richEditor ul[style*="text-align:right"],
+.richEditor ol[style*="text-align:right"] {
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+  text-align: right;
+  list-style-position: inside;
+  padding-left: 0;
+  padding-right: 1.2em;
 }
 
-function toDateInputValue(value) {
-  const text = String(value || "").trim();
-  const isoMatch = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
-  const date = new Date(text);
-  if (!Number.isFinite(date.getTime())) return "";
-  return date.toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
+.richEditor li {
+  text-align: inherit;
 }
 
-function renderTeacherOptions(selectedValue) {
-  const selected = String(selectedValue || "").trim();
+/* Phone modal centering fix: keep tool sheets comfortable instead of stuck to bottom. */
+@media (max-width: 820px) {
+  .toolModal {
+    place-items: center !important;
+    align-items: center !important;
+    justify-items: center !important;
+    padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom)) !important;
+  }
 
-  let options = `<option value="">Select Teacher</option>`;
+  .toolModalCard {
+    width: min(100%, 680px) !important;
+    max-height: calc(100dvh - 30px) !important;
+    margin: auto !important;
+    border-radius: 18px !important;
+  }
 
-  TEACHER_OPTIONS.forEach(teacher => {
-    options += `
-      <option value="${escapeAttribute(teacher)}" ${selected === teacher ? "selected" : ""}>
-        ${escapeHtml(teacher)}
-      </option>
-    `;
-  });
+  .toolModal.toolModalManage {
+    place-items: center !important;
+    align-items: center !important;
+    justify-items: center !important;
+    padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom)) !important;
+  }
 
-  if (selected && !TEACHER_OPTIONS.includes(selected)) {
-    options += `
-      <option value="${escapeAttribute(selected)}" selected>
-        ${escapeHtml(selected)}
-      </option>
-    `;
+  .toolModal.toolModalManage .toolModalCard {
+    width: min(100%, 720px) !important;
+    max-height: calc(100dvh - 30px) !important;
+    margin: auto !important;
   }
+}
 
-  return options;
+
+/* SFK admin mobile login v7 */
+.loginCard .loginForm {
+  width: 100%;
+  display: grid;
+  gap: 14px;
+}
+.loginCard .loginForm input,
+.loginCard .loginForm button {
+  width: 100%;
+}
+#adminLoginButton[disabled] {
+  opacity: 0.72;
+  cursor: progress;
 }

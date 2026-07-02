@@ -6,6 +6,8 @@
   const MEDIA_REF_PREFIX = "sfk-media://";
   // Keep each Firestore media document safely below the 1 MiB document limit.
   const NO_BILLING_MEDIA_MAX_BASE64_CHARS = 850000;
+  // Small inline preview used so image cards are not blank while the full Firestore media loads.
+  const NO_BILLING_INLINE_PREVIEW_MAX_BASE64_CHARS = 120000;
 
   const SHEETS = {
     Settings: {
@@ -68,11 +70,14 @@
 
   const originalFetch = window.fetch.bind(window);
   let db = null;
+  let adapterInitialized = false;
+  let initializeAttempts = 0;
 
-  function initialize() {
+  function ensureFirebaseDb() {
+    if (db) return db;
+
     if (!window.SFK_FIREBASE_READY || !window.firebase) {
-      console.warn("SFK Firebase is not configured yet. Apps Script fallback remains active.");
-      return;
+      throw new Error("Firebase is still loading. Please wait a moment, then try again.");
     }
 
     if (!firebase.apps.length) {
@@ -81,8 +86,24 @@
 
     db = firebase.firestore();
     window.SFK_CLASSBOARD_FIREBASE_DB = db;
-    window.fetch = firebaseAwareFetch;
-    console.info("SFK ClassBoard Firebase adapter enabled.");
+    return db;
+  }
+
+  function initialize() {
+    try {
+      ensureFirebaseDb();
+      if (!adapterInitialized) {
+        window.fetch = firebaseAwareFetch;
+        adapterInitialized = true;
+        console.info("SFK ClassBoard Firebase adapter enabled.");
+      }
+    } catch (error) {
+      initializeAttempts += 1;
+      if (initializeAttempts <= 20) {
+        window.setTimeout(initialize, Math.min(1800, 120 * initializeAttempts));
+      }
+      console.warn("SFK Firebase adapter waiting:", error.message || error);
+    }
   }
 
   async function firebaseAwareFetch(input, options) {
@@ -117,6 +138,7 @@
   }
 
   async function handleGet(params) {
+    ensureFirebaseDb();
     const type = params.get("type") || "today";
 
     if (type === "today") return getTodayBoard();
@@ -137,6 +159,7 @@
   }
 
   async function handlePost(body, sourceUrl) {
+    ensureFirebaseDb();
     const type = body.type;
     const payload = body.payload || {};
 
@@ -383,6 +406,7 @@
     prepared.AttachmentNames = uploadResult.names || "";
     prepared.AttachmentLabels = uploadResult.names || "";
     prepared.AttachmentName = uploadResult.names || "";
+    prepared.AttachmentRefs = uploadResult.refs || "";
     return prepared;
   }
 
@@ -398,8 +422,11 @@
     }
 
     return {
+      // Keep the public row small and stable. The board resolves these refs
+      // from Firestore, which prevents first-load blank/black previews.
       urls: savedFiles.map(file => file.uri).join("\n"),
-      names: savedFiles.map(file => file.name).join("\n")
+      names: savedFiles.map(file => file.name).join("\n"),
+      refs: savedFiles.map(file => file.uri).join("\n")
     };
   }
 
@@ -659,10 +686,14 @@
 
       media.push({
         kind: "image",
-        url: saved.uri,
-        viewerUrl: saved.uri,
+        // Preview is shown immediately; Firestore ref is kept for full/reload hydration.
+        url: saved.previewUrl || saved.uri,
+        viewerUrl: saved.previewUrl || saved.uri,
+        previewUrl: saved.previewUrl || "",
         fullUrl: saved.uri,
         downloadUrl: saved.uri,
+        firestoreRef: saved.uri,
+        mediaRef: saved.uri,
         mediaId: saved.id,
         storage: "firestore",
         name: saved.name,
@@ -697,6 +728,7 @@
     const safeOwner = safeMediaDocPart(ownerId || kind);
     const id = `${safeOwner}_${Date.now()}_${Number(options.index || 0)}_${Math.random().toString(36).slice(2, 8)}`.slice(0, 240);
     const name = String(file.name || "SFK photo").trim() || "SFK photo";
+    const previewUrl = await buildNoBillingInlinePreview(file, mimeType, base64);
 
     await db.collection(collectionName).doc(id).set(withMeta(cleanFirestoreData({
       OwnerID: String(ownerId || ""),
@@ -705,6 +737,9 @@
       MimeType: mimeType,
       Data: base64,
       BytesApprox: Math.ceil(base64.length * 0.75),
+      PreviewURL: previewUrl || "",
+      previewUrl: previewUrl || "",
+      DataURL: base64.length <= NO_BILLING_INLINE_PREVIEW_MAX_BASE64_CHARS ? `data:${mimeType};base64,${base64}` : "",
       Publish: "YES",
       CreatedByRole: currentFirebaseRole()
     })));
@@ -713,8 +748,73 @@
       id,
       uri: mediaRef(kind, id),
       name,
-      mimeType
+      mimeType,
+      previewUrl
     };
+  }
+
+  async function buildNoBillingInlinePreview(file, mimeType, base64) {
+    const fullDataUrl = `data:${mimeType};base64,${base64}`;
+    if (base64.length <= NO_BILLING_INLINE_PREVIEW_MAX_BASE64_CHARS) return fullDataUrl;
+    if (typeof document === "undefined" || typeof Image === "undefined") return "";
+
+    try {
+      const image = await loadNoBillingPreviewImage(fullDataUrl);
+      const dimensions = [720, 560, 420, 320];
+      const qualities = [0.58, 0.48, 0.38, 0.3, 0.24];
+      let fallback = "";
+
+      for (const maxDimension of dimensions) {
+        const sourceWidth = image.naturalWidth || image.width || 1;
+        const sourceHeight = image.naturalHeight || image.height || 1;
+        const ratio = Math.min(1, maxDimension / Math.max(sourceWidth, sourceHeight));
+        const width = Math.max(1, Math.round(sourceWidth * ratio));
+        const height = Math.max(1, Math.round(sourceHeight * ratio));
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext("2d");
+        context.fillStyle = "#fff";
+        context.fillRect(0, 0, width, height);
+        context.drawImage(image, 0, 0, width, height);
+
+        for (const quality of qualities) {
+          const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/jpeg", quality));
+          if (!blob) continue;
+          const dataUrl = await blobToDataUrl(blob);
+          const length = dataUrlBase64Length(dataUrl);
+          if (length <= NO_BILLING_INLINE_PREVIEW_MAX_BASE64_CHARS) return dataUrl;
+          fallback = dataUrl;
+        }
+      }
+
+      return dataUrlBase64Length(fallback) <= NO_BILLING_INLINE_PREVIEW_MAX_BASE64_CHARS * 1.35 ? fallback : "";
+    } catch (error) {
+      console.warn("Unable to build inline media preview:", error);
+      return "";
+    }
+  }
+
+  function loadNoBillingPreviewImage(src) {
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error("Preview image could not be decoded."));
+      image.src = src;
+    });
+  }
+
+  function blobToDataUrl(blob) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => reject(reader.error || new Error("Preview could not be read."));
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  function dataUrlBase64Length(value) {
+    return String(value || "").split(",")[1]?.length || 0;
   }
 
   function mediaRef(kind, id) {
@@ -745,12 +845,15 @@
     if (!ref) return "";
 
     try {
-      const doc = await db.collection(ref.collectionName).doc(ref.id).get();
+      const activeDb = ensureFirebaseDb();
+      const doc = await activeDb.collection(ref.collectionName).doc(ref.id).get();
       if (!doc.exists) return "";
 
       const data = doc.data() || {};
+      const directDataUrl = String(data.DataURL || data.dataUrl || data.Url || data.url || data.PreviewURL || data.previewUrl || "").trim();
+      if (/^data:image\//i.test(directDataUrl)) return directDataUrl;
       const mimeType = String(data.MimeType || data.mimeType || "image/jpeg").trim();
-      const base64 = String(data.Data || data.data || "").trim();
+      const base64 = String(data.Data || data.data || data.Base64 || data.base64 || "").trim();
       if (!base64 || !mimeType.toLowerCase().startsWith("image/")) return "";
       return `data:${mimeType};base64,${base64}`;
     } catch (error) {
@@ -766,22 +869,64 @@
   }
 
   async function resolveMemoryMediaItem(item) {
-    if (!item || typeof item !== "object") return null;
+    if (!item) return null;
 
-    const ref = parseMediaRef(item.url || item.viewerUrl || item.fullUrl || item.downloadUrl || "");
-    if (!ref) return item;
+    const normalizedItem = typeof item === "string"
+      ? { kind: "image", url: item, viewerUrl: item, fullUrl: item, downloadUrl: item, name: "SFK memory" }
+      : item;
+    if (!normalizedItem || typeof normalizedItem !== "object") return null;
+
+    const ref = memoryMediaRefFromItem(normalizedItem);
+    if (!ref) return normalizedItem;
 
     const dataUrl = await resolveMediaDataUrl(ref);
-    if (!dataUrl) return item;
+    if (!dataUrl) {
+      return {
+        ...normalizedItem,
+        firestoreRef: mediaRef(ref.kind, ref.id),
+        mediaId: normalizedItem.mediaId || ref.id,
+        storage: normalizedItem.storage || "firestore"
+      };
+    }
 
     return {
-      ...item,
+      ...normalizedItem,
+      kind: "image",
       url: dataUrl,
       viewerUrl: dataUrl,
       fullUrl: dataUrl,
       downloadUrl: dataUrl,
-      firestoreRef: mediaRef(ref.kind, ref.id)
+      firestoreRef: mediaRef(ref.kind, ref.id),
+      mediaId: normalizedItem.mediaId || ref.id,
+      storage: normalizedItem.storage || "firestore"
     };
+  }
+
+  function memoryMediaRefFromItem(item) {
+    const candidates = [
+      item.firestoreRef,
+      item.url,
+      item.viewerUrl,
+      item.fullUrl,
+      item.downloadUrl,
+      item.href,
+      item.mediaRef,
+      item.MediaRef,
+      item.Ref,
+      item.ref
+    ];
+
+    for (const value of candidates) {
+      const ref = parseMediaRef(value);
+      if (ref) return ref;
+    }
+
+    const mediaId = String(item.mediaId || item.MediaID || item.id || item.ID || "").trim();
+    if (/^[A-Za-z0-9_-]{1,240}$/.test(mediaId)) {
+      return { kind: "memory", id: mediaId, collectionName: MEMORY_MEDIA_COLLECTION };
+    }
+
+    return null;
   }
 
   async function resolveAnnouncementRows(rows) {
@@ -830,7 +975,8 @@
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) media = parsed;
       } catch (error) {
-        media = [];
+        const ref = parseMediaRef(raw);
+        media = ref ? [raw] : [];
       }
     }
 
@@ -839,13 +985,48 @@
         const parsed = JSON.parse(json);
         if (Array.isArray(parsed)) media = parsed;
       } catch (error) {
-        media = [];
+        const ref = parseMediaRef(json);
+        media = ref ? [json] : [];
       }
     }
 
-    return media.slice(0, 6).filter(item =>
-      item && typeof item === "object" && String(item.url || item.viewerUrl || item.fileId || "").trim()
-    );
+    return media.slice(0, 6).map((item) => {
+      if (typeof item === "string") {
+        const ref = parseMediaRef(item);
+        return ref ? {
+          kind: "image",
+          url: item,
+          viewerUrl: item,
+          fullUrl: item,
+          downloadUrl: item,
+          firestoreRef: item,
+          mediaId: ref.id,
+          storage: "firestore",
+          name: "SFK memory",
+          muted: true
+        } : null;
+      }
+      if (!item || typeof item !== "object") return null;
+      const ref = memoryMediaRefFromItem(item);
+      if (ref) {
+        const uri = mediaRef(ref.kind, ref.id);
+        return {
+          ...item,
+          kind: item.kind || "image",
+          url: item.url || uri,
+          viewerUrl: item.viewerUrl || uri,
+          fullUrl: item.fullUrl || uri,
+          downloadUrl: item.downloadUrl || uri,
+          firestoreRef: item.firestoreRef || uri,
+          mediaId: item.mediaId || ref.id,
+          storage: item.storage || "firestore",
+          muted: item.muted !== false
+        };
+      }
+      return String(item.url || item.viewerUrl || item.fullUrl || item.downloadUrl || item.fileId || "").trim()
+        ? item
+        : null;
+    }).filter(Boolean);
   }
 
   function buildInlineMemoryAssetsFallback(payload) {
@@ -1278,6 +1459,8 @@
   }
 
   function parseJsonArray(value) {
+    if (Array.isArray(value)) return value;
+    if (value && typeof value === "object") return [value];
     try {
       const parsed = JSON.parse(value || "[]");
       return Array.isArray(parsed) ? parsed : [];
@@ -1310,12 +1493,46 @@
     }));
   }
 
+  async function directPost(type, payload = {}) {
+    return handlePost({ type, payload: payload || {} }, "firebase-direct://adapter");
+  }
+
+  async function directGet(type = "today", params = {}) {
+    const searchParams = new URLSearchParams();
+    Object.entries(params || {}).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") searchParams.set(key, String(value));
+    });
+    searchParams.set("type", type || "today");
+    return handleGet(searchParams);
+  }
+
+  async function ready(timeoutMs = 10000) {
+    const started = Date.now();
+    let delay = 80;
+    while (Date.now() - started < timeoutMs) {
+      try {
+        return Boolean(ensureFirebaseDb());
+      } catch (error) {
+        await new Promise(resolve => setTimeout(resolve, delay));
+        delay = Math.min(650, Math.round(delay * 1.45));
+      }
+    }
+    return Boolean(ensureFirebaseDb());
+  }
+
   window.SFKClassBoardFirebaseAdapter = {
     SHEETS,
     getRows,
     getPublishedRows,
     getTodayBoard,
-    getWeeklySchedule
+    getWeeklySchedule,
+    post: directPost,
+    get: directGet,
+    resolveMediaDataUrl,
+    ready,
+    isReady: () => {
+      try { return Boolean(ensureFirebaseDb()); } catch (error) { return false; }
+    }
   };
 
   initialize();

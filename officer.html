@@ -38,7 +38,7 @@
           autocomplete="off"
         />
 
-        <button onclick="loginOfficer()">Login</button>
+        <button id="officerLoginButton" type="button" data-officer-login onclick="loginOfficer(event)">Login</button>
 
         <small id="officerLoginMessage"></small>
       </div>
@@ -383,10 +383,10 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
-  <script src="firebase-config.js?v=2-secure-auth"></script>
-  <script src="auth.js?v=2-persistent-login"></script>
-  <script src="firebase-adapter.js?v=media-fix-v2"></script>
-  <script src="pwa.js?v=15-pwa-polish"></script>
-  <script src="officer.js?v=media-fix-v2"></script>
+  <script src="firebase-config.js?v=phone-login-v8"></script>
+  <script src="auth.js?v=phone-login-v8"></script>
+  <script src="firebase-adapter.js?v=media-fix-v8"></script>
+  <script src="pwa.js?v=media-fix-v8"></script>
+  <script src="officer.js?v=media-fix-v8"></script>
 </body>
 </html>
