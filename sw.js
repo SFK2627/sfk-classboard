@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-sw.js-birthday-overlapfix-v3";
+const CACHE_NAME = "sfk-sw.js-birthday-accordion-portrait-v5";
 const APP_SHELL = [
   "./",
   "./index.html",

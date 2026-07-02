@@ -57,6 +57,7 @@ let announcementFastRefreshStartedAt = 0;
 let lastBirthdayDisplayKey = "";
 let birthdayYearModalReady = false;
 let lastBirthdayModalFocus = null;
+let activeBirthdayMonth = null;
 let weeklyScheduleData = [];
 let weeklyDailyInfoData = [];
 let activeWeeklyDay = "Monday";
@@ -2974,6 +2975,7 @@ function openBirthdayYearModal() {
   if (!modal) return;
 
   lastBirthdayModalFocus = document.activeElement;
+  activeBirthdayMonth = null;
   renderBirthdayYearModal(latestData?.birthdays || []);
   modal.setAttribute("aria-hidden", "false");
   document.body.classList.add("birthdayYearModalOpen");
@@ -3020,11 +3022,15 @@ function renderBirthdayYearModal(items) {
       todayBox.innerHTML = `
         <span>Today’s Celebrants</span>
         <strong>${todayRecords.map(record => escapeHTML(record.name)).join(", ")}</strong>
-        <small>Make their day extra special! 🎉</small>
+        <small>Tap a month below to view its birthday list 🎉</small>
       `;
     } else {
-      todayBox.hidden = true;
-      todayBox.innerHTML = "";
+      todayBox.hidden = false;
+      todayBox.innerHTML = `
+        <span>Birthday List</span>
+        <strong>Tap a month to view the celebrants.</strong>
+        <small>Each month stays hidden until you open it. 🎂</small>
+      `;
     }
   }
 
@@ -3045,23 +3051,28 @@ function renderBirthdayYearModal(items) {
   });
 
   list.innerHTML = Array.from(grouped.entries()).map(([month, monthRecords], groupIndex) => {
-    const monthName = getBirthdayMonthName(month);
-    const monthIcon = getBirthdayMonthIcon(month);
-    const isCurrentMonth = Number(month) === todayMonth;
+    const monthNumber = Number(month);
+    const monthName = getBirthdayMonthName(monthNumber);
+    const monthIcon = getBirthdayMonthIcon(monthNumber);
+    const isCurrentMonth = monthNumber === todayMonth;
+    const isExpanded = activeBirthdayMonth === monthNumber;
     const celebrantLabel = `${monthRecords.length} ${monthRecords.length === 1 ? "celebrant" : "celebrants"}`;
 
     return `
-      <section class="birthdayMonthGroup ${isCurrentMonth ? "isCurrentMonth" : ""}" style="--group-index:${groupIndex};">
-        <div class="birthdayMonthHeader">
+      <section class="birthdayMonthGroup ${isCurrentMonth ? "isCurrentMonth" : ""} ${isExpanded ? "isExpanded" : ""}" style="--group-index:${groupIndex};">
+        <button type="button" class="birthdayMonthHeader" aria-expanded="${isExpanded ? "true" : "false"}" aria-controls="birthdayMonthPanel-${monthNumber}" onclick="toggleBirthdayMonth(${monthNumber})">
           <div class="birthdayMonthBadge" aria-hidden="true">${escapeHTML(monthIcon)}</div>
           <div class="birthdayMonthHeading">
             <h3>${escapeHTML(monthName)}</h3>
             <p>${celebrantLabel}${isCurrentMonth ? ' <span>This month</span>' : ''}</p>
           </div>
-          <div class="birthdayMonthCount" aria-label="${celebrantLabel}">${monthRecords.length}</div>
-        </div>
+          <div class="birthdayMonthCountWrap">
+            <div class="birthdayMonthCount" aria-label="${celebrantLabel}">${monthRecords.length}</div>
+            <span class="birthdayMonthToggle" aria-hidden="true">${isExpanded ? "−" : "+"}</span>
+          </div>
+        </button>
 
-        <div class="birthdayMonthPeople">
+        <div id="birthdayMonthPanel-${monthNumber}" class="birthdayMonthPeople" ${isExpanded ? '' : 'hidden'}>
           ${monthRecords.map((record, itemIndex) => `
             <div class="birthdayYearPerson ${record.monthDay === todayMonthDay ? "isToday" : ""}" style="--item-index:${itemIndex};">
               <span class="birthdayYearSparkle" aria-hidden="true">${record.monthDay === todayMonthDay ? "🎉" : "🎂"}</span>
@@ -3077,6 +3088,14 @@ function renderBirthdayYearModal(items) {
       </section>
     `;
   }).join("");
+}
+
+function toggleBirthdayMonth(month) {
+  const numericMonth = Number(month) || 0;
+  if (!numericMonth) return;
+
+  activeBirthdayMonth = activeBirthdayMonth === numericMonth ? null : numericMonth;
+  renderBirthdayYearModal(latestData?.birthdays || []);
 }
 
 function getSortedBirthdayRecords(items) {

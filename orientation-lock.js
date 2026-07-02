@@ -1,8 +1,9 @@
-(function sfkFreezePortraitLayoutOnPhones() {
+(function sfkPortraitOnlyReminderOnPhones() {
   "use strict";
 
-  const STYLE_ID = "sfkPortraitFreezeStyle";
-  const ROOT = document.documentElement;
+  const STYLE_ID = "sfkPortraitReminderStyleV2";
+  const OVERLAY_ID = "sfkPortraitReminder";
+  let allowLandscape = false;
 
   function isMobileLikeDevice() {
     const ua = navigator.userAgent || "";
@@ -11,17 +12,11 @@
     const coarse = window.matchMedia && window.matchMedia("(hover: none) and (pointer: coarse)").matches;
     const shortestScreenSide = Math.min(screen.width || 0, screen.height || 0);
     const shortestViewportSide = Math.min(window.innerWidth || 0, window.innerHeight || 0);
-    return userAgentDataMobile || uaMobile || (coarse && (shortestScreenSide <= 700 || shortestViewportSide <= 700));
+    return userAgentDataMobile || uaMobile || (coarse && (shortestScreenSide <= 820 || shortestViewportSide <= 820));
   }
 
   function isLandscapeViewport() {
     return window.innerWidth > window.innerHeight;
-  }
-
-  function getRotationDirectionClass() {
-    const angle = Number(screen.orientation && screen.orientation.angle);
-    if (angle === 270 || angle === -90) return "sfkPortraitRotateCCW";
-    return "sfkPortraitRotateCW";
   }
 
   function injectStyle() {
@@ -29,49 +24,88 @@
     const style = document.createElement("style");
     style.id = STYLE_ID;
     style.textContent = `
-      html.sfkPortraitFreeze {
-        width: 100vw !important;
-        height: 100vh !important;
-        overflow: hidden !important;
-        background: #111 !important;
-      }
-
-      html.sfkPortraitFreeze body {
+      #sfkPortraitReminder {
         position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
+        inset: 0 !important;
+        z-index: 2147483000 !important;
+        display: none !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 22px !important;
+        background: linear-gradient(135deg, #ffeaa7 0%, #fff7d6 48%, #ffffff 100%) !important;
+        color: #111 !important;
+        text-align: center !important;
+      }
+
+      html.sfkPortraitReminderOn,
+      html.sfkPortraitReminderOn body {
+        overflow: hidden !important;
+      }
+
+      html.sfkPortraitReminderOn #sfkPortraitReminder {
+        display: flex !important;
+      }
+
+      .sfkPortraitReminderCard {
+        width: min(92vw, 440px) !important;
+        border: 3px solid #111 !important;
+        border-radius: 24px !important;
+        background: rgba(255, 255, 255, .94) !important;
+        box-shadow: 8px 8px 0 rgba(0, 0, 0, .22) !important;
+        padding: 24px 22px !important;
+        font-family: inherit !important;
+      }
+
+      .sfkPortraitReminderIcon {
+        display: grid !important;
+        place-items: center !important;
+        width: 70px !important;
+        height: 70px !important;
+        margin: 0 auto 14px !important;
+        border-radius: 22px !important;
+        border: 3px solid #111 !important;
+        background: #ffd700 !important;
+        font-size: 2.1rem !important;
+        box-shadow: 4px 4px 0 rgba(0,0,0,.18) !important;
+      }
+
+      .sfkPortraitReminderCard h2 {
+        margin: 0 0 8px !important;
+        color: #111 !important;
+        font-size: clamp(1.35rem, 4vw, 2rem) !important;
+        line-height: 1.05 !important;
+        font-weight: 950 !important;
+      }
+
+      .sfkPortraitReminderCard p {
         margin: 0 !important;
-        width: var(--sfk-freeze-short-side) !important;
-        height: var(--sfk-freeze-long-side) !important;
-        min-width: var(--sfk-freeze-short-side) !important;
-        min-height: var(--sfk-freeze-long-side) !important;
-        max-width: none !important;
-        max-height: none !important;
-        transform-origin: top left !important;
-        overflow-x: hidden !important;
-        overflow-y: auto !important;
-        -webkit-overflow-scrolling: touch !important;
-        overscroll-behavior: none !important;
-        touch-action: pan-y !important;
-        backface-visibility: hidden !important;
-      }
-
-      html.sfkPortraitFreeze.sfkPortraitRotateCW body {
-        transform: translateX(var(--sfk-freeze-viewport-width)) rotate(90deg) !important;
-      }
-
-      html.sfkPortraitFreeze.sfkPortraitRotateCCW body {
-        transform: translateY(var(--sfk-freeze-viewport-height)) rotate(-90deg) !important;
-      }
-
-      html.sfkPortraitFreeze body #sfkIntroOverlay,
-      html.sfkPortraitFreeze body .sfkStartIntro,
-      html.sfkPortraitFreeze body .announcementImageOverlay,
-      html.sfkPortraitFreeze body #announcementImageOverlay {
-        max-width: var(--sfk-freeze-short-side) !important;
+        color: #333 !important;
+        font-size: clamp(.95rem, 2.6vw, 1.08rem) !important;
+        line-height: 1.35 !important;
+        font-weight: 700 !important;
       }
     `;
     document.head.appendChild(style);
+  }
+
+  function ensureOverlay() {
+    injectStyle();
+    let overlay = document.getElementById(OVERLAY_ID);
+    if (overlay) return overlay;
+
+    overlay = document.createElement("div");
+    overlay.id = OVERLAY_ID;
+    overlay.setAttribute("role", "alert");
+    overlay.setAttribute("aria-live", "assertive");
+    overlay.innerHTML = `
+      <div class="sfkPortraitReminderCard">
+        <div class="sfkPortraitReminderIcon">📱</div>
+        <h2>View in Portrait Mode</h2>
+        <p>Please rotate your phone upright para maayos at hindi masira ang ClassBoard layout.</p>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    return overlay;
   }
 
   async function tryNativePortraitLock() {
@@ -85,42 +119,39 @@
         }
       }
     } catch (error) {
-      // Browsers often allow real orientation lock only inside installed PWAs.
-      // The CSS freeze below keeps the app in portrait layout when lock is unavailable.
+      // Many mobile browsers only allow real orientation lock in installed PWAs.
+      // The reminder overlay below protects the portrait layout when lock is unavailable.
     }
   }
 
-  function applyPortraitFreeze() {
-    injectStyle();
-    const shouldFreeze = isMobileLikeDevice() && isLandscapeViewport();
-    const width = Math.max(1, window.innerWidth || document.documentElement.clientWidth || 1);
-    const height = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 1);
-    const shortSide = Math.min(width, height);
-    const longSide = Math.max(width, height);
-
-    ROOT.style.setProperty("--sfk-freeze-viewport-width", `${width}px`);
-    ROOT.style.setProperty("--sfk-freeze-viewport-height", `${height}px`);
-    ROOT.style.setProperty("--sfk-freeze-short-side", `${shortSide}px`);
-    ROOT.style.setProperty("--sfk-freeze-long-side", `${longSide}px`);
-
-    ROOT.classList.toggle("sfkPortraitFreeze", shouldFreeze);
-    ROOT.classList.remove("sfkPortraitRotateCW", "sfkPortraitRotateCCW");
-    if (shouldFreeze) ROOT.classList.add(getRotationDirectionClass());
+  function applyPortraitReminder() {
+    ensureOverlay();
+    const shouldShow = isMobileLikeDevice() && isLandscapeViewport() && !allowLandscape;
+    document.documentElement.classList.toggle("sfkPortraitReminderOn", shouldShow);
   }
 
   function scheduleApply() {
     requestAnimationFrame(() => {
-      applyPortraitFreeze();
-      setTimeout(applyPortraitFreeze, 120);
-      setTimeout(applyPortraitFreeze, 360);
+      applyPortraitReminder();
+      setTimeout(applyPortraitReminder, 120);
+      setTimeout(applyPortraitReminder, 360);
     });
   }
 
   function start() {
-    injectStyle();
-    applyPortraitFreeze();
+    ensureOverlay();
+    applyPortraitReminder();
     tryNativePortraitLock();
   }
+
+  window.SFK_PHONE_ORIENTATION = {
+    allowWatchLandscape(value) {
+      allowLandscape = Boolean(value);
+      applyPortraitReminder();
+      if (!allowLandscape) tryNativePortraitLock();
+    },
+    refresh: applyPortraitReminder
+  };
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", start, { once: true });

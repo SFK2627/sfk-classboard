@@ -6533,8 +6533,8 @@ html.phone-device .announcement-bottom-stack .announcement-heart-spacer {
 
 
 /* ================================
-   BIRTHDAY FULL YEAR MODAL OVERLAP FIX + UI POLISH
-   Cleaner grouping layout, no decorative overlap, and roomier birthday cards.
+   BIRTHDAY FULL YEAR MODAL ACCORDION UPDATE
+   Show months first; reveal each month's birthday list only when clicked.
 ================================ */
 .birthdayHeaderDate {
   cursor: pointer;
@@ -6755,7 +6755,7 @@ body.birthdayYearModalOpen {
 }
 
 .birthdayMonthGroup {
-  margin: 0 0 16px;
+  margin: 0 0 14px;
   animation: birthdayGroupReveal .34s ease both;
   animation-delay: calc(var(--group-index, 0) * 55ms);
 }
@@ -6772,6 +6772,7 @@ body.birthdayYearModalOpen {
 }
 
 .birthdayMonthHeader {
+  width: 100%;
   position: sticky;
   top: 0;
   z-index: 2;
@@ -6779,17 +6780,33 @@ body.birthdayYearModalOpen {
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
-  margin: 0 0 10px;
+  margin: 0;
   border: 3px solid #111;
   border-radius: 18px;
   background: linear-gradient(135deg, rgba(255,236,158,.98), rgba(255,214,102,.96));
   color: #111;
   padding: 10px 12px;
   box-shadow: 4px 4px 0 rgba(0,0,0,.14);
+  cursor: pointer;
+  text-align: left;
+}
+
+.birthdayMonthHeader:hover {
+  transform: translateY(-1px);
+}
+
+.birthdayMonthHeader:focus-visible {
+  outline: 3px solid rgba(255, 215, 0, .45);
+  outline-offset: 2px;
 }
 
 .birthdayMonthGroup.isCurrentMonth .birthdayMonthHeader {
   background: linear-gradient(135deg, #ffe27e, #ffc9df);
+}
+
+.birthdayMonthGroup.isExpanded .birthdayMonthHeader {
+  border-bottom-left-radius: 14px;
+  border-bottom-right-radius: 14px;
 }
 
 .birthdayMonthBadge {
@@ -6835,6 +6852,12 @@ body.birthdayYearModalOpen {
   text-transform: uppercase;
 }
 
+.birthdayMonthCountWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .birthdayMonthCount {
   display: inline-grid;
   place-items: center;
@@ -6848,10 +6871,29 @@ body.birthdayYearModalOpen {
   font-weight: 950;
 }
 
+.birthdayMonthToggle {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: rgba(17,17,17,.08);
+  color: #111;
+  font-size: 1.25rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
 .birthdayMonthPeople {
   display: grid;
   grid-template-columns: 1fr;
   gap: 10px;
+  margin-top: 10px;
+  padding: 2px 2px 4px;
+}
+
+.birthdayMonthPeople[hidden] {
+  display: none !important;
 }
 
 .birthdayYearPerson {
@@ -7045,10 +7087,20 @@ body.birthdayYearModalOpen {
     font-size: .74rem;
   }
 
+  .birthdayMonthCountWrap {
+    gap: 6px;
+  }
+
   .birthdayMonthCount {
     min-width: 34px;
     height: 34px;
     font-size: .8rem;
+  }
+
+  .birthdayMonthToggle {
+    width: 28px;
+    height: 28px;
+    font-size: 1.05rem;
   }
 
   .birthdayYearPerson {
