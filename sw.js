@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-classboard-v204-portrait-only-v1";
+const CACHE_NAME = "sfk-sw.js-portrait-freeze-v2";
 const APP_SHELL = [
   "./",
   "./index.html",
