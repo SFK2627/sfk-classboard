@@ -1802,6 +1802,18 @@ function waitForAnnouncementImageDecode(src, timeoutMs = 4500) {
   });
 }
 
+function closeAnnouncementImageOverlay() {
+  const overlay = document.getElementById("announcementImageOverlay");
+  if (!overlay) return;
+  const image = overlay.querySelector("img");
+  if (image) {
+    image.removeAttribute("src");
+  }
+  overlay.hidden = true;
+  overlay.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("announcementImageOpen");
+}
+
 function showAnnouncementImageOverlay(src, label) {
   if (!src) return;
   let overlay = document.getElementById("announcementImageOverlay");
@@ -1809,26 +1821,44 @@ function showAnnouncementImageOverlay(src, label) {
     overlay = document.createElement("div");
     overlay.id = "announcementImageOverlay";
     overlay.className = "announcementImageOverlay";
-    overlay.style.cssText = "position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:18px;background:rgba(0,0,0,.78);backdrop-filter:blur(4px);";
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.style.cssText = "position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;padding:18px;background:rgba(0,0,0,.78);backdrop-filter:blur(4px);";
     overlay.innerHTML = `
-      <div class="announcementImageOverlayBackdrop" data-close-announcement-image="true" style="position:absolute;inset:0;"></div>
-      <figure class="announcementImageOverlayFigure" style="position:relative;z-index:1;max-width:min(96vw,1100px);max-height:92vh;margin:0;display:grid;gap:10px;">
-        <button class="announcementImageOverlayClose" type="button" data-close-announcement-image="true" aria-label="Close image" style="justify-self:end;width:42px;height:42px;border:0;border-radius:999px;background:#fff;color:#111;font-size:28px;font-weight:800;line-height:1;box-shadow:0 8px 30px rgba(0,0,0,.32);">×</button>
-        <img alt="" style="display:block;max-width:96vw;max-height:78vh;object-fit:contain;border-radius:14px;background:#fff;box-shadow:0 18px 60px rgba(0,0,0,.45);" />
-        <figcaption style="color:#fff;text-align:center;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.7);"></figcaption>
+      <button class="announcementImageOverlayBackdrop" type="button" data-close-announcement-image="true" aria-label="Close image preview" style="position:absolute;inset:0;border:0;background:transparent;padding:0;margin:0;cursor:zoom-out;"></button>
+      <figure class="announcementImageOverlayFigure" style="position:relative;z-index:1;max-width:min(96vw,1100px);max-height:92vh;margin:0;display:grid;gap:10px;place-items:center;pointer-events:none;">
+        <button class="announcementImageOverlayClose" type="button" data-close-announcement-image="true" aria-label="Close image" style="position:relative;z-index:3;justify-self:end;pointer-events:auto;width:48px;height:48px;border:0;border-radius:999px;background:#fff;color:#111;font-size:30px;font-weight:900;line-height:1;box-shadow:0 8px 30px rgba(0,0,0,.32);cursor:pointer;touch-action:manipulation;">×</button>
+        <img alt="" style="display:block;max-width:96vw;max-height:78vh;object-fit:contain;border-radius:14px;background:#fff;box-shadow:0 18px 60px rgba(0,0,0,.45);pointer-events:auto;" />
+        <figcaption style="color:#fff;text-align:center;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.7);pointer-events:none;"></figcaption>
       </figure>
     `;
     document.body.appendChild(overlay);
-    overlay.addEventListener("click", (clickEvent) => {
-      if (clickEvent.target?.dataset?.closeAnnouncementImage === "true") {
-        overlay.hidden = true;
-        document.body.classList.remove("announcementImageOpen");
+
+    const requestClose = (event) => {
+      const closeTarget = event.target?.closest?.("[data-close-announcement-image='true']");
+      if (!closeTarget) return;
+      event.preventDefault();
+      event.stopPropagation();
+      closeAnnouncementImageOverlay();
+    };
+
+    overlay.addEventListener("click", requestClose, true);
+    overlay.addEventListener("pointerdown", requestClose, true);
+    overlay.addEventListener("touchstart", requestClose, { capture: true, passive: false });
+
+    document.addEventListener("click", (event) => {
+      const activeOverlay = document.getElementById("announcementImageOverlay");
+      if (!activeOverlay || activeOverlay.hidden) return;
+      if (event.target?.closest?.("#announcementImageOverlay [data-close-announcement-image='true']")) {
+        event.preventDefault();
+        event.stopPropagation();
+        closeAnnouncementImageOverlay();
       }
-    });
+    }, true);
+
     document.addEventListener("keydown", (keyEvent) => {
       if (keyEvent.key === "Escape" && !overlay.hidden) {
-        overlay.hidden = true;
-        document.body.classList.remove("announcementImageOpen");
+        closeAnnouncementImageOverlay();
       }
     });
   }
@@ -1840,7 +1870,7 @@ function showAnnouncementImageOverlay(src, label) {
     image.alt = "Loading announcement photo...";
     image.onerror = () => {
       image.alt = "Photo could not load. Please close and try again.";
-      if (caption) caption.textContent = "Photo could not load. Try again or refresh once.";
+      if (caption) caption.textContent = "Photo could not load. Tap X or outside the photo to close.";
     };
     image.onload = () => {
       image.alt = String(label || "Announcement photo").trim();
@@ -1850,7 +1880,13 @@ function showAnnouncementImageOverlay(src, label) {
   }
   if (caption) caption.textContent = "Loading photo...";
   overlay.hidden = false;
+  overlay.setAttribute("aria-hidden", "false");
   document.body.classList.add("announcementImageOpen");
+
+  const closeButton = overlay.querySelector(".announcementImageOverlayClose");
+  if (closeButton && typeof closeButton.focus === "function") {
+    window.setTimeout(() => closeButton.focus({ preventScroll: true }), 0);
+  }
 }
 
 function parseClassBoardMediaRef(value) {
