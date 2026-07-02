@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-sw.js-birthday-modal-v1";
+const CACHE_NAME = "sfk-sw.js-birthday-date-modal-portrait-blocker-v2";
 const APP_SHELL = [
   "./",
   "./index.html",

@@ -1,17 +1,49 @@
-// Admin shortcut service worker cleanup. This file intentionally does not cache pages.
-self.addEventListener('install', (event) => {
-  event.waitUntil(self.skipWaiting());
+const CACHE_NAME = "sfk-admin-pwa-v20-portrait-only-v1";
+const APP_SHELL = [
+  "./",
+  "./index.html",
+  "./manifest.webmanifest",
+  "./sw.js",
+  "../admin.html?embedded=1&v=portrait-only-v1",
+  "../admin.css?v=portrait-only-v1",
+  "../admin.js?v=portrait-only-v1",
+  "../firebase-config.js",
+  "../orientation-lock.js?v=portrait-blocker-birthday-v2",
+  "../firebase-adapter.js?v=9-heart-ledger-v3",
+  "../icons/icon-192.png",
+  "../icons/icon-512.png",
+  "../icons/icon-maskable-512.png"
+];
+
+self.addEventListener("install", (event) => {
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
+  self.skipWaiting();
 });
-self.addEventListener('activate', (event) => {
-  event.waitUntil((async () => {
-    if (self.caches) {
-      const keys = await caches.keys();
-      await Promise.all(keys.filter((key) => /^sfk-admin-pwa/i.test(key)).map((key) => caches.delete(key)));
-    }
-    await self.registration.unregister();
-    await self.clients.claim();
-  })());
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) => Promise.all(
+      keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+    ))
+  );
+  self.clients.claim();
 });
-self.addEventListener('fetch', (event) => {
-  event.respondWith(fetch(event.request));
+
+self.addEventListener("fetch", (event) => {
+  const request = event.request;
+  const url = new URL(request.url);
+
+  if (request.method !== "GET" || url.origin !== self.location.origin) return;
+
+  event.respondWith(
+    fetch(request)
+      .then((response) => {
+        if (response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+        }
+        return response;
+      })
+      .catch(() => caches.match(request).then((cached) => cached || caches.match("./index.html")))
+  );
 });

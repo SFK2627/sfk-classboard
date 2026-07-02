@@ -2859,6 +2859,7 @@ function renderBirthdays(items) {
 
   if (dateText) {
     dateText.textContent = formatBirthdayDateText(todayMonthDay);
+    dateText.setAttribute("title", "View whole-year birthday list");
   }
 
   if (!items || items.length === 0) {
@@ -3061,21 +3062,24 @@ function getOrdinalDay(day) {
 
 
 function initBirthdayYearModal() {
-  const card = document.getElementById("birthdayCornerCard");
+  const dateTrigger = document.getElementById("birthdayDateText");
   const modal = document.getElementById("birthdayYearModal");
   const closeBtn = document.getElementById("birthdayYearClose");
   const backdrop = document.getElementById("birthdayYearBackdrop");
 
-  if (!card || !modal || card.dataset.birthdayModalReady === "true") return;
+  if (!dateTrigger || !modal || dateTrigger.dataset.birthdayModalReady === "true") return;
 
-  card.dataset.birthdayModalReady = "true";
-  card.addEventListener("click", (event) => {
-    if (event.target?.closest?.("a, button, input, textarea, select")) return;
+  dateTrigger.dataset.birthdayModalReady = "true";
+  dateTrigger.setAttribute("aria-label", "Open the whole-year birthday list");
+  dateTrigger.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
     openBirthdayYearModal();
   });
-  card.addEventListener("keydown", (event) => {
+  dateTrigger.addEventListener("keydown", (event) => {
     if (event.key !== "Enter" && event.key !== " ") return;
     event.preventDefault();
+    event.stopPropagation();
     openBirthdayYearModal();
   });
 
@@ -3105,7 +3109,7 @@ function closeBirthdayYearModal() {
   document.body.classList.remove("birthdayYearOpen");
   window.setTimeout(() => {
     modal.hidden = true;
-    document.getElementById("birthdayCornerCard")?.focus();
+    document.getElementById("birthdayDateText")?.focus();
   }, 170);
 }
 
