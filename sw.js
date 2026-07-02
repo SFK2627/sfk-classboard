@@ -1,8 +1,7 @@
-const CACHE_NAME = "sfk-classboard-v197-route-repair-v1";
+const CACHE_NAME = "sfk-classboard-v194-no-billing-upload";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./reset-cache.html",
   "./style.css",
   "./script.js",
   "./class-chat.css",
