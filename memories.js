@@ -8,6 +8,8 @@ const MAX_MEDIA_FILES = 6;
 const MAX_VIDEO_BYTES = 12 * 1024 * 1024;
 const MAX_TOTAL_UPLOAD_BYTES = 4 * 1024 * 1024;
 const TARGET_IMAGE_BYTES = 380 * 1024;
+const NO_BILLING_MEDIA_REF_PREFIX = "sfk-media://";
+const NO_BILLING_MEMORY_MEDIA_COLLECTION = "memoryMedia";
 const MUSIC_LINK_TEST_TIMEOUT_MS = 8000;
 const MEMORY_SHARE_IMAGE_WIDTH = 1080;
 const MEMORY_SHARE_IMAGE_HEIGHT = 1350;
@@ -216,9 +218,9 @@ async function loadMemories() {
   try {
     const rows = await loadMemoriesFromFirebaseFirst();
     memoryState.posts = rows.map(normalizeMemoryPost);
-    localStorage.setItem(MEMORY_CACHE_KEY, JSON.stringify(memoryState.posts));
     markLoadedMemoriesSeen(memoryState.posts);
     renderMemories();
+    cacheMemoriesForFastLoad(memoryState.posts);
   } catch (error) {
     console.error("Memories load failed:", error);
     if (memoryState.posts.length === 0) {
@@ -265,9 +267,143 @@ async function loadMemoriesDirectFromFirebase() {
     });
   });
 
-  return rows
+  const publishedRows = rows
     .filter((row) => String(row.Publish || "YES").trim().toUpperCase() === "YES")
     .sort((a, b) => compareMemoryRowsForDisplay(a, b));
+
+  return Promise.all(publishedRows.map(resolveNoBillingMemoryMediaRefsInRow));
+}
+
+async function resolveNoBillingMemoryMediaRefsInRow(row) {
+  const mediaItems = getRawMemoryMediaItems(row);
+  if (!mediaItems.some(hasNoBillingMemoryMediaRef)) return row;
+
+  const media = await Promise.all(mediaItems.map(resolveNoBillingMemoryMediaItem));
+  return {
+    ...row,
+    media: media.filter(Boolean),
+    MediaJSON: JSON.stringify(media.filter(Boolean))
+  };
+}
+
+function getRawMemoryMediaItems(row) {
+  if (Array.isArray(row?.media)) return row.media;
+
+  const jsonCandidates = [row?.MediaJSON, row?.mediaJSON, row?.UploadedMediaJSON, row?.uploadedMediaJSON];
+  for (const value of jsonCandidates) {
+    try {
+      const parsed = JSON.parse(String(value || "[]"));
+      if (Array.isArray(parsed)) return parsed;
+    } catch (error) {
+      // Ignore invalid legacy JSON and try the next field.
+    }
+  }
+
+  return [];
+}
+
+function hasNoBillingMemoryMediaRef(item) {
+  return Boolean(getNoBillingMemoryMediaRef(item));
+}
+
+function getNoBillingMemoryMediaRef(item) {
+  if (!item || typeof item !== "object") return null;
+
+  const candidates = [item.url, item.viewerUrl, item.fullUrl, item.downloadUrl, item.firestoreRef];
+  for (const value of candidates) {
+    const ref = parseNoBillingMemoryMediaRef(value);
+    if (ref) return ref;
+  }
+
+  return null;
+}
+
+function parseNoBillingMemoryMediaRef(value) {
+  const raw = String(value || "").trim();
+  if (!raw.startsWith(NO_BILLING_MEDIA_REF_PREFIX)) return null;
+
+  const rest = raw.slice(NO_BILLING_MEDIA_REF_PREFIX.length);
+  const slashIndex = rest.indexOf("/");
+  if (slashIndex <= 0) return null;
+
+  const kind = rest.slice(0, slashIndex);
+  const id = rest.slice(slashIndex + 1);
+  if (kind !== "memory" || !id) return null;
+
+  return { raw, id };
+}
+
+async function resolveNoBillingMemoryMediaItem(item) {
+  const ref = getNoBillingMemoryMediaRef(item);
+  if (!ref) return item;
+
+  const dataUrl = await loadNoBillingMemoryMediaDataUrl(ref.id);
+  if (!dataUrl) return item;
+
+  return {
+    ...item,
+    kind: "image",
+    url: dataUrl,
+    viewerUrl: dataUrl,
+    fullUrl: dataUrl,
+    downloadUrl: dataUrl,
+    firestoreRef: ref.raw
+  };
+}
+
+async function loadNoBillingMemoryMediaDataUrl(mediaId) {
+  const db = getClassBoardFirestore();
+  if (!db || !mediaId) return "";
+
+  try {
+    const doc = await db.collection(NO_BILLING_MEMORY_MEDIA_COLLECTION).doc(mediaId).get();
+    if (!doc.exists) return "";
+
+    const data = doc.data() || {};
+    const mimeType = String(data.MimeType || data.mimeType || "image/jpeg").trim();
+    const base64 = String(data.Data || data.data || "").trim();
+    if (!base64 || !mimeType.toLowerCase().startsWith("image/")) return "";
+
+    return `data:${mimeType};base64,${base64}`;
+  } catch (error) {
+    console.warn("Unable to load memory photo from Firestore:", error);
+    return "";
+  }
+}
+
+function cacheMemoriesForFastLoad(posts) {
+  try {
+    const cacheablePosts = (posts || []).map(stripLargeInlineMediaForMemoryCache);
+    localStorage.setItem(MEMORY_CACHE_KEY, JSON.stringify(cacheablePosts));
+  } catch (error) {
+    // No-billing photos can be large data URLs. A cache failure must not block rendering.
+    console.warn("Unable to update memories cache:", error);
+    try {
+      localStorage.removeItem(MEMORY_CACHE_KEY);
+    } catch (removeError) {
+      // Ignore localStorage cleanup errors.
+    }
+  }
+}
+
+function stripLargeInlineMediaForMemoryCache(post) {
+  return {
+    ...post,
+    media: Array.isArray(post?.media)
+      ? post.media.map((item) => ({
+          ...item,
+          url: stripInlineMediaUrl(item?.url),
+          viewerUrl: stripInlineMediaUrl(item?.viewerUrl),
+          fullUrl: stripInlineMediaUrl(item?.fullUrl),
+          downloadUrl: stripInlineMediaUrl(item?.downloadUrl)
+        }))
+      : []
+  };
+}
+
+function stripInlineMediaUrl(value) {
+  const raw = String(value || "");
+  return raw.startsWith("data:") ? "" : raw;
 }
 
 function getClassBoardFirestore() {
@@ -2211,11 +2347,7 @@ function syncMemoryHeartStatesFromServer(posts) {
 }
 
 function saveMemoryCacheSnapshot() {
-  try {
-    localStorage.setItem(MEMORY_CACHE_KEY, JSON.stringify(memoryState.posts));
-  } catch (error) {
-    console.warn("Unable to update memories cache:", error);
-  }
+  cacheMemoriesForFastLoad(memoryState.posts);
 }
 
 
@@ -5672,9 +5804,9 @@ loadMemories = async function loadMemoriesWithHeartLedgerV3() {
     const posts = rows.map(normalizeMemoryPost);
     await hydrateMemoryHeartsV3(posts);
     memoryState.posts = posts;
-    localStorage.setItem(MEMORY_CACHE_KEY, JSON.stringify(memoryState.posts));
     markLoadedMemoriesSeen(memoryState.posts);
     renderMemories();
+    cacheMemoriesForFastLoad(memoryState.posts);
   } catch (error) {
     console.error("Memories load failed:", error);
     if (memoryState.posts.length === 0) {

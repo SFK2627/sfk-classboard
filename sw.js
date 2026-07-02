@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-classboard-v194-no-billing-upload";
+const CACHE_NAME = "sfk-classboard-v195-memory-image-display-fix";
 const APP_SHELL = [
   "./",
   "./index.html",
