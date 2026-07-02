@@ -5,12 +5,12 @@ const MEMORY_MEDIA_COLLECTION = "memoryMedia";
 const CLASSBOARD_MEDIA_DATA_CACHE = new Map();
 const CLASSBOARD_MEDIA_BLOB_URL_CACHE = new Map();
 
-const DATA_REFRESH_MS = 5000;
+const DATA_REFRESH_MS = 2000;
 const ANNOUNCEMENT_ROTATE_MS = 10000;
 const BIRTHDAY_ROTATE_MS = 30000;
 const CACHE_KEY = "sfkClassBoardData";
 const CLASSBOARD_MEDIA_FIX_CACHE_VERSION_KEY = "sfkClassBoardMediaFixVersion";
-const CLASSBOARD_MEDIA_FIX_CACHE_VERSION = "media-fix-v8";
+const CLASSBOARD_MEDIA_FIX_CACHE_VERSION = "instant-announcement-v1";
 const ANNOUNCEMENT_HEARTS_KEY = "sfkClassBoardHeartedAnnouncements";
 
 try {
@@ -52,6 +52,8 @@ let birthdayIndex = 0;
 let isFetching = false;
 let announcementMediaHydrationTimer = null;
 let announcementMediaHydrationRun = 0;
+let announcementFastRefreshTimer = null;
+let announcementFastRefreshStartedAt = 0;
 let lastBirthdayDisplayKey = "";
 let weeklyScheduleData = [];
 let weeklyDailyInfoData = [];
@@ -129,6 +131,25 @@ function initClassBoard() {
   loadMemoriesUnreadBadge();
 
   setInterval(loadClassBoard, DATA_REFRESH_MS);
+  startAnnouncementFastRefreshBurst("startup");
+  window.addEventListener("focus", () => startAnnouncementFastRefreshBurst("window-focus"));
+  window.addEventListener("pageshow", () => startAnnouncementFastRefreshBurst("pageshow"));
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) startAnnouncementFastRefreshBurst("visible");
+  });
+  window.addEventListener("storage", (event) => {
+    if (event.key === "sfkClassBoardAnnouncementUpdatedAt") startAnnouncementFastRefreshBurst("admin-saved");
+  });
+  try {
+    if (typeof BroadcastChannel !== "undefined") {
+      const channel = new BroadcastChannel("sfk-classboard-updates");
+      channel.addEventListener("message", (event) => {
+        if (event.data?.type === "announcement-updated") startAnnouncementFastRefreshBurst("announcement-broadcast");
+      });
+    }
+  } catch (error) {
+    // Ignore unsupported broadcast channel errors.
+  }
   setInterval(loadMemoriesUnreadBadge, 60000);
   setInterval(rotateBirthdays, BIRTHDAY_ROTATE_MS);
   window.addEventListener("resize", fitAnnouncementTextToCard);
@@ -248,9 +269,24 @@ async function loadClassBoard() {
     safeSetClassBoardCache(newDataString);
 
     if (newDataString !== latestDataString) {
+      const previousData = latestData;
+      const shouldFocusLatestAnnouncement = shouldInstantFocusLatestAnnouncement(
+        previousData?.announcements || [],
+        data.announcements || []
+      );
+
+      if (shouldFocusLatestAnnouncement) {
+        announcementIndex = 0;
+      }
+
       latestDataString = newDataString;
       latestData = data;
       renderDashboard(data);
+
+      if (shouldFocusLatestAnnouncement) {
+        resetAnnouncementRotation(data.announcements || []);
+      }
+
       scheduleAnnouncementMediaHydration("fresh-dashboard");
     } else {
       latestData = data;
@@ -269,6 +305,48 @@ async function loadClassBoard() {
   } finally {
     isFetching = false;
   }
+}
+
+
+function startAnnouncementFastRefreshBurst(reason = "") {
+  window.clearTimeout(announcementFastRefreshTimer);
+  announcementFastRefreshStartedAt = Date.now();
+
+  const run = () => {
+    loadClassBoard();
+    if (Date.now() - announcementFastRefreshStartedAt > 30000) return;
+    announcementFastRefreshTimer = window.setTimeout(run, 1200);
+  };
+
+  announcementFastRefreshTimer = window.setTimeout(run, reason === "startup" ? 900 : 80);
+}
+
+function shouldInstantFocusLatestAnnouncement(previousItems = [], nextItems = []) {
+  const previousActive = getActiveAnnouncements(previousItems || []);
+  const nextActive = getActiveAnnouncements(nextItems || []);
+  if (nextActive.length === 0) return false;
+  if (previousActive.length === 0) return true;
+
+  const previousTopId = getAnnouncementId(previousActive[0]);
+  const nextTopId = getAnnouncementId(nextActive[0]);
+  if (nextTopId && nextTopId !== previousTopId) return true;
+
+  const previousSignature = getAnnouncementQuickRenderSignature(previousActive);
+  const nextSignature = getAnnouncementQuickRenderSignature(nextActive);
+  return previousSignature !== nextSignature && announcementIndex >= nextActive.length;
+}
+
+function getAnnouncementQuickRenderSignature(items = []) {
+  return getActiveAnnouncements(items)
+    .slice(0, 5)
+    .map(item => [
+      getAnnouncementId(item),
+      item?.Subject || "",
+      item?.Announcement || "",
+      item?.AttachmentURLs || item?.Attachments || item?.AttachmentURL || item?.AttachmentRefs || "",
+      item?.AttachmentNames || item?.AttachmentLabels || item?.AttachmentName || ""
+    ].map(value => String(value || "").trim()).join("~"))
+    .join("|");
 }
 
 async function loadMemoriesUnreadBadge() {
@@ -453,9 +531,21 @@ function getSubjectColor(subject) {
   return "#FFD700";
 }
 
+function getScheduleTextColor(subject, backgroundColor) {
+  const sub = String(subject || "").toLowerCase().trim();
+
+  // Force black text for subjects with very light official colors.
+  // This keeps Math (light green) and Science (yellow) readable in
+  // Today's Schedule and in the Current / Next Period cards.
+  if (sub.includes("math") || sub.includes("science")) {
+    return "#111";
+  }
+
+  return getReadableTextColor(backgroundColor || getSubjectColor(subject));
+}
+
 function getSubjectTextColor(subject) {
-  const color = getSubjectColor(subject);
-  return getReadableTextColor(color);
+  return getScheduleTextColor(subject, getSubjectColor(subject));
 }
 
 function escapeHtml(value) {
@@ -547,7 +637,7 @@ function renderCurrentSubject(item) {
 
   if (item) {
     const color = item.Color || getSubjectColor(item.Subject);
-    const textColor = getReadableTextColor(color);
+    const textColor = getScheduleTextColor(item.Subject, color);
 
     card.style.background = color;
     card.style.color = textColor;
@@ -598,7 +688,7 @@ function renderNextSubject(item) {
 
   if (item) {
     const color = item.Color || getSubjectColor(item.Subject);
-    const textColor = getReadableTextColor(color);
+    const textColor = getScheduleTextColor(item.Subject, color);
 
     card.style.background = color;
     card.style.color = textColor;
@@ -664,7 +754,7 @@ function renderSchedule(items, currentSubject) {
 
   box.innerHTML = items.map(item => {
     const color = item.Color || getSubjectColor(item.Subject);
-    const textColor = getReadableTextColor(color);
+    const textColor = getScheduleTextColor(item.Subject, color);
 
     const isCurrent =
       currentSubject &&
@@ -755,6 +845,13 @@ function scrollToCurrentSchedule() {
   }, 300);
 }
 
+function normalizeAnnouncementIndex(index, total) {
+  const count = Number(total) || 0;
+  if (count <= 0) return 0;
+  const safe = Number(index) || 0;
+  return ((safe % count) + count) % count;
+}
+
 function renderAnnouncements(items) {
   items = getActiveAnnouncements(items);
   const box = document.getElementById("announcementList");
@@ -767,8 +864,9 @@ function renderAnnouncements(items) {
   }
 
   const total = items.length;
-  const currentNumber = (announcementIndex % total) + 1;
-  const item = items[announcementIndex % total];
+  announcementIndex = normalizeAnnouncementIndex(announcementIndex, total);
+  const currentNumber = announcementIndex + 1;
+  const item = items[announcementIndex];
 
   const subjectColor = getSubjectColor(item.Subject);
   const subjectTextColor = getSubjectTextColor(item.Subject);
@@ -1679,17 +1777,17 @@ function scheduleAnnouncementMediaHydration(reason = "") {
     const pending = document.querySelector("[data-announcement-media-ref]");
     if (!pending || announcementMediaHydrationRun >= 10) return;
 
-    const delays = [250, 500, 900, 1500, 2400, 3600, 5200, 7200, 9500, 12000];
+    const delays = [120, 220, 400, 700, 1100, 1700, 2500, 3500, 5000, 7000];
     const delay = delays[Math.min(announcementMediaHydrationRun, delays.length - 1)];
     announcementMediaHydrationTimer = window.setTimeout(runHydration, delay);
   };
 
-  announcementMediaHydrationTimer = window.setTimeout(runHydration, 50);
+  announcementMediaHydrationTimer = window.setTimeout(runHydration, 0);
 }
 
 
 async function resolveClassBoardMediaDataUrlWithRetryV7(value, attempts = 8) {
-  const delays = [0, 180, 420, 760, 1200, 1800, 2600, 3800];
+  const delays = [0, 80, 180, 320, 560, 900, 1400, 2100];
   for (let index = 0; index < attempts; index += 1) {
     if (delays[index]) await new Promise(resolve => setTimeout(resolve, delays[index]));
     const dataUrl = await resolveClassBoardMediaDataUrl(value);
@@ -1788,14 +1886,9 @@ async function handlePendingAnnouncementMediaClick(event) {
 }
 
 async function prepareAnnouncementImageDisplayUrl(dataUrl, cacheKey) {
-  const displayUrl = classBoardMediaDisplayUrl(dataUrl, cacheKey);
-  if (!displayUrl || !isAnnouncementImageDisplayUrl(displayUrl)) return displayUrl;
-  try {
-    await waitForAnnouncementImageDecode(displayUrl, 4500);
-  } catch (error) {
-    console.warn("Announcement image decode delayed:", error);
-  }
-  return displayUrl;
+  // Do not block the announcement card while the browser decodes the picture.
+  // The chip becomes ready immediately, and the image continues loading in the background.
+  return classBoardMediaDisplayUrl(dataUrl, cacheKey);
 }
 
 function waitForAnnouncementImageDecode(src, timeoutMs = 4500) {
