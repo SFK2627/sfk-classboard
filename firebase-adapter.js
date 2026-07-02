@@ -1,546 +1,1322 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#f7c600" />
-  <meta name="description" content="SFK ClassBoard Admin panel for posting announcements, reminders, schedules, prayer leaders, birthdays, and class records." />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-title" content="SFK Admin" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-
-  <title>SFK ClassBoard Admin</title>
-
-  <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
-  <link rel="manifest" href="admin.webmanifest?v=2-pwa-polish" />
-  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
-  <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
-  <link rel="stylesheet" href="admin.css?v=phone-orientation-lock" />
-  <script src="orientation-lock.js?v=3-phone-device-lock" defer></script>
-</head>
-
-<body>
-  <main class="adminApp">
-
-    <!-- LOGIN SCREEN -->
-    <section id="loginScreen" class="loginScreen">
-      <div class="loginCard">
-        <div class="koalaMark">🐨</div>
-
-        <h1>SFK ClassBoard Admin</h1>
-        <p>Manage announcements, reminders, quotes, birthdays, and more.</p>
-
-        <input 
-          id="adminPin" 
-          type="password" 
-          placeholder="Enter Admin PIN" 
-          autocomplete="off"
-        />
-
-        <button onclick="loginAdmin()">Login</button>
-
-        <small id="loginMessage"></small>
-      </div>
-    </section>
-
-    <!-- ADMIN PANEL -->
-    <section id="adminPanel" class="adminPanel hidden">
-
-      <header class="adminTopbar">
-        <div>
-          <h1>SFK ClassBoard Admin</h1>
-          <p>Grade 8 - St. Faustina Kowalska • S.Y. 2026–2027 • #BeKind</p>
-        </div>
-
-        <button class="logoutBtn" onclick="logoutAdmin()">Logout</button>
-      </header>
-
-      <!-- CREATE / ADD DATA -->
-      <section class="adminGrid">
-
-        <!-- SUBJECT ANNOUNCEMENT -->
-        <div class="formCard">
-          <h2>📢 Subject Announcement</h2>
-
-          <label for="announcementPublishDate">Publish Date</label>
-          <input id="announcementPublishDate" type="date" />
-          <small class="fieldHint">This is the displayed date and the first day the announcement will appear.</small>
-
-          <label for="announcementSubject">Subject</label>
-          <input id="announcementSubject" list="subjectOptions" type="text" placeholder="Select or type subject" />
-
-          <label for="announcementTextEditor">Announcement</label>
-          <div class="richComposer" data-rich-target="announcementText">
-            <div class="richToolbar" aria-label="Announcement formatting tools">
-              <div class="richToolbarGroup" aria-label="Text style">
-                <button type="button" data-rich-command="bold" title="Bold selected text"><b>B</b></button>
-                <button type="button" data-rich-command="italic" title="Italic selected text"><i>I</i></button>
-                <button type="button" data-rich-command="underline" title="Underline selected text"><u>U</u></button>
-              </div>
-              <div class="richToolbarGroup" aria-label="Bullets and numbering">
-                <button type="button" data-rich-list="disc" title="Bullet list">•</button>
-                <button type="button" data-rich-list="circle" title="Circle bullet">○</button>
-                <button type="button" data-rich-list="square" title="Square bullet">▪</button>
-                <button type="button" data-rich-list="decimal" title="Numbered list">1.</button>
-                <button type="button" data-rich-list="lower-alpha" title="Letter list">a.</button>
-                <button type="button" data-rich-list="upper-alpha" title="Capital letter list">A.</button>
-              </div>
-              <div class="richToolbarGroup" aria-label="Indent">
-                <button type="button" data-rich-indent="out" title="Decrease indent">⇤</button>
-                <button type="button" data-rich-indent="in" title="Increase indent">⇥</button>
-              </div>
-              <div class="richToolbarGroup" aria-label="Text color">
-                <button type="button" class="richColorChip richColorBlack" data-rich-color="#111111" title="Black text">A</button>
-                <button type="button" class="richColorChip richColorRed" data-rich-color="#d62828" title="Red text">A</button>
-                <button type="button" class="richColorChip richColorBlue" data-rich-color="#2563eb" title="Blue text">A</button>
-                <button type="button" class="richColorChip richColorGreen" data-rich-color="#0f766e" title="Green text">A</button>
-                <button type="button" class="richColorChip richColorPurple" data-rich-color="#7c3aed" title="Purple text">A</button>
-                <label class="richColorPickerLabel" title="Custom text color"><span>Color</span><input type="color" data-rich-color-picker value="#111111" aria-label="Custom text color"></label>
-              </div>
-              <div class="richToolbarGroup" aria-label="Alignment">
-                <button type="button" data-rich-align="left" title="Align left">Left</button>
-                <button type="button" data-rich-align="center" title="Align center">Center</button>
-                <button type="button" data-rich-align="right" title="Align right">Right</button>
-                <button type="button" data-rich-command="removeFormat" title="Clear selected formatting">Clear</button>
-              </div>
-            </div>
-            <div id="announcementTextEditor" class="richEditor" contenteditable="true" data-placeholder="Type announcement here. Select words or lines, then apply bold or bullets."></div>
-            <textarea id="announcementText" class="richHiddenTextarea" aria-hidden="true" tabindex="-1"></textarea>
-          </div>
-          <small class="fieldHint">Format only selected words or lines. You can add bullets, numbering, indent, alignment, and text color.</small>
-
-          <label for="announcementTeacher">Teacher</label>
-			<select id="announcementTeacher">
-			  <option value="">Select Teacher</option>
-			  <option value="Mr. John Rey Tubello">Mr. John Rey Tubello</option>
-			  <option value="Ms. Chiarah De Castro">Ms. Chiarah De Castro</option>
-			  <option value="Mrs. Melanie Sebastian">Mrs. Melanie Sebastian</option>
-			  <option value="Ms. Hannah Lee Cillo">Ms. Hannah Lee Cillo</option>
-			  <option value="Ms Christine Tolentino">Ms Christine Tolentino</option>
-			  <option value="Ms. Kamille Lajom">Ms. Kamille Lajom</option>
-			  <option value="Mr. Alexis Pastrana">Mr. Alexis Pastrana</option>
-			  <option value="Ms. Gina Soriano">Ms. Gina Soriano</option>
-			  <option value="Mr. Runmar Quipanes">Mr. Runmar Quipanes</option>
-			</select>
-
-          <label for="announcementDeadline">Deadline</label>
-          <input id="announcementDeadline" type="date" />
-
-          <label for="announcementShowDeadline">Show Deadline on ClassBoard?</label>
-          <select id="announcementShowDeadline">
-            <option value="YES">YES - Show Deadline</option>
-            <option value="NO">NO - Hide Deadline</option>
-          </select>
-
-          <label for="announcementAttachments">Attachments</label>
-          <input
-            id="announcementAttachments"
-            type="file"
-            multiple
-            accept="image/*"
-          />
-          <small class="fieldHint">
-            Optional. Up to 5 photos. No-billing mode compresses images and stores them in Firestore.
-          </small>
-
-          <label for="announcementPriority">Priority</label>
-          <select id="announcementPriority">
-            <option value="Reminder">Reminder</option>
-            <option value="Important">Important</option>
-            <option value="Urgent">Urgent</option>
-            <option value="For Submission">For Submission</option>
-          </select>
-
-          <label for="announcementExpiryDate">Expiry Date</label>
-          <input id="announcementExpiryDate" type="date" />
-          <small class="fieldHint">First day this announcement will no longer appear. Leave blank for no expiry.</small>
-
-          <label for="announcementPublish">Visibility</label>
-          <select id="announcementPublish">
-            <option value="YES">Active / Follow Publish Date</option>
-            <option value="NO">Draft / Hidden</option>
-          </select>
-
-          <button onclick="saveAnnouncement()">Save Announcement</button>
-        </div>
-
-        <!-- THINGS TO BRING -->
-        <div class="formCard">
-          <h2>🎒 Things to Bring</h2>
-
-          <label for="thingsDate">Date Needed</label>
-          <input id="thingsDate" type="date" />
-
-          <label for="thingsSubject">Subject</label>
-          <input id="thingsSubject" list="subjectOptions" type="text" placeholder="Select or type subject" />
-
-          <label for="thingsItemEditor">Item / Reminder</label>
-          <div class="richComposer" data-rich-target="thingsItem">
-            <div class="richToolbar" aria-label="Things to Bring formatting tools">
-              <div class="richToolbarGroup" aria-label="Text style">
-                <button type="button" data-rich-command="bold" title="Bold selected text"><b>B</b></button>
-                <button type="button" data-rich-command="italic" title="Italic selected text"><i>I</i></button>
-                <button type="button" data-rich-command="underline" title="Underline selected text"><u>U</u></button>
-              </div>
-              <div class="richToolbarGroup" aria-label="Bullets and numbering">
-                <button type="button" data-rich-list="disc" title="Bullet list">•</button>
-                <button type="button" data-rich-list="circle" title="Circle bullet">○</button>
-                <button type="button" data-rich-list="square" title="Square bullet">▪</button>
-                <button type="button" data-rich-list="decimal" title="Numbered list">1.</button>
-                <button type="button" data-rich-list="lower-alpha" title="Letter list">a.</button>
-                <button type="button" data-rich-list="upper-alpha" title="Capital letter list">A.</button>
-              </div>
-              <div class="richToolbarGroup" aria-label="Indent">
-                <button type="button" data-rich-indent="out" title="Decrease indent">⇤</button>
-                <button type="button" data-rich-indent="in" title="Increase indent">⇥</button>
-              </div>
-              <div class="richToolbarGroup" aria-label="Text color">
-                <button type="button" class="richColorChip richColorBlack" data-rich-color="#111111" title="Black text">A</button>
-                <button type="button" class="richColorChip richColorRed" data-rich-color="#d62828" title="Red text">A</button>
-                <button type="button" class="richColorChip richColorBlue" data-rich-color="#2563eb" title="Blue text">A</button>
-                <button type="button" class="richColorChip richColorGreen" data-rich-color="#0f766e" title="Green text">A</button>
-                <button type="button" class="richColorChip richColorPurple" data-rich-color="#7c3aed" title="Purple text">A</button>
-                <label class="richColorPickerLabel" title="Custom text color"><span>Color</span><input type="color" data-rich-color-picker value="#111111" aria-label="Custom text color"></label>
-              </div>
-              <div class="richToolbarGroup" aria-label="Alignment">
-                <button type="button" data-rich-align="left" title="Align left">Left</button>
-                <button type="button" data-rich-align="center" title="Align center">Center</button>
-                <button type="button" data-rich-align="right" title="Align right">Right</button>
-                <button type="button" data-rich-command="removeFormat" title="Clear selected formatting">Clear</button>
-              </div>
-            </div>
-            <div id="thingsItemEditor" class="richEditor" contenteditable="true" data-placeholder="Example: Bring laptop / notebook / materials..."></div>
-            <textarea id="thingsItem" class="richHiddenTextarea" aria-hidden="true" tabindex="-1"></textarea>
-          </div>
-          <small class="fieldHint">Use bullets, numbering, and bold only where needed.</small>
-
-          <label for="thingsPublish">Publish</label>
-          <select id="thingsPublish">
-            <option value="YES">YES</option>
-            <option value="NO">NO</option>
-          </select>
-
-          <button onclick="saveThingsToBring()">Save Things to Bring</button>
-        </div>
-
-        <!-- ADVISER REMINDER -->
-        <div class="formCard">
-          <h2>📝 Adviser Reminder</h2>
-
-          <label for="adviserDate">Date</label>
-          <input id="adviserDate" type="date" />
-
-          <label for="adviserReminder">Reminder</label>
-          <textarea id="adviserReminder" placeholder="Type adviser reminder here..."></textarea>
-
-          <label for="adviserFormat">Text Format</label>
-          <select id="adviserFormat">
-            <option value="left">Left</option>
-            <option value="center">Center</option>
-            <option value="right">Right</option>
-            <option value="bullets">Bullets</option>
-            <option value="numbers">Numbers</option>
-          </select>
-
-          <label for="adviserPublish">Publish</label>
-          <select id="adviserPublish">
-            <option value="YES">YES</option>
-            <option value="NO">NO</option>
-          </select>
-
-          <button onclick="saveAdviserReminder()">Save Reminder</button>
-        </div>
-
-        <!-- PRAYER LEADER -->
-        <div class="formCard">
-          <h2>🙏 Prayer Leader</h2>
-
-          <label for="prayerDate">Date</label>
-          <input id="prayerDate" type="date" />
-
-          <label for="prayerName">Prayer Leader Name</label>
-          <input id="prayerName" type="text" placeholder="Example: Juan Dela Cruz" />
-
-          <label for="prayerPublish">Publish</label>
-          <select id="prayerPublish">
-            <option value="YES">YES</option>
-            <option value="NO">NO</option>
-          </select>
-
-          <button onclick="savePrayerLeader()">Save Prayer Leader</button>
-        </div>
-
-        <!-- DAILY KINDNESS QUOTE -->
-        <div class="formCard highlightCard">
-          <h2>🫶 Daily Kindness Quote</h2>
-
-          <label for="quoteDateInput">Date</label>
-          <input id="quoteDateInput" type="date" />
-
-          <label for="quoteTextInput">Quote</label>
-          <textarea id="quoteTextInput" placeholder="Enter kindness quote..."></textarea>
-
-          <label for="quoteAuthorInput">Author</label>
-          <input id="quoteAuthorInput" type="text" placeholder="Example: St. Faustina / SFK ClassBoard" />
-
-          <label for="quotePublishInput">Publish</label>
-          <select id="quotePublishInput">
-            <option value="YES">YES</option>
-            <option value="NO">NO</option>
-          </select>
-
-          <button onclick="saveQuote()">Save Quote</button>
-        </div>
-
-        <!-- BIRTHDAY -->
-        <div class="formCard">
-          <h2>🎂 Birthday</h2>
-
-          <label for="birthdayName">Student Name</label>
-          <input id="birthdayName" type="text" placeholder="Example: Juan Dela Cruz" />
-
-          <label for="birthdayDate">Birthday</label>
-          <input id="birthdayDate" type="date" />
-
-          <label for="birthdayPublish">Publish</label>
-          <select id="birthdayPublish">
-            <option value="YES">YES</option>
-            <option value="NO">NO</option>
-          </select>
-
-          <button onclick="saveBirthday()">Save Birthday</button>
-        </div>
-
-        <!-- TICKER MESSAGE -->
-        <div class="formCard">
-          <h2>📺 Ticker Message</h2>
-
-          <label for="tickerMessage">Message</label>
-          <textarea id="tickerMessage" placeholder="Example: Bring your handbook tomorrow."></textarea>
-
-          <label for="tickerPublish">Publish</label>
-          <select id="tickerPublish">
-            <option value="YES">YES</option>
-            <option value="NO">NO</option>
-          </select>
-
-          <button onclick="saveTickerMessage()">Save Ticker Message</button>
-        </div>
-
-
-        <!-- CLASS SCHEDULE -->
-        <div class="formCard">
-          <h2>🗓️ Class Schedule</h2>
-
-          <label for="scheduleDay">Day</label>
-          <select id="scheduleDay">
-            <option value="Monday">Monday</option>
-            <option value="Tuesday">Tuesday</option>
-            <option value="Wednesday">Wednesday</option>
-            <option value="Thursday">Thursday</option>
-            <option value="Friday">Friday</option>
-          </select>
-
-          <label for="scheduleStartTime">Start Time</label>
-          <input id="scheduleStartTime" type="time" />
-
-          <label for="scheduleEndTime">End Time</label>
-          <input id="scheduleEndTime" type="time" />
-
-          <label for="scheduleSubject">Subject / Block</label>
-          <input id="scheduleSubject" list="subjectOptions" type="text" placeholder="Example: ICT / Break / Assembly" />
-
-          <label for="scheduleTeacher">Teacher</label>
-          <input id="scheduleTeacher" list="teacherOptions" type="text" placeholder="Select or type teacher" />
-
-          <label for="scheduleRoom">Room</label>
-          <input id="scheduleRoom" type="text" placeholder="Example: ComLab / Room 404" />
-
-          <label for="scheduleColor">Color Hex</label>
-          <input id="scheduleColor" list="scheduleColorOptions" type="text" placeholder="Type or paste hex, example: #FFD700" />
-          <small class="fieldHint">Optional. Type/copy a hex color. Subject guide: English #EC407A · Math #2E7D32 · Science #FFD700 · ICT/LE #D32F2F · Filipino #8B5A2B · CLED #7B1FA2 · MAPEH #111111 · AP #1976D2</small>
-
-          <label for="schedulePublish">Publish</label>
-          <select id="schedulePublish">
-            <option value="YES">YES</option>
-            <option value="NO">NO</option>
-          </select>
-
-          <button onclick="saveClassSchedule()">Save Schedule Period</button>
-          <small class="fieldHint">Tip: Use Manage Existing Data → Class Schedule to edit, hide, delete, or reorder existing periods.</small>
-        </div>
-
-        <!-- DAILY SCHEDULE INFO -->
-        <div class="formCard">
-          <h2>🚪 Daily Schedule Info</h2>
-
-          <label for="dailyInfoDay">Day</label>
-          <select id="dailyInfoDay">
-            <option value="Monday">Monday</option>
-            <option value="Tuesday">Tuesday</option>
-            <option value="Wednesday">Wednesday</option>
-            <option value="Thursday">Thursday</option>
-            <option value="Friday">Friday</option>
-          </select>
-
-          <label for="dailyInfoEntryGate">Entry Gate</label>
-          <input id="dailyInfoEntryGate" type="text" placeholder="Example: Gate 2" />
-
-          <label for="dailyInfoExitGate">Exit Gate</label>
-          <input id="dailyInfoExitGate" type="text" placeholder="Example: SHS Gate" />
-
-          <label for="dailyInfoUniform">Prescribed Uniform</label>
-          <input id="dailyInfoUniform" list="uniformOptions" type="text" placeholder="Select or type uniform" />
-
-          <label for="dailyInfoPublish">Publish</label>
-          <select id="dailyInfoPublish">
-            <option value="YES">YES</option>
-            <option value="NO">NO</option>
-          </select>
-
-          <button onclick="saveDailyInfo()">Save Daily Info</button>
-        </div>
-
-      </section>
-
-      <datalist id="subjectOptions">
-        <option value="English"></option>
-        <option value="Mathematics"></option>
-        <option value="Science"></option>
-        <option value="ICT"></option>
-        <option value="Filipino"></option>
-        <option value="CLED"></option>
-        <option value="AP"></option>
-        <option value="MAPEH"></option>
-        <option value="LE"></option>
-        <option value="Homeroom"></option>
-        <option value="Morning Assembly"></option>
-        <option value="Class Meeting"></option>
-        <option value="Performance Task"></option>
-      </datalist>
-
-      <datalist id="scheduleColorOptions">
-        <option value="#EC407A" label="English - Pink"></option>
-        <option value="#2E7D32" label="Mathematics - Green"></option>
-        <option value="#FFD700" label="Science - Gold"></option>
-        <option value="#D32F2F" label="ICT / LE - Red"></option>
-        <option value="#8B5A2B" label="Filipino - Brown"></option>
-        <option value="#7B1FA2" label="CLED - Violet"></option>
-        <option value="#111111" label="MAPEH - Black"></option>
-        <option value="#1976D2" label="AP - Blue"></option>
-        <option value="#F7C600" label="SFK Yellow / Homeroom"></option>
-      </datalist>
-
-      <datalist id="teacherOptions">
-        <option value="Mr. John Rey Tubello"></option>
-        <option value="Ms. Chiarah De Castro"></option>
-        <option value="Mrs. Melanie Sebastian"></option>
-        <option value="Ms. Hannah Lee Cillo"></option>
-        <option value="Ms Christine Tolentino"></option>
-        <option value="Ms. Kamille Lajom"></option>
-        <option value="Mr. Alexis Pastrana"></option>
-        <option value="Ms. Gina Soriano"></option>
-        <option value="Mr. Runmar Quipanes"></option>
-      </datalist>
-
-      <datalist id="uniformOptions">
-        <option value="Complete School Uniform"></option>
-        <option value="Activity Shirt"></option>
-        <option value="PE Shirt"></option>
-      </datalist>
-
-      <!-- MANAGE EXISTING DATA -->
-      <section class="managePanel">
-        <div class="manageHeader">
-          <div>
-            <h2>Manage Existing Data</h2>
-            <p>View, edit, hide, or delete existing ClassBoard records from the database.</p>
-          </div>
-
-          <button class="refreshBtn" onclick="refreshCurrentAdminTable()">Refresh</button>
-        </div>
-
-        <div class="manageTabs">
-          <button onclick="loadAdminTable('Schedule', this)">Class Schedule</button>
-          <button onclick="loadAdminTable('Announcements', this)">Announcements</button>
-          <button onclick="loadAdminTable('ThingsToBring', this)">Things to Bring</button>
-          <button onclick="loadAdminTable('AdviserReminders', this)">Adviser Reminders</button>
-          <button onclick="loadAdminTable('PrayerLeaders', this)">Prayer Leaders</button>
-          <button onclick="loadAdminTable('DailyQuotes', this)">Daily Quotes</button>
-          <button onclick="loadAdminTable('Birthdays', this)">Birthdays</button>
-          <button onclick="loadAdminTable('TickerMessages', this)">Ticker Messages</button>
-          <button onclick="loadAdminTable('DailyInfo', this)">Daily Info</button>
-        </div>
-
-        <div class="manageFilters">
-          <label for="adminManageSearch">Search records</label>
-          <input id="adminManageSearch" type="search" placeholder="Search date, subject, text, name..." oninput="applyAdminManageFilters()" />
-
-          <label for="adminPublishFilter">Publish filter</label>
-          <select id="adminPublishFilter" onchange="applyAdminManageFilters()">
-            <option value="all">All records</option>
-            <option value="published">Published only</option>
-            <option value="hidden">Hidden only</option>
-          </select>
-        </div>
-
-        <div class="batchActions">
-          <button onclick="selectAllAdminRows()">Select All</button>
-          <button onclick="clearAdminSelection()">Clear Selection</button>
-          <button onclick="hideSelectedAdminRecords()">Hide Selected</button>
-          <button class="dangerBatchBtn" onclick="deleteSelectedAdminRecords()">Delete Selected</button>
-        </div>
-
-        <div id="manageStatus" class="manageStatus">
-          Select a category to view existing data.
-        </div>
-
-        <div class="tableWrap">
-          <table id="adminDataTable">
-            <thead></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- EDIT MODAL -->
-      <div id="editModal" class="editModal hidden">
-        <div class="editModalCard">
-          <div class="editModalHeader">
-            <div>
-              <h2 id="editModalTitle">Edit Record</h2>
-              <p id="editModalSubtitle">Update existing ClassBoard data.</p>
-            </div>
-
-            <button class="modalCloseBtn" onclick="closeEditModal()">×</button>
-          </div>
-
-          <div id="editFields" class="editFields"></div>
-
-          <div class="editModalActions">
-            <button class="cancelEditBtn" onclick="closeEditModal()">Cancel</button>
-            <button class="saveEditBtn" onclick="saveEditedRecord()">Save Changes</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- TOAST MESSAGE -->
-      <div id="adminToast" class="adminToast hidden">
-        Saved successfully.
-      </div>
-
-    </section>
-
-  </main>
-
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
-  <script src="firebase-config.js?v=2-secure-auth"></script>
-  <script src="auth.js?v=2-persistent-login"></script>
-  <script src="firebase-adapter.js?v=media-fix-v5"></script>
-  <script src="pwa.js?v=15-pwa-polish"></script>
-  <script src="admin.js?v=media-fix-v5"></script>
-</body>
-</html>
+(function () {
+  const APPS_SCRIPT_MARKER = "script.google.com/macros";
+  const TIMEZONE = "Asia/Manila";
+  const ANNOUNCEMENT_MEDIA_COLLECTION = "announcementMedia";
+  const MEMORY_MEDIA_COLLECTION = "memoryMedia";
+  const MEDIA_REF_PREFIX = "sfk-media://";
+  // Keep each Firestore media document safely below the 1 MiB document limit.
+  const NO_BILLING_MEDIA_MAX_BASE64_CHARS = 850000;
+
+  const SHEETS = {
+    Settings: {
+      collection: "settings",
+      headers: ["Key", "Value"]
+    },
+    Schedule: {
+      collection: "schedule",
+      headers: ["Day", "StartTime", "EndTime", "Subject", "Teacher", "Room", "Color", "Publish"]
+    },
+    Announcements: {
+      collection: "announcements",
+      headers: ["ID", "Date", "Subject", "Announcement", "Teacher", "Deadline", "ShowDeadline", "AttachmentURLs", "AttachmentNames", "Priority", "PublishDate", "ExpiryDate", "Publish", "HeartCount"]
+    },
+    ThingsToBring: {
+      collection: "thingsToBring",
+      headers: ["Date", "Subject", "Item", "Publish"]
+    },
+    AdviserReminders: {
+      collection: "adviserReminders",
+      headers: ["Date", "Reminder", "Publish"]
+    },
+    PrayerLeaders: {
+      collection: "prayerLeaders",
+      headers: ["Date", "PrayerLeader", "Publish"]
+    },
+    DailyQuotes: {
+      collection: "dailyQuotes",
+      headers: ["Date", "Quote", "Author", "Publish"]
+    },
+    Birthdays: {
+      collection: "birthdays",
+      headers: ["Name", "Birthday", "Publish"]
+    },
+    TickerMessages: {
+      collection: "tickerMessages",
+      headers: ["Message", "Priority", "Publish"]
+    },
+    DailyInfo: {
+      collection: "dailyInfo",
+      headers: ["Day", "EntryGate", "ExitGate", "Uniform", "Publish"]
+    },
+    Memories: {
+      collection: "memories",
+      headers: ["ID", "Date", "Caption", "Author", "Role", "MediaItems", "Music", "Publish", "HeartCount"]
+    }
+  };
+
+  const TYPE_TO_SHEET = {
+    schedule: "Schedule",
+    announcement: "Announcements",
+    things: "ThingsToBring",
+    reminder: "AdviserReminders",
+    prayer: "PrayerLeaders",
+    quote: "DailyQuotes",
+    birthday: "Birthdays",
+    ticker: "TickerMessages",
+    dailyInfo: "DailyInfo"
+  };
+
+  const originalFetch = window.fetch.bind(window);
+  let db = null;
+
+  function initialize() {
+    if (!window.SFK_FIREBASE_READY || !window.firebase) {
+      console.warn("SFK Firebase is not configured yet. Apps Script fallback remains active.");
+      return;
+    }
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(window.SFK_FIREBASE_CONFIG);
+    }
+
+    db = firebase.firestore();
+    window.SFK_CLASSBOARD_FIREBASE_DB = db;
+    window.fetch = firebaseAwareFetch;
+    console.info("SFK ClassBoard Firebase adapter enabled.");
+  }
+
+  async function firebaseAwareFetch(input, options) {
+    const url = typeof input === "string" ? input : input && input.url;
+    if (!url || !String(url).includes(APPS_SCRIPT_MARKER)) {
+      return originalFetch(input, options);
+    }
+
+    try {
+      const parsed = new URL(url);
+      const requestType = parsed.searchParams.get("type");
+      if (requestType === "memoryAudio" || requestType === "memoryMedia") {
+        return originalFetch(input, options);
+      }
+
+      if (options && String(options.method || "GET").toUpperCase() === "POST") {
+        const body = JSON.parse(options.body || "{}");
+        if (body.type === "musicMetadataBatch") {
+          return originalFetch(input, options);
+        }
+
+        // Photo uploads are handled directly in Firestore for this no-billing build.
+        // No Apps Script, Firebase Storage, or paid billing project is required.
+        return jsonResponse(await handlePost(body, url));
+      }
+
+      return jsonResponse(await handleGet(parsed.searchParams));
+    } catch (error) {
+      console.error("Firebase adapter error:", error);
+      return jsonResponse({ success: false, status: "error", message: error.message || "Firebase error" }, 500);
+    }
+  }
+
+  async function handleGet(params) {
+    const type = params.get("type") || "today";
+
+    if (type === "today") return getTodayBoard();
+    if (type === "schedule") return getWeeklySchedule();
+    if (type === "settings") return getSettings();
+    if (type === "adminList") {
+      requireFirebaseRole(["admin"]);
+      return getManageList(params.get("sheet"));
+    }
+    if (type === "officerList") {
+      requireFirebaseRole(["admin", "officer"]);
+      return getManageList(params.get("sheet"));
+    }
+    if (type === "memories") return getMemories();
+    if (type === "memoryAudio") return getMemoryAudio(params.get("fileId"));
+
+    return { status: "error", message: "Invalid Firebase endpoint." };
+  }
+
+  async function handlePost(body, sourceUrl) {
+    const type = body.type;
+    const payload = body.payload || {};
+
+    if (type === "adminUpdate") {
+      requireFirebaseRole(["admin"]);
+      return updateRow(payload);
+    }
+    if (type === "adminUnpublish") {
+      requireFirebaseRole(["admin"]);
+      return unpublishRow(payload);
+    }
+    if (type === "officerHide") {
+      requireFirebaseRole(["admin", "officer"]);
+      return unpublishRow(payload);
+    }
+    if (type === "adminRestore") {
+      requireFirebaseRole(["admin"]);
+      return publishRow(payload);
+    }
+    if (type === "officerRestore") {
+      requireFirebaseRole(["admin", "officer"]);
+      return publishRow(payload);
+    }
+    if (type === "adminDelete") {
+      requireFirebaseRole(["admin"]);
+      return deleteRow(payload);
+    }
+    if (type === "adminBatchUnpublish") {
+      requireFirebaseRole(["admin"]);
+      return batchRows(payload, unpublishRow);
+    }
+    if (type === "officerBatchHide") {
+      requireFirebaseRole(["admin", "officer"]);
+      return batchRows(payload, unpublishRow);
+    }
+    if (type === "adminBatchDelete") {
+      requireFirebaseRole(["admin"]);
+      return batchRows(payload, deleteRow);
+    }
+    if (type === "officerAdd") {
+      requireFirebaseRole(["admin", "officer"]);
+      return addTypedRow(payload.kind, payload, sourceUrl);
+    }
+    if (type === "announcementHeart" || type === "announcementHeartV2") return recordHeart("Announcements", payload.announcementId || payload.AnnouncementID || payload.ID || payload.id, payload.delta, payload);
+    if (type === "memoryHeart" || type === "memoryHeartV2") return recordHeart("Memories", payload.memoryId || payload.MemoryID || payload.ID || payload.id, payload.delta, payload);
+    if (type === "memoryAuth") return checkMemoryAuth(payload);
+    if (type === "memoryUploadSession") {
+      requireFirebaseRole(["admin", "officer"]);
+      return {
+        success: true,
+        sessionId: generateId("memoryUploadSession"),
+        mode: "firestore-no-billing"
+      };
+    }
+    if (type === "memoryUploadAssets") {
+      requireFirebaseRole(["admin", "officer"]);
+      return uploadMemoryAssetsNoBilling(payload, payload.MemoryID || payload.memoryId || generateId("memory"));
+    }
+    if (type === "memoryHide") {
+      requireFirebaseRole(["admin", "officer"]);
+      return hideMemory(payload.memoryId || payload.MemoryID || payload.ID || payload.id);
+    }
+    if (type === "memoryDelete") {
+      requireFirebaseRole(["admin"]);
+      return deleteMemory(payload.memoryId || payload.MemoryID || payload.ID || payload.id);
+    }
+    if (type === "memoryUpdate") {
+      requireFirebaseRole(["admin", "officer"]);
+      return updateMemory(payload.memoryId || payload.MemoryID || payload.ID || payload.id, payload);
+    }
+    if (type === "memoryCreate") {
+      requireFirebaseRole(["admin", "officer"]);
+      return createMemory(payload, sourceUrl);
+    }
+
+    if (TYPE_TO_SHEET[type]) {
+      requireFirebaseRole(["admin"]);
+      return addTypedRow(type, payload, sourceUrl);
+    }
+
+    return { success: false, message: `Unknown Firebase request type: ${type}` };
+  }
+
+  async function getTodayBoard() {
+    const now = new Date();
+    const todayDate = formatLongDate(now);
+    const day = formatDay(now);
+    const schedule = (await getPublishedRows("Schedule"))
+      .filter(row => normalize(row.Day) === normalize(day))
+      .sort((a, b) => timeToMinutes(a.StartTime) - timeToMinutes(b.StartTime));
+
+    const birthdays = (await getPublishedRows("Birthdays")).map(row => ({
+      ...row,
+      Birthday: row.Birthday || row.MonthDay || row.Birthdate || row.Date,
+      Birthdate: row.Birthday || row.MonthDay || row.Birthdate || row.Date,
+      Date: row.Birthday || row.MonthDay || row.Birthdate || row.Date
+    }));
+
+    return {
+      status: "success",
+      date: todayDate,
+      day,
+      time: now.toLocaleTimeString("en-US", { timeZone: TIMEZONE }),
+      settings: await getSettings(),
+      schedule,
+      currentSubject: getCurrentSubject(schedule, now),
+      nextSubject: getNextSubject(schedule, now),
+      announcements: await resolveAnnouncementRows(await getPublishedRows("Announcements")),
+      thingsToBring: await getPublishedRows("ThingsToBring"),
+      prayerLeader: (await getTodayRows("PrayerLeaders", todayDate))[0] || null,
+      adviserReminders: await getPublishedRows("AdviserReminders"),
+      dailyInfo: await getPublishedRows("DailyInfo"),
+      dailyQuote: (await getTodayRows("DailyQuotes", todayDate))[0] || null,
+      birthdays,
+      ticker: await getPublishedRows("TickerMessages")
+    };
+  }
+
+  async function getWeeklySchedule() {
+    return {
+      status: "success",
+      schedule: await getPublishedRows("Schedule"),
+      dailyInfo: await getPublishedRows("DailyInfo")
+    };
+  }
+
+  async function getSettings() {
+    const rows = await getRows("Settings");
+    const settings = {};
+    rows.forEach(row => {
+      if (row.Key) settings[row.Key] = row.Value || "";
+    });
+    return settings;
+  }
+
+  async function getMemories() {
+    const rows = await getPublishedRows("Memories");
+    const memories = await Promise.all(rows.map(async row => {
+      const count = readHeartCount(row);
+      const rawMedia = Array.isArray(row.media) ? row.media : parseJsonArray(row.MediaJSON || row.mediaJSON || row.MediaItems || row.mediaItems || row.Media);
+      const media = await resolveMemoryMediaItems(rawMedia);
+      return {
+        ...row,
+        ID: row.ID || row.MemoryID || row.memoryId || row.id || row.docId,
+        id: row.ID || row.MemoryID || row.memoryId || row.id || row.docId,
+        HeartCount: count,
+        heartCount: count,
+        Hearts: count,
+        hearts: count,
+        media,
+        music: row.music && typeof row.music === "object" ? row.music : parseJsonObject(row.MusicJSON)
+      };
+    }));
+
+    return {
+      status: "success",
+      memories
+    };
+  }
+
+  async function getRows(sheetName) {
+    const meta = getSheetMeta(sheetName);
+    const snap = await db.collection(meta.collection).get();
+    const rows = [];
+    snap.forEach(doc => {
+      const data = doc.data() || {};
+      rows.push({ ...data, docId: doc.id, id: data.id || doc.id });
+    });
+    return rows.sort(compareRows);
+  }
+
+  async function getPublishedRows(sheetName) {
+    return (await getRows(sheetName)).filter(row =>
+      isPublished(row) &&
+      (sheetName !== "Announcements" || isAnnouncementActiveToday(row))
+    );
+  }
+
+  async function getTodayRows(sheetName, todayDate) {
+    const todayKey = normalizeDate(todayDate);
+    return (await getPublishedRows(sheetName)).filter(row => normalizeDate(row.Date || row.Birthday) === todayKey);
+  }
+
+  async function getManageList(sheetName) {
+    const meta = getSheetMeta(sheetName);
+    const rows = await getRows(sheetName);
+    return {
+      status: "success",
+      sheetName,
+      headers: meta.headers,
+      rows: rows.map((row, index) => ({
+        id: row.id,
+        docId: row.id,
+        rowNumber: index + 2,
+        sheetName,
+        notedCount: readHeartCount(row),
+        heartCount: readHeartCount(row),
+        cells: meta.headers.map(header => serializeCell(row[header]))
+      }))
+    };
+  }
+
+  async function addTypedRow(type, payload, sourceUrl) {
+    const sheetName = TYPE_TO_SHEET[type] || TYPE_TO_SHEET[payload.kind];
+    if (!sheetName) return { success: false, message: "Unknown row type." };
+
+    const meta = getSheetMeta(sheetName);
+    const id = generateId(type);
+    const preparedPayload = sheetName === "Announcements"
+      ? await prepareAnnouncementPayload(payload, id, sourceUrl)
+      : payload;
+    const row = normalizePayloadForSheet(sheetName, preparedPayload, id);
+    await db.collection(meta.collection).doc(id).set(withMeta(cleanFirestoreData(row)));
+    return { success: true, message: "Saved successfully.", id };
+  }
+
+
+  async function prepareAnnouncementPayload(payload, id, sourceUrl) {
+    const files = Array.isArray(payload.AttachmentFiles)
+      ? payload.AttachmentFiles.filter(file => file && file.data)
+      : [];
+
+    const prepared = { ...payload };
+    delete prepared.AttachmentFiles;
+
+    if (files.length === 0) {
+      prepared.AttachmentURLs = normalizeAttachmentText(
+        prepared.AttachmentURLs || prepared.Attachments || prepared.AttachmentURL || ""
+      );
+      prepared.AttachmentNames = normalizeAttachmentText(
+        prepared.AttachmentNames || prepared.AttachmentLabels || prepared.AttachmentName || ""
+      );
+      return prepared;
+    }
+
+    if (!sourceUrl) {
+      throw new Error("Attachment upload service is not available. Please refresh and try again.");
+    }
+
+    const uploadResult = await uploadAnnouncementAttachmentsNoBilling(id, files);
+    prepared.AttachmentURLs = uploadResult.urls || "";
+    prepared.Attachments = uploadResult.urls || "";
+    prepared.AttachmentURL = uploadResult.urls || "";
+    prepared.AttachmentNames = uploadResult.names || "";
+    prepared.AttachmentLabels = uploadResult.names || "";
+    prepared.AttachmentName = uploadResult.names || "";
+    return prepared;
+  }
+
+  async function uploadAnnouncementAttachmentsNoBilling(recordId, files) {
+    const savedFiles = [];
+
+    for (const [index, file] of files.entries()) {
+      const saved = await saveNoBillingMediaFile(ANNOUNCEMENT_MEDIA_COLLECTION, recordId, file, {
+        ownerKind: "announcement",
+        index
+      });
+      savedFiles.push(saved);
+    }
+
+    return {
+      urls: savedFiles.map(file => file.uri).join("\n"),
+      names: savedFiles.map(file => file.name).join("\n")
+    };
+  }
+
+  function normalizeAttachmentText(value) {
+    if (Array.isArray(value)) return value.map(item => String(item || "").trim()).filter(Boolean).join("\n");
+    return String(value || "").replace(/\r\n/g, "\n").trim();
+  }
+
+  function cleanFirestoreData(value) {
+    if (value === undefined) return "";
+    if (value === null) return null;
+    if (Array.isArray(value)) {
+      return value
+        .map(item => cleanFirestoreData(item))
+        .filter(item => item !== undefined);
+    }
+    if (value && typeof value === "object" && typeof value.toMillis !== "function") {
+      const clean = {};
+      Object.entries(value).forEach(([key, item]) => {
+        if (!key) return;
+        const next = cleanFirestoreData(item);
+        if (next !== undefined) clean[key] = next;
+      });
+      return clean;
+    }
+    return value;
+  }
+
+  async function updateRow(payload) {
+    const row = await rowByNumber(payload.sheetName, payload.rowNumber);
+    const meta = getSheetMeta(payload.sheetName);
+    const values = payload.values || [];
+    const next = {};
+
+    meta.headers.forEach((header, index) => {
+      next[header] = deserializeCell(values[index]);
+    });
+
+    await db.collection(meta.collection).doc(row.id).set(withMeta(cleanFirestoreData(next), false), { merge: true });
+    return { success: true, message: "Record updated." };
+  }
+
+  async function unpublishRow(payload) {
+    const row = await rowByNumber(payload.sheetName, payload.rowNumber);
+    const meta = getSheetMeta(payload.sheetName);
+    await db.collection(meta.collection).doc(row.id).set(withMeta({ Publish: "NO" }, false), { merge: true });
+    return { success: true, message: "Record hidden." };
+  }
+
+  async function publishRow(payload) {
+    const row = await rowByNumber(payload.sheetName, payload.rowNumber);
+    const meta = getSheetMeta(payload.sheetName);
+    await db.collection(meta.collection).doc(row.id).set(withMeta({ Publish: "YES" }, false), { merge: true });
+    return { success: true, message: "Record restored." };
+  }
+
+  async function deleteRow(payload) {
+    const row = await rowByNumber(payload.sheetName, payload.rowNumber);
+    const meta = getSheetMeta(payload.sheetName);
+    await db.collection(meta.collection).doc(row.id).delete();
+    return { success: true, message: "Record deleted." };
+  }
+
+  async function batchRows(payload, action) {
+    for (const rowNumber of payload.rowNumbers || []) {
+      await action({ sheetName: payload.sheetName, rowNumber });
+    }
+    return { success: true, message: "Batch action complete." };
+  }
+
+  async function rowByNumber(sheetName, rowNumber) {
+    const rows = await getRows(sheetName);
+    const row = rows[Number(rowNumber) - 2];
+    if (!row) throw new Error("Record not found.");
+    return row;
+  }
+
+  async function recordHeart(sheetName, id, deltaValue, payload = {}) {
+    const recordId = String(id || "").trim();
+    if (!recordId) return { success: false, message: "Missing record ID." };
+
+    const meta = getSheetMeta(sheetName);
+    const ref = await resolveRecordRef(meta.collection, recordId);
+    if (!ref) {
+      return { success: false, message: "Record not found. Please refresh and try again." };
+    }
+
+    const deviceId = normalizeHeartDeviceId(payload.deviceId || payload.DeviceID || payload.device || "anonymous-device");
+    const requestedState = parseHeartRequestedState(payload);
+    let count = 0;
+    let hearted = false;
+    let savedHeartUsers = {};
+
+    await db.runTransaction(async transaction => {
+      const doc = await transaction.get(ref);
+      if (!doc.exists) throw new Error("Record not found.");
+
+      const data = doc.data() || {};
+      const heartedDevices = normalizeHeartedDevices(data.HeartUsersV2 || data.heartUsersV2 || data.NotedDevicesV2 || data.notedDevicesV2);
+      const currentlyHearted = Boolean(heartedDevices[deviceId]);
+      const nextHearted = requestedState === null ? !currentlyHearted : requestedState;
+
+      if (nextHearted) heartedDevices[deviceId] = true;
+      else delete heartedDevices[deviceId];
+
+      hearted = Boolean(heartedDevices[deviceId]);
+      count = Object.keys(heartedDevices).length;
+      savedHeartUsers = { ...heartedDevices };
+
+      const update = withMeta({
+        HeartUsersV2: heartedDevices,
+        heartUsersV2: heartedDevices,
+        HeartCountV2: count,
+        heartCountV2: count,
+        NotedCountV2: count,
+        notedCountV2: count
+      }, false);
+      transaction.set(ref, update, { merge: true });
+    });
+
+    return { success: true, count, hearted, heartUsers: savedHeartUsers };
+  }
+
+  async function resolveRecordRef(collectionName, recordId) {
+    const directRef = db.collection(collectionName).doc(recordId);
+    const directDoc = await directRef.get();
+    if (directDoc.exists) return directRef;
+
+    const byUpperId = await db.collection(collectionName).where("ID", "==", recordId).limit(1).get();
+    if (!byUpperId.empty) return byUpperId.docs[0].ref;
+
+    const byLowerId = await db.collection(collectionName).where("id", "==", recordId).limit(1).get();
+    if (!byLowerId.empty) return byLowerId.docs[0].ref;
+
+    const byMemoryId = await db.collection(collectionName).where("MemoryID", "==", recordId).limit(1).get();
+    if (!byMemoryId.empty) return byMemoryId.docs[0].ref;
+
+    const byLowerMemoryId = await db.collection(collectionName).where("memoryId", "==", recordId).limit(1).get();
+    if (!byLowerMemoryId.empty) return byLowerMemoryId.docs[0].ref;
+
+    return null;
+  }
+
+  function readHeartCount(row) {
+    const users = normalizeHeartedDevices(row?.HeartUsersV2 || row?.heartUsersV2 || row?.NotedDevicesV2 || row?.notedDevicesV2);
+    const mapCount = Object.keys(users).length;
+    if (mapCount > 0) return mapCount;
+
+    const values = [row?.HeartCountV2, row?.heartCountV2, row?.NotedCountV2, row?.notedCountV2]
+      .map(value => Number(value))
+      .filter(value => Number.isFinite(value) && value >= 0);
+
+    return values.length ? Math.max(...values) : 0;
+  }
+
+  function normalizeHeartedDevices(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+    return Object.fromEntries(
+      Object.entries(value)
+        .filter(([key, isHearted]) => key && Boolean(isHearted))
+        .map(([key]) => [normalizeHeartDeviceId(key), true])
+    );
+  }
+
+  function parseHeartRequestedState(payload = {}) {
+    const raw = payload.hearted ?? payload.isHearted ?? payload.Noted ?? payload.noted ?? payload.action;
+    if (raw === undefined || raw === null || raw === "") return null;
+    const text = String(raw).trim().toLowerCase();
+    if (["true", "1", "yes", "heart", "hearted", "note", "noted", "add"].includes(text)) return true;
+    if (["false", "0", "no", "unheart", "unhearted", "remove", "delete"].includes(text)) return false;
+    return null;
+  }
+
+  function normalizeHeartDeviceId(value) {
+    const text = String(value || "").trim();
+    return text || "anonymous-device";
+  }
+
+  function makeHeartDocId(targetId, deviceId) {
+    return `${safeHeartDocPart(targetId)}__${safeHeartDocPart(deviceId)}`.slice(0, 1400);
+  }
+
+  function safeHeartDocPart(value) {
+    return encodeURIComponent(String(value || ""))
+      .replace(/\./g, "%2E")
+      .replace(/%/g, "_");
+  }
+
+  function checkMemoryAuth(payload) {
+    const role = currentFirebaseRole();
+    const ok = role === "admin" || role === "officer";
+    return {
+      success: ok,
+      role: ok ? (role === "admin" ? "Admin" : "Officer") : "",
+      message: ok ? "Posting unlocked." : "Authentication required."
+    };
+  }
+
+  async function createMemory(payload, sourceUrl) {
+    const id = payload.MemoryID || payload.memoryId || generateId("memory");
+    const suppliedMedia = parseUploadedMemoryMedia(payload);
+    const uploaded = await uploadMemoryAssets(payload, id, sourceUrl);
+    const media = suppliedMedia.concat(uploaded.media || []).slice(0, 6);
+    const music = uploaded.music || (payload.MusicFile ? null : buildMemoryMusic(payload));
+
+    const row = {
+      ID: id,
+      Title: payload.Title || "Untitled Memory",
+      Date: normalizeInputDate(payload.Date) || formatLongDate(new Date()),
+      Caption: payload.Caption || payload.caption || "",
+      PostedBy: payload.PostedBy || payload.Author || payload.author || "SFK",
+      Role: payload.Role || payload.role || "",
+      media,
+      MediaJSON: JSON.stringify(media),
+      MediaItems: JSON.stringify(media),
+      music,
+      MusicTitle: String(payload.MusicTitle || payload.MusicDisplayTitle || payload.MusicName || "").trim(),
+      MusicJSON: music ? JSON.stringify(music) : "",
+      VideoURL: payload.VideoURL || "",
+      Publish: payload.Publish || "YES",
+      HeartCount: 0,
+      heartCount: 0,
+      Hearts: 0,
+      hearts: 0
+    };
+
+    const linkedVideo = String(payload.VideoURL || "").trim();
+    if (linkedVideo) row.VideoURL = linkedVideo;
+
+    await db.collection(SHEETS.Memories.collection).doc(id).set(withMeta(row));
+    return { success: true, id, message: "Memory posted." };
+  }
+
+  async function uploadMemoryAssets(payload, memoryId) {
+    const hasMediaFiles = Array.isArray(payload.MediaFiles) && payload.MediaFiles.length > 0;
+    const hasMusicFile = Boolean(payload.MusicFile && payload.MusicFile.data);
+    if (!hasMediaFiles && !hasMusicFile) {
+      return { media: [], music: null };
+    }
+
+    return uploadMemoryAssetsNoBilling(payload, memoryId);
+  }
+
+  async function uploadMemoryAssetsNoBilling(payload, memoryId) {
+    const files = Array.isArray(payload.MediaFiles) ? payload.MediaFiles : [];
+
+    if (payload.MusicFile && payload.MusicFile.data) {
+      throw new Error("No-billing mode supports music links, not uploaded music files. Use a direct MP3/M4A link instead.");
+    }
+
+    const media = [];
+    for (const [index, file] of files.entries()) {
+      const saved = await saveNoBillingMediaFile(MEMORY_MEDIA_COLLECTION, memoryId, file, {
+        ownerKind: "memory",
+        index
+      });
+
+      media.push({
+        kind: "image",
+        url: saved.uri,
+        viewerUrl: saved.uri,
+        fullUrl: saved.uri,
+        downloadUrl: saved.uri,
+        mediaId: saved.id,
+        storage: "firestore",
+        name: saved.name,
+        mimeType: saved.mimeType,
+        muted: true
+      });
+    }
+
+    return { success: true, media, music: null, mode: "firestore-no-billing" };
+  }
+
+  async function saveNoBillingMediaFile(collectionName, ownerId, file, options = {}) {
+    if (!file || !file.data) {
+      throw new Error("Selected photo could not be read. Please choose another image.");
+    }
+
+    const mimeType = String(file.mimeType || file.type || "image/jpeg").trim().toLowerCase();
+    if (!mimeType.startsWith("image/")) {
+      throw new Error("No-billing mode supports photo uploads only. Use a public link for PDFs, videos, or audio.");
+    }
+
+    const base64 = String(file.data || "").trim();
+    if (!base64) {
+      throw new Error("Selected photo is empty. Please choose another image.");
+    }
+
+    if (base64.length > NO_BILLING_MEDIA_MAX_BASE64_CHARS) {
+      throw new Error(`${file.name || "This photo"} is still too large after compression. Try a smaller screenshot/photo.`);
+    }
+
+    const kind = collectionName === MEMORY_MEDIA_COLLECTION ? "memory" : "announcement";
+    const safeOwner = safeMediaDocPart(ownerId || kind);
+    const id = `${safeOwner}_${Date.now()}_${Number(options.index || 0)}_${Math.random().toString(36).slice(2, 8)}`.slice(0, 240);
+    const name = String(file.name || "SFK photo").trim() || "SFK photo";
+
+    await db.collection(collectionName).doc(id).set(withMeta(cleanFirestoreData({
+      OwnerID: String(ownerId || ""),
+      OwnerKind: options.ownerKind || kind,
+      Name: name,
+      MimeType: mimeType,
+      Data: base64,
+      BytesApprox: Math.ceil(base64.length * 0.75),
+      Publish: "YES",
+      CreatedByRole: currentFirebaseRole()
+    })));
+
+    return {
+      id,
+      uri: mediaRef(kind, id),
+      name,
+      mimeType
+    };
+  }
+
+  function mediaRef(kind, id) {
+    return `${MEDIA_REF_PREFIX}${kind}/${id}`;
+  }
+
+  function parseMediaRef(value) {
+    const raw = String(value || "").trim();
+    if (!raw.startsWith(MEDIA_REF_PREFIX)) return null;
+
+    const rest = raw.slice(MEDIA_REF_PREFIX.length);
+    const slashIndex = rest.indexOf("/");
+    if (slashIndex <= 0) return null;
+
+    const kind = rest.slice(0, slashIndex);
+    const id = rest.slice(slashIndex + 1);
+    if (!id || !["announcement", "memory"].includes(kind)) return null;
+
+    return {
+      kind,
+      id,
+      collectionName: kind === "memory" ? MEMORY_MEDIA_COLLECTION : ANNOUNCEMENT_MEDIA_COLLECTION
+    };
+  }
+
+  async function resolveMediaDataUrl(value) {
+    const ref = typeof value === "string" ? parseMediaRef(value) : value;
+    if (!ref) return "";
+
+    try {
+      const doc = await db.collection(ref.collectionName).doc(ref.id).get();
+      if (!doc.exists) return "";
+
+      const data = doc.data() || {};
+      const mimeType = String(data.MimeType || data.mimeType || "image/jpeg").trim();
+      const base64 = String(data.Data || data.data || "").trim();
+      if (!base64 || !mimeType.toLowerCase().startsWith("image/")) return "";
+      return `data:${mimeType};base64,${base64}`;
+    } catch (error) {
+      console.warn("Unable to load no-billing media:", error);
+      return "";
+    }
+  }
+
+  async function resolveMemoryMediaItems(items) {
+    const rawItems = Array.isArray(items) ? items : [];
+    const resolved = await Promise.all(rawItems.map(resolveMemoryMediaItem));
+    return resolved.filter(item => item && typeof item === "object");
+  }
+
+  async function resolveMemoryMediaItem(item) {
+    if (!item || typeof item !== "object") return null;
+
+    const ref = parseMediaRef(item.url || item.viewerUrl || item.fullUrl || item.downloadUrl || "");
+    if (!ref) return item;
+
+    const dataUrl = await resolveMediaDataUrl(ref);
+    if (!dataUrl) return item;
+
+    return {
+      ...item,
+      url: dataUrl,
+      viewerUrl: dataUrl,
+      fullUrl: dataUrl,
+      downloadUrl: dataUrl,
+      firestoreRef: mediaRef(ref.kind, ref.id)
+    };
+  }
+
+  async function resolveAnnouncementRows(rows) {
+    return Promise.all((rows || []).map(async row => {
+      const rawUrls = splitAttachmentText(row.AttachmentURLs || row.Attachments || row.AttachmentURL);
+      if (rawUrls.length === 0) return row;
+
+      const resolvedUrls = await Promise.all(rawUrls.map(async url => {
+        const ref = parseMediaRef(url);
+        if (!ref) return url;
+        return await resolveMediaDataUrl(ref) || url;
+      }));
+
+      return {
+        ...row,
+        AttachmentURLs: resolvedUrls.join("\n"),
+        Attachments: resolvedUrls.join("\n"),
+        AttachmentURL: resolvedUrls.join("\n")
+      };
+    }));
+  }
+
+  function splitAttachmentText(value) {
+    return String(value || "")
+      .split(/\r?\n/)
+      .map(item => item.trim())
+      .filter(Boolean);
+  }
+
+  function safeMediaDocPart(value) {
+    return String(value || "media")
+      .replace(/[^A-Za-z0-9_-]+/g, "_")
+      .replace(/^_+|_+$/g, "")
+      .slice(0, 80) || "media";
+  }
+
+  function parseUploadedMemoryMedia(payload) {
+    const raw = payload?.UploadedMedia || payload?.uploadedMedia || payload?.MediaUploaded || null;
+    const json = payload?.UploadedMediaJSON || payload?.uploadedMediaJSON || payload?.MediaUploadedJSON || "";
+    let media = [];
+
+    if (Array.isArray(raw)) {
+      media = raw;
+    } else if (typeof raw === "string" && raw.trim()) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) media = parsed;
+      } catch (error) {
+        media = [];
+      }
+    }
+
+    if (media.length === 0 && typeof json === "string" && json.trim()) {
+      try {
+        const parsed = JSON.parse(json);
+        if (Array.isArray(parsed)) media = parsed;
+      } catch (error) {
+        media = [];
+      }
+    }
+
+    return media.slice(0, 6).filter(item =>
+      item && typeof item === "object" && String(item.url || item.viewerUrl || item.fileId || "").trim()
+    );
+  }
+
+  function buildInlineMemoryAssetsFallback(payload) {
+    const files = Array.isArray(payload.MediaFiles) ? payload.MediaFiles : [];
+    if (!files.length || payload.MusicFile) return null;
+
+    const totalBase64Length = files.reduce((sum, file) => sum + String(file?.data || "").length, 0);
+    // Firestore documents have a hard size limit. Inline fallback is only safe
+    // for one compressed photo or very small attachments.
+    if (files.length > 1 || totalBase64Length > 650000) return null;
+
+    return {
+      success: true,
+      media: buildMemoryMedia(files),
+      music: null,
+      fallback: "inline"
+    };
+  }
+
+  function currentFirebaseRole() {
+    try {
+      return window.SFKAuth?.currentRole?.() || "";
+    } catch (error) {
+      return "";
+    }
+  }
+
+  function requireFirebaseRole(allowedRoles) {
+    const role = currentFirebaseRole();
+    if (!allowedRoles.includes(role)) {
+      throw new Error("You are not authorized to perform this action.");
+    }
+    return role;
+  }
+
+  async function getFirebaseAuthToken(forceRefresh) {
+    const token = await window.SFKAuth?.getIdToken?.(Boolean(forceRefresh));
+    if (!token) throw new Error("Your login session expired. Please sign in again.");
+    return token;
+  }
+
+  async function hideMemory(id) {
+    if (!id) return { success: false, message: "Missing memory ID." };
+    await db.collection(SHEETS.Memories.collection).doc(String(id)).set(withMeta({ Publish: "NO" }, false), { merge: true });
+    return { success: true, message: "Memory hidden." };
+  }
+
+  async function deleteMemory(id) {
+    if (!id) return { success: false, message: "Missing memory ID." };
+    await db.collection(SHEETS.Memories.collection).doc(String(id)).delete();
+    return { success: true, message: "Memory deleted." };
+  }
+
+  async function updateMemory(id, payload) {
+    if (!id) return { success: false, message: "Missing memory ID." };
+
+    const next = {
+      Title: payload.Title || "Untitled Memory",
+      Date: normalizeInputDate(payload.Date) || formatLongDate(new Date()),
+      Caption: payload.Caption || "",
+      PostedBy: payload.PostedBy || "SFK",
+      VideoURL: payload.VideoURL || "",
+      MusicTitle: String(payload.MusicTitle || payload.MusicDisplayTitle || payload.MusicName || "").trim()
+    };
+
+    const cleanMusicTitle = next.MusicTitle;
+    const current = await db.collection(SHEETS.Memories.collection).doc(String(id)).get();
+    const currentMusic = current.exists ? current.data()?.music : null;
+    if (currentMusic && typeof currentMusic === "object") {
+      const fallbackName = deriveMusicNameFromUrl(
+        currentMusic.previewUrl || currentMusic.fullUrl || currentMusic.url || currentMusic.downloadUrl || currentMusic.fallbackUrl
+      ) || "Background music";
+      next.music = { ...currentMusic, name: cleanMusicTitle || fallbackName, customTitle: cleanMusicTitle };
+      next.MusicJSON = JSON.stringify(next.music);
+    }
+
+    await db.collection(SHEETS.Memories.collection).doc(String(id)).set(withMeta(next, false), { merge: true });
+    return { success: true, message: "Memory updated." };
+  }
+
+  function getMemoryAudio(fileId) {
+    return {
+      success: false,
+      message: fileId
+        ? "This Firebase version will play public/direct audio links directly. If this is a Google Drive audio file, make sure it is shared publicly."
+        : "Missing audio file ID."
+    };
+  }
+
+  function buildMemoryMedia(files) {
+    return (files || [])
+      .filter(file => file && file.data)
+      .map(file => {
+        const mimeType = String(file.mimeType || "application/octet-stream");
+        const isVideo = mimeType.startsWith("video/");
+        const dataUrl = `data:${mimeType};base64,${file.data}`;
+
+        return {
+          kind: isVideo ? "direct-video" : "image",
+          url: dataUrl,
+          viewerUrl: dataUrl,
+          fullUrl: dataUrl,
+          name: file.name || "SFK memory",
+          mimeType,
+          muted: true
+        };
+      });
+  }
+
+  function buildMemoryMusic(payload) {
+    const musicTitle = String(payload.MusicTitle || payload.MusicDisplayTitle || payload.MusicName || "").trim();
+
+    if (payload.MusicFile && payload.MusicFile.data) {
+      const mimeType = String(payload.MusicFile.mimeType || "audio/mpeg");
+      return {
+        kind: "direct-audio",
+        name: musicTitle || payload.MusicFile.name || "Background music",
+        customTitle: musicTitle,
+        url: `data:${mimeType};base64,${payload.MusicFile.data}`,
+        mimeType,
+        muted: true,
+        started: false
+      };
+    }
+
+    const url = String(payload.MusicURL || "").trim();
+    if (!url) return null;
+
+    const youtubeId = getYouTubeId(url);
+    if (youtubeId) {
+      return {
+        kind: "youtube-audio",
+        videoId: youtubeId,
+        name: musicTitle || "YouTube music",
+        customTitle: musicTitle,
+        url: `https://www.youtube.com/watch?v=${youtubeId}`,
+        muted: true,
+        started: false
+      };
+    }
+
+    const driveId = getDriveFileId(url);
+    if (driveId) {
+      return {
+        kind: "drive-audio",
+        name: musicTitle || "Google Drive music",
+        customTitle: musicTitle,
+        fileId: driveId,
+        url: getDriveAudioStreamUrl(driveId),
+        fallbackUrl: getDriveStreamUrl(driveId),
+        previewUrl: url,
+        muted: true,
+        started: false
+      };
+    }
+
+    return {
+      kind: "direct-audio",
+      name: musicTitle || deriveMusicNameFromUrl(url) || "Background music",
+      customTitle: musicTitle,
+      url,
+      muted: true,
+      started: false
+    };
+  }
+
+  function deriveMusicNameFromUrl(value) {
+    try {
+      const raw = String(value || "").trim();
+      if (!raw) return "";
+      const parsed = new URL(raw, window.location.href);
+      const last = decodeURIComponent((parsed.pathname.split("/").filter(Boolean).pop() || "").replace(/[_-]+/g, " "));
+      const cleaned = last.replace(/\.(mp3|m4a|aac|ogg|wav|webm)$/i, "").trim();
+      return cleaned ? cleaned.replace(/\s+/g, " ") : "";
+    } catch (error) {
+      return "";
+    }
+  }
+
+  function getYouTubeId(value) {
+    const match = String(value || "").match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([A-Za-z0-9_-]{6,})/i);
+    return match ? match[1] : "";
+  }
+
+  function getDriveFileId(url) {
+    const text = String(url || "");
+    const pathMatch = text.match(/drive\.google\.com\/file\/d\/([^/]+)/i);
+    if (pathMatch) return decodeURIComponent(pathMatch[1]);
+    const queryMatch = text.match(/[?&]id=([^&]+)/i);
+    return queryMatch ? decodeURIComponent(queryMatch[1]) : "";
+  }
+
+  function getDriveStreamUrl(fileId) {
+    return fileId
+      ? `https://drive.usercontent.google.com/download?id=${encodeURIComponent(fileId)}&export=download&confirm=t`
+      : "";
+  }
+
+  function getDriveAudioStreamUrl(fileId) {
+    return fileId
+      ? `https://drive.google.com/uc?export=download&id=${encodeURIComponent(fileId)}`
+      : "";
+  }
+
+  function normalizePayloadForSheet(sheetName, payload, id) {
+    if (sheetName === "Announcements") {
+      return {
+        ID: id,
+        Date: normalizeInputDate(payload.Date),
+        Subject: payload.Subject || "",
+        Announcement: payload.Announcement || "",
+        Teacher: payload.Teacher || "",
+        Deadline: normalizeInputDate(payload.Deadline),
+        PublishDate: normalizeInputDate(payload.PublishDate),
+        ExpiryDate: normalizeInputDate(payload.ExpiryDate),
+        ShowDeadline: payload.ShowDeadline || "",
+        AttachmentURLs: payload.AttachmentURLs || payload.Attachments || payload.AttachmentURL || "",
+        Attachments: payload.AttachmentURLs || payload.Attachments || payload.AttachmentURL || "",
+        AttachmentURL: payload.AttachmentURLs || payload.Attachments || payload.AttachmentURL || "",
+        AttachmentNames: payload.AttachmentNames || payload.AttachmentLabels || payload.AttachmentName || "",
+        AttachmentLabels: payload.AttachmentNames || payload.AttachmentLabels || payload.AttachmentName || "",
+        AttachmentName: payload.AttachmentNames || payload.AttachmentLabels || payload.AttachmentName || "",
+        Priority: payload.Priority || "Normal",
+        Publish: payload.Publish || "YES",
+        HeartCount: Number(payload.HeartCount || 0) || 0
+      };
+    }
+
+    if (sheetName === "Schedule") return {
+      Day: payload.Day || "",
+      StartTime: normalizeScheduleTime(payload.StartTime),
+      EndTime: normalizeScheduleTime(payload.EndTime),
+      Subject: payload.Subject || "",
+      Teacher: payload.Teacher || "",
+      Room: payload.Room || "",
+      Color: normalizeScheduleColor(payload.Color || payload.ColorHex || payload.SubjectColor || ""),
+      Type: inferScheduleType(payload.Subject),
+      Publish: payload.Publish || "YES"
+    };
+
+    if (sheetName === "ThingsToBring") return { Date: normalizeInputDate(payload.Date), Subject: payload.Subject || "", Item: payload.Item || "", Publish: payload.Publish || "YES" };
+    if (sheetName === "AdviserReminders") return { Date: normalizeInputDate(payload.Date), Reminder: payload.Reminder || "", Publish: payload.Publish || "YES" };
+    if (sheetName === "PrayerLeaders") return { Date: normalizeInputDate(payload.Date), PrayerLeader: payload.PrayerLeader || "", Publish: payload.Publish || "YES" };
+    if (sheetName === "DailyQuotes") return { Date: normalizeInputDate(payload.Date), Quote: payload.Quote || "", Author: payload.Author || "SFK ClassBoard", Publish: payload.Publish || "YES" };
+    if (sheetName === "Birthdays") return { Name: payload.Name || "", Birthday: normalizeBirthday(payload.Birthday), Publish: payload.Publish || "YES" };
+    if (sheetName === "TickerMessages") return { Message: payload.Message || "", Priority: payload.Priority || "Normal", Publish: payload.Publish || "YES" };
+    if (sheetName === "DailyInfo") return { Day: payload.Day || "", EntryGate: payload.EntryGate || "", ExitGate: payload.ExitGate || "", Uniform: payload.Uniform || "", Publish: payload.Publish || "YES" };
+
+    return payload;
+  }
+
+  function inferScheduleType(subject) {
+    const text = String(subject || "").trim().toLowerCase();
+    if (!text) return "Class";
+    if (text.includes("assembly")) return "Assembly";
+    if (text.includes("break")) return "Break";
+    if (text.includes("lunch")) return "Lunch";
+    if (text.includes("mass")) return "Mass";
+    if (text.includes("homeroom")) return "Homeroom";
+    if (text.includes("no class")) return "No Classes";
+    if (text.includes("activity") || text.includes("performance task") || text.includes("peta")) return "Activity";
+    return "Class";
+  }
+
+  function normalizeScheduleColor(value) {
+    const text = String(value || "").trim();
+    if (!text) return "";
+
+    const hex = text.match(/^#?([0-9a-fA-F]{6})$/);
+    if (hex) return `#${hex[1].toUpperCase()}`;
+
+    return text.replace(/\s+/g, " ");
+  }
+
+  function normalizeScheduleTime(value) {
+    const text = String(value || "").trim();
+    if (!text) return "";
+
+    const twentyFourHour = text.match(/^(\d{1,2}):(\d{2})$/);
+    if (twentyFourHour) {
+      let hour = Number(twentyFourHour[1]);
+      const minute = twentyFourHour[2];
+      const meridiem = hour >= 12 ? "PM" : "AM";
+      if (hour === 0) hour = 12;
+      else if (hour > 12) hour -= 12;
+      return `${hour}:${minute} ${meridiem}`;
+    }
+
+    return text.replace(/\s+/g, " ").toUpperCase();
+  }
+
+  function withMeta(row, includeCreated = true) {
+    const meta = { ...row, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+    if (includeCreated) meta.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+    return meta;
+  }
+
+  function getSheetMeta(sheetName) {
+    const meta = SHEETS[sheetName];
+    if (!meta) throw new Error(`Unknown sheet: ${sheetName}`);
+    return meta;
+  }
+
+  function compareRows(a, b) {
+    const ao = Number(a.Order || a.Sort || 0);
+    const bo = Number(b.Order || b.Sort || 0);
+    if (ao || bo) return ao - bo;
+    const ad = toMillis(a.createdAt) || 0;
+    const bd = toMillis(b.createdAt) || 0;
+    return bd - ad;
+  }
+
+  function toMillis(value) {
+    if (!value) return 0;
+    if (typeof value.toMillis === "function") return value.toMillis();
+    const date = new Date(value);
+    return Number.isFinite(date.getTime()) ? date.getTime() : 0;
+  }
+
+  function isPublished(row) {
+    return String(row.Publish || row.Published || "YES").trim().toUpperCase() !== "NO";
+  }
+
+  function isAnnouncementActiveToday(row) {
+    const todayKey = getManilaDateKey(new Date());
+    const publishKey = getDateKey(row.PublishDate || row.ScheduledPublishDate || row.StartDate);
+    const expiryKey = getDateKey(row.ExpiryDate || row.ExpirationDate || row.EndDate);
+    return (!publishKey || todayKey >= publishKey) && (!expiryKey || todayKey < expiryKey);
+  }
+
+  function getManilaDateKey(date) {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: TIMEZONE,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).formatToParts(date);
+    const year = parts.find(part => part.type === "year")?.value || "";
+    const month = parts.find(part => part.type === "month")?.value || "";
+    const day = parts.find(part => part.type === "day")?.value || "";
+    return `${year}-${month}-${day}`;
+  }
+
+  function getDateKey(value) {
+    if (!value) return "";
+    if (typeof value.toDate === "function") return getManilaDateKey(value.toDate());
+    const text = String(value).trim();
+    const isoMatch = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
+    const date = new Date(text);
+    return Number.isFinite(date.getTime()) ? getManilaDateKey(date) : "";
+  }
+
+  function getCurrentSubject(schedule, now) {
+    const nowMinutes = getManilaMinutes(now);
+    return schedule.find(item => nowMinutes >= timeToMinutes(item.StartTime) && nowMinutes < timeToMinutes(item.EndTime)) || null;
+  }
+
+  function getNextSubject(schedule, now) {
+    const nowMinutes = getManilaMinutes(now);
+    return schedule.find(item => timeToMinutes(item.StartTime) > nowMinutes) || null;
+  }
+
+  function getManilaMinutes(date) {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: TIMEZONE,
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false
+    }).formatToParts(date);
+    const hour = Number(parts.find(part => part.type === "hour").value);
+    const minute = Number(parts.find(part => part.type === "minute").value);
+    return hour * 60 + minute;
+  }
+
+  function timeToMinutes(value) {
+    if (!value) return 99999;
+    const text = String(value).trim();
+    const match = text.match(/^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$/i);
+    if (!match) return 99999;
+    let hour = Number(match[1]);
+    const minute = Number(match[2]);
+    const meridiem = (match[3] || "").toUpperCase();
+    if (meridiem === "PM" && hour < 12) hour += 12;
+    if (meridiem === "AM" && hour === 12) hour = 0;
+    return hour * 60 + minute;
+  }
+
+  function formatLongDate(date) {
+    return date.toLocaleDateString("en-US", { timeZone: TIMEZONE, month: "long", day: "numeric", year: "numeric" });
+  }
+
+  function formatDay(date) {
+    return date.toLocaleDateString("en-US", { timeZone: TIMEZONE, weekday: "long" });
+  }
+
+  function normalizeInputDate(value) {
+    if (!value) return "";
+    const date = new Date(value);
+    if (Number.isFinite(date.getTime())) return formatLongDate(date);
+    return String(value);
+  }
+
+  function normalizeBirthday(value) {
+    if (!value) return "";
+    const date = new Date(value);
+    if (Number.isFinite(date.getTime())) {
+      return date.toLocaleDateString("en-US", { timeZone: TIMEZONE, month: "long", day: "numeric" });
+    }
+    return String(value);
+  }
+
+  function normalizeDate(value) {
+    return String(value || "").trim().toLowerCase().replace(/,/g, "").replace(/\s+/g, " ");
+  }
+
+  function normalize(value) {
+    return String(value || "").trim().toLowerCase();
+  }
+
+  function generateId(prefix) {
+    return `${prefix || "row"}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  }
+
+  function serializeCell(value) {
+    if (Array.isArray(value) || (value && typeof value === "object" && typeof value.toMillis !== "function")) {
+      return JSON.stringify(value);
+    }
+    return value == null ? "" : String(value);
+  }
+
+  function parseJsonArray(value) {
+    try {
+      const parsed = JSON.parse(value || "[]");
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function parseJsonObject(value) {
+    try {
+      const parsed = JSON.parse(value || "null");
+      return parsed && typeof parsed === "object" ? parsed : null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function deserializeCell(value) {
+    const text = String(value || "").trim();
+    if ((text.startsWith("[") && text.endsWith("]")) || (text.startsWith("{") && text.endsWith("}"))) {
+      try { return JSON.parse(text); } catch (error) { return value; }
+    }
+    return value;
+  }
+
+  function jsonResponse(data, status = 200) {
+    return Promise.resolve(new Response(JSON.stringify(data), {
+      status,
+      headers: { "Content-Type": "application/json" }
+    }));
+  }
+
+  window.SFKClassBoardFirebaseAdapter = {
+    SHEETS,
+    getRows,
+    getPublishedRows,
+    getTodayBoard,
+    getWeeklySchedule
+  };
+
+  initialize();
+}());

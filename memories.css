@@ -3408,16 +3408,3 @@ body.shareFormatOpen {
   font-weight: 900;
   box-shadow: 0 8px 22px rgba(0,0,0,.22);
 }
-
-
-.viewerMediaUnavailable {
-  min-height: min(60vh, 520px);
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  color: rgba(255, 255, 255, 0.88);
-  text-align: center;
-  font-weight: 800;
-  background: rgba(0, 0, 0, 0.72);
-  border-radius: 18px;
-}

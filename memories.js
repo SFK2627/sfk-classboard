@@ -1,5 +1,5 @@
 const MEMORIES_API_URL = "https://script.google.com/macros/s/AKfycbzCjWVnO-ZNvKTNqKN1zVscNsfPox0uDnO1QTSbBCrMFaS79tfL3mopHa2pH7gHczYeOA/exec";
-const MEMORY_CACHE_KEY = "sfkMemoriesCacheV4";
+const MEMORY_CACHE_KEY = "sfkMemoriesCacheV1";
 const HEARTED_MEMORY_KEY = "sfkHeartedMemoriesV1";
 const MEMORIES_SEEN_IDS_KEY = "sfkMemoriesSeenPostIdsV1";
 const MEMORY_POSTED_BY_KEY = "sfkMemoryPostedByV1";
@@ -280,31 +280,21 @@ async function resolveNoBillingMemoryMediaRefsInRow(row) {
   if (!mediaItems.some(hasNoBillingMemoryMediaRef)) return row;
 
   const media = await Promise.all(mediaItems.map(resolveNoBillingMemoryMediaItem));
-  const resolved = media.filter(Boolean);
   return {
     ...row,
-    media: resolved,
-    MediaJSON: JSON.stringify(resolved),
-    MediaItems: JSON.stringify(resolved)
+    media: media.filter(Boolean),
+    MediaJSON: JSON.stringify(media.filter(Boolean))
   };
 }
 
 function getRawMemoryMediaItems(row) {
   if (Array.isArray(row?.media)) return row.media;
 
-  const jsonCandidates = [
-    row?.MediaJSON, row?.mediaJSON,
-    row?.MediaItems, row?.mediaItems,
-    row?.Media, row?.media,
-    row?.UploadedMedia, row?.uploadedMedia,
-    row?.UploadedMediaJSON, row?.uploadedMediaJSON
-  ];
+  const jsonCandidates = [row?.MediaJSON, row?.mediaJSON, row?.MediaItems, row?.mediaItems, row?.Media, row?.media, row?.UploadedMediaJSON, row?.uploadedMediaJSON];
   for (const value of jsonCandidates) {
-    if (Array.isArray(value)) return value;
     try {
       const parsed = JSON.parse(String(value || "[]"));
       if (Array.isArray(parsed)) return parsed;
-      if (parsed && typeof parsed === "object") return [parsed];
     } catch (error) {
       // Ignore invalid legacy JSON and try the next field.
     }
@@ -318,30 +308,12 @@ function hasNoBillingMemoryMediaRef(item) {
 }
 
 function getNoBillingMemoryMediaRef(item) {
-  if (!item) return null;
-  if (typeof item === "string") return parseNoBillingMemoryMediaRef(item);
-  if (typeof item !== "object") return null;
+  if (!item || typeof item !== "object") return null;
 
-  const candidates = [
-    item.firestoreRef,
-    item.url,
-    item.viewerUrl,
-    item.fullUrl,
-    item.downloadUrl,
-    item.href,
-    item.mediaRef,
-    item.MediaRef,
-    item.Ref,
-    item.ref
-  ];
+  const candidates = [item.url, item.viewerUrl, item.fullUrl, item.downloadUrl, item.firestoreRef];
   for (const value of candidates) {
     const ref = parseNoBillingMemoryMediaRef(value);
     if (ref) return ref;
-  }
-
-  const mediaId = String(item.mediaId || item.MediaID || item.id || item.ID || "").trim();
-  if (/^[A-Za-z0-9_-]{1,240}$/.test(mediaId) && String(item.storage || item.OwnerKind || item.ownerKind || "").toLowerCase().includes("firestore")) {
-    return { raw: `${NO_BILLING_MEDIA_REF_PREFIX}memory/${mediaId}`, id: mediaId };
   }
 
   return null;
@@ -356,10 +328,10 @@ function parseNoBillingMemoryMediaRef(value) {
   if (slashIndex <= 0) return null;
 
   const kind = rest.slice(0, slashIndex);
-  const id = rest.slice(slashIndex + 1).trim();
-  if (!["memory", "memories", "memoryMedia"].includes(kind) || !/^[A-Za-z0-9_-]{1,240}$/.test(id)) return null;
+  const id = rest.slice(slashIndex + 1);
+  if (kind !== "memory" || !id) return null;
 
-  return { raw: `${NO_BILLING_MEDIA_REF_PREFIX}memory/${id}`, id };
+  return { raw, id };
 }
 
 async function resolveNoBillingMemoryMediaItem(item) {
@@ -385,7 +357,7 @@ async function loadNoBillingMemoryMediaDataUrl(mediaId) {
   if (!cleanId) return "";
   if (NO_BILLING_MEMORY_MEDIA_CACHE.has(cleanId)) return NO_BILLING_MEMORY_MEDIA_CACHE.get(cleanId);
 
-  const db = await waitForClassBoardFirestore();
+  const db = getClassBoardFirestore();
   if (!db) return "";
 
   try {
@@ -393,14 +365,8 @@ async function loadNoBillingMemoryMediaDataUrl(mediaId) {
     if (!doc.exists) return "";
 
     const data = doc.data() || {};
-    const mimeType = String(data.MimeType || data.mimeType || data.Type || "image/jpeg").trim();
-    const directDataUrl = String(data.DataURL || data.dataUrl || data.Url || data.url || data.PreviewURL || data.previewUrl || "").trim();
-    if (/^data:image\//i.test(directDataUrl)) {
-      NO_BILLING_MEMORY_MEDIA_CACHE.set(cleanId, directDataUrl);
-      return directDataUrl;
-    }
-
-    const base64 = String(data.Data || data.data || data.Base64 || data.base64 || data.Content || data.content || "").trim();
+    const mimeType = String(data.MimeType || data.mimeType || "image/jpeg").trim();
+    const base64 = String(data.Data || data.data || "").trim();
     if (!base64 || !mimeType.toLowerCase().startsWith("image/")) return "";
 
     const dataUrl = `data:${mimeType};base64,${base64}`;
@@ -459,20 +425,6 @@ function getClassBoardFirestore() {
     console.warn("Firebase database is unavailable:", error);
     return null;
   }
-}
-
-async function waitForClassBoardFirestore(timeoutMs = 7000) {
-  const started = Date.now();
-  let delay = 80;
-
-  while (Date.now() - started < timeoutMs) {
-    const db = getClassBoardFirestore();
-    if (db) return db;
-    await new Promise(resolve => setTimeout(resolve, delay));
-    delay = Math.min(500, Math.round(delay * 1.45));
-  }
-
-  return getClassBoardFirestore();
 }
 
 function convertFirestoreData(data) {
@@ -560,7 +512,7 @@ function normalizeMemoryPost(raw) {
 
   if (uploadedMedia.length === 0) {
     try {
-      const parsed = JSON.parse(raw.MediaJSON || raw.mediaJSON || raw.MediaItems || raw.mediaItems || raw.UploadedMedia || raw.uploadedMedia || raw.Media || "[]");
+      const parsed = JSON.parse(raw.MediaJSON || raw.mediaJSON || raw.MediaItems || raw.mediaItems || raw.Media || "[]");
       uploadedMedia = Array.isArray(parsed) ? parsed : [];
     } catch (error) {
       uploadedMedia = [];
@@ -722,64 +674,10 @@ function deriveMusicNameFromUrl(value) {
 }
 
 function normalizeStoredMedia(item) {
-  if (!item) return null;
-
-  if (typeof item === "string") {
-    const ref = parseNoBillingMemoryMediaRef(item);
-    if (ref) {
-      return {
-        kind: "image",
-        url: "",
-        viewerUrl: "",
-        fullUrl: "",
-        downloadUrl: "",
-        previewUrl: "",
-        firestoreRef: ref.raw,
-        mediaId: ref.id,
-        name: "SFK memory",
-        mimeType: "image/jpeg",
-        fileId: "",
-        ratio: 0,
-        streamUrl: "",
-        muted: true
-      };
-    }
-    const url = safeHttpUrl(item);
-    return url ? {
-      kind: "image",
-      url,
-      viewerUrl: url,
-      fullUrl: url,
-      downloadUrl: "",
-      previewUrl: url,
-      firestoreRef: "",
-      name: "SFK memory",
-      mimeType: "",
-      fileId: getDriveFileId(url),
-      ratio: 0,
-      streamUrl: "",
-      muted: true
-    } : null;
-  }
-
-  if (typeof item !== "object") return null;
+  if (!item || typeof item !== "object") return null;
 
   const noBillingRef = getNoBillingMemoryMediaRef(item);
-  const previewUrl = [
-    item.previewUrl,
-    item.PreviewURL,
-    item.inlinePreviewUrl,
-    item.InlinePreviewURL,
-    item.thumbnailUrl,
-    item.ThumbnailURL,
-    item.thumbUrl,
-    item.ThumbURL,
-    item.dataUrl,
-    item.DataURL
-  ].map(safeHttpUrl).find(Boolean) || "";
-  const primaryUrl = [item.url, item.viewerUrl, item.fullUrl, item.downloadUrl]
-    .map(safeHttpUrl)
-    .find(Boolean) || previewUrl;
+  const primaryUrl = safeHttpUrl(item.url) || safeHttpUrl(item.viewerUrl) || safeHttpUrl(item.fullUrl) || safeHttpUrl(item.downloadUrl);
   if (!primaryUrl && !noBillingRef) return null;
 
   const allowedKinds = ["image", "drive-video", "direct-video", "embed-video"];
@@ -790,8 +688,8 @@ function normalizeStoredMedia(item) {
     ? `https://drive.google.com/thumbnail?id=${encodeURIComponent(fileId)}&sz=w4000`
     : "";
 
-  const normalizedUrl = safeHttpUrl(item.url) || previewUrl || (noBillingRef ? "" : primaryUrl);
-  const normalizedViewerUrl = safeHttpUrl(item.viewerUrl) || previewUrl || derivedViewerUrl || normalizedUrl;
+  const normalizedUrl = safeHttpUrl(item.url) || (noBillingRef ? "" : primaryUrl);
+  const normalizedViewerUrl = safeHttpUrl(item.viewerUrl) || derivedViewerUrl || normalizedUrl;
   const normalizedFullUrl = safeHttpUrl(item.fullUrl) || normalizedUrl || normalizedViewerUrl;
 
   return {
@@ -799,12 +697,10 @@ function normalizeStoredMedia(item) {
     url: normalizedUrl,
     viewerUrl: normalizedViewerUrl,
     fullUrl: normalizedFullUrl,
-    downloadUrl: noBillingRef ? "" : safeHttpUrl(item.downloadUrl),
-    previewUrl,
-    firestoreRef: noBillingRef?.raw || String(item.firestoreRef || item.mediaRef || "").trim(),
-    mediaId: noBillingRef?.id || String(item.mediaId || item.MediaID || "").trim(),
-    name: String(item.name || item.Name || "SFK memory"),
-    mimeType: String(item.mimeType || item.MimeType || ""),
+    downloadUrl: safeHttpUrl(item.downloadUrl),
+    firestoreRef: noBillingRef?.raw || String(item.firestoreRef || "").trim(),
+    name: String(item.name || "SFK memory"),
+    mimeType: String(item.mimeType || ""),
     fileId,
     ratio: Number(item.ratio) > 0 ? Number(item.ratio) : 0,
     streamUrl: kind === "drive-video"
@@ -1236,9 +1132,7 @@ function renderMediaSlide(media, postId, index) {
   const common = `data-action="view" data-id="${escapeAttr(postId)}" data-index="${index}"`;
 
   if (media.kind === "image") {
-    const imageUrl = [media.viewerUrl, media.previewUrl, media.url, media.fullUrl, media.downloadUrl]
-      .map(safeHttpUrl)
-      .find(Boolean) || "";
+    const imageUrl = safeHttpUrl(media.url || media.viewerUrl || media.fullUrl || "");
     const firestoreRef = getNoBillingMemoryMediaRef(media)?.raw || "";
     const imageAttrs = firestoreRef
       ? `data-memory-media-ref="${escapeAttr(firestoreRef)}" data-post-id="${escapeAttr(postId)}" data-media-index="${index}"`
@@ -1249,7 +1143,7 @@ function renderMediaSlide(media, postId, index) {
     return `
       <div class="mediaSlide ${imageUrl ? "" : "mediaSlideLoading"}">
         ${imageUrl ? `<img class="mediaBackdrop" src="${escapeAttr(imageUrl)}" alt="" aria-hidden="true" loading="lazy" />` : `<div class="mediaBackdrop memoryMediaLoadingBackdrop" aria-hidden="true"></div>`}
-        <img class="mediaMain" ${srcAttr} ${imageAttrs} alt="${escapeAttr(media.name)}" loading="lazy" decoding="async" ${hiddenAttr} ${common} />
+        <img class="mediaMain" ${srcAttr} ${imageAttrs} alt="${escapeAttr(media.name)}" loading="lazy" ${hiddenAttr} ${common} />
         ${imageUrl ? "" : `<span class="memoryMediaLoadingText">Loading photo...</span>`}
       </div>
     `;
@@ -1284,42 +1178,19 @@ function renderMediaSlide(media, postId, index) {
   `;
 }
 
-async function hydrateNoBillingMemoryImages(root = document, options = {}) {
+async function hydrateNoBillingMemoryImages(root = document) {
   if (!root) return;
-  const retryCount = Number(options.retryCount || 0);
-  const images = Array.from(root.querySelectorAll('img[data-memory-media-ref], img[src^="sfk-media://memory/"], img[src^="sfk-media://memories/"], img[src^="sfk-media://memoryMedia/"]'));
+  const images = Array.from(root.querySelectorAll("img[data-memory-media-ref]"));
   await Promise.all(images.map(async (image) => {
-    const rawRef = image.dataset.memoryMediaRef || image.getAttribute("src") || "";
-    const ref = parseNoBillingMemoryMediaRef(rawRef);
+    const ref = parseNoBillingMemoryMediaRef(image.dataset.memoryMediaRef || "");
     if (!ref) return;
 
-    if ((image.getAttribute("src") || "").startsWith("sfk-media://")) {
-      image.removeAttribute("src");
-      image.hidden = true;
-    }
-
     const dataUrl = await loadNoBillingMemoryMediaDataUrl(ref.id);
-    if (!dataUrl) {
-      if (retryCount < 3 && image.isConnected) {
-        window.setTimeout(() => {
-          hydrateNoBillingMemoryImages(image.closest(".mediaSlide") || image.parentElement || image, { retryCount: retryCount + 1 }).catch(() => {});
-        }, 600 + retryCount * 900);
-      } else {
-        const slide = image.closest(".mediaSlide");
-        const text = slide?.querySelector(".memoryMediaLoadingText");
-        if (text) text.textContent = "Photo is saved, but cannot load yet. Refresh or publish the latest Firebase rules.";
-      }
-      return;
-    }
+    if (!dataUrl) return;
 
     image.src = dataUrl;
     image.hidden = false;
     image.removeAttribute("data-memory-media-ref");
-    image.onerror = () => {
-      const slide = image.closest(".mediaSlide");
-      const text = slide?.querySelector(".memoryMediaLoadingText");
-      if (text) text.textContent = "This photo could not be displayed.";
-    };
 
     const slide = image.closest(".mediaSlide");
     slide?.classList.remove("mediaSlideLoading");
@@ -1349,7 +1220,6 @@ async function hydrateNoBillingMemoryImages(root = document, options = {}) {
       media.fullUrl = dataUrl;
       media.downloadUrl = dataUrl;
       media.firestoreRef = ref.raw;
-      media.mediaId = ref.id;
     }
   }));
 }
@@ -5526,18 +5396,11 @@ function renderViewerMedia(media, options = {}) {
   const active = options.active !== false;
 
   if (media.kind === "image") {
-    const imageUrl = [media.viewerUrl, media.previewUrl, media.url, media.fullUrl, media.downloadUrl]
-      .map(safeHttpUrl)
-      .find(Boolean) || "";
+    const imageUrl = safeHttpUrl(media.viewerUrl || media.url || media.fullUrl || "");
     const firestoreRef = getNoBillingMemoryMediaRef(media)?.raw || "";
-    const hydrationAttrs = firestoreRef ? ` data-memory-media-ref="${escapeAttr(firestoreRef)}"` : "";
-    if (imageUrl) {
-      return `<img src="${escapeAttr(imageUrl)}"${hydrationAttrs} alt="${escapeAttr(media.name)}" draggable="false" decoding="async" />`;
-    }
-    if (firestoreRef) {
-      return `<img data-memory-media-ref="${escapeAttr(firestoreRef)}" alt="${escapeAttr(media.name)}" draggable="false" decoding="async" hidden />`;
-    }
-    return `<div class="viewerMediaUnavailable">Photo is saved, but cannot load yet.</div>`;
+    return imageUrl
+      ? `<img src="${escapeAttr(imageUrl)}" alt="${escapeAttr(media.name)}" draggable="false" />`
+      : `<img data-memory-media-ref="${escapeAttr(firestoreRef)}" alt="${escapeAttr(media.name)}" draggable="false" hidden />`;
   }
 
   if (media.kind === "direct-video" || media.kind === "drive-video") {

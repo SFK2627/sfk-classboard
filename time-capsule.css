@@ -2099,35 +2099,3 @@
     justify-self: start;
   }
 }
-
-.timeCapsuleImageFallback {
-  width: 100%;
-  aspect-ratio: 16 / 10;
-  display: grid;
-  place-items: center;
-  padding: 18px;
-  background: rgba(17, 17, 17, .92);
-  color: #ffe08a;
-  text-align: center;
-  font-weight: 800;
-  font-size: 0.95rem;
-  letter-spacing: .04em;
-  text-transform: uppercase;
-  border-radius: 13px 13px 0 0;
-}
-
-.timeCapsuleSlideCard .timeCapsuleImageFallback {
-  min-height: 220px;
-  border-radius: 16px 16px 0 0;
-  border-bottom: 1px solid rgba(255, 255, 255, .12);
-}
-
-/* Media fix v4: keep Firestore placeholders hidden until the real photo is hydrated. */
-.timeCapsuleEntry img[hidden],
-.timeCapsuleSlideCard img[hidden] {
-  display: none !important;
-}
-
-.timeCapsuleImageFallback {
-  min-height: 180px;
-}
