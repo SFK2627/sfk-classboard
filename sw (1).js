@@ -9,96 +9,39 @@
   <meta name="apple-mobile-web-app-title" content="SFK Admin" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>SFK Admin</title>
-  <link rel="manifest" href="manifest.webmanifest?v=route-repair-v1" />
+  <link rel="manifest" href="manifest.webmanifest?v=3" />
   <link rel="icon" type="image/png" sizes="192x192" href="../icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="../icons/icon-192.png?v=3" />
   <style>
-    * { box-sizing: border-box; }
+    html,
     body {
       margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      padding: 20px;
-      font-family: Arial, sans-serif;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
       background: #fff8dc;
-      color: #111;
     }
-    .card {
-      width: min(92vw, 430px);
-      padding: 24px;
-      border: 2px solid #f7c600;
-      border-radius: 22px;
-      background: #fff;
-      box-shadow: 0 14px 40px rgba(0,0,0,.12);
-      text-align: center;
+
+    iframe {
+      display: block;
+      width: 100%;
+      height: 100dvh;
+      border: 0;
+      background: #fff8dc;
     }
-    h1 { margin: 0 0 8px; font-size: 26px; }
-    p { margin: 0 0 18px; line-height: 1.5; }
-    a {
-      display: inline-flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 48px;
-      padding: 0 18px;
-      border-radius: 14px;
-      border: 2px solid #111;
-      background: #f7c600;
-      color: #111;
-      font-weight: 800;
-      text-decoration: none;
-    }
-    small { display: block; margin-top: 14px; color: #5f4b00; }
   </style>
+  <script src="../orientation-lock.js?v=appwide-v6" defer></script>
 </head>
 <body>
-  <div class="card">
-    <h1>Opening Admin...</h1>
-    <p>This shortcut now opens the real admin page directly, without the old iframe/cache layer.</p>
-    <a id="openAdminLink" href="../admin.html?shortcut=admin&v=route-repair-v1">Open Admin Login</a>
-    <small id="status">Cleaning old admin shortcut cache...</small>
-  </div>
+  <iframe src="../admin.html?embedded=1&v=appwide-portrait-v6" title="SFK ClassBoard Admin"></iframe>
   <script>
-    (function () {
-      var target = new URL('../admin.html?shortcut=admin&v=route-repair-v1', window.location.href);
-      var statusEl = document.getElementById('status');
-      var link = document.getElementById('openAdminLink');
-      link.href = target.toString();
-
-      function isShortcutScope(scope) {
-        var path = new URL(scope).pathname.replace(/\/+$/, '/');
-        return /\/(admin|officers)\/$/.test(path);
-      }
-
-      function clearShortcutCaches() {
-        if (!('caches' in window)) return Promise.resolve();
-        return caches.keys().then(function (keys) {
-          return Promise.all(keys.map(function (key) {
-            if (/sfk-(admin|officers)-pwa/i.test(key)) return caches.delete(key);
-            return false;
-          }));
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch((error) => {
+          console.warn("Admin service worker registration failed:", error);
         });
-      }
-
-      function unregisterShortcutWorkers() {
-        if (!('serviceWorker' in navigator)) return Promise.resolve();
-        return navigator.serviceWorker.getRegistrations().then(function (registrations) {
-          return Promise.all(registrations.map(function (registration) {
-            return isShortcutScope(registration.scope) ? registration.unregister() : false;
-          }));
-        });
-      }
-
-      Promise.all([clearShortcutCaches(), unregisterShortcutWorkers()])
-        .then(function () {
-          statusEl.textContent = 'Redirecting...';
-          window.setTimeout(function () { window.location.replace(target.toString()); }, 250);
-        })
-        .catch(function () {
-          statusEl.textContent = 'Tap the button if it does not redirect.';
-          window.setTimeout(function () { window.location.replace(target.toString()); }, 600);
-        });
-    }());
+      });
+    }
   </script>
 </body>
 </html>
