@@ -18,6 +18,11 @@
     photo: "What story or feeling should future-you remember about this photo?"
   };
 
+  const CAPSULE_MEDIA_COLLECTION = "timeCapsuleMedia";
+  const CAPSULE_MEDIA_REF_PREFIX = "sfk-media://capsule/";
+  const CAPSULE_MEDIA_MAX_BASE64_CHARS = 850000;
+  const CAPSULE_TARGET_IMAGE_BYTES = 620000;
+
   const state = {
     context: null,
     settings: null,
@@ -35,6 +40,8 @@
     presentationEntries: [],
     slideIndex: 0,
     settingsCreating: false,
+    selectedImage: null,
+    imageCache: new Map(),
     initialized: false
   };
 
@@ -88,6 +95,12 @@
     elements.text = document.getElementById("timeCapsuleText");
     elements.characterCount = document.getElementById("timeCapsuleCharacterCount");
     elements.imageUrl = document.getElementById("timeCapsuleImageUrl");
+    elements.imageRef = document.getElementById("timeCapsuleImageRef") || { value: "" };
+    elements.imageFile = document.getElementById("timeCapsuleImageFile");
+    elements.imagePreview = document.getElementById("timeCapsuleImagePreview");
+    elements.imagePreviewImg = document.getElementById("timeCapsuleImagePreviewImg");
+    elements.imagePreviewText = document.getElementById("timeCapsuleImagePreviewText");
+    elements.clearImage = document.getElementById("timeCapsuleClearImage");
     elements.cancelEdit = document.getElementById("timeCapsuleCancelEdit");
     elements.submit = document.getElementById("timeCapsuleSubmit");
     elements.formMessage = document.getElementById("timeCapsuleFormMessage");
@@ -113,6 +126,9 @@
     elements.print = document.getElementById("timeCapsulePrint");
     elements.type.addEventListener("change", updateEntryPrompt);
     elements.text.addEventListener("input", updateCharacterCount);
+    elements.imageFile?.addEventListener("change", handleImageFileChange);
+    elements.imageUrl?.addEventListener("input", handleImageUrlInput);
+    elements.clearImage?.addEventListener("click", clearImageSelection);
   }
 
   function open(context) {
@@ -125,6 +141,7 @@
     state.slideIndex = 0;
     state.publicStatus = null;
     state.entriesLoaded = false;
+    state.selectedImage = null;
     state.publishedStatusSignature = "";
     window.clearTimeout(state.statusRetryTimer);
     state.statusRetryTimer = null;
@@ -395,6 +412,7 @@
     elements.entries.innerHTML = entries.length
       ? entries.map((entry) => entryCard(entry, false)).join("")
       : `<p class="timeCapsuleEmpty">${unlocked ? "No approved entries yet." : "You have not sealed an entry yet."}</p>`;
+    hydrateCapsuleImages(elements.entries);
   }
 
   function renderReviewEntries() {
@@ -406,10 +424,11 @@
     elements.reviewList.innerHTML = entries.length
       ? entries.map((entry) => entryCard(entry, true)).join("")
       : `<p class="timeCapsuleEmpty">No ${escapeHtml(filter)} entries.</p>`;
+    hydrateCapsuleImages(elements.reviewList);
   }
 
   function entryCard(entry, forReview) {
-    const imageUrl = safeImageUrl(entry.ImageURL);
+    const imageMarkup = capsuleImageMarkup(entry.ImageURL, `Time capsule photo by ${entry.AuthorName || "SFK"}`, true);
     const ownPending = entry.AuthorUID === state.context.profile.uid
       && entry.Status === "pending"
       && isSubmissionOpen();
@@ -427,7 +446,7 @@
           </div>`
         : "";
     return `<article class="timeCapsuleEntry" data-status="${escapeHtml(entry.Status || "pending")}">
-      ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="Time capsule photo by ${escapeHtml(entry.AuthorName || "SFK")}" loading="lazy" referrerpolicy="no-referrer" />` : ""}
+      ${imageMarkup}
       <div class="timeCapsuleEntryBody">
         <div class="timeCapsuleEntryMeta">
           <span>${escapeHtml(ENTRY_TYPES[entry.Type] || "Memory")}</span>
@@ -466,31 +485,44 @@
   async function submitEntry(event) {
     event.preventDefault();
     if (!state.context || !isSubmissionOpen()) return;
+
     const text = elements.text.value.trim();
-    const imageUrl = safeImageUrl(elements.imageUrl.value);
-    if (!text && !imageUrl) {
-      elements.formMessage.textContent = "Add a message or a valid public HTTPS image link.";
+    let imageUrl = getCurrentImageReference();
+
+    if (!text && !imageUrl && !state.selectedImage) {
+      elements.formMessage.textContent = "Add a message, attach a photo, or paste a valid photo link.";
       return;
     }
-    if (elements.imageUrl.value.trim() && !imageUrl) {
-      elements.formMessage.textContent = "Photo link must be a valid public HTTPS URL.";
+
+    if (elements.imageUrl.value.trim() && !safeImageUrl(elements.imageUrl.value)) {
+      elements.formMessage.textContent = "Photo link must be a valid public HTTPS image link.";
       return;
     }
 
     elements.submit.disabled = true;
     elements.formMessage.textContent = elements.editId.value ? "Updating entry..." : "Sealing entry...";
+
     try {
+      const collection = state.context.db.collection("timeCapsuleEntries");
+      const reference = elements.editId.value ? collection.doc(elements.editId.value) : collection.doc();
+
+      if (state.selectedImage) {
+        elements.formMessage.textContent = "Saving photo safely without billing...";
+        imageUrl = await saveCapsuleImageNoBilling(reference.id, state.selectedImage);
+      }
+
       const payload = {
         Type: ENTRY_TYPES[elements.type.value] ? elements.type.value : "memory",
         Text: text,
         ImageURL: imageUrl,
         UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
+
       if (elements.editId.value) {
-        await state.context.db.collection("timeCapsuleEntries").doc(elements.editId.value).update(payload);
+        await reference.update(payload);
         elements.formMessage.textContent = "Entry updated.";
       } else {
-        await state.context.db.collection("timeCapsuleEntries").add({
+        await reference.set({
           ...payload,
           AuthorUID: state.context.profile.uid,
           AuthorName: state.context.profile.name,
@@ -518,7 +550,7 @@
       elements.editId.value = entry.id;
       elements.type.value = ENTRY_TYPES[entry.Type] ? entry.Type : "memory";
       elements.text.value = entry.Text || "";
-      elements.imageUrl.value = entry.ImageURL || "";
+      setFormImageFromEntry(entry.ImageURL || "");
       elements.cancelEdit.hidden = false;
       elements.submit.textContent = "Update Entry";
       elements.form.hidden = false;
@@ -562,6 +594,7 @@
     if (!elements.form) return;
     elements.form.reset();
     elements.editId.value = "";
+    clearImageSelection(null, { keepMessage: true });
     elements.cancelEdit.hidden = true;
     elements.submit.textContent = "Seal Entry";
     elements.formMessage.textContent = "";
@@ -679,16 +712,17 @@
     if (!entries.length) return;
     state.slideIndex = (index + entries.length) % entries.length;
     const entry = entries[state.slideIndex];
-    const imageUrl = safeImageUrl(entry.ImageURL);
+    const imageMarkup = capsuleImageMarkup(entry.ImageURL, "SFK Time Capsule memory", false);
     elements.slideCount.textContent = `${state.slideIndex + 1} / ${entries.length}`;
     elements.slide.innerHTML = `<article class="timeCapsuleSlideCard">
-      ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="SFK Time Capsule memory" referrerpolicy="no-referrer" />` : ""}
+      ${imageMarkup}
       <div>
         <span>${escapeHtml(ENTRY_TYPES[entry.Type] || "Memory")}</span>
         ${entry.Text ? `<p>${escapeHtml(entry.Text)}</p>` : ""}
         <footer>${escapeHtml(entry.AuthorName || "SFK")} · ${escapeHtml(formatDate(timestampDate(entry.CreatedAt), false))}</footer>
       </div>
     </article>`;
+    hydrateCapsuleImages(elements.slide);
   }
 
   function togglePresentationPlayback() {
@@ -702,17 +736,18 @@
     state.presentationTimer = window.setInterval(() => showSlide(state.slideIndex + 1), 7000);
   }
 
-  function printCapsule() {
+  async function printCapsule() {
     const original = elements.slide.innerHTML;
     elements.slide.innerHTML = state.presentationEntries.map((entry) => {
-      const imageUrl = safeImageUrl(entry.ImageURL);
+      const imageMarkup = capsuleImageMarkup(entry.ImageURL, "SFK Time Capsule memory", false);
       return `<article class="timeCapsuleSlideCard">
-        ${imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="SFK Time Capsule memory" />` : ""}
+        ${imageMarkup}
         <div><span>${escapeHtml(ENTRY_TYPES[entry.Type] || "Memory")}</span>
         ${entry.Text ? `<p>${escapeHtml(entry.Text)}</p>` : ""}
         <footer>${escapeHtml(entry.AuthorName || "SFK")}</footer></div>
       </article>`;
     }).join("");
+    await hydrateCapsuleImages(elements.slide);
     document.body.classList.add("timeCapsulePrinting");
     window.print();
     document.body.classList.remove("timeCapsulePrinting");
@@ -770,15 +805,292 @@
     return (timestampDate(a.CreatedAt)?.getTime() || 0) - (timestampDate(b.CreatedAt)?.getTime() || 0);
   }
 
+  function capsuleImageMarkup(value, alt, lazy) {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+
+    const ref = parseCapsuleMediaRef(raw);
+    if (ref) {
+      return `<img data-capsule-image-ref="${escapeHtml(raw)}" alt="${escapeHtml(alt)}" ${lazy ? 'loading="lazy"' : ""} hidden />`;
+    }
+
+    const imageUrl = safeImageUrl(raw);
+    return imageUrl
+      ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(alt)}" ${lazy ? 'loading="lazy"' : ""} referrerpolicy="no-referrer" />`
+      : "";
+  }
+
+  async function hydrateCapsuleImages(root) {
+    if (!root) return;
+    const images = Array.from(root.querySelectorAll("img[data-capsule-image-ref]"));
+    await Promise.all(images.map(async (image) => {
+      const reference = image.getAttribute("data-capsule-image-ref") || "";
+      const src = await resolveCapsuleImage(reference);
+      if (src) {
+        image.src = src;
+        image.hidden = false;
+        image.removeAttribute("data-capsule-image-ref");
+      } else {
+        image.remove();
+      }
+    }));
+  }
+
+  function parseCapsuleMediaRef(value) {
+    const raw = String(value || "").trim();
+    if (!raw.startsWith(CAPSULE_MEDIA_REF_PREFIX)) return null;
+    const id = raw.slice(CAPSULE_MEDIA_REF_PREFIX.length).trim();
+    if (!/^[A-Za-z0-9_-]{1,240}$/.test(id)) return null;
+    return { id, uri: `${CAPSULE_MEDIA_REF_PREFIX}${id}` };
+  }
+
+  async function resolveCapsuleImage(value) {
+    const raw = String(value || "").trim();
+    const direct = safeImageUrl(raw);
+    if (direct) return direct;
+
+    const reference = parseCapsuleMediaRef(raw);
+    if (!reference || !state.context?.db) return "";
+    if (state.imageCache.has(reference.uri)) return state.imageCache.get(reference.uri);
+
+    try {
+      const snapshot = await state.context.db.collection(CAPSULE_MEDIA_COLLECTION).doc(reference.id).get();
+      if (!snapshot.exists) return "";
+      const data = snapshot.data() || {};
+      const mimeType = String(data.MimeType || data.mimeType || "image/jpeg").trim().toLowerCase();
+      const base64 = String(data.Data || data.data || "").trim();
+      if (!base64 || !mimeType.startsWith("image/")) return "";
+      const dataUrl = `data:${mimeType};base64,${base64}`;
+      state.imageCache.set(reference.uri, dataUrl);
+      return dataUrl;
+    } catch (error) {
+      console.warn("Unable to load Time Capsule photo:", error);
+      return "";
+    }
+  }
+
+  async function handleImageFileChange(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) {
+      clearSelectedFileOnly();
+      return;
+    }
+
+    elements.formMessage.textContent = "Preparing photo preview...";
+    try {
+      const prepared = await prepareCapsuleImageFile(file);
+      state.selectedImage = prepared;
+      elements.imageRef.value = "";
+      elements.imageUrl.value = "";
+      showImagePreview(prepared.previewUrl, prepared.name, "Ready to attach");
+      elements.formMessage.textContent = "Photo ready. It will be compressed and saved without billing.";
+    } catch (error) {
+      clearSelectedFileOnly();
+      elements.formMessage.textContent = readableError(error);
+    }
+  }
+
+  function handleImageUrlInput() {
+    if (!elements.imageUrl.value.trim()) {
+      if (!elements.imageRef.value) hideImagePreview();
+      return;
+    }
+    state.selectedImage = null;
+    elements.imageRef.value = "";
+    if (elements.imageFile) elements.imageFile.value = "";
+    const imageUrl = safeImageUrl(elements.imageUrl.value);
+    if (imageUrl) {
+      showImagePreview(imageUrl, "Linked photo", "This link will be used");
+    } else {
+      hideImagePreview();
+    }
+  }
+
+  function clearImageSelection(event, options = {}) {
+    if (event && typeof event.preventDefault === "function") event.preventDefault();
+    state.selectedImage = null;
+    if (elements.imageFile) elements.imageFile.value = "";
+    if (elements.imageUrl) elements.imageUrl.value = "";
+    if (elements.imageRef) elements.imageRef.value = "";
+    hideImagePreview();
+    if (!options.keepMessage && elements.formMessage) elements.formMessage.textContent = "Photo removed.";
+  }
+
+  function clearSelectedFileOnly() {
+    state.selectedImage = null;
+    if (elements.imageFile) elements.imageFile.value = "";
+  }
+
+  function showImagePreview(src, name, status) {
+    if (!elements.imagePreview || !elements.imagePreviewImg) return;
+    elements.imagePreview.hidden = false;
+    elements.imagePreviewImg.src = src;
+    elements.imagePreviewImg.alt = name || "Selected Time Capsule photo";
+    if (elements.imagePreviewText) {
+      elements.imagePreviewText.textContent = `${status || "Photo selected"}: ${name || "photo"}`;
+    }
+  }
+
+  function hideImagePreview() {
+    if (elements.imagePreview) elements.imagePreview.hidden = true;
+    if (elements.imagePreviewImg) {
+      elements.imagePreviewImg.removeAttribute("src");
+      elements.imagePreviewImg.alt = "";
+    }
+    if (elements.imagePreviewText) elements.imagePreviewText.textContent = "";
+  }
+
+  function setFormImageFromEntry(value) {
+    const raw = String(value || "").trim();
+    state.selectedImage = null;
+    if (elements.imageFile) elements.imageFile.value = "";
+    if (parseCapsuleMediaRef(raw)) {
+      elements.imageRef.value = raw;
+      elements.imageUrl.value = "";
+      resolveCapsuleImage(raw).then((src) => {
+        if (src && elements.imageRef.value === raw) showImagePreview(src, "Attached photo", "Saved photo");
+      });
+      return;
+    }
+
+    elements.imageRef.value = "";
+    elements.imageUrl.value = raw;
+    const imageUrl = safeImageUrl(raw);
+    if (imageUrl) showImagePreview(imageUrl, "Linked photo", "Saved link");
+    else hideImagePreview();
+  }
+
+  function getCurrentImageReference() {
+    const savedRef = String(elements.imageRef?.value || "").trim();
+    if (parseCapsuleMediaRef(savedRef)) return savedRef;
+    return safeImageUrl(elements.imageUrl?.value || "");
+  }
+
+  async function saveCapsuleImageNoBilling(entryId, prepared) {
+    if (!state.context?.db) throw new Error("Firebase is not ready. Refresh and try again.");
+    if (!prepared || !prepared.data) throw new Error("Selected photo could not be read. Choose another image.");
+
+    const id = `${safeDocPart(entryId)}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`.slice(0, 240);
+    await state.context.db.collection(CAPSULE_MEDIA_COLLECTION).doc(id).set({
+      EntryID: String(entryId || ""),
+      OwnerUID: state.context.profile.uid,
+      OwnerName: state.context.profile.name,
+      OwnerRole: state.context.profile.role,
+      Name: prepared.name,
+      MimeType: prepared.mimeType,
+      Data: prepared.data,
+      BytesApprox: Math.ceil(prepared.data.length * 0.75),
+      CreatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    const uri = `${CAPSULE_MEDIA_REF_PREFIX}${id}`;
+    state.imageCache.set(uri, `data:${prepared.mimeType};base64,${prepared.data}`);
+    return uri;
+  }
+
+  async function prepareCapsuleImageFile(file) {
+    if (!file || !String(file.type || "").toLowerCase().startsWith("image/")) {
+      throw new Error("Time Capsule no-billing upload supports photos only.");
+    }
+
+    const originalDataUrl = await readFileAsDataUrl(file);
+    const image = await loadCapsuleImage(originalDataUrl);
+    const blob = await compressCapsuleImage(image);
+    if (!blob) throw new Error("Unable to compress this photo. Try a smaller image.");
+
+    const dataUrl = await readFileAsDataUrl(blob);
+    const base64 = String(dataUrl).split(",")[1] || "";
+    if (!base64 || base64.length > CAPSULE_MEDIA_MAX_BASE64_CHARS) {
+      throw new Error("This photo is still too large after compression. Try a smaller screenshot/photo.");
+    }
+
+    return {
+      name: `${String(file.name || "time-capsule-photo").replace(/\.[^.]+$/, "") || "time-capsule-photo"}.jpg`,
+      mimeType: "image/jpeg",
+      data: base64,
+      previewUrl: dataUrl
+    };
+  }
+
+  async function compressCapsuleImage(image) {
+    const dimensions = [1200, 1000, 820, 680, 560];
+    const qualities = [0.72, 0.64, 0.56, 0.48, 0.4, 0.34];
+    let fallback = null;
+
+    for (const maxDimension of dimensions) {
+      const ratio = Math.min(1, maxDimension / Math.max(image.naturalWidth || image.width, image.naturalHeight || image.height));
+      const width = Math.max(1, Math.round((image.naturalWidth || image.width) * ratio));
+      const height = Math.max(1, Math.round((image.naturalHeight || image.height) * ratio));
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext("2d");
+      context.fillStyle = "#fff";
+      context.fillRect(0, 0, width, height);
+      context.drawImage(image, 0, 0, width, height);
+
+      for (const quality of qualities) {
+        const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
+        if (!blob) continue;
+        fallback = blob;
+        if (blob.size <= CAPSULE_TARGET_IMAGE_BYTES) return blob;
+      }
+    }
+    return fallback;
+  }
+
+  function readFileAsDataUrl(fileOrBlob) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => reject(new Error("Unable to read selected photo."));
+      reader.readAsDataURL(fileOrBlob);
+    });
+  }
+
+  function loadCapsuleImage(src) {
+    return new Promise((resolve, reject) => {
+      const image = new Image();
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error("Unable to preview this photo. Try a JPG or PNG."));
+      image.src = src;
+    });
+  }
+
+  function safeDocPart(value) {
+    return String(value || "capsule")
+      .replace(/[^A-Za-z0-9_-]+/g, "_")
+      .replace(/^_+|_+$/g, "")
+      .slice(0, 80) || "capsule";
+  }
+
   function safeImageUrl(value) {
     const text = String(value || "").trim();
     if (!text) return "";
+    if (/^data:image\//i.test(text)) return text;
+    if (parseCapsuleMediaRef(text)) return "";
+
     try {
       const url = new URL(text);
-      return url.protocol === "https:" ? url.href : "";
+      if (url.protocol !== "https:") return "";
+      const driveId = getDriveFileId(url.href);
+      if (driveId) return `https://drive.google.com/thumbnail?id=${encodeURIComponent(driveId)}&sz=w2000`;
+      return url.href;
     } catch (error) {
       return "";
     }
+  }
+
+  function getDriveFileId(value) {
+    const text = String(value || "").trim();
+    if (!/drive\.google\.com|drive\.usercontent\.google\.com/i.test(text)) return "";
+    const pathMatch = text.match(/\/file\/d\/([^/?#]+)/i);
+    if (pathMatch) return decodeURIComponent(pathMatch[1]);
+    const openMatch = text.match(/[?&]id=([^&#]+)/i);
+    if (openMatch) return decodeURIComponent(openMatch[1]);
+    const ucMatch = text.match(/\/uc\?[^#]*id=([^&#]+)/i);
+    if (ucMatch) return decodeURIComponent(ucMatch[1]);
+    return "";
   }
 
   function escapeHtml(value) {

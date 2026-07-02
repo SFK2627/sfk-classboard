@@ -15,7 +15,7 @@
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
   <link rel="stylesheet" href="style.css?v=74-clock-access-menu" />
   <link rel="stylesheet" href="class-chat.css?v=46-watch-request-queue" />
-  <link rel="stylesheet" href="time-capsule.css?v=6-capsule-volume-restore" />
+  <link rel="stylesheet" href="time-capsule.css?v=8-media-fix-v2" />
   <script src="orientation-lock.js?v=4-watch-party-landscape" defer></script>
 
   <style id="sfkStartIntroStyle">
@@ -1261,9 +1261,18 @@
                 <textarea id="timeCapsuleText" maxlength="1200" rows="5" placeholder="Write something for our future selves..."></textarea>
                 <small id="timeCapsuleCharacterCount" class="timeCapsuleCharacterCount">0 / 1200</small>
               </label>
-              <label>Photo link <small>Optional public HTTPS image link</small>
-                <input id="timeCapsuleImageUrl" type="url" maxlength="2000" placeholder="https://..." />
+              <input id="timeCapsuleImageRef" type="hidden" />
+              <label>Photo link <small>Optional public HTTPS image link or Google Drive photo link</small>
+                <input id="timeCapsuleImageUrl" type="text" maxlength="2000" inputmode="url" placeholder="https://..." />
               </label>
+              <label>Attach photo <small>Optional photo from your device; compressed and saved without billing</small>
+                <input id="timeCapsuleImageFile" type="file" accept="image/*" />
+              </label>
+              <div id="timeCapsuleImagePreview" class="timeCapsuleImagePreview" hidden>
+                <img id="timeCapsuleImagePreviewImg" alt="" />
+                <div><strong>Photo preview</strong><small id="timeCapsuleImagePreviewText"></small></div>
+                <button id="timeCapsuleClearImage" type="button">Remove</button>
+              </div>
               <div class="timeCapsuleFormActions">
                 <button id="timeCapsuleCancelEdit" type="button" hidden>Cancel edit</button>
                 <button id="timeCapsuleSubmit" type="submit">Seal Entry</button>
@@ -1376,11 +1385,11 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js?v=2-secure-auth"></script>
-  <script src="firebase-adapter.js?v=no-billing-upload"></script>
-  <script src="script.js?v=no-billing-upload"></script>
+  <script src="firebase-adapter.js?v=media-fix-v2"></script>
+  <script src="script.js?v=media-fix-v2"></script>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.16/dist/hls.min.js"></script>
   <script src="https://cdn.dashjs.org/v5.2.0/legacy/umd/dash.all.min.js"></script>
-  <script src="time-capsule.js?v=6-capsule-volume-restore"></script>
+  <script src="time-capsule.js?v=8-media-fix-v2"></script>
   <script src="class-chat.js?v=190-capsule-volume-restore"></script>
   <script src="pwa.js?v=3"></script>
 </body>

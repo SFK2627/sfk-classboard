@@ -1,4 +1,8 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbzCjWVnO-ZNvKTNqKN1zVscNsfPox0uDnO1QTSbBCrMFaS79tfL3mopHa2pH7gHczYeOA/exec";
+const CLASSBOARD_MEDIA_REF_PREFIX = "sfk-media://";
+const ANNOUNCEMENT_MEDIA_COLLECTION = "announcementMedia";
+const MEMORY_MEDIA_COLLECTION = "memoryMedia";
+const CLASSBOARD_MEDIA_DATA_CACHE = new Map();
 
 const DATA_REFRESH_MS = 5000;
 const ANNOUNCEMENT_ROTATE_MS = 10000;
@@ -13,6 +17,8 @@ const IS_PHONE_DEVICE =
 if (IS_PHONE_DEVICE) {
   document.documentElement.classList.add("phone-device");
 }
+
+document.addEventListener("click", handlePendingAnnouncementMediaClick);
 
 /* PRAYER AUDIO PLAYER SYSTEM
    No autoplay / no bell.
@@ -39,6 +45,19 @@ let activeWeeklyDay = "Monday";
 let lastPrayerTriggerKey = "";
 let lastScheduleAutoScrollKey = "";
 let isTodayScheduleOpen = false;
+
+function safeSetClassBoardCache(value) {
+  try {
+    localStorage.setItem(CACHE_KEY, String(value || ""));
+  } catch (error) {
+    console.warn("ClassBoard cache skipped:", error);
+    try {
+      localStorage.removeItem(CACHE_KEY);
+    } catch (removeError) {
+      // Ignore cache cleanup errors.
+    }
+  }
+}
 
 const subjectIcons = {
   english: "📘",
@@ -211,7 +230,7 @@ async function loadClassBoard() {
     const data = await response.json();
     const newDataString = JSON.stringify(data);
 
-    localStorage.setItem(CACHE_KEY, newDataString);
+    safeSetClassBoardCache(newDataString);
 
     if (newDataString !== latestDataString) {
       latestDataString = newDataString;
@@ -789,6 +808,7 @@ function renderAnnouncements(items) {
     </div>
   `;
 
+  hydrateAnnouncementMedia(box).catch(() => {});
   requestAnimationFrame(fitAnnouncementTextToCard);
   setTimeout(fitAnnouncementTextToCard, 90);
   setTimeout(fitAnnouncementTextToCard, 260);
@@ -1355,7 +1375,7 @@ function applyAnnouncementHeartResult(id, count, hearted, heartUsers) {
   });
 
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(latestData));
+    safeSetClassBoardCache(JSON.stringify(latestData));
     latestDataString = JSON.stringify(latestData);
   } catch (error) {
     // Ignore cache update errors.
@@ -1411,7 +1431,7 @@ function updateAnnouncementHeartCountLocal(id, value, absolute = false) {
         };
       });
 
-      localStorage.setItem(CACHE_KEY, JSON.stringify(cachedData));
+      safeSetClassBoardCache(JSON.stringify(cachedData));
       latestDataString = JSON.stringify(cachedData);
     }
   } catch (error) {
@@ -1545,25 +1565,41 @@ function renderAnnouncementAttachments(item) {
 
   if (urls.length === 0) return "";
 
-  const safeUrls = urls
-    .filter(isSafeExternalLink)
+  const attachmentItems = urls
+    .map((url, index) => {
+      const mediaRef = parseClassBoardMediaRef(url);
+      const safeUrl = isSafeExternalLink(url) ? String(url || "").trim() : "";
+      if (!safeUrl && !mediaRef) return null;
+      return {
+        rawUrl: String(url || "").trim(),
+        safeUrl,
+        mediaRef,
+        label: labels[index] || `Attachment ${index + 1}`
+      };
+    })
+    .filter(Boolean)
     .slice(0, 8);
 
-  const links = safeUrls
-    .map((url, index) => {
-      const label = labels[index] || `Attachment ${index + 1}`;
-      const isImage = isImageUrl(url) || isImageUrl(label);
+  const links = attachmentItems
+    .map((item) => {
+      const label = item.label;
+      const isImage = item.mediaRef?.kind === "announcement" || isImageUrl(item.safeUrl || item.rawUrl) || isImageUrl(label);
       const icon = isImage ? "🖼️" : "📎";
+      const pendingAttrs = item.mediaRef
+        ? ` data-announcement-media-ref="${escapeHtml(item.mediaRef.raw)}" data-announcement-media-label="${escapeHtml(label)}"`
+        : "";
+      const href = item.safeUrl || "#";
+      const pendingClass = item.mediaRef ? " is-loading-media" : "";
 
       return `
-        <a class="announcement-attachment-chip compact-attachment-row"
-           href="${escapeHtml(url)}"
+        <a class="announcement-attachment-chip compact-attachment-row${pendingClass}"
+           href="${escapeHtml(href)}"
            target="_blank"
            rel="noopener noreferrer"
-           title="Open ${escapeHtml(label)}">
+           title="Open ${escapeHtml(label)}"${pendingAttrs}>
           <span class="attachment-file-icon" aria-hidden="true">${icon}</span>
           <span class="attachment-file-name">${escapeHtml(label)}</span>
-          <span class="attachment-file-open" aria-hidden="true">↗</span>
+          <span class="attachment-file-open" aria-hidden="true">${item.mediaRef ? "…" : "↗"}</span>
         </a>
       `;
     })
@@ -1571,16 +1607,96 @@ function renderAnnouncementAttachments(item) {
 
   if (!links) return "";
 
-  const attachmentLabel = safeUrls.length === 1 ? "Attachment" : "Attachments";
+  const attachmentLabel = attachmentItems.length === 1 ? "Attachment" : "Attachments";
 
   return `
     <div class="announcement-attachments compact-attachments" aria-label="Announcement attachments">
-      <div class="announcement-attachments-label compact-attachments-label">📎 ${attachmentLabel} (${safeUrls.length})</div>
+      <div class="announcement-attachments-label compact-attachments-label">📎 ${attachmentLabel} (${attachmentItems.length})</div>
       <div class="announcement-attachment-list compact-attachment-list">
         ${links}
       </div>
     </div>
   `;
+}
+
+async function hydrateAnnouncementMedia(root = document) {
+  if (!root) return;
+  const links = Array.from(root.querySelectorAll("[data-announcement-media-ref]"));
+  await Promise.all(links.map(async (link) => {
+    const rawRef = link.getAttribute("data-announcement-media-ref") || "";
+    const dataUrl = await resolveClassBoardMediaDataUrl(rawRef);
+    if (!dataUrl) {
+      link.classList.remove("is-loading-media");
+      link.classList.add("is-unavailable-media");
+      const open = link.querySelector(".attachment-file-open");
+      if (open) open.textContent = "!";
+      return;
+    }
+
+    link.href = dataUrl;
+    link.classList.remove("is-loading-media", "is-unavailable-media");
+    link.classList.add("is-ready-media");
+    link.removeAttribute("data-announcement-media-ref");
+    link.dataset.announcementMediaReady = "true";
+    const open = link.querySelector(".attachment-file-open");
+    if (open) open.textContent = "↗";
+  }));
+}
+
+function handlePendingAnnouncementMediaClick(event) {
+  const link = event.target?.closest?.("[data-announcement-media-ref]");
+  if (!link) return;
+  event.preventDefault();
+  const open = link.querySelector(".attachment-file-open");
+  if (open) open.textContent = "…";
+  hydrateAnnouncementMedia(link.parentElement || link).catch(() => {
+    if (open) open.textContent = "!";
+  });
+}
+
+function parseClassBoardMediaRef(value) {
+  const raw = String(value || "").trim();
+  if (!raw.startsWith(CLASSBOARD_MEDIA_REF_PREFIX)) return null;
+  const rest = raw.slice(CLASSBOARD_MEDIA_REF_PREFIX.length);
+  const slashIndex = rest.indexOf("/");
+  if (slashIndex <= 0) return null;
+
+  const kind = rest.slice(0, slashIndex);
+  const id = rest.slice(slashIndex + 1);
+  if (!id || !/^[A-Za-z0-9_-]{1,240}$/.test(id)) return null;
+  if (!["announcement", "memory"].includes(kind)) return null;
+
+  return {
+    raw,
+    kind,
+    id,
+    collectionName: kind === "announcement" ? ANNOUNCEMENT_MEDIA_COLLECTION : MEMORY_MEDIA_COLLECTION
+  };
+}
+
+async function resolveClassBoardMediaDataUrl(value) {
+  const ref = parseClassBoardMediaRef(value);
+  if (!ref) return "";
+  const cacheKey = `${ref.kind}/${ref.id}`;
+  if (CLASSBOARD_MEDIA_DATA_CACHE.has(cacheKey)) return CLASSBOARD_MEDIA_DATA_CACHE.get(cacheKey);
+
+  const db = getClassBoardFirestore();
+  if (!db) return "";
+
+  try {
+    const doc = await db.collection(ref.collectionName).doc(ref.id).get();
+    if (!doc.exists) return "";
+    const data = doc.data() || {};
+    const mimeType = String(data.MimeType || data.mimeType || "image/jpeg").trim();
+    const base64 = String(data.Data || data.data || "").trim();
+    if (!base64 || !mimeType.toLowerCase().startsWith("image/")) return "";
+    const dataUrl = `data:${mimeType};base64,${base64}`;
+    CLASSBOARD_MEDIA_DATA_CACHE.set(cacheKey, dataUrl);
+    return dataUrl;
+  } catch (error) {
+    console.warn("Unable to load ClassBoard media:", error);
+    return "";
+  }
 }
 
 function splitAttachmentField(value) {
@@ -3282,7 +3398,7 @@ loadClassBoard = async function loadClassBoardWithHeartLedger() {
     }
 
     const newDataString = JSON.stringify(data);
-    localStorage.setItem(CACHE_KEY, newDataString);
+    safeSetClassBoardCache(newDataString);
 
     if (newDataString !== latestDataString) {
       latestDataString = newDataString;
@@ -3363,7 +3479,7 @@ heartAnnouncement = async function heartAnnouncementV3(id) {
         }
       });
       latestDataString = JSON.stringify(latestData);
-      localStorage.setItem(CACHE_KEY, latestDataString);
+      safeSetClassBoardCache(latestDataString);
     }
     renderAnnouncements(latestData?.announcements || []);
   } catch (error) {

@@ -276,7 +276,7 @@
     const rows = await getPublishedRows("Memories");
     const memories = await Promise.all(rows.map(async row => {
       const count = readHeartCount(row);
-      const rawMedia = Array.isArray(row.media) ? row.media : parseJsonArray(row.MediaJSON);
+      const rawMedia = Array.isArray(row.media) ? row.media : parseJsonArray(row.MediaJSON || row.mediaJSON || row.MediaItems || row.mediaItems || row.Media);
       const media = await resolveMemoryMediaItems(rawMedia);
       return {
         ...row,
@@ -613,6 +613,8 @@
       PostedBy: payload.PostedBy || payload.Author || payload.author || "SFK",
       Role: payload.Role || payload.role || "",
       media,
+      MediaJSON: JSON.stringify(media),
+      MediaItems: JSON.stringify(media),
       music,
       MusicTitle: String(payload.MusicTitle || payload.MusicDisplayTitle || payload.MusicName || "").trim(),
       MusicJSON: music ? JSON.stringify(music) : "",

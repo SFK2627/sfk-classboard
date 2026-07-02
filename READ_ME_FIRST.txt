@@ -1,34 +1,43 @@
-SFK ClassBoard - Needed Files Only
+SFK ClassBoard - Media Fix v2 (no billing)
 
-Purpose:
-- Fix announcement photo upload without billing.
-- Fix memories photo upload without billing.
-- Keep Firebase Storage disabled.
-- Keep the original loading screen.
+Replace/upload these files to the same paths in your GitHub Pages repo:
 
-Upload/replace these files in your GitHub Pages repo using the same folders:
+Root files:
 - index.html
 - script.js
 - firebase-adapter.js
+- memories.html
+- memories.js
+- memories.css
+- time-capsule.js
+- time-capsule.css
+- sw.js
 - admin.html
 - admin.js
 - officer.html
 - officer.js
-- memories.html
-- memories.js
-- sw.js
+
+Folder files:
 - admin/index.html
 - admin/sw.js
 - officers/index.html
 - officers/sw.js
 
-Firebase Console step:
-- Open Firestore Database > Rules.
-- Copy/paste the included FIREBASE_RULES.txt.
-- Publish.
+Firebase rules:
+1. Open Firebase Console > Firestore Database > Rules.
+2. Copy the whole FIREBASE_RULES.txt from this folder.
+3. Paste and Publish.
 
-Important:
-- No Firebase Storage is needed.
-- No billing/Blaze is needed.
-- No-billing upload supports photos only. For videos/music/docs, use Drive/YouTube/direct public links.
-- After replacing files, hard refresh. On phone/PWA, remove old shortcut/app then open/install again.
+What this fixes:
+- Memories photos saved as sfk-media://memory/... are resolved from Firestore and shown in the feed and viewer.
+- Cached Memories posts with only firestoreRef are hydrated instead of disappearing.
+- Memories loader now also reads MediaItems/MediaJSON fallback fields.
+- Subject Announcement image attachments saved as sfk-media://announcement/... are resolved on the page without needing a refresh.
+- ClassBoard cache failures from large no-billing images no longer stop rendering.
+- Keeps the Time Capsule no-billing image attach fix.
+- No Firebase Storage and no billing required.
+
+After upload:
+- Hard refresh on browser.
+- On phone/PWA, remove the old installed shortcut/app first, then open the site again.
+- Test with one small photo first.

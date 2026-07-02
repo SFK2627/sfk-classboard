@@ -3388,3 +3388,23 @@ body.shareFormatOpen {
   filter: none;
   transform: translateY(1px) scale(.78) rotate(4deg);
 }
+
+.mediaSlideLoading {
+  background: #202020;
+}
+
+.memoryMediaLoadingBackdrop {
+  background: radial-gradient(circle at center, rgba(255,255,255,.16), rgba(255,255,255,.04));
+}
+
+.memoryMediaLoadingText {
+  position: relative;
+  z-index: 2;
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: rgba(255,255,255,.9);
+  color: #111;
+  font-size: .78rem;
+  font-weight: 900;
+  box-shadow: 0 8px 22px rgba(0,0,0,.22);
+}
