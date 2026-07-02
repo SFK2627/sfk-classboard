@@ -1,112 +1,104 @@
-const CACHE_NAME = "sfk-sw.js-schedule-color-fix-v1";
-const APP_SHELL = [
-  "./",
-  "./index.html",
-  "./reset-cache.html",
-  "./style.css",
-  "./script.js",
-  "./class-chat.css",
-  "./class-chat.js",
-  "./time-capsule.css",
-  "./time-capsule.js",
-  "./class-chat-admin.js",
-  "./pwa.js",
-  "./firebase-config.js",
-  "./firebase-adapter.js",
-  "./auth.js",
-  "./orientation-lock.js",
-  "./memories.html",
-  "./memories.css",
-  "./memories.js",
-  "./admin.html",
-  "./admin.css",
-  "./admin.js",
-  "./officer.html",
-  "./officer.css",
-  "./officer.js",
-  "./manifest.webmanifest",
-  "./class-photo.jpg",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
-  "./icons/icon-maskable-512.png"
-];
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#f7c600" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="SFK Admin" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>SFK Admin</title>
+  <link rel="manifest" href="manifest.webmanifest?v=route-repair-v1" />
+  <link rel="icon" type="image/png" sizes="192x192" href="../icons/icon-192.png?v=3" />
+  <link rel="apple-touch-icon" href="../icons/icon-192.png?v=3" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #fff8dc;
+      color: #111;
+    }
+    .card {
+      width: min(92vw, 430px);
+      padding: 24px;
+      border: 2px solid #f7c600;
+      border-radius: 22px;
+      background: #fff;
+      box-shadow: 0 14px 40px rgba(0,0,0,.12);
+      text-align: center;
+    }
+    h1 { margin: 0 0 8px; font-size: 26px; }
+    p { margin: 0 0 18px; line-height: 1.5; }
+    a {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 48px;
+      padding: 0 18px;
+      border-radius: 14px;
+      border: 2px solid #111;
+      background: #f7c600;
+      color: #111;
+      font-weight: 800;
+      text-decoration: none;
+    }
+    small { display: block; margin-top: 14px; color: #5f4b00; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Opening Admin...</h1>
+    <p>This shortcut now opens the real admin page directly, without the old iframe/cache layer.</p>
+    <a id="openAdminLink" href="../admin.html?shortcut=admin&v=route-repair-v1">Open Admin Login</a>
+    <small id="status">Cleaning old admin shortcut cache...</small>
+  </div>
+  <script>
+    (function () {
+      var target = new URL('../admin.html?shortcut=admin&v=route-repair-v1', window.location.href);
+      var statusEl = document.getElementById('status');
+      var link = document.getElementById('openAdminLink');
+      link.href = target.toString();
 
-async function precacheAppShell() {
-  const cache = await caches.open(CACHE_NAME);
-  await Promise.all(
-    APP_SHELL.map((url) => cache.add(url).catch((error) => {
-      console.warn("SFK cache skipped:", url, error);
-    }))
-  );
-}
-
-async function trimOldCaches() {
-  const keys = await caches.keys();
-  await Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)));
-}
-
-function shouldCache(response) {
-  return response && response.ok && response.type === "basic";
-}
-
-async function cacheMatch(request) {
-  const cached = await caches.match(request, { ignoreSearch: true });
-  if (cached) return cached;
-
-  const url = new URL(request.url);
-  if (url.pathname.endsWith("/")) {
-    return caches.match("./index.html", { ignoreSearch: true });
-  }
-  return null;
-}
-
-async function networkFirst(request) {
-  const cache = await caches.open(CACHE_NAME);
-  try {
-    const response = await fetch(request);
-    if (shouldCache(response)) await cache.put(request, response.clone());
-    return response;
-  } catch (error) {
-    const cached = await cacheMatch(request);
-    return cached || caches.match("./index.html", { ignoreSearch: true });
-  }
-}
-
-async function staleWhileRevalidate(request, event) {
-  const cache = await caches.open(CACHE_NAME);
-  const cached = await cacheMatch(request);
-  const fetchPromise = fetch(request)
-    .then((response) => {
-      if (shouldCache(response)) {
-        event.waitUntil(cache.put(request, response.clone()));
+      function isShortcutScope(scope) {
+        var path = new URL(scope).pathname.replace(/\/+$/, '/');
+        return /\/(admin|officers)\/$/.test(path);
       }
-      return response;
-    })
-    .catch(() => cached || Response.error());
 
-  return cached || fetchPromise;
-}
+      function clearShortcutCaches() {
+        if (!('caches' in window)) return Promise.resolve();
+        return caches.keys().then(function (keys) {
+          return Promise.all(keys.map(function (key) {
+            if (/sfk-(admin|officers)-pwa/i.test(key)) return caches.delete(key);
+            return false;
+          }));
+        });
+      }
 
-self.addEventListener("install", (event) => {
-  event.waitUntil(precacheAppShell());
-  self.skipWaiting();
-});
+      function unregisterShortcutWorkers() {
+        if (!('serviceWorker' in navigator)) return Promise.resolve();
+        return navigator.serviceWorker.getRegistrations().then(function (registrations) {
+          return Promise.all(registrations.map(function (registration) {
+            return isShortcutScope(registration.scope) ? registration.unregister() : false;
+          }));
+        });
+      }
 
-self.addEventListener("activate", (event) => {
-  event.waitUntil(trimOldCaches());
-  self.clients.claim();
-});
-
-self.addEventListener("fetch", (event) => {
-  const { request } = event;
-  const url = new URL(request.url);
-
-  if (request.method !== "GET" || url.origin !== self.location.origin) return;
-
-  if (request.mode === "navigate" || request.destination === "document") {
-    event.respondWith(networkFirst(request));
-    return;
-  }
-
-  event.respondWith(staleWhileRevalidate(request, event));
-});
+      Promise.all([clearShortcutCaches(), unregisterShortcutWorkers()])
+        .then(function () {
+          statusEl.textContent = 'Redirecting...';
+          window.setTimeout(function () { window.location.replace(target.toString()); }, 250);
+        })
+        .catch(function () {
+          statusEl.textContent = 'Tap the button if it does not redirect.';
+          window.setTimeout(function () { window.location.replace(target.toString()); }, 600);
+        });
+    }());
+  </script>
+</body>
+</html>

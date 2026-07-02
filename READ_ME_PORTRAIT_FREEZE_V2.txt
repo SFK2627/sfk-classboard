@@ -1,23 +1,27 @@
-SFK ClassBoard - Memories image display fix
+PORTRAIT FREEZE V2
 
-Replace/upload these files in the same locations in your GitHub Pages repo:
+Upload/replace these files in the same locations.
 
-1. memories.js
-2. memories.html
-3. sw.js
-4. firebase-adapter.js  (included only to keep your no-billing upload adapter together)
+This version does not show a landscape blocker. Instead, if a phone is rotated horizontally, the app keeps a portrait layout by freezing/counter-rotating the page. In installed PWA mode, the manifest still requests portrait-primary.
 
-Firebase rules:
-- Your latest rules already have memoryMedia read/write permissions.
-- FIREBASE_RULES.txt is included only as a backup/reference.
+Files included:
+- orientation-lock.js
+- manifest.webmanifest
+- admin.webmanifest
+- officer.webmanifest
+- index.html
+- admin.html
+- officer.html
+- memories.html
+- sw.js
+- admin/index.html
+- admin/manifest.webmanifest
+- admin/sw.js
+- officers/index.html
+- officers/manifest.webmanifest
+- officers/sw.js
 
-What was fixed:
-- Uploaded no-billing memory photos are saved in Firestore as memoryMedia documents.
-- The memories page was reading the memories collection directly, so it saw sfk-media://memory/... references but did not convert them into displayable data:image URLs.
-- memories.js now resolves those memoryMedia references before rendering.
-- LocalStorage cache failures from large inline image data no longer stop rendering.
-- sw.js and memories.html were bumped so the old cached memories.js is less likely to remain stuck.
-
-After uploading:
-- Hard refresh the site.
-- On phone/PWA, remove the old installed shortcut/app, then open/install again.
+After upload:
+1. Wait for GitHub Pages to update.
+2. Hard refresh.
+3. On phone/PWA, remove old shortcut/app first, then open fresh and reinstall if needed.

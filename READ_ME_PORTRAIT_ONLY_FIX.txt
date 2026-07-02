@@ -1,10 +1,7 @@
-PORTRAIT FREEZE V2
+SFK Portrait Only Mobile Fix
 
-Upload/replace these files in the same locations.
+Upload/replace these files in the same locations on GitHub Pages:
 
-This version does not show a landscape blocker. Instead, if a phone is rotated horizontally, the app keeps a portrait layout by freezing/counter-rotating the page. In installed PWA mode, the manifest still requests portrait-primary.
-
-Files included:
 - orientation-lock.js
 - manifest.webmanifest
 - admin.webmanifest
@@ -21,7 +18,13 @@ Files included:
 - officers/manifest.webmanifest
 - officers/sw.js
 
+What this does:
+- Installed PWA uses portrait-primary orientation in the manifest.
+- Mobile browsers that support Screen Orientation API are requested to lock to portrait.
+- If the phone is rotated landscape, the app is covered by a portrait-only blocker until the device is upright again.
+- Desktop/TV landscape view should not be blocked.
+
 After upload:
-1. Wait for GitHub Pages to update.
-2. Hard refresh.
-3. On phone/PWA, remove old shortcut/app first, then open fresh and reinstall if needed.
+1. Hard refresh.
+2. On phone/PWA, remove the old installed shortcut/app first.
+3. Open the site again and reinstall if needed.

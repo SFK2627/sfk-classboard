@@ -9,7 +9,7 @@
   <meta name="apple-mobile-web-app-title" content="SFK Admin" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>SFK Admin</title>
-  <link rel="manifest" href="manifest.webmanifest?v=3" />
+  <link rel="manifest" href="manifest.webmanifest?v=portrait-freeze-v2" />
   <link rel="icon" type="image/png" sizes="192x192" href="../icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="../icons/icon-192.png?v=3" />
   <style>

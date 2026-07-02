@@ -1,16 +1,13 @@
-SFK Portrait Only Mobile Fix
+SFK Admin/Officers Route Clean v9
 
-Upload/replace these files in the same locations on GitHub Pages:
+Problem fixed:
+- Admin/Officers pages showing raw service-worker JavaScript or manifest JSON instead of the real page.
+- Root manifest.webmanifest was broken and contained JavaScript instead of JSON.
 
-- orientation-lock.js
+Upload/replace these files in the same locations:
 - manifest.webmanifest
-- admin.webmanifest
-- officer.webmanifest
-- index.html
-- admin.html
-- officer.html
-- memories.html
-- sw.js
+- reset-cache.html
+- 404.html
 - admin/index.html
 - admin/manifest.webmanifest
 - admin/sw.js
@@ -18,13 +15,10 @@ Upload/replace these files in the same locations on GitHub Pages:
 - officers/manifest.webmanifest
 - officers/sw.js
 
-What this does:
-- Installed PWA uses portrait-primary orientation in the manifest.
-- Mobile browsers that support Screen Orientation API are requested to lock to portrait.
-- If the phone is rotated landscape, the app is covered by a portrait-only blocker until the device is upright again.
-- Desktop/TV landscape view should not be blocked.
-
 After upload:
-1. Hard refresh.
-2. On phone/PWA, remove the old installed shortcut/app first.
-3. Open the site again and reinstall if needed.
+1. Wait for GitHub Pages to finish updating.
+2. Open: reset-cache.html?go=admin
+3. Then test admin.html and officer.html directly.
+4. On phone, remove/uninstall the old PWA/shortcut first, then open the site fresh in the browser.
+
+This does not change Firebase, Memories, Announcements, login logic, or the original loading screen.
