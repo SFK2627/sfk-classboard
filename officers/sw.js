@@ -1,15 +1,16 @@
-const CACHE_NAME = "sfk-officers-pwa-v21-no-billing-upload";
+const CACHE_NAME = "sfk-officers-pwa-v22-appwide-portrait-v6";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./sw.js",
-  "../officer.html?embedded=1&v=no-billing-upload",
+  "../officer.html?embedded=1&v=appwide-portrait-v6",
   "../officer.css?v=no-billing-upload",
   "../officer.js?v=no-billing-upload",
   "../firebase-config.js",
   "../firebase-adapter.js",
   "../auth.js",
+  "../orientation-lock.js",
   "../icons/icon-192.png",
   "../icons/icon-512.png",
   "../icons/icon-maskable-512.png"

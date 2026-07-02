@@ -2,1459 +2,391 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#f7c600" />
+  <meta name="description" content="SFK Officers Panel for posting class announcements, things to bring, prayer leaders, quotes, and birthday greetings." />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="SFK Officers" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
-  <title>SFK ClassBoard</title>
+  <title>SFK Officers Panel</title>
 
-  <link rel="manifest" href="manifest.webmanifest?v=portrait-reminder-v1" />
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+  <link rel="manifest" href="officer.webmanifest?v=portrait-reminder-v1" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
-  <link rel="stylesheet" href="style.css?v=77-birthday-accordion-appwide-portrait-v6" />
-  <link rel="stylesheet" href="class-chat.css?v=46-watch-request-queue" />
-  <link rel="stylesheet" href="time-capsule.css?v=11-media-fix-v8" />
-
-  <style id="sfkStartIntroStyle">
-    #sfkIntroOverlay.sfkStartIntro {
-      position: fixed;
-      inset: 0;
-      z-index: 999999;
-      min-height: 100vh;
-      min-height: 100dvh;
-      display: grid;
-      place-items: center;
-      padding: 16px;
-      overflow: hidden;
-      background: #111;
-      box-sizing: border-box;
-      opacity: 1;
-      visibility: visible;
-      transition: opacity .45s ease, visibility .45s ease;
-      font-family: Arial, Helvetica, sans-serif;
-    }
-
-    #sfkIntroOverlay.sfkStartIntro::before {
-      content: "";
-      position: absolute;
-      inset: -28px;
-      background:
-        linear-gradient(180deg, rgba(0,0,0,.36), rgba(0,0,0,.58)),
-        url("class-photo.jpg") center center / cover no-repeat;
-      filter: blur(15px) brightness(.72) saturate(1.08);
-      transform: scale(1.08);
-      pointer-events: none;
-    }
-
-    #sfkIntroOverlay.sfkStartIntro::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background:
-        radial-gradient(circle at top, rgba(255,215,0,.22), transparent 36%),
-        linear-gradient(135deg, rgba(247,198,0,.16), rgba(0,0,0,.16));
-      pointer-events: none;
-    }
-
-    #sfkIntroOverlay.sfkStartIntro.is-hidden {
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-    }
-
-    .sfkStartShell {
-      position: relative;
-      z-index: 2;
-      width: min(1080px, 100%);
-      max-height: calc(100dvh - 32px);
-      overflow: auto;
-      display: grid;
-      gap: 16px;
-      padding: 20px;
-      border-radius: 30px;
-      background: linear-gradient(180deg, rgba(17,17,17,.94), rgba(12,12,12,.96));
-      border: 4px solid rgba(255,255,255,.94);
-      box-shadow: 0 26px 80px rgba(0,0,0,.45);
-      color: #fff;
-      box-sizing: border-box;
-      scrollbar-width: thin;
-    }
-
-    .sfkStartShell::before {
-      content: "";
-      position: absolute;
-      inset: 10px;
-      border-radius: 22px;
-      border: 1px solid rgba(255,215,0,.18);
-      pointer-events: none;
-    }
-
-    .sfkStartTop {
-      position: relative;
-      z-index: 2;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .sfkStartTag,
-    .sfkStartSkip {
-      border-radius: 999px;
-      font-weight: 900;
-      box-shadow: 0 7px 18px rgba(0,0,0,.20);
-    }
-
-    .sfkStartTag {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 16px;
-      color: #111;
-      background: linear-gradient(180deg, #fff1a8, #ffd84d);
-      border: 2px solid rgba(255,255,255,.90);
-      font-size: clamp(.82rem, 1.2vw, 1rem);
-    }
-
-    .sfkStartSkip {
-      border: 2px solid rgba(255,255,255,.18);
-      background: rgba(255,255,255,.10);
-      color: #fff;
-      padding: 10px 16px;
-      font-size: clamp(.88rem, 1.2vw, 1rem);
-      cursor: pointer;
-      opacity: 0;
-      pointer-events: none;
-      transform: translateY(-4px);
-      transition: opacity .28s ease, transform .28s ease;
-    }
-
-    .sfkStartIntro.skip-ready .sfkStartSkip {
-      opacity: 1;
-      pointer-events: auto;
-      transform: translateY(0);
-    }
-
-    .sfkStartBody {
-      position: relative;
-      z-index: 2;
-      display: grid;
-      grid-template-columns: minmax(0, 1.12fr) minmax(320px, .88fr);
-      align-items: center;
-      gap: 26px;
-    }
-
-    .sfkStartPhotoCard {
-      position: relative;
-      padding: 12px;
-      border-radius: 26px;
-      background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(247,241,219,.98));
-      border: 3px solid rgba(255,255,255,.95);
-      box-shadow: 0 18px 42px rgba(0,0,0,.25);
-      overflow: hidden;
-    }
-
-    .sfkStartPhoto {
-      display: block;
-      width: 100%;
-      aspect-ratio: 16 / 9;
-      object-fit: cover;
-      border-radius: 18px;
-      border: 1px solid rgba(17,17,17,.10);
-    }
-
-    .sfkStartPhotoLabel {
-      position: absolute;
-      top: 22px;
-      left: 22px;
-      z-index: 2;
-      max-width: calc(100% - 44px);
-      padding: 9px 15px;
-      border-radius: 999px;
-      color: #111;
-      background: rgba(255,248,219,.96);
-      border: 2px solid rgba(255,255,255,.88);
-      font-size: clamp(.78rem, 1.15vw, .95rem);
-      font-weight: 900;
-      box-shadow: 0 8px 20px rgba(0,0,0,.14);
-    }
-
-    .sfkStartPhotoCaption {
-      position: absolute;
-      left: 50%;
-      bottom: 22px;
-      z-index: 2;
-      transform: translateX(-50%);
-      width: calc(100% - 48px);
-      max-width: 460px;
-      padding: 10px 14px;
-      text-align: center;
-      border-radius: 16px;
-      background: rgba(17,17,17,.62);
-      color: #fff6ca;
-      border: 1px solid rgba(255,215,0,.24);
-      backdrop-filter: blur(8px);
-      font-size: clamp(.9rem, 1.45vw, 1.08rem);
-      font-weight: 900;
-      line-height: 1.25;
-    }
-
-    .sfkStartAccent {
-      color: #ffd84d;
-      background: rgba(255,215,0,.12);
-      padding: 1px 4px;
-      border-radius: 7px;
-      text-shadow: 0 2px 8px rgba(0,0,0,.28);
-    }
-
-    .sfkStartCopy {
-      text-align: center;
-      display: grid;
-      justify-items: center;
-      align-content: center;
-      gap: 10px;
-      padding: 8px 4px;
-    }
-
-    .sfkStartPill {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 10px 18px;
-      border-radius: 999px;
-      color: #ffe36b;
-      background: rgba(255,215,0,.10);
-      border: 2px solid rgba(255,215,0,.58);
-      font-size: clamp(.86rem, 1.3vw, 1.05rem);
-      font-weight: 900;
-      line-height: 1.2;
-    }
-
-    .sfkStartTitle {
-      margin: 0;
-      color: #fff;
-      font-size: clamp(2rem, 3.6vw, 3.4rem);
-      font-family: 'Fredoka', Arial, sans-serif;
-      line-height: 1;
-    }
-
-    .sfkStartWord {
-      color: #ffd84d;
-      font-family: 'Luckiest Guy', 'Fredoka', Arial, sans-serif;
-      font-size: clamp(3rem, 6.8vw, 6.5rem);
-      line-height: .95;
-      letter-spacing: .03em;
-      text-shadow: 4px 4px 0 rgba(0,0,0,.25);
-      white-space: nowrap;
-      animation: sfkStartWordFloat 2.8s ease-in-out infinite;
-    }
-
-    .sfkStartWord span {
-      display: inline-block;
-      transform-origin: 50% 85%;
-      animation: sfkStartLetterWave 1.65s ease-in-out infinite;
-      animation-delay: calc(var(--sfk-wave-index) * 90ms);
-    }
-
-    @keyframes sfkStartLetterWave {
-      0%, 42%, 100% { transform: translateY(0) rotate(0deg); }
-      12% { transform: translateY(-9px) rotate(-4deg); }
-      23% { transform: translateY(2px) rotate(3deg); }
-      32% { transform: translateY(-3px) rotate(-1deg); }
-    }
-
-    @keyframes sfkStartWordFloat {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-3px); }
-    }
-
-    .sfkStartSubtitle {
-      margin: 0;
-      color: #fff2b6;
-      font-size: clamp(1rem, 1.8vw, 1.35rem);
-      font-weight: 900;
-      line-height: 1.3;
-    }
-
-    .sfkStartStatus {
-      margin: 0;
-      padding: 9px 15px;
-      border-radius: 999px;
-      color: rgba(255,255,255,.92);
-      background: rgba(255,255,255,.08);
-      border: 1px solid rgba(255,255,255,.13);
-      font-size: clamp(.82rem, 1.2vw, .95rem);
-      font-weight: 800;
-    }
-
-    .sfkStartProgress {
-      position: relative;
-      z-index: 2;
-      width: 100%;
-      height: 12px;
-      overflow: hidden;
-      border-radius: 999px;
-      background: rgba(255,255,255,.13);
-      border: 1px solid rgba(255,255,255,.14);
-    }
-
-    .sfkStartProgress span {
-      display: block;
-      height: 100%;
-      width: 0%;
-      border-radius: inherit;
-      background: linear-gradient(90deg, #fff2a6, #ffd84d 60%, #ffea61);
-      animation: sfkStartProgressFill 30s linear forwards;
-    }
-
-    @keyframes sfkStartProgressFill {
-      from { width: 0%; }
-      to { width: 100%; }
-    }
-
-    @media (max-width: 900px) {
-      .sfkStartShell {
-        width: min(680px, 100%);
-      }
-
-      .sfkStartBody {
-        grid-template-columns: 1fr;
-        gap: 16px;
-      }
-
-      .sfkStartPhotoCard {
-        order: 1;
-      }
-
-      .sfkStartCopy {
-        order: 2;
-      }
-    }
-
-    @media (max-width: 640px) {
-      #sfkIntroOverlay.sfkStartIntro {
-        padding: 10px;
-        align-items: center;
-      }
-
-      .sfkStartShell {
-        width: 100%;
-        max-height: calc(100dvh - 20px);
-        padding: 13px;
-        gap: 10px;
-        border-width: 3px;
-        border-radius: 22px;
-      }
-
-      .sfkStartShell::before {
-        inset: 8px;
-        border-radius: 16px;
-      }
-
-      .sfkStartTop {
-        gap: 8px;
-      }
-
-      .sfkStartTag {
-        max-width: calc(100% - 84px);
-        padding: 8px 11px;
-        font-size: .78rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .sfkStartSkip {
-        padding: 8px 12px;
-        font-size: .84rem;
-      }
-
-      .sfkStartBody {
-        gap: 10px;
-      }
-
-      .sfkStartPhotoCard {
-        padding: 8px;
-        border-radius: 18px;
-      }
-
-      .sfkStartPhoto {
-        aspect-ratio: 4 / 3;
-        border-radius: 13px;
-      }
-
-      .sfkStartPhotoLabel {
-        top: 14px;
-        left: 14px;
-        max-width: calc(100% - 28px);
-        padding: 7px 10px;
-        font-size: .72rem;
-      }
-
-      .sfkStartPhotoCaption {
-        bottom: 14px;
-        width: calc(100% - 28px);
-        padding: 8px 10px;
-        border-radius: 12px;
-        font-size: .78rem;
-      }
-
-      .sfkStartCopy {
-        gap: 7px;
-        padding: 0;
-      }
-
-      .sfkStartPill {
-        padding: 8px 11px;
-        font-size: .78rem;
-        max-width: 100%;
-      }
-
-      .sfkStartTitle {
-        font-size: clamp(1.35rem, 7vw, 1.95rem);
-      }
-
-      .sfkStartWord {
-        font-size: clamp(2.35rem, 14vw, 3.75rem);
-      }
-
-      .sfkStartWord span {
-        animation-name: sfkStartLetterWavePhone;
-      }
-
-      @keyframes sfkStartLetterWavePhone {
-        0%, 42%, 100% { transform: translateY(0) rotate(0deg); }
-        12% { transform: translateY(-6px) rotate(-3deg); }
-        23% { transform: translateY(1px) rotate(2deg); }
-        32% { transform: translateY(-2px) rotate(-1deg); }
-      }
-
-      .sfkStartSubtitle {
-        font-size: clamp(.82rem, 4vw, .98rem);
-      }
-
-      .sfkStartStatus {
-        padding: 8px 11px;
-        font-size: .78rem;
-      }
-
-      .sfkStartProgress {
-        height: 10px;
-      }
-    }
-
-    @media (max-width: 380px) {
-      .sfkStartShell {
-        padding: 11px;
-        border-radius: 20px;
-      }
-
-      .sfkStartPhoto {
-        aspect-ratio: 1.15 / 1;
-      }
-
-      .sfkStartWord {
-        font-size: clamp(2.05rem, 13.5vw, 3.15rem);
-      }
-
-      .sfkStartTitle {
-        font-size: 1.28rem;
-      }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .sfkStartProgress span {
-        animation: none;
-        width: 100%;
-      }
-
-      .sfkStartWord,
-      .sfkStartWord span {
-        animation: none;
-      }
-    }
-  </style>
-
+  <link rel="stylesheet" href="officer.css?v=phone-orientation-lock" />
   <script src="orientation-lock.js?v=appwide-v6" defer></script>
 </head>
 
 <body>
-  <main class="app">
+  <main class="officerApp">
 
-    <button id="installAppBtn" class="installAppBtn" type="button" hidden>
-      <span aria-hidden="true">&#8595;</span> Install App
-    </button>
+    <!-- LOGIN SCREEN -->
+    <section id="officerLoginScreen" class="loginScreen">
+      <div class="loginCard">
+        <div class="koalaMark">🐨</div>
 
-    <div id="sfkIntroOverlay" class="sfkStartIntro" aria-label="SFK ClassBoard Intro">
-      <div class="sfkStartShell">
-        <div class="sfkStartTop">
-          <div class="sfkStartTag">🐨 Kindness First • #BeKind 🫶</div>
-          <button class="sfkStartSkip" type="button" onclick="hideSfkIntro(true)">Skip</button>
-        </div>
+        <h1>SFK Officers Panel</h1>
+        <p>For Grade 8 - St. Faustina Kowalska Officers only.</p>
 
-        <div class="sfkStartBody">
-          <div class="sfkStartPhotoCard">
-            <div class="sfkStartPhotoLabel">📸 SFK 2026–2027 🫶</div>
-            <img src="class-photo.jpg" alt="Grade 8 St. Faustina Kowalska class photo" class="sfkStartPhoto" />
-            <div class="sfkStartPhotoCaption">
-              <span class="sfkStartAccent">S</span>o <span class="sfkStartAccent">F</span>ar, so <span class="sfkStartAccent">K</span>ind
-            </div>
-          </div>
+        <input
+          id="officerPin"
+          type="password"
+          placeholder="Enter Officer PIN"
+          autocomplete="off"
+        />
 
-          <div class="sfkStartCopy">
-            <div class="sfkStartPill">Grade 8 - St. Faustina Kowalska</div>
-            <h1 class="sfkStartTitle">SFK ClassBoard</h1>
-            <div class="sfkStartWord" aria-label="#BeKind"><span aria-hidden="true" style="--sfk-wave-index:0">#</span><span aria-hidden="true" style="--sfk-wave-index:1">B</span><span aria-hidden="true" style="--sfk-wave-index:2">e</span><span aria-hidden="true" style="--sfk-wave-index:3">K</span><span aria-hidden="true" style="--sfk-wave-index:4">i</span><span aria-hidden="true" style="--sfk-wave-index:5">n</span><span aria-hidden="true" style="--sfk-wave-index:6">d</span></div>
-            <p class="sfkStartSubtitle">A kind class. A beautiful beginning.</p>
-            <p class="sfkStartStatus">Opening your class dashboard...</p>
-          </div>
-        </div>
+        <button onclick="loginOfficer()">Login</button>
 
-        <div class="sfkStartProgress" aria-hidden="true">
-          <span></span>
-        </div>
-      </div>
-    </div>
-
-
-    <div id="bellAlert" class="bell-alert hidden">
-      ⏰ CLASS CHANGE SOON
-    </div>
-
-    <div id="prayerPopup" class="prayerPopup hidden">
-      <div class="prayerPopupBox prayerPlayerBox">
-        <button class="prayerCloseBtn" onclick="closePrayerPopup()">×</button>
-
-        <div class="prayerPopupIcon" id="prayerPopupIcon">🙏</div>
-
-        <div class="prayerPopupText">
-          <h2 id="prayerPopupTitle">Prayer Time</h2>
-          <p id="prayerPopupSubtitle">Please pause for prayer.</p>
-          <strong id="prayerPopupStatus">Use the player below to play the prayer.</strong>
-
-          <audio id="prayerPlayer" class="prayerPlayer" controls preload="auto">
-            Your browser does not support the audio player.
-          </audio>
-        </div>
-      </div>
-    </div>
-
-    <audio id="angelusAudio" src="angelus.mp3" preload="metadata"></audio>
-    <audio id="reginaCaeliAudio" src="regina-caeli.mp3" preload="metadata"></audio>
-    <audio id="threePmPrayerAudio" src="three-pm-prayer.mp3" preload="metadata"></audio>
-
-    
-    <header class="topbar">
-      <div class="brandBox">
-        <h1 id="dashboardTitle">SFK ClassBoard</h1>
-        <p id="sectionText">Grade 8 - St. Faustina Kowalska</p>
-      </div>
-
-      <div class="topbarHeart">🫶</div>
-
-      <div class="topQuoteBox">
-        <span class="quoteLabel">Daily Kindness Quote</span>
-        <p id="dailyQuote">Loading...</p>
-        <small id="quoteAuthor"></small>
-      </div>
-
-      <div
-        id="classBoardAccessTrigger"
-        class="timeBox"
-        role="button"
-        tabindex="0"
-        aria-haspopup="dialog"
-        aria-controls="classBoardAccessMenu"
-        aria-expanded="false"
-        title="Open ClassBoard access menu"
-      >
-        <h2 id="timeText">--:-- --</h2>
-        <p id="dateText">Loading date...</p>
-      </div>
-    </header>
-
-    <div id="classBoardAccessMenu" class="accessMenuLayer" hidden>
-      <button class="accessMenuBackdrop" type="button" aria-label="Close access menu"></button>
-      <section class="accessMenuPanel" role="dialog" aria-modal="true" aria-labelledby="accessMenuTitle">
-        <header class="accessMenuHeader">
-          <div>
-            <span class="accessMenuEyebrow">SFK CLASSBOARD</span>
-            <h2 id="accessMenuTitle">Choose access</h2>
-          </div>
-          <button id="closeAccessMenu" class="accessMenuClose" type="button" aria-label="Close menu">&times;</button>
-        </header>
-
-        <nav class="accessMenuOptions" aria-label="ClassBoard access">
-          <a class="accessMenuItem" href="admin.html">
-            <span class="accessMenuBadge" aria-hidden="true">A</span>
-            <span><strong>Admin Panel</strong><small>Full ClassBoard management</small></span>
-            <span class="accessMenuArrow" aria-hidden="true">&rarr;</span>
-          </a>
-          <a class="accessMenuItem" href="officer.html">
-            <span class="accessMenuBadge" aria-hidden="true">O</span>
-            <span><strong>Officers Panel</strong><small>Post announcements and updates</small></span>
-            <span class="accessMenuArrow" aria-hidden="true">&rarr;</span>
-          </a>
-        </nav>
-      </section>
-    </div>
-
-    <section class="heroGrid">
-      <div class="card current">
-        <p class="label">Current Period</p>
-        <h2 id="currentSubject">Loading...</h2>
-        <p id="currentDetails">Please wait</p>
-        <div id="currentCountdownText" class="countdown currentCountdown">Ends in: --</div>
-      </div>
-
-      <div class="card next">
-        <p class="label">Next Period</p>
-        <h2 id="nextSubject">Loading...</h2>
-        <p id="nextDetails">Please wait</p>
-        <div id="countdownText" class="countdown">Starts in: --</div>
-      </div>
-
-      <div class="card prayer">
-        <a
-          class="prayerLeaderLink"
-          href="https://canva.link/j5s9jp6hpl357ak"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Open Prayer Leader presentation"
-        >
-          <p class="label">Prayer Leader</p>
-          <h2 id="prayerLeader">Loading...</h2>
-        </a>
-
-        <div class="cleanersMini">
-          <span>Cleaners Today</span>
-          <strong id="cleanersToday">Loading...</strong>
-        </div>
-      </div>
-
-      <div class="card birthdayCard">
-        <div class="birthdayHeader">
-          <p class="label">Birthday Corner</p>
-          <span id="birthdayDateText" class="birthdayHeaderDate" role="button" tabindex="0"
-                aria-label="Open full year birthday list" title="View all birthdays">--</span>
-        </div>
-
-        <div id="birthdayList" class="birthdayList">
-          <div class="noBirthday">
-            <span></span>
-            <p>No birthday celebrants today.</p>
-          </div>
-        </div>
+        <small id="officerLoginMessage"></small>
       </div>
     </section>
 
-    <div id="birthdayYearModal" class="birthdayYearModal" aria-hidden="true">
-      <div class="birthdayYearBackdrop" data-birthday-modal-close></div>
-      <div class="birthdayYearPanel" role="dialog" aria-modal="true" aria-labelledby="birthdayYearTitle">
-        <button id="birthdayYearClose" class="birthdayYearClose" type="button" aria-label="Close birthday list">×</button>
+    <!-- OFFICER PANEL -->
+    <section id="officerPanel" class="officerPanel hidden">
 
-        <div class="birthdayYearTop">
-          <div>
-            <p class="birthdayYearKicker">SFK Birthday Corner</p>
-            <h2 id="birthdayYearTitle">Full Year Birthday List</h2>
-          </div>
-          <span id="birthdayYearCount" class="birthdayYearCount">0 birthdays</span>
+      <header class="officerTopbar">
+        <div>
+          <h1>SFK Officers Panel</h1>
+          <p>Grade 8 - St. Faustina Kowalska • S.Y. 2026–2027 • #BeKind</p>
         </div>
 
-        <div id="birthdayYearToday" class="birthdayYearToday" hidden></div>
-        <div id="birthdayYearList" class="birthdayYearList"></div>
-      </div>
-    </div>
-
-    <section class="mainGrid">
-	<div class="card scheduleCard todayScheduleCollapsed">
-	  <div class="scheduleHeader">
-		<h2>Today's Schedule</h2>
-
-		<div class="scheduleHeaderActions">
-		  <a class="memoriesDashboardBtn" href="memories.html" aria-label="Open SFK Memories" title="SFK Memories">
-			<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-			  <rect width="18" height="18" x="3" y="3" rx="5"></rect>
-			  <circle cx="12" cy="12" r="4"></circle>
-			  <circle cx="17.5" cy="6.5" r=".8" fill="currentColor" stroke="none"></circle>
-			</svg>
-      <span id="memoriesUnreadBadge" class="memoriesUnreadBadge" hidden>0</span>
-		  </a>
-		  <button class="weeklyScheduleBtn" onclick="openWeeklySchedule()">
-			Week View
-		  </button>
-		</div>
-	  </div>
-
-	  <button id="todayScheduleToggle" class="todayScheduleToggle" onclick="toggleTodaySchedule()">
-		Show Today ▼
-	  </button>
-
-	  <div id="scheduleList"></div>
-	</div>
-
-      <div class="card announcementsCard">
-        <div class="announcementHeading">
-          <h2 id="announcementTitle">Subject Announcements</h2>
-          <button id="announcementTimerToggle" class="announcementTimerToggle" type="button" onclick="toggleAnnouncementRotation()" aria-pressed="false" aria-label="Pause announcement timer" title="Pause announcement timer">&#10074;&#10074;</button>
-        </div>
-        <div id="announcementProgress" class="announcementProgress" aria-hidden="true">
-          <span id="announcementProgressFill"></span>
-        </div>
-        <div id="announcementList"></div>
-      </div>
-
-      <div class="card sideCard thingsCard">
-        <div class="cardHeader">
-          <h2>Things to Bring</h2>
-          <span id="bringSummary" class="bringSummary"></span>
-        </div>
-
-        <div id="thingsList"></div>
-      </div>
-
-      <div class="card sideCard">
-        <div class="cardHeader adviserReminderHeader">
-          <h2>Adviser Reminders</h2>
-          <div class="adviserHeaderActions">
-            <button id="timeCapsuleOpen" class="timeCapsuleOpen" type="button" aria-label="Open SFK Time Capsule" title="SFK Time Capsule">
-              <span aria-hidden="true">&#9829;</span><i aria-hidden="true"></i>
-            </button>
-            <button id="classChatOpen" class="classChatOpen" type="button" aria-label="Open class group chat" title="Class group chat">
-              <span class="classChatGlyph" aria-hidden="true"></span>
-              <span id="classChatUnread" class="classChatUnread" hidden>0</span>
-            </button>
-          </div>
-        </div>
-        <div id="reminderList"></div>
-      </div>
-    </section>
-
-    <footer class="ticker">
-      <div id="tickerText">Loading announcements...</div>
-    </footer>
-	<div id="weeklyScheduleModal" class="weeklyScheduleModal hidden">
-  <div class="weeklyScheduleBox">
-    <div class="weeklyScheduleTop">
-      <div>
-        <h2>Weekly Class Schedule</h2>
-        <p>Grade 8 - St. Faustina Kowalska</p>
-      </div>
-
-      <button onclick="closeWeeklySchedule()" class="weeklyCloseBtn">×</button>
-    </div>
-
-    <div class="weeklyTabs">
-      <button class="weeklyTab active" onclick="showWeeklyDay('Monday')">Monday</button>
-      <button class="weeklyTab" onclick="showWeeklyDay('Tuesday')">Tuesday</button>
-      <button class="weeklyTab" onclick="showWeeklyDay('Wednesday')">Wednesday</button>
-      <button class="weeklyTab" onclick="showWeeklyDay('Thursday')">Thursday</button>
-      <button class="weeklyTab" onclick="showWeeklyDay('Friday')">Friday</button>
-    </div>
-
-    <div id="weeklyScheduleContent" class="weeklyScheduleContent">
-      Loading schedule...
-    </div>
-  </div>
-</div>
-  </main>
-
-  <div id="classChatLayer" class="classChatLayer" hidden>
-    <button class="classChatBackdrop" type="button" data-chat-close aria-label="Close class chat"></button>
-    <section class="classChatPanel" role="dialog" aria-modal="true" aria-labelledby="classChatTitle">
-      <header class="classChatTopbar">
-        <button class="classChatBack" type="button" data-chat-close aria-label="Close class chat">&#8592;</button>
-        <div class="classChatIdentity">
-          <span id="classChatHeaderMark" class="classChatAvatar">SFK</span>
-          <div>
-            <h2 id="classChatTitle">SFK Class GC</h2>
-            <p id="classChatStatus">Sign in to join the conversation</p>
-          </div>
-        </div>
-        <button id="classChatWatchOpen" class="classChatWatchOpen" type="button" hidden aria-label="Open Watch Party" title="Watch Party">
-          <span aria-hidden="true">&#9654;</span>
-          <i id="classChatWatchBadge" hidden></i>
-        </button>
-        <button id="classChatLogout" class="classChatLogout" type="button" hidden aria-label="Open chat menu" title="Chat menu" aria-expanded="false">&#8943;</button>
+        <button class="logoutBtn" onclick="logoutOfficer()">Logout</button>
       </header>
-      <div id="classChatMenu" class="classChatMenu" hidden>
-        <button id="classChatThemeToggle" type="button" aria-pressed="false">
-          <span class="classChatMenuIcon" aria-hidden="true">&#9789;</span>
-          <span class="classChatMenuLabel">Dark mode</span>
-        </button>
-        <button id="classChatFontSizeToggle" type="button">
-          <span class="classChatMenuIcon" aria-hidden="true">Aa</span>
-          <span id="classChatFontSizeLabel">Text size: Default</span>
-        </button>
-        <button id="classChatMoreToggle" class="classChatMoreToggle" type="button" hidden aria-expanded="false">
-          <span class="classChatMenuIcon" aria-hidden="true">&#9776;</span>
-          <span>More tools</span>
-          <b aria-hidden="true">&#9662;</b>
-        </button>
-        <div id="classChatMoreTools" class="classChatMenuMore" hidden>
-        <button id="classChatSearchOpen" type="button">
-          <span class="classChatMenuIcon" aria-hidden="true">&#8981;</span>
-          <span>Search messages</span>
-        </button>
-        <button id="classChatSavedOpen" type="button" hidden>
-          <span class="classChatMenuIcon" aria-hidden="true">&#9734;</span>
-          <span id="classChatSavedLabel">Saved messages</span>
-        </button>
-        <button id="classChatAccentOpen" type="button" hidden>
-          <span class="classChatMenuIcon" aria-hidden="true">&#9679;</span>
-          <span>Chat theme</span>
-        </button>
-        <button id="classChatColorOpen" type="button" hidden>
-          <span class="classChatMenuIcon classChatColorMenuIcon" aria-hidden="true"></span>
-          <span>Profile color</span>
-        </button>
-        <button id="classChatPollOpen" type="button" hidden>
-          <span class="classChatMenuIcon" aria-hidden="true">&#9776;</span>
-          <span>Create quick poll</span>
-        </button>
-        <button id="classChatControlsOpen" type="button" hidden>
-          <span class="classChatMenuIcon" aria-hidden="true">&#9881;</span>
-          <span>Chat controls</span>
-        </button>
-        <button id="classChatScheduleOpen" type="button" hidden>
-          <span class="classChatMenuIcon" aria-hidden="true">&#9719;</span>
-          <span>Schedule message</span>
-        </button>
-        <button id="classChatReportsOpen" type="button" hidden>
-          <span class="classChatMenuIcon" aria-hidden="true">&#9873;</span>
-          <span>Reported messages</span>
-        </button>
-        <button id="classChatAuditOpen" type="button" hidden>
-          <span class="classChatMenuIcon" aria-hidden="true">&#9201;</span>
-          <span>Activity history</span>
-        </button>
-        </div>
-        <button id="classChatLeave" type="button">
-          <span class="classChatMenuIcon" aria-hidden="true">&#8594;</span>
-          <span id="classChatLeaveLabel">Leave chat</span>
-        </button>
-      </div>
 
-      <section id="classChatUtility" class="classChatUtility" hidden aria-labelledby="classChatUtilityTitle">
-        <header>
-          <button id="classChatUtilityBack" type="button" aria-label="Back">&#8592;</button>
-          <h3 id="classChatUtilityTitle">Search messages</h3>
-        </header>
-
-        <div id="classChatSearchPanel" class="classChatUtilityBody">
-          <label class="classChatSearchBox">
-            <span aria-hidden="true">&#8981;</span>
-            <input id="classChatSearchInput" type="search" placeholder="Search recent messages..." autocomplete="off" />
-          </label>
-          <p class="classChatUtilityHint">Searches the latest 200 messages by text or sender.</p>
-          <div id="classChatSearchResults" class="classChatSearchResults"></div>
-        </div>
-
-        <form id="classChatControlsPanel" class="classChatUtilityBody classChatControlsPanel" hidden>
-          <label class="classChatControlRow">
-            <span><strong>Lock conversation</strong><small>Only the Adviser can send while locked.</small></span>
-            <input id="classChatLockToggle" type="checkbox" />
-          </label>
-          <label for="classChatSlowMode">Slow mode</label>
-          <select id="classChatSlowMode">
-            <option value="0">Off</option>
-            <option value="5">5 seconds</option>
-            <option value="10">10 seconds</option>
-            <option value="30">30 seconds</option>
-            <option value="60">1 minute</option>
-          </select>
-          <label class="classChatControlRow">
-            <span><strong>Chat hours</strong><small>Students can send only during the selected hours.</small></span>
-            <input id="classChatHoursToggle" type="checkbox" />
-          </label>
-          <div class="classChatHoursGrid">
-            <label for="classChatHoursStart">Start<input id="classChatHoursStart" type="time" value="06:00" /></label>
-            <label for="classChatHoursEnd">End<input id="classChatHoursEnd" type="time" value="21:00" /></label>
-          </div>
-          <label class="classChatControlRow">
-            <span><strong>Spam protection</strong><small>Blocks duplicate messages and rapid consecutive sends.</small></span>
-            <input id="classChatSpamToggle" type="checkbox" />
-          </label>
-          <label class="classChatControlRow">
-            <span><strong>Keyword filter</strong><small>Stops messages containing blocked words.</small></span>
-            <input id="classChatKeywordToggle" type="checkbox" />
-          </label>
-          <label class="classChatControlRow">
-            <span><strong>Clickable links</strong><small>Also controls inline YouTube video previews.</small></span>
-            <input id="classChatLinksToggle" type="checkbox" checked />
-          </label>
-          <label class="classChatControlRow">
-            <span><strong>Allow media</strong><small>Lets members send image, GIF, video, audio, and YouTube links.</small></span>
-            <input id="classChatMediaToggle" type="checkbox" checked />
-          </label>
-          <label class="classChatControlRow">
-            <span><strong>Watch Party</strong><small>Allows synchronized viewing and student host requests.</small></span>
-            <input id="classChatWatchToggle" type="checkbox" checked />
-          </label>
-          <label class="classChatControlRow">
-            <span><strong>Watch Party fullscreen</strong><small>Allows members to expand the shared video to fullscreen.</small></span>
-            <input id="classChatWatchFullscreenToggle" type="checkbox" checked />
-          </label>
-          <label for="classChatBlockedKeywords">Blocked keywords</label>
-          <textarea id="classChatBlockedKeywords" rows="4" placeholder="Enter words separated by commas or new lines"></textarea>
-          <button type="submit">Save chat controls</button>
-          <p id="classChatControlsMessage" class="classChatUtilityHint" role="status"></p>
-        </form>
-
-        <form id="classChatPollPanel" class="classChatUtilityBody classChatPollPanel" hidden>
-          <label for="classChatPollQuestion">Question</label>
-          <input id="classChatPollQuestion" type="text" maxlength="160" placeholder="Ask the class..." required />
-          <label>Choices</label>
-          <div id="classChatPollOptionsEditor" class="classChatPollOptionsEditor">
-            <div class="classChatPollOptionRow">
-              <input class="classChatPollOptionInput" type="text" maxlength="80" placeholder="Choice 1" required />
-            </div>
-            <div class="classChatPollOptionRow">
-              <input class="classChatPollOptionInput" type="text" maxlength="80" placeholder="Choice 2" required />
-            </div>
-            <div class="classChatPollOptionRow">
-              <input class="classChatPollOptionInput" type="text" maxlength="80" placeholder="Choice 3 (optional)" />
-              <button type="button" data-remove-poll-option aria-label="Remove choice">&times;</button>
-            </div>
-            <div class="classChatPollOptionRow">
-              <input class="classChatPollOptionInput" type="text" maxlength="80" placeholder="Choice 4 (optional)" />
-              <button type="button" data-remove-poll-option aria-label="Remove choice">&times;</button>
-            </div>
-          </div>
-          <button id="classChatAddPollOption" class="classChatAddPollOption" type="button">+ Add choice</button>
-          <label class="classChatPollSetting"><input id="classChatPollMultiple" type="checkbox" /> Allow multiple answers</label>
-          <label class="classChatPollSetting"><input id="classChatPollAnonymous" type="checkbox" /> Anonymous voting</label>
-          <label for="classChatPollDeadline">Voting deadline (optional)</label>
-          <input id="classChatPollDeadline" type="datetime-local" />
-          <button type="submit">Post poll</button>
-          <p id="classChatPollMessage" class="classChatUtilityHint" role="status"></p>
-        </form>
-
-        <div id="classChatSavedPanel" class="classChatUtilityBody" hidden>
-          <p class="classChatUtilityHint">Messages saved only for your account.</p>
-          <div id="classChatSavedResults" class="classChatSearchResults"></div>
-        </div>
-
-        <form id="classChatColorPanel" class="classChatUtilityBody classChatColorPanel" hidden>
-          <div class="classChatColorPreview">
-            <span id="classChatColorPreview">ST</span>
-            <div>
-              <strong>Choose your profile color</strong>
-              <small>This color appears beside your messages.</small>
-            </div>
-          </div>
-          <div id="classChatProfileColors" class="classChatColorChoices" role="radiogroup" aria-label="Profile color">
-            <label style="--profile-color:#F7C600"><input type="radio" name="classChatProfileColor" value="#F7C600" /><span></span><small>Yellow</small></label>
-            <label style="--profile-color:#FF7A7A"><input type="radio" name="classChatProfileColor" value="#FF7A7A" /><span></span><small>Coral</small></label>
-            <label style="--profile-color:#FF8FCB"><input type="radio" name="classChatProfileColor" value="#FF8FCB" /><span></span><small>Pink</small></label>
-            <label style="--profile-color:#B99CFF"><input type="radio" name="classChatProfileColor" value="#B99CFF" /><span></span><small>Violet</small></label>
-            <label style="--profile-color:#73B9FF"><input type="radio" name="classChatProfileColor" value="#73B9FF" /><span></span><small>Blue</small></label>
-            <label style="--profile-color:#68D9B0"><input type="radio" name="classChatProfileColor" value="#68D9B0" /><span></span><small>Mint</small></label>
-            <label style="--profile-color:#FF9E45"><input type="radio" name="classChatProfileColor" value="#FF9E45" /><span></span><small>Orange</small></label>
-            <label style="--profile-color:#A9B1BD"><input type="radio" name="classChatProfileColor" value="#A9B1BD" /><span></span><small>Gray</small></label>
-          </div>
-          <label class="classChatCustomColor" for="classChatProfileCustomColor">
-            <span><strong>Custom color</strong><small>Pick any color not shown above.</small></span>
-            <input id="classChatProfileCustomColor" type="color" value="#F7C600" />
-          </label>
-          <button id="classChatColorSave" type="submit">Save profile color</button>
-          <p id="classChatColorMessage" class="classChatUtilityHint" role="status"></p>
-        </form>
-
-        <form id="classChatAccentPanel" class="classChatUtilityBody classChatAccentPanel" hidden>
-          <div id="classChatAccentPreview" class="classChatAccentPreview">
-            <span>Classmate message</span>
-            <b>Your message</b>
-          </div>
-          <p id="classChatAccentStatus" class="classChatUtilityHint"></p>
-          <div id="classChatAccentChoices" class="classChatColorChoices" role="radiogroup" aria-label="Chat theme color">
-            <label style="--profile-color:#F7C600"><input type="radio" name="classChatAccentColor" value="#F7C600" /><span></span><small>Yellow</small></label>
-            <label style="--profile-color:#E5484D"><input type="radio" name="classChatAccentColor" value="#E5484D" /><span></span><small>Red</small></label>
-            <label style="--profile-color:#D94F9D"><input type="radio" name="classChatAccentColor" value="#D94F9D" /><span></span><small>Pink</small></label>
-            <label style="--profile-color:#7259D6"><input type="radio" name="classChatAccentColor" value="#7259D6" /><span></span><small>Violet</small></label>
-            <label style="--profile-color:#2675D8"><input type="radio" name="classChatAccentColor" value="#2675D8" /><span></span><small>Blue</small></label>
-            <label style="--profile-color:#198754"><input type="radio" name="classChatAccentColor" value="#198754" /><span></span><small>Green</small></label>
-            <label style="--profile-color:#E97820"><input type="radio" name="classChatAccentColor" value="#E97820" /><span></span><small>Orange</small></label>
-            <label style="--profile-color:#242424"><input type="radio" name="classChatAccentColor" value="#242424" /><span></span><small>Black</small></label>
-          </div>
-          <label class="classChatCustomColor" for="classChatAccentCustomColor">
-            <span><strong>Custom color</strong><small>Light and dark colors are both allowed.</small></span>
-            <input id="classChatAccentCustomColor" type="color" value="#F7C600" />
-          </label>
-          <div class="classChatAccentActions">
-            <button type="submit">Save for me</button>
-            <button id="classChatAccentReset" type="button">Use default</button>
-          </div>
-          <section id="classChatAccentAdmin" class="classChatAccentAdmin" hidden>
-            <label class="classChatControlRow">
-              <span><strong>Class-wide theme</strong><small>Overrides personal themes for everyone.</small></span>
-              <input id="classChatAccentForce" type="checkbox" />
-            </label>
-            <button id="classChatAccentApplyClass" type="button">Update class theme</button>
-          </section>
-          <p id="classChatAccentMessage" class="classChatUtilityHint" role="status"></p>
-        </form>
-
-        <form id="classChatSchedulePanel" class="classChatUtilityBody classChatPollPanel" hidden>
-          <label for="classChatScheduleText">Message</label>
-          <textarea id="classChatScheduleText" maxlength="500" rows="5" placeholder="Type the scheduled message..." required></textarea>
-          <label for="classChatScheduleAt">Publish date and time</label>
-          <input id="classChatScheduleAt" type="datetime-local" required />
-          <button type="submit">Schedule message</button>
-          <p id="classChatScheduleMessage" class="classChatUtilityHint" role="status"></p>
-        </form>
-
-        <div id="classChatReportsPanel" class="classChatUtilityBody" hidden>
-          <p class="classChatUtilityHint">Private reports visible only to the Adviser/Admin.</p>
-          <div id="classChatReportsResults" class="classChatSearchResults"></div>
-        </div>
-
-        <div id="classChatAuditPanel" class="classChatUtilityBody classChatAuditPanel" hidden>
-          <div class="classChatAuditFilters">
-            <label class="classChatSearchBox">
-              <span aria-hidden="true">&#8981;</span>
-              <input id="classChatAuditSearch" type="search" placeholder="Search person or message..." autocomplete="off" />
-            </label>
-            <select id="classChatAuditType" aria-label="Filter activity type">
-              <option value="all">All activity</option>
-              <option value="message">Messages</option>
-              <option value="reaction">Reactions</option>
-              <option value="moderation">Deleted / moderation</option>
-            </select>
-          </div>
-          <p class="classChatUtilityHint">Admin-only history. Deleted message content remains visible here.</p>
-          <div id="classChatAuditResults" class="classChatAuditResults"></div>
-        </div>
-
-        <form id="classChatMediaPanel" class="classChatUtilityBody classChatPollPanel" hidden>
-          <label for="classChatMediaUrl">Direct media or YouTube link</label>
-          <input id="classChatMediaUrl" type="url" maxlength="2000" placeholder="https://..." required />
-          <label for="classChatMediaType">Media type</label>
-          <select id="classChatMediaType">
-            <option value="auto">Detect automatically</option>
-            <option value="image">Image / GIF</option>
-            <option value="video">Video</option>
-            <option value="audio">Audio / MP3</option>
-            <option value="youtube">YouTube</option>
-          </select>
-          <label for="classChatMediaCaption">Caption (optional)</label>
-          <textarea id="classChatMediaCaption" maxlength="500" rows="3" placeholder="Add a caption..."></textarea>
-          <button type="submit">Send media</button>
-          <p id="classChatMediaMessage" class="classChatUtilityHint" role="status"></p>
-        </form>
+      <section class="noticeBox">
+        <strong>Officer Access:</strong>
+        Officers can add new records and hide existing records only. Editing and deleting are not allowed.
       </section>
 
-      <div id="classChatExitDialog" class="classChatExitDialog" hidden>
-        <div class="classChatExitCard" role="alertdialog" aria-modal="true" aria-labelledby="classChatExitTitle">
-          <h3 id="classChatExitTitle">Exit SFK Chat?</h3>
-          <p id="classChatExitText">Do you really want to exit SFK Chat?</p>
-          <div>
-            <button id="classChatExitNo" type="button">No</button>
-            <button id="classChatExitYes" type="button">Yes</button>
-          </div>
-        </div>
-      </div>
+      <!-- CREATE / ADD DATA -->
+      <section class="officerGrid">
 
-      <div id="classChatLogin" class="classChatLogin">
-        <div class="classChatWelcome">
-          <span id="classChatWelcomeMark" class="classChatWelcomeMark">SFK</span>
-          <h3 id="classChatLoginTitle">Class conversation</h3>
-          <p id="classChatLoginDescription">Use your assigned chat account. Your name will appear automatically.</p>
-          <div id="classChatCapsuleSeal" class="classChatCapsuleSeal" hidden>
-            <span class="classChatCapsuleLock" aria-hidden="true"><i></i></span>
-            <div>
-              <strong id="classChatCapsuleSealLabel">SEALED FOR NOW</strong>
-              <small id="classChatCapsuleCountdown">Preparing unlock countdown...</small>
-            </div>
-          </div>
-        </div>
+        <!-- SUBJECT ANNOUNCEMENT -->
+        <div class="formCard">
+          <h2>📢 Subject Announcement</h2>
 
-        <div class="classChatRoleTabs" role="tablist" aria-label="Chat account type">
-          <button class="is-active" type="button" data-chat-role="student">Student</button>
-          <button type="button" data-chat-role="staff">Adviser / Officer</button>
-        </div>
+          <label for="officerAnnouncementPublishDate">Publish Date</label>
+          <input id="officerAnnouncementPublishDate" type="date" />
+          <small class="fieldHint">This is the displayed date and the first day the announcement will appear.</small>
 
-        <form id="classChatStudentForm" class="classChatAuthForm">
-          <label for="classChatStudentId">Student ID</label>
-          <input id="classChatStudentId" type="text" inputmode="numeric" autocomplete="username" required />
-          <label id="classChatStudentPinLabel" for="classChatStudentPin">Personal Chat PIN</label>
-          <input id="classChatStudentPin" type="password" inputmode="numeric" autocomplete="current-password" minlength="6" required />
-          <button id="classChatStudentSubmit" type="submit">Open class chat</button>
-        </form>
+          <label for="officerAnnouncementSubject">Subject</label>
+          <input id="officerAnnouncementSubject" list="subjectOptions" type="text" placeholder="Select or type subject" />
 
-        <form id="classChatStaffForm" class="classChatAuthForm" hidden>
-          <label for="classChatStaffRole">Account</label>
-          <select id="classChatStaffRole">
-            <option value="admin">Adviser / Admin</option>
-            <option value="officer">Officer</option>
-          </select>
-          <label for="classChatStaffPin">Account PIN</label>
-          <input id="classChatStaffPin" type="password" autocomplete="current-password" required />
-          <button id="classChatStaffSubmit" type="submit">Open class chat</button>
-        </form>
-
-        <form id="classChatChangePinForm" class="classChatAuthForm classChatChangePinForm" hidden>
-          <div class="classChatPinNotice">
-            <strong id="classChatPinNoticeTitle">Create your personal Chat PIN</strong>
-            <span id="classChatPinNoticeText">Replace the default PIN before opening the class conversation.</span>
-          </div>
-          <label for="classChatNewPin">New 6-digit PIN</label>
-          <input id="classChatNewPin" type="password" inputmode="numeric" autocomplete="new-password" pattern="[0-9]{6}" maxlength="6" required />
-          <label for="classChatConfirmPin">Confirm new PIN</label>
-          <input id="classChatConfirmPin" type="password" inputmode="numeric" autocomplete="new-password" pattern="[0-9]{6}" maxlength="6" required />
-          <fieldset class="classChatFirstColor">
-            <legend>Choose your profile color</legend>
-            <div class="classChatColorChoices" role="radiogroup" aria-label="First profile color">
-              <label style="--profile-color:#F7C600"><input type="radio" name="classChatFirstColor" value="#F7C600" checked /><span></span><small>Yellow</small></label>
-              <label style="--profile-color:#FF7A7A"><input type="radio" name="classChatFirstColor" value="#FF7A7A" /><span></span><small>Coral</small></label>
-              <label style="--profile-color:#FF8FCB"><input type="radio" name="classChatFirstColor" value="#FF8FCB" /><span></span><small>Pink</small></label>
-              <label style="--profile-color:#B99CFF"><input type="radio" name="classChatFirstColor" value="#B99CFF" /><span></span><small>Violet</small></label>
-              <label style="--profile-color:#73B9FF"><input type="radio" name="classChatFirstColor" value="#73B9FF" /><span></span><small>Blue</small></label>
-              <label style="--profile-color:#68D9B0"><input type="radio" name="classChatFirstColor" value="#68D9B0" /><span></span><small>Mint</small></label>
-              <label style="--profile-color:#FF9E45"><input type="radio" name="classChatFirstColor" value="#FF9E45" /><span></span><small>Orange</small></label>
-              <label style="--profile-color:#A9B1BD"><input type="radio" name="classChatFirstColor" value="#A9B1BD" /><span></span><small>Gray</small></label>
-            </div>
-            <label class="classChatCustomColor" for="classChatFirstCustomColor">
-              <span><strong>Custom color</strong><small>Or choose any color.</small></span>
-              <input id="classChatFirstCustomColor" type="color" value="#F7C600" />
-            </label>
-          </fieldset>
-          <button type="submit">Save PIN and continue</button>
-        </form>
-        <p id="classChatLoginMessage" class="classChatLoginMessage" role="status"></p>
-      </div>
-
-      <div id="classChatRoom" class="classChatRoom" hidden>
-        <button id="classChatPinned" class="classChatPinned" type="button" hidden>
-          <span aria-hidden="true">&#128204;</span>
-          <span><strong id="classChatPinnedName">SFK Adviser</strong><small id="classChatPinnedText"></small></span>
-          <span aria-hidden="true">&#8250;</span>
-        </button>
-        <div id="classChatMessages" class="classChatMessages" aria-live="polite"></div>
-        <div id="classChatTyping" class="classChatTyping" hidden></div>
-        <div id="classChatReply" class="classChatReply" hidden>
-          <div><strong id="classChatReplyName"></strong><span id="classChatReplyText"></span></div>
-          <button id="classChatReplyCancel" type="button" aria-label="Cancel reply">&times;</button>
-        </div>
-        <div id="classChatMentionSuggestions" class="classChatMentionSuggestions" hidden></div>
-        <form id="classChatComposer" class="classChatComposer">
-          <button id="classChatMediaOpen" class="classChatMediaOpen" type="button" aria-label="Send media" title="Send media">+</button>
-          <textarea id="classChatInput" rows="1" maxlength="500" placeholder="Message..." aria-label="Message"></textarea>
-          <button id="classChatSend" type="submit" aria-label="Send message">&#10148;</button>
-        </form>
-        <button id="classChatJumpUnread" class="classChatJumpUnread" type="button" hidden aria-label="Jump to unread messages">&#8595;</button>
-      </div>
-
-      <section id="classChatWatchRoom" class="classChatWatchRoom" hidden aria-labelledby="classChatWatchTitle">
-        <header class="classChatWatchHeader">
-          <button id="classChatWatchBack" type="button" aria-label="Back to class chat">&#8592;</button>
-          <div>
-            <h3 id="classChatWatchTitle">SFK Watch Party</h3>
-            <p id="classChatWatchStatus">No active watch party</p>
-          </div>
-          <button id="classChatWatchEnd" class="classChatWatchEnd" type="button" hidden>End</button>
-        </header>
-
-        <div class="classChatWatchBody">
-          <div id="classChatWatchStage" class="classChatWatchStage is-empty">
-            <div id="classChatWatchPlayer" class="classChatWatchPlayer">
-              <div class="classChatWatchEmpty">
-                <span aria-hidden="true">&#9654;</span>
-                <strong>No video is playing</strong>
-                <small>Approved host requests will appear here.</small>
+          <label for="officerAnnouncementTextEditor">Announcement</label>
+          <div class="richComposer" data-rich-target="officerAnnouncementText">
+            <div class="richToolbar" aria-label="Announcement formatting tools">
+              <div class="richToolbarGroup" aria-label="Text style">
+                <button type="button" data-rich-command="bold" title="Bold selected text"><b>B</b></button>
+                <button type="button" data-rich-command="italic" title="Italic selected text"><i>I</i></button>
+                <button type="button" data-rich-command="underline" title="Underline selected text"><u>U</u></button>
+              </div>
+              <div class="richToolbarGroup" aria-label="Bullets and numbering">
+                <button type="button" data-rich-list="disc" title="Bullet list">•</button>
+                <button type="button" data-rich-list="circle" title="Circle bullet">○</button>
+                <button type="button" data-rich-list="square" title="Square bullet">▪</button>
+                <button type="button" data-rich-list="decimal" title="Numbered list">1.</button>
+                <button type="button" data-rich-list="lower-alpha" title="Letter list">a.</button>
+                <button type="button" data-rich-list="upper-alpha" title="Capital letter list">A.</button>
+              </div>
+              <div class="richToolbarGroup" aria-label="Indent">
+                <button type="button" data-rich-indent="out" title="Decrease indent">⇤</button>
+                <button type="button" data-rich-indent="in" title="Increase indent">⇥</button>
+              </div>
+              <div class="richToolbarGroup" aria-label="Text color">
+                <button type="button" class="richColorChip richColorBlack" data-rich-color="#111111" title="Black text">A</button>
+                <button type="button" class="richColorChip richColorRed" data-rich-color="#d62828" title="Red text">A</button>
+                <button type="button" class="richColorChip richColorBlue" data-rich-color="#2563eb" title="Blue text">A</button>
+                <button type="button" class="richColorChip richColorGreen" data-rich-color="#0f766e" title="Green text">A</button>
+                <button type="button" class="richColorChip richColorPurple" data-rich-color="#7c3aed" title="Purple text">A</button>
+                <label class="richColorPickerLabel" title="Custom text color"><span>Color</span><input type="color" data-rich-color-picker value="#111111" aria-label="Custom text color"></label>
+              </div>
+              <div class="richToolbarGroup" aria-label="Alignment">
+                <button type="button" data-rich-align="left" title="Align left">Left</button>
+                <button type="button" data-rich-align="center" title="Align center">Center</button>
+                <button type="button" data-rich-align="right" title="Align right">Right</button>
+                <button type="button" data-rich-command="removeFormat" title="Clear selected formatting">Clear</button>
               </div>
             </div>
-            <button id="classChatWatchJoin" class="classChatWatchJoin" type="button" hidden>Join Watch Party</button>
-            <button id="classChatWatchFullscreen" class="classChatWatchFullscreen" type="button" hidden aria-label="Enter fullscreen" title="Fullscreen">&#x26F6;</button>
+            <div id="officerAnnouncementTextEditor" class="richEditor" contenteditable="true" data-placeholder="Type announcement here. Select words or lines, then apply bold or bullets."></div>
+            <textarea id="officerAnnouncementText" class="richHiddenTextarea" aria-hidden="true" tabindex="-1"></textarea>
+          </div>
+          <small class="fieldHint">Format only selected words or lines. You can add bullets, numbering, indent, alignment, and text color.</small>
+
+          <label for="officerAnnouncementTeacher">Teacher</label>
+          <select id="officerAnnouncementTeacher">
+            <option value="">Select Teacher</option>
+            <option value="Mr. John Rey Tubello">Mr. John Rey Tubello</option>
+            <option value="Ms. Chiarah De Castro">Ms. Chiarah De Castro</option>
+            <option value="Mrs. Melanie Sebastian">Mrs. Melanie Sebastian</option>
+            <option value="Ms. Hannah Lee Cillo">Ms. Hannah Lee Cillo</option>
+            <option value="Ms Christine Tolentino">Ms Christine Tolentino</option>
+            <option value="Ms. Kamille Lajom">Ms. Kamille Lajom</option>
+            <option value="Mr. Alexis Pastrana">Mr. Alexis Pastrana</option>
+            <option value="Ms. Gina Soriano">Ms. Gina Soriano</option>
+            <option value="Mr. Runmar Quipanes">Mr. Runmar Quipanes</option>
+          </select>
+
+          <label for="officerAnnouncementPosition">Officer Position <span class="requiredMark">*</span></label>
+          <select id="officerAnnouncementPosition" required>
+            <option value="">Select Officer Position</option>
+            <option value="Class President">Class President</option>
+            <option value="Vice President">Vice President</option>
+            <option value="Secretary">Secretary</option>
+            <option value="Assistant Secretary">Assistant Secretary</option>
+            <option value="Treasurer">Treasurer</option>
+            <option value="Auditor">Auditor</option>
+            <option value="Class Officer">Class Officer</option>
+          </select>
+          <small class="fieldHint">
+            Required for officer posts. This will show as “Teacher thru your position” on the ClassBoard.
+          </small>
+
+          <label for="officerAnnouncementDeadline">Deadline</label>
+          <input id="officerAnnouncementDeadline" type="date" />
+
+          <label for="officerAnnouncementShowDeadline">Show Deadline on ClassBoard?</label>
+          <select id="officerAnnouncementShowDeadline">
+            <option value="YES">YES - Show Deadline</option>
+            <option value="NO">NO - Hide Deadline</option>
+          </select>
+
+          <label for="officerAnnouncementAttachments">Attachments</label>
+          <input
+            id="officerAnnouncementAttachments"
+            type="file"
+            multiple
+            accept="image/*"
+          />
+          <small class="fieldHint">
+            Optional. Up to 5 photos. No-billing mode compresses images and stores them in Firestore.
+          </small>
+
+          <label for="officerAnnouncementPriority">Priority</label>
+          <select id="officerAnnouncementPriority">
+            <option value="Reminder">Reminder</option>
+            <option value="Important">Important</option>
+            <option value="Urgent">Urgent</option>
+            <option value="For Submission">For Submission</option>
+          </select>
+
+          <label for="officerAnnouncementExpiryDate">Expiry Date</label>
+          <input id="officerAnnouncementExpiryDate" type="date" />
+          <small class="fieldHint">First day this announcement will no longer appear. Leave blank for no expiry.</small>
+
+          <label for="officerAnnouncementPublish">Visibility</label>
+          <select id="officerAnnouncementPublish">
+            <option value="YES">Active / Follow Publish Date</option>
+            <option value="NO">Draft / Hidden</option>
+          </select>
+
+          <button onclick="saveOfficerAnnouncement()">Save Announcement</button>
+        </div>
+
+        <!-- THINGS TO BRING -->
+        <div class="formCard">
+          <h2>🎒 Things to Bring</h2>
+
+          <label for="officerThingsDate">Date Needed</label>
+          <input id="officerThingsDate" type="date" />
+
+          <label for="officerThingsSubject">Subject</label>
+          <input id="officerThingsSubject" list="subjectOptions" type="text" placeholder="Select or type subject" />
+
+          <label for="officerThingsItemEditor">Item / Reminder</label>
+          <div class="richComposer" data-rich-target="officerThingsItem">
+            <div class="richToolbar" aria-label="Things to Bring formatting tools">
+              <div class="richToolbarGroup" aria-label="Text style">
+                <button type="button" data-rich-command="bold" title="Bold selected text"><b>B</b></button>
+                <button type="button" data-rich-command="italic" title="Italic selected text"><i>I</i></button>
+                <button type="button" data-rich-command="underline" title="Underline selected text"><u>U</u></button>
+              </div>
+              <div class="richToolbarGroup" aria-label="Bullets and numbering">
+                <button type="button" data-rich-list="disc" title="Bullet list">•</button>
+                <button type="button" data-rich-list="circle" title="Circle bullet">○</button>
+                <button type="button" data-rich-list="square" title="Square bullet">▪</button>
+                <button type="button" data-rich-list="decimal" title="Numbered list">1.</button>
+                <button type="button" data-rich-list="lower-alpha" title="Letter list">a.</button>
+                <button type="button" data-rich-list="upper-alpha" title="Capital letter list">A.</button>
+              </div>
+              <div class="richToolbarGroup" aria-label="Indent">
+                <button type="button" data-rich-indent="out" title="Decrease indent">⇤</button>
+                <button type="button" data-rich-indent="in" title="Increase indent">⇥</button>
+              </div>
+              <div class="richToolbarGroup" aria-label="Text color">
+                <button type="button" class="richColorChip richColorBlack" data-rich-color="#111111" title="Black text">A</button>
+                <button type="button" class="richColorChip richColorRed" data-rich-color="#d62828" title="Red text">A</button>
+                <button type="button" class="richColorChip richColorBlue" data-rich-color="#2563eb" title="Blue text">A</button>
+                <button type="button" class="richColorChip richColorGreen" data-rich-color="#0f766e" title="Green text">A</button>
+                <button type="button" class="richColorChip richColorPurple" data-rich-color="#7c3aed" title="Purple text">A</button>
+                <label class="richColorPickerLabel" title="Custom text color"><span>Color</span><input type="color" data-rich-color-picker value="#111111" aria-label="Custom text color"></label>
+              </div>
+              <div class="richToolbarGroup" aria-label="Alignment">
+                <button type="button" data-rich-align="left" title="Align left">Left</button>
+                <button type="button" data-rich-align="center" title="Align center">Center</button>
+                <button type="button" data-rich-align="right" title="Align right">Right</button>
+                <button type="button" data-rich-command="removeFormat" title="Clear selected formatting">Clear</button>
+              </div>
+            </div>
+            <div id="officerThingsItemEditor" class="richEditor" contenteditable="true" data-placeholder="Example: Bring notebook / project materials..."></div>
+            <textarea id="officerThingsItem" class="richHiddenTextarea" aria-hidden="true" tabindex="-1"></textarea>
+          </div>
+          <small class="fieldHint">Use bullets, numbering, and bold only where needed.</small>
+
+          <label for="officerThingsPublish">Publish</label>
+          <select id="officerThingsPublish">
+            <option value="YES">YES</option>
+            <option value="NO">NO</option>
+          </select>
+
+          <button onclick="saveOfficerThings()">Save Things to Bring</button>
+        </div>
+
+        <!-- PRAYER LEADER -->
+        <div class="formCard">
+          <h2>🙏 Prayer Leader</h2>
+
+          <label for="officerPrayerDate">Date</label>
+          <input id="officerPrayerDate" type="date" />
+
+          <label for="officerPrayerName">Prayer Leader Name</label>
+          <input id="officerPrayerName" type="text" placeholder="Example: Juan Dela Cruz" />
+
+          <label for="officerPrayerPublish">Publish</label>
+          <select id="officerPrayerPublish">
+            <option value="YES">YES</option>
+            <option value="NO">NO</option>
+          </select>
+
+          <button onclick="saveOfficerPrayer()">Save Prayer Leader</button>
+        </div>
+
+        <!-- DAILY KINDNESS QUOTE -->
+        <div class="formCard">
+          <h2>🫶 Daily Quote</h2>
+
+          <label for="officerQuoteDate">Date</label>
+          <input id="officerQuoteDate" type="date" />
+
+          <label for="officerQuoteText">Quote</label>
+          <textarea id="officerQuoteText" placeholder="Enter kindness quote..."></textarea>
+
+          <label for="officerQuoteAuthor">Author</label>
+          <input id="officerQuoteAuthor" type="text" placeholder="Example: St. Faustina / SFK Officers" />
+
+          <label for="officerQuotePublish">Publish</label>
+          <select id="officerQuotePublish">
+            <option value="YES">YES</option>
+            <option value="NO">NO</option>
+          </select>
+
+          <button onclick="saveOfficerQuote()">Save Daily Quote</button>
+        </div>
+
+        <!-- BIRTHDAY GREETINGS -->
+        <div class="formCard highlightCard">
+          <h2>🎂 Birthday Greetings</h2>
+
+          <label for="officerBirthdayName">Student Name</label>
+          <input id="officerBirthdayName" type="text" placeholder="Example: Juan Dela Cruz" />
+
+          <label for="officerBirthdayDate">Birthday</label>
+          <input id="officerBirthdayDate" type="date" />
+
+          <label for="officerBirthdayPublish">Publish</label>
+          <select id="officerBirthdayPublish">
+            <option value="YES">YES</option>
+            <option value="NO">NO</option>
+          </select>
+
+          <button onclick="saveOfficerBirthday()">Save Birthday Greeting</button>
+        </div>
+
+      </section>
+
+      <datalist id="subjectOptions">
+        <option value="English"></option>
+        <option value="Mathematics"></option>
+        <option value="Science"></option>
+        <option value="ICT"></option>
+        <option value="Filipino"></option>
+        <option value="CLED"></option>
+        <option value="AP"></option>
+        <option value="MAPEH"></option>
+        <option value="LE"></option>
+        <option value="Homeroom"></option>
+        <option value="Morning Assembly"></option>
+        <option value="Class Meeting"></option>
+        <option value="Performance Task"></option>
+      </datalist>
+
+      <!-- MANAGE EXISTING DATA -->
+      <section class="managePanel">
+        <div class="manageHeader">
+          <div>
+            <h2>Manage Existing Data</h2>
+            <p>View existing records and hide items if needed. Edit and delete are disabled for officers.</p>
           </div>
 
-          <div id="classChatWatchNow" class="classChatWatchNow" hidden>
-            <div>
-              <strong id="classChatWatchNowTitle">Watch Party</strong>
-              <small>
-                <span id="classChatWatchHost">Hosted by SFK</span>
-                <span id="classChatWatchViewerCount" class="classChatWatchViewerCount"> · 0 watching</span>
-              </small>
-            </div>
-            <span id="classChatWatchProvider">VIDEO</span>
-          </div>
+          <button class="refreshBtn" onclick="refreshCurrentOfficerTable()">Refresh</button>
+        </div>
 
-          <div id="classChatWatchControls" class="classChatWatchControls" hidden>
-            <div>
-              <button type="button" data-watch-control="back" aria-label="Back 10 seconds">&#8630; 10</button>
-              <button id="classChatWatchPlayPause" type="button" data-watch-control="toggle" aria-label="Play or pause">&#9654;</button>
-              <button type="button" data-watch-control="forward" aria-label="Forward 10 seconds">10 &#8631;</button>
-              <button type="button" data-watch-control="sync">Sync</button>
-            </div>
-            <input id="classChatWatchSeek" type="range" min="0" max="100" value="0" step="1" aria-label="Video position" />
-            <small id="classChatWatchTime">0:00 / 0:00</small>
-          </div>
+        <div class="manageTabs">
+          <button onclick="loadOfficerTable('Announcements', this)">Announcements</button>
+          <button onclick="loadOfficerTable('ThingsToBring', this)">Things to Bring</button>
+          <button onclick="loadOfficerTable('PrayerLeaders', this)">Prayer Leaders</button>
+          <button onclick="loadOfficerTable('DailyQuotes', this)">Daily Quotes</button>
+          <button onclick="loadOfficerTable('Birthdays', this)">Birthday Greetings</button>
+        </div>
 
-          <div id="classChatWatchVolumePanel" class="classChatWatchVolume" hidden>
-            <label id="classChatWatchVolumeSyncLabel" class="classChatWatchVolumeSwitch">
-              <input id="classChatWatchVolumeSync" type="checkbox" />
-              <span>Sync volume to viewers</span>
-            </label>
-            <div class="classChatWatchVolumeRow">
-              <span id="classChatWatchVolumeLabel">Volume</span>
-              <input id="classChatWatchVolume" type="range" min="0" max="100" value="100" step="1" aria-label="Watch Party volume" />
-              <strong id="classChatWatchVolumeValue">100%</strong>
-            </div>
-            <small id="classChatWatchVolumeHint">Sync is OFF · this changes only your player.</small>
-          </div>
+        <div class="manageFilters">
+          <label for="officerManageSearch">Search records</label>
+          <input id="officerManageSearch" type="search" placeholder="Search date, subject, text, name..." oninput="applyOfficerManageFilters()" />
 
-          <section class="classChatWatchRequestCard">
-            <div>
-              <strong id="classChatWatchFormTitle">Request to Host</strong>
-              <small id="classChatWatchFormHint">Video links only: YouTube, TikTok, Instagram, Drive, Bilibili, Vimeo, HLS .m3u8, DASH .mpd, or direct video files.</small>
-            </div>
-            <form id="classChatWatchRequestForm">
-              <input id="classChatWatchUrl" type="url" maxlength="2000" placeholder="Paste video link" required />
-              <input id="classChatWatchRequestTitle" type="text" maxlength="100" placeholder="Title (optional)" />
-              <button type="submit">Send request</button>
-            </form>
-            <p id="classChatWatchRequestMessage" role="status"></p>
-          </section>
+          <label for="officerPublishFilter">Publish filter</label>
+          <select id="officerPublishFilter" onchange="applyOfficerManageFilters()">
+            <option value="all">All records</option>
+            <option value="published">Published only</option>
+            <option value="hidden">Hidden only</option>
+          </select>
+        </div>
 
-          <section id="classChatWatchQueue" class="classChatWatchQueue" hidden>
-            <header>
-              <strong>Host Requests</strong>
-              <small id="classChatWatchQueueCount"></small>
-            </header>
-            <div id="classChatWatchQueueList"></div>
-          </section>
+        <div id="officerManageStatus" class="manageStatus">
+          Select a category to view existing data.
+        </div>
+
+        <div class="batchActions">
+          <button onclick="selectAllOfficerRows()">Select All</button>
+          <button onclick="clearOfficerSelection()">Clear Selection</button>
+          <button onclick="hideSelectedOfficerRecords()">Hide Selected</button>
+        </div>
+
+        <div class="tableWrap">
+          <table id="officerDataTable">
+            <thead></thead>
+            <tbody></tbody>
+          </table>
         </div>
       </section>
 
-      <section id="timeCapsuleRoom" class="timeCapsuleRoom" hidden aria-labelledby="timeCapsuleTitle">
-        <header class="timeCapsuleHeader">
-          <button id="timeCapsuleBack" type="button" aria-label="Back to ClassBoard">&#8592;</button>
-          <span class="timeCapsuleHeart" aria-hidden="true">&#9829;<i></i></span>
-          <div>
-            <h2 id="timeCapsuleTitle">SFK Time Capsule</h2>
-            <p id="timeCapsuleHeaderStatus">Loading capsule...</p>
-          </div>
-          <button id="timeCapsuleAdminToggle" class="timeCapsuleAdminToggle" type="button" hidden>Manage</button>
-        </header>
-
-        <div class="timeCapsuleBody">
-          <section class="timeCapsuleHero">
-            <div id="timeCapsuleLockMark" class="timeCapsuleLockMark" aria-hidden="true"><span>&#9829;</span><i></i></div>
-            <div>
-              <span id="timeCapsuleEyebrow">SEALED FOR NOW</span>
-              <h3 id="timeCapsuleHeroTitle">Our memories are growing.</h3>
-              <p id="timeCapsuleCountdown">Preparing countdown...</p>
-            </div>
-            <button id="timeCapsulePresent" type="button" hidden>View Capsule</button>
-          </section>
-
-          <div class="timeCapsuleStats">
-            <span><strong id="timeCapsuleEntryCount">0</strong><small>My entries</small></span>
-            <span><strong id="timeCapsuleClassCount">0</strong><small>Sealed entries</small></span>
-            <span><strong id="timeCapsuleContributorCount">0</strong><small>Contributors</small></span>
-          </div>
-
-          <section id="timeCapsuleComposeCard" class="timeCapsuleComposeCard">
-            <header>
-              <div><strong>Leave something for our future selves</strong><small>Add as many memories, messages, and moments as you want.</small></div>
-              <button id="timeCapsuleComposeToggle" type="button" aria-expanded="false" aria-label="Add a capsule entry">+</button>
-            </header>
-            <form id="timeCapsuleForm" hidden>
-              <input id="timeCapsuleEditId" type="hidden" />
-              <label>Entry type
-                <select id="timeCapsuleType">
-                  <option value="memory">Favorite memory</option>
-                  <option value="message">Message</option>
-                  <option value="goal">Goal</option>
-                  <option value="prediction">Prediction</option>
-                  <option value="photo">Photo memory</option>
-                </select>
-              </label>
-              <div class="timeCapsulePrompt" aria-live="polite">
-                <span aria-hidden="true">&#9829;</span>
-                <div><strong>A little prompt</strong><small id="timeCapsulePromptText">What moment from this class do you never want to forget?</small></div>
-              </div>
-              <label>Your entry
-                <textarea id="timeCapsuleText" maxlength="1200" rows="5" placeholder="Write something for our future selves..."></textarea>
-                <small id="timeCapsuleCharacterCount" class="timeCapsuleCharacterCount">0 / 1200</small>
-              </label>
-              <input id="timeCapsuleImageRef" type="hidden" />
-              <label>Photo link <small>Optional public HTTPS image link or Google Drive photo link</small>
-                <input id="timeCapsuleImageUrl" type="text" maxlength="2000" inputmode="url" placeholder="https://..." />
-              </label>
-              <label>Attach photo <small>Optional photo from your device; compressed and saved without billing</small>
-                <input id="timeCapsuleImageFile" type="file" accept="image/*" />
-              </label>
-              <div id="timeCapsuleImagePreview" class="timeCapsuleImagePreview" hidden>
-                <img id="timeCapsuleImagePreviewImg" alt="" />
-                <div><strong>Photo preview</strong><small id="timeCapsuleImagePreviewText"></small></div>
-                <button id="timeCapsuleClearImage" type="button">Remove</button>
-              </div>
-              <div class="timeCapsuleFormActions">
-                <button id="timeCapsuleCancelEdit" type="button" hidden>Cancel edit</button>
-                <button id="timeCapsuleSubmit" type="submit">Seal Entry</button>
-              </div>
-              <p id="timeCapsuleFormMessage" role="status"></p>
-            </form>
-          </section>
-
-          <section class="timeCapsuleEntriesSection">
-            <header>
-              <div><strong id="timeCapsuleEntriesTitle">My Sealed Entries</strong><small id="timeCapsuleEntriesHint">Only you and the Adviser can view these before unlock day.</small></div>
-            </header>
-            <div id="timeCapsuleEntries" class="timeCapsuleEntries"></div>
-          </section>
-
-          <section id="timeCapsuleAdminPanel" class="timeCapsuleAdminPanel" hidden>
-            <header><div><strong>Manage Time Capsule</strong><small>Review entries and control submission and unlock dates.</small></div></header>
-            <form id="timeCapsuleSettingsForm">
-              <label>Submission deadline<input id="timeCapsuleDeadline" type="datetime-local" required /></label>
-              <label>Unlock date<input id="timeCapsuleUnlockAt" type="datetime-local" required /></label>
-              <label class="timeCapsuleSwitch"><span><strong>Accept submissions</strong><small>Students and officers can add entries.</small></span><input id="timeCapsuleAllowSubmissions" type="checkbox" checked /></label>
-              <div class="timeCapsuleFormActions">
-                <button id="timeCapsuleUnlockNow" type="button">Unlock now</button>
-                <button type="submit">Save Settings</button>
-              </div>
-              <p id="timeCapsuleSettingsMessage" role="status"></p>
-            </form>
-            <div class="timeCapsuleReviewHeader">
-              <strong>Review Entries</strong>
-              <select id="timeCapsuleReviewFilter" aria-label="Filter capsule entries">
-                <option value="pending">Pending</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
-                <option value="all">All entries</option>
-              </select>
-            </div>
-            <div id="timeCapsuleReviewList" class="timeCapsuleReviewList"></div>
-          </section>
-        </div>
-
-        <div id="timeCapsulePresentation" class="timeCapsulePresentation" hidden>
-          <header>
-            <button id="timeCapsulePresentationClose" type="button" aria-label="Close presentation">&times;</button>
-            <div><strong>SFK Year-End Capsule</strong><small id="timeCapsuleSlideCount">1 / 1</small></div>
-            <button id="timeCapsulePrint" type="button">Print</button>
-          </header>
-          <div id="timeCapsuleSlide" class="timeCapsuleSlide"></div>
-          <footer>
-            <button id="timeCapsulePrevious" type="button" aria-label="Previous entry">&#8592;</button>
-            <button id="timeCapsulePlay" type="button" aria-label="Play presentation">&#9654;</button>
-            <button id="timeCapsuleNext" type="button" aria-label="Next entry">&#8594;</button>
-          </footer>
-        </div>
-      </section>
-
-      <div id="classChatReactionDetails" class="classChatReactionDetails" hidden>
-        <button id="classChatReactionDetailsBackdrop" class="classChatReactionDetailsBackdrop" type="button" aria-label="Close reaction details"></button>
-        <section class="classChatReactionDetailsSheet" role="dialog" aria-modal="true" aria-labelledby="classChatReactionDetailsTitle">
-          <button id="classChatReactionDetailsClose" class="classChatReactionDetailsHandle" type="button" aria-label="Close reaction details"><span></span></button>
-          <h3 id="classChatReactionDetailsTitle">Reactions</h3>
-          <div id="classChatReactionDetailsList" class="classChatReactionDetailsList"></div>
-        </section>
+      <!-- TOAST MESSAGE -->
+      <div id="officerToast" class="officerToast hidden">
+        Saved successfully.
       </div>
 
-      <div id="classChatReactionTray" class="classChatReactionTray" hidden></div>
-      <div id="classChatToast" class="classChatToast" hidden role="status"></div>
     </section>
-  </div>
 
-
-  <script id="sfkStartIntroScript">
-    const SFK_INTRO_SESSION_KEY = "sfkClassBoardIntroSeenThisSession";
-
-    document.addEventListener("DOMContentLoaded", initSfkIntro);
-
-    function initSfkIntro() {
-      const intro = document.getElementById("sfkIntroOverlay");
-      if (!intro) return;
-
-      const alreadySeen = sessionStorage.getItem(SFK_INTRO_SESSION_KEY) === "YES";
-      if (alreadySeen) {
-        intro.remove();
-        return;
-      }
-
-      sessionStorage.setItem(SFK_INTRO_SESSION_KEY, "YES");
-
-      window.sfkIntroSkipTimer = window.setTimeout(() => {
-        intro.classList.add("skip-ready");
-      }, 6000);
-
-      window.setTimeout(() => {
-        hideSfkIntro(false);
-      }, 30000);
-    }
-
-    function hideSfkIntro(isManual) {
-      const intro = document.getElementById("sfkIntroOverlay");
-      if (!intro) return;
-
-      window.clearTimeout(window.sfkIntroSkipTimer);
-      intro.classList.add("is-hidden");
-      window.setTimeout(() => {
-        if (intro.parentNode) intro.remove();
-      }, isManual ? 220 : 460);
-    }
-  </script>
+  </main>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
-  <script src="firebase-config.js?v=phone-login-v8"></script>
-  <script src="firebase-adapter.js?v=media-fix-v8"></script>
-  <script src="script.js?v=birthday-accordion-appwide-portrait-v6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.16/dist/hls.min.js"></script>
-  <script src="https://cdn.dashjs.org/v5.2.0/legacy/umd/dash.all.min.js"></script>
-  <script src="time-capsule.js?v=11-media-fix-v8"></script>
-  <script src="class-chat.js?v=190-capsule-volume-restore"></script>
-  <script src="pwa.js?v=media-fix-v8"></script>
-
-  <script>
-    window.sfkAnnouncementCloseEmergencyGuardV3 = true;
-    (function () {
-      function forceCloseAnnouncementPreview(event) {
-        if (event) {
-          event.preventDefault && event.preventDefault();
-          event.stopPropagation && event.stopPropagation();
-          event.stopImmediatePropagation && event.stopImmediatePropagation();
-        }
-        document.querySelectorAll('#announcementImageOverlay, .announcementImageOverlay').forEach(function (overlay) {
-          overlay.querySelectorAll('img').forEach(function (img) {
-            img.onload = null;
-            img.onerror = null;
-            img.removeAttribute('src');
-            img.alt = '';
-          });
-          overlay.hidden = true;
-          overlay.style.display = 'none';
-          overlay.style.pointerEvents = 'none';
-          overlay.remove && overlay.remove();
-        });
-        document.body.classList.remove('announcementImageOpen');
-        return false;
-      }
-      window.forceCloseAnnouncementPreview = forceCloseAnnouncementPreview;
-      ['pointerdown', 'touchstart', 'mousedown', 'click'].forEach(function (type) {
-        document.addEventListener(type, function (event) {
-          var target = event.target;
-          if (!target || !target.closest) return;
-          var overlay = target.closest('#announcementImageOverlay, .announcementImageOverlay');
-          if (!overlay) return;
-          if (target.closest('.announcementImageOverlayClose, [data-close-announcement-image="true"]') || target === overlay || target.classList.contains('announcementImageOverlayBackdrop')) {
-            forceCloseAnnouncementPreview(event);
-          }
-        }, { capture: true, passive: false });
-      });
-      document.addEventListener('keydown', function (event) {
-        if (event.key === 'Escape' && document.querySelector('#announcementImageOverlay, .announcementImageOverlay')) {
-          forceCloseAnnouncementPreview(event);
-        }
-      }, true);
-    })();
-  </script>
-
+  <script src="firebase-config.js?v=2-secure-auth"></script>
+  <script src="auth.js?v=admin-officer-rescue-v2"></script>
+  <script src="firebase-adapter.js?v=media-fix-v2"></script>
+  <script src="pwa.js?v=15-pwa-polish"></script>
+  <script src="officer.js?v=admin-officer-rescue-v2"></script>
 </body>
 </html>

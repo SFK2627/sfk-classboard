@@ -1,15 +1,16 @@
-const CACHE_NAME = "sfk-admin-pwa-v21-no-billing-upload";
+const CACHE_NAME = "sfk-admin-pwa-v22-appwide-portrait-v6";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./sw.js",
-  "../admin.html?embedded=1&v=no-billing-upload",
+  "../admin.html?embedded=1&v=appwide-portrait-v6",
   "../admin.css?v=no-billing-upload",
   "../admin.js?v=no-billing-upload",
   "../firebase-config.js",
   "../firebase-adapter.js",
   "../auth.js",
+  "../orientation-lock.js",
   "../icons/icon-192.png",
   "../icons/icon-512.png",
   "../icons/icon-maskable-512.png"
