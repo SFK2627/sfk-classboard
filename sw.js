@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-sw.js-gc-student-delete-fallback-v23";
+const CACHE_NAME = "sfk-sw.js-gc-everyone-mention-v24";
 const APP_SHELL = [
   "./",
   "./index.html",

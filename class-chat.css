@@ -4856,3 +4856,60 @@ button.timeCapsuleOpen:hover {
 .classChatSeen.is-open .classChatSeenButton {
   animation: classChatSeenReveal .16s ease-out both;
 }
+
+
+/* =========================================================
+   v24 @EVERYONE MENTION
+========================================================= */
+.classChatMention.is-everyone {
+  border-radius: 999px;
+  padding: 1px 6px;
+  background: rgba(247,198,0,.25);
+  color: #6e5600;
+  font-weight: 950;
+}
+
+.classChatMentionEveryoneOption {
+  border: 1px solid rgba(247,198,0,.35) !important;
+  background: rgba(247,198,0,.14) !important;
+}
+
+.classChatEveryoneAvatar {
+  width: 29px;
+  height: 29px;
+  flex: 0 0 29px;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid #111;
+  border-radius: 50%;
+  background: #f7c600;
+  color: #111;
+  font-size: .84rem;
+  font-weight: 950;
+}
+
+.classChatMentionEveryoneOption strong,
+.classChatMentionEveryoneOption small {
+  display: block;
+}
+
+.classChatMentionEveryoneOption small {
+  margin-top: 2px;
+  color: rgba(17,17,17,.60);
+  font-size: .68rem;
+  font-weight: 800;
+}
+
+.classChatPanel.is-dark .classChatMention.is-everyone {
+  background: rgba(247,198,0,.20);
+  color: #ffe680;
+}
+
+.classChatPanel.is-dark .classChatMentionEveryoneOption {
+  border-color: rgba(247,198,0,.26) !important;
+  background: rgba(247,198,0,.12) !important;
+}
+
+.classChatPanel.is-dark .classChatMentionEveryoneOption small {
+  color: rgba(255,255,255,.62);
+}

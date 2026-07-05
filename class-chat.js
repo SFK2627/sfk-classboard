@@ -1887,7 +1887,7 @@
         && Date.now() - createdAt.getTime() <= OWN_DELETE_WINDOW_MS;
       const canModerate = currentProfile.role === "admin";
       const removed = isMessageRemoved(message);
-      const mentioned = !removed && isCurrentUserMentioned(message.Text);
+      const mentioned = !removed && isCurrentUserMentioned(message);
       const priorityLabel = message.Priority === true
         ? `<span class="classChatPriorityLabel">ADVISER PRIORITY</span>`
         : "";
@@ -2066,6 +2066,7 @@
     const names = [...new Set(
       chatDirectory.map((entry) => String(entry.Name || "").trim())
         .concat(currentProfile?.name || "")
+        .concat("everyone")
         .filter(Boolean)
     )].sort((a, b) => b.length - a.length);
     if (!names.length) return escapeHtml(text);
@@ -2074,7 +2075,8 @@
     let cursor = 0;
     String(text).replace(pattern, (match, name, offset) => {
       output += escapeHtml(String(text).slice(cursor, offset));
-      output += `<span class="classChatMention">@${escapeHtml(name)}</span>`;
+      const isEveryone = String(name || "").toLowerCase() === "everyone";
+      output += `<span class="classChatMention ${isEveryone ? "is-everyone" : ""}">@${escapeHtml(isEveryone ? "everyone" : name)}</span>`;
       cursor = offset + match.length;
       return match;
     });
@@ -3701,9 +3703,21 @@
     });
   }
 
-  function isCurrentUserMentioned(text) {
+  function isCurrentUserMentioned(message) {
     if (!currentProfile?.name) return false;
-    return String(text || "").toLowerCase().includes(`@${currentProfile.name.toLowerCase()}`);
+    const text = String(typeof message === "string" ? message : message?.Text || "");
+    const lower = text.toLowerCase();
+
+    const senderUid = typeof message === "string" ? "" : String(message?.SenderUID || "");
+    const senderRole = typeof message === "string" ? "" : String(message?.SenderRole || "").toLowerCase();
+    const fromStaff = senderRole === "admin" || senderRole === "officer";
+
+    // @everyone is treated as a real mention only when it comes from Adviser/Admin or Officer.
+    if (fromStaff && senderUid !== currentProfile.uid && /(^|\s)@everyone(?=\s|$|[.,!?])/i.test(text)) {
+      return true;
+    }
+
+    return lower.includes(`@${currentProfile.name.toLowerCase()}`);
   }
 
   function updateSeenIndicators() {
@@ -4037,24 +4051,50 @@
       elements.mentionSuggestions.hidden = true;
       return;
     }
+
     const query = match[1].trim().toLowerCase();
-    if (match[1].endsWith(" ") && chatDirectory.some((entry) => String(entry.Name || "").toLowerCase() === query)) {
+    const canMentionEveryone = currentProfile?.role === "admin" || currentProfile?.role === "officer";
+    const exactStudentMatch = chatDirectory.some((entry) => String(entry.Name || "").toLowerCase() === query);
+    if (match[1].endsWith(" ") && (exactStudentMatch || (canMentionEveryone && query === "everyone"))) {
       elements.mentionSuggestions.hidden = true;
       return;
     }
-    const suggestions = chatDirectory
+
+    const specialSuggestions = [];
+    if (canMentionEveryone && (!query || "everyone".includes(query))) {
+      specialSuggestions.push({
+        Name: "everyone",
+        Label: "@everyone",
+        Hint: "Mention all GC members",
+        Special: "everyone"
+      });
+    }
+
+    const peopleSuggestions = chatDirectory
       .filter((entry) => entry.uid !== currentProfile.uid && entry.Name !== currentProfile.name)
       .filter((entry) => !query || String(entry.Name || "").toLowerCase().includes(query))
-      .slice(0, 8);
+      .slice(0, Math.max(0, 8 - specialSuggestions.length));
+
+    const suggestions = specialSuggestions.concat(peopleSuggestions);
     if (!suggestions.length) {
       elements.mentionSuggestions.hidden = true;
       return;
     }
-    elements.mentionSuggestions.innerHTML = suggestions.map((entry) => `
-      <button type="button" data-mention-name="${escapeHtml(entry.Name || "")}">
-        <span class="classChatMessageAvatar" style="visibility:visible">${escapeHtml(initials(entry.Name))}</span>
-        <span>${escapeHtml(entry.Name || "Student")}</span>
-      </button>`).join("");
+
+    elements.mentionSuggestions.innerHTML = suggestions.map((entry) => {
+      if (entry.Special === "everyone") {
+        return `
+          <button type="button" class="classChatMentionEveryoneOption" data-mention-name="everyone">
+            <span class="classChatEveryoneAvatar" aria-hidden="true">@</span>
+            <span><strong>${escapeHtml(entry.Label)}</strong><small>${escapeHtml(entry.Hint)}</small></span>
+          </button>`;
+      }
+      return `
+        <button type="button" data-mention-name="${escapeHtml(entry.Name || "")}">
+          <span class="classChatMessageAvatar" style="visibility:visible">${escapeHtml(initials(entry.Name))}</span>
+          <span>${escapeHtml(entry.Name || "Student")}</span>
+        </button>`;
+    }).join("");
     elements.mentionSuggestions.hidden = false;
     elements.mentionSuggestions.querySelectorAll("[data-mention-name]").forEach((button) => {
       button.addEventListener("click", () => insertMention(button.dataset.mentionName, match.index, cursor));
