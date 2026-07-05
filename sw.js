@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-sw.js-gc-everyone-mention-v24";
+const CACHE_NAME = "sfk-sw.js-gc-everyone-announcement-v25";
 const APP_SHELL = [
   "./",
   "./index.html",

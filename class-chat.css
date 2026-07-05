@@ -4913,3 +4913,64 @@ button.timeCapsuleOpen:hover {
 .classChatPanel.is-dark .classChatMentionEveryoneOption small {
   color: rgba(255,255,255,.62);
 }
+
+
+/* =========================================================
+   v25 @EVERYONE STRONG HIGHLIGHT + LONG ANNOUNCEMENTS
+========================================================= */
+.classChatMessage.is-everyone-mentioned .classChatBubble {
+  position: relative;
+  border-color: rgba(247,198,0,.75) !important;
+  box-shadow:
+    0 0 0 3px rgba(247,198,0,.34),
+    0 10px 26px rgba(247,198,0,.18);
+}
+
+.classChatMessage.is-everyone-mentioned .classChatBubble::before {
+  content: "@everyone";
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 0 7px;
+  border-radius: 999px;
+  padding: 4px 9px;
+  background: #111;
+  color: #f7c600;
+  font-size: .66rem;
+  font-weight: 950;
+  letter-spacing: .03em;
+}
+
+.classChatMention.is-everyone {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(17,17,17,.18);
+  border-radius: 999px;
+  padding: 2px 8px;
+  background: linear-gradient(180deg, #fff0a8, #f7c600);
+  color: #111 !important;
+  font-weight: 950;
+  box-shadow: 0 2px 6px rgba(17,17,17,.12);
+}
+
+.classChatComposer textarea {
+  max-height: min(42vh, 260px);
+}
+
+.classChatPanel.is-dark .classChatMessage.is-everyone-mentioned .classChatBubble {
+  box-shadow:
+    0 0 0 3px rgba(247,198,0,.25),
+    0 10px 26px rgba(0,0,0,.28);
+}
+
+.classChatPanel.is-dark .classChatMessage.is-everyone-mentioned .classChatBubble::before {
+  background: #f7c600;
+  color: #111;
+}
+
+.classChatPanel.is-dark .classChatMention.is-everyone {
+  border-color: rgba(247,198,0,.28);
+  background: linear-gradient(180deg, #f7c600, #dba800);
+  color: #111 !important;
+}

@@ -1887,6 +1887,7 @@
         && Date.now() - createdAt.getTime() <= OWN_DELETE_WINDOW_MS;
       const canModerate = currentProfile.role === "admin";
       const removed = isMessageRemoved(message);
+      const everyoneMentioned = !removed && isEveryoneMentionMessage(message);
       const mentioned = !removed && isCurrentUserMentioned(message);
       const priorityLabel = message.Priority === true
         ? `<span class="classChatPriorityLabel">ADVISER PRIORITY</span>`
@@ -1923,7 +1924,7 @@
       return `
         ${showDay ? `<div class="classChatDay">${escapeHtml(day)}</div>` : ""}
         ${showNewDivider ? `<div class="classChatNewDivider">New messages</div>` : ""}
-        <article class="classChatMessage ${own ? "is-own" : ""} ${grouped ? "is-grouped" : "is-first"} ${groupEnd ? "is-group-end" : ""} ${removed ? "has-removed" : ""} ${mentioned ? "is-mentioned" : ""} ${message.Priority ? "is-priority" : ""}"
+        <article class="classChatMessage ${own ? "is-own" : ""} ${grouped ? "is-grouped" : "is-first"} ${groupEnd ? "is-group-end" : ""} ${removed ? "has-removed" : ""} ${mentioned ? "is-mentioned" : ""} ${everyoneMentioned ? "is-everyone-mentioned" : ""} ${message.Priority ? "is-priority" : ""}"
                  data-message-id="${message.id}">
           ${own ? "" : (() => {
             const avatarColor = profileColorForMessage(message);
@@ -3703,17 +3704,23 @@
     });
   }
 
+  function isEveryoneMentionMessage(message) {
+    const text = String(typeof message === "string" ? message : message?.Text || "");
+    const senderRole = typeof message === "string" ? "" : String(message?.SenderRole || "").toLowerCase();
+    const fromStaff = senderRole === "admin" || senderRole === "officer";
+    return fromStaff && /(^|\s)@everyone(?=\s|$|[.,!?])/i.test(text);
+  }
+
   function isCurrentUserMentioned(message) {
     if (!currentProfile?.name) return false;
     const text = String(typeof message === "string" ? message : message?.Text || "");
     const lower = text.toLowerCase();
-
     const senderUid = typeof message === "string" ? "" : String(message?.SenderUID || "");
-    const senderRole = typeof message === "string" ? "" : String(message?.SenderRole || "").toLowerCase();
-    const fromStaff = senderRole === "admin" || senderRole === "officer";
 
-    // @everyone is treated as a real mention only when it comes from Adviser/Admin or Officer.
-    if (fromStaff && senderUid !== currentProfile.uid && /(^|\s)@everyone(?=\s|$|[.,!?])/i.test(text)) {
+    // @everyone is a real mention only when sent by Adviser/Admin or Officer.
+    // It highlights all other members; the sender still sees the @everyone badge
+    // through the message styling.
+    if (isEveryoneMentionMessage(message) && senderUid !== currentProfile.uid) {
       return true;
     }
 
