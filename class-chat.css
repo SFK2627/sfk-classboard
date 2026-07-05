@@ -4619,3 +4619,218 @@ button.timeCapsuleOpen:hover {
     transform: translateY(0);
   }
 }
+
+
+/* =========================================================
+   v20 CUSTOM GC DIALOGS
+   Replaces browser dialogs so there is no "github.io says" popup.
+========================================================= */
+.classChatCustomDialog {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.classChatCustomDialog[hidden] {
+  display: none !important;
+}
+
+.classChatCustomDialogBackdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  border: 0;
+  background: rgba(17,17,17,.46);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.classChatCustomDialogCard {
+  position: relative;
+  z-index: 1;
+  width: min(348px, 100%);
+  display: grid;
+  justify-items: center;
+  border: 2px solid rgba(17,17,17,.18);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at top right, rgba(247,198,0,.28), transparent 38%),
+    linear-gradient(180deg, #fffdf5, #fff3c7);
+  padding: 22px 18px 18px;
+  color: #111;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(17,17,17,.28);
+  animation: classChatCustomDialogIn .16s ease-out both;
+}
+
+.classChatCustomDialogIcon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  margin-bottom: 10px;
+  background: #111;
+  color: #f7c600;
+  font-size: 1.25rem;
+  font-weight: 950;
+  box-shadow: 0 10px 20px rgba(17,17,17,.18);
+}
+
+.classChatCustomDialog.is-success .classChatCustomDialogIcon {
+  background: #0f766e;
+  color: #fff;
+}
+
+.classChatCustomDialog.is-danger .classChatCustomDialogIcon {
+  background: #b00020;
+  color: #fff;
+}
+
+.classChatCustomDialogCard h3 {
+  margin: 0;
+  font-size: 1.12rem;
+  font-weight: 950;
+  line-height: 1.15;
+}
+
+.classChatCustomDialogCard p {
+  width: 100%;
+  margin: 8px 0 0;
+  color: rgba(17,17,17,.72);
+  font-size: .88rem;
+  font-weight: 650;
+  line-height: 1.4;
+  white-space: pre-line;
+}
+
+.classChatCustomDialogInputWrap {
+  width: 100%;
+  display: grid;
+  gap: 6px;
+  margin-top: 14px;
+  text-align: left;
+}
+
+.classChatCustomDialogInputWrap[hidden] {
+  display: none !important;
+}
+
+.classChatCustomDialogInputWrap span {
+  color: rgba(17,17,17,.72);
+  font-size: .75rem;
+  font-weight: 900;
+}
+
+.classChatCustomDialogInputWrap input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1.5px solid rgba(17,17,17,.16);
+  border-radius: 14px;
+  background: rgba(255,255,255,.96);
+  color: #111;
+  font: inherit;
+  font-size: .92rem;
+  padding: 12px 13px;
+  outline: none;
+}
+
+.classChatCustomDialogInputWrap input:focus {
+  border-color: #f7c600;
+  box-shadow: 0 0 0 4px rgba(247,198,0,.18);
+}
+
+.classChatCustomDialogActions {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-top: 18px;
+}
+
+.classChatCustomDialogCancel[hidden] + .classChatCustomDialogConfirm {
+  grid-column: 1 / -1;
+}
+
+.classChatCustomDialogActions button {
+  min-height: 42px;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-size: .86rem;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.classChatCustomDialogCancel {
+  background: rgba(17,17,17,.08);
+  color: #111;
+}
+
+.classChatCustomDialogConfirm {
+  background: linear-gradient(180deg, #111, #000);
+  color: #f7c600;
+  box-shadow: 0 10px 20px rgba(17,17,17,.18);
+}
+
+.classChatCustomDialog.is-danger .classChatCustomDialogConfirm {
+  background: linear-gradient(180deg, #d11f3a, #ac1630);
+  color: #fff;
+}
+
+.classChatCustomDialogActions button:hover,
+.classChatCustomDialogActions button:focus-visible {
+  filter: brightness(1.04);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.classChatPanel.is-dark .classChatCustomDialogCard {
+  border-color: rgba(255,255,255,.10);
+  background:
+    radial-gradient(circle at top right, rgba(247,198,0,.16), transparent 38%),
+    linear-gradient(180deg, #252525, #171717);
+  color: #fff;
+  box-shadow: 0 24px 64px rgba(0,0,0,.56);
+}
+
+.classChatPanel.is-dark .classChatCustomDialogCard p,
+.classChatPanel.is-dark .classChatCustomDialogInputWrap span {
+  color: rgba(255,255,255,.72);
+}
+
+.classChatPanel.is-dark .classChatCustomDialogInputWrap input {
+  border-color: rgba(255,255,255,.12);
+  background: #101010;
+  color: #fff;
+  color-scheme: dark;
+}
+
+.classChatPanel.is-dark .classChatCustomDialogCancel {
+  background: rgba(255,255,255,.10);
+  color: #fff;
+}
+
+.classChatPanel.is-dark .classChatCustomDialogConfirm {
+  background: linear-gradient(180deg, #f7c600, #efb100);
+  color: #111;
+}
+
+.classChatPanel.is-dark .classChatCustomDialog.is-danger .classChatCustomDialogConfirm {
+  background: linear-gradient(180deg, #ff6b6b, #d82a45);
+  color: #fff;
+}
+
+@keyframes classChatCustomDialogIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

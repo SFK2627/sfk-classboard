@@ -3207,7 +3207,7 @@
       VolumeLevel: normalizeWatchVolume(volumeLevel),
       UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }).catch((error) => {
-      window.alert(readableError(error));
+      showClassChatNotice(readableError(error));
     });
   }
 
@@ -3314,7 +3314,7 @@
       StateUpdatedAt: firebase.firestore.FieldValue.serverTimestamp(),
       UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }).catch((error) => {
-      window.alert(readableError(error));
+      showClassChatNotice(readableError(error));
     });
   }
 
@@ -3372,7 +3372,7 @@
     } catch (error) {
       window.SFK_WATCH_PARTY_LANDSCAPE = false;
       window.SFK_PHONE_ORIENTATION?.allowWatchLandscape?.(false);
-      window.alert(readableError(error));
+      showClassChatNotice(readableError(error));
     }
   }
 
@@ -3577,7 +3577,10 @@
         renderWatchQueue();
       } else if (action === "start") {
         if (currentWatchParty?.Active
-            && !window.confirm("Replace the current Watch Party with this queued video?")) {
+            && !await showClassChatConfirm("Replace the current Watch Party with this queued video?", {
+              title: "Replace Watch Party?",
+              confirmText: "Replace"
+            })) {
           button.disabled = false;
           return;
         }
@@ -3592,7 +3595,7 @@
         if (request.Status === "queued") await renumberWatchQueue(request.id);
       }
     } catch (error) {
-      window.alert(readableError(error));
+      showClassChatNotice(readableError(error));
       button.disabled = false;
     }
   }
@@ -3675,7 +3678,7 @@
       MediaType: currentWatchParty.Provider || ""
     });
     await batch.commit().catch((error) => {
-      window.alert(readableError(error));
+      showClassChatNotice(readableError(error));
     });
   }
 
@@ -3862,24 +3865,24 @@
     if (!text || !currentProfile) return;
 
     if (currentProfile.mutedUntil > Date.now()) {
-      window.alert(`Messaging is muted until ${new Date(currentProfile.mutedUntil).toLocaleString()}.`);
+      showClassChatNotice(`Messaging is muted until ${new Date(currentProfile.mutedUntil).toLocaleString()}.`, { title: "Messaging muted" });
       return;
     }
     if (isChatRestrictedForUser()) {
-      window.alert(currentConfig.Locked
+      showClassChatNotice(currentConfig.Locked
         ? "The Adviser has temporarily locked the class conversation."
-        : "Chat messaging is currently outside the allowed hours.");
+        : "Chat messaging is currently outside the allowed hours.", { title: "Chat unavailable" });
       return;
     }
     const blockedReason = validateOutboundText(text);
     if (blockedReason) {
-      window.alert(blockedReason);
+      showClassChatNotice(blockedReason, { title: "Message blocked" });
       return;
     }
     const slowModeMs = Number(currentConfig.SlowModeSeconds || 0) * 1000;
     const waitMs = slowModeMs - (Date.now() - lastSentAt);
     if (!editTarget && currentProfile.role !== "admin" && waitMs > 0) {
-      window.alert(`Slow mode is on. Please wait ${Math.ceil(waitMs / 1000)} more second${waitMs > 1000 ? "s" : ""}.`);
+      showClassChatNotice(`Slow mode is on. Please wait ${Math.ceil(waitMs / 1000)} more second${waitMs > 1000 ? "s" : ""}.`, { title: "Slow mode" });
       return;
     }
 
@@ -3932,7 +3935,7 @@
       await clearTyping();
       scrollToBottom();
     } catch (error) {
-      window.alert(readableError(error));
+      showClassChatNotice(readableError(error));
     } finally {
       elements.send.disabled = false;
       elements.input.focus();
@@ -4561,7 +4564,7 @@
       await batch.commit();
     } catch (error) {
       await loadReactions(messageId);
-      window.alert(readableError(error));
+      showClassChatNotice(readableError(error));
     }
   }
 
@@ -4776,7 +4779,7 @@
       });
       await batch.commit();
     } catch (error) {
-      window.alert(readableError(error));
+      showClassChatNotice(readableError(error));
     }
   }
 
@@ -4797,7 +4800,7 @@
       });
       await batch.commit();
     } catch (error) {
-      window.alert(readableError(error));
+      showClassChatNotice(readableError(error));
     }
   }
 
@@ -4826,7 +4829,7 @@
       if (wasSaved) savedMessageIds.add(message.id);
       else savedMessageIds.delete(message.id);
       updateSaveButtons(message.id, wasSaved);
-      window.alert(readableError(error));
+      showClassChatNotice(readableError(error));
     }
   }
 
@@ -4835,6 +4838,148 @@
     article?.querySelectorAll("[data-chat-action='save']").forEach((button) => {
       button.textContent = saved ? "Unsave" : "Save";
     });
+  }
+
+  function ensureClassChatDialog() {
+    let dialog = elements.customDialog || document.getElementById("classChatCustomDialog");
+    if (dialog) {
+      elements.customDialog = dialog;
+      return dialog;
+    }
+
+    dialog = document.createElement("div");
+    dialog.id = "classChatCustomDialog";
+    dialog.className = "classChatCustomDialog";
+    dialog.hidden = true;
+    dialog.innerHTML = `
+      <button class="classChatCustomDialogBackdrop" type="button" data-dialog-cancel aria-label="Close dialog"></button>
+      <form class="classChatCustomDialogCard">
+        <div class="classChatCustomDialogIcon" aria-hidden="true">!</div>
+        <h3 id="classChatCustomDialogTitle">ClassBoard</h3>
+        <p id="classChatCustomDialogMessage"></p>
+        <label class="classChatCustomDialogInputWrap" hidden>
+          <span id="classChatCustomDialogInputLabel">Response</span>
+          <input id="classChatCustomDialogInput" type="text" autocomplete="off" />
+        </label>
+        <div class="classChatCustomDialogActions">
+          <button type="button" class="classChatCustomDialogCancel" data-dialog-cancel>Cancel</button>
+          <button type="submit" class="classChatCustomDialogConfirm">OK</button>
+        </div>
+      </form>`;
+
+    (elements.panel || document.body).appendChild(dialog);
+    elements.customDialog = dialog;
+    return dialog;
+  }
+
+  function showClassChatDialog(options = {}) {
+    const dialog = ensureClassChatDialog();
+    const card = dialog.querySelector(".classChatCustomDialogCard");
+    const title = dialog.querySelector("#classChatCustomDialogTitle");
+    const message = dialog.querySelector("#classChatCustomDialogMessage");
+    const icon = dialog.querySelector(".classChatCustomDialogIcon");
+    const inputWrap = dialog.querySelector(".classChatCustomDialogInputWrap");
+    const inputLabel = dialog.querySelector("#classChatCustomDialogInputLabel");
+    const input = dialog.querySelector("#classChatCustomDialogInput");
+    const cancel = dialog.querySelector(".classChatCustomDialogCancel");
+    const confirm = dialog.querySelector(".classChatCustomDialogConfirm");
+    const cancelItems = dialog.querySelectorAll("[data-dialog-cancel]");
+
+    const variant = options.variant || "info";
+    const hasInput = options.type === "prompt";
+
+    dialog.className = `classChatCustomDialog is-${variant}`;
+    title.textContent = options.title || "SFK ClassBoard";
+    message.textContent = options.message || "";
+    icon.textContent = variant === "danger" ? "!" : variant === "success" ? "✓" : "i";
+    confirm.textContent = options.confirmText || (hasInput ? "Submit" : "OK");
+    cancel.textContent = options.cancelText || "Cancel";
+    cancel.hidden = options.hideCancel === true;
+    inputWrap.hidden = !hasInput;
+    inputLabel.textContent = options.inputLabel || "Response";
+    input.placeholder = options.placeholder || "";
+    input.value = options.defaultValue || "";
+
+    dialog.hidden = false;
+    document.body.classList.add("classChatDialogOpen");
+
+    return new Promise((resolve) => {
+      let finished = false;
+
+      const cleanup = () => {
+        card.removeEventListener("submit", onSubmit);
+        cancelItems.forEach((item) => item.removeEventListener("click", onCancel));
+        document.removeEventListener("keydown", onKeydown);
+        dialog.hidden = true;
+        document.body.classList.remove("classChatDialogOpen");
+      };
+
+      const finish = (result) => {
+        if (finished) return;
+        finished = true;
+        cleanup();
+        resolve(result);
+      };
+
+      const onSubmit = (event) => {
+        event.preventDefault();
+        finish(hasInput ? { confirmed: true, value: input.value } : { confirmed: true, value: "" });
+      };
+
+      const onCancel = () => finish(hasInput ? { confirmed: false, value: null } : { confirmed: false, value: "" });
+
+      const onKeydown = (event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          onCancel();
+        }
+      };
+
+      card.addEventListener("submit", onSubmit);
+      cancelItems.forEach((item) => item.addEventListener("click", onCancel));
+      document.addEventListener("keydown", onKeydown);
+
+      window.setTimeout(() => {
+        if (hasInput) input.focus();
+        else confirm.focus();
+      }, 40);
+    });
+  }
+
+  async function showClassChatNotice(message, options = {}) {
+    await showClassChatDialog({
+      title: options.title || "SFK ClassBoard",
+      message,
+      confirmText: options.confirmText || "OK",
+      hideCancel: true,
+      variant: options.variant || "info"
+    });
+  }
+
+  async function showClassChatConfirm(message, options = {}) {
+    const result = await showClassChatDialog({
+      title: options.title || "Please confirm",
+      message,
+      confirmText: options.confirmText || "Continue",
+      cancelText: options.cancelText || "Cancel",
+      variant: options.variant || "info"
+    });
+    return result.confirmed === true;
+  }
+
+  async function showClassChatPrompt(message, options = {}) {
+    const result = await showClassChatDialog({
+      title: options.title || "SFK ClassBoard",
+      message,
+      type: "prompt",
+      inputLabel: options.inputLabel || "Response",
+      placeholder: options.placeholder || "",
+      defaultValue: options.defaultValue || "",
+      confirmText: options.confirmText || "Submit",
+      cancelText: options.cancelText || "Cancel",
+      variant: options.variant || "info"
+    });
+    return result.confirmed ? result.value : null;
   }
 
   function showChatToast(message) {
@@ -4864,7 +5009,10 @@
 
   async function reportMessage(message) {
     if (!message || message.IsScheduled || message.SenderUID === currentProfile.uid) return;
-    const reason = window.prompt("Why are you reporting this message? You may leave this blank.");
+    const reason = await showClassChatPrompt("Why are you reporting this message? You may leave this blank.", {
+      title: "Report message",
+      placeholder: "Reason for report"
+    });
     if (reason === null) return;
     try {
       const batch = db.batch();
@@ -4887,9 +5035,9 @@
         Details: String(reason || "").trim()
       });
       await batch.commit();
-      window.alert("The message was privately reported to the Adviser.");
+      showClassChatNotice("The message was privately reported to the Adviser.", { title: "Report sent", variant: "success" });
     } catch (error) {
-      window.alert(readableError(error));
+      showClassChatNotice(readableError(error));
     }
   }
 
@@ -5038,7 +5186,10 @@
 
   async function closePoll(message) {
     if (!message || message.Type !== "poll" || (message.SenderUID !== currentProfile.uid && currentProfile.role !== "admin")) return;
-    if (!window.confirm("Close this poll? Voting will stop.")) return;
+    if (!await showClassChatConfirm("Close this poll? Voting will stop.", {
+      title: "Close poll?",
+      confirmText: "Close Poll"
+    })) return;
     try {
       const batch = db.batch();
       batch.update(db.collection("chatMessages").doc(message.id), {
@@ -5053,13 +5204,16 @@
       });
       await batch.commit();
     } catch (error) {
-      window.alert(readableError(error));
+      showClassChatNotice(readableError(error));
     }
   }
 
   async function muteMessageSender(message) {
     if (currentProfile.role !== "admin" || message.SenderRole !== "student") return;
-    if (!window.confirm(`Mute ${message.SenderName || "this student"} for 10 minutes?`)) return;
+    if (!await showClassChatConfirm(`Mute ${message.SenderName || "this student"} for 10 minutes?`, {
+      title: "Mute student?",
+      confirmText: "Mute"
+    })) return;
     try {
       const batch = db.batch();
       batch.update(db.collection("chatProfiles").doc(message.SenderUID), {
@@ -5073,7 +5227,7 @@
       });
       await batch.commit();
     } catch (error) {
-      window.alert(readableError(error));
+      showClassChatNotice(readableError(error));
     }
   }
 
@@ -5363,7 +5517,7 @@
         UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
     } catch (error) {
-      window.alert(readableError(error));
+      showClassChatNotice(readableError(error));
     }
   }
 
@@ -5422,7 +5576,11 @@
     const canDeleteOwn = own && Date.now() - timestampToMillis(message.CreatedAt) <= OWN_DELETE_WINDOW_MS;
     const canModerate = currentProfile.role === "admin";
     if (!canDeleteOwn && !canModerate) return;
-    if (!window.confirm("Remove this message from the class chat?")) return;
+    if (!await showClassChatConfirm("Remove this message from the class chat?", {
+      title: "Remove message?",
+      confirmText: "Remove",
+      variant: "danger"
+    })) return;
 
     const ref = db.collection("chatMessages").doc(message.id);
     try {
@@ -5473,7 +5631,7 @@
         }
       }
     } catch (error) {
-      window.alert(readableError(error));
+      showClassChatNotice(readableError(error));
     }
   }
 
@@ -5673,12 +5831,22 @@
   async function clearGcConversationFromChat() {
     if (!db || currentProfile?.role !== "admin") return;
 
-    const confirmed = window.confirm(
-      "Delete every GC message, reaction, poll vote, scheduled post, receipt, and saved copy? Member accounts will remain."
+    const confirmed = await showClassChatConfirm(
+      "Delete every GC message, reaction, poll vote, scheduled post, receipt, and saved copy? Member accounts will remain.",
+      {
+        title: "Delete entire GC conversation?",
+        confirmText: "Continue",
+        variant: "danger"
+      }
     );
     if (!confirmed) return;
 
-    const phrase = window.prompt("Type DELETE ALL to confirm. This cannot be undone.");
+    const phrase = await showClassChatPrompt("Type DELETE ALL to confirm. This cannot be undone.", {
+      title: "Final confirmation",
+      placeholder: "Type DELETE ALL",
+      confirmText: "Delete",
+      variant: "danger"
+    });
     if (String(phrase || "").trim().toUpperCase() !== "DELETE ALL") {
       if (elements.gcAdminMessage) elements.gcAdminMessage.textContent = "GC cleanup cancelled.";
       return;
