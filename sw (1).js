@@ -1,19 +1,12 @@
-SFK ClassBoard - GC Tools Visible v13
+SFK ClassBoard - GC Admin Tools Style Polish v14
 
-Where to find it:
-1. Inside the GC:
-   Open GC > sign in as Adviser/Admin > Chat menu (...) > More Tools > Chat Controls.
-   The GC Admin Tools section is now directly inside Chat Controls.
+Updated:
+- GC Admin Tools inside the GC now have cleaner cards, better spacing, readable text, and styled buttons.
+- Improved both light mode and dark mode appearance.
+- Admin page GC tools card also got the same visual polish.
+- Cache/version strings were updated.
 
-2. On the Admin page:
-   Open admin.html. The GC Admin Tools card is now shown near the top of the Admin Panel.
-
-Included:
-- Add GC members using Student ID | Full Name.
-- Refresh/enable/disable GC members.
-- Delete entire GC conversation.
-- Student-deleted messages stay fixed: they no longer say removed by the Adviser.
-
-After upload:
-- Hard refresh.
-- If old files still show, open reset-cache.html once.
+If old styling still appears:
+1. Hard refresh.
+2. Open reset-cache.html once.
+3. Reload the page.
