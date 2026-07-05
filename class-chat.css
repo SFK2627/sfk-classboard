@@ -4573,3 +4573,49 @@ button.timeCapsuleOpen:hover {
 .classChatSeen.is-admin-seen.is-empty {
   font-weight: 800;
 }
+
+
+/* =========================================================
+   v19 GC SEEN DETAILS ON CLICK ONLY
+   Admin seen details are hidden until the message/chat bubble is clicked.
+========================================================= */
+.classChatSeen.is-admin-seen {
+  display: block;
+  margin-top: 5px;
+}
+
+.classChatSeen.is-admin-seen:not(.is-open) {
+  display: none;
+}
+
+.classChatSeen.is-admin-seen.is-open {
+  animation: classChatSeenReveal .16s ease-out both;
+}
+
+.classChatSeen.is-admin-seen .classChatSeenButton {
+  max-width: min(100%, 340px);
+  justify-content: flex-start;
+}
+
+.classChatSeenHelper {
+  display: block;
+  margin-top: 3px;
+  color: rgba(17,17,17,.55);
+  font-size: .58rem;
+  font-weight: 750;
+}
+
+.classChatPanel.is-dark .classChatSeenHelper {
+  color: rgba(255,255,255,.56);
+}
+
+@keyframes classChatSeenReveal {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

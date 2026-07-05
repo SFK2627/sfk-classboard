@@ -63,6 +63,7 @@
   let auditEntries = [];
   let chatDirectory = [];
   let readReceipts = [];
+  let adminSeenDetailMessageId = "";
   let savedMessageIds = new Set();
   let savedItems = [];
   let replyTarget = null;
@@ -523,6 +524,7 @@
       await auth.signOut().catch(() => {});
     }
     currentProfile = null;
+    adminSeenDetailMessageId = "";
     showLogin();
     if (chatHistoryActive) {
       chatHistoryActive = false;
@@ -3687,35 +3689,23 @@
 
     elements.messages.querySelectorAll("[data-seen-message]").forEach((node) => {
       node.textContent = "";
-      node.classList.remove("is-admin-seen", "is-empty");
+      node.classList.remove("is-admin-seen", "is-empty", "is-open");
       node.removeAttribute("title");
     });
 
     const isAdmin = currentProfile.role === "admin";
 
-    // Adviser/Admin mode: show seen details for every visible message,
-    // even when the message was sent by a student or another staff account.
+    // Adviser/Admin mode: do NOT show seen details automatically.
+    // A message click toggles the selected message's seen details inline.
     if (isAdmin) {
-      currentMessages
-        .filter((message) => !message.IsScheduled && !message.Removed)
-        .forEach((message) => {
-          const node = elements.messages.querySelector(`[data-seen-message="${cssEscape(message.id)}"]`);
-          if (!node) return;
+      if (!adminSeenDetailMessageId) return;
+      const selectedMessage = findMessage(adminSeenDetailMessageId);
+      if (!selectedMessage || selectedMessage.IsScheduled || selectedMessage.Removed) {
+        adminSeenDetailMessageId = "";
+        return;
+      }
 
-          const seenReceipts = getSeenReceiptsForMessage(message);
-          node.classList.add("is-admin-seen");
-
-          if (!seenReceipts.length) {
-            node.textContent = "Seen by 0";
-            node.classList.add("is-empty");
-            return;
-          }
-
-          const summary = formatSeenSummary(seenReceipts);
-          const detail = formatSeenDetailText(message, seenReceipts);
-          node.title = detail;
-          node.innerHTML = `<button type="button" class="classChatSeenButton" data-seen-detail="${escapeHtml(message.id)}">${escapeHtml(summary)}</button>`;
-        });
+      renderAdminSeenDetailsForMessage(selectedMessage);
       return;
     }
 
@@ -3795,13 +3785,34 @@
     ].join("\n");
   }
 
-  function showSeenDetailsForMessage(messageId) {
+  function toggleSeenDetailsForMessage(messageId) {
     if (currentProfile?.role !== "admin") return;
     const message = findMessage(messageId);
-    if (!message) return;
+    if (!message || message.IsScheduled || message.Removed) return;
+
+    adminSeenDetailMessageId = adminSeenDetailMessageId === messageId ? "" : messageId;
+    updateSeenIndicators();
+  }
+
+  function renderAdminSeenDetailsForMessage(message) {
+    const node = elements.messages.querySelector(`[data-seen-message="${cssEscape(message.id)}"]`);
+    if (!node) return;
 
     const seenReceipts = getSeenReceiptsForMessage(message);
-    window.alert(formatSeenDetailText(message, seenReceipts));
+    const summary = formatSeenSummary(seenReceipts);
+    const detail = formatSeenDetailText(message, seenReceipts);
+    const names = seenReceipts
+      .map((receipt) => String(receipt.Name || "Classmate").trim())
+      .filter(Boolean);
+
+    node.classList.add("is-admin-seen", "is-open");
+    if (!seenReceipts.length) node.classList.add("is-empty");
+    node.title = detail;
+    node.innerHTML = `
+      <button type="button" class="classChatSeenButton" data-seen-detail="${escapeHtml(message.id)}" aria-expanded="true">
+        ${escapeHtml(summary)}
+      </button>
+      <span class="classChatSeenHelper">${names.length ? "Click again to hide." : "No one has seen this message yet."}</span>`;
   }
 
   function updateJumpButton() {
@@ -4124,7 +4135,7 @@
     if (seenDetail) {
       event.preventDefault();
       event.stopPropagation();
-      showSeenDetailsForMessage(seenDetail.dataset.seenDetail);
+      toggleSeenDetailsForMessage(seenDetail.dataset.seenDetail);
       return;
     }
 
@@ -4142,19 +4153,31 @@
     }
 
     const button = event.target.closest("[data-chat-action]");
-    if (!button) return;
-    const message = findMessage(button.dataset.messageId);
-    if (!message) return;
+    if (button) {
+      const message = findMessage(button.dataset.messageId);
+      if (!message) return;
 
-    if (button.dataset.chatAction === "reply") setReply(message);
-    if (button.dataset.chatAction === "react") showReactionTray(message.id, button);
-    if (button.dataset.chatAction === "edit") setEdit(message);
-    if (button.dataset.chatAction === "save") toggleSavedMessage(message);
-    if (button.dataset.chatAction === "pin") togglePinnedMessage(message);
-    if (button.dataset.chatAction === "priority") togglePriorityMessage(message);
-    if (button.dataset.chatAction === "close-poll") closePoll(message);
-    if (button.dataset.chatAction === "report") reportMessage(message);
-    if (button.dataset.chatAction === "delete") removeMessage(message);
+      if (button.dataset.chatAction === "reply") setReply(message);
+      if (button.dataset.chatAction === "react") showReactionTray(message.id, button);
+      if (button.dataset.chatAction === "edit") setEdit(message);
+      if (button.dataset.chatAction === "save") toggleSavedMessage(message);
+      if (button.dataset.chatAction === "pin") togglePinnedMessage(message);
+      if (button.dataset.chatAction === "priority") togglePriorityMessage(message);
+      if (button.dataset.chatAction === "close-poll") closePoll(message);
+      if (button.dataset.chatAction === "report") reportMessage(message);
+      if (button.dataset.chatAction === "delete") removeMessage(message);
+      return;
+    }
+
+    // Adviser/Admin mode: seen details stay hidden until the actual
+    // message/chat bubble is clicked.
+    if (currentProfile?.role === "admin") {
+      const article = event.target.closest(".classChatMessage");
+      if (!article || event.target.closest("button, a, iframe, video, audio, input, textarea, select, label")) return;
+      const message = findMessage(article.dataset.messageId);
+      if (!message || message.IsScheduled || message.Removed) return;
+      toggleSeenDetailsForMessage(message.id);
+    }
   }
 
   function focusOriginalMessage(messageId) {
