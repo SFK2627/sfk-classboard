@@ -7141,3 +7141,163 @@ body.birthdayYearModalOpen {
     overflow: hidden;
   }
 }
+
+/* =========================================================
+   v7 DESKTOP SUBJECT ANNOUNCEMENT AUTO-FIT
+   Makes announcement post text grow as large as safely possible
+   while keeping subject, posted date, teacher/deadline, attachments,
+   left/right buttons, and heart button protected.
+========================================================= */
+@media (min-width: 1201px) {
+  .announcementsCard {
+    min-height: 0 !important;
+  }
+
+  .announcementsCard #announcementList {
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .announcement-item.rotating-announcement {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .announcement-item.rotating-announcement .announcement-top-left,
+  .announcement-item.rotating-announcement .announcement-bottom-stack {
+    flex: 0 0 auto !important;
+    position: relative !important;
+    z-index: 5 !important;
+  }
+
+  .announcement-item.rotating-announcement .announcement-center-content {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    padding-block: clamp(6px, .9vh, 12px) !important;
+  }
+
+  .announcement-item.rotating-announcement .announcement-main-text {
+    width: 100% !important;
+    max-width: min(98%, 1120px) !important;
+    margin: 0 auto !important;
+    text-align: center !important;
+    font-size: var(--announcement-fit-font, clamp(2rem, 3.2vw, 4.5rem)) !important;
+    line-height: var(--announcement-fit-line-height, 1.06) !important;
+    font-weight: 950 !important;
+    letter-spacing: -0.025em !important;
+    overflow-x: hidden !important;
+    overflow-y: hidden !important;
+    scrollbar-gutter: stable both-edges;
+  }
+
+  .announcement-item.rotating-announcement.announcement-rich .announcement-main-text {
+    font-size: var(--announcement-fit-font, clamp(1.15rem, 1.7vw, 2.4rem)) !important;
+    line-height: var(--announcement-fit-line-height, 1.14) !important;
+    font-weight: 850 !important;
+    letter-spacing: -0.01em !important;
+  }
+
+  .announcement-item.rotating-announcement .announcement-main-text .formattedText,
+  .announcement-item.rotating-announcement .announcement-main-text .richBoardText,
+  .announcement-item.rotating-announcement .announcement-main-text .richBoardText p,
+  .announcement-item.rotating-announcement .announcement-main-text .richBoardText div,
+  .announcement-item.rotating-announcement .announcement-main-text .richBoardText span,
+  .announcement-item.rotating-announcement .announcement-main-text .richBoardText li {
+    font-size: inherit !important;
+    line-height: inherit !important;
+  }
+
+  .announcement-item.rotating-announcement .announcement-main-text p,
+  .announcement-item.rotating-announcement .announcement-main-text div,
+  .announcement-item.rotating-announcement .announcement-main-text span,
+  .announcement-item.rotating-announcement .announcement-main-text li {
+    line-height: inherit !important;
+  }
+
+  .announcement-item.rotating-announcement.announcement-fit-scroll .announcement-main-text {
+    overflow-y: auto !important;
+    padding-right: 8px !important;
+  }
+
+  .announcement-item.rotating-announcement.announcement-fitted-tight .announcement-main-text {
+    letter-spacing: -0.01em !important;
+  }
+}
+
+
+/* =========================================================
+   v8 ANNOUNCEMENT BOLD DISPLAY FIX
+   Desktop auto-fit stays large, but normal text is no longer forced bold.
+   Only text actually marked with Bold in the editor uses heavy weight.
+========================================================= */
+@media (min-width: 1201px) {
+  .announcement-item.rotating-announcement .announcement-main-text {
+    font-weight: 680 !important;
+  }
+
+  .announcement-item.rotating-announcement.announcement-rich .announcement-main-text {
+    font-weight: 560 !important;
+  }
+
+  .announcement-item.rotating-announcement .announcement-main-text .formattedText,
+  .announcement-item.rotating-announcement .announcement-main-text .richBoardText,
+  .announcement-item.rotating-announcement .announcement-main-text .richBoardText p,
+  .announcement-item.rotating-announcement .announcement-main-text .richBoardText div,
+  .announcement-item.rotating-announcement .announcement-main-text .richBoardText span,
+  .announcement-item.rotating-announcement .announcement-main-text .richBoardText li {
+    font-weight: inherit !important;
+  }
+
+  .announcement-item.rotating-announcement .announcement-main-text b,
+  .announcement-item.rotating-announcement .announcement-main-text strong,
+  .announcement-item.rotating-announcement .announcement-main-text .richBoardText b,
+  .announcement-item.rotating-announcement .announcement-main-text .richBoardText strong {
+    font-weight: 950 !important;
+  }
+}
+
+/* =========================================================
+   v9 ANNOUNCEMENT LARGE AUTO-FIT RESTORE
+   Keeps v8 no-forced-bold fix, but lets rich/editor posts grow bigger.
+   The JS measurement still shrinks/scrolls text before it can overlap the
+   subject, date, teacher/deadline, attachment, buttons, or heart.
+========================================================= */
+@media (min-width: 1201px) {
+  .announcement-item.rotating-announcement .announcement-main-text {
+    font-size: var(--announcement-fit-font, clamp(1.85rem, 2.9vw, 4.2rem)) !important;
+    line-height: var(--announcement-fit-line-height, 1.07) !important;
+    font-weight: 650 !important;
+  }
+
+  .announcement-item.rotating-announcement.announcement-rich .announcement-main-text {
+    font-size: var(--announcement-fit-font, clamp(1.65rem, 2.55vw, 3.9rem)) !important;
+    line-height: var(--announcement-fit-line-height, 1.08) !important;
+    font-weight: 540 !important;
+  }
+
+  .announcement-item.rotating-announcement .announcement-main-text .formattedText,
+  .announcement-item.rotating-announcement .announcement-main-text .richBoardText,
+  .announcement-item.rotating-announcement .announcement-main-text .richBoardText p,
+  .announcement-item.rotating-announcement .announcement-main-text .richBoardText div,
+  .announcement-item.rotating-announcement .announcement-main-text .richBoardText span,
+  .announcement-item.rotating-announcement .announcement-main-text .richBoardText li {
+    font-weight: inherit !important;
+    font-size: inherit !important;
+    line-height: inherit !important;
+  }
+
+  .announcement-item.rotating-announcement .announcement-main-text b,
+  .announcement-item.rotating-announcement .announcement-main-text strong,
+  .announcement-item.rotating-announcement .announcement-main-text .richBoardText b,
+  .announcement-item.rotating-announcement .announcement-main-text .richBoardText strong {
+    font-weight: 950 !important;
+  }
+}

@@ -931,6 +931,8 @@ function renderAnnouncements(items) {
   requestAnimationFrame(fitAnnouncementTextToCard);
   setTimeout(fitAnnouncementTextToCard, 90);
   setTimeout(fitAnnouncementTextToCard, 260);
+  setTimeout(fitAnnouncementTextToCard, 650);
+  setTimeout(fitAnnouncementTextToCard, 1200);
 }
 
 
@@ -961,41 +963,63 @@ function fitAnnouncementTextToCard() {
   const minimumFont = getAnnouncementMinimumFontSize(charCount, viewportWidth, viewportHeight, visualUnits, hasRichText);
   const lineHeight = getAnnouncementLineHeight(charCount, visualUnits, hasRichText);
 
-  text.style.setProperty("--announcement-fit-font", `${targetFont}px`);
   text.style.setProperty("--announcement-fit-line-height", String(lineHeight));
 
   // In one-column tablet/phone layouts, the card is allowed to grow with the page.
   // Do not squeeze the text there; readability is more important than fixed height.
   if (canGrowWithPage) {
+    text.style.setProperty("--announcement-fit-font", `${targetFont}px`);
     text.style.maxHeight = "none";
     text.style.overflowY = "visible";
     return;
   }
 
-  let fontSize = targetFont;
-  let safetyCounter = 0;
+  // Desktop display: use the biggest possible text without touching the subject,
+  // posted date, teacher/deadline, attachments, navigation, or heart button.
   let availableTextHeight = getAnnouncementAvailableTextHeight(center, text);
+  const maximumFont = getAnnouncementMaximumFontSize(
+    charCount,
+    viewportWidth,
+    viewportHeight,
+    visualUnits,
+    hasRichText,
+    availableTextHeight,
+    center.clientWidth || center.getBoundingClientRect().width || 0
+  );
+
   text.style.maxHeight = `${availableTextHeight}px`;
   text.style.overflowY = "hidden";
 
-  while (
-    safetyCounter < 80 &&
-    fontSize > minimumFont &&
-    announcementContentOverflows(card, center, text, availableTextHeight)
-  ) {
-    fontSize = Math.max(minimumFont, fontSize - 0.75);
-    text.style.setProperty("--announcement-fit-font", `${fontSize}px`);
+  let low = minimumFont;
+  let high = Math.max(minimumFont, maximumFont);
+  let best = minimumFont;
+
+  for (let i = 0; i < 22; i++) {
+    const mid = (low + high) / 2;
+    text.style.setProperty("--announcement-fit-font", `${mid}px`);
     availableTextHeight = getAnnouncementAvailableTextHeight(center, text);
     text.style.maxHeight = `${availableTextHeight}px`;
-    safetyCounter++;
+
+    if (announcementContentOverflows(card, center, text, availableTextHeight)) {
+      high = mid - 0.1;
+    } else {
+      best = mid;
+      low = mid + 0.1;
+    }
   }
+
+  const finalFont = Math.max(minimumFont, Math.min(best, maximumFont));
+  text.style.setProperty("--announcement-fit-font", `${finalFont.toFixed(2)}px`);
+  availableTextHeight = getAnnouncementAvailableTextHeight(center, text);
+  text.style.maxHeight = `${availableTextHeight}px`;
 
   const stillOverflowing = announcementContentOverflows(card, center, text, availableTextHeight);
   card.classList.toggle("announcement-fitted-tight", stillOverflowing);
 
-  // Last-resort safety: never overlap the footer/buttons. Keep a readable floor and
-  // allow the text area itself to scroll only when an announcement is truly too long.
+  // Last-resort safety: never overlap the footer/buttons. Keep the fixed slots safe
+  // and scroll only the announcement text when the post is extremely long.
   if (stillOverflowing) {
+    text.style.setProperty("--announcement-fit-font", `${minimumFont}px`);
     text.style.overflowY = "auto";
     card.classList.add("announcement-fit-scroll");
   }
@@ -1060,30 +1084,64 @@ function getAnnouncementTargetFontSize(charCount, viewportWidth, viewportHeight,
   let size;
 
   if (hasRichText) {
-    if (charCount <= 60) size = phone ? 21 : 26;
-    else if (charCount <= 120) size = phone ? 19 : 23;
-    else if (charCount <= 220) size = phone ? 17 : 21;
-    else if (charCount <= 360) size = phone ? 15 : 18;
-    else if (charCount <= 540) size = phone ? 14 : 16;
-    else size = phone ? 13 : 15;
+    // v9: Rich editor posts used to be treated too conservatively, so the
+    // desktop display looked small. Start larger, then let the measured
+    // binary-search below shrink only when it would overlap the safe slots.
+    if (charCount <= 30) size = phone ? 26 : 64;
+    else if (charCount <= 60) size = phone ? 24 : 56;
+    else if (charCount <= 100) size = phone ? 22 : 48;
+    else if (charCount <= 160) size = phone ? 20 : 40;
+    else if (charCount <= 240) size = phone ? 18 : 34;
+    else if (charCount <= 360) size = phone ? 16 : 28;
+    else if (charCount <= 540) size = phone ? 14 : 22;
+    else size = phone ? 13 : 17;
 
-    if (wideBoard && charCount <= 260) size += 2;
+    if (wideBoard && charCount <= 260) size += 6;
     if (visualUnits >= 8) size -= 1;
-    if (visualUnits >= 12) size -= 1;
+    if (visualUnits >= 12) size -= 2;
   } else {
-    if (charCount <= 60) size = phone ? 40 : 44;
-    else if (charCount <= 100) size = phone ? 34 : 38;
-    else if (charCount <= 160) size = phone ? 28 : 32;
-    else if (charCount <= 240) size = phone ? 24 : 28;
-    else if (charCount <= 340) size = phone ? 21 : 24;
-    else if (charCount <= 460) size = phone ? 18 : 21;
+    if (charCount <= 20) size = phone ? 44 : 72;
+    else if (charCount <= 40) size = phone ? 40 : 64;
+    else if (charCount <= 60) size = phone ? 38 : 58;
+    else if (charCount <= 100) size = phone ? 34 : 50;
+    else if (charCount <= 160) size = phone ? 28 : 42;
+    else if (charCount <= 240) size = phone ? 24 : 34;
+    else if (charCount <= 340) size = phone ? 21 : 28;
+    else if (charCount <= 460) size = phone ? 18 : 23;
     else size = phone ? 16 : 18;
   }
 
-  if (shortHeight) size -= hasRichText ? 1 : 2;
-  if (veryShortHeight) size -= hasRichText ? 1 : 2;
+  if (shortHeight) size -= hasRichText ? 1 : 3;
+  if (veryShortHeight) size -= hasRichText ? 1 : 4;
 
   return Math.max(size, getAnnouncementMinimumFontSize(charCount, viewportWidth, viewportHeight, visualUnits, hasRichText));
+}
+
+function getAnnouncementMaximumFontSize(charCount, viewportWidth, viewportHeight, visualUnits = 1, hasRichText = false, availableTextHeight = 180, centerWidth = 0) {
+  const base = getAnnouncementTargetFontSize(charCount, viewportWidth, viewportHeight, visualUnits, hasRichText);
+  const heightCap = Math.max(18, (availableTextHeight || 180) * (hasRichText ? 0.42 : 0.58));
+  const widthCap = centerWidth
+    ? Math.max(18, centerWidth / Math.max(8, Math.min(Math.max(charCount, 1), 32)) * (hasRichText ? 1.55 : 1.85))
+    : 96;
+  const hardCap = hasRichText ? 76 : 88;
+
+  if (charCount <= 18 && !hasRichText) {
+    return Math.min(hardCap, Math.max(base, heightCap, 58));
+  }
+
+  if (charCount <= 60 && !hasRichText) {
+    return Math.min(hardCap, Math.max(base, Math.min(heightCap, widthCap), 48));
+  }
+
+  if (hasRichText && charCount <= 60) {
+    return Math.min(hardCap, Math.max(base, Math.min(heightCap, widthCap), 46));
+  }
+
+  if (hasRichText && charCount <= 140) {
+    return Math.min(hardCap, Math.max(base, Math.min(heightCap, widthCap), 36));
+  }
+
+  return Math.min(hardCap, Math.max(base, Math.min(heightCap, widthCap)));
 }
 
 function getAnnouncementMinimumFontSize(charCount, viewportWidth, viewportHeight, visualUnits = 1, hasRichText = false) {
@@ -1092,8 +1150,9 @@ function getAnnouncementMinimumFontSize(charCount, viewportWidth, viewportHeight
 
   if (hasRichText) {
     if (phone) return 12;
-    if (charCount > 700 || visualUnits > 14 || veryShortHeight) return 10.5;
-    return 12;
+    if (charCount > 700 || visualUnits > 14 || veryShortHeight) return 11;
+    if (charCount <= 160) return 16;
+    return 13;
   }
 
   if (charCount <= 120) return phone ? 16 : 17;
@@ -1105,11 +1164,14 @@ function getAnnouncementMinimumFontSize(charCount, viewportWidth, viewportHeight
 
 function getAnnouncementLineHeight(charCount, visualUnits = 1, hasRichText = false) {
   if (hasRichText) {
-    if (charCount <= 120 && visualUnits <= 3) return 1.20;
-    if (charCount <= 360) return 1.16;
-    return 1.12;
+    if (charCount <= 80 && visualUnits <= 3) return 1.06;
+    if (charCount <= 180) return 1.08;
+    if (charCount <= 360) return 1.11;
+    return 1.10;
   }
-  return charCount <= 120 ? 1.08 : 1.14;
+  if (charCount <= 60 && visualUnits <= 2) return 1.02;
+  if (charCount <= 120) return 1.06;
+  return 1.12;
 }
 
 function renderAnnouncementHeartButton(item) {
