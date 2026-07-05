@@ -10,7 +10,7 @@ const ANNOUNCEMENT_ROTATE_MS = 10000;
 const BIRTHDAY_ROTATE_MS = 30000;
 const CACHE_KEY = "sfkClassBoardData";
 const CLASSBOARD_MEDIA_FIX_CACHE_VERSION_KEY = "sfkClassBoardMediaFixVersion";
-const CLASSBOARD_MEDIA_FIX_CACHE_VERSION = "instant-announcement-v1";
+const CLASSBOARD_MEDIA_FIX_CACHE_VERSION = "announcement-window-fit-v10";
 const ANNOUNCEMENT_HEARTS_KEY = "sfkClassBoardHeartedAnnouncements";
 
 try {
@@ -1147,19 +1147,41 @@ function getAnnouncementMaximumFontSize(charCount, viewportWidth, viewportHeight
 function getAnnouncementMinimumFontSize(charCount, viewportWidth, viewportHeight, visualUnits = 1, hasRichText = false) {
   const phone = viewportWidth <= 900;
   const veryShortHeight = viewportHeight <= 720;
+  const compactDesktopWindow = viewportWidth >= 1201 && viewportHeight <= 860;
 
   if (hasRichText) {
     if (phone) return 12;
-    if (charCount > 700 || visualUnits > 14 || veryShortHeight) return 11;
-    if (charCount <= 160) return 16;
-    return 13;
+
+    // v10: In a browser window that is not full screen, the old fitter could
+    // shrink rich/editor posts too much just to preserve every slot. Keep a
+    // readable floor instead, then let the text area scroll if the post is
+    // truly too long. This prevents overlap without making announcements tiny.
+    if (compactDesktopWindow) {
+      if (charCount <= 140 && visualUnits <= 4) return veryShortHeight ? 24 : 28;
+      if (charCount <= 260 && visualUnits <= 6) return veryShortHeight ? 21 : 24;
+      if (charCount <= 420 && visualUnits <= 9) return veryShortHeight ? 18 : 20;
+      if (charCount <= 620 && visualUnits <= 12) return veryShortHeight ? 15 : 17;
+      return veryShortHeight ? 12.5 : 14;
+    }
+
+    if (charCount > 700 || visualUnits > 14 || veryShortHeight) return 12;
+    if (charCount <= 160) return 18;
+    if (charCount <= 320) return 16;
+    return 13.5;
   }
 
-  if (charCount <= 120) return phone ? 16 : 17;
-  if (charCount <= 260) return phone ? 13 : 14;
-  if (charCount <= 460) return phone ? 11 : 12;
+  if (compactDesktopWindow) {
+    if (charCount <= 120) return veryShortHeight ? 26 : 30;
+    if (charCount <= 260) return veryShortHeight ? 20 : 24;
+    if (charCount <= 460) return veryShortHeight ? 15 : 18;
+    return veryShortHeight ? 12 : 14;
+  }
 
-  return veryShortHeight ? 9.5 : 10.5;
+  if (charCount <= 120) return phone ? 16 : 20;
+  if (charCount <= 260) return phone ? 13 : 16;
+  if (charCount <= 460) return phone ? 11 : 13;
+
+  return veryShortHeight ? 10.5 : 11.5;
 }
 
 function getAnnouncementLineHeight(charCount, visualUnits = 1, hasRichText = false) {
