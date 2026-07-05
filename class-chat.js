@@ -5561,14 +5561,30 @@
     const canDeleteOwn = own && Date.now() - timestampToMillis(message.CreatedAt) <= OWN_DELETE_WINDOW_MS;
     const canModerate = currentProfile.role === "admin";
     if (!canDeleteOwn && !canModerate) return;
-    if (!await showClassChatConfirm("Remove this message from the class chat?", {
+
+    const confirmed = await showClassChatConfirm("Remove this message from the class chat?", {
       title: "Remove message?",
       confirmText: "Remove",
       variant: "danger"
-    })) return;
+    });
+    if (!confirmed) return;
 
     const ref = db.collection("chatMessages").doc(message.id);
+
     try {
+      // Student self-delete must stay simple because Firestore rules usually
+      // allow students to edit only their own message document, not audit logs
+      // or moderation records. This prevents the old permission-denied popup.
+      if (!canModerate && own) {
+        await ref.update({
+          Text: "",
+          Removed: true,
+          RemovedBy: currentProfile.uid,
+          RemovedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        return;
+      }
+
       const batch = db.batch();
       if (canModerate && !own) {
         batch.set(db.collection("chatModerationLogs").doc(), {
@@ -5582,6 +5598,7 @@
           CreatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
       }
+
       const removal = {
         Text: "",
         Removed: true,
@@ -5592,6 +5609,7 @@
       };
       if (canModerate) removal.Pinned = false;
       batch.update(ref, removal);
+
       addAuditToBatch(batch, "MESSAGE_DELETED", {
         MessageID: message.id,
         TargetUID: message.SenderUID || "",
@@ -5600,23 +5618,27 @@
         MediaType: message.MediaType || "",
         Details: canModerate && !own ? "Removed by Admin" : "Removed by sender"
       });
+
       await batch.commit();
 
       if (canModerate) {
         const replies = await db.collection("chatMessages").where("ReplyToID", "==", message.id).get();
         if (!replies.empty) {
-          const batch = db.batch();
+          const replyBatch = db.batch();
           replies.docs.forEach((replyDoc) => {
-            batch.update(replyDoc.ref, {
+            replyBatch.update(replyDoc.ref, {
               ReplyToText: "",
               ReplySourceRemoved: true
             });
           });
-          await batch.commit();
+          await replyBatch.commit();
         }
       }
     } catch (error) {
-      showClassChatNotice(readableError(error));
+      showClassChatNotice(readableError(error, "delete-message"), {
+        title: "Message not removed",
+        variant: "danger"
+      });
     }
   }
 
@@ -5970,13 +5992,18 @@
     return date.toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit" });
   }
 
-  function readableError(error) {
+  function readableError(error, context = "") {
     const code = String(error?.code || "");
     if (code.includes("wrong-password") || code.includes("invalid-credential") || code.includes("user-not-found")) {
       return "Student ID or PIN is incorrect.";
     }
     if (code.includes("too-many-requests")) return "Too many attempts. Please wait and try again.";
-    if (code.includes("permission-denied")) return "This account is not allowed to access the class chat.";
+    if (code.includes("permission-denied")) {
+      if (context === "delete-message") {
+        return "This message could not be removed because the database rules blocked the delete action. Please reload and try again. If it still happens, the Firebase rules need to allow the sender to mark their own message as removed.";
+      }
+      return "This account is not allowed to access the class chat.";
+    }
     if (code.includes("network-request-failed")) return "No connection. Check your internet and try again.";
     return String(error?.message || "Class chat could not be opened.").replace(/^Firebase:\s*/i, "");
   }
