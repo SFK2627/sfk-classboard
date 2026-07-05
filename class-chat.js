@@ -3,6 +3,8 @@
 
   const REACTIONS = ["🫶", "👍", "❤️", "😂", "😮", "😢", "🙏", "✅"];
   const MESSAGE_LIMIT_STEP = 30;
+  const CHAT_SAFE_MESSAGE_CHARS = 420;
+  const CHAT_LONG_MESSAGE_NOTICE_CHARS = 500;
   const MAX_POLL_OPTIONS = 12;
   const OWN_DELETE_WINDOW_MS = 5 * 60 * 1000;
   const PROFILE_COLOR_COOLDOWN_MS = 3 * 24 * 60 * 60 * 1000;
@@ -3885,7 +3887,7 @@
 
   async function sendMessage(event) {
     event.preventDefault();
-    const text = elements.input.value.trim();
+    const text = elements.input.value.replace(/\r\n/g, "\n").trim();
     if (!text || !currentProfile) return;
 
     if (currentProfile.mutedUntil > Date.now()) {
@@ -3959,11 +3961,32 @@
       await clearTyping();
       scrollToBottom();
     } catch (error) {
-      showClassChatNotice(readableError(error));
+      showClassChatNotice(readableError(error, "send-message"), { title: "Message not sent", variant: "danger" });
     } finally {
       elements.send.disabled = false;
       elements.input.focus();
     }
+  }
+
+  function splitChatAnnouncementText(text) {
+    const source = String(text || "").trim();
+    if (source.length <= CHAT_LONG_MESSAGE_NOTICE_CHARS) return [source];
+
+    const chunks = [];
+    let remaining = source;
+    while (remaining.length > CHAT_SAFE_MESSAGE_CHARS) {
+      let cutAt = remaining.lastIndexOf("\n\n", CHAT_SAFE_MESSAGE_CHARS);
+      if (cutAt < CHAT_SAFE_MESSAGE_CHARS * 0.45) cutAt = remaining.lastIndexOf("\n", CHAT_SAFE_MESSAGE_CHARS);
+      if (cutAt < CHAT_SAFE_MESSAGE_CHARS * 0.45) cutAt = remaining.lastIndexOf(". ", CHAT_SAFE_MESSAGE_CHARS);
+      if (cutAt < CHAT_SAFE_MESSAGE_CHARS * 0.45) cutAt = remaining.lastIndexOf(" ", CHAT_SAFE_MESSAGE_CHARS);
+      if (cutAt < CHAT_SAFE_MESSAGE_CHARS * 0.45) cutAt = CHAT_SAFE_MESSAGE_CHARS;
+
+      const chunk = remaining.slice(0, cutAt).trim();
+      if (chunk) chunks.push(chunk);
+      remaining = remaining.slice(cutAt).trim();
+    }
+    if (remaining) chunks.push(remaining);
+    return chunks;
   }
 
   function validateOutboundText(text) {
@@ -6093,6 +6116,9 @@
     if (code.includes("permission-denied")) {
       if (context === "delete-message") {
         return "This message could not be removed because the database rules blocked all delete fallback options. Please try editing the message manually, or update Firebase rules to allow the sender to blank their own message text.";
+      }
+      if (context === "send-message") {
+        return "This message was blocked by Firebase rules. Since this version sends your announcement as ONE message, the Firestore rules must allow longer message text for Admin/Adviser.";
       }
       return "This account is not allowed to access the class chat.";
     }

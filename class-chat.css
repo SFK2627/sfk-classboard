@@ -4974,3 +4974,38 @@ button.timeCapsuleOpen:hover {
   background: linear-gradient(180deg, #f7c600, #dba800);
   color: #111 !important;
 }
+
+
+/* =========================================================
+   v28 GC MESSAGE SPACING + LINE BREAK PRESERVE
+   Keeps announcement paragraphs, blank lines, and multiple spaces visible.
+========================================================= */
+.classChatText,
+.classChatBubble .classChatText,
+.classChatMessage .classChatText {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.classChatText .classChatMention,
+.classChatText .classChatLink {
+  white-space: normal;
+}
+
+.classChatSearchResult span {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+}
+
+.classChatQuoted span,
+.classChatReply span {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.classChatComposer textarea {
+  white-space: pre-wrap;
+  tab-size: 2;
+}
