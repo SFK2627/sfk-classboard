@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-sw.js-gc-preserve-spacing-v28";
+const CACHE_NAME = "sfk-sw.js-gc-everyone-inline-v29";
 const APP_SHELL = [
   "./",
   "./index.html",
