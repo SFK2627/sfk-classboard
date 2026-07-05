@@ -1937,7 +1937,7 @@
               ${messageContent}
             </div>
             <div class="classChatReactionSummary" data-reactions-for="${message.id}"></div>
-            <div class="classChatMeta">${(groupEnd || canModerate) ? `${formatTime(createdAt)}<span class="classChatSeen" data-seen-message="${message.id}"></span>` : ""}</div>
+            <div class="classChatMeta">${(groupEnd || canModerate || own) ? `${formatTime(createdAt)}<span class="classChatSeen" data-seen-message="${message.id}"></span>` : ""}</div>
             ${actionButtons}
           </div>
         </article>`;
@@ -3696,38 +3696,16 @@
       node.removeAttribute("title");
     });
 
-    const isAdmin = currentProfile.role === "admin";
+    // No automatic "Seen by" display. It must stay hidden until a message is clicked.
+    if (!adminSeenDetailMessageId) return;
 
-    // Adviser/Admin mode: do NOT show seen details automatically.
-    // A message click toggles the selected message's seen details inline.
-    if (isAdmin) {
-      if (!adminSeenDetailMessageId) return;
-      const selectedMessage = findMessage(adminSeenDetailMessageId);
-      if (!selectedMessage || selectedMessage.IsScheduled || selectedMessage.Removed) {
-        adminSeenDetailMessageId = "";
-        return;
-      }
-
-      renderAdminSeenDetailsForMessage(selectedMessage);
+    const selectedMessage = findMessage(adminSeenDetailMessageId);
+    if (!selectedMessage || selectedMessage.IsScheduled || selectedMessage.Removed || !canCurrentUserViewSeenDetails(selectedMessage)) {
+      adminSeenDetailMessageId = "";
       return;
     }
 
-    // Student/officer mode: keep the simple seen label only for the latest
-    // message sent by the current user.
-    const latestOwn = [...currentMessages].reverse().find((message) => (
-      !message.IsScheduled && !message.Removed && message.SenderUID === currentProfile.uid
-    ));
-    if (!latestOwn) return;
-
-    const seenReceipts = getSeenReceiptsForMessage(latestOwn)
-      .filter((receipt) => receipt.uid !== currentProfile.uid);
-    const node = elements.messages.querySelector(`[data-seen-message="${cssEscape(latestOwn.id)}"]`);
-    if (!node || !seenReceipts.length) return;
-
-    const seenNames = seenReceipts.map((receipt) => receipt.Name || "Classmate");
-    node.textContent = seenNames.length <= 2
-      ? `Seen by ${seenNames.join(" and ")}`
-      : `Seen by ${seenNames.length}`;
+    renderSeenDetailsForMessage(selectedMessage);
   }
 
   function getSeenReceiptsForMessage(message) {
@@ -3788,20 +3766,26 @@
     ].join("\n");
   }
 
+  function canCurrentUserViewSeenDetails(message) {
+    if (!currentProfile || !message) return false;
+    if (currentProfile.role === "admin") return true;
+    return message.SenderUID === currentProfile.uid;
+  }
+
   function toggleSeenDetailsForMessage(messageId) {
-    if (currentProfile?.role !== "admin") return;
     const message = findMessage(messageId);
-    if (!message || message.IsScheduled || message.Removed) return;
+    if (!message || message.IsScheduled || message.Removed || !canCurrentUserViewSeenDetails(message)) return;
 
     adminSeenDetailMessageId = adminSeenDetailMessageId === messageId ? "" : messageId;
     updateSeenIndicators();
   }
 
-  function renderAdminSeenDetailsForMessage(message) {
+  function renderSeenDetailsForMessage(message) {
     const node = elements.messages.querySelector(`[data-seen-message="${cssEscape(message.id)}"]`);
     if (!node) return;
 
-    const seenReceipts = getSeenReceiptsForMessage(message);
+    const seenReceipts = getSeenReceiptsForMessage(message)
+      .filter((receipt) => receipt.uid !== currentProfile.uid);
     const summary = formatSeenSummary(seenReceipts);
     const detail = formatSeenDetailText(message, seenReceipts);
     const names = seenReceipts
@@ -3815,7 +3799,7 @@
       <button type="button" class="classChatSeenButton" data-seen-detail="${escapeHtml(message.id)}" aria-expanded="true">
         ${escapeHtml(summary)}
       </button>
-      <span class="classChatSeenHelper">${names.length ? "Click again to hide." : "No one has seen this message yet."}</span>`;
+      <span class="classChatSeenHelper">${names.length ? "Click the message again to hide." : "No one has seen this message yet."}</span>`;
   }
 
   function updateJumpButton() {
@@ -4172,13 +4156,14 @@
       return;
     }
 
-    // Adviser/Admin mode: seen details stay hidden until the actual
+    // Seen details are hidden by default. They only open when the actual
     // message/chat bubble is clicked.
-    if (currentProfile?.role === "admin") {
-      const article = event.target.closest(".classChatMessage");
-      if (!article || event.target.closest("button, a, iframe, video, audio, input, textarea, select, label")) return;
-      const message = findMessage(article.dataset.messageId);
-      if (!message || message.IsScheduled || message.Removed) return;
+    const article = event.target.closest(".classChatMessage");
+    if (!article || event.target.closest("button, a, iframe, video, audio, input, textarea, select, label")) return;
+    const message = findMessage(article.dataset.messageId);
+    if (!message || message.IsScheduled || message.Removed) return;
+
+    if (canCurrentUserViewSeenDetails(message)) {
       toggleSeenDetailsForMessage(message.id);
     }
   }

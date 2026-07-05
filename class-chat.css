@@ -4834,3 +4834,25 @@ button.timeCapsuleOpen:hover {
     transform: translateY(0) scale(1);
   }
 }
+
+
+/* =========================================================
+   v21 SEEN BY HIDDEN UNTIL MESSAGE CLICK
+   No automatic visible "Seen by" labels.
+========================================================= */
+.classChatSeen {
+  display: none !important;
+}
+
+.classChatSeen.is-open {
+  display: block !important;
+}
+
+.classChatSeen.is-admin-seen:not(.is-open),
+.classChatSeen:not(.is-open) {
+  display: none !important;
+}
+
+.classChatSeen.is-open .classChatSeenButton {
+  animation: classChatSeenReveal .16s ease-out both;
+}

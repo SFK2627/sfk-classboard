@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-sw.js-gc-custom-dialog-v20";
+const CACHE_NAME = "sfk-sw.js-gc-seen-hidden-v21";
 const APP_SHELL = [
   "./",
   "./index.html",
