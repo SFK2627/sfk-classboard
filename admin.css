@@ -16,7 +16,7 @@
   <link rel="manifest" href="admin.webmanifest?v=portrait-reminder-v1" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
-  <link rel="stylesheet" href="admin.css?v=gc-admin-style-v14" />
+  <link rel="stylesheet" href="admin.css?v=emergency-restore-v15" />
   <script src="orientation-lock.js?v=appwide-v6" defer></script>
 </head>
 
@@ -567,7 +567,7 @@
   <script src="auth.js?v=admin-officer-rescue-v2"></script>
   <script src="firebase-adapter.js?v=media-fix-v2"></script>
   <script src="pwa.js?v=15-pwa-polish"></script>
-  <script src="class-chat-admin.js?v=gc-tools-visible-v13"></script>
-  <script src="admin.js?v=gc-tools-visible-v13"></script>
+  <script src="class-chat-admin.js?v=emergency-restore-v15"></script>
+  <script src="admin.js?v=emergency-restore-v15"></script>
 </body>
 </html>
