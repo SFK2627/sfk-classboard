@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-sw.js-announcement-windowfit-v10";
+const CACHE_NAME = "sfk-sw.js-gc-tools-messagefix-v12";
 const APP_SHELL = [
   "./",
   "./index.html",

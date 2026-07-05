@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
   <link rel="stylesheet" href="style.css?v=announcement-windowfit-v10" />
-  <link rel="stylesheet" href="class-chat.css?v=46-watch-request-queue" />
+  <link rel="stylesheet" href="class-chat.css?v=gc-tools-messagefix-v12" />
   <link rel="stylesheet" href="time-capsule.css?v=11-media-fix-v8" />
 
   <style id="sfkStartIntroStyle">
@@ -818,6 +818,10 @@
           <span class="classChatMenuIcon" aria-hidden="true">&#9881;</span>
           <span>Chat controls</span>
         </button>
+        <button id="classChatGcAdminOpen" type="button" hidden>
+          <span class="classChatMenuIcon" aria-hidden="true">&#128101;</span>
+          <span>GC Admin Tools</span>
+        </button>
         <button id="classChatScheduleOpen" type="button" hidden>
           <span class="classChatMenuIcon" aria-hidden="true">&#9719;</span>
           <span>Schedule message</span>
@@ -1026,6 +1030,33 @@
           </div>
           <p class="classChatUtilityHint">Admin-only history. Deleted message content remains visible here.</p>
           <div id="classChatAuditResults" class="classChatAuditResults"></div>
+        </div>
+
+        <div id="classChatGcAdminPanel" class="classChatUtilityBody classChatGcAdminPanel" hidden>
+          <section class="classChatGcAdminCard">
+            <h4>Add GC members</h4>
+            <p class="classChatUtilityHint">One student per line using <strong>Student ID | Full Name</strong>. New accounts use default PIN <strong>123456</strong>.</p>
+            <label for="classChatGcMemberInput">Members to add</label>
+            <textarea id="classChatGcMemberInput" rows="7" placeholder="20260001 | Juan Dela Cruz"></textarea>
+            <button id="classChatGcAddMembers" type="button">Add Members to GC</button>
+          </section>
+
+          <section class="classChatGcAdminCard">
+            <h4>Current GC members</h4>
+            <div class="classChatGcAdminActions">
+              <button id="classChatGcRefreshMembers" type="button">Refresh Member List</button>
+            </div>
+            <p id="classChatGcAdminMessage" class="classChatUtilityHint" role="status"></p>
+            <div id="classChatGcMemberList" class="classChatGcMemberList"></div>
+          </section>
+
+          <section class="classChatGcDanger">
+            <div>
+              <h4>Delete entire GC conversation</h4>
+              <p>Deletes all messages, reactions, poll votes, scheduled posts, receipts, and saved copies. GC member accounts will remain.</p>
+            </div>
+            <button id="classChatGcClearConversation" type="button">Delete Entire Conversation</button>
+          </section>
         </div>
 
         <form id="classChatMediaPanel" class="classChatUtilityBody classChatPollPanel" hidden>
@@ -1409,7 +1440,7 @@
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.16/dist/hls.min.js"></script>
   <script src="https://cdn.dashjs.org/v5.2.0/legacy/umd/dash.all.min.js"></script>
   <script src="time-capsule.js?v=11-media-fix-v8"></script>
-  <script src="class-chat.js?v=190-capsule-volume-restore"></script>
+  <script src="class-chat.js?v=gc-tools-messagefix-v12"></script>
   <script src="pwa.js?v=media-fix-v8"></script>
 
   <script>

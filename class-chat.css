@@ -3879,3 +3879,112 @@ body.classChatIsOpen {
     transition: none !important;
   }
 }
+
+
+/* =========================================================
+   v12 GC ADMIN TOOLS INSIDE GC + DELETED MESSAGE LABEL FIX
+========================================================= */
+.classChatGcAdminPanel {
+  display: grid;
+  gap: 14px;
+}
+
+.classChatGcAdminCard,
+.classChatGcDanger {
+  border: 2px solid rgba(17,17,17,.18);
+  border-radius: 18px;
+  background: rgba(255,255,255,.86);
+  padding: 14px;
+}
+
+.classChatGcAdminCard h4,
+.classChatGcDanger h4 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+  font-weight: 950;
+  color: #111;
+}
+
+.classChatGcAdminPanel textarea {
+  width: 100%;
+  min-height: 130px;
+  resize: vertical;
+}
+
+.classChatGcAdminActions {
+  display: flex;
+  justify-content: flex-start;
+  margin: 8px 0;
+}
+
+.classChatGcMemberList {
+  display: grid;
+  gap: 8px;
+  max-height: 220px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.classChatGcMemberRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid rgba(17,17,17,.14);
+  border-radius: 14px;
+  background: #fff;
+  padding: 10px;
+}
+
+.classChatGcMemberRow strong,
+.classChatGcMemberRow small {
+  display: block;
+}
+
+.classChatGcMemberRow small {
+  margin-top: 2px;
+  color: rgba(17,17,17,.62);
+  font-size: .76rem;
+}
+
+.classChatGcMemberRow button {
+  flex: 0 0 auto;
+  min-width: 76px;
+}
+
+.classChatGcDanger {
+  display: grid;
+  gap: 10px;
+  border-color: #b00020;
+  background: #fff2f2;
+}
+
+.classChatGcDanger p {
+  margin: 0;
+  color: rgba(17,17,17,.72);
+  font-size: .83rem;
+  line-height: 1.35;
+}
+
+.classChatGcDanger button {
+  border-color: #b00020 !important;
+  background: #b00020 !important;
+  color: #fff !important;
+}
+
+.classChatRemoved {
+  color: rgba(17,17,17,.68);
+  font-style: italic;
+  font-weight: 650;
+}
+
+@media (max-width: 640px) {
+  .classChatGcMemberRow {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .classChatGcMemberRow button {
+    width: 100%;
+  }
+}

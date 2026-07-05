@@ -168,6 +168,10 @@
     elements.colorOpen.addEventListener("click", () => openUtility("color"));
     elements.pollOpen.addEventListener("click", () => openUtility("poll"));
     elements.controlsOpen.addEventListener("click", () => openUtility("controls"));
+    elements.gcAdminOpen?.addEventListener("click", () => openUtility("gc-admin"));
+    elements.gcAddMembers?.addEventListener("click", addGcMembersFromChat);
+    elements.gcRefreshMembers?.addEventListener("click", loadGcMembersFromChat);
+    elements.gcClearConversation?.addEventListener("click", clearGcConversationFromChat);
     elements.scheduleOpen.addEventListener("click", () => openUtility("schedule"));
     elements.reportsOpen.addEventListener("click", () => openUtility("reports"));
     elements.auditOpen.addEventListener("click", () => openUtility("audit"));
@@ -278,6 +282,7 @@
     elements.colorMenuIcon = elements.colorOpen?.querySelector(".classChatColorMenuIcon");
     elements.pollOpen = document.getElementById("classChatPollOpen");
     elements.controlsOpen = document.getElementById("classChatControlsOpen");
+    elements.gcAdminOpen = document.getElementById("classChatGcAdminOpen");
     elements.scheduleOpen = document.getElementById("classChatScheduleOpen");
     elements.reportsOpen = document.getElementById("classChatReportsOpen");
     elements.auditOpen = document.getElementById("classChatAuditOpen");
@@ -291,6 +296,13 @@
     elements.lockToggle = document.getElementById("classChatLockToggle");
     elements.slowMode = document.getElementById("classChatSlowMode");
     elements.controlsMessage = document.getElementById("classChatControlsMessage");
+    elements.gcAdminPanel = document.getElementById("classChatGcAdminPanel");
+    elements.gcMemberInput = document.getElementById("classChatGcMemberInput");
+    elements.gcAddMembers = document.getElementById("classChatGcAddMembers");
+    elements.gcRefreshMembers = document.getElementById("classChatGcRefreshMembers");
+    elements.gcClearConversation = document.getElementById("classChatGcClearConversation");
+    elements.gcAdminMessage = document.getElementById("classChatGcAdminMessage");
+    elements.gcMemberList = document.getElementById("classChatGcMemberList");
     elements.pollForm = document.getElementById("classChatPollPanel");
     elements.pollQuestion = document.getElementById("classChatPollQuestion");
     elements.pollOptionsEditor = document.getElementById("classChatPollOptionsEditor");
@@ -759,6 +771,7 @@
     elements.utility.hidden = false;
     elements.searchPanel.hidden = type !== "search";
     elements.controlsForm.hidden = type !== "controls";
+    if (elements.gcAdminPanel) elements.gcAdminPanel.hidden = type !== "gc-admin";
     elements.pollForm.hidden = type !== "poll";
     elements.savedPanel.hidden = type !== "saved";
     elements.colorForm.hidden = type !== "color";
@@ -790,6 +803,12 @@
         ? currentConfig.BlockedKeywords.join(", ")
         : "";
       elements.controlsMessage.textContent = "";
+    }
+    if (type === "gc-admin") {
+      elements.utilityTitle.textContent = "GC Admin Tools";
+      if (elements.gcAdminMessage) elements.gcAdminMessage.textContent = "";
+      loadGcMembersFromChat();
+      window.setTimeout(() => elements.gcMemberInput?.focus(), 80);
     }
     if (type === "poll") {
       elements.utilityTitle.textContent = "Create quick poll";
@@ -905,6 +924,7 @@
     elements.colorOpen.hidden = true;
     elements.pollOpen.hidden = true;
     elements.controlsOpen.hidden = true;
+    if (elements.gcAdminOpen) elements.gcAdminOpen.hidden = true;
     elements.scheduleOpen.hidden = true;
     elements.reportsOpen.hidden = true;
     elements.auditOpen.hidden = true;
@@ -944,6 +964,7 @@
     elements.title.textContent = "SFK Class GC";
     elements.status.textContent = `${currentProfile.name} · Class member`;
     elements.controlsOpen.hidden = currentProfile.role !== "admin";
+    if (elements.gcAdminOpen) elements.gcAdminOpen.hidden = currentProfile.role !== "admin";
     elements.pollOpen.hidden = false;
     elements.scheduleOpen.hidden = currentProfile.role !== "admin";
     elements.reportsOpen.hidden = currentProfile.role !== "admin";
@@ -1865,7 +1886,7 @@
         ? `<span class="classChatPriorityLabel">ADVISER PRIORITY</span>`
         : "";
       const messageContent = removed
-        ? `<span class="classChatRemoved">Message removed by the Adviser.</span>`
+        ? `<span class="classChatRemoved">${escapeHtml(getRemovedMessageText(message, own))}</span>`
         : message.Type === "poll"
           ? renderPollMarkup(message)
           : `<div class="classChatText">${formatMessageText(message.Text || "")}${message.Edited ? `<small class="classChatEdited">edited</small>` : ""}</div>${renderSocialVideoEmbed(message.Text || "")}${renderMediaAttachment(message)}`;
@@ -1924,6 +1945,32 @@
     updateSeenIndicators();
     updateJumpButton();
     hydrateTikTokShortEmbeds();
+  }
+
+  function getRemovedMessageText(message, own) {
+    if (!message) return "Message removed.";
+    const removedBy = String(message.RemovedBy || "");
+    const senderUid = String(message.SenderUID || "");
+    const removerRole = String(message.RemovedByRole || "").toLowerCase();
+    const removerName = String(message.RemovedByName || "").trim();
+
+    if (removedBy && senderUid && removedBy === senderUid) {
+      return own ? "You removed this message." : "Message removed by the sender.";
+    }
+
+    if (removerRole === "student") {
+      return own ? "You removed this message." : "Message removed by the sender.";
+    }
+
+    if (removerRole === "officer") {
+      return "Message removed by the Officer.";
+    }
+
+    if (removerName && removerName !== "SFK Adviser") {
+      return `Message removed by ${removerName}.`;
+    }
+
+    return "Message removed by the Adviser.";
   }
 
   function isSameMessageGroup(first, second) {
@@ -4805,7 +4852,8 @@
       REPORT_CREATED: ["&#9873;", "reported a message"],
       WATCH_PARTY_STARTED: ["&#9654;", "started a Watch Party"],
       WATCH_PARTY_ENDED: ["&#9632;", "ended a Watch Party"],
-      CLASS_THEME_CHANGED: ["&#9679;", "changed the class theme"]
+      CLASS_THEME_CHANGED: ["&#9679;", "changed the class theme"],
+      GC_CONVERSATION_CLEARED: ["&#128465;", "deleted the entire GC conversation"]
     };
     const [icon, action] = labels[event] || ["&#8226;", event.toLowerCase().replaceAll("_", " ")];
     const actor = entry.ActorName || "Class member";
@@ -5256,6 +5304,8 @@
         Text: "",
         Removed: true,
         RemovedBy: currentProfile.uid,
+        RemovedByName: currentProfile.name,
+        RemovedByRole: currentProfile.role,
         RemovedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
       if (canModerate) removal.Pinned = false;
@@ -5360,6 +5410,226 @@
       return;
     }
     requestCloseChat();
+  }
+
+  async function addGcMembersFromChat() {
+    if (!currentProfile || currentProfile.role !== "admin") return;
+    const input = elements.gcMemberInput;
+    const button = elements.gcAddMembers;
+    const message = elements.gcAdminMessage;
+    const entries = parseGcMemberEntries(input?.value || "");
+
+    if (!entries.length) {
+      if (message) message.textContent = "Enter at least one valid Student ID | Full Name member entry.";
+      return;
+    }
+
+    if (button) button.disabled = true;
+    if (message) message.textContent = `Adding 0 of ${entries.length} members...`;
+
+    let created = 0;
+    const errors = [];
+
+    try {
+      ensureFirebase();
+      const provisionAuth = getGcProvisionAuth();
+      for (let index = 0; index < entries.length; index += 1) {
+        const entry = entries[index];
+        if (message) message.textContent = `Adding ${index + 1} of ${entries.length}: ${entry.name}`;
+        try {
+          const credential = await provisionAuth.createUserWithEmailAndPassword(
+            studentEmail(entry.studentId),
+            "123456"
+          );
+          await db.collection("chatProfiles").doc(credential.user.uid).set({
+            StudentID: entry.studentId,
+            Name: entry.name,
+            Role: "student",
+            Active: true,
+            Blocked: false,
+            MustChangePin: true,
+            AvatarColor: DEFAULT_PROFILE_COLOR,
+            CreatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          await db.collection("chatDirectory").doc(credential.user.uid).set({
+            Name: entry.name,
+            Role: "student",
+            AvatarColor: DEFAULT_PROFILE_COLOR,
+            UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+          await provisionAuth.signOut().catch(() => {});
+          created += 1;
+        } catch (error) {
+          errors.push(`${entry.studentId}: ${readableError(error)}`);
+          await provisionAuth.signOut().catch(() => {});
+        }
+      }
+
+      if (input) input.value = "";
+      if (message) {
+        message.textContent = `${created} member${created === 1 ? "" : "s"} added.${errors.length ? ` ${errors.length} skipped: ${errors.slice(0, 3).join("; ")}` : ""}`;
+      }
+      await loadGcMembersFromChat();
+    } catch (error) {
+      if (message) message.textContent = readableError(error);
+    } finally {
+      if (button) button.disabled = false;
+    }
+  }
+
+  async function loadGcMembersFromChat() {
+    if (!elements.gcMemberList || !db || currentProfile?.role !== "admin") return;
+    elements.gcMemberList.innerHTML = `<p class="classChatUtilityHint">Loading GC members...</p>`;
+
+    try {
+      const snapshot = await db.collection("chatProfiles").orderBy("Name").get();
+      if (snapshot.empty) {
+        elements.gcMemberList.innerHTML = `<p class="classChatUtilityHint">No GC members yet.</p>`;
+        return;
+      }
+
+      elements.gcMemberList.innerHTML = snapshot.docs.map((doc) => {
+        const profile = doc.data() || {};
+        const active = profile.Active !== false && profile.Blocked !== true;
+        return `
+          <div class="classChatGcMemberRow">
+            <div>
+              <strong>${escapeHtml(profile.Name || "Student")}</strong>
+              <small>${escapeHtml(profile.StudentID || "")} · ${active ? "Active" : "Disabled"}</small>
+            </div>
+            <button type="button" data-gc-profile="${escapeHtml(doc.id)}" data-gc-active="${active ? "true" : "false"}">
+              ${active ? "Disable" : "Enable"}
+            </button>
+          </div>`;
+      }).join("");
+
+      elements.gcMemberList.querySelectorAll("[data-gc-profile]").forEach((button) => {
+        button.addEventListener("click", () => toggleGcMemberFromChat(button));
+      });
+    } catch (error) {
+      elements.gcMemberList.innerHTML = "";
+      if (elements.gcAdminMessage) elements.gcAdminMessage.textContent = readableError(error);
+    }
+  }
+
+  async function toggleGcMemberFromChat(button) {
+    if (!button || !db || currentProfile?.role !== "admin") return;
+    const currentlyActive = button.dataset.gcActive === "true";
+    button.disabled = true;
+
+    try {
+      await db.collection("chatProfiles").doc(button.dataset.gcProfile).update({
+        Active: !currentlyActive,
+        Blocked: false,
+        UpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      await loadGcMembersFromChat();
+    } catch (error) {
+      if (elements.gcAdminMessage) elements.gcAdminMessage.textContent = readableError(error);
+      button.disabled = false;
+    }
+  }
+
+  async function clearGcConversationFromChat() {
+    if (!db || currentProfile?.role !== "admin") return;
+
+    const confirmed = window.confirm(
+      "Delete every GC message, reaction, poll vote, scheduled post, receipt, and saved copy? Member accounts will remain."
+    );
+    if (!confirmed) return;
+
+    const phrase = window.prompt("Type DELETE ALL to confirm. This cannot be undone.");
+    if (String(phrase || "").trim().toUpperCase() !== "DELETE ALL") {
+      if (elements.gcAdminMessage) elements.gcAdminMessage.textContent = "GC cleanup cancelled.";
+      return;
+    }
+
+    const button = elements.gcClearConversation;
+    if (button) button.disabled = true;
+    if (elements.gcAdminMessage) elements.gcAdminMessage.textContent = "Deleting GC conversation...";
+
+    try {
+      let deletedMessages = 0;
+
+      while (true) {
+        const snapshot = await db.collection("chatMessages").limit(50).get();
+        if (snapshot.empty) break;
+
+        for (const messageDoc of snapshot.docs) {
+          const reactions = await messageDoc.ref.collection("reactions").get();
+          const votes = await messageDoc.ref.collection("votes").get();
+          const refs = reactions.docs.map((doc) => doc.ref)
+            .concat(votes.docs.map((doc) => doc.ref));
+          refs.push(messageDoc.ref);
+          await deleteGcRefsInBatches(refs);
+          deletedMessages += 1;
+          if (elements.gcAdminMessage) {
+            elements.gcAdminMessage.textContent = `Deleting GC conversation... ${deletedMessages} message${deletedMessages === 1 ? "" : "s"} removed`;
+          }
+        }
+      }
+
+      await deleteGcFlatCollection("chatTyping");
+      await deleteGcFlatCollection("chatReadReceipts");
+      await deleteGcFlatCollection("chatScheduled");
+
+      const profiles = await db.collection("chatProfiles").get();
+      for (const profile of profiles.docs) {
+        const saved = await db.collection("chatSaved").doc(profile.id).collection("items").get();
+        await deleteGcRefsInBatches(saved.docs.map((doc) => doc.ref));
+      }
+
+      const batch = db.batch();
+      addAuditToBatch(batch, "GC_CONVERSATION_CLEARED", {
+        Details: `Deleted ${deletedMessages} message${deletedMessages === 1 ? "" : "s"} from the GC conversation`
+      });
+      await batch.commit();
+
+      if (elements.gcAdminMessage) {
+        elements.gcAdminMessage.textContent = `GC conversation deleted. ${deletedMessages} message${deletedMessages === 1 ? "" : "s"} removed.`;
+      }
+    } catch (error) {
+      if (elements.gcAdminMessage) elements.gcAdminMessage.textContent = readableError(error);
+    } finally {
+      if (button) button.disabled = false;
+    }
+  }
+
+  async function deleteGcFlatCollection(collectionName) {
+    while (true) {
+      const snapshot = await db.collection(collectionName).limit(400).get();
+      if (snapshot.empty) return;
+      await deleteGcRefsInBatches(snapshot.docs.map((doc) => doc.ref));
+    }
+  }
+
+  async function deleteGcRefsInBatches(refs) {
+    for (let index = 0; index < refs.length; index += 400) {
+      const batch = db.batch();
+      refs.slice(index, index + 400).forEach((ref) => batch.delete(ref));
+      await batch.commit();
+    }
+  }
+
+  function getGcProvisionAuth() {
+    try {
+      return firebase.app("sfkChatProvisionerFromGc").auth();
+    } catch (error) {
+      return firebase.initializeApp(window.SFK_FIREBASE_CONFIG, "sfkChatProvisionerFromGc").auth();
+    }
+  }
+
+  function parseGcMemberEntries(raw) {
+    const seen = new Set();
+    return String(raw || "").split(/\r?\n/).map((line) => {
+      const parts = line.split("|").map((part) => part.trim());
+      const studentId = normalizeStudentId(parts[0]);
+      const name = parts[1] || "";
+      if (!studentId || !name || seen.has(studentId)) return null;
+      seen.add(studentId);
+      return { studentId, name };
+    }).filter(Boolean);
   }
 
   function normalizeStudentId(value) {
