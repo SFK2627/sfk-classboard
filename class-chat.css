@@ -4360,3 +4360,216 @@ body.classChatIsOpen {
     width: 100%;
   }
 }
+
+/* =========================================================
+   v16 GC + TIME CAPSULE BUTTON RESTORE
+   Keeps both quick-access buttons visible in Adviser Reminders.
+========================================================= */
+.adviserReminderHeader {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-direction: row !important;
+  gap: 10px !important;
+  min-height: 42px !important;
+}
+
+.adviserReminderHeader h2 {
+  min-width: 0 !important;
+  margin-right: 8px !important;
+}
+
+.adviserHeaderActions {
+  flex: 0 0 auto !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+  min-width: 76px !important;
+  min-height: 36px !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  z-index: 50 !important;
+}
+
+.adviserHeaderActions #timeCapsuleOpen,
+.adviserHeaderActions #classChatOpen,
+button.timeCapsuleOpen,
+button.classChatOpen {
+  display: grid !important;
+  place-items: center !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  position: relative !important;
+  z-index: 55 !important;
+  transform: none !important;
+  overflow: visible !important;
+  box-sizing: border-box !important;
+  cursor: pointer !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+.adviserHeaderActions #timeCapsuleOpen,
+button.timeCapsuleOpen {
+  width: 36px !important;
+  height: 36px !important;
+  flex: 0 0 36px !important;
+  border: 2px solid #111 !important;
+  border-radius: 999px !important;
+  padding: 0 !important;
+  background: linear-gradient(180deg, #ffd900 0%, #f7c600 100%) !important;
+  color: #111 !important;
+  font-size: 1.34rem !important;
+  line-height: 1 !important;
+  box-shadow: 2px 2px 0 rgba(17,17,17,.32) !important;
+}
+
+.adviserHeaderActions #timeCapsuleOpen > span,
+button.timeCapsuleOpen > span {
+  display: block !important;
+  color: #111 !important;
+  -webkit-text-stroke: 0 !important;
+  filter: none !important;
+  line-height: 1 !important;
+}
+
+.adviserHeaderActions #timeCapsuleOpen > i,
+button.timeCapsuleOpen > i {
+  right: -2px !important;
+  bottom: -1px !important;
+  width: 10px !important;
+  height: 8px !important;
+  border: 2px solid #111 !important;
+  background: #fffdf3 !important;
+}
+
+.adviserHeaderActions #classChatOpen,
+button.classChatOpen {
+  width: 34px !important;
+  height: 34px !important;
+  flex: 0 0 34px !important;
+  border: 2px solid #111 !important;
+  border-radius: 999px !important;
+  padding: 0 !important;
+  background: #111 !important;
+  color: #f7c600 !important;
+  box-shadow: 2px 2px 0 rgba(17,17,17,.32) !important;
+}
+
+.adviserHeaderActions #classChatOpen .classChatGlyph,
+button.classChatOpen .classChatGlyph {
+  display: block !important;
+  width: 16px !important;
+  height: 12px !important;
+  border: 2px solid currentColor !important;
+  border-radius: 7px !important;
+  color: #f7c600 !important;
+}
+
+.adviserHeaderActions #classChatOpen:hover,
+.adviserHeaderActions #timeCapsuleOpen:hover,
+button.classChatOpen:hover,
+button.timeCapsuleOpen:hover {
+  filter: brightness(1.05) !important;
+  transform: translateY(-1px) !important;
+}
+
+.adviserHeaderActions #classChatUnread[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 700px) {
+  .adviserHeaderActions {
+    gap: 7px !important;
+    min-width: 72px !important;
+  }
+
+  .adviserHeaderActions #timeCapsuleOpen,
+  button.timeCapsuleOpen {
+    width: 34px !important;
+    height: 34px !important;
+    flex-basis: 34px !important;
+  }
+
+  .adviserHeaderActions #classChatOpen,
+  button.classChatOpen {
+    width: 32px !important;
+    height: 32px !important;
+    flex-basis: 32px !important;
+  }
+}
+
+
+/* =========================================================
+   v17 GC ADMIN DETAILED SEEN LIST
+   Admin can see who viewed every message, not only admin's own messages.
+========================================================= */
+.classChatSeen.is-admin-seen {
+  display: block;
+  margin-top: 4px;
+  color: #6b6257;
+  font-size: .62rem;
+  line-height: 1.25;
+}
+
+.classChatSeen.is-admin-seen.is-empty {
+  opacity: .72;
+  font-style: italic;
+}
+
+.classChatSeenButton {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  border: 1px solid rgba(17,17,17,.12);
+  border-radius: 999px;
+  background: rgba(247,198,0,.18);
+  color: #5e4c00;
+  padding: 3px 8px;
+  font: inherit;
+  font-size: .62rem;
+  font-weight: 850;
+  line-height: 1.15;
+  text-align: left;
+  cursor: pointer;
+  white-space: normal;
+  box-shadow: none;
+}
+
+.classChatSeenButton:hover,
+.classChatSeenButton:focus-visible {
+  background: rgba(247,198,0,.30);
+  outline: none;
+}
+
+.classChatPanel.is-dark .classChatSeen.is-admin-seen {
+  color: rgba(255,255,255,.70);
+}
+
+.classChatPanel.is-dark .classChatSeenButton {
+  border-color: rgba(247,198,0,.24);
+  background: rgba(247,198,0,.16);
+  color: #ffe680;
+}
+
+.classChatPanel.is-dark .classChatSeenButton:hover,
+.classChatPanel.is-dark .classChatSeenButton:focus-visible {
+  background: rgba(247,198,0,.24);
+}
+
+
+/* =========================================================
+   v18 GC SEEN SUMMARY FORMAT
+   Shows: Seen by # first, then the actual names.
+========================================================= */
+.classChatSeenButton {
+  max-width: min(100%, 320px);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.classChatSeen.is-admin-seen.is-empty {
+  font-weight: 800;
+}

@@ -1935,7 +1935,7 @@
               ${messageContent}
             </div>
             <div class="classChatReactionSummary" data-reactions-for="${message.id}"></div>
-            <div class="classChatMeta">${groupEnd ? `${formatTime(createdAt)}<span class="classChatSeen" data-seen-message="${message.id}"></span>` : ""}</div>
+            <div class="classChatMeta">${(groupEnd || canModerate) ? `${formatTime(createdAt)}<span class="classChatSeen" data-seen-message="${message.id}"></span>` : ""}</div>
             ${actionButtons}
           </div>
         </article>`;
@@ -3684,20 +3684,124 @@
 
   function updateSeenIndicators() {
     if (!currentProfile || !elements.messages) return;
-    elements.messages.querySelectorAll("[data-seen-message]").forEach((node) => { node.textContent = ""; });
+
+    elements.messages.querySelectorAll("[data-seen-message]").forEach((node) => {
+      node.textContent = "";
+      node.classList.remove("is-admin-seen", "is-empty");
+      node.removeAttribute("title");
+    });
+
+    const isAdmin = currentProfile.role === "admin";
+
+    // Adviser/Admin mode: show seen details for every visible message,
+    // even when the message was sent by a student or another staff account.
+    if (isAdmin) {
+      currentMessages
+        .filter((message) => !message.IsScheduled && !message.Removed)
+        .forEach((message) => {
+          const node = elements.messages.querySelector(`[data-seen-message="${cssEscape(message.id)}"]`);
+          if (!node) return;
+
+          const seenReceipts = getSeenReceiptsForMessage(message);
+          node.classList.add("is-admin-seen");
+
+          if (!seenReceipts.length) {
+            node.textContent = "Seen by 0";
+            node.classList.add("is-empty");
+            return;
+          }
+
+          const summary = formatSeenSummary(seenReceipts);
+          const detail = formatSeenDetailText(message, seenReceipts);
+          node.title = detail;
+          node.innerHTML = `<button type="button" class="classChatSeenButton" data-seen-detail="${escapeHtml(message.id)}">${escapeHtml(summary)}</button>`;
+        });
+      return;
+    }
+
+    // Student/officer mode: keep the simple seen label only for the latest
+    // message sent by the current user.
     const latestOwn = [...currentMessages].reverse().find((message) => (
       !message.IsScheduled && !message.Removed && message.SenderUID === currentProfile.uid
     ));
     if (!latestOwn) return;
-    const createdAt = timestampToMillis(latestOwn.CreatedAt);
-    const seenNames = readReceipts
-      .filter((receipt) => receipt.uid !== currentProfile.uid && timestampToMillis(receipt.LastSeenAt) >= createdAt)
-      .map((receipt) => receipt.Name || "Classmate");
+
+    const seenReceipts = getSeenReceiptsForMessage(latestOwn)
+      .filter((receipt) => receipt.uid !== currentProfile.uid);
     const node = elements.messages.querySelector(`[data-seen-message="${cssEscape(latestOwn.id)}"]`);
-    if (!node || !seenNames.length) return;
+    if (!node || !seenReceipts.length) return;
+
+    const seenNames = seenReceipts.map((receipt) => receipt.Name || "Classmate");
     node.textContent = seenNames.length <= 2
       ? `Seen by ${seenNames.join(" and ")}`
       : `Seen by ${seenNames.length}`;
+  }
+
+  function getSeenReceiptsForMessage(message) {
+    if (!message) return [];
+    const createdAt = timestampToMillis(message.CreatedAt);
+    if (!createdAt) return [];
+
+    const senderUid = String(message.SenderUID || "");
+    const seenByUid = new Map();
+
+    readReceipts.forEach((receipt) => {
+      const uid = String(receipt.uid || "");
+      if (!uid || uid === senderUid) return;
+      const lastSeenAt = timestampToMillis(receipt.LastSeenAt);
+      if (lastSeenAt < createdAt) return;
+
+      const existing = seenByUid.get(uid);
+      if (!existing || timestampToMillis(existing.LastSeenAt) < lastSeenAt) {
+        seenByUid.set(uid, receipt);
+      }
+    });
+
+    return Array.from(seenByUid.values()).sort((a, b) => {
+      const nameA = String(a.Name || "").toLowerCase();
+      const nameB = String(b.Name || "").toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
+  }
+
+  function formatSeenSummary(seenReceipts) {
+    const names = seenReceipts
+      .map((receipt) => String(receipt.Name || "Classmate").trim())
+      .filter(Boolean);
+
+    if (!names.length) return "Seen by 0";
+
+    const shownNames = names.slice(0, 4).join(", ");
+    const moreCount = Math.max(0, names.length - 4);
+    return moreCount
+      ? `Seen by ${names.length}: ${shownNames} +${moreCount} more`
+      : `Seen by ${names.length}: ${shownNames}`;
+  }
+
+  function formatSeenDetailText(message, seenReceipts) {
+    const sender = message?.SenderName || "Classmate";
+    const sentAt = timestampToDate(message?.CreatedAt);
+    const lines = seenReceipts.map((receipt, index) => {
+      const lastSeenAt = timestampToDate(receipt.LastSeenAt);
+      return `${index + 1}. ${receipt.Name || "Classmate"} — ${formatDayLabel(lastSeenAt)}, ${formatTime(lastSeenAt)}`;
+    });
+
+    return [
+      `Seen details`,
+      `Message from: ${sender}`,
+      `Sent: ${formatDayLabel(sentAt)}, ${formatTime(sentAt)}`,
+      "",
+      lines.length ? lines.join("\n") : "Not seen yet"
+    ].join("\n");
+  }
+
+  function showSeenDetailsForMessage(messageId) {
+    if (currentProfile?.role !== "admin") return;
+    const message = findMessage(messageId);
+    if (!message) return;
+
+    const seenReceipts = getSeenReceiptsForMessage(message);
+    window.alert(formatSeenDetailText(message, seenReceipts));
   }
 
   function updateJumpButton() {
@@ -4016,6 +4120,14 @@
   }
 
   function handleMessageClick(event) {
+    const seenDetail = event.target.closest("[data-seen-detail]");
+    if (seenDetail) {
+      event.preventDefault();
+      event.stopPropagation();
+      showSeenDetailsForMessage(seenDetail.dataset.seenDetail);
+      return;
+    }
+
     const quoted = event.target.closest("[data-quoted-message-id]");
     if (quoted) {
       focusOriginalMessage(quoted.dataset.quotedMessageId);
