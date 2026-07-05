@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-admin-pwa-v22-appwide-portrait-v6";
+const CACHE_NAME = "sfk-admin-pwa-v25-gc-admin-style-v14";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -7,6 +7,7 @@ const APP_SHELL = [
   "../admin.html?embedded=1&v=appwide-portrait-v6",
   "../admin.css?v=no-billing-upload",
   "../admin.js?v=no-billing-upload",
+  "../class-chat-admin.js",
   "../firebase-config.js",
   "../firebase-adapter.js",
   "../auth.js",
