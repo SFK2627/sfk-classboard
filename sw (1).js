@@ -1,47 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#f7c600" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-title" content="SFK Admin" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>SFK Admin</title>
-  <link rel="manifest" href="manifest.webmanifest?v=3" />
-  <link rel="icon" type="image/png" sizes="192x192" href="../icons/icon-192.png?v=3" />
-  <link rel="apple-touch-icon" href="../icons/icon-192.png?v=3" />
-  <style>
-    html,
-    body {
-      margin: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: #fff8dc;
-    }
+SFK ClassBoard - GC Tools Visible v13
 
-    iframe {
-      display: block;
-      width: 100%;
-      height: 100dvh;
-      border: 0;
-      background: #fff8dc;
-    }
-  </style>
-  <script src="../orientation-lock.js?v=appwide-v6" defer></script>
-</head>
-<body>
-  <iframe src="../admin.html?embedded=1&v=appwide-portrait-v6" title="SFK ClassBoard Admin"></iframe>
-  <script>
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("./sw.js").catch((error) => {
-          console.warn("Admin service worker registration failed:", error);
-        });
-      });
-    }
-  </script>
-</body>
-</html>
+Where to find it:
+1. Inside the GC:
+   Open GC > sign in as Adviser/Admin > Chat menu (...) > More Tools > Chat Controls.
+   The GC Admin Tools section is now directly inside Chat Controls.
+
+2. On the Admin page:
+   Open admin.html. The GC Admin Tools card is now shown near the top of the Admin Panel.
+
+Included:
+- Add GC members using Student ID | Full Name.
+- Refresh/enable/disable GC members.
+- Delete entire GC conversation.
+- Student-deleted messages stay fixed: they no longer say removed by the Adviser.
+
+After upload:
+- Hard refresh.
+- If old files still show, open reset-cache.html once.
