@@ -884,7 +884,7 @@
     }
 
     const results = searchMessages.filter((message) => {
-      if (message.Removed) return false;
+      if (isMessageRemoved(message)) return false;
       return `${message.SenderName || ""} ${message.Text || ""}`.toLowerCase().includes(query);
     }).slice(0, 40);
 
@@ -1886,7 +1886,7 @@
         && message.Type !== "poll"
         && Date.now() - createdAt.getTime() <= OWN_DELETE_WINDOW_MS;
       const canModerate = currentProfile.role === "admin";
-      const removed = message.Removed === true;
+      const removed = isMessageRemoved(message);
       const mentioned = !removed && isCurrentUserMentioned(message.Text);
       const priorityLabel = message.Priority === true
         ? `<span class="classChatPriorityLabel">ADVISER PRIORITY</span>`
@@ -1900,7 +1900,7 @@
       const replySource = message.ReplyToID ? findMessage(message.ReplyToID) : null;
       const replyIsUnavailable = removed
         || message.ReplySourceRemoved === true
-        || replySource?.Removed === true;
+        || isMessageRemoved(replySource);
       const quoted = message.ReplyToID && !replyIsUnavailable ? `
         <div class="classChatQuoted" data-quoted-message-id="${message.ReplyToID}">
           <strong>${escapeHtml(message.ReplyToName || "Message")}</strong>
@@ -1945,12 +1945,31 @@
 
     syncReactionListeners();
     clearPollVoteListeners();
-    currentMessages.filter((message) => message.Type === "poll" && !message.Removed)
+    currentMessages.filter((message) => message.Type === "poll" && !isMessageRemoved(message))
       .forEach((message) => loadPollVotes(message));
     verifyQuotedMessages();
     updateSeenIndicators();
     updateJumpButton();
     hydrateTikTokShortEmbeds();
+  }
+
+  function isMessageRemoved(message) {
+    if (!message) return false;
+    if (message.Removed === true) return true;
+
+    // Fallback for stricter Firebase rules: if a student could only blank
+    // their own text through the normal edit permission, treat that message
+    // as removed in the UI. Empty text cannot be sent from the composer.
+    const text = String(message.Text ?? "").trim();
+    const isPlainTextMessage = !message.Type
+      && !message.MediaType
+      && !message.MediaURL
+      && !message.MediaPath
+      && !message.FileURL
+      && !message.ImageURL
+      && !message.VideoURL
+      && !message.AudioURL;
+    return isPlainTextMessage && text === "";
   }
 
   function getRemovedMessageText(message, own) {
@@ -3700,7 +3719,7 @@
     if (!adminSeenDetailMessageId) return;
 
     const selectedMessage = findMessage(adminSeenDetailMessageId);
-    if (!selectedMessage || selectedMessage.IsScheduled || selectedMessage.Removed || !canCurrentUserViewSeenDetails(selectedMessage)) {
+    if (!selectedMessage || selectedMessage.IsScheduled || isMessageRemoved(selectedMessage) || !canCurrentUserViewSeenDetails(selectedMessage)) {
       adminSeenDetailMessageId = "";
       return;
     }
@@ -3774,7 +3793,7 @@
 
   function toggleSeenDetailsForMessage(messageId) {
     const message = findMessage(messageId);
-    if (!message || message.IsScheduled || message.Removed || !canCurrentUserViewSeenDetails(message)) return;
+    if (!message || message.IsScheduled || isMessageRemoved(message) || !canCurrentUserViewSeenDetails(message)) return;
 
     adminSeenDetailMessageId = adminSeenDetailMessageId === messageId ? "" : messageId;
     updateSeenIndicators();
@@ -3830,7 +3849,7 @@
     await Promise.all(missingIds.map(async (messageId) => {
       try {
         const snapshot = await db.collection("chatMessages").doc(messageId).get();
-        if (!snapshot.exists || snapshot.data()?.Removed === true) {
+        if (!snapshot.exists || isMessageRemoved(snapshot.data())) {
           elements.messages
             .querySelectorAll(`[data-quoted-message-id="${cssEscape(messageId)}"]`)
             .forEach((node) => node.remove());
@@ -4161,7 +4180,7 @@
     const article = event.target.closest(".classChatMessage");
     if (!article || event.target.closest("button, a, iframe, video, audio, input, textarea, select, label")) return;
     const message = findMessage(article.dataset.messageId);
-    if (!message || message.IsScheduled || message.Removed) return;
+    if (!message || message.IsScheduled || isMessageRemoved(message)) return;
 
     if (canCurrentUserViewSeenDetails(message)) {
       toggleSeenDetailsForMessage(message.id);
@@ -5572,16 +5591,11 @@
     const ref = db.collection("chatMessages").doc(message.id);
 
     try {
-      // Student self-delete must stay simple because Firestore rules usually
-      // allow students to edit only their own message document, not audit logs
-      // or moderation records. This prevents the old permission-denied popup.
+      // Student self-delete must be compatible with stricter Firestore rules.
+      // First try the normal removed marker. If rules block added Removed fields,
+      // fall back to edit-safe updates that blank the text.
       if (!canModerate && own) {
-        await ref.update({
-          Text: "",
-          Removed: true,
-          RemovedBy: currentProfile.uid,
-          RemovedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
+        await removeOwnMessageWithFallback(ref);
         return;
       }
 
@@ -5640,6 +5654,37 @@
         variant: "danger"
       });
     }
+  }
+
+  async function removeOwnMessageWithFallback(ref) {
+    const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+    const attempts = [
+      {
+        Text: "",
+        Removed: true,
+        RemovedBy: currentProfile.uid,
+        RemovedAt: timestamp
+      },
+      {
+        Text: "",
+        Edited: true,
+        EditedAt: firebase.firestore.FieldValue.serverTimestamp()
+      },
+      {
+        Text: ""
+      }
+    ];
+
+    let lastError = null;
+    for (const payload of attempts) {
+      try {
+        await ref.update(payload);
+        return true;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+    throw lastError;
   }
 
   async function markRead() {
@@ -6000,7 +6045,7 @@
     if (code.includes("too-many-requests")) return "Too many attempts. Please wait and try again.";
     if (code.includes("permission-denied")) {
       if (context === "delete-message") {
-        return "This message could not be removed because the database rules blocked the delete action. Please reload and try again. If it still happens, the Firebase rules need to allow the sender to mark their own message as removed.";
+        return "This message could not be removed because the database rules blocked all delete fallback options. Please try editing the message manually, or update Firebase rules to allow the sender to blank their own message text.";
       }
       return "This account is not allowed to access the class chat.";
     }
