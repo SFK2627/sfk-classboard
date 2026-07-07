@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-sw.js-shhh-sensitivity-slider-v42";
+const CACHE_NAME = "sfk-sw.js-shhh-real-slider-v43";
 const APP_SHELL = [
   "./",
   "./index.html",

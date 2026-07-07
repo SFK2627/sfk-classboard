@@ -8454,3 +8454,47 @@ button.timeCapsuleOpen:hover {
 .shhhSensitivitySlider {
   grid-column: 1 / -1;
 }
+
+
+/* v43 FORCE REAL SLIDER - NO DROPDOWN */
+.shhhSensitivitySlider {
+  grid-column: 1 / -1 !important;
+  display: grid !important;
+  gap: 8px !important;
+}
+
+.shhhSensitivitySlider input[type="range"] {
+  display: block !important;
+  width: 100% !important;
+  height: 14px !important;
+  min-height: 14px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  accent-color: #ffd000 !important;
+  cursor: pointer !important;
+}
+
+.shhhSliderLabels {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  width: 100% !important;
+  font-size: .76rem !important;
+  font-weight: 950 !important;
+}
+
+.shhhSliderLabels strong {
+  min-width: 58px !important;
+  padding: 4px 9px !important;
+  border-radius: 999px !important;
+  background: #ffd000 !important;
+  color: #111 !important;
+  text-align: center !important;
+}
+
+.shhhSensitivitySlider select {
+  display: none !important;
+}

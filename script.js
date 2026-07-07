@@ -4444,7 +4444,7 @@ function createShhhModeUi() {
       </div>
 
       <p class="shhhSensitivityNote">
-        For front classroom mic: use High. If it triggers too often, use Medium or Low.
+        Slide right for more sensitive. Use 80–100% if mic is far from students.
       </p>
 
       <label class="shhhModeMuteRow">
@@ -4474,6 +4474,7 @@ function createShhhModeUi() {
     </div>`;
 
   document.body.appendChild(panel);
+  forceShhhSensitivitySlider();
 
   openButton.addEventListener("click", openShhhModePanel);
   openButton.addEventListener("keydown", (event) => {
@@ -4497,7 +4498,7 @@ function createShhhModeUi() {
     updateShhhModeUi(shhhMode.voiceEnabled ? "Voice on" : "Voice off");
   });
   panel.querySelector("#shhhModeSensitivity")?.addEventListener("input", (event) => {
-    shhhMode.sensitivityLevel = Number(event.target.value);
+    shhhMode.sensitivityLevel = Math.max(0, Math.min(100, Number(event.target.value) || 0));
     saveShhhModeSettings();
     updateShhhModeUi();
   });
@@ -4507,6 +4508,46 @@ function createShhhModeUi() {
     updateShhhModeUi();
   });
 }
+
+
+function forceShhhSensitivitySlider() {
+  const field = document.getElementById("shhhModeSensitivity");
+  if (!field) return;
+
+  if (field.tagName === "SELECT") {
+    const oldValue = field.value;
+    const label = field.closest("label");
+    if (!label) return;
+
+    let level = SHHH_SENSITIVITY_DEFAULT;
+    if (oldValue === "high") level = 90;
+    else if (oldValue === "medium") level = 65;
+    else if (oldValue === "low") level = 35;
+
+    label.className = "shhhSensitivitySlider";
+    label.innerHTML = `
+      Sensitivity
+      <input id="shhhModeSensitivity" type="range" min="0" max="100" step="1" value="${level}">
+      <div class="shhhSliderLabels">
+        <span>Least</span>
+        <strong id="shhhSensitivityValue">${level}%</strong>
+        <span>Most</span>
+      </div>
+    `;
+    shhhMode.sensitivityLevel = level;
+  }
+
+  const slider = document.getElementById("shhhModeSensitivity");
+  if (slider && slider.type === "range" && !slider.dataset.boundSlider) {
+    slider.dataset.boundSlider = "true";
+    slider.addEventListener("input", (event) => {
+      shhhMode.sensitivityLevel = Math.max(0, Math.min(100, Number(event.target.value) || 0));
+      saveShhhModeSettings();
+      updateShhhModeUi();
+    });
+  }
+}
+
 
 function restoreShhhModeSettings() {
   try {
@@ -4524,6 +4565,7 @@ function restoreShhhModeSettings() {
   } catch (error) {
     // Settings are optional.
   }
+  forceShhhSensitivitySlider();
   const sensitivity = document.getElementById("shhhModeSensitivity");
   const cooldown = document.getElementById("shhhModeCooldown");
   const mute = document.getElementById("shhhModeMute");
