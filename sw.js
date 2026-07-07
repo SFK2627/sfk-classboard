@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-sw.js-phone-classphoto-fix-v39";
+const CACHE_NAME = "sfk-sw.js-phone-classphoto-embed-v40";
 const APP_SHELL = [
   "./",
   "./index.html",
