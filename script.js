@@ -4301,9 +4301,9 @@ heartAnnouncement = async function heartAnnouncementV3(id) {
 const SHHH_MODE_STORAGE_KEY = "sfkClassBoardShhhModeSettings";
 const SHHH_DESKTOP_MEDIA_QUERY = "(min-width: 1024px) and (pointer: fine)";
 const SHHH_SENSITIVITY = {
-  low: { label: "Low", threshold: 0.115 },
-  medium: { label: "Medium", threshold: 0.080 },
-  high: { label: "High", threshold: 0.052 }
+  low: { label: "Low", threshold: 0.060 },
+  medium: { label: "Medium", threshold: 0.038 },
+  high: { label: "High", threshold: 0.022 }
 };
 
 let shhhMode = {
@@ -4419,9 +4419,9 @@ function createShhhModeUi() {
         <label>
           Sensitivity
           <select id="shhhModeSensitivity">
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
+            <option value="low">Low - sensitive</option>
+            <option value="medium">Medium - very sensitive</option>
+            <option value="high">High - super sensitive</option>
           </select>
         </label>
         <label>
@@ -4433,6 +4433,10 @@ function createShhhModeUi() {
           </select>
         </label>
       </div>
+
+      <p class="shhhSensitivityNote">
+        For front classroom mic: use High. If it triggers too often, use Medium or Low.
+      </p>
 
       <label class="shhhModeMuteRow">
         <input id="shhhModeMute" type="checkbox">
@@ -4654,14 +4658,14 @@ function monitorShhhNoise() {
   }
 
   const rms = Math.sqrt(sum / shhhMode.samples.length);
-  shhhMode.level = Math.min(1, rms * 4.6);
+  shhhMode.level = Math.min(1, rms * 7.2);
   const threshold = SHHH_SENSITIVITY[shhhMode.sensitivity]?.threshold || SHHH_SENSITIVITY.medium.threshold;
   const now = Date.now();
   const isLoud = rms >= threshold;
 
   if (isLoud) {
     if (!shhhMode.loudSince) shhhMode.loudSince = now;
-    if (now - shhhMode.loudSince > 420 && now - shhhMode.lastShhhAt > shhhMode.cooldownMs) {
+    if (now - shhhMode.loudSince > 220 && now - shhhMode.lastShhhAt > shhhMode.cooldownMs) {
       shhhMode.lastShhhAt = now;
       handleShhhTrigger(false);
     }
