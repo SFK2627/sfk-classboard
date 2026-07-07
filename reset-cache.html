@@ -1,67 +1,181 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>SFK Cache Reset</title>
-  <style>
-    * { box-sizing: border-box; }
-    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 22px; font-family: Arial, Helvetica, sans-serif; background: #fff8dc; color: #111; }
-    .card { width: min(92vw, 500px); padding: 24px; border: 2px solid #f7c600; border-radius: 22px; background: #fff; box-shadow: 0 14px 40px rgba(0,0,0,.12); text-align: center; }
-    h1 { margin: 0 0 10px; font-size: 1.6rem; }
-    p { line-height: 1.5; }
-    .links { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 18px; }
-    a, button { display: inline-flex; justify-content: center; align-items: center; min-height: 46px; padding: 0 16px; border-radius: 12px; border: 2px solid #111; background: #f7c600; color: #111; font-weight: 800; text-decoration: none; cursor: pointer; }
-    #status { font-weight: 800; color: #6b5200; }
-  </style>
-  <script src="orientation-lock.js?v=appwide-v6" defer></script>
-</head>
-<body>
-  <div class="card">
-    <h1>SFK Cache Reset</h1>
-    <p id="status">Clearing old service workers and cache...</p>
-    <p>Use this once after uploading the repair files. It fixes the raw code/manifest screen problem.</p>
-    <div class="links">
-      <a href="admin.html?fresh=admin-officer-rescue-v2">Open Admin</a>
-      <a href="officer.html?fresh=admin-officer-rescue-v2">Open Officers</a>
-      <a href="index.html?fresh=admin-officer-rescue-v2">Open ClassBoard</a>
-      <button type="button" id="again">Clear Again</button>
-    </div>
-  </div>
-  <script>
-    (function () {
-      var statusEl = document.getElementById('status');
-      var params = new URLSearchParams(window.location.search);
-      var go = (params.get('go') || '').toLowerCase();
-      var target = go === 'officers' || go === 'officer'
-        ? 'officer.html?fresh=admin-officer-rescue-v2'
-        : go === 'home' || go === 'classboard'
-          ? 'index.html?fresh=admin-officer-rescue-v2'
-          : 'admin.html?fresh=admin-officer-rescue-v2';
-      function unregisterAllWorkers() {
-        if (!('serviceWorker' in navigator)) return Promise.resolve([]);
-        return navigator.serviceWorker.getRegistrations().then(function (registrations) {
-          return Promise.all(registrations.map(function (registration) { return registration.unregister(); }));
-        });
+(function sfkPortraitOnlyReminderOnPhones() {
+  "use strict";
+
+  const STYLE_ID = "sfkPortraitReminderStyleV2";
+  const OVERLAY_ID = "sfkPortraitReminder";
+  let allowLandscape = false;
+
+  function isMobileLikeDevice() {
+    const ua = navigator.userAgent || "";
+    const uaMobile = /Android.+Mobile|iPhone|iPod|Windows Phone|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+    const userAgentDataMobile = navigator.userAgentData && navigator.userAgentData.mobile === true;
+    const coarse = window.matchMedia && window.matchMedia("(hover: none) and (pointer: coarse)").matches;
+    const shortestScreenSide = Math.min(screen.width || 0, screen.height || 0);
+    const shortestViewportSide = Math.min(window.innerWidth || 0, window.innerHeight || 0);
+    return userAgentDataMobile || uaMobile || (coarse && (shortestScreenSide <= 820 || shortestViewportSide <= 820));
+  }
+
+  function isLandscapeViewport() {
+    return window.innerWidth > window.innerHeight;
+  }
+
+  function injectStyle() {
+    if (document.getElementById(STYLE_ID)) return;
+    const style = document.createElement("style");
+    style.id = STYLE_ID;
+    style.textContent = `
+      #sfkPortraitReminder {
+        position: fixed !important;
+        inset: 0 !important;
+        z-index: 2147483000 !important;
+        display: none !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 22px !important;
+        background: linear-gradient(135deg, #ffeaa7 0%, #fff7d6 48%, #ffffff 100%) !important;
+        color: #111 !important;
+        text-align: center !important;
       }
-      function clearAllCaches() {
-        if (!('caches' in window)) return Promise.resolve([]);
-        return caches.keys().then(function (keys) {
-          return Promise.all(keys.map(function (key) { return caches.delete(key); }));
-        });
+
+      html.sfkPortraitReminderOn,
+      html.sfkPortraitReminderOn body {
+        overflow: hidden !important;
       }
-      function run(autoRedirect) {
-        statusEl.textContent = 'Clearing old service workers and cache...';
-        Promise.all([unregisterAllWorkers(), clearAllCaches()]).then(function () {
-          statusEl.textContent = 'Done. Redirecting...';
-          if (autoRedirect) window.setTimeout(function () { window.location.replace(target); }, 800);
-        }).catch(function () {
-          statusEl.textContent = 'Cache reset attempted. Use the buttons below.';
-        });
+
+      html.sfkPortraitReminderOn #sfkPortraitReminder {
+        display: flex !important;
       }
-      document.getElementById('again').addEventListener('click', function () { run(false); });
-      run(true);
-    }());
-  </script>
-</body>
-</html>
+
+      .sfkPortraitReminderCard {
+        width: min(92vw, 440px) !important;
+        border: 3px solid #111 !important;
+        border-radius: 24px !important;
+        background: rgba(255, 255, 255, .94) !important;
+        box-shadow: 8px 8px 0 rgba(0, 0, 0, .22) !important;
+        padding: 24px 22px !important;
+        font-family: inherit !important;
+      }
+
+      .sfkPortraitReminderIcon {
+        display: grid !important;
+        place-items: center !important;
+        width: 70px !important;
+        height: 70px !important;
+        margin: 0 auto 14px !important;
+        border-radius: 22px !important;
+        border: 3px solid #111 !important;
+        background: #ffd700 !important;
+        font-size: 2.1rem !important;
+        box-shadow: 4px 4px 0 rgba(0,0,0,.18) !important;
+      }
+
+      .sfkPortraitReminderCard h2 {
+        margin: 0 0 8px !important;
+        color: #111 !important;
+        font-size: clamp(1.35rem, 4vw, 2rem) !important;
+        line-height: 1.05 !important;
+        font-weight: 950 !important;
+      }
+
+      .sfkPortraitReminderCard p {
+        margin: 0 !important;
+        color: #333 !important;
+        font-size: clamp(.95rem, 2.6vw, 1.08rem) !important;
+        line-height: 1.35 !important;
+        font-weight: 700 !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function ensureOverlay() {
+    injectStyle();
+    let overlay = document.getElementById(OVERLAY_ID);
+    if (overlay) return overlay;
+
+    overlay = document.createElement("div");
+    overlay.id = OVERLAY_ID;
+    overlay.setAttribute("role", "alert");
+    overlay.setAttribute("aria-live", "assertive");
+    overlay.innerHTML = `
+      <div class="sfkPortraitReminderCard">
+        <div class="sfkPortraitReminderIcon">📱</div>
+        <h2>View in Portrait Mode</h2>
+        <p>Please rotate your phone upright para maayos at hindi masira ang ClassBoard layout.</p>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    return overlay;
+  }
+
+  async function tryNativePortraitLock() {
+    if (!isMobileLikeDevice()) return;
+    try {
+      if (screen.orientation && screen.orientation.lock) {
+        try {
+          await screen.orientation.lock("portrait-primary");
+        } catch (error) {
+          await screen.orientation.lock("portrait");
+        }
+      }
+    } catch (error) {
+      // Many mobile browsers only allow real orientation lock in installed PWAs.
+      // The reminder overlay below protects the portrait layout when lock is unavailable.
+    }
+  }
+
+  function applyPortraitReminder() {
+    ensureOverlay();
+    const shouldShow = isMobileLikeDevice() && isLandscapeViewport() && !allowLandscape;
+    document.documentElement.classList.toggle("sfkPortraitReminderOn", shouldShow);
+  }
+
+  function scheduleApply() {
+    requestAnimationFrame(() => {
+      applyPortraitReminder();
+      setTimeout(applyPortraitReminder, 120);
+      setTimeout(applyPortraitReminder, 360);
+    });
+  }
+
+  function start() {
+    ensureOverlay();
+    applyPortraitReminder();
+    tryNativePortraitLock();
+  }
+
+  window.SFK_PHONE_ORIENTATION = {
+    allowWatchLandscape(value) {
+      allowLandscape = Boolean(value);
+      applyPortraitReminder();
+      if (!allowLandscape) tryNativePortraitLock();
+    },
+    refresh: applyPortraitReminder
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", start, { once: true });
+  } else {
+    start();
+  }
+
+  window.addEventListener("resize", scheduleApply, { passive: true });
+  window.addEventListener("orientationchange", () => {
+    tryNativePortraitLock();
+    scheduleApply();
+  }, { passive: true });
+  window.addEventListener("pageshow", scheduleApply, { passive: true });
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+      tryNativePortraitLock();
+      scheduleApply();
+    }
+  });
+  if (screen.orientation && screen.orientation.addEventListener) {
+    screen.orientation.addEventListener("change", () => {
+      tryNativePortraitLock();
+      scheduleApply();
+    });
+  }
+  document.addEventListener("pointerdown", () => tryNativePortraitLock(), { capture: true, passive: true });
+})();
