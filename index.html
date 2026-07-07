@@ -13,7 +13,7 @@
   <link rel="manifest" href="manifest.webmanifest?v=portrait-reminder-v1" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
-  <link rel="stylesheet" href="style.css?v=shhh-better-sound-v38" />
+  <link rel="stylesheet" href="style.css?v=phone-classphoto-fix-v39" />
   <link rel="stylesheet" href="class-chat.css?v=gc-everyone-inline-v29" />
   <link rel="stylesheet" href="time-capsule.css?v=gc-timecapsule-buttons-v16" />
 
@@ -42,7 +42,7 @@
       inset: -28px;
       background:
         linear-gradient(180deg, rgba(0,0,0,.36), rgba(0,0,0,.58)),
-        url("class-photo.jpg") center center / cover no-repeat;
+        url("class-photo.jpg?v=phone-photo-fix-v39") center center / cover no-repeat;
       filter: blur(15px) brightness(.72) saturate(1.08);
       transform: scale(1.08);
       pointer-events: none;
@@ -475,9 +475,62 @@
         animation: none;
       }
     }
+  
+    /* v39 PHONE INTRO CLASS PHOTO FIX */
+    @media (max-width: 640px), (pointer: coarse) {
+      #sfkIntroOverlay.sfkStartIntro {
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+      }
+
+      .sfkStartShell {
+        max-height: calc(100dvh - 18px) !important;
+        overflow-y: auto !important;
+      }
+
+      .sfkStartBody {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        align-items: start !important;
+      }
+
+      .sfkStartPhotoCard {
+        display: block !important;
+        order: 1 !important;
+        width: 100% !important;
+        min-height: 170px !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        background:
+          linear-gradient(180deg, rgba(255,255,255,.98), rgba(247,241,219,.98)),
+          url("class-photo.jpg?v=phone-photo-fix-v39") center center / cover no-repeat !important;
+      }
+
+      .sfkStartPhoto {
+        display: block !important;
+        width: 100% !important;
+        min-height: 165px !important;
+        max-height: 42dvh !important;
+        object-fit: cover !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        background: url("class-photo.jpg?v=phone-photo-fix-v39") center center / cover no-repeat !important;
+      }
+
+      .sfkStartPhoto[hidden],
+      .sfkStartPhotoCard[hidden] {
+        display: block !important;
+      }
+
+      .sfkStartCopy {
+        order: 2 !important;
+      }
+    }
+
   </style>
 
   <script src="orientation-lock.js?v=appwide-v6" defer></script>
+  <link rel="preload" href="class-photo.jpg?v=phone-photo-fix-v39" as="image" fetchpriority="high">
 </head>
 
 <body>
@@ -497,7 +550,7 @@
         <div class="sfkStartBody">
           <div class="sfkStartPhotoCard">
             <div class="sfkStartPhotoLabel">📸 SFK 2026–2027 🫶</div>
-            <img src="class-photo.jpg" alt="Grade 8 St. Faustina Kowalska class photo" class="sfkStartPhoto" />
+            <img src="class-photo.jpg?v=phone-photo-fix-v39" loading="eager" fetchpriority="high" decoding="async" alt="Grade 8 St. Faustina Kowalska class photo" class="sfkStartPhoto" />
             <div class="sfkStartPhotoCaption">
               <span class="sfkStartAccent">S</span>o <span class="sfkStartAccent">F</span>ar, so <span class="sfkStartAccent">K</span>ind
             </div>
@@ -1450,7 +1503,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js?v=phone-login-v8"></script>
   <script src="firebase-adapter.js?v=media-fix-v8"></script>
-  <script src="script.js?v=shhh-better-sound-v38"></script>
+  <script src="script.js?v=phone-classphoto-fix-v39"></script>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.16/dist/hls.min.js"></script>
   <script src="https://cdn.dashjs.org/v5.2.0/legacy/umd/dash.all.min.js"></script>
   <script src="time-capsule.js?v=gc-timecapsule-buttons-v16"></script>
@@ -1500,6 +1553,41 @@
       }, true);
     })();
   </script>
+
+
+<script>
+  // v39 phone intro class photo fallback
+  window.addEventListener("DOMContentLoaded", function () {
+    var photo = document.querySelector(".sfkStartPhoto");
+    var card = document.querySelector(".sfkStartPhotoCard");
+    if (!photo) return;
+
+    function forceShowPhoto() {
+      if (card) {
+        card.style.display = "block";
+        card.style.visibility = "visible";
+        card.style.opacity = "1";
+        card.style.backgroundImage = 'linear-gradient(180deg, rgba(255,255,255,.98), rgba(247,241,219,.98)), url("class-photo.jpg?v=phone-photo-fix-v39")';
+        card.style.backgroundSize = "cover";
+        card.style.backgroundPosition = "center";
+      }
+      photo.style.display = "block";
+      photo.style.visibility = "visible";
+      photo.style.opacity = "1";
+      photo.style.minHeight = "165px";
+    }
+
+    forceShowPhoto();
+
+    photo.addEventListener("error", function () {
+      forceShowPhoto();
+      if (!photo.dataset.retryPhoto) {
+        photo.dataset.retryPhoto = "1";
+        photo.src = "class-photo.jpg?v=phone-photo-fix-v39-retry-" + Date.now();
+      }
+    });
+  });
+</script>
 
 </body>
 </html>

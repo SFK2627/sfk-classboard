@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-sw.js-shhh-better-sound-v38";
+const CACHE_NAME = "sfk-sw.js-phone-classphoto-fix-v39";
 const APP_SHELL = [
   "./",
   "./index.html",
