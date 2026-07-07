@@ -8428,3 +8428,29 @@ button.timeCapsuleOpen:hover {
     color: rgba(255,255,255,.72);
   }
 }
+
+
+/* v42 SHHH SENSITIVITY SLIDER */
+.shhhSensitivitySlider input[type="range"] {
+  width: 100%;
+  accent-color: #f7c600;
+  height: 8px;
+}
+
+.shhhSliderLabels {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 5px;
+  font-size: .72rem;
+  font-weight: 900;
+}
+
+.shhhSliderLabels strong {
+  color: #b00020;
+  font-size: .9rem;
+}
+
+.shhhSensitivitySlider {
+  grid-column: 1 / -1;
+}

@@ -4300,11 +4300,19 @@ heartAnnouncement = async function heartAnnouncementV3(id) {
 ========================================================= */
 const SHHH_MODE_STORAGE_KEY = "sfkClassBoardShhhModeSettings";
 const SHHH_DESKTOP_MEDIA_QUERY = "(min-width: 1024px) and (pointer: fine)";
-const SHHH_SENSITIVITY = {
-  low: { label: "Low", threshold: 0.060 },
-  medium: { label: "Medium", threshold: 0.038 },
-  high: { label: "High", threshold: 0.022 }
-};
+const SHHH_SENSITIVITY_DEFAULT = 65;
+const SHHH_SENSITIVITY_MIN = 0;
+const SHHH_SENSITIVITY_MAX = 100;
+
+function getShhhThreshold() {
+  const value = Math.max(SHHH_SENSITIVITY_MIN, Math.min(
+    SHHH_SENSITIVITY_MAX,
+    Number(shhhMode.sensitivityLevel ?? SHHH_SENSITIVITY_DEFAULT)
+  ));
+
+  // Higher slider = lower threshold = more sensitive.
+  return 0.090 - (value / 100) * 0.082;
+}
 
 let shhhMode = {
   available: false,
@@ -4323,7 +4331,7 @@ let shhhMode = {
   totalCount: 0,
   muted: false,
   voiceEnabled: true,
-  sensitivity: "medium",
+  sensitivityLevel: SHHH_SENSITIVITY_DEFAULT,
   cooldownMs: 10000
 };
 
@@ -4416,13 +4424,14 @@ function createShhhModeUi() {
       </div>
 
       <div class="shhhModeControls">
-        <label>
+        <label class="shhhSensitivitySlider">
           Sensitivity
-          <select id="shhhModeSensitivity">
-            <option value="low">Low - sensitive</option>
-            <option value="medium">Medium - very sensitive</option>
-            <option value="high">High - super sensitive</option>
-          </select>
+          <input id="shhhModeSensitivity" type="range" min="0" max="100" step="1">
+          <div class="shhhSliderLabels">
+            <span>Least</span>
+            <strong id="shhhSensitivityValue">65%</strong>
+            <span>Most</span>
+          </div>
         </label>
         <label>
           Cooldown
@@ -4487,8 +4496,8 @@ function createShhhModeUi() {
     saveShhhModeSettings();
     updateShhhModeUi(shhhMode.voiceEnabled ? "Voice on" : "Voice off");
   });
-  panel.querySelector("#shhhModeSensitivity")?.addEventListener("change", (event) => {
-    shhhMode.sensitivity = event.target.value in SHHH_SENSITIVITY ? event.target.value : "medium";
+  panel.querySelector("#shhhModeSensitivity")?.addEventListener("input", (event) => {
+    shhhMode.sensitivityLevel = Number(event.target.value);
     saveShhhModeSettings();
     updateShhhModeUi();
   });
@@ -4502,7 +4511,9 @@ function createShhhModeUi() {
 function restoreShhhModeSettings() {
   try {
     const saved = JSON.parse(localStorage.getItem(SHHH_MODE_STORAGE_KEY) || "{}");
-    if (saved.sensitivity in SHHH_SENSITIVITY) shhhMode.sensitivity = saved.sensitivity;
+    shhhMode.sensitivityLevel = Number.isFinite(Number(saved.sensitivityLevel))
+      ? Number(saved.sensitivityLevel)
+      : SHHH_SENSITIVITY_DEFAULT;
     if ([5000, 10000, 20000].includes(Number(saved.cooldownMs))) {
       shhhMode.cooldownMs = Number(saved.cooldownMs);
     }
@@ -4517,7 +4528,7 @@ function restoreShhhModeSettings() {
   const cooldown = document.getElementById("shhhModeCooldown");
   const mute = document.getElementById("shhhModeMute");
   const voice = document.getElementById("shhhModeVoice");
-  if (sensitivity) sensitivity.value = shhhMode.sensitivity;
+  if (sensitivity) sensitivity.value = String(shhhMode.sensitivityLevel);
   if (cooldown) cooldown.value = String(shhhMode.cooldownMs);
   if (mute) mute.checked = Boolean(shhhMode.muted);
   if (voice) voice.checked = Boolean(shhhMode.voiceEnabled);
@@ -4527,7 +4538,7 @@ function restoreShhhModeSettings() {
 function saveShhhModeSettings() {
   try {
     localStorage.setItem(SHHH_MODE_STORAGE_KEY, JSON.stringify({
-      sensitivity: shhhMode.sensitivity,
+      sensitivityLevel: shhhMode.sensitivityLevel,
       cooldownMs: shhhMode.cooldownMs,
       muted: Boolean(shhhMode.muted),
       voiceEnabled: Boolean(shhhMode.voiceEnabled),
@@ -4659,7 +4670,7 @@ function monitorShhhNoise() {
 
   const rms = Math.sqrt(sum / shhhMode.samples.length);
   shhhMode.level = Math.min(1, rms * 7.2);
-  const threshold = SHHH_SENSITIVITY[shhhMode.sensitivity]?.threshold || SHHH_SENSITIVITY.medium.threshold;
+  const threshold = getShhhThreshold();
   const now = Date.now();
   const isLoud = rms >= threshold;
 
@@ -4908,6 +4919,12 @@ function updateShhhModeUi(statusOverride = "") {
   }
   if (testButton) {
     testButton.textContent = shhhMode.muted ? "Count Test" : "Test Shhh";
+  }
+  const sensitivity = document.getElementById("shhhModeSensitivity");
+  const sensitivityValue = document.getElementById("shhhSensitivityValue");
+  if (sensitivity) sensitivity.value = String(shhhMode.sensitivityLevel);
+  if (sensitivityValue) {
+    sensitivityValue.textContent = `${Math.round(shhhMode.sensitivityLevel)}%`;
   }
   if (toggle) {
     toggle.textContent = shhhMode.enabled ? "Turn Off" : "Turn On";
