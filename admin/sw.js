@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-admin-pwa-v25-gc-admin-style-v14";
+const CACHE_NAME = "sfk-admin-pwa-v27-gc-timecapsule-buttons-v16";
 const APP_SHELL = [
   "./",
   "./index.html",

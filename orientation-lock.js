@@ -1,392 +1,181 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#f7c600" />
-  <meta name="description" content="SFK Officers Panel for posting class announcements, things to bring, prayer leaders, quotes, and birthday greetings." />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-title" content="SFK Officers" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+(function sfkPortraitOnlyReminderOnPhones() {
+  "use strict";
 
-  <title>SFK Officers Panel</title>
+  const STYLE_ID = "sfkPortraitReminderStyleV2";
+  const OVERLAY_ID = "sfkPortraitReminder";
+  let allowLandscape = false;
 
-  <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
-  <link rel="manifest" href="officer.webmanifest?v=portrait-reminder-v1" />
-  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
-  <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
-  <link rel="stylesheet" href="officer.css?v=phone-orientation-lock" />
-  <script src="orientation-lock.js?v=appwide-v6" defer></script>
-</head>
+  function isMobileLikeDevice() {
+    const ua = navigator.userAgent || "";
+    const uaMobile = /Android.+Mobile|iPhone|iPod|Windows Phone|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+    const userAgentDataMobile = navigator.userAgentData && navigator.userAgentData.mobile === true;
+    const coarse = window.matchMedia && window.matchMedia("(hover: none) and (pointer: coarse)").matches;
+    const shortestScreenSide = Math.min(screen.width || 0, screen.height || 0);
+    const shortestViewportSide = Math.min(window.innerWidth || 0, window.innerHeight || 0);
+    return userAgentDataMobile || uaMobile || (coarse && (shortestScreenSide <= 820 || shortestViewportSide <= 820));
+  }
 
-<body>
-  <main class="officerApp">
+  function isLandscapeViewport() {
+    return window.innerWidth > window.innerHeight;
+  }
 
-    <!-- LOGIN SCREEN -->
-    <section id="officerLoginScreen" class="loginScreen">
-      <div class="loginCard">
-        <div class="koalaMark">🐨</div>
+  function injectStyle() {
+    if (document.getElementById(STYLE_ID)) return;
+    const style = document.createElement("style");
+    style.id = STYLE_ID;
+    style.textContent = `
+      #sfkPortraitReminder {
+        position: fixed !important;
+        inset: 0 !important;
+        z-index: 2147483000 !important;
+        display: none !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 22px !important;
+        background: linear-gradient(135deg, #ffeaa7 0%, #fff7d6 48%, #ffffff 100%) !important;
+        color: #111 !important;
+        text-align: center !important;
+      }
 
-        <h1>SFK Officers Panel</h1>
-        <p>For Grade 8 - St. Faustina Kowalska Officers only.</p>
+      html.sfkPortraitReminderOn,
+      html.sfkPortraitReminderOn body {
+        overflow: hidden !important;
+      }
 
-        <input
-          id="officerPin"
-          type="password"
-          placeholder="Enter Officer PIN"
-          autocomplete="off"
-        />
+      html.sfkPortraitReminderOn #sfkPortraitReminder {
+        display: flex !important;
+      }
 
-        <button onclick="loginOfficer()">Login</button>
+      .sfkPortraitReminderCard {
+        width: min(92vw, 440px) !important;
+        border: 3px solid #111 !important;
+        border-radius: 24px !important;
+        background: rgba(255, 255, 255, .94) !important;
+        box-shadow: 8px 8px 0 rgba(0, 0, 0, .22) !important;
+        padding: 24px 22px !important;
+        font-family: inherit !important;
+      }
 
-        <small id="officerLoginMessage"></small>
+      .sfkPortraitReminderIcon {
+        display: grid !important;
+        place-items: center !important;
+        width: 70px !important;
+        height: 70px !important;
+        margin: 0 auto 14px !important;
+        border-radius: 22px !important;
+        border: 3px solid #111 !important;
+        background: #ffd700 !important;
+        font-size: 2.1rem !important;
+        box-shadow: 4px 4px 0 rgba(0,0,0,.18) !important;
+      }
+
+      .sfkPortraitReminderCard h2 {
+        margin: 0 0 8px !important;
+        color: #111 !important;
+        font-size: clamp(1.35rem, 4vw, 2rem) !important;
+        line-height: 1.05 !important;
+        font-weight: 950 !important;
+      }
+
+      .sfkPortraitReminderCard p {
+        margin: 0 !important;
+        color: #333 !important;
+        font-size: clamp(.95rem, 2.6vw, 1.08rem) !important;
+        line-height: 1.35 !important;
+        font-weight: 700 !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function ensureOverlay() {
+    injectStyle();
+    let overlay = document.getElementById(OVERLAY_ID);
+    if (overlay) return overlay;
+
+    overlay = document.createElement("div");
+    overlay.id = OVERLAY_ID;
+    overlay.setAttribute("role", "alert");
+    overlay.setAttribute("aria-live", "assertive");
+    overlay.innerHTML = `
+      <div class="sfkPortraitReminderCard">
+        <div class="sfkPortraitReminderIcon">📱</div>
+        <h2>View in Portrait Mode</h2>
+        <p>Please rotate your phone upright para maayos at hindi masira ang ClassBoard layout.</p>
       </div>
-    </section>
+    `;
+    document.body.appendChild(overlay);
+    return overlay;
+  }
 
-    <!-- OFFICER PANEL -->
-    <section id="officerPanel" class="officerPanel hidden">
+  async function tryNativePortraitLock() {
+    if (!isMobileLikeDevice()) return;
+    try {
+      if (screen.orientation && screen.orientation.lock) {
+        try {
+          await screen.orientation.lock("portrait-primary");
+        } catch (error) {
+          await screen.orientation.lock("portrait");
+        }
+      }
+    } catch (error) {
+      // Many mobile browsers only allow real orientation lock in installed PWAs.
+      // The reminder overlay below protects the portrait layout when lock is unavailable.
+    }
+  }
 
-      <header class="officerTopbar">
-        <div>
-          <h1>SFK Officers Panel</h1>
-          <p>Grade 8 - St. Faustina Kowalska • S.Y. 2026–2027 • #BeKind</p>
-        </div>
+  function applyPortraitReminder() {
+    ensureOverlay();
+    const shouldShow = isMobileLikeDevice() && isLandscapeViewport() && !allowLandscape;
+    document.documentElement.classList.toggle("sfkPortraitReminderOn", shouldShow);
+  }
 
-        <button class="logoutBtn" onclick="logoutOfficer()">Logout</button>
-      </header>
+  function scheduleApply() {
+    requestAnimationFrame(() => {
+      applyPortraitReminder();
+      setTimeout(applyPortraitReminder, 120);
+      setTimeout(applyPortraitReminder, 360);
+    });
+  }
 
-      <section class="noticeBox">
-        <strong>Officer Access:</strong>
-        Officers can add new records and hide existing records only. Editing and deleting are not allowed.
-      </section>
+  function start() {
+    ensureOverlay();
+    applyPortraitReminder();
+    tryNativePortraitLock();
+  }
 
-      <!-- CREATE / ADD DATA -->
-      <section class="officerGrid">
+  window.SFK_PHONE_ORIENTATION = {
+    allowWatchLandscape(value) {
+      allowLandscape = Boolean(value);
+      applyPortraitReminder();
+      if (!allowLandscape) tryNativePortraitLock();
+    },
+    refresh: applyPortraitReminder
+  };
 
-        <!-- SUBJECT ANNOUNCEMENT -->
-        <div class="formCard">
-          <h2>📢 Subject Announcement</h2>
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", start, { once: true });
+  } else {
+    start();
+  }
 
-          <label for="officerAnnouncementPublishDate">Publish Date</label>
-          <input id="officerAnnouncementPublishDate" type="date" />
-          <small class="fieldHint">This is the displayed date and the first day the announcement will appear.</small>
-
-          <label for="officerAnnouncementSubject">Subject</label>
-          <input id="officerAnnouncementSubject" list="subjectOptions" type="text" placeholder="Select or type subject" />
-
-          <label for="officerAnnouncementTextEditor">Announcement</label>
-          <div class="richComposer" data-rich-target="officerAnnouncementText">
-            <div class="richToolbar" aria-label="Announcement formatting tools">
-              <div class="richToolbarGroup" aria-label="Text style">
-                <button type="button" data-rich-command="bold" title="Bold selected text"><b>B</b></button>
-                <button type="button" data-rich-command="italic" title="Italic selected text"><i>I</i></button>
-                <button type="button" data-rich-command="underline" title="Underline selected text"><u>U</u></button>
-              </div>
-              <div class="richToolbarGroup" aria-label="Bullets and numbering">
-                <button type="button" data-rich-list="disc" title="Bullet list">•</button>
-                <button type="button" data-rich-list="circle" title="Circle bullet">○</button>
-                <button type="button" data-rich-list="square" title="Square bullet">▪</button>
-                <button type="button" data-rich-list="decimal" title="Numbered list">1.</button>
-                <button type="button" data-rich-list="lower-alpha" title="Letter list">a.</button>
-                <button type="button" data-rich-list="upper-alpha" title="Capital letter list">A.</button>
-              </div>
-              <div class="richToolbarGroup" aria-label="Indent">
-                <button type="button" data-rich-indent="out" title="Decrease indent">⇤</button>
-                <button type="button" data-rich-indent="in" title="Increase indent">⇥</button>
-              </div>
-              <div class="richToolbarGroup" aria-label="Text color">
-                <button type="button" class="richColorChip richColorBlack" data-rich-color="#111111" title="Black text">A</button>
-                <button type="button" class="richColorChip richColorRed" data-rich-color="#d62828" title="Red text">A</button>
-                <button type="button" class="richColorChip richColorBlue" data-rich-color="#2563eb" title="Blue text">A</button>
-                <button type="button" class="richColorChip richColorGreen" data-rich-color="#0f766e" title="Green text">A</button>
-                <button type="button" class="richColorChip richColorPurple" data-rich-color="#7c3aed" title="Purple text">A</button>
-                <label class="richColorPickerLabel" title="Custom text color"><span>Color</span><input type="color" data-rich-color-picker value="#111111" aria-label="Custom text color"></label>
-              </div>
-              <div class="richToolbarGroup" aria-label="Alignment">
-                <button type="button" data-rich-align="left" title="Align left">Left</button>
-                <button type="button" data-rich-align="center" title="Align center">Center</button>
-                <button type="button" data-rich-align="right" title="Align right">Right</button>
-                <button type="button" data-rich-command="removeFormat" title="Clear selected formatting">Clear</button>
-              </div>
-            </div>
-            <div id="officerAnnouncementTextEditor" class="richEditor" contenteditable="true" data-placeholder="Type announcement here. Select words or lines, then apply bold or bullets."></div>
-            <textarea id="officerAnnouncementText" class="richHiddenTextarea" aria-hidden="true" tabindex="-1"></textarea>
-          </div>
-          <small class="fieldHint">Format only selected words or lines. You can add bullets, numbering, indent, alignment, and text color.</small>
-
-          <label for="officerAnnouncementTeacher">Teacher</label>
-          <select id="officerAnnouncementTeacher">
-            <option value="">Select Teacher</option>
-            <option value="Mr. John Rey Tubello">Mr. John Rey Tubello</option>
-            <option value="Ms. Chiarah De Castro">Ms. Chiarah De Castro</option>
-            <option value="Mrs. Melanie Sebastian">Mrs. Melanie Sebastian</option>
-            <option value="Ms. Hannah Lee Cillo">Ms. Hannah Lee Cillo</option>
-            <option value="Ms Christine Tolentino">Ms Christine Tolentino</option>
-            <option value="Ms. Kamille Lajom">Ms. Kamille Lajom</option>
-            <option value="Mr. Alexis Pastrana">Mr. Alexis Pastrana</option>
-            <option value="Ms. Gina Soriano">Ms. Gina Soriano</option>
-            <option value="Mr. Runmar Quipanes">Mr. Runmar Quipanes</option>
-          </select>
-
-          <label for="officerAnnouncementPosition">Officer Position <span class="requiredMark">*</span></label>
-          <select id="officerAnnouncementPosition" required>
-            <option value="">Select Officer Position</option>
-            <option value="Class President">Class President</option>
-            <option value="Vice President">Vice President</option>
-            <option value="Secretary">Secretary</option>
-            <option value="Assistant Secretary">Assistant Secretary</option>
-            <option value="Treasurer">Treasurer</option>
-            <option value="Auditor">Auditor</option>
-            <option value="Class Officer">Class Officer</option>
-          </select>
-          <small class="fieldHint">
-            Required for officer posts. This will show as “Teacher thru your position” on the ClassBoard.
-          </small>
-
-          <label for="officerAnnouncementDeadline">Deadline</label>
-          <input id="officerAnnouncementDeadline" type="date" />
-
-          <label for="officerAnnouncementShowDeadline">Show Deadline on ClassBoard?</label>
-          <select id="officerAnnouncementShowDeadline">
-            <option value="YES">YES - Show Deadline</option>
-            <option value="NO">NO - Hide Deadline</option>
-          </select>
-
-          <label for="officerAnnouncementAttachments">Attachments</label>
-          <input
-            id="officerAnnouncementAttachments"
-            type="file"
-            multiple
-            accept="image/*"
-          />
-          <small class="fieldHint">
-            Optional. Up to 5 photos. No-billing mode compresses images and stores them in Firestore.
-          </small>
-
-          <label for="officerAnnouncementPriority">Priority</label>
-          <select id="officerAnnouncementPriority">
-            <option value="Reminder">Reminder</option>
-            <option value="Important">Important</option>
-            <option value="Urgent">Urgent</option>
-            <option value="For Submission">For Submission</option>
-          </select>
-
-          <label for="officerAnnouncementExpiryDate">Expiry Date</label>
-          <input id="officerAnnouncementExpiryDate" type="date" />
-          <small class="fieldHint">First day this announcement will no longer appear. Leave blank for no expiry.</small>
-
-          <label for="officerAnnouncementPublish">Visibility</label>
-          <select id="officerAnnouncementPublish">
-            <option value="YES">Active / Follow Publish Date</option>
-            <option value="NO">Draft / Hidden</option>
-          </select>
-
-          <button onclick="saveOfficerAnnouncement()">Save Announcement</button>
-        </div>
-
-        <!-- THINGS TO BRING -->
-        <div class="formCard">
-          <h2>🎒 Things to Bring</h2>
-
-          <label for="officerThingsDate">Date Needed</label>
-          <input id="officerThingsDate" type="date" />
-
-          <label for="officerThingsSubject">Subject</label>
-          <input id="officerThingsSubject" list="subjectOptions" type="text" placeholder="Select or type subject" />
-
-          <label for="officerThingsItemEditor">Item / Reminder</label>
-          <div class="richComposer" data-rich-target="officerThingsItem">
-            <div class="richToolbar" aria-label="Things to Bring formatting tools">
-              <div class="richToolbarGroup" aria-label="Text style">
-                <button type="button" data-rich-command="bold" title="Bold selected text"><b>B</b></button>
-                <button type="button" data-rich-command="italic" title="Italic selected text"><i>I</i></button>
-                <button type="button" data-rich-command="underline" title="Underline selected text"><u>U</u></button>
-              </div>
-              <div class="richToolbarGroup" aria-label="Bullets and numbering">
-                <button type="button" data-rich-list="disc" title="Bullet list">•</button>
-                <button type="button" data-rich-list="circle" title="Circle bullet">○</button>
-                <button type="button" data-rich-list="square" title="Square bullet">▪</button>
-                <button type="button" data-rich-list="decimal" title="Numbered list">1.</button>
-                <button type="button" data-rich-list="lower-alpha" title="Letter list">a.</button>
-                <button type="button" data-rich-list="upper-alpha" title="Capital letter list">A.</button>
-              </div>
-              <div class="richToolbarGroup" aria-label="Indent">
-                <button type="button" data-rich-indent="out" title="Decrease indent">⇤</button>
-                <button type="button" data-rich-indent="in" title="Increase indent">⇥</button>
-              </div>
-              <div class="richToolbarGroup" aria-label="Text color">
-                <button type="button" class="richColorChip richColorBlack" data-rich-color="#111111" title="Black text">A</button>
-                <button type="button" class="richColorChip richColorRed" data-rich-color="#d62828" title="Red text">A</button>
-                <button type="button" class="richColorChip richColorBlue" data-rich-color="#2563eb" title="Blue text">A</button>
-                <button type="button" class="richColorChip richColorGreen" data-rich-color="#0f766e" title="Green text">A</button>
-                <button type="button" class="richColorChip richColorPurple" data-rich-color="#7c3aed" title="Purple text">A</button>
-                <label class="richColorPickerLabel" title="Custom text color"><span>Color</span><input type="color" data-rich-color-picker value="#111111" aria-label="Custom text color"></label>
-              </div>
-              <div class="richToolbarGroup" aria-label="Alignment">
-                <button type="button" data-rich-align="left" title="Align left">Left</button>
-                <button type="button" data-rich-align="center" title="Align center">Center</button>
-                <button type="button" data-rich-align="right" title="Align right">Right</button>
-                <button type="button" data-rich-command="removeFormat" title="Clear selected formatting">Clear</button>
-              </div>
-            </div>
-            <div id="officerThingsItemEditor" class="richEditor" contenteditable="true" data-placeholder="Example: Bring notebook / project materials..."></div>
-            <textarea id="officerThingsItem" class="richHiddenTextarea" aria-hidden="true" tabindex="-1"></textarea>
-          </div>
-          <small class="fieldHint">Use bullets, numbering, and bold only where needed.</small>
-
-          <label for="officerThingsPublish">Publish</label>
-          <select id="officerThingsPublish">
-            <option value="YES">YES</option>
-            <option value="NO">NO</option>
-          </select>
-
-          <button onclick="saveOfficerThings()">Save Things to Bring</button>
-        </div>
-
-        <!-- PRAYER LEADER -->
-        <div class="formCard">
-          <h2>🙏 Prayer Leader</h2>
-
-          <label for="officerPrayerDate">Date</label>
-          <input id="officerPrayerDate" type="date" />
-
-          <label for="officerPrayerName">Prayer Leader Name</label>
-          <input id="officerPrayerName" type="text" placeholder="Example: Juan Dela Cruz" />
-
-          <label for="officerPrayerPublish">Publish</label>
-          <select id="officerPrayerPublish">
-            <option value="YES">YES</option>
-            <option value="NO">NO</option>
-          </select>
-
-          <button onclick="saveOfficerPrayer()">Save Prayer Leader</button>
-        </div>
-
-        <!-- DAILY KINDNESS QUOTE -->
-        <div class="formCard">
-          <h2>🫶 Daily Quote</h2>
-
-          <label for="officerQuoteDate">Date</label>
-          <input id="officerQuoteDate" type="date" />
-
-          <label for="officerQuoteText">Quote</label>
-          <textarea id="officerQuoteText" placeholder="Enter kindness quote..."></textarea>
-
-          <label for="officerQuoteAuthor">Author</label>
-          <input id="officerQuoteAuthor" type="text" placeholder="Example: St. Faustina / SFK Officers" />
-
-          <label for="officerQuotePublish">Publish</label>
-          <select id="officerQuotePublish">
-            <option value="YES">YES</option>
-            <option value="NO">NO</option>
-          </select>
-
-          <button onclick="saveOfficerQuote()">Save Daily Quote</button>
-        </div>
-
-        <!-- BIRTHDAY GREETINGS -->
-        <div class="formCard highlightCard">
-          <h2>🎂 Birthday Greetings</h2>
-
-          <label for="officerBirthdayName">Student Name</label>
-          <input id="officerBirthdayName" type="text" placeholder="Example: Juan Dela Cruz" />
-
-          <label for="officerBirthdayDate">Birthday</label>
-          <input id="officerBirthdayDate" type="date" />
-
-          <label for="officerBirthdayPublish">Publish</label>
-          <select id="officerBirthdayPublish">
-            <option value="YES">YES</option>
-            <option value="NO">NO</option>
-          </select>
-
-          <button onclick="saveOfficerBirthday()">Save Birthday Greeting</button>
-        </div>
-
-      </section>
-
-      <datalist id="subjectOptions">
-        <option value="English"></option>
-        <option value="Mathematics"></option>
-        <option value="Science"></option>
-        <option value="ICT"></option>
-        <option value="Filipino"></option>
-        <option value="CLED"></option>
-        <option value="AP"></option>
-        <option value="MAPEH"></option>
-        <option value="LE"></option>
-        <option value="Homeroom"></option>
-        <option value="Morning Assembly"></option>
-        <option value="Class Meeting"></option>
-        <option value="Performance Task"></option>
-      </datalist>
-
-      <!-- MANAGE EXISTING DATA -->
-      <section class="managePanel">
-        <div class="manageHeader">
-          <div>
-            <h2>Manage Existing Data</h2>
-            <p>View existing records and hide items if needed. Edit and delete are disabled for officers.</p>
-          </div>
-
-          <button class="refreshBtn" onclick="refreshCurrentOfficerTable()">Refresh</button>
-        </div>
-
-        <div class="manageTabs">
-          <button onclick="loadOfficerTable('Announcements', this)">Announcements</button>
-          <button onclick="loadOfficerTable('ThingsToBring', this)">Things to Bring</button>
-          <button onclick="loadOfficerTable('PrayerLeaders', this)">Prayer Leaders</button>
-          <button onclick="loadOfficerTable('DailyQuotes', this)">Daily Quotes</button>
-          <button onclick="loadOfficerTable('Birthdays', this)">Birthday Greetings</button>
-        </div>
-
-        <div class="manageFilters">
-          <label for="officerManageSearch">Search records</label>
-          <input id="officerManageSearch" type="search" placeholder="Search date, subject, text, name..." oninput="applyOfficerManageFilters()" />
-
-          <label for="officerPublishFilter">Publish filter</label>
-          <select id="officerPublishFilter" onchange="applyOfficerManageFilters()">
-            <option value="all">All records</option>
-            <option value="published">Published only</option>
-            <option value="hidden">Hidden only</option>
-          </select>
-        </div>
-
-        <div id="officerManageStatus" class="manageStatus">
-          Select a category to view existing data.
-        </div>
-
-        <div class="batchActions">
-          <button onclick="selectAllOfficerRows()">Select All</button>
-          <button onclick="clearOfficerSelection()">Clear Selection</button>
-          <button onclick="hideSelectedOfficerRecords()">Hide Selected</button>
-        </div>
-
-        <div class="tableWrap">
-          <table id="officerDataTable">
-            <thead></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- TOAST MESSAGE -->
-      <div id="officerToast" class="officerToast hidden">
-        Saved successfully.
-      </div>
-
-    </section>
-
-  </main>
-
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
-  <script src="firebase-config.js?v=2-secure-auth"></script>
-  <script src="auth.js?v=admin-officer-rescue-v2"></script>
-  <script src="firebase-adapter.js?v=media-fix-v2"></script>
-  <script src="pwa.js?v=15-pwa-polish"></script>
-  <script src="officer.js?v=admin-officer-rescue-v2"></script>
-</body>
-</html>
+  window.addEventListener("resize", scheduleApply, { passive: true });
+  window.addEventListener("orientationchange", () => {
+    tryNativePortraitLock();
+    scheduleApply();
+  }, { passive: true });
+  window.addEventListener("pageshow", scheduleApply, { passive: true });
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+      tryNativePortraitLock();
+      scheduleApply();
+    }
+  });
+  if (screen.orientation && screen.orientation.addEventListener) {
+    screen.orientation.addEventListener("change", () => {
+      tryNativePortraitLock();
+      scheduleApply();
+    });
+  }
+  document.addEventListener("pointerdown", () => tryNativePortraitLock(), { capture: true, passive: true });
+})();

@@ -1,0 +1,20 @@
+SFK ClassBoard - Firestore Rules Note for Long Single GC Messages
+
+This v27 frontend sends long announcements as ONE message. It does NOT split the message.
+
+If the app still shows a permission error when sending a long announcement, the cause is Firestore Security Rules, not the HTML/JS.
+
+What to check in Firebase Console:
+1. Firebase Console > Firestore Database > Rules.
+2. Find the rule for chatMessages create/update.
+3. Look for any text length condition, often like:
+   request.resource.data.Text.size() <= 500
+   request.resource.data.Text.size() < 500
+   request.resource.data.keys().hasOnly([...])
+4. Increase the allowed Text size for Admin/Adviser messages to 5000, or add an admin/staff exception.
+
+Example idea only; adapt to your current rules:
+- Students: Text max 500
+- Admin/Adviser/Officer: Text max 5000
+
+Do not paste this blindly unless it matches your rules structure.
