@@ -4331,6 +4331,7 @@ let shhhMode = {
   totalCount: 0,
   muted: false,
   voiceEnabled: true,
+  visualEnabled: true,
   sensitivityLevel: SHHH_SENSITIVITY_DEFAULT,
   cooldownMs: 10000
 };
@@ -4463,6 +4464,14 @@ function createShhhModeUi() {
         </span>
       </label>
 
+      <label class="shhhModeVisualRow">
+        <input id="shhhModeVisual" type="checkbox" checked>
+        <span>
+          <strong>Visual Shhh Alert</strong>
+          <small>Shows moving 🤫 SHHH! alert in the center.</small>
+        </span>
+      </label>
+
       <div class="shhhModeActions">
         <button id="shhhModeToggle" type="button">Turn On</button>
         <button id="shhhModeTest" type="button">Test Shhh</button>
@@ -4474,6 +4483,7 @@ function createShhhModeUi() {
     </div>`;
 
   document.body.appendChild(panel);
+  createShhhVisualAlert();
   forceShhhSensitivitySlider();
 
   openButton.addEventListener("click", openShhhModePanel);
@@ -4496,6 +4506,11 @@ function createShhhModeUi() {
     shhhMode.voiceEnabled = Boolean(event.target.checked);
     saveShhhModeSettings();
     updateShhhModeUi(shhhMode.voiceEnabled ? "Voice on" : "Voice off");
+  });
+  panel.querySelector("#shhhModeVisual")?.addEventListener("change", (event) => {
+    shhhMode.visualEnabled = Boolean(event.target.checked);
+    saveShhhModeSettings();
+    updateShhhModeUi(shhhMode.visualEnabled ? "Visual alert on" : "Visual alert off");
   });
   panel.querySelector("#shhhModeSensitivity")?.addEventListener("input", (event) => {
     shhhMode.sensitivityLevel = Math.max(0, Math.min(100, Number(event.target.value) || 0));
@@ -4562,6 +4577,7 @@ function restoreShhhModeSettings() {
     shhhMode.totalCount = Math.max(0, Number(saved.totalCount) || 0);
     shhhMode.muted = Boolean(saved.muted);
     shhhMode.voiceEnabled = typeof saved.voiceEnabled === "boolean" ? saved.voiceEnabled : true;
+    shhhMode.visualEnabled = typeof saved.visualEnabled === "boolean" ? saved.visualEnabled : true;
   } catch (error) {
     // Settings are optional.
   }
@@ -4570,10 +4586,12 @@ function restoreShhhModeSettings() {
   const cooldown = document.getElementById("shhhModeCooldown");
   const mute = document.getElementById("shhhModeMute");
   const voice = document.getElementById("shhhModeVoice");
+  const visual = document.getElementById("shhhModeVisual");
   if (sensitivity) sensitivity.value = String(shhhMode.sensitivityLevel);
   if (cooldown) cooldown.value = String(shhhMode.cooldownMs);
   if (mute) mute.checked = Boolean(shhhMode.muted);
   if (voice) voice.checked = Boolean(shhhMode.voiceEnabled);
+  if (visual) visual.checked = Boolean(shhhMode.visualEnabled);
   updateShhhModeUi();
 }
 
@@ -4584,6 +4602,7 @@ function saveShhhModeSettings() {
       cooldownMs: shhhMode.cooldownMs,
       muted: Boolean(shhhMode.muted),
       voiceEnabled: Boolean(shhhMode.voiceEnabled),
+      visualEnabled: Boolean(shhhMode.visualEnabled),
       autoCount: Math.max(0, Number(shhhMode.autoCount) || 0),
       totalCount: Math.max(0, Number(shhhMode.totalCount) || 0)
     }));
@@ -4730,7 +4749,44 @@ function monitorShhhNoise() {
   shhhMode.animationId = requestAnimationFrame(monitorShhhNoise);
 }
 
+
+function createShhhVisualAlert() {
+  if (document.getElementById("shhhVisualAlert")) return;
+  const visual = document.createElement("div");
+  visual.id = "shhhVisualAlert";
+  visual.className = "shhhVisualAlert";
+  visual.setAttribute("aria-hidden", "true");
+  visual.innerHTML = `
+    <div class="shhhVisualGlow"></div>
+    <div class="shhhVisualCard">
+      <span class="shhhVisualEmoji">🤫</span>
+      <strong>SHHH!</strong>
+      <small>Be quiet, please.</small>
+    </div>
+  `;
+  document.body.appendChild(visual);
+}
+
+function showShhhVisualAlert(manual = false) {
+  if (!shhhMode.visualEnabled) return;
+  createShhhVisualAlert();
+  const visual = document.getElementById("shhhVisualAlert");
+  if (!visual) return;
+
+  visual.classList.remove("is-showing", "is-manual");
+  void visual.offsetWidth;
+  visual.classList.toggle("is-manual", Boolean(manual));
+  visual.classList.add("is-showing");
+
+  window.clearTimeout(visual._hideTimer);
+  visual._hideTimer = window.setTimeout(() => {
+    visual.classList.remove("is-showing", "is-manual");
+  }, manual ? 2100 : 2600);
+}
+
+
 function handleShhhTrigger(manual = false) {
+  showShhhVisualAlert(manual);
   if (shhhMode.muted) {
     recordShhhPlayed(manual);
     const message = manual
@@ -4914,6 +4970,7 @@ function updateShhhModeUi(statusOverride = "") {
   const totalCount = document.getElementById("shhhModeTotalCount");
   const mute = document.getElementById("shhhModeMute");
   const voice = document.getElementById("shhhModeVoice");
+  const visual = document.getElementById("shhhModeVisual");
   const testButton = document.getElementById("shhhModeTest");
 
   if (openButton) {
@@ -4958,6 +5015,9 @@ function updateShhhModeUi(statusOverride = "") {
   if (voice) {
     voice.checked = Boolean(shhhMode.voiceEnabled);
     voice.disabled = Boolean(shhhMode.muted);
+  }
+  if (visual) {
+    visual.checked = Boolean(shhhMode.visualEnabled);
   }
   if (testButton) {
     testButton.textContent = shhhMode.muted ? "Count Test" : "Test Shhh";
