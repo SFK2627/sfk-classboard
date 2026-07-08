@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-sw.js-shhh-pure-english-v56";
+const CACHE_NAME = "sfk-sw.js-subject-popup-special-links-v58";
 const APP_SHELL = [
   "./",
   "./index.html",

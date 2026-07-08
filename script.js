@@ -740,6 +740,36 @@ function renderPrayerLeader(item) {
     item ? item.PrayerLeader : "Not set";
 }
 
+
+function isSubjectDetailsScheduleItem(item = {}) {
+  const subject = String(item.Subject || item.subject || "").trim().toLowerCase();
+  if (!subject) return false;
+
+  // Keep existing Canva / FB / external links untouched.
+  if (isSafeExternalLink(getScheduleItemLink(item))) return false;
+
+  // Non-academic / special cards should keep their existing behavior or remain plain.
+  const excludedPatterns = [
+    "break",
+    "recess",
+    "lunch",
+    "snack",
+    "morning assembly",
+    "assembly",
+    "daily prayer",
+    "prayer",
+    "angelus",
+    "regina caeli",
+    "holy mass",
+    "mass",
+    "flag ceremony",
+    "homeroom",
+    "free time"
+  ];
+
+  return !excludedPatterns.some((pattern) => subject.includes(pattern));
+}
+
 function renderSchedule(items, currentSubject) {
   const box = document.getElementById("scheduleList");
 
@@ -760,6 +790,7 @@ function renderSchedule(items, currentSubject) {
   box.innerHTML = items.map(item => {
     const color = item.Color || getSubjectColor(item.Subject);
     const textColor = getScheduleTextColor(item.Subject, color);
+    const canOpenSubjectDetails = isSubjectDetailsScheduleItem(item);
 
     const isCurrent =
       currentSubject &&
@@ -769,6 +800,7 @@ function renderSchedule(items, currentSubject) {
 
     return `
   <div class="schedule-item ${isCurrent ? "current-row" : ""}"
+       ${canOpenSubjectDetails ? `data-subject-popup="${escapeHtml(item.Subject || "")}"` : ""}
        style="background:${color}; color:${textColor};">
     ${isCurrent ? `<div class="current-badge">▶ CURRENT PERIOD</div>` : ""}
     <strong style="color:${textColor};">${item.StartTime} - ${item.EndTime}</strong><br>
@@ -777,6 +809,13 @@ function renderSchedule(items, currentSubject) {
   </div>
 `;
   }).join("");
+
+  box.querySelectorAll("[data-subject-popup]").forEach((card) => {
+    card.addEventListener("click", (event) => {
+      if (event.target.closest("a, button")) return;
+      openSubjectDetailsPopup(card.dataset.subjectPopup || "");
+    });
+  });
 
   syncTodayScheduleToggle();
 
@@ -792,6 +831,44 @@ function renderSchedule(items, currentSubject) {
   }
 
   box.scrollTop = previousScrollTop;
+}
+
+
+function openSubjectDetailsPopup(subjectName) {
+  const subject = String(subjectName || "").trim();
+  if (!subject) return;
+
+  const announcements = Array.isArray(latestData?.announcements) ? latestData.announcements : [];
+  const items = announcements.filter((item) =>
+    String(item.Subject || "").trim().toLowerCase() === subject.toLowerCase()
+  );
+
+  document.getElementById("subjectDetailsPopup")?.remove();
+
+  const popup = document.createElement("div");
+  popup.id = "subjectDetailsPopup";
+  popup.className = "subjectDetailsPopup";
+  popup.innerHTML = `
+    <div class="subjectDetailsCard">
+      <button class="subjectDetailsClose">×</button>
+      <h2>${escapeHtml(subject)}</h2>
+      <h3>📢 Announcements</h3>
+      <div>
+        ${items.length ? items.map(item => `
+          <article>
+            <b>${escapeHtml(item.Date || "No date")}</b>
+            <p>${escapeHtml(item.Message || item.Title || "Announcement")}</p>
+          </article>
+        `).join("") : "<p>No announcements yet.</p>"}
+      </div>
+      <h3>🎒 Things to Bring</h3>
+      <p>Subject reminders will appear here.</p>
+      <h3>📜 History</h3>
+      <p>Past subject records will appear here.</p>
+    </div>`;
+  document.body.appendChild(popup);
+  popup.querySelector(".subjectDetailsClose").onclick=()=>popup.remove();
+  popup.onclick=(e)=>{if(e.target===popup)popup.remove();};
 }
 
 function isCompactScheduleView() {
