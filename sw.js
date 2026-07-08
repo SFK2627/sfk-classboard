@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-sw.js-shhh-tagalog-big-popup-v54";
+const CACHE_NAME = "sfk-sw.js-shhh-english-only-v55";
 const APP_SHELL = [
   "./",
   "./index.html",
