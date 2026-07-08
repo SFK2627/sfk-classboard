@@ -10,7 +10,7 @@ const ANNOUNCEMENT_ROTATE_MS = 10000;
 const BIRTHDAY_ROTATE_MS = 30000;
 const CACHE_KEY = "sfkClassBoardData";
 const CLASSBOARD_MEDIA_FIX_CACHE_VERSION_KEY = "sfkClassBoardMediaFixVersion";
-const CLASSBOARD_MEDIA_FIX_CACHE_VERSION = "announcement-window-fit-v10";
+const CLASSBOARD_MEDIA_FIX_CACHE_VERSION = "subject-records-design-v61";
 const ANNOUNCEMENT_HEARTS_KEY = "sfkClassBoardHeartedAnnouncements";
 
 try {
@@ -61,6 +61,8 @@ let activeBirthdayMonth = null;
 let weeklyScheduleData = [];
 let weeklyDailyInfoData = [];
 let activeWeeklyDay = "Monday";
+let subjectRecordsCache = null;
+let subjectRecordsPromise = null;
 let lastPrayerTriggerKey = "";
 let lastScheduleAutoScrollKey = "";
 let isTodayScheduleOpen = false;
@@ -835,14 +837,24 @@ function renderSchedule(items, currentSubject) {
 
 
 
+
 function normalizeSubjectRecordKey(value = "") {
   return String(value || "")
     .toLowerCase()
-    .replace(/[^\w\s]/g, " ")
-    .replace(/\b(mathematics)\b/g, "math")
-    .replace(/\b(technology and livelihood education)\b/g, "tle")
-    .replace(/\b(araling panlipunan)\b/g, "ap")
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\bmathematics\b/g, "math")
+    .replace(/\btechnology and livelihood education\b/g, "tle")
+    .replace(/\baraling panlipunan\b/g, "ap")
     .replace(/\s+/g, " ")
+    .trim();
+}
+
+function getSubjectBaseKey(value = "") {
+  return normalizeSubjectRecordKey(value)
+    .split(" ")
+    .filter(token => !/^\d+$/.test(token) && !/^grade$/.test(token) && !/^g$/.test(token))
+    .join(" ")
     .trim();
 }
 
@@ -853,9 +865,50 @@ function isSubjectRecordMatch(itemSubject = "", targetSubject = "") {
   if (itemKey === targetKey) return true;
   if (itemKey.includes(targetKey) || targetKey.includes(itemKey)) return true;
 
+  const itemBase = getSubjectBaseKey(itemKey);
+  const targetBase = getSubjectBaseKey(targetKey);
+  if (itemBase && targetBase && (itemBase === targetBase || itemBase.includes(targetBase) || targetBase.includes(itemBase))) {
+    return true;
+  }
+
   const itemTokens = new Set(itemKey.split(" ").filter(Boolean));
   const targetTokens = targetKey.split(" ").filter(Boolean);
   return targetTokens.length > 0 && targetTokens.every(token => itemTokens.has(token));
+}
+
+function getSubjectRecordsFallback() {
+  return {
+    announcements: Array.isArray(latestData?.announcements) ? latestData.announcements : [],
+    thingsToBring: Array.isArray(latestData?.thingsToBring) ? latestData.thingsToBring : []
+  };
+}
+
+async function fetchSubjectRecords(forceFresh = false) {
+  if (!forceFresh && subjectRecordsCache) return subjectRecordsCache;
+  if (!forceFresh && subjectRecordsPromise) return subjectRecordsPromise;
+
+  subjectRecordsPromise = fetch(`${API_URL}?type=subjectRecords&ts=${Date.now()}`, { cache: "no-store" })
+    .then(response => response.json())
+    .then(data => {
+      const hasFreshData = Array.isArray(data?.announcements) || Array.isArray(data?.thingsToBring);
+      const records = {
+        announcements: Array.isArray(data?.announcements) ? data.announcements : getSubjectRecordsFallback().announcements,
+        thingsToBring: Array.isArray(data?.thingsToBring) ? data.thingsToBring : getSubjectRecordsFallback().thingsToBring,
+        generatedAt: data?.generatedAt || "",
+        source: hasFreshData ? "api" : "fallback"
+      };
+      subjectRecordsCache = records;
+      return records;
+    })
+    .catch(() => ({
+      ...getSubjectRecordsFallback(),
+      source: "fallback"
+    }))
+    .finally(() => {
+      subjectRecordsPromise = null;
+    });
+
+  return subjectRecordsPromise;
 }
 
 function getSubjectRecordDateValue(item = {}) {
@@ -899,18 +952,12 @@ function getAnnouncementRecordText(item = {}) {
   );
 }
 
-function getAllSubjectAnnouncements(subject = "") {
-  const data = latestData || {};
-  const source = Array.isArray(data.announcements) ? data.announcements : [];
-  return source
+function getSubjectRecordCollections(subject = "", records = getSubjectRecordsFallback()) {
+  const announcements = (Array.isArray(records.announcements) ? records.announcements : [])
     .filter(item => isSubjectRecordMatch(item.Subject || item.subject || "", subject))
     .sort((a, b) => getSubjectRecordSortTime(b) - getSubjectRecordSortTime(a));
-}
 
-function getAllSubjectThingsToBring(subject = "") {
-  const data = latestData || {};
-  const source = Array.isArray(data.thingsToBring) ? data.thingsToBring : [];
-  return source
+  const things = (Array.isArray(records.thingsToBring) ? records.thingsToBring : [])
     .filter(item => isSubjectRecordMatch(item.Subject || item.subject || "", subject))
     .map(item => ({
       ...item,
@@ -918,14 +965,16 @@ function getAllSubjectThingsToBring(subject = "") {
       itemText: getThingText(item) || getAnnouncementRecordText(item)
     }))
     .sort((a, b) => getSubjectRecordSortTime(b) - getSubjectRecordSortTime(a));
+
+  return { announcements, things };
 }
 
 function renderSubjectRecordCards(items = [], type = "announcement") {
   if (!items.length) {
     return `<div class="subjectEmptyState">
       <span>${type === "things" ? "🎒" : "📭"}</span>
-      <strong>No records yet</strong>
-      <small>Once a post is made for this subject, it will appear here even after it is no longer shown on the main board.</small>
+      <strong>No records found yet</strong>
+      <small>No matching saved post was found for this subject yet.</small>
     </div>`;
   }
 
@@ -961,16 +1010,72 @@ function renderSubjectRecordCards(items = [], type = "announcement") {
   }).join("");
 }
 
-function openSubjectDetailsPopup(subjectName) {
-  const subject = String(subjectName || "").trim();
-  if (!subject) return;
+function renderSubjectHistoryTimeline(history = []) {
+  if (!history.length) {
+    return `<div class="subjectEmptyState"><span>🗂️</span><strong>No history yet</strong><small>No saved record for this subject has been found.</small></div>`;
+  }
 
-  const announcements = getAllSubjectAnnouncements(subject);
-  const things = getAllSubjectThingsToBring(subject);
+  return history.map(item => `
+    <div class="subjectTimelineItem">
+      <span>${item.__historyType === "things" ? "🎒" : "📢"}</span>
+      <div>
+        <b>${escapeHtml(getSubjectRecordDateLabel(item))}</b>
+        <p>${escapeHtml(item.__historyType === "things" ? (item.itemText || "Thing to bring") : getAnnouncementRecordText(item))}</p>
+      </div>
+    </div>
+  `).join("");
+}
+
+function renderSubjectDetailsPopupContent(popup, subject, records, statusLabel = "") {
+  const { announcements, things } = getSubjectRecordCollections(subject, records);
   const history = [
     ...announcements.map(item => ({ ...item, __historyType: "announcement" })),
     ...things.map(item => ({ ...item, __historyType: "things" }))
   ].sort((a, b) => getSubjectRecordSortTime(b) - getSubjectRecordSortTime(a));
+
+  const card = popup.querySelector(".subjectDetailsCard");
+  if (!card) return;
+
+  card.innerHTML = `
+    <button class="subjectDetailsClose" aria-label="Close subject details">×</button>
+
+    <div class="subjectDetailsHero">
+      <div class="subjectDetailsIcon">${iconFor(subject)}</div>
+      <div>
+        <span class="subjectDetailsKicker">Subject records ${statusLabel ? `• ${escapeHtml(statusLabel)}` : ""}</span>
+        <h2>${escapeHtml(subject)}</h2>
+        <p>All saved posts for this subject, including past announcements and things to bring.</p>
+      </div>
+    </div>
+
+    <div class="subjectStats">
+      <span><strong>${announcements.length}</strong><small>Announcements</small></span>
+      <span><strong>${things.length}</strong><small>Things to Bring</small></span>
+      <span><strong>${history.length}</strong><small>Total Records</small></span>
+    </div>
+
+    <section class="subjectDetailsSection">
+      <h3>📢 Announcements</h3>
+      <div class="subjectRecordList">${renderSubjectRecordCards(announcements, "announcement")}</div>
+    </section>
+
+    <section class="subjectDetailsSection">
+      <h3>🎒 Things to Bring</h3>
+      <div class="subjectRecordList">${renderSubjectRecordCards(things, "things")}</div>
+    </section>
+
+    <section class="subjectDetailsSection">
+      <h3>📜 History Timeline</h3>
+      <div class="subjectTimeline">${renderSubjectHistoryTimeline(history)}</div>
+    </section>
+  `;
+
+  card.querySelector(".subjectDetailsClose").onclick = () => popup.remove();
+}
+
+async function openSubjectDetailsPopup(subjectName) {
+  const subject = String(subjectName || "").trim();
+  if (!subject) return;
 
   document.getElementById("subjectDetailsPopup")?.remove();
 
@@ -978,55 +1083,26 @@ function openSubjectDetailsPopup(subjectName) {
   popup.id = "subjectDetailsPopup";
   popup.className = "subjectDetailsPopup";
   popup.innerHTML = `
-    <div class="subjectDetailsCard">
+    <div class="subjectDetailsCard isLoading">
       <button class="subjectDetailsClose" aria-label="Close subject details">×</button>
-
-      <div class="subjectDetailsHero">
-        <div class="subjectDetailsIcon">${iconFor(subject)}</div>
-        <div>
-          <span class="subjectDetailsKicker">Subject record</span>
-          <h2>${escapeHtml(subject)}</h2>
-          <p>All posted records for this subject, including past announcements and things to bring.</p>
-        </div>
+      <div class="subjectLoading">
+        <span>${iconFor(subject)}</span>
+        <strong>Loading ${escapeHtml(subject)} records...</strong>
+        <small>Loading all saved posts from Announcements and ThingsToBring.</small>
       </div>
-
-      <div class="subjectStats">
-        <span><strong>${announcements.length}</strong><small>Announcements</small></span>
-        <span><strong>${things.length}</strong><small>Things to Bring</small></span>
-        <span><strong>${history.length}</strong><small>Total Records</small></span>
-      </div>
-
-      <section class="subjectDetailsSection">
-        <h3>📢 Announcements</h3>
-        <div class="subjectRecordList">${renderSubjectRecordCards(announcements, "announcement")}</div>
-      </section>
-
-      <section class="subjectDetailsSection">
-        <h3>🎒 Things to Bring</h3>
-        <div class="subjectRecordList">${renderSubjectRecordCards(things, "things")}</div>
-      </section>
-
-      <section class="subjectDetailsSection">
-        <h3>📜 History Timeline</h3>
-        <div class="subjectTimeline">
-          ${history.length ? history.map(item => `
-            <div class="subjectTimelineItem">
-              <span>${item.__historyType === "things" ? "🎒" : "📢"}</span>
-              <div>
-                <b>${escapeHtml(getSubjectRecordDateLabel(item))}</b>
-                <p>${escapeHtml(item.__historyType === "things" ? (item.itemText || "Thing to bring") : getAnnouncementRecordText(item))}</p>
-              </div>
-            </div>
-          `).join("") : `<div class="subjectEmptyState"><span>🗂️</span><strong>No history yet</strong><small>No saved record for this subject has been found.</small></div>`}
-        </div>
-      </section>
-    </div>`;
-
+    </div>
+  `;
   document.body.appendChild(popup);
   popup.querySelector(".subjectDetailsClose").onclick = () => popup.remove();
   popup.onclick = (event) => {
     if (event.target === popup) popup.remove();
   };
+
+  renderSubjectDetailsPopupContent(popup, subject, getSubjectRecordsFallback(), "current data");
+
+  const freshRecords = await fetchSubjectRecords(true);
+  if (!document.body.contains(popup)) return;
+  renderSubjectDetailsPopupContent(popup, subject, freshRecords, "all history");
 }
 
 

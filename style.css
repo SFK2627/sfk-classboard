@@ -9696,3 +9696,323 @@ button.timeCapsuleOpen:hover {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* v60 SUBJECT HISTORY API + STRONGER POPUP DESIGN */
+.subjectDetailsCard {
+  width: min(920px, 96vw) !important;
+  max-height: 88vh !important;
+  padding: 28px !important;
+  border-radius: 38px !important;
+}
+
+.subjectDetailsCard.isLoading {
+  display: grid;
+  place-items: center;
+  min-height: 280px;
+}
+
+.subjectLoading {
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.subjectLoading span {
+  display: grid;
+  place-items: center;
+  width: 88px;
+  height: 88px;
+  border-radius: 28px;
+  background: #111;
+  color: #ffd000;
+  font-size: 3rem;
+  animation: subjectLoadingPulse 1s ease-in-out infinite alternate;
+}
+
+.subjectLoading strong {
+  font-size: 1.5rem;
+}
+
+.subjectLoading small {
+  color: rgba(17,17,17,.62);
+  font-weight: 900;
+}
+
+.subjectDetailsHero {
+  padding: 18px !important;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at top right, rgba(255, 208, 0, .28), transparent 38%),
+    linear-gradient(180deg, rgba(255,255,255,.80), rgba(255,255,255,.50));
+  border: 2px solid rgba(0,0,0,.08);
+}
+
+.subjectStats span {
+  min-height: 74px;
+  align-content: center;
+  background: linear-gradient(180deg, #111, #2b2b2b) !important;
+  color: #ffd000;
+  border-color: rgba(255,208,0,.42) !important;
+}
+
+.subjectStats small {
+  color: rgba(255,255,255,.72) !important;
+}
+
+.subjectDetailsSection {
+  padding: 16px;
+  border-radius: 24px;
+  background: rgba(255,255,255,.45);
+  border: 2px solid rgba(0,0,0,.06);
+}
+
+.subjectDetailsSection + .subjectDetailsSection {
+  margin-top: 16px !important;
+}
+
+.subjectRecordCard {
+  transition: transform .16s ease, box-shadow .16s ease;
+}
+
+.subjectRecordCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px rgba(0,0,0,.13);
+}
+
+@keyframes subjectLoadingPulse {
+  from { transform: scale(.96); }
+  to { transform: scale(1.04); }
+}
+
+
+/* v61 PREMIUM SUBJECT RECORDS POPUP REDESIGN */
+.subjectDetailsPopup {
+  background:
+    radial-gradient(circle at 18% 12%, rgba(255, 208, 0, .26), transparent 30%),
+    radial-gradient(circle at 78% 78%, rgba(255, 132, 0, .14), transparent 34%),
+    rgba(0, 0, 0, .62) !important;
+  backdrop-filter: blur(7px) saturate(1.1) !important;
+}
+
+.subjectDetailsCard {
+  width: min(980px, 96vw) !important;
+  max-height: 88vh !important;
+  padding: 0 !important;
+  border-radius: 34px !important;
+  border: 5px solid #ffd000 !important;
+  background:
+    linear-gradient(180deg, #fff8c9 0%, #fffdf0 42%, #fff5c7 100%) !important;
+  overflow: hidden auto !important;
+  box-shadow:
+    0 34px 110px rgba(0,0,0,.48),
+    0 0 0 9px rgba(255,208,0,.18),
+    inset 0 0 0 2px rgba(255,255,255,.52) !important;
+}
+
+.subjectDetailsClose {
+  position: sticky !important;
+  top: 16px !important;
+  float: right !important;
+  margin: 16px 16px -62px 0 !important;
+  width: 50px !important;
+  height: 50px !important;
+  border-radius: 999px !important;
+  background: #111 !important;
+  color: #ffd000 !important;
+  font-size: 2rem !important;
+  border: 3px solid rgba(255,255,255,.38) !important;
+  box-shadow: 0 14px 30px rgba(0,0,0,.28) !important;
+}
+
+.subjectDetailsHero {
+  margin: 0 !important;
+  padding: 30px 82px 26px 30px !important;
+  border-radius: 0 0 34px 34px !important;
+  background:
+    radial-gradient(circle at 12% 10%, rgba(255,255,255,.35), transparent 26%),
+    linear-gradient(135deg, #111 0%, #2b260e 52%, #ffd000 180%) !important;
+  color: #fff !important;
+  border: 0 !important;
+  box-shadow: inset 0 -8px 0 rgba(255,208,0,.45) !important;
+}
+
+.subjectDetailsHero h2 {
+  color: #ffd000 !important;
+  text-shadow: 0 4px 0 rgba(0,0,0,.28) !important;
+}
+
+.subjectDetailsHero p {
+  color: rgba(255,255,255,.82) !important;
+}
+
+.subjectDetailsKicker {
+  background: #ffd000 !important;
+  color: #111 !important;
+  box-shadow: 0 8px 18px rgba(0,0,0,.22) !important;
+}
+
+.subjectDetailsIcon {
+  width: 92px !important;
+  height: 92px !important;
+  flex-basis: 92px !important;
+  border-radius: 30px !important;
+  background: #ffd000 !important;
+  color: #111 !important;
+  font-size: 3rem !important;
+  box-shadow:
+    0 16px 36px rgba(0,0,0,.30),
+    inset 0 0 0 4px rgba(255,255,255,.35) !important;
+}
+
+.subjectStats {
+  margin: 18px 22px !important;
+}
+
+.subjectStats span {
+  border-radius: 22px !important;
+  min-height: 88px !important;
+  background:
+    radial-gradient(circle at top, rgba(255,208,0,.25), transparent 36%),
+    linear-gradient(180deg, #171717, #2e2e2e) !important;
+}
+
+.subjectStats strong {
+  font-size: 2.35rem !important;
+}
+
+.subjectStats small {
+  color: rgba(255,255,255,.72) !important;
+}
+
+.subjectDetailsSection {
+  margin: 18px 22px !important;
+  padding: 18px !important;
+  border-radius: 28px !important;
+  background: rgba(255,255,255,.72) !important;
+  border: 2px solid rgba(0,0,0,.08) !important;
+  box-shadow: 0 12px 32px rgba(0,0,0,.08) !important;
+}
+
+.subjectDetailsSection h3 {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: -18px -18px 14px !important;
+  padding: 15px 18px !important;
+  border-radius: 26px 26px 0 0 !important;
+  background: linear-gradient(180deg, #fff, #fff4be) !important;
+  border-bottom: 3px solid rgba(255,208,0,.82) !important;
+  font-size: 1.45rem !important;
+}
+
+.subjectRecordList {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+  gap: 14px !important;
+}
+
+.subjectRecordCard {
+  position: relative;
+  grid-template-columns: 54px 1fr !important;
+  gap: 14px !important;
+  padding: 17px !important;
+  border-radius: 24px !important;
+  background:
+    radial-gradient(circle at top right, rgba(255,208,0,.16), transparent 38%),
+    #ffffff !important;
+  border: 2px solid rgba(17,17,17,.08) !important;
+  box-shadow: 0 14px 34px rgba(0,0,0,.10) !important;
+}
+
+.subjectRecordCard::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 18px;
+  bottom: 18px;
+  width: 6px;
+  border-radius: 999px;
+  background: #ffd000;
+}
+
+.subjectRecordIcon {
+  width: 54px !important;
+  height: 54px !important;
+  border-radius: 18px !important;
+  background: linear-gradient(180deg, #111, #333) !important;
+  box-shadow: 0 10px 22px rgba(0,0,0,.20) !important;
+}
+
+.subjectRecordText {
+  font-size: 1.05rem !important;
+  font-weight: 750 !important;
+}
+
+.subjectRecordDate {
+  background: #ffd000 !important;
+  color: #111 !important;
+  box-shadow: 0 4px 10px rgba(0,0,0,.12) !important;
+}
+
+.subjectRecordType {
+  background: #111 !important;
+  color: #ffd000 !important;
+}
+
+.subjectTimeline {
+  position: relative;
+  padding-left: 8px;
+}
+
+.subjectTimelineItem {
+  border-left: 6px solid #ffd000 !important;
+  background: #fff !important;
+  box-shadow: 0 9px 22px rgba(0,0,0,.08) !important;
+}
+
+.subjectEmptyState {
+  min-height: 170px !important;
+  align-content: center !important;
+  background:
+    repeating-linear-gradient(135deg, rgba(255,208,0,.09) 0 10px, rgba(255,255,255,.72) 10px 20px) !important;
+  border: 3px dashed rgba(0,0,0,.18) !important;
+}
+
+.subjectEmptyState span {
+  font-size: 2.6rem !important;
+}
+
+.subjectEmptyState strong {
+  font-size: 1.25rem !important;
+}
+
+.subjectLoading {
+  padding: 54px 22px !important;
+}
+
+@media (max-width: 680px) {
+  .subjectDetailsCard {
+    border-radius: 26px !important;
+  }
+
+  .subjectDetailsHero {
+    padding: 26px 70px 24px 20px !important;
+  }
+
+  .subjectDetailsIcon {
+    width: 64px !important;
+    height: 64px !important;
+    flex-basis: 64px !important;
+    font-size: 2.2rem !important;
+  }
+
+  .subjectStats {
+    grid-template-columns: 1fr !important;
+  }
+
+  .subjectRecordList {
+    grid-template-columns: 1fr !important;
+  }
+}
