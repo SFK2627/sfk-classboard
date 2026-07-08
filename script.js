@@ -10,7 +10,7 @@ const ANNOUNCEMENT_ROTATE_MS = 10000;
 const BIRTHDAY_ROTATE_MS = 30000;
 const CACHE_KEY = "sfkClassBoardData";
 const CLASSBOARD_MEDIA_FIX_CACHE_VERSION_KEY = "sfkClassBoardMediaFixVersion";
-const CLASSBOARD_MEDIA_FIX_CACHE_VERSION = "subject-recent-history-v64";
+const CLASSBOARD_MEDIA_FIX_CACHE_VERSION = "subject-title-color-x-v65";
 const ANNOUNCEMENT_HEARTS_KEY = "sfkClassBoardHeartedAnnouncements";
 
 try {
@@ -1100,10 +1100,10 @@ function renderSubjectDetailsPopupContent(popup, subject, records, statusLabel =
     <button class="subjectDetailsClose" aria-label="Close subject details">×</button>
 
     <div class="subjectDetailsHero">
-      <div class="subjectDetailsIcon">${iconFor(subject)}</div>
+      <div class="subjectDetailsIcon" style="background:${subjectAccent}; color:${subjectAccentText};">${iconFor(subject)}</div>
       <div>
-        <span class="subjectDetailsKicker">Subject records ${statusLabel ? `• ${escapeHtml(statusLabel)}` : ""}</span>
-        <h2>${escapeHtml(subject)}</h2>
+        <span class="subjectDetailsKicker" style="background:${subjectAccent}; color:${subjectAccentText};">Subject records ${statusLabel ? `• ${escapeHtml(statusLabel)}` : ""}</span>
+        <h2 style="color:${subjectAccent};">${escapeHtml(subject)}</h2>
         <p>Recent posts show here. Older posts are kept in the History Timeline.</p>
       </div>
     </div>
@@ -1145,9 +1145,9 @@ async function openSubjectDetailsPopup(subjectName) {
   popup.innerHTML = `
     <div class="subjectDetailsCard isLoading">
       <button class="subjectDetailsClose" aria-label="Close subject details">×</button>
-      <div class="subjectLoading">
-        <span>${iconFor(subject)}</span>
-        <strong>Loading ${escapeHtml(subject)} records...</strong>
+      <div class="subjectLoading" style="--subject-accent:${getSubjectColor(subject)}; --subject-accent-text:${getScheduleTextColor(subject, getSubjectColor(subject))};">
+        <span style="background:${getSubjectColor(subject)}; color:${getScheduleTextColor(subject, getSubjectColor(subject))};">${iconFor(subject)}</span>
+        <strong style="color:${getSubjectColor(subject)};">Loading ${escapeHtml(subject)} records...</strong>
         <small>Loading all saved posts from Announcements and ThingsToBring.</small>
       </div>
     </div>

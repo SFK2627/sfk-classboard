@@ -10130,3 +10130,60 @@ button.timeCapsuleOpen:hover {
     margin-top: 5px;
   }
 }
+
+
+/* v65 SUBJECT TITLE COLOR + TOP RIGHT CLOSE BUTTON */
+.subjectDetailsCard {
+  position: relative !important;
+}
+
+.subjectDetailsClose {
+  position: absolute !important;
+  top: 18px !important;
+  right: 18px !important;
+  left: auto !important;
+  float: none !important;
+  margin: 0 !important;
+  z-index: 50 !important;
+  transform: none !important;
+}
+
+.subjectDetailsHero {
+  padding-right: 92px !important;
+}
+
+.subjectDetailsHero h2 {
+  color: var(--subject-accent) !important;
+  -webkit-text-stroke: 0 !important;
+  text-shadow:
+    0 4px 0 rgba(0,0,0,.32),
+    0 0 18px color-mix(in srgb, var(--subject-accent) 55%, transparent) !important;
+}
+
+.subjectDetailsKicker,
+.subjectDetailsIcon {
+  background: var(--subject-accent) !important;
+  color: var(--subject-accent-text) !important;
+}
+
+.subjectLoading span {
+  background: var(--subject-accent) !important;
+  color: var(--subject-accent-text) !important;
+}
+
+.subjectLoading strong {
+  color: var(--subject-accent) !important;
+}
+
+@media (max-width: 680px) {
+  .subjectDetailsClose {
+    top: 12px !important;
+    right: 12px !important;
+    width: 44px !important;
+    height: 44px !important;
+  }
+
+  .subjectDetailsHero {
+    padding-right: 72px !important;
+  }
+}
