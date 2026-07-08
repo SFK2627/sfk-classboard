@@ -10,7 +10,7 @@ const ANNOUNCEMENT_ROTATE_MS = 10000;
 const BIRTHDAY_ROTATE_MS = 30000;
 const CACHE_KEY = "sfkClassBoardData";
 const CLASSBOARD_MEDIA_FIX_CACHE_VERSION_KEY = "sfkClassBoardMediaFixVersion";
-const CLASSBOARD_MEDIA_FIX_CACHE_VERSION = "subject-rich-fix-v62";
+const CLASSBOARD_MEDIA_FIX_CACHE_VERSION = "subject-recent-history-v64";
 const ANNOUNCEMENT_HEARTS_KEY = "sfkClassBoardHeartedAnnouncements";
 
 try {
@@ -940,6 +940,33 @@ function getSubjectRecordSortTime(item = {}) {
   return parsed && Number.isFinite(parsed.getTime()) ? parsed.getTime() : 0;
 }
 
+function getLocalDateOnlyTime(date = new Date()) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+}
+
+function getSubjectRecordDayTime(item = {}) {
+  const value = getSubjectRecordDateValue(item);
+  if (!value) return 0;
+  const parsed = new Date(value);
+  if (!Number.isFinite(parsed.getTime())) return 0;
+  return getLocalDateOnlyTime(parsed);
+}
+
+function isSubjectRecordInRecentWindow(item = {}, options = {}) {
+  const dayTime = getSubjectRecordDayTime(item);
+  if (!dayTime) return false;
+
+  const todayTime = getLocalDateOnlyTime(new Date());
+  const daysBack = Number(options.daysBack ?? 7);
+  const startTime = todayTime - (Math.max(0, daysBack) * 24 * 60 * 60 * 1000);
+
+  if (options.includeFuture) {
+    return dayTime >= startTime;
+  }
+
+  return dayTime >= startTime && dayTime <= todayTime;
+}
+
 function getAnnouncementRecordText(item = {}) {
   return (
     item.Announcement ||
@@ -992,8 +1019,8 @@ function renderSubjectRecordCards(items = [], type = "announcement") {
   if (!items.length) {
     return `<div class="subjectEmptyState">
       <span>${type === "things" ? "🎒" : "📭"}</span>
-      <strong>No records found yet</strong>
-      <small>No matching saved post was found for this subject yet.</small>
+      <strong>No recent records here</strong>
+      <small>Older posts may still appear in the History Timeline below.</small>
     </div>`;
   }
 
@@ -1047,6 +1074,15 @@ function renderSubjectHistoryTimeline(history = []) {
 
 function renderSubjectDetailsPopupContent(popup, subject, records, statusLabel = "") {
   const { announcements, things } = getSubjectRecordCollections(subject, records);
+
+  const recentAnnouncements = announcements.filter(item =>
+    isSubjectRecordInRecentWindow(item, { daysBack: 7, includeFuture: false })
+  );
+
+  const currentThings = things.filter(item =>
+    isSubjectRecordInRecentWindow(item, { daysBack: 7, includeFuture: true })
+  );
+
   const history = [
     ...announcements.map(item => ({ ...item, __historyType: "announcement" })),
     ...things.map(item => ({ ...item, __historyType: "things" }))
@@ -1054,6 +1090,11 @@ function renderSubjectDetailsPopupContent(popup, subject, records, statusLabel =
 
   const card = popup.querySelector(".subjectDetailsCard");
   if (!card) return;
+
+  const subjectAccent = getSubjectColor(subject);
+  const subjectAccentText = getScheduleTextColor(subject, subjectAccent);
+  card.style.setProperty("--subject-accent", subjectAccent);
+  card.style.setProperty("--subject-accent-text", subjectAccentText);
 
   card.innerHTML = `
     <button class="subjectDetailsClose" aria-label="Close subject details">×</button>
@@ -1063,28 +1104,28 @@ function renderSubjectDetailsPopupContent(popup, subject, records, statusLabel =
       <div>
         <span class="subjectDetailsKicker">Subject records ${statusLabel ? `• ${escapeHtml(statusLabel)}` : ""}</span>
         <h2>${escapeHtml(subject)}</h2>
-        <p>All saved posts for this subject, including past announcements and things to bring.</p>
+        <p>Recent posts show here. Older posts are kept in the History Timeline.</p>
       </div>
     </div>
 
     <div class="subjectStats">
-      <span><strong>${announcements.length}</strong><small>Announcements</small></span>
-      <span><strong>${things.length}</strong><small>Things to Bring</small></span>
-      <span><strong>${history.length}</strong><small>Total Records</small></span>
+      <span><strong>${recentAnnouncements.length}</strong><small>Recent Announcements</small></span>
+      <span><strong>${currentThings.length}</strong><small>Current Bring Items</small></span>
+      <span><strong>${history.length}</strong><small>All History</small></span>
     </div>
 
-    <section class="subjectDetailsSection">
-      <h3>📢 Announcements</h3>
-      <div class="subjectRecordList">${renderSubjectRecordCards(announcements, "announcement")}</div>
+    <section class="subjectDetailsSection subjectRecentSection">
+      <h3>📢 Announcements <small>Today + last 7 days</small></h3>
+      <div class="subjectRecordList">${renderSubjectRecordCards(recentAnnouncements, "announcement")}</div>
     </section>
 
-    <section class="subjectDetailsSection">
-      <h3>🎒 Things to Bring</h3>
-      <div class="subjectRecordList">${renderSubjectRecordCards(things, "things")}</div>
+    <section class="subjectDetailsSection subjectRecentSection">
+      <h3>🎒 Things to Bring <small>Today + last 7 days + upcoming</small></h3>
+      <div class="subjectRecordList">${renderSubjectRecordCards(currentThings, "things")}</div>
     </section>
 
-    <section class="subjectDetailsSection">
-      <h3>📜 History Timeline</h3>
+    <section class="subjectDetailsSection subjectHistoryOnlySection">
+      <h3>📜 History Timeline <small>All records, including older posts</small></h3>
       <div class="subjectTimeline">${renderSubjectHistoryTimeline(history)}</div>
     </section>
   `;

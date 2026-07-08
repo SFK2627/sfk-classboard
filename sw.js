@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-sw.js-subject-rich-fix-v62";
+const CACHE_NAME = "sfk-sw.js-subject-recent-history-v64";
 const APP_SHELL = [
   "./",
   "./index.html",

@@ -10047,3 +10047,86 @@ button.timeCapsuleOpen:hover {
 .subjectTimelineText p {
   margin: 0 0 5px !important;
 }
+
+
+/* v63 SUBJECT COLOR ACCENT */
+.subjectDetailsCard {
+  --subject-accent: #ffd000;
+  --subject-accent-text: #111;
+}
+
+.subjectDetailsHero h2 {
+  color: var(--subject-accent) !important;
+  text-shadow: 0 4px 0 rgba(0,0,0,.28), 0 0 18px rgba(255,255,255,.08) !important;
+}
+
+.subjectDetailsKicker {
+  background: var(--subject-accent) !important;
+  color: var(--subject-accent-text) !important;
+}
+
+.subjectDetailsIcon {
+  background: var(--subject-accent) !important;
+  color: var(--subject-accent-text) !important;
+  box-shadow:
+    0 16px 36px rgba(0,0,0,.30),
+    0 0 0 4px color-mix(in srgb, var(--subject-accent) 48%, white 52%),
+    inset 0 0 0 4px rgba(255,255,255,.35) !important;
+}
+
+.subjectDetailsSection h3 {
+  border-bottom-color: color-mix(in srgb, var(--subject-accent) 78%, white 22%) !important;
+}
+
+.subjectRecordTypeBadge.announcement {
+  background: color-mix(in srgb, var(--subject-accent) 85%, white 15%) !important;
+  color: var(--subject-accent-text) !important;
+}
+
+.subjectTimelineItem {
+  border-left-color: var(--subject-accent) !important;
+}
+
+
+/* v64 RECENT VS HISTORY SPLIT */
+.subjectDetailsSection h3 small {
+  display: inline-flex;
+  align-items: center;
+  margin-left: auto;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(17,17,17,.08);
+  color: rgba(17,17,17,.62);
+  font-size: .72rem;
+  font-weight: 950;
+}
+
+.subjectRecentSection {
+  border-left: 7px solid var(--subject-accent) !important;
+}
+
+.subjectHistoryOnlySection {
+  border-left: 7px solid #111 !important;
+}
+
+.subjectHistoryOnlySection h3 {
+  background: linear-gradient(180deg, #111, #2f2f2f) !important;
+  color: #ffd000 !important;
+}
+
+.subjectHistoryOnlySection h3 small {
+  background: rgba(255,208,0,.16);
+  color: rgba(255,255,255,.78);
+}
+
+@media (max-width: 680px) {
+  .subjectDetailsSection h3 {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .subjectDetailsSection h3 small {
+    margin-left: 0;
+    margin-top: 5px;
+  }
+}
