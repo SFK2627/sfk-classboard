@@ -10016,3 +10016,34 @@ button.timeCapsuleOpen:hover {
     grid-template-columns: 1fr !important;
   }
 }
+
+
+/* v62 SUBJECT RECORD RICH TEXT FIX */
+.subjectRecordText .formattedText,
+.subjectTimelineText .formattedText {
+  margin: 0 !important;
+  color: #111 !important;
+  font-weight: 850 !important;
+  text-align: left !important;
+}
+
+.subjectRecordText ul,
+.subjectRecordText ol,
+.subjectTimelineText ul,
+.subjectTimelineText ol {
+  margin: 0 !important;
+  padding-left: 1.25rem !important;
+}
+
+.subjectRecordText li,
+.subjectTimelineText li {
+  margin: 2px 0 !important;
+}
+
+.subjectTimelineText {
+  margin-top: 4px;
+}
+
+.subjectTimelineText p {
+  margin: 0 0 5px !important;
+}

@@ -10,7 +10,7 @@ const ANNOUNCEMENT_ROTATE_MS = 10000;
 const BIRTHDAY_ROTATE_MS = 30000;
 const CACHE_KEY = "sfkClassBoardData";
 const CLASSBOARD_MEDIA_FIX_CACHE_VERSION_KEY = "sfkClassBoardMediaFixVersion";
-const CLASSBOARD_MEDIA_FIX_CACHE_VERSION = "subject-records-design-v61";
+const CLASSBOARD_MEDIA_FIX_CACHE_VERSION = "subject-rich-fix-v62";
 const ANNOUNCEMENT_HEARTS_KEY = "sfkClassBoardHeartedAnnouncements";
 
 try {
@@ -952,6 +952,25 @@ function getAnnouncementRecordText(item = {}) {
   );
 }
 
+function renderSubjectRecordText(value = "") {
+  const text = String(value || "").trim();
+  if (!text) return "";
+
+  // Rich posts from the admin editor are stored as [rich] + HTML.
+  // Render them safely instead of showing raw <ul><li> tags.
+  if (isRichBoardText(text)) {
+    return formatBoardText(text, "left");
+  }
+
+  return formatBoardText(text, "left") || `<div class="formattedText align-left">${escapeHTML(text)}</div>`;
+}
+
+function getSubjectTimelineText(item = {}) {
+  return item.__historyType === "things"
+    ? (item.itemText || getThingText(item) || "Thing to bring")
+    : getAnnouncementRecordText(item);
+}
+
 function getSubjectRecordCollections(subject = "", records = getSubjectRecordsFallback()) {
   const announcements = (Array.isArray(records.announcements) ? records.announcements : [])
     .filter(item => isSubjectRecordMatch(item.Subject || item.subject || "", subject))
@@ -998,7 +1017,7 @@ function renderSubjectRecordCards(items = [], type = "announcement") {
             <span class="subjectRecordDate">${escapeHtml(dateLabel)}</span>
             <span class="subjectRecordType">${escapeHtml(priority)}</span>
           </div>
-          <div class="subjectRecordText">${formatBoardText(text, "left")}</div>
+          <div class="subjectRecordText">${renderSubjectRecordText(text)}</div>
           ${(deadline || teacher) ? `
             <div class="subjectRecordMeta">
               ${deadline ? `<span>📅 ${escapeHtml(deadline)}</span>` : ""}
@@ -1020,7 +1039,7 @@ function renderSubjectHistoryTimeline(history = []) {
       <span>${item.__historyType === "things" ? "🎒" : "📢"}</span>
       <div>
         <b>${escapeHtml(getSubjectRecordDateLabel(item))}</b>
-        <p>${escapeHtml(item.__historyType === "things" ? (item.itemText || "Thing to bring") : getAnnouncementRecordText(item))}</p>
+        <div class="subjectTimelineText">${renderSubjectRecordText(getSubjectTimelineText(item))}</div>
       </div>
     </div>
   `).join("");
