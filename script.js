@@ -10,7 +10,7 @@ const ANNOUNCEMENT_ROTATE_MS = 10000;
 const BIRTHDAY_ROTATE_MS = 30000;
 const CACHE_KEY = "sfkClassBoardData";
 const CLASSBOARD_MEDIA_FIX_CACHE_VERSION_KEY = "sfkClassBoardMediaFixVersion";
-const CLASSBOARD_MEDIA_FIX_CACHE_VERSION = "subject-title-color-x-v65";
+const CLASSBOARD_MEDIA_FIX_CACHE_VERSION = "subject-ap-mapeh-fix-v66";
 const ANNOUNCEMENT_HEARTS_KEY = "sfkClassBoardHeartedAnnouncements";
 
 try {
@@ -863,17 +863,29 @@ function isSubjectRecordMatch(itemSubject = "", targetSubject = "") {
   const targetKey = normalizeSubjectRecordKey(targetSubject);
   if (!itemKey || !targetKey) return false;
   if (itemKey === targetKey) return true;
-  if (itemKey.includes(targetKey) || targetKey.includes(itemKey)) return true;
-
-  const itemBase = getSubjectBaseKey(itemKey);
-  const targetBase = getSubjectBaseKey(targetKey);
-  if (itemBase && targetBase && (itemBase === targetBase || itemBase.includes(targetBase) || targetBase.includes(itemBase))) {
-    return true;
-  }
 
   const itemTokens = new Set(itemKey.split(" ").filter(Boolean));
   const targetTokens = targetKey.split(" ").filter(Boolean);
-  return targetTokens.length > 0 && targetTokens.every(token => itemTokens.has(token));
+
+  // Exact token matching prevents AP from matching MAPEH.
+  if (targetTokens.length > 0 && targetTokens.every(token => itemTokens.has(token))) {
+    return true;
+  }
+
+  const itemBase = getSubjectBaseKey(itemKey);
+  const targetBase = getSubjectBaseKey(targetKey);
+  if (itemBase && targetBase && itemBase === targetBase) {
+    return true;
+  }
+
+  // Only allow loose substring matching for longer subject names.
+  // Short subjects like AP, PE, LE must not match words like MAPEH.
+  const canUseLooseMatch = itemBase.length >= 4 && targetBase.length >= 4;
+  if (canUseLooseMatch && (itemBase.includes(targetBase) || targetBase.includes(itemBase))) {
+    return true;
+  }
+
+  return false;
 }
 
 function getSubjectRecordsFallback() {

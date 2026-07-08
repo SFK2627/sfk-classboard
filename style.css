@@ -10187,3 +10187,9 @@ button.timeCapsuleOpen:hover {
     padding-right: 72px !important;
   }
 }
+
+
+/* v66 AP/MAPEH SUBJECT MATCH FIX */
+.subjectDetailsCard {
+  --subject-match-fix: v66;
+}
