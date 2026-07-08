@@ -8658,3 +8658,39 @@ button.timeCapsuleOpen:hover {
   0%, 100% { transform: scale(1); }
   45% { transform: scale(1.08); }
 }
+
+
+/* v45 BIGGER SHHH VISUAL + MATCH SOUND LENGTH */
+.shhhVisualCard {
+  min-width: min(88vw, 560px) !important;
+  padding: 34px 52px 38px !important;
+  border-width: 5px !important;
+}
+
+.shhhVisualEmoji {
+  font-size: clamp(5.5rem, 15vw, 9rem) !important;
+}
+
+.shhhVisualCard strong {
+  font-size: clamp(4.5rem, 15vw, 8rem) !important;
+}
+
+.shhhVisualCard small {
+  font-size: clamp(1.2rem, 3vw, 1.7rem) !important;
+}
+
+.shhhVisualGlow {
+  width: min(75vw, 650px) !important;
+}
+
+.shhhVisualAlert.is-showing .shhhVisualCard {
+  animation-duration: var(--shhh-alert-duration, 4800ms) !important;
+}
+
+.shhhVisualAlert.is-showing .shhhVisualGlow {
+  animation-duration: var(--shhh-alert-duration, 4800ms) !important;
+}
+
+.shhhVisualAlert.is-showing .shhhVisualEmoji {
+  animation-duration: 600ms !important;
+}

@@ -4779,9 +4779,12 @@ function showShhhVisualAlert(manual = false) {
   visual.classList.add("is-showing");
 
   window.clearTimeout(visual._hideTimer);
+  // Match the visual alert duration with the Shhh sound duration.
+  const visualDuration = manual ? 3400 : 4800;
+  visual.style.setProperty("--shhh-alert-duration", `${visualDuration}ms`);
   visual._hideTimer = window.setTimeout(() => {
     visual.classList.remove("is-showing", "is-manual");
-  }, manual ? 2100 : 2600);
+  }, visualDuration);
 }
 
 
