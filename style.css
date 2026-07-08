@@ -9231,3 +9231,57 @@ button.timeCapsuleOpen:hover {
   .shhhVisualCard { min-width: min(92vw, 620px) !important; padding: 24px 24px 28px !important; }
   .shhhVisualBars { gap: 6px; height: 46px; }
 }
+
+
+/* v51 MULTI VOICE + FILIPINO SHHH VOICE */
+.shhhVoiceOptions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 7px;
+  margin: -2px 0 0;
+  padding: 8px 10px;
+  border: 1.5px solid rgba(255,208,0,.26);
+  border-radius: 14px;
+  background: rgba(255,208,0,.08);
+}
+
+.shhhVoiceOptions label {
+  color: rgba(255,255,255,.88);
+  font-size: .72rem;
+  font-weight: 950;
+}
+
+.shhhVoiceOptions select {
+  width: 100%;
+  min-height: 34px;
+  margin-top: 4px;
+  border: 1.5px solid rgba(255,208,0,.48);
+  border-radius: 11px;
+  padding: 6px 9px;
+  background: #fff;
+  color: #111;
+  font-weight: 900;
+}
+
+.shhhRandomVoiceMini {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+}
+
+.shhhRandomVoiceMini input {
+  width: 18px;
+  height: 18px;
+  accent-color: #ffd000;
+}
+
+.shhhRandomVoiceMini span {
+  font-size: .74rem;
+  font-weight: 900;
+}
+
+@media (prefers-color-scheme: light) {
+  .shhhVoiceOptions label {
+    color: rgba(17,17,17,.78);
+  }
+}

@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-cache-shhh-bongga-v50";
+const CACHE_NAME = "sfk-sw.js-shhh-multivoice-filipino-v51";
 const APP_SHELL = [
   "./",
   "./index.html",

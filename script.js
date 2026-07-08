@@ -4331,6 +4331,8 @@ let shhhMode = {
   totalCount: 0,
   muted: false,
   voiceEnabled: true,
+  voiceLanguage: "mixed",
+  randomVoiceEnabled: true,
   visualEnabled: true,
   sensitivityLevel: SHHH_SENSITIVITY_DEFAULT,
   micGainLevel: 100,
@@ -4475,9 +4477,24 @@ function createShhhModeUi() {
         <input id="shhhModeVoice" type="checkbox" checked>
         <span>
           <strong>Be Quiet Voice</strong>
-          <small>Speaks “Be quiet” after the shhh sound.</small>
+          <small>Speaks English / Filipino reminders after the shhh sound.</small>
         </span>
       </label>
+
+      <div class="shhhVoiceOptions">
+        <label>
+          Voice Words
+          <select id="shhhVoiceLanguage">
+            <option value="mixed">Mixed English + Filipino</option>
+            <option value="filipino">Filipino / Tagalog</option>
+            <option value="english">English only</option>
+          </select>
+        </label>
+        <label class="shhhRandomVoiceMini">
+          <input id="shhhRandomVoice" type="checkbox" checked>
+          <span>Random available voice</span>
+        </label>
+      </div>
 
       <label class="shhhModeVisualRow">
         <input id="shhhModeVisual" type="checkbox" checked>
@@ -4522,6 +4539,16 @@ function createShhhModeUi() {
     shhhMode.voiceEnabled = Boolean(event.target.checked);
     saveShhhModeSettings();
     updateShhhModeUi(shhhMode.voiceEnabled ? "Voice on" : "Voice off");
+  });
+  panel.querySelector("#shhhVoiceLanguage")?.addEventListener("change", (event) => {
+    shhhMode.voiceLanguage = ["mixed", "filipino", "english"].includes(event.target.value) ? event.target.value : "mixed";
+    saveShhhModeSettings();
+    updateShhhModeUi("Voice words updated");
+  });
+  panel.querySelector("#shhhRandomVoice")?.addEventListener("change", (event) => {
+    shhhMode.randomVoiceEnabled = Boolean(event.target.checked);
+    saveShhhModeSettings();
+    updateShhhModeUi(shhhMode.randomVoiceEnabled ? "Random voice on" : "Random voice off");
   });
   panel.querySelector("#shhhModeVisual")?.addEventListener("change", (event) => {
     shhhMode.visualEnabled = Boolean(event.target.checked);
@@ -4605,6 +4632,8 @@ function restoreShhhModeSettings() {
     shhhMode.totalCount = Math.max(0, Number(saved.totalCount) || 0);
     shhhMode.muted = Boolean(saved.muted);
     shhhMode.voiceEnabled = typeof saved.voiceEnabled === "boolean" ? saved.voiceEnabled : true;
+    shhhMode.voiceLanguage = ["mixed", "filipino", "english"].includes(saved.voiceLanguage) ? saved.voiceLanguage : "mixed";
+    shhhMode.randomVoiceEnabled = typeof saved.randomVoiceEnabled === "boolean" ? saved.randomVoiceEnabled : true;
     shhhMode.visualEnabled = typeof saved.visualEnabled === "boolean" ? saved.visualEnabled : true;
     shhhMode.micGainLevel = Math.max(0, Math.min(100, Number(saved.micGainLevel ?? 100)));
     shhhMode.noiseGateLevel = Math.max(0, Math.min(100, Number(saved.noiseGateLevel ?? 20)));
@@ -4616,6 +4645,8 @@ function restoreShhhModeSettings() {
   const cooldown = document.getElementById("shhhModeCooldown");
   const mute = document.getElementById("shhhModeMute");
   const voice = document.getElementById("shhhModeVoice");
+  const voiceLanguage = document.getElementById("shhhVoiceLanguage");
+  const randomVoice = document.getElementById("shhhRandomVoice");
   const visual = document.getElementById("shhhModeVisual");
   const micGain = document.getElementById("shhhMicGain");
   const micGainValue = document.getElementById("shhhMicGainValue");
@@ -4629,6 +4660,8 @@ function restoreShhhModeSettings() {
   if (cooldown) cooldown.value = String(shhhMode.cooldownMs);
   if (mute) mute.checked = Boolean(shhhMode.muted);
   if (voice) voice.checked = Boolean(shhhMode.voiceEnabled);
+  if (voiceLanguage) voiceLanguage.value = shhhMode.voiceLanguage;
+  if (randomVoice) randomVoice.checked = Boolean(shhhMode.randomVoiceEnabled);
   if (visual) visual.checked = Boolean(shhhMode.visualEnabled);
   updateShhhModeUi();
 }
@@ -4640,6 +4673,8 @@ function saveShhhModeSettings() {
       cooldownMs: shhhMode.cooldownMs,
       muted: Boolean(shhhMode.muted),
       voiceEnabled: Boolean(shhhMode.voiceEnabled),
+      voiceLanguage: shhhMode.voiceLanguage,
+      randomVoiceEnabled: Boolean(shhhMode.randomVoiceEnabled),
       visualEnabled: Boolean(shhhMode.visualEnabled),
       micGainLevel: shhhMode.micGainLevel,
       noiseGateLevel: shhhMode.noiseGateLevel,
@@ -4952,10 +4987,28 @@ function scheduleBeQuietVoice(manual = false, shhhDuration = 0) {
   window.setTimeout(() => speakBeQuietVoice(manual), delay);
 }
 
-function getPreferredBeQuietVoice() {
-  if (!("speechSynthesis" in window)) return null;
+function getAvailableShhhVoices(languageMode = "mixed") {
+  if (!("speechSynthesis" in window)) return [];
   const voices = window.speechSynthesis.getVoices() || [];
+  if (!voices.length) return [];
+
+  const englishVoices = voices.filter((voice) => /^en/i.test(voice.lang || ""));
+  const filipinoVoices = voices.filter((voice) => /^(fil|tl)/i.test(voice.lang || "") || /Filipino|Tagalog/i.test(`${voice.name} ${voice.voiceURI}`));
+
+  if (languageMode === "english") return englishVoices.length ? englishVoices : voices;
+  if (languageMode === "filipino") return filipinoVoices.length ? filipinoVoices : (englishVoices.length ? englishVoices : voices);
+
+  return [...filipinoVoices, ...englishVoices].length ? [...filipinoVoices, ...englishVoices] : voices;
+}
+
+function pickShhhVoice(languageMode = "mixed") {
+  const voices = getAvailableShhhVoices(languageMode);
   if (!voices.length) return null;
+
+  if (shhhMode.randomVoiceEnabled) {
+    return voices[Math.floor(Math.random() * voices.length)] || voices[0] || null;
+  }
+
   const preferredPatterns = [
     /Samantha/i,
     /Google US English/i,
@@ -4963,13 +5016,43 @@ function getPreferredBeQuietVoice() {
     /Microsoft Jenny/i,
     /Google UK English Female/i,
     /Zira/i,
-    /Female/i
+    /Filipino/i,
+    /Tagalog/i
   ];
   for (const pattern of preferredPatterns) {
     const match = voices.find((voice) => pattern.test(`${voice.name} ${voice.voiceURI}`));
     if (match) return match;
   }
-  return voices.find((voice) => /en/i.test(voice.lang || "")) || voices[0] || null;
+  return voices[0] || null;
+}
+
+function getShhhVoicePhrase() {
+  const english = [
+    "Be quiet, please.",
+    "Class, quiet please.",
+    "Please lower your voice.",
+    "Quiet down, please.",
+    "Let's keep the classroom quiet."
+  ];
+
+  const filipino = [
+    "Tahimik muna, please.",
+    "Hinaan ang boses.",
+    "Class, tahimik muna.",
+    "Pakiusap, quiet muna.",
+    "Makinig muna tayo."
+  ];
+
+  let list = [...english, ...filipino];
+  if (shhhMode.voiceLanguage === "english") list = english;
+  if (shhhMode.voiceLanguage === "filipino") list = filipino;
+
+  const text = list[Math.floor(Math.random() * list.length)] || "Be quiet, please.";
+  const isFilipino = filipino.includes(text);
+  return {
+    text,
+    lang: isFilipino ? "fil-PH" : "en-US"
+  };
 }
 
 function speakBeQuietVoice(manual = false) {
@@ -4977,13 +5060,19 @@ function speakBeQuietVoice(manual = false) {
     if (!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) return;
     const synth = window.speechSynthesis;
     synth.cancel();
-    const utterance = new SpeechSynthesisUtterance("Be quiet, please.");
-    utterance.lang = "en-US";
-    utterance.rate = manual ? 0.78 : 0.72;
-    utterance.pitch = manual ? 1.06 : 1.02;
+
+    const phrase = getShhhVoicePhrase();
+    const utterance = new SpeechSynthesisUtterance(phrase.text);
+    utterance.lang = phrase.lang;
+    utterance.rate = manual ? 0.82 : 0.76;
+    utterance.pitch = shhhMode.randomVoiceEnabled
+      ? 0.92 + Math.random() * 0.24
+      : 1.02;
     utterance.volume = 1;
-    const preferredVoice = getPreferredBeQuietVoice();
-    if (preferredVoice) utterance.voice = preferredVoice;
+
+    const selectedVoice = pickShhhVoice(shhhMode.voiceLanguage);
+    if (selectedVoice) utterance.voice = selectedVoice;
+
     synth.speak(utterance);
   } catch (error) {
     // Voice is optional; shhh sound still works.
@@ -5053,6 +5142,8 @@ function updateShhhModeUi(statusOverride = "") {
   const totalCount = document.getElementById("shhhModeTotalCount");
   const mute = document.getElementById("shhhModeMute");
   const voice = document.getElementById("shhhModeVoice");
+  const voiceLanguage = document.getElementById("shhhVoiceLanguage");
+  const randomVoice = document.getElementById("shhhRandomVoice");
   const visual = document.getElementById("shhhModeVisual");
   const testButton = document.getElementById("shhhModeTest");
   const micGain = document.getElementById("shhhMicGain");
@@ -5102,6 +5193,14 @@ function updateShhhModeUi(statusOverride = "") {
   if (voice) {
     voice.checked = Boolean(shhhMode.voiceEnabled);
     voice.disabled = Boolean(shhhMode.muted);
+  }
+  if (voiceLanguage) {
+    voiceLanguage.value = shhhMode.voiceLanguage || "mixed";
+    voiceLanguage.disabled = Boolean(shhhMode.muted) || !shhhMode.voiceEnabled;
+  }
+  if (randomVoice) {
+    randomVoice.checked = Boolean(shhhMode.randomVoiceEnabled);
+    randomVoice.disabled = Boolean(shhhMode.muted) || !shhhMode.voiceEnabled;
   }
   if (visual) {
     visual.checked = Boolean(shhhMode.visualEnabled);
