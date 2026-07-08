@@ -834,14 +834,143 @@ function renderSchedule(items, currentSubject) {
 }
 
 
+
+function normalizeSubjectRecordKey(value = "") {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[^\w\s]/g, " ")
+    .replace(/\b(mathematics)\b/g, "math")
+    .replace(/\b(technology and livelihood education)\b/g, "tle")
+    .replace(/\b(araling panlipunan)\b/g, "ap")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function isSubjectRecordMatch(itemSubject = "", targetSubject = "") {
+  const itemKey = normalizeSubjectRecordKey(itemSubject);
+  const targetKey = normalizeSubjectRecordKey(targetSubject);
+  if (!itemKey || !targetKey) return false;
+  if (itemKey === targetKey) return true;
+  if (itemKey.includes(targetKey) || targetKey.includes(itemKey)) return true;
+
+  const itemTokens = new Set(itemKey.split(" ").filter(Boolean));
+  const targetTokens = targetKey.split(" ").filter(Boolean);
+  return targetTokens.length > 0 && targetTokens.every(token => itemTokens.has(token));
+}
+
+function getSubjectRecordDateValue(item = {}) {
+  return (
+    item.PublishDate ||
+    item.ScheduledPublishDate ||
+    item.PostedDate ||
+    item.DatePosted ||
+    item.CreatedAt ||
+    item.Timestamp ||
+    item.Date ||
+    item.StartDate ||
+    item.Deadline ||
+    item.DueDate ||
+    item.DateNeeded ||
+    item.NeededDate ||
+    ""
+  );
+}
+
+function getSubjectRecordDateLabel(item = {}) {
+  const value = getSubjectRecordDateValue(item);
+  return value ? String(value) : "No date";
+}
+
+function getSubjectRecordSortTime(item = {}) {
+  const value = getSubjectRecordDateValue(item);
+  const parsed = value ? new Date(value) : null;
+  return parsed && Number.isFinite(parsed.getTime()) ? parsed.getTime() : 0;
+}
+
+function getAnnouncementRecordText(item = {}) {
+  return (
+    item.Announcement ||
+    item.Message ||
+    item.Title ||
+    item.Reminder ||
+    item.Description ||
+    item.Task ||
+    "Announcement"
+  );
+}
+
+function getAllSubjectAnnouncements(subject = "") {
+  const data = latestData || {};
+  const source = Array.isArray(data.announcements) ? data.announcements : [];
+  return source
+    .filter(item => isSubjectRecordMatch(item.Subject || item.subject || "", subject))
+    .sort((a, b) => getSubjectRecordSortTime(b) - getSubjectRecordSortTime(a));
+}
+
+function getAllSubjectThingsToBring(subject = "") {
+  const data = latestData || {};
+  const source = Array.isArray(data.thingsToBring) ? data.thingsToBring : [];
+  return source
+    .filter(item => isSubjectRecordMatch(item.Subject || item.subject || "", subject))
+    .map(item => ({
+      ...item,
+      dateValue: getThingDateValue(item),
+      itemText: getThingText(item) || getAnnouncementRecordText(item)
+    }))
+    .sort((a, b) => getSubjectRecordSortTime(b) - getSubjectRecordSortTime(a));
+}
+
+function renderSubjectRecordCards(items = [], type = "announcement") {
+  if (!items.length) {
+    return `<div class="subjectEmptyState">
+      <span>${type === "things" ? "🎒" : "📭"}</span>
+      <strong>No records yet</strong>
+      <small>Once a post is made for this subject, it will appear here even after it is no longer shown on the main board.</small>
+    </div>`;
+  }
+
+  return items.map((item) => {
+    const isThing = type === "things";
+    const text = isThing
+      ? (item.itemText || "No item specified")
+      : getAnnouncementRecordText(item);
+    const dateLabel = isThing
+      ? (item.dateValue || getSubjectRecordDateLabel(item))
+      : getSubjectRecordDateLabel(item);
+    const priority = item.Priority || (isThing ? "Things to Bring" : "Announcement");
+    const deadline = item.Deadline || item.DueDate || item.DateNeeded || item.NeededDate || "";
+    const teacher = item.Teacher || item.PostedBy || item.Author || "";
+
+    return `
+      <article class="subjectRecordCard ${isThing ? "isThing" : "isAnnouncement"}">
+        <div class="subjectRecordIcon">${isThing ? "🎒" : "📢"}</div>
+        <div class="subjectRecordContent">
+          <div class="subjectRecordTop">
+            <span class="subjectRecordDate">${escapeHtml(dateLabel)}</span>
+            <span class="subjectRecordType">${escapeHtml(priority)}</span>
+          </div>
+          <div class="subjectRecordText">${formatBoardText(text, "left")}</div>
+          ${(deadline || teacher) ? `
+            <div class="subjectRecordMeta">
+              ${deadline ? `<span>📅 ${escapeHtml(deadline)}</span>` : ""}
+              ${teacher ? `<span>👤 ${escapeHtml(teacher)}</span>` : ""}
+            </div>` : ""}
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
 function openSubjectDetailsPopup(subjectName) {
   const subject = String(subjectName || "").trim();
   if (!subject) return;
 
-  const announcements = Array.isArray(latestData?.announcements) ? latestData.announcements : [];
-  const items = announcements.filter((item) =>
-    String(item.Subject || "").trim().toLowerCase() === subject.toLowerCase()
-  );
+  const announcements = getAllSubjectAnnouncements(subject);
+  const things = getAllSubjectThingsToBring(subject);
+  const history = [
+    ...announcements.map(item => ({ ...item, __historyType: "announcement" })),
+    ...things.map(item => ({ ...item, __historyType: "things" }))
+  ].sort((a, b) => getSubjectRecordSortTime(b) - getSubjectRecordSortTime(a));
 
   document.getElementById("subjectDetailsPopup")?.remove();
 
@@ -850,26 +979,57 @@ function openSubjectDetailsPopup(subjectName) {
   popup.className = "subjectDetailsPopup";
   popup.innerHTML = `
     <div class="subjectDetailsCard">
-      <button class="subjectDetailsClose">×</button>
-      <h2>${escapeHtml(subject)}</h2>
-      <h3>📢 Announcements</h3>
-      <div>
-        ${items.length ? items.map(item => `
-          <article>
-            <b>${escapeHtml(item.Date || "No date")}</b>
-            <p>${escapeHtml(item.Message || item.Title || "Announcement")}</p>
-          </article>
-        `).join("") : "<p>No announcements yet.</p>"}
+      <button class="subjectDetailsClose" aria-label="Close subject details">×</button>
+
+      <div class="subjectDetailsHero">
+        <div class="subjectDetailsIcon">${iconFor(subject)}</div>
+        <div>
+          <span class="subjectDetailsKicker">Subject record</span>
+          <h2>${escapeHtml(subject)}</h2>
+          <p>All posted records for this subject, including past announcements and things to bring.</p>
+        </div>
       </div>
-      <h3>🎒 Things to Bring</h3>
-      <p>Subject reminders will appear here.</p>
-      <h3>📜 History</h3>
-      <p>Past subject records will appear here.</p>
+
+      <div class="subjectStats">
+        <span><strong>${announcements.length}</strong><small>Announcements</small></span>
+        <span><strong>${things.length}</strong><small>Things to Bring</small></span>
+        <span><strong>${history.length}</strong><small>Total Records</small></span>
+      </div>
+
+      <section class="subjectDetailsSection">
+        <h3>📢 Announcements</h3>
+        <div class="subjectRecordList">${renderSubjectRecordCards(announcements, "announcement")}</div>
+      </section>
+
+      <section class="subjectDetailsSection">
+        <h3>🎒 Things to Bring</h3>
+        <div class="subjectRecordList">${renderSubjectRecordCards(things, "things")}</div>
+      </section>
+
+      <section class="subjectDetailsSection">
+        <h3>📜 History Timeline</h3>
+        <div class="subjectTimeline">
+          ${history.length ? history.map(item => `
+            <div class="subjectTimelineItem">
+              <span>${item.__historyType === "things" ? "🎒" : "📢"}</span>
+              <div>
+                <b>${escapeHtml(getSubjectRecordDateLabel(item))}</b>
+                <p>${escapeHtml(item.__historyType === "things" ? (item.itemText || "Thing to bring") : getAnnouncementRecordText(item))}</p>
+              </div>
+            </div>
+          `).join("") : `<div class="subjectEmptyState"><span>🗂️</span><strong>No history yet</strong><small>No saved record for this subject has been found.</small></div>`}
+        </div>
+      </section>
     </div>`;
+
   document.body.appendChild(popup);
-  popup.querySelector(".subjectDetailsClose").onclick=()=>popup.remove();
-  popup.onclick=(e)=>{if(e.target===popup)popup.remove();};
+  popup.querySelector(".subjectDetailsClose").onclick = () => popup.remove();
+  popup.onclick = (event) => {
+    if (event.target === popup) popup.remove();
+  };
 }
+
+
 
 function isCompactScheduleView() {
   return window.matchMedia("(max-width: 700px)").matches;

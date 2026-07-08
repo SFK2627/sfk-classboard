@@ -9386,3 +9386,313 @@ button.timeCapsuleOpen:hover {
   font-weight: 900;
   opacity: .9;
 }
+
+
+/* v59 FULL SUBJECT RECORD POPUP */
+.subjectDetailsPopup {
+  position: fixed;
+  inset: 0;
+  z-index: 300000;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background:
+    radial-gradient(circle at center, rgba(255, 208, 0, .15), transparent 32%),
+    rgba(0, 0, 0, .56);
+  backdrop-filter: blur(5px);
+  animation: subjectPopupFade .18s ease both;
+}
+
+.subjectDetailsCard {
+  position: relative;
+  width: min(840px, 95vw);
+  max-height: 86vh;
+  overflow: auto;
+  border-radius: 34px;
+  padding: 24px;
+  background:
+    radial-gradient(circle at top left, rgba(255, 208, 0, .30), transparent 28%),
+    linear-gradient(180deg, #fffdf0, #fff4be);
+  border: 4px solid rgba(255, 208, 0, .88);
+  box-shadow:
+    0 30px 100px rgba(0, 0, 0, .42),
+    0 0 0 8px rgba(255, 208, 0, .16);
+  animation: subjectCardPop .22s cubic-bezier(.2,.9,.25,1) both;
+}
+
+.subjectDetailsClose {
+  position: sticky;
+  top: 0;
+  float: right;
+  z-index: 4;
+  width: 46px;
+  height: 46px;
+  border: 0;
+  border-radius: 50%;
+  background: #111;
+  color: #ffd000;
+  font-size: 1.8rem;
+  font-weight: 950;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(0,0,0,.22);
+}
+
+.subjectDetailsHero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 2px 52px 16px 0;
+}
+
+.subjectDetailsIcon {
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  flex: 0 0 76px;
+  border-radius: 26px;
+  background: linear-gradient(180deg, #111, #2c2c2c);
+  color: #ffd000;
+  font-size: 2.45rem;
+  box-shadow: 0 12px 30px rgba(0,0,0,.20);
+}
+
+.subjectDetailsKicker {
+  display: inline-flex;
+  margin-bottom: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #111;
+  color: #ffd000;
+  font-size: .74rem;
+  font-weight: 950;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.subjectDetailsHero h2 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  line-height: .95;
+  font-family: 'Fredoka', Arial, sans-serif;
+}
+
+.subjectDetailsHero p {
+  margin: 7px 0 0;
+  color: rgba(17,17,17,.68);
+  font-weight: 800;
+}
+
+.subjectStats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 16px 0 18px;
+}
+
+.subjectStats span {
+  display: grid;
+  gap: 2px;
+  padding: 13px 12px;
+  border-radius: 18px;
+  background: rgba(255,255,255,.74);
+  border: 2px solid rgba(0,0,0,.08);
+  text-align: center;
+}
+
+.subjectStats strong {
+  font-size: 1.9rem;
+  line-height: 1;
+}
+
+.subjectStats small {
+  font-size: .76rem;
+  font-weight: 950;
+  color: rgba(17,17,17,.62);
+  text-transform: uppercase;
+}
+
+.subjectDetailsSection {
+  margin-top: 18px;
+}
+
+.subjectDetailsSection h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  padding-bottom: 7px;
+  border-bottom: 3px solid rgba(0,0,0,.10);
+  font-size: 1.32rem;
+}
+
+.subjectRecordList {
+  display: grid;
+  gap: 10px;
+}
+
+.subjectRecordCard {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 20px;
+  background: rgba(255,255,255,.88);
+  border: 2px solid rgba(0,0,0,.08);
+  box-shadow: 0 10px 26px rgba(0,0,0,.08);
+}
+
+.subjectRecordCard.isThing {
+  background: linear-gradient(180deg, #fff, #fff4fb);
+}
+
+.subjectRecordIcon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: #111;
+  color: #ffd000;
+  font-size: 1.5rem;
+}
+
+.subjectRecordTop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.subjectRecordDate,
+.subjectRecordType {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-size: .76rem;
+  font-weight: 950;
+}
+
+.subjectRecordDate {
+  background: #ffd000;
+  color: #111;
+}
+
+.subjectRecordType {
+  background: rgba(0,0,0,.08);
+  color: rgba(17,17,17,.72);
+}
+
+.subjectRecordText {
+  font-size: 1.02rem;
+  line-height: 1.35;
+  color: #111;
+  overflow-wrap: anywhere;
+}
+
+.subjectRecordText p {
+  margin: 0 0 6px;
+}
+
+.subjectRecordMeta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  color: rgba(17,17,17,.62);
+  font-size: .78rem;
+  font-weight: 900;
+}
+
+.subjectTimeline {
+  display: grid;
+  gap: 9px;
+}
+
+.subjectTimelineItem {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 10px;
+  padding: 10px 12px;
+  border-left: 5px solid #ffd000;
+  border-radius: 16px;
+  background: rgba(255,255,255,.65);
+}
+
+.subjectTimelineItem > span {
+  font-size: 1.25rem;
+}
+
+.subjectTimelineItem b {
+  font-size: .84rem;
+}
+
+.subjectTimelineItem p {
+  margin: 3px 0 0;
+  color: rgba(17,17,17,.72);
+  font-weight: 800;
+}
+
+.subjectEmptyState {
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  padding: 22px;
+  border-radius: 20px;
+  background: rgba(255,255,255,.62);
+  border: 2px dashed rgba(0,0,0,.14);
+  text-align: center;
+}
+
+.subjectEmptyState span {
+  font-size: 2rem;
+}
+
+.subjectEmptyState strong {
+  font-size: 1.05rem;
+}
+
+.subjectEmptyState small {
+  max-width: 480px;
+  color: rgba(17,17,17,.62);
+  font-weight: 800;
+}
+
+@keyframes subjectPopupFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes subjectCardPop {
+  from { opacity: 0; transform: translateY(18px) scale(.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 640px) {
+  .subjectDetailsCard {
+    padding: 18px;
+    border-radius: 26px;
+  }
+
+  .subjectDetailsHero {
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .subjectDetailsIcon {
+    width: 58px;
+    height: 58px;
+    flex-basis: 58px;
+    font-size: 2rem;
+    border-radius: 20px;
+  }
+
+  .subjectStats {
+    grid-template-columns: 1fr;
+  }
+
+  .subjectRecordCard {
+    grid-template-columns: 1fr;
+  }
+}
