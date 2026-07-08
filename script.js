@@ -4817,11 +4817,24 @@ function createShhhVisualAlert() {
   visual.className = "shhhVisualAlert";
   visual.setAttribute("aria-hidden", "true");
   visual.innerHTML = `
+    <div class="shhhVisualBackdrop"></div>
     <div class="shhhVisualGlow"></div>
+    <div class="shhhVisualRing shhhVisualRingOne"></div>
+    <div class="shhhVisualRing shhhVisualRingTwo"></div>
+    <div class="shhhVisualRing shhhVisualRingThree"></div>
+    <div class="shhhVisualSpark shhhVisualSparkOne">✨</div>
+    <div class="shhhVisualSpark shhhVisualSparkTwo">✨</div>
+    <div class="shhhVisualSpark shhhVisualSparkThree">💫</div>
+    <div class="shhhVisualChip shhhVisualChipLeft">shhh</div>
+    <div class="shhhVisualChip shhhVisualChipRight">quiet</div>
     <div class="shhhVisualCard">
+      <div class="shhhVisualTopline">Noise detected</div>
       <span class="shhhVisualEmoji">🤫</span>
-      <strong>SHHH!</strong>
-      <small>Be quiet, please.</small>
+      <strong class="shhhVisualMainText">SHHHHH!</strong>
+      <small class="shhhVisualSubtext">Be quiet, please.</small>
+      <div class="shhhVisualBars" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
     </div>
   `;
   document.body.appendChild(visual);
@@ -4833,15 +4846,22 @@ function showShhhVisualAlert(manual = false) {
   const visual = document.getElementById("shhhVisualAlert");
   if (!visual) return;
 
+  const mainText = visual.querySelector(".shhhVisualMainText");
+  const subText = visual.querySelector(".shhhVisualSubtext");
+  const topLine = visual.querySelector(".shhhVisualTopline");
+  if (mainText) mainText.textContent = manual ? "SHHHH!" : "SHHHHHH!";
+  if (subText) subText.textContent = manual ? "Quiet test alert." : "Be quiet, please.";
+  if (topLine) topLine.textContent = manual ? "Test alert" : "Noise detected";
+
   visual.classList.remove("is-showing", "is-manual");
   void visual.offsetWidth;
   visual.classList.toggle("is-manual", Boolean(manual));
   visual.classList.add("is-showing");
 
   window.clearTimeout(visual._hideTimer);
-  // Match the visual alert duration with the Shhh sound duration.
   const visualDuration = manual ? 3400 : 4800;
   visual.style.setProperty("--shhh-alert-duration", `${visualDuration}ms`);
+  visual.style.setProperty("--shhh-loop-duration", `${Math.max(900, Math.round(visualDuration * 0.32))}ms`);
   visual._hideTimer = window.setTimeout(() => {
     visual.classList.remove("is-showing", "is-manual");
   }, visualDuration);
