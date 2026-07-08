@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-sw.js-shhh-visual-duration-v45";
+const CACHE_NAME = "sfk-sw.js-shhh-mic-controls-v46";
 const APP_SHELL = [
   "./",
   "./index.html",

@@ -8694,3 +8694,6 @@ button.timeCapsuleOpen:hover {
 .shhhVisualAlert.is-showing .shhhVisualEmoji {
   animation-duration: 600ms !important;
 }
+
+/* v46 mic gain and noise gate */
+.shhhSensitivitySlider { grid-column:1/-1!important; }

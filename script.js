@@ -4333,6 +4333,8 @@ let shhhMode = {
   voiceEnabled: true,
   visualEnabled: true,
   sensitivityLevel: SHHH_SENSITIVITY_DEFAULT,
+  micGainLevel: 100,
+  noiseGateLevel: 20,
   cooldownMs: 10000
 };
 
@@ -4434,6 +4436,18 @@ function createShhhModeUi() {
             <span>Most</span>
           </div>
         </label>
+        <label class="shhhSensitivitySlider">
+          Microphone Gain
+          <input id="shhhMicGain" type="range" min="0" max="100" value="100">
+          <div class="shhhSliderLabels"><span>Low</span><strong id="shhhMicGainValue">100%</strong><span>High</span></div>
+        </label>
+
+        <label class="shhhSensitivitySlider">
+          Noise Gate
+          <input id="shhhNoiseGate" type="range" min="0" max="100" value="20">
+          <div class="shhhSliderLabels"><span>Ignore</span><strong id="shhhNoiseGateValue">20%</strong><span>Detect</span></div>
+        </label>
+
         <label>
           Cooldown
           <select id="shhhModeCooldown">
@@ -4513,7 +4527,19 @@ function createShhhModeUi() {
     updateShhhModeUi(shhhMode.visualEnabled ? "Visual alert on" : "Visual alert off");
   });
   panel.querySelector("#shhhModeSensitivity")?.addEventListener("input", (event) => {
-    shhhMode.sensitivityLevel = Math.max(0, Math.min(100, Number(event.target.value) || 0));
+    shhhMode.sensitivityLevel = Number(event.target.value);
+    saveShhhModeSettings();
+    updateShhhModeUi();
+  });
+
+  panel.querySelector("#shhhMicGain")?.addEventListener("input", (event) => {
+    shhhMode.micGainLevel = Number(event.target.value);
+    saveShhhModeSettings();
+    updateShhhModeUi();
+  });
+
+  panel.querySelector("#shhhNoiseGate")?.addEventListener("input", (event) => {
+    shhhMode.noiseGateLevel = Number(event.target.value);
     saveShhhModeSettings();
     updateShhhModeUi();
   });
@@ -4578,6 +4604,8 @@ function restoreShhhModeSettings() {
     shhhMode.muted = Boolean(saved.muted);
     shhhMode.voiceEnabled = typeof saved.voiceEnabled === "boolean" ? saved.voiceEnabled : true;
     shhhMode.visualEnabled = typeof saved.visualEnabled === "boolean" ? saved.visualEnabled : true;
+    shhhMode.micGainLevel = Number(saved.micGainLevel ?? 100);
+    shhhMode.noiseGateLevel = Number(saved.noiseGateLevel ?? 20);
   } catch (error) {
     // Settings are optional.
   }
@@ -4603,6 +4631,8 @@ function saveShhhModeSettings() {
       muted: Boolean(shhhMode.muted),
       voiceEnabled: Boolean(shhhMode.voiceEnabled),
       visualEnabled: Boolean(shhhMode.visualEnabled),
+      micGainLevel: shhhMode.micGainLevel,
+      noiseGateLevel: shhhMode.noiseGateLevel,
       autoCount: Math.max(0, Number(shhhMode.autoCount) || 0),
       totalCount: Math.max(0, Number(shhhMode.totalCount) || 0)
     }));
@@ -4730,10 +4760,11 @@ function monitorShhhNoise() {
   }
 
   const rms = Math.sqrt(sum / shhhMode.samples.length);
-  shhhMode.level = Math.min(1, rms * 7.2);
+  shhhMode.level = Math.min(1, rms * 7.2 * (shhhMode.micGainLevel / 100));
   const threshold = getShhhThreshold();
   const now = Date.now();
-  const isLoud = rms >= threshold;
+  const gateAdjusted = threshold + ((shhhMode.noiseGateLevel / 100) * 0.045);
+  const isLoud = rms >= gateAdjusted;
 
   if (isLoud) {
     if (!shhhMode.loudSince) shhhMode.loudSince = now;
