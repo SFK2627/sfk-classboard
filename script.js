@@ -4331,7 +4331,6 @@ let shhhMode = {
   totalCount: 0,
   muted: false,
   voiceEnabled: true,
-  voiceLanguage: "english",
   randomVoiceEnabled: true,
   visualEnabled: true,
   sensitivityLevel: SHHH_SENSITIVITY_DEFAULT,
@@ -4532,11 +4531,6 @@ function createShhhModeUi() {
     saveShhhModeSettings();
     updateShhhModeUi(shhhMode.voiceEnabled ? "Voice on" : "Voice off");
   });
-  panel.querySelector("#shhhVoiceLanguage")?.addEventListener("change", (event) => {
-    shhhMode.voiceLanguage = ["mixed", "English", "english"].includes(event.target.value) ? event.target.value : "mixed";
-    saveShhhModeSettings();
-    updateShhhModeUi("Voice words updated");
-  });
   panel.querySelector("#shhhRandomVoice")?.addEventListener("change", (event) => {
     shhhMode.randomVoiceEnabled = Boolean(event.target.checked);
     saveShhhModeSettings();
@@ -4624,7 +4618,6 @@ function restoreShhhModeSettings() {
     shhhMode.totalCount = Math.max(0, Number(saved.totalCount) || 0);
     shhhMode.muted = Boolean(saved.muted);
     shhhMode.voiceEnabled = typeof saved.voiceEnabled === "boolean" ? saved.voiceEnabled : true;
-    shhhMode.voiceLanguage = "english";
     shhhMode.randomVoiceEnabled = typeof saved.randomVoiceEnabled === "boolean" ? saved.randomVoiceEnabled : true;
     shhhMode.visualEnabled = typeof saved.visualEnabled === "boolean" ? saved.visualEnabled : true;
     shhhMode.micGainLevel = Math.max(0, Math.min(100, Number(saved.micGainLevel ?? 100)));
@@ -4663,8 +4656,7 @@ function saveShhhModeSettings() {
       cooldownMs: shhhMode.cooldownMs,
       muted: Boolean(shhhMode.muted),
       voiceEnabled: Boolean(shhhMode.voiceEnabled),
-      voiceLanguage: "english",
-      randomVoiceEnabled: Boolean(shhhMode.randomVoiceEnabled),
+          randomVoiceEnabled: Boolean(shhhMode.randomVoiceEnabled),
       visualEnabled: Boolean(shhhMode.visualEnabled),
       micGainLevel: shhhMode.micGainLevel,
       noiseGateLevel: shhhMode.noiseGateLevel,
@@ -5002,15 +4994,17 @@ function pickShhhVoice() {
     /Zira/i,
     /Female/i
   ];
+
   for (const pattern of preferredPatterns) {
     const match = voices.find((voice) => pattern.test(`${voice.name} ${voice.voiceURI}`));
     if (match) return match;
   }
+
   return voices[0] || null;
 }
 
 function getShhhVoicePhrase() {
-  const english = [
+  const phrases = [
     "Be quiet, please.",
     "Class, quiet please.",
     "Please lower your voice.",
@@ -5053,11 +5047,9 @@ function getShhhVoicePhrase() {
     "Quiet team, let's go."
   ];
 
-  const text = english[Math.floor(Math.random() * english.length)] || "Be quiet, please.";
   return {
-    text,
-    lang: "en-US",
-    isEnglish: false
+    text: phrases[Math.floor(Math.random() * phrases.length)] || "Be quiet, please.",
+    lang: "en-US"
   };
 }
 
@@ -5069,8 +5061,7 @@ function speakBeQuietVoice(manual = false) {
 
     const phrase = getShhhVoicePhrase();
     const utterance = new SpeechSynthesisUtterance(phrase.text);
-    utterance.lang = phrase.lang;
-
+    utterance.lang = "en-US";
     utterance.rate = manual ? 0.82 : 0.76;
     utterance.pitch = shhhMode.randomVoiceEnabled ? 0.92 + Math.random() * 0.24 : 1.02;
     utterance.volume = 1;
@@ -5078,7 +5069,7 @@ function speakBeQuietVoice(manual = false) {
     const selectedVoice = pickShhhVoice();
     if (selectedVoice) {
       utterance.voice = selectedVoice;
-      if (selectedVoice.lang) utterance.lang = selectedVoice.lang;
+      if (selectedVoice.lang && /^en/i.test(selectedVoice.lang)) utterance.lang = selectedVoice.lang;
     }
 
     synth.speak(utterance);

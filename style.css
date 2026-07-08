@@ -9355,7 +9355,7 @@ button.timeCapsuleOpen:hover {
 }
 
 
-/* v55 ENGLISH ONLY SHHH VOICE */
+/* v55 PURE ENGLISH SHHH VOICE */
 .shhhVoiceOptions::before {
   content: "English voice only";
   color: rgba(255,255,255,.72);
