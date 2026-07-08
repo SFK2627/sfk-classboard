@@ -4401,9 +4401,10 @@ function createShhhModeUi() {
         <button id="shhhModeClose" type="button" aria-label="Close Shhh Mode">&times;</button>
       </header>
 
-      <div id="shhhModeDesktopOnly" class="shhhModeNotice" hidden>
-        Shhh Mode is available on desktop/laptop only.
-      </div>
+      <div class="shhhModeScrollable">
+        <div id="shhhModeDesktopOnly" class="shhhModeNotice" hidden>
+          Shhh Mode is available on desktop/laptop only.
+        </div>
 
       <div class="shhhModeStatus">
         <strong id="shhhModeStatusText">Off</strong>
@@ -4445,7 +4446,7 @@ function createShhhModeUi() {
         <label class="shhhSensitivitySlider">
           Noise Gate
           <input id="shhhNoiseGate" type="range" min="0" max="100" value="20">
-          <div class="shhhSliderLabels"><span>Ignore</span><strong id="shhhNoiseGateValue">20%</strong><span>Detect</span></div>
+          <div class="shhhSliderLabels"><span>Detect More</span><strong id="shhhNoiseGateValue">20%</strong><span>Ignore More</span></div>
         </label>
 
         <label>
@@ -4459,7 +4460,7 @@ function createShhhModeUi() {
       </div>
 
       <p class="shhhSensitivityNote">
-        Slide right for more sensitive. Use 80–100% if mic is far from students.
+        Mic Gain 0 or Sensitivity 0 = OFF. For strong webcam: lower Gain + slide Noise Gate right.
       </p>
 
       <label class="shhhModeMuteRow">
@@ -4491,9 +4492,10 @@ function createShhhModeUi() {
         <button id="shhhModeTest" type="button">Test Shhh</button>
       </div>
 
-      <p class="shhhModePrivacy">
-        No voice is recorded. It only reads loudness level from the microphone.
-      </p>
+        <p class="shhhModePrivacy">
+          No voice is recorded. It only reads loudness level from the microphone.
+        </p>
+      </div>
     </div>`;
 
   document.body.appendChild(panel);
@@ -4527,19 +4529,19 @@ function createShhhModeUi() {
     updateShhhModeUi(shhhMode.visualEnabled ? "Visual alert on" : "Visual alert off");
   });
   panel.querySelector("#shhhModeSensitivity")?.addEventListener("input", (event) => {
-    shhhMode.sensitivityLevel = Number(event.target.value);
+    shhhMode.sensitivityLevel = Math.max(0, Math.min(100, Number(event.target.value) || 0));
     saveShhhModeSettings();
     updateShhhModeUi();
   });
 
   panel.querySelector("#shhhMicGain")?.addEventListener("input", (event) => {
-    shhhMode.micGainLevel = Number(event.target.value);
+    shhhMode.micGainLevel = Math.max(0, Math.min(100, Number(event.target.value) || 0));
     saveShhhModeSettings();
     updateShhhModeUi();
   });
 
   panel.querySelector("#shhhNoiseGate")?.addEventListener("input", (event) => {
-    shhhMode.noiseGateLevel = Number(event.target.value);
+    shhhMode.noiseGateLevel = Math.max(0, Math.min(100, Number(event.target.value) || 0));
     saveShhhModeSettings();
     updateShhhModeUi();
   });
@@ -4604,8 +4606,8 @@ function restoreShhhModeSettings() {
     shhhMode.muted = Boolean(saved.muted);
     shhhMode.voiceEnabled = typeof saved.voiceEnabled === "boolean" ? saved.voiceEnabled : true;
     shhhMode.visualEnabled = typeof saved.visualEnabled === "boolean" ? saved.visualEnabled : true;
-    shhhMode.micGainLevel = Number(saved.micGainLevel ?? 100);
-    shhhMode.noiseGateLevel = Number(saved.noiseGateLevel ?? 20);
+    shhhMode.micGainLevel = Math.max(0, Math.min(100, Number(saved.micGainLevel ?? 100)));
+    shhhMode.noiseGateLevel = Math.max(0, Math.min(100, Number(saved.noiseGateLevel ?? 20)));
   } catch (error) {
     // Settings are optional.
   }
@@ -4615,7 +4617,15 @@ function restoreShhhModeSettings() {
   const mute = document.getElementById("shhhModeMute");
   const voice = document.getElementById("shhhModeVoice");
   const visual = document.getElementById("shhhModeVisual");
+  const micGain = document.getElementById("shhhMicGain");
+  const micGainValue = document.getElementById("shhhMicGainValue");
+  const noiseGate = document.getElementById("shhhNoiseGate");
+  const noiseGateValue = document.getElementById("shhhNoiseGateValue");
   if (sensitivity) sensitivity.value = String(shhhMode.sensitivityLevel);
+  if (micGain) micGain.value = String(shhhMode.micGainLevel);
+  if (micGainValue) micGainValue.textContent = `${Math.round(shhhMode.micGainLevel)}%`;
+  if (noiseGate) noiseGate.value = String(shhhMode.noiseGateLevel);
+  if (noiseGateValue) noiseGateValue.textContent = `${Math.round(shhhMode.noiseGateLevel)}%`;
   if (cooldown) cooldown.value = String(shhhMode.cooldownMs);
   if (mute) mute.checked = Boolean(shhhMode.muted);
   if (voice) voice.checked = Boolean(shhhMode.voiceEnabled);
@@ -4759,16 +4769,36 @@ function monitorShhhNoise() {
     sum += value * value;
   }
 
-  const rms = Math.sqrt(sum / shhhMode.samples.length);
-  shhhMode.level = Math.min(1, rms * 7.2 * (shhhMode.micGainLevel / 100));
-  const threshold = getShhhThreshold();
+  const rawRms = Math.sqrt(sum / shhhMode.samples.length);
+  const micGainPercent = Math.max(0, Math.min(100, Number(shhhMode.micGainLevel) || 0));
+  const sensitivityPercent = Math.max(0, Math.min(100, Number(shhhMode.sensitivityLevel) || 0));
+  const noiseGatePercent = Math.max(0, Math.min(100, Number(shhhMode.noiseGateLevel) || 0));
+
+  // HARD RULES:
+  // Sensitivity 0 = OFF for triggering.
+  // Mic Gain 0 = OFF for triggering.
+  const detectionAllowed = micGainPercent > 0 && sensitivityPercent > 0;
+
+  const gainMultiplier = micGainPercent / 100;
+  const adjustedRms = rawRms * gainMultiplier;
+  shhhMode.level = Math.min(1, adjustedRms * 5.2);
+
+  // Lower sensitivity = needs much stronger sound.
+  // Higher sensitivity = triggers easier.
+  const sensitivityThreshold = 0.240 - (sensitivityPercent / 100) * 0.230;
+
+  // Higher noise gate = ignore more weak/background sound.
+  const gateThreshold = Math.pow(noiseGatePercent / 100, 1.35) * 0.260;
+
+  // Both settings matter together.
+  const finalThreshold = sensitivityThreshold + gateThreshold;
+
   const now = Date.now();
-  const gateAdjusted = threshold + ((shhhMode.noiseGateLevel / 100) * 0.045);
-  const isLoud = rms >= gateAdjusted;
+  const isLoud = detectionAllowed && adjustedRms >= finalThreshold;
 
   if (isLoud) {
     if (!shhhMode.loudSince) shhhMode.loudSince = now;
-    if (now - shhhMode.loudSince > 220 && now - shhhMode.lastShhhAt > shhhMode.cooldownMs) {
+    if (now - shhhMode.loudSince > 280 && now - shhhMode.lastShhhAt > shhhMode.cooldownMs) {
       shhhMode.lastShhhAt = now;
       handleShhhTrigger(false);
     }
@@ -4776,10 +4806,9 @@ function monitorShhhNoise() {
     shhhMode.loudSince = 0;
   }
 
-  updateShhhModeUi(isLoud ? "Too loud" : shhhMode.level > 0.28 ? "Getting loud" : "Quiet");
+  updateShhhModeUi(isLoud ? "Too loud" : shhhMode.level > 0.32 ? "Getting loud" : "Quiet");
   shhhMode.animationId = requestAnimationFrame(monitorShhhNoise);
 }
-
 
 function createShhhVisualAlert() {
   if (document.getElementById("shhhVisualAlert")) return;
@@ -5006,6 +5035,10 @@ function updateShhhModeUi(statusOverride = "") {
   const voice = document.getElementById("shhhModeVoice");
   const visual = document.getElementById("shhhModeVisual");
   const testButton = document.getElementById("shhhModeTest");
+  const micGain = document.getElementById("shhhMicGain");
+  const micGainValue = document.getElementById("shhhMicGainValue");
+  const noiseGate = document.getElementById("shhhNoiseGate");
+  const noiseGateValue = document.getElementById("shhhNoiseGateValue");
 
   if (openButton) {
     openButton.classList.toggle("is-active", shhhMode.enabled);
@@ -5061,6 +5094,18 @@ function updateShhhModeUi(statusOverride = "") {
   if (sensitivity) sensitivity.value = String(shhhMode.sensitivityLevel);
   if (sensitivityValue) {
     sensitivityValue.textContent = `${Math.round(shhhMode.sensitivityLevel)}%`;
+  }
+  if (micGain) {
+    micGain.value = String(Math.round(shhhMode.micGainLevel));
+  }
+  if (micGainValue) {
+    micGainValue.textContent = `${Math.round(shhhMode.micGainLevel)}%`;
+  }
+  if (noiseGate) {
+    noiseGate.value = String(Math.round(shhhMode.noiseGateLevel));
+  }
+  if (noiseGateValue) {
+    noiseGateValue.textContent = `${Math.round(shhhMode.noiseGateLevel)}%`;
   }
   if (toggle) {
     toggle.textContent = shhhMode.enabled ? "Turn Off" : "Turn On";

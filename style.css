@@ -8697,3 +8697,268 @@ button.timeCapsuleOpen:hover {
 
 /* v46 mic gain and noise gate */
 .shhhSensitivitySlider { grid-column:1/-1!important; }
+
+
+/* v47 COMPACT SHHH SETTINGS PANEL */
+.shhhModePanel {
+  top: 14px !important;
+  right: 14px !important;
+  bottom: auto !important;
+  width: min(360px, calc(100vw - 28px)) !important;
+  max-height: calc(100dvh - 28px) !important;
+}
+
+.shhhModeCard {
+  max-height: calc(100dvh - 28px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+.shhhModeCard header {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 5 !important;
+  margin: 0 !important;
+  padding: 12px 13px 10px !important;
+  background:
+    radial-gradient(circle at top right, rgba(247,198,0,.22), transparent 42%),
+    linear-gradient(180deg, rgba(37,37,37,.98), rgba(24,24,24,.98)) !important;
+  border-bottom: 1px solid rgba(255,255,255,.12) !important;
+}
+
+.shhhModeCard header h3 {
+  font-size: 1.08rem !important;
+  line-height: 1 !important;
+}
+
+.shhhModeCard header p {
+  font-size: .72rem !important;
+  line-height: 1.15 !important;
+}
+
+#shhhModeClose {
+  position: absolute !important;
+  top: 9px !important;
+  right: 9px !important;
+  z-index: 20 !important;
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  min-height: 38px !important;
+  display: grid !important;
+  place-items: center !important;
+  border: 2px solid rgba(255,255,255,.24) !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,.14) !important;
+  color: #ffffff !important;
+  font-size: 1.55rem !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  box-shadow: 0 6px 16px rgba(0,0,0,.25) !important;
+}
+
+#shhhModeClose:hover {
+  background: #ffd000 !important;
+  color: #111 !important;
+}
+
+.shhhModeScrollable {
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch !important;
+  padding: 12px 13px 13px !important;
+  display: grid !important;
+  gap: 9px !important;
+  max-height: calc(100dvh - 100px) !important;
+}
+
+.shhhModeStatus {
+  padding: 10px 12px !important;
+}
+
+.shhhModeStatus strong {
+  font-size: .98rem !important;
+}
+
+.shhhModeStatus span {
+  font-size: .76rem !important;
+}
+
+.shhhModeMeter {
+  height: 8px !important;
+  margin: 0 !important;
+}
+
+.shhhModeCounts {
+  gap: 7px !important;
+  margin: 0 !important;
+}
+
+.shhhModeCounts article {
+  padding: 7px 8px !important;
+  border-radius: 13px !important;
+}
+
+.shhhModeCounts article span {
+  font-size: .68rem !important;
+}
+
+.shhhModeCounts article strong {
+  font-size: 1.15rem !important;
+}
+
+#shhhModeResetCount {
+  min-height: 30px !important;
+  font-size: .78rem !important;
+}
+
+.shhhModeControls {
+  gap: 8px !important;
+}
+
+.shhhModeControls label {
+  font-size: .76rem !important;
+}
+
+.shhhSensitivitySlider input[type="range"] {
+  height: 9px !important;
+}
+
+.shhhSliderLabels {
+  font-size: .66rem !important;
+}
+
+.shhhSliderLabels strong {
+  min-width: 48px !important;
+  padding: 2px 7px !important;
+  font-size: .78rem !important;
+}
+
+.shhhModeControls select {
+  min-height: 38px !important;
+  font-size: .88rem !important;
+  border-radius: 12px !important;
+}
+
+.shhhSensitivityNote {
+  margin: 0 !important;
+  font-size: .68rem !important;
+  line-height: 1.2 !important;
+}
+
+.shhhModeMuteRow,
+.shhhModeVoiceRow,
+.shhhModeVisualRow {
+  margin: 0 !important;
+  padding: 8px 10px !important;
+  border-radius: 13px !important;
+  gap: 8px !important;
+}
+
+.shhhModeMuteRow input,
+.shhhModeVoiceRow input,
+.shhhModeVisualRow input {
+  width: 19px !important;
+  height: 19px !important;
+  flex-basis: 19px !important;
+}
+
+.shhhModeMuteRow strong,
+.shhhModeVoiceRow strong,
+.shhhModeVisualRow strong {
+  font-size: .82rem !important;
+}
+
+.shhhModeMuteRow small,
+.shhhModeVoiceRow small,
+.shhhModeVisualRow small {
+  font-size: .66rem !important;
+  line-height: 1.15 !important;
+}
+
+.shhhModeActions {
+  gap: 8px !important;
+  margin-top: 1px !important;
+}
+
+.shhhModeActions button {
+  min-height: 38px !important;
+  font-size: .86rem !important;
+}
+
+.shhhModePrivacy {
+  margin: 0 !important;
+  font-size: .68rem !important;
+  line-height: 1.25 !important;
+}
+
+/* Hide/compact repeated explanatory text so the panel stays clean. */
+.shhhModeCard .shhhModePrivacy {
+  opacity: .88 !important;
+}
+
+@media (max-height: 720px) {
+  .shhhModePanel {
+    top: 8px !important;
+    right: 8px !important;
+    width: min(345px, calc(100vw - 16px)) !important;
+    max-height: calc(100dvh - 16px) !important;
+  }
+
+  .shhhModeCard {
+    max-height: calc(100dvh - 16px) !important;
+  }
+
+  .shhhModeScrollable {
+    max-height: calc(100dvh - 82px) !important;
+    padding: 9px 11px 11px !important;
+    gap: 7px !important;
+  }
+
+  .shhhModeCard header {
+    padding: 10px 12px 8px !important;
+  }
+
+  #shhhModeClose {
+    top: 7px !important;
+    right: 7px !important;
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    min-height: 34px !important;
+    font-size: 1.35rem !important;
+  }
+}
+
+
+/* v48 TRUE MIC GAIN + STRONG WEBCAM NOISE GATE */
+.shhhModeControls label:has(#shhhMicGain),
+.shhhModeControls label:has(#shhhNoiseGate) {
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 12px;
+  padding: 7px 8px;
+  background: rgba(255,255,255,.045);
+}
+
+#shhhNoiseGateValue,
+#shhhMicGainValue {
+  background: #ffd000 !important;
+  color: #111 !important;
+}
+
+
+/* v49 REAL SLIDER EFFECT FIX */
+#shhhMicGainValue,
+#shhhNoiseGateValue,
+#shhhSensitivityValue {
+  box-shadow: 0 0 0 2px rgba(0,0,0,.18) !important;
+}
+
+.shhhSensitivityNote {
+  color: rgba(255,255,255,.86) !important;
+}

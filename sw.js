@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-sw.js-shhh-mic-controls-v46";
+const CACHE_NAME = "sfk-sw.js-shhh-sliders-fixed-v49";
 const APP_SHELL = [
   "./",
   "./index.html",
