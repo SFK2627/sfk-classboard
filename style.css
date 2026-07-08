@@ -9285,3 +9285,71 @@ button.timeCapsuleOpen:hover {
     color: rgba(17,17,17,.78);
   }
 }
+
+
+/* v54 BETTER TAGALOG VOICE + RESTORE BIG SHHH POPUP SIZE */
+.shhhVisualCard {
+  min-width: min(94vw, 720px) !important;
+  padding: 36px 58px 42px !important;
+  border-radius: 42px !important;
+  border-width: 7px !important;
+}
+
+.shhhVisualEmoji {
+  font-size: clamp(7rem, 18vw, 11.5rem) !important;
+}
+
+.shhhVisualMainText,
+.shhhVisualCard strong {
+  font-size: clamp(5.8rem, 17vw, 10rem) !important;
+  letter-spacing: .07em !important;
+}
+
+.shhhVisualSubtext,
+.shhhVisualCard small {
+  font-size: clamp(1.35rem, 3vw, 1.9rem) !important;
+}
+
+.shhhVisualTopline {
+  font-size: clamp(1rem, 1.9vw, 1.25rem) !important;
+  padding: 7px 18px !important;
+}
+
+.shhhVisualBars {
+  width: min(94%, 430px) !important;
+  height: 68px !important;
+  gap: 10px !important;
+}
+
+.shhhVisualBars span {
+  max-width: 28px !important;
+}
+
+.shhhVisualGlow {
+  width: min(94vw, 860px) !important;
+}
+
+.shhhVisualRing {
+  width: min(86vw, 720px) !important;
+}
+
+.shhhVisualChip {
+  font-size: clamp(1.1rem, 2.1vw, 1.45rem) !important;
+  padding: 10px 19px !important;
+}
+
+@media (max-width: 640px) {
+  .shhhVisualCard {
+    min-width: min(95vw, 720px) !important;
+    padding: 30px 26px 34px !important;
+  }
+
+  .shhhVisualEmoji {
+    font-size: clamp(6.5rem, 22vw, 10rem) !important;
+  }
+
+  .shhhVisualMainText,
+  .shhhVisualCard strong {
+    font-size: clamp(4.8rem, 18vw, 8rem) !important;
+  }
+}

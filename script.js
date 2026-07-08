@@ -4477,7 +4477,7 @@ function createShhhModeUi() {
         <input id="shhhModeVoice" type="checkbox" checked>
         <span>
           <strong>Be Quiet Voice</strong>
-          <small>Speaks English / Filipino reminders after the shhh sound.</small>
+          <small>Speaks clearer English / Filipino classroom reminders.</small>
         </span>
       </label>
 
@@ -4485,7 +4485,7 @@ function createShhhModeUi() {
         <label>
           Voice Words
           <select id="shhhVoiceLanguage">
-            <option value="mixed">Mixed English + Filipino</option>
+            <option value="mixed">Mixed English + Filipino + Silencio</option>
             <option value="filipino">Filipino / Tagalog</option>
             <option value="english">English only</option>
           </select>
@@ -4993,10 +4993,13 @@ function getAvailableShhhVoices(languageMode = "mixed") {
   if (!voices.length) return [];
 
   const englishVoices = voices.filter((voice) => /^en/i.test(voice.lang || ""));
-  const filipinoVoices = voices.filter((voice) => /^(fil|tl)/i.test(voice.lang || "") || /Filipino|Tagalog/i.test(`${voice.name} ${voice.voiceURI}`));
+  const filipinoVoices = voices.filter((voice) =>
+    /^(fil|tl|tgl)/i.test(voice.lang || "")
+    || /Filipino|Tagalog|Philippines|Filipinas|Manila/i.test(`${voice.name} ${voice.voiceURI}`)
+  );
 
   if (languageMode === "english") return englishVoices.length ? englishVoices : voices;
-  if (languageMode === "filipino") return filipinoVoices.length ? filipinoVoices : (englishVoices.length ? englishVoices : voices);
+  if (languageMode === "filipino") return filipinoVoices.length ? filipinoVoices : voices;
 
   return [...filipinoVoices, ...englishVoices].length ? [...filipinoVoices, ...englishVoices] : voices;
 }
@@ -5032,26 +5035,72 @@ function getShhhVoicePhrase() {
     "Class, quiet please.",
     "Please lower your voice.",
     "Quiet down, please.",
-    "Let's keep the classroom quiet."
+    "Let's keep the classroom quiet.",
+    "Silent please.",
+    "Silence please.",
+    "Keep your voices low.",
+    "Lower your volume, please.",
+    "Inside voices, please.",
+    "Settle down, class.",
+    "Eyes front, voices down.",
+    "Quiet mode, please.",
+    "Please listen quietly.",
+    "Less talking, more listening.",
+    "Class, let's be quiet.",
+    "Kindly lower your voice.",
+    "Quiet please, everyone.",
+    "Let's stay calm and quiet.",
+    "Shhh, quiet please."
   ];
 
+  // Natural Filipino lines. Kept simple so text-to-speech pronounces them better.
   const filipino = [
-    "Tahimik muna, please.",
-    "Hinaan ang boses.",
-    "Class, tahimik muna.",
-    "Pakiusap, quiet muna.",
-    "Makinig muna tayo."
+    "Tahimik muna tayo.",
+    "Hinaan muna natin ang boses.",
+    "Pakiusap, hinaan ang boses.",
+    "Makinig muna tayo.",
+    "Bawas ingay muna.",
+    "Kalma muna tayo.",
+    "Pakiusap, tahimik muna.",
+    "Mahina muna ang boses.",
+    "Makinig tayo, klase.",
+    "Tahimik muna, klase.",
+    "Ang ingay natin, ah.",
+    "Baka puwedeng isara muna ang bibig.",
+    "Zip muna ang labi.",
+    "Hinaan muna ang lakas ng boses.",
+    "Pahinga muna sa kuwentuhan.",
+    "Tigil muna ang daldalan.",
+    "Bibig sarado muna, tenga bukas.",
+    "Bawas lakas muna tayo.",
+    "Masyado na tayong maingay.",
+    "Mahinang boses muna tayo.",
+    "Sandaling katahimikan muna.",
+    "Paki hinaan ang usapan.",
+    "Muna tayong tumahimik.",
+    "Makinig muna bago magsalita.",
+    "Ayusin muna natin ang ingay."
   ];
 
-  let list = [...english, ...filipino];
-  if (shhhMode.voiceLanguage === "english") list = english;
-  if (shhhMode.voiceLanguage === "filipino") list = filipino;
+  const spanishStyle = [
+    "Silencio!",
+    "Silencio, por favor.",
+    "Silencio class.",
+    "Silencio muna.",
+    "Silencio please."
+  ];
+
+  let list = [...english, ...filipino, ...spanishStyle];
+  if (shhhMode.voiceLanguage === "english") list = [...english, ...spanishStyle];
+  if (shhhMode.voiceLanguage === "filipino") list = [...filipino, ...spanishStyle];
 
   const text = list[Math.floor(Math.random() * list.length)] || "Be quiet, please.";
   const isFilipino = filipino.includes(text);
+  const isSpanishStyle = spanishStyle.includes(text);
   return {
     text,
-    lang: isFilipino ? "fil-PH" : "en-US"
+    lang: isFilipino ? "fil-PH" : (isSpanishStyle ? "es-ES" : "en-US"),
+    isFilipino
   };
 }
 
@@ -5064,14 +5113,19 @@ function speakBeQuietVoice(manual = false) {
     const phrase = getShhhVoicePhrase();
     const utterance = new SpeechSynthesisUtterance(phrase.text);
     utterance.lang = phrase.lang;
-    utterance.rate = manual ? 0.82 : 0.76;
+
+    // Filipino/Tagalog sounds more natural when spoken slightly slower.
+    utterance.rate = phrase.isFilipino ? (manual ? 0.74 : 0.70) : (manual ? 0.82 : 0.76);
     utterance.pitch = shhhMode.randomVoiceEnabled
-      ? 0.92 + Math.random() * 0.24
+      ? (phrase.isFilipino ? 0.96 + Math.random() * 0.14 : 0.92 + Math.random() * 0.24)
       : 1.02;
     utterance.volume = 1;
 
-    const selectedVoice = pickShhhVoice(shhhMode.voiceLanguage);
-    if (selectedVoice) utterance.voice = selectedVoice;
+    const selectedVoice = pickShhhVoice(phrase.isFilipino ? "filipino" : shhhMode.voiceLanguage);
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+      if (selectedVoice.lang) utterance.lang = selectedVoice.lang;
+    }
 
     synth.speak(utterance);
   } catch (error) {
