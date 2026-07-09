@@ -2730,3 +2730,4 @@ function renderHomepagePresetGallery() {
     `;
   }).join("");
 }
+// v75 preset gallery marker
