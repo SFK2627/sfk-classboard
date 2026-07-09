@@ -222,19 +222,51 @@
             </div>
           </details>
 
-          <details class="designGroup">
-            <summary>🙏 Prayer / 🧹 Cleaners / 🎂 Birthday</summary>
+          <details class="designGroup" open>
+            <summary>🙏 Prayer / 🧹 Cleaners / 🎂 Birthday Detailed Colors</summary>
+            <p class="fieldHint">These controls affect the exact homepage cards shown beside Current/Next Period.</p>
+
+            <h3 class="designMiniHeading">🙏 Prayer Leader Card</h3>
             <div class="designSettingGrid">
               <label>Prayer label text <input id="designPrayerLabelText" type="text" value="Prayer Leader"></label>
-              <label>Prayer label color <input id="designPrayerLabelColor" type="color" value="#555555"></label>
               <label>Prayer card background <input id="designPrayerCardBg" type="color" value="#ffffff"></label>
-              <label>Prayer name color <input id="designPrayerNameColor" type="color" value="#111111"></label>
-              <label>Cleaners label color <input id="designCleanersLabelColor" type="color" value="#555555"></label>
-              <label>Cleaners name color <input id="designCleanersTextColor" type="color" value="#111111"></label>
+              <label>Prayer card border <input id="designPrayerCardBorder" type="color" value="#111111"></label>
+              <label>Prayer card text <input id="designPrayerCardText" type="color" value="#111111"></label>
+              <label>Prayer label color <input id="designPrayerLabelColor" type="color" value="#555555"></label>
+              <label>Prayer leader name color <input id="designPrayerNameColor" type="color" value="#111111"></label>
+              <label>Prayer divider/accent <input id="designPrayerDividerColor" type="color" value="#ffd700"></label>
+              <label>Prayer link hover bg <input id="designPrayerLinkHoverBg" type="color" value="#fff7c7"></label>
+            </div>
+
+            <h3 class="designMiniHeading">🧹 Cleaners Today Box</h3>
+            <div class="designSettingGrid">
+              <label>Cleaners label text <input id="designCleanersLabelText" type="text" value="Cleaners Today"></label>
+              <label>Cleaners box background <input id="designCleanersBoxBg" type="color" value="#111111"></label>
+              <label>Cleaners box border <input id="designCleanersBorderColor" type="color" value="#ffd700"></label>
+              <label>Cleaners label color <input id="designCleanersLabelColor" type="color" value="#ffffff"></label>
+              <label>Cleaners group/name color <input id="designCleanersTextColor" type="color" value="#ffd700"></label>
+              <label>Cleaners box shadow <input id="designCleanersShadowColor" type="color" value="#111111"></label>
+            </div>
+
+            <h3 class="designMiniHeading">🎂 Birthday Corner Card</h3>
+            <div class="designSettingGrid">
               <label>Birthday label text <input id="designBirthdayLabelText" type="text" value="Birthday Corner"></label>
-              <label>Birthday label color <input id="designBirthdayLabelColor" type="color" value="#555555"></label>
-              <label>Birthday card background <input id="designBirthdayCardBg" type="color" value="#ffffff"></label>
-              <label>Birthday text color <input id="designBirthdayTextColor" type="color" value="#111111"></label>
+              <label>Birthday card background <input id="designBirthdayCardBg" type="color" value="#fffdf0"></label>
+              <label>Birthday card border <input id="designBirthdayCardBorder" type="color" value="#111111"></label>
+              <label>Birthday card accent <input id="designBirthdayCardAccent" type="color" value="#ffd700"></label>
+              <label>Birthday label color <input id="designBirthdayLabelColor" type="color" value="#111111"></label>
+              <label>Date badge background <input id="designBirthdayDateBg" type="color" value="#111111"></label>
+              <label>Date badge text <input id="designBirthdayDateTextColor" type="color" value="#ffd700"></label>
+              <label>Date badge border <input id="designBirthdayDateBorder" type="color" value="#ffd700"></label>
+              <label>Celebrant card background <input id="designBirthdayInnerBg" type="color" value="#111111"></label>
+              <label>Celebrant card border <input id="designBirthdayInnerBorder" type="color" value="#ffd700"></label>
+              <label>Birthday icon background <input id="designBirthdayIconBg" type="color" value="#ffd700"></label>
+              <label>Birthday icon text <input id="designBirthdayIconText" type="color" value="#111111"></label>
+              <label>Greeting text <input id="designBirthdayGreetingColor" type="color" value="#ffd700"></label>
+              <label>Celebrant name text <input id="designBirthdayCelebrantColor" type="color" value="#ffffff"></label>
+              <label>Message text <input id="designBirthdayMessageColor" type="color" value="#f5f5f5"></label>
+              <label>No-birthday background <input id="designBirthdayEmptyBg" type="color" value="#111111"></label>
+              <label>No-birthday text <input id="designBirthdayEmptyText" type="color" value="#ffd700"></label>
             </div>
           </details>
 
@@ -735,9 +767,9 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js?v=2-secure-auth"></script>
   <script src="auth.js?v=admin-officer-rescue-v2"></script>
-  <script src="firebase-adapter.js?v=homepage-design-v68"></script>
+  <script src="firebase-adapter.js?v=homepage-design-v70"></script>
   <script src="pwa.js?v=15-pwa-polish"></script>
-  <script src="class-chat-admin.js?v=homepage-design-v68"></script>
-  <script src="admin.js?v=homepage-design-v68"></script>
+  <script src="class-chat-admin.js?v=homepage-design-v70"></script>
+  <script src="admin.js?v=homepage-design-v70"></script>
 </body>
 </html>

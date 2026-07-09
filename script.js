@@ -10,7 +10,7 @@ const ANNOUNCEMENT_ROTATE_MS = 10000;
 const BIRTHDAY_ROTATE_MS = 30000;
 const CACHE_KEY = "sfkClassBoardData";
 const CLASSBOARD_MEDIA_FIX_CACHE_VERSION_KEY = "sfkClassBoardMediaFixVersion";
-const CLASSBOARD_MEDIA_FIX_CACHE_VERSION = "homepage-design-studio-v69";
+const CLASSBOARD_MEDIA_FIX_CACHE_VERSION = "homepage-design-v70";
 const ANNOUNCEMENT_HEARTS_KEY = "sfkClassBoardHeartedAnnouncements";
 
 try {
@@ -496,11 +496,33 @@ function applyHomepageDesignSettings(settings = {}) {
     "--home-things-summary-text": ["HomepageThingsSummaryText", ""],
     "--home-prayer-label-color": ["HomepagePrayerLabelColor", ""],
     "--home-prayer-card-bg": ["HomepagePrayerCardBg", ""],
+    "--home-prayer-card-border": ["HomepagePrayerCardBorder", ""],
+    "--home-prayer-card-text": ["HomepagePrayerCardText", ""],
     "--home-prayer-name-color": ["HomepagePrayerNameColor", ""],
+    "--home-prayer-divider-color": ["HomepagePrayerDividerColor", ""],
+    "--home-prayer-link-hover-bg": ["HomepagePrayerLinkHoverBg", ""],
+    "--home-cleaners-label-text-color": ["HomepageCleanersLabelColor", ""],
+    "--home-cleaners-box-bg": ["HomepageCleanersBoxBg", ""],
+    "--home-cleaners-border-color": ["HomepageCleanersBorderColor", ""],
     "--home-cleaners-label-color": ["HomepageCleanersLabelColor", ""],
     "--home-cleaners-text-color": ["HomepageCleanersTextColor", ""],
+    "--home-cleaners-shadow-color": ["HomepageCleanersShadowColor", ""],
     "--home-birthday-label-color": ["HomepageBirthdayLabelColor", ""],
     "--home-birthday-card-bg": ["HomepageBirthdayCardBg", ""],
+    "--home-birthday-card-border": ["HomepageBirthdayCardBorder", ""],
+    "--home-birthday-card-accent": ["HomepageBirthdayCardAccent", ""],
+    "--home-birthday-date-bg": ["HomepageBirthdayDateBg", ""],
+    "--home-birthday-date-text": ["HomepageBirthdayDateTextColor", ""],
+    "--home-birthday-date-border": ["HomepageBirthdayDateBorder", ""],
+    "--home-birthday-inner-bg": ["HomepageBirthdayInnerBg", ""],
+    "--home-birthday-inner-border": ["HomepageBirthdayInnerBorder", ""],
+    "--home-birthday-icon-bg": ["HomepageBirthdayIconBg", ""],
+    "--home-birthday-icon-text": ["HomepageBirthdayIconText", ""],
+    "--home-birthday-greeting-color": ["HomepageBirthdayGreetingColor", ""],
+    "--home-birthday-celebrant-color": ["HomepageBirthdayCelebrantColor", ""],
+    "--home-birthday-message-color": ["HomepageBirthdayMessageColor", ""],
+    "--home-birthday-empty-bg": ["HomepageBirthdayEmptyBg", ""],
+    "--home-birthday-empty-text": ["HomepageBirthdayEmptyText", ""],
     "--home-birthday-text-color": ["HomepageBirthdayTextColor", ""],
     "--home-adviser-title-color": ["HomepageAdviserRemindersTitleColor", ""],
     "--home-ticker-bg": ["HomepageTickerBg", ""],
@@ -521,6 +543,7 @@ function applyHomepageDesignSettings(settings = {}) {
   setHomepageText("#announcementTitle", getHomepageSetting(settings, "HomepageAnnouncementsTitleText", "Subject Announcements"));
   setHomepageText(".thingsCard .cardHeader h2", getHomepageSetting(settings, "HomepageThingsTitleText", "Things to Bring"));
   setHomepageText(".prayer .label", getHomepageSetting(settings, "HomepagePrayerLabelText", "Prayer Leader"));
+  setHomepageText(".cleanersMini span", getHomepageSetting(settings, "HomepageCleanersLabelText", "Cleaners Today"));
   setHomepageText(".birthdayCard .label", getHomepageSetting(settings, "HomepageBirthdayLabelText", "Birthday Corner"));
   setHomepageText(".adviserReminderHeader h2", getHomepageSetting(settings, "HomepageAdviserRemindersTitleText", "Adviser Reminders"));
   setHomepageText(".quoteLabel", getHomepageSetting(settings, "HomepageQuoteLabelTextValue", "Daily Kindness Quote"));

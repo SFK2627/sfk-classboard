@@ -10438,3 +10438,138 @@ body[data-use-subject-schedule-colors="no"] .schedule-item {
 .adviserReminderHeader h2 { color: var(--home-adviser-title-color) !important; }
 .ticker { background: var(--home-ticker-bg) !important; color: var(--home-ticker-text) !important; }
 .ticker * { color: var(--home-ticker-text) !important; }
+
+
+/* v70 PRAYER / CLEANERS / BIRTHDAY DETAILED DESIGN CONTROLS */
+:root {
+  --home-prayer-card-bg: #ffffff;
+  --home-prayer-card-border: #111111;
+  --home-prayer-card-text: #111111;
+  --home-prayer-label-color: #555555;
+  --home-prayer-name-color: #111111;
+  --home-prayer-divider-color: #ffd700;
+  --home-prayer-link-hover-bg: #fff7c7;
+  --home-cleaners-box-bg: #111111;
+  --home-cleaners-border-color: #ffd700;
+  --home-cleaners-label-color: #ffffff;
+  --home-cleaners-text-color: #ffd700;
+  --home-cleaners-shadow-color: #111111;
+  --home-birthday-card-bg: #fffdf0;
+  --home-birthday-card-border: #111111;
+  --home-birthday-card-accent: #ffd700;
+  --home-birthday-label-color: #111111;
+  --home-birthday-date-bg: #111111;
+  --home-birthday-date-text: #ffd700;
+  --home-birthday-date-border: #ffd700;
+  --home-birthday-inner-bg: #111111;
+  --home-birthday-inner-border: #ffd700;
+  --home-birthday-icon-bg: #ffd700;
+  --home-birthday-icon-text: #111111;
+  --home-birthday-greeting-color: #ffd700;
+  --home-birthday-celebrant-color: #ffffff;
+  --home-birthday-message-color: #f5f5f5;
+  --home-birthday-empty-bg: #111111;
+  --home-birthday-empty-text: #ffd700;
+}
+
+.heroGrid .prayer.card,
+.heroGrid .prayer {
+  background: var(--home-prayer-card-bg) !important;
+  color: var(--home-prayer-card-text) !important;
+  border-color: var(--home-prayer-card-border) !important;
+  border-left-color: var(--home-prayer-divider-color) !important;
+}
+
+.heroGrid .prayerLeaderLink {
+  background: transparent !important;
+  color: var(--home-prayer-card-text) !important;
+  border-bottom-color: var(--home-prayer-divider-color) !important;
+}
+
+.heroGrid .prayerLeaderLink:hover {
+  background: var(--home-prayer-link-hover-bg) !important;
+}
+
+.heroGrid .prayer .label,
+.heroGrid .prayerLeaderLink .label {
+  color: var(--home-prayer-label-color) !important;
+}
+
+.heroGrid .prayer h2,
+.heroGrid #prayerLeader,
+.heroGrid .prayerLeaderLink h2 {
+  color: var(--home-prayer-name-color) !important;
+}
+
+.heroGrid .cleanersMini {
+  background: var(--home-cleaners-box-bg) !important;
+  color: var(--home-cleaners-text-color) !important;
+  border-color: var(--home-cleaners-border-color) !important;
+  box-shadow: 0 3px 0 var(--home-cleaners-shadow-color) !important;
+}
+
+.heroGrid .cleanersMini span {
+  color: var(--home-cleaners-label-color) !important;
+}
+
+.heroGrid .cleanersMini strong,
+.heroGrid #cleanersToday {
+  color: var(--home-cleaners-text-color) !important;
+}
+
+.heroGrid .birthdayCard,
+.heroGrid .birthdayCard.card {
+  background: var(--home-birthday-card-bg) !important;
+  color: var(--home-birthday-text-color) !important;
+  border-color: var(--home-birthday-card-border) !important;
+  border-left-color: var(--home-birthday-card-accent) !important;
+}
+
+.heroGrid .birthdayCard .label {
+  color: var(--home-birthday-label-color) !important;
+}
+
+.heroGrid #birthdayDateText,
+.heroGrid .birthdayHeaderDate {
+  background: var(--home-birthday-date-bg) !important;
+  color: var(--home-birthday-date-text) !important;
+  border-color: var(--home-birthday-date-border) !important;
+}
+
+.heroGrid .birthdayItem {
+  background: var(--home-birthday-inner-bg) !important;
+  border-color: var(--home-birthday-inner-border) !important;
+  color: var(--home-birthday-message-color) !important;
+}
+
+.heroGrid .birthdayIcon {
+  background: var(--home-birthday-icon-bg) !important;
+  color: var(--home-birthday-icon-text) !important;
+}
+
+.heroGrid .birthdayItem strong,
+.heroGrid .birthdayCounter {
+  color: var(--home-birthday-greeting-color) !important;
+}
+
+.heroGrid .birthdayItem h3,
+.heroGrid .birthdayNameMarquee,
+.heroGrid .birthdayNameMarquee span {
+  color: var(--home-birthday-celebrant-color) !important;
+}
+
+.heroGrid .birthdayItem p,
+.heroGrid .birthdayContent p {
+  color: var(--home-birthday-message-color) !important;
+}
+
+.heroGrid .noBirthday {
+  background: var(--home-birthday-empty-bg) !important;
+  border-color: var(--home-birthday-inner-border) !important;
+  color: var(--home-birthday-empty-text) !important;
+}
+
+.heroGrid .noBirthday span,
+.heroGrid .noBirthday p {
+  color: var(--home-birthday-empty-text) !important;
+}
