@@ -453,6 +453,7 @@ function applyHomepageDesignSettings(settings = {}) {
     "--home-quote-text": ["HomepageQuoteText", ""],
     "--home-quote-label-bg": ["HomepageQuoteLabelBg", ""],
     "--home-quote-label-text": ["HomepageQuoteLabelText", ""],
+    "--home-auto-subject-theme": ["HomepageAutoSubjectTheme", "NO"],
     "--home-timebox-bg": ["HomepageTimeBoxBg", ""],
     "--home-timebox-text": ["HomepageTimeBoxText", ""],
     "--home-current-label-color": ["HomepageCurrentLabelColor", ""],
@@ -536,6 +537,7 @@ function applyHomepageDesignSettings(settings = {}) {
   document.body.dataset.homeShadowStyle = getHomepageSetting(settings, "HomepageShadowStyle", "classic");
   document.body.dataset.useSubjectScheduleColors = getHomepageBool(settings, "HomepageUseSubjectScheduleColors", true) ? "yes" : "no";
   document.body.dataset.useSubjectPeriodColors = getHomepageBool(settings, "HomepageUseSubjectPeriodColors", true) ? "yes" : "no";
+  document.body.dataset.autoSubjectTheme = getHomepageBool(settings, "HomepageAutoSubjectTheme", false) ? "yes" : "no";
 
   setHomepageText(".current .label", getHomepageSetting(settings, "HomepageCurrentLabelText", "Current Period"));
   setHomepageText(".next .label", getHomepageSetting(settings, "HomepageNextLabelText", "Next Period"));
@@ -551,6 +553,92 @@ function applyHomepageDesignSettings(settings = {}) {
 
 function getHomeCssVar(name, fallback = "") {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+}
+
+function mixHexColors(hexA, hexB, amount = 0.5) {
+  const parse = (hex) => {
+    const clean = String(hex || "").replace("#", "");
+    if (clean.length !== 6) return null;
+    return [
+      parseInt(clean.slice(0, 2), 16),
+      parseInt(clean.slice(2, 4), 16),
+      parseInt(clean.slice(4, 6), 16)
+    ];
+  };
+  const a = parse(hexA);
+  const b = parse(hexB);
+  if (!a || !b) return hexA || hexB || "#ffd000";
+  const clamp = (v) => Math.max(0, Math.min(255, Math.round(v)));
+  const out = a.map((channel, index) => clamp(channel + (b[index] - channel) * amount));
+  return `#${out.map(v => v.toString(16).padStart(2, "0")).join("")}`;
+}
+
+function setAutoSubjectVar(root, name, value) {
+  if (root && value) root.style.setProperty(name, value);
+}
+
+function applyAutoSubjectHomepageTheme(periodState = {}) {
+  const root = document.documentElement;
+  if (!root || !getHomepageBool(homepageDesignSettings, "HomepageAutoSubjectTheme", false)) {
+    document.body.dataset.autoSubjectTheme = "no";
+    return;
+  }
+
+  const item = periodState.currentPeriod || periodState.nextPeriod || null;
+  if (!item) return;
+
+  const subjectColor = item.Color || getSubjectColor(item.Subject);
+  const readable = getReadableTextColor(subjectColor);
+  const dark = mixHexColors(subjectColor, "#000000", 0.62);
+  const soft = mixHexColors(subjectColor, "#ffffff", 0.78);
+  const softer = mixHexColors(subjectColor, "#ffffff", 0.90);
+
+  document.body.dataset.autoSubjectTheme = "yes";
+  setAutoSubjectVar(root, "--home-design-bg", soft);
+  setAutoSubjectVar(root, "--home-design-text", "#111111");
+  setAutoSubjectVar(root, "--home-design-card-bg", softer);
+  setAutoSubjectVar(root, "--home-design-card-text", "#111111");
+  setAutoSubjectVar(root, "--home-design-card-border", dark);
+  setAutoSubjectVar(root, "--home-design-card-shadow", dark);
+  setAutoSubjectVar(root, "--home-design-accent", subjectColor);
+  setAutoSubjectVar(root, "--home-design-accent-text", readable);
+  setAutoSubjectVar(root, "--home-topbar-bg", dark);
+  setAutoSubjectVar(root, "--home-topbar-text", "#ffffff");
+  setAutoSubjectVar(root, "--home-brand-subtitle-color", subjectColor);
+  setAutoSubjectVar(root, "--home-quote-bg", dark);
+  setAutoSubjectVar(root, "--home-quote-text", "#ffffff");
+  setAutoSubjectVar(root, "--home-quote-label-bg", subjectColor);
+  setAutoSubjectVar(root, "--home-quote-label-text", readable);
+  setAutoSubjectVar(root, "--home-timebox-bg", subjectColor);
+  setAutoSubjectVar(root, "--home-timebox-text", readable);
+  setAutoSubjectVar(root, "--home-schedule-title-color", dark);
+  setAutoSubjectVar(root, "--home-schedule-panel-bg", softer);
+  setAutoSubjectVar(root, "--home-schedule-button-bg", dark);
+  setAutoSubjectVar(root, "--home-schedule-button-text", "#ffffff");
+  setAutoSubjectVar(root, "--home-announcements-title-color", dark);
+  setAutoSubjectVar(root, "--home-announcement-panel-bg", softer);
+  setAutoSubjectVar(root, "--home-announcement-chip-bg", dark);
+  setAutoSubjectVar(root, "--home-announcement-chip-text", "#ffffff");
+  setAutoSubjectVar(root, "--home-things-title-color", dark);
+  setAutoSubjectVar(root, "--home-things-panel-bg", softer);
+  setAutoSubjectVar(root, "--home-things-status-bg", dark);
+  setAutoSubjectVar(root, "--home-things-status-text", "#ffffff");
+  setAutoSubjectVar(root, "--home-prayer-card-bg", softer);
+  setAutoSubjectVar(root, "--home-prayer-card-border", dark);
+  setAutoSubjectVar(root, "--home-prayer-divider-color", subjectColor);
+  setAutoSubjectVar(root, "--home-cleaners-box-bg", dark);
+  setAutoSubjectVar(root, "--home-cleaners-border-color", subjectColor);
+  setAutoSubjectVar(root, "--home-cleaners-text-color", subjectColor);
+  setAutoSubjectVar(root, "--home-birthday-card-bg", softer);
+  setAutoSubjectVar(root, "--home-birthday-card-border", dark);
+  setAutoSubjectVar(root, "--home-birthday-card-accent", subjectColor);
+  setAutoSubjectVar(root, "--home-birthday-date-bg", dark);
+  setAutoSubjectVar(root, "--home-birthday-date-text", "#ffffff");
+  setAutoSubjectVar(root, "--home-birthday-inner-bg", dark);
+  setAutoSubjectVar(root, "--home-birthday-inner-border", subjectColor);
+  setAutoSubjectVar(root, "--home-birthday-greeting-color", subjectColor);
+  setAutoSubjectVar(root, "--home-ticker-bg", dark);
+  setAutoSubjectVar(root, "--home-ticker-text", subjectColor);
 }
 
 function autoFitSingleLine(element, options = {}) {
@@ -590,6 +678,7 @@ function renderDashboard(data) {
     `${data.day}, ${data.date}`;
 
   const periodState = getDisplayPeriodState(data.schedule || [], data.currentSubject, data.nextSubject);
+  applyAutoSubjectHomepageTheme(periodState);
 
   renderCurrentSubject(periodState.currentPeriod);
   renderNextSubject(periodState.nextPeriod);
@@ -826,8 +915,8 @@ function renderCurrentSubject(item) {
     if (labelEl) labelEl.style.color = getHomeCssVar("--home-current-label-color", subjectTextColor);
 
     if (countdownEl) {
-      countdownEl.style.color = getHomeCssVar("--home-current-countdown-text", autoTextColor === "#111" ? "#111" : "#fff");
-      countdownEl.style.background = getHomeCssVar("--home-current-countdown-bg", autoTextColor === "#111" ? "rgba(255,255,255,.65)" : "rgba(0,0,0,.45)");
+      countdownEl.style.setProperty("color", getHomeCssVar("--home-current-countdown-text", autoTextColor === "#111" ? "#111" : "#fff"), "important");
+      countdownEl.style.setProperty("background", getHomeCssVar("--home-current-countdown-bg", autoTextColor === "#111" ? "rgba(255,255,255,.65)" : "rgba(0,0,0,.45)"), "important");
       countdownEl.style.borderColor = "rgba(0,0,0,.25)";
     }
 
@@ -841,8 +930,8 @@ function renderCurrentSubject(item) {
     detailsEl.style.color = getHomeCssVar("--home-current-details-color", "#fff");
     if (labelEl) labelEl.style.color = getHomeCssVar("--home-current-label-color", "#ffd700");
     if (countdownEl) {
-      countdownEl.style.color = getHomeCssVar("--home-current-countdown-text", "#111");
-      countdownEl.style.background = getHomeCssVar("--home-current-countdown-bg", "rgba(255, 215, 0, .95)");
+      countdownEl.style.setProperty("color", getHomeCssVar("--home-current-countdown-text", "#111"), "important");
+      countdownEl.style.setProperty("background", getHomeCssVar("--home-current-countdown-bg", "rgba(255, 215, 0, .95)"), "important");
       countdownEl.style.borderColor = "rgba(0,0,0,.35)";
     }
     subjectEl.textContent = "No current period";
@@ -874,8 +963,8 @@ function renderNextSubject(item) {
     if (labelEl) labelEl.style.color = getHomeCssVar("--home-next-label-color", subjectTextColor);
 
     if (countdownEl) {
-      countdownEl.style.color = getHomeCssVar("--home-next-countdown-text", autoTextColor === "#111" ? "#111" : "#fff");
-      countdownEl.style.background = getHomeCssVar("--home-next-countdown-bg", autoTextColor === "#111" ? "rgba(255,255,255,.65)" : "rgba(0,0,0,.45)");
+      countdownEl.style.setProperty("color", getHomeCssVar("--home-next-countdown-text", autoTextColor === "#111" ? "#111" : "#fff"), "important");
+      countdownEl.style.setProperty("background", getHomeCssVar("--home-next-countdown-bg", autoTextColor === "#111" ? "rgba(255,255,255,.65)" : "rgba(0,0,0,.45)"), "important");
     }
 
     subjectEl.innerHTML = renderScheduleSubjectText(item, subjectTextColor);
@@ -888,8 +977,8 @@ function renderNextSubject(item) {
     detailsEl.style.color = getHomeCssVar("--home-next-details-color", "#111");
     if (labelEl) labelEl.style.color = getHomeCssVar("--home-next-label-color", "#111");
     if (countdownEl) {
-      countdownEl.style.color = getHomeCssVar("--home-next-countdown-text", "#fff");
-      countdownEl.style.background = getHomeCssVar("--home-next-countdown-bg", "rgba(0, 0, 0, .44)");
+      countdownEl.style.setProperty("color", getHomeCssVar("--home-next-countdown-text", "#fff"), "important");
+      countdownEl.style.setProperty("background", getHomeCssVar("--home-next-countdown-bg", "rgba(0, 0, 0, .44)"), "important");
     }
     subjectEl.textContent = "No next period";
     detailsEl.textContent = "End of schedule";
@@ -4052,6 +4141,24 @@ function updateCountdownAndBell() {
     if (alert) {
       alert.classList.add("hidden");
     }
+  }
+
+  enforceHomepagePeriodColors();
+}
+
+
+function enforceHomepagePeriodColors() {
+  const currentCountdown = document.getElementById("currentCountdownText");
+  const nextCountdown = document.getElementById("countdownText");
+
+  if (currentCountdown) {
+    currentCountdown.style.setProperty("color", getHomeCssVar("--home-current-countdown-text", currentCountdown.style.color || "#111"), "important");
+    currentCountdown.style.setProperty("background", getHomeCssVar("--home-current-countdown-bg", currentCountdown.style.background || "rgba(255, 215, 0, .95)"), "important");
+  }
+
+  if (nextCountdown) {
+    nextCountdown.style.setProperty("color", getHomeCssVar("--home-next-countdown-text", nextCountdown.style.color || "#fff"), "important");
+    nextCountdown.style.setProperty("background", getHomeCssVar("--home-next-countdown-bg", nextCountdown.style.background || "rgba(0,0,0,.44)"), "important");
   }
 }
 

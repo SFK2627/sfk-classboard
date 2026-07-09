@@ -272,6 +272,7 @@
       "HomepageTimeBoxBg",
       "HomepageTimeBoxText",
       "HomepageQuoteLabelTextValue",
+      "HomepageAutoSubjectTheme",
       "HomepageUseSubjectPeriodColors",
       "HomepageOverridePeriodTextColors",
       "HomepageCurrentLabelText",

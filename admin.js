@@ -2155,6 +2155,7 @@ const HOMEPAGE_DESIGN_FIELDS = {
   "HomepageTimeBoxBg": "designTimeBoxBg",
   "HomepageTimeBoxText": "designTimeBoxText",
   "HomepageQuoteLabelTextValue": "designQuoteLabelTextValue",
+  "HomepageAutoSubjectTheme": "designAutoSubjectTheme",
   "HomepageUseSubjectPeriodColors": "designUseSubjectPeriodColors",
   "HomepageOverridePeriodTextColors": "designOverridePeriodTextColors",
   "HomepageCurrentLabelText": "designCurrentLabelText",
@@ -2262,6 +2263,7 @@ const HOMEPAGE_DESIGN_DEFAULTS = {
   "HomepageTimeBoxBg": "#ffd700",
   "HomepageTimeBoxText": "#111111",
   "HomepageQuoteLabelTextValue": "Daily Kindness Quote",
+  "HomepageAutoSubjectTheme": "NO",
   "HomepageUseSubjectPeriodColors": "YES",
   "HomepageOverridePeriodTextColors": "NO",
   "HomepageCurrentLabelText": "Current Period",
@@ -2350,7 +2352,8 @@ const HOMEPAGE_DESIGN_DEFAULTS = {
 const HOMEPAGE_DESIGN_CHECKBOX_KEYS = [
   "HomepageUseSubjectPeriodColors",
   "HomepageOverridePeriodTextColors",
-  "HomepageUseSubjectScheduleColors"
+  "HomepageUseSubjectScheduleColors",
+  "HomepageAutoSubjectTheme"
 ];
 
 function normalizeHomepageDesignValue(key, value) {
@@ -2520,6 +2523,23 @@ function deleteCustomHomepagePreset(id) {
 }
 
 const HOMEPAGE_THEME_PRESETS = [
+  buildHomepagePreset("autoSubject", "Auto Subject Theme", "modern", "One smart preset: the homepage changes color automatically based on the current subject.", ["#60A5FA", "#C084FC", "#90EE90", "#FFD700", "#333333"], {
+    HomepageAutoSubjectTheme: "YES",
+    HomepageUseSubjectPeriodColors: "YES",
+    HomepageOverridePeriodTextColors: "NO",
+    HomepageBgColor: "#f7c600",
+    HomepageCardBgColor: "#ffffff",
+    HomepageCardTextColor: "#111111",
+    HomepageCardBorderColor: "#111111",
+    HomepageAccentColor: "#ffd700",
+    HomepageTopbarBg: "#111111",
+    HomepageTopbarText: "#ffffff",
+    HomepageSchedulePanelBg: "#ffffff",
+    HomepageAnnouncementPanelBg: "#ffffff",
+    HomepageThingsPanelBg: "#ffffff",
+    HomepagePrayerCardBg: "#ffffff",
+    HomepageBirthdayCardBg: "#fffdf0"
+  }),
   buildHomepagePreset("classic", "Original ClassBoard", "classic", "The default yellow, black, and white ClassBoard look.", ["#f7c600", "#111111", "#ffffff", "#ffd700"], {}),
   buildHomepagePreset("schoolGold", "School Gold", "classic", "Bold school-board look with strong black and gold contrast.", ["#f7c600", "#111111", "#ffffff", "#ffd700"], {
     HomepageBgColor: "#f7c600", HomepageTopbarBg: "#111111", HomepageAccentColor: "#ffd700", HomepageScheduleButtonBg: "#111111", HomepageScheduleButtonText: "#ffd700",

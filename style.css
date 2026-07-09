@@ -10292,6 +10292,14 @@ body {
   --home-quote-label-text: #111111;
   --home-timebox-bg: #ffd700;
   --home-timebox-text: #111111;
+  --home-current-subject-color: #ffffff;
+  --home-current-details-color: #ffffff;
+  --home-current-countdown-bg: #ffd700;
+  --home-current-countdown-text: #111111;
+  --home-next-subject-color: #111111;
+  --home-next-details-color: #111111;
+  --home-next-countdown-bg: #111111;
+  --home-next-countdown-text: #ffffff;
   --home-schedule-title-color: #111111;
   --home-schedule-panel-bg: #ffffff;
   --home-schedule-button-bg: #111111;
@@ -10953,4 +10961,67 @@ body[data-use-subject-schedule-colors="no"] .schedule-item {
   .homepageDesignStudio .themePresetActions {
     grid-template-columns: 1fr !important;
   }
+}
+
+
+/* v76 DESIGN COLOR OVERRIDE FIX + AUTO SUBJECT THEME */
+:root {
+  --home-auto-subject-theme: NO;
+  --home-current-countdown-bg: rgba(255, 215, 0, .95);
+  --home-current-countdown-text: #111111;
+  --home-next-countdown-bg: rgba(0, 0, 0, .44);
+  --home-next-countdown-text: #ffffff;
+}
+
+.current #currentCountdownText,
+.current .currentCountdown {
+  background: var(--home-current-countdown-bg) !important;
+  color: var(--home-current-countdown-text) !important;
+}
+
+.next #countdownText,
+.next .countdown {
+  background: var(--home-next-countdown-bg) !important;
+  color: var(--home-next-countdown-text) !important;
+}
+
+body[data-use-subject-period-colors="no"] .current {
+  background: var(--home-current-card-bg) !important;
+}
+
+body[data-use-subject-period-colors="no"] .next {
+  background: var(--home-next-card-bg) !important;
+}
+
+body[data-use-subject-period-colors="no"] .current #currentSubject,
+body[data-use-subject-period-colors="no"] .current #currentSubject * {
+  color: var(--home-current-subject-color) !important;
+}
+
+body[data-use-subject-period-colors="no"] .current #currentDetails,
+body[data-use-subject-period-colors="no"] .current #currentDetails * {
+  color: var(--home-current-details-color) !important;
+}
+
+body[data-use-subject-period-colors="no"] .next #nextSubject,
+body[data-use-subject-period-colors="no"] .next #nextSubject * {
+  color: var(--home-next-subject-color) !important;
+}
+
+body[data-use-subject-period-colors="no"] .next #nextDetails,
+body[data-use-subject-period-colors="no"] .next #nextDetails * {
+  color: var(--home-next-details-color) !important;
+}
+
+body[data-auto-subject-theme="yes"] .card,
+body[data-auto-subject-theme="yes"] .scheduleCard,
+body[data-auto-subject-theme="yes"] .announcementsCard,
+body[data-auto-subject-theme="yes"] .thingsCard,
+body[data-auto-subject-theme="yes"] .sideCard {
+  transition: background-color .25s ease, color .25s ease, border-color .25s ease;
+}
+
+.autoSubjectThemeRow {
+  border: 3px solid #111 !important;
+  background: #fff7c7 !important;
 }
