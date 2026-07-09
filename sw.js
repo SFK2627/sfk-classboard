@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-sw.js-homepage-presets-v73";
+const CACHE_NAME = "sfk-sw.js-homepage-custom-presets-v74";
 const APP_SHELL = [
   "./",
   "./index.html",

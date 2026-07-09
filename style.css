@@ -10579,3 +10579,88 @@ body[data-use-subject-schedule-colors="no"] .schedule-item {
 
 /* v73 HOMEPAGE THEME PRESET GALLERY */
 :root { --homepage-theme-presets: v73; }
+
+
+/* v74 CUSTOM HOMEPAGE PRESETS + MOBILE CLEANUP */
+.customPresetSaveBtn {
+  background: #111 !important;
+  color: #ffd000 !important;
+  border: 2px solid #ffd000 !important;
+  border-radius: 14px !important;
+  font-weight: 950 !important;
+}
+
+.themePresetBadgeRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.themePresetBadge.custom {
+  background: #7c3aed !important;
+  color: #ffffff !important;
+}
+
+.themePresetDeleteBtn {
+  border: 1px solid #b91c1c !important;
+  background: #fff1f2 !important;
+  color: #9f1239 !important;
+  border-radius: 999px !important;
+  padding: 5px 9px !important;
+  font-size: .72rem !important;
+  font-weight: 950 !important;
+}
+
+.themePresetActions {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 8px !important;
+}
+
+.themePresetActions button {
+  min-height: 42px !important;
+  white-space: normal !important;
+}
+
+@media (max-width: 720px) {
+  .themePresetPicker {
+    padding: 12px !important;
+  }
+
+  .themePresetTop,
+  .themePresetFilters,
+  .themePresetNavActions {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  .themePresetGallery {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .themePresetCard {
+    width: 100% !important;
+  }
+
+  .themePresetActions {
+    grid-template-columns: 1fr !important;
+  }
+
+  .customPresetSaveBtn,
+  .themePresetNavActions .panelNavBtn,
+  .themePresetNavActions button {
+    width: 100% !important;
+    justify-content: center !important;
+    min-height: 46px !important;
+  }
+
+  /* Hide technical Firebase wording in mobile toasts/status if old cached adapter still complains. */
+  .adminToast {
+    max-width: calc(100vw - 24px) !important;
+    overflow-wrap: anywhere !important;
+  }
+}
