@@ -10576,3 +10576,6 @@ body[data-use-subject-schedule-colors="no"] .schedule-item {
 
 /* v72 FIREBASE HOMEPAGE DESIGN SAVE FIX */
 .homepageDesignStudio { --homepage-design-save-fix: v72; }
+
+/* v73 HOMEPAGE THEME PRESET GALLERY */
+:root { --homepage-theme-presets: v73; }
