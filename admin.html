@@ -91,8 +91,19 @@
 
         <!-- HOMEPAGE DESIGN SETTINGS -->
         <div class="formCard homepageDesignCard homepageDesignStudio">
-          <h2>🎨 Homepage Design Studio</h2>
-          <p class="fieldHint">Customize the homepage only. Admin and Officer pages will stay unchanged.</p>
+          <div class="homepageStudioHero">
+            <div>
+              <p class="studioEyebrow">Homepage only</p>
+              <h2>🎨 Homepage Design Studio</h2>
+              <p class="fieldHint">Pick a theme first, then adjust only the colors/text you need. Admin and Officer pages stay unchanged.</p>
+            </div>
+            <div class="studioHelpCard">
+              <strong>Easy workflow</strong>
+              <span>1. Choose preset</span>
+              <span>2. Edit small details</span>
+              <span>3. Save design</span>
+            </div>
+          </div>
 
           <section class="themePresetPicker" aria-label="Homepage theme presets">
             <div class="themePresetTop">
@@ -129,6 +140,15 @@
               <p class="fieldHint">Loading presets...</p>
             </div>
           </section>
+
+          <section class="manualDesignControls" aria-label="Manual homepage design controls">
+            <div class="manualDesignHeader">
+              <div>
+                <h3>🛠 Manual Fine-Tuning</h3>
+                <p class="fieldHint">Open one section at a time. Color pickers now show as clean cards and work well on phone.</p>
+              </div>
+              <button type="button" class="collapseDesignGroupsBtn" onclick="toggleHomepageDesignGroups()">Open / Close Sections</button>
+            </div>
 
           <details class="designGroup" open>
             <summary>🏠 Global Homepage</summary>
@@ -312,6 +332,7 @@
             <button type="button" class="dangerSoftBtn" onclick="restoreHomepageDesignDefaults()">↩ Restore Original Defaults</button>
             <small id="homepageDesignStatus" class="fieldHint"></small>
           </div>
+          </section>
         </div>
 
         <!-- SUBJECT ANNOUNCEMENT -->
@@ -794,9 +815,9 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js?v=2-secure-auth"></script>
   <script src="auth.js?v=admin-officer-rescue-v2"></script>
-  <script src="firebase-adapter.js?v=homepage-auto-subject-v76"></script>
+  <script src="firebase-adapter.js?v=homepage-design-ui-v77"></script>
   <script src="pwa.js?v=15-pwa-polish"></script>
-  <script src="class-chat-admin.js?v=homepage-auto-subject-v76"></script>
-  <script src="admin.js?v=homepage-auto-subject-v76"></script>
+  <script src="class-chat-admin.js?v=homepage-design-ui-v77"></script>
+  <script src="admin.js?v=homepage-design-ui-v77"></script>
 </body>
 </html>

@@ -2693,6 +2693,16 @@ async function applyAndSaveHomepageDesignPreset(name) {
   await saveHomepageDesignSettings();
 }
 
+
+function toggleHomepageDesignGroups() {
+  const groups = Array.from(document.querySelectorAll(".homepageDesignStudio .manualDesignControls .designGroup"));
+  if (!groups.length) return;
+  const shouldOpen = groups.some(group => !group.open);
+  groups.forEach(group => {
+    group.open = shouldOpen;
+  });
+}
+
 function renderHomepagePresetGallery() {
   const gallery = document.getElementById("homepagePresetGallery");
   if (!gallery) return;
@@ -2751,3 +2761,5 @@ function renderHomepagePresetGallery() {
   }).join("");
 }
 // v75 preset gallery marker
+
+// v77 homepage design studio UX marker
