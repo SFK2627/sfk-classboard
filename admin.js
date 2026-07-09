@@ -2396,7 +2396,11 @@ async function saveHomepageDesignSettings() {
   const status = document.getElementById("homepageDesignStatus");
   if (status) status.textContent = "Saving homepage design...";
   const saved = await sendAdminData("homepageDesign", collectHomepageDesignSettings());
-  if (status) status.textContent = saved ? "Saved. Open Homepage or hard refresh to see the design." : "Unable to save design settings.";
+  if (status) {
+    status.textContent = saved
+      ? "Saved. Open Homepage or hard refresh to see the design."
+      : "Unable to save design settings. Make sure firebase-adapter.js v72 is uploaded.";
+  }
 }
 
 function resetHomepageDesignForm(ask = false) {

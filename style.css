@@ -10573,3 +10573,6 @@ body[data-use-subject-schedule-colors="no"] .schedule-item {
 .heroGrid .noBirthday p {
   color: var(--home-birthday-empty-text) !important;
 }
+
+/* v72 FIREBASE HOMEPAGE DESIGN SAVE FIX */
+.homepageDesignStudio { --homepage-design-save-fix: v72; }

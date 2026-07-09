@@ -235,12 +235,137 @@
       return createMemory(payload, sourceUrl);
     }
 
+    if (type === "homepageDesign" || type === "homepagedesign") {
+      requireFirebaseRole(["admin"]);
+      return saveHomepageDesignSettings(payload);
+    }
+
     if (TYPE_TO_SHEET[type]) {
       requireFirebaseRole(["admin"]);
       return addTypedRow(type, payload, sourceUrl);
     }
 
     return { success: false, message: `Unknown Firebase request type: ${type}` };
+  }
+
+
+  async function saveHomepageDesignSettings(payload) {
+    const allowedKeys = [
+      "HomepageBgColor",
+      "HomepageTextColor",
+      "HomepageCardBgColor",
+      "HomepageCardTextColor",
+      "HomepageCardBorderColor",
+      "HomepageCardShadowColor",
+      "HomepageAccentColor",
+      "HomepageAccentTextColor",
+      "HomepageCardRadius",
+      "HomepageShadowStyle",
+      "HomepageTopbarBg",
+      "HomepageTopbarText",
+      "HomepageBrandTitleColor",
+      "HomepageBrandSubtitleColor",
+      "HomepageQuoteBg",
+      "HomepageQuoteText",
+      "HomepageQuoteLabelBg",
+      "HomepageQuoteLabelText",
+      "HomepageTimeBoxBg",
+      "HomepageTimeBoxText",
+      "HomepageQuoteLabelTextValue",
+      "HomepageUseSubjectPeriodColors",
+      "HomepageOverridePeriodTextColors",
+      "HomepageCurrentLabelText",
+      "HomepageCurrentLabelColor",
+      "HomepageCurrentCardBg",
+      "HomepageCurrentSubjectColor",
+      "HomepageCurrentDetailsColor",
+      "HomepageCurrentCountdownBg",
+      "HomepageCurrentCountdownText",
+      "HomepageNextLabelText",
+      "HomepageNextLabelColor",
+      "HomepageNextCardBg",
+      "HomepageNextSubjectColor",
+      "HomepageNextDetailsColor",
+      "HomepageNextCountdownBg",
+      "HomepageNextCountdownText",
+      "HomepageUseSubjectScheduleColors",
+      "HomepageTodayScheduleTitle",
+      "HomepageScheduleTitleColor",
+      "HomepageSchedulePanelBg",
+      "HomepageScheduleCardBg",
+      "HomepageScheduleCardText",
+      "HomepageScheduleTimeColor",
+      "HomepageScheduleDetailsColor",
+      "HomepageScheduleCurrentBadgeBg",
+      "HomepageScheduleCurrentBadgeText",
+      "HomepageScheduleButtonBg",
+      "HomepageScheduleButtonText",
+      "HomepageAnnouncementsTitleText",
+      "HomepageAnnouncementsTitleColor",
+      "HomepageAnnouncementPanelBg",
+      "HomepageAnnouncementCardBg",
+      "HomepageAnnouncementTextColor",
+      "HomepageAnnouncementChipBg",
+      "HomepageAnnouncementChipText",
+      "HomepageAnnouncementButtonBg",
+      "HomepageAnnouncementButtonText",
+      "HomepageThingsTitleText",
+      "HomepageThingsTitleColor",
+      "HomepageThingsPanelBg",
+      "HomepageThingsItemBg",
+      "HomepageThingsItemText",
+      "HomepageThingsSubjectText",
+      "HomepageThingsStatusBg",
+      "HomepageThingsStatusText",
+      "HomepageThingsSummaryBg",
+      "HomepageThingsSummaryText",
+      "HomepagePrayerLabelText",
+      "HomepagePrayerLabelColor",
+      "HomepagePrayerCardBg",
+      "HomepagePrayerCardBorder",
+      "HomepagePrayerCardText",
+      "HomepagePrayerNameColor",
+      "HomepagePrayerDividerColor",
+      "HomepagePrayerLinkHoverBg",
+      "HomepageCleanersLabelText",
+      "HomepageCleanersBoxBg",
+      "HomepageCleanersBorderColor",
+      "HomepageCleanersLabelColor",
+      "HomepageCleanersTextColor",
+      "HomepageCleanersShadowColor",
+      "HomepageBirthdayLabelText",
+      "HomepageBirthdayLabelColor",
+      "HomepageBirthdayCardBg",
+      "HomepageBirthdayCardBorder",
+      "HomepageBirthdayCardAccent",
+      "HomepageBirthdayDateBg",
+      "HomepageBirthdayDateTextColor",
+      "HomepageBirthdayDateBorder",
+      "HomepageBirthdayInnerBg",
+      "HomepageBirthdayInnerBorder",
+      "HomepageBirthdayIconBg",
+      "HomepageBirthdayIconText",
+      "HomepageBirthdayGreetingColor",
+      "HomepageBirthdayCelebrantColor",
+      "HomepageBirthdayMessageColor",
+      "HomepageBirthdayEmptyBg",
+      "HomepageBirthdayEmptyText",
+      "HomepageBirthdayTextColor",
+      "HomepageAdviserRemindersTitleText",
+      "HomepageAdviserRemindersTitleColor",
+      "HomepageTickerBg",
+      "HomepageTickerText"
+    ];
+
+    const batch = db.batch();
+    const meta = getSheetMeta("Settings");
+    allowedKeys.forEach((key) => {
+      const value = String(payload?.[key] || "").trim().slice(0, 180);
+      const ref = db.collection(meta.collection).doc(key);
+      batch.set(ref, withMeta({ Key: key, Value: value }), { merge: true });
+    });
+    await batch.commit();
+    return { success: true, message: "Homepage design settings saved." };
   }
 
   async function getTodayBoard() {
