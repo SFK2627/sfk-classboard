@@ -10,7 +10,7 @@ const ANNOUNCEMENT_ROTATE_MS = 10000;
 const BIRTHDAY_ROTATE_MS = 30000;
 const CACHE_KEY = "sfkClassBoardData";
 const CLASSBOARD_MEDIA_FIX_CACHE_VERSION_KEY = "sfkClassBoardMediaFixVersion";
-const CLASSBOARD_MEDIA_FIX_CACHE_VERSION = "subject-ap-mapeh-fix-v66";
+const CLASSBOARD_MEDIA_FIX_CACHE_VERSION = "subject-hard-family-match-v67";
 const ANNOUNCEMENT_HEARTS_KEY = "sfkClassBoardHeartedAnnouncements";
 
 try {
@@ -853,21 +853,67 @@ function normalizeSubjectRecordKey(value = "") {
 function getSubjectBaseKey(value = "") {
   return normalizeSubjectRecordKey(value)
     .split(" ")
-    .filter(token => !/^\d+$/.test(token) && !/^grade$/.test(token) && !/^g$/.test(token))
+    .filter(token => !/^\d+$/.test(token) && token !== "grade" && token !== "g")
     .join(" ")
     .trim();
+}
+
+function getSubjectFamilyKey(value = "") {
+  const key = normalizeSubjectRecordKey(value);
+  const tokens = key.split(" ").filter(Boolean);
+  const tokenSet = new Set(tokens);
+
+  // HARD SEPARATION:
+  // AP / Araling Panlipunan is NOT the same as MAPEH.
+  // MAPEH contains the letters "ap", but it must never match AP.
+  if (tokenSet.has("mapeh") || tokenSet.has("music") || tokenSet.has("arts") || tokenSet.has("pe") || tokenSet.has("health")) {
+    return "mapeh";
+  }
+
+  if (
+    tokenSet.has("ap") ||
+    tokenSet.has("araling") ||
+    tokenSet.has("panlipunan") ||
+    key === "araling panlipunan"
+  ) {
+    return "ap";
+  }
+
+  if (tokenSet.has("math")) return "math";
+  if (tokenSet.has("science")) return "science";
+  if (tokenSet.has("english")) return "english";
+  if (tokenSet.has("filipino")) return "filipino";
+  if (tokenSet.has("ict")) return "ict";
+  if (tokenSet.has("cled")) return "cled";
+  if (tokenSet.has("tle")) return "tle";
+
+  return "";
 }
 
 function isSubjectRecordMatch(itemSubject = "", targetSubject = "") {
   const itemKey = normalizeSubjectRecordKey(itemSubject);
   const targetKey = normalizeSubjectRecordKey(targetSubject);
   if (!itemKey || !targetKey) return false;
+
+  const itemFamily = getSubjectFamilyKey(itemKey);
+  const targetFamily = getSubjectFamilyKey(targetKey);
+
+  // If both are known academic subject families, they must be the same.
+  // This prevents AP from ever getting MAPEH records.
+  if (itemFamily && targetFamily) {
+    return itemFamily === targetFamily;
+  }
+
+  // If one side is AP or MAPEH and the other side is unknown, do not do loose matching.
+  if ((itemFamily === "ap" || itemFamily === "mapeh" || targetFamily === "ap" || targetFamily === "mapeh") && itemFamily !== targetFamily) {
+    return false;
+  }
+
   if (itemKey === targetKey) return true;
 
   const itemTokens = new Set(itemKey.split(" ").filter(Boolean));
   const targetTokens = targetKey.split(" ").filter(Boolean);
 
-  // Exact token matching prevents AP from matching MAPEH.
   if (targetTokens.length > 0 && targetTokens.every(token => itemTokens.has(token))) {
     return true;
   }
@@ -878,8 +924,6 @@ function isSubjectRecordMatch(itemSubject = "", targetSubject = "") {
     return true;
   }
 
-  // Only allow loose substring matching for longer subject names.
-  // Short subjects like AP, PE, LE must not match words like MAPEH.
   const canUseLooseMatch = itemBase.length >= 4 && targetBase.length >= 4;
   if (canUseLooseMatch && (itemBase.includes(targetBase) || targetBase.includes(itemBase))) {
     return true;

@@ -10193,3 +10193,9 @@ button.timeCapsuleOpen:hover {
 .subjectDetailsCard {
   --subject-match-fix: v66;
 }
+
+
+/* v67 HARD SUBJECT FAMILY MATCH FIX */
+.subjectDetailsCard {
+  --subject-family-match-fix: v67;
+}

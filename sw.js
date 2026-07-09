@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-sw.js-subject-ap-mapeh-fix-v66";
+const CACHE_NAME = "sfk-sw.js-subject-hard-family-match-v67";
 const APP_SHELL = [
   "./",
   "./index.html",
