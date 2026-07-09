@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-sw.js-homepage-design-v70";
+const CACHE_NAME = "sfk-sw.js-homepage-admin-readable-v71";
 const APP_SHELL = [
   "./",
   "./index.html",
