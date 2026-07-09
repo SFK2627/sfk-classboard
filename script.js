@@ -10,7 +10,7 @@ const ANNOUNCEMENT_ROTATE_MS = 10000;
 const BIRTHDAY_ROTATE_MS = 30000;
 const CACHE_KEY = "sfkClassBoardData";
 const CLASSBOARD_MEDIA_FIX_CACHE_VERSION_KEY = "sfkClassBoardMediaFixVersion";
-const CLASSBOARD_MEDIA_FIX_CACHE_VERSION = "subject-hard-family-match-v67";
+const CLASSBOARD_MEDIA_FIX_CACHE_VERSION = "homepage-design-studio-v69";
 const ANNOUNCEMENT_HEARTS_KEY = "sfkClassBoardHeartedAnnouncements";
 
 try {
@@ -63,6 +63,7 @@ let weeklyDailyInfoData = [];
 let activeWeeklyDay = "Monday";
 let subjectRecordsCache = null;
 let subjectRecordsPromise = null;
+let homepageDesignSettings = {};
 let lastPrayerTriggerKey = "";
 let lastScheduleAutoScrollKey = "";
 let isTodayScheduleOpen = false;
@@ -410,6 +411,147 @@ function renderMemoriesUnreadBadge(count) {
   badge.textContent = safeCount > 99 ? "99+" : String(safeCount);
 }
 
+
+function getHomepageSetting(settings, key, fallback = "") {
+  const value = settings && settings[key] !== undefined ? String(settings[key] || "").trim() : "";
+  return value || fallback;
+}
+
+function getHomepageBool(settings, key, fallback = true) {
+  const value = getHomepageSetting(settings, key, fallback ? "YES" : "NO").toUpperCase();
+  return value !== "NO";
+}
+
+function setHomepageText(selector, text) {
+  const element = document.querySelector(selector);
+  if (element && text) element.textContent = text;
+}
+
+function applyHomepageVar(root, key, value) {
+  if (value) root.style.setProperty(key, value);
+}
+
+function applyHomepageDesignSettings(settings = {}) {
+  homepageDesignSettings = settings || {};
+  const root = document.documentElement;
+
+  const designMap = {
+    "--home-design-bg": ["HomepageBgColor", ""],
+    "--home-design-text": ["HomepageTextColor", ""],
+    "--home-design-card-bg": ["HomepageCardBgColor", ""],
+    "--home-design-card-text": ["HomepageCardTextColor", ""],
+    "--home-design-card-border": ["HomepageCardBorderColor", ""],
+    "--home-design-card-shadow": ["HomepageCardShadowColor", ""],
+    "--home-design-accent": ["HomepageAccentColor", ""],
+    "--home-design-accent-text": ["HomepageAccentTextColor", ""],
+    "--home-card-radius": ["HomepageCardRadius", "16px"],
+    "--home-topbar-bg": ["HomepageTopbarBg", ""],
+    "--home-topbar-text": ["HomepageTopbarText", ""],
+    "--home-brand-title-color": ["HomepageBrandTitleColor", ""],
+    "--home-brand-subtitle-color": ["HomepageBrandSubtitleColor", ""],
+    "--home-quote-bg": ["HomepageQuoteBg", ""],
+    "--home-quote-text": ["HomepageQuoteText", ""],
+    "--home-quote-label-bg": ["HomepageQuoteLabelBg", ""],
+    "--home-quote-label-text": ["HomepageQuoteLabelText", ""],
+    "--home-timebox-bg": ["HomepageTimeBoxBg", ""],
+    "--home-timebox-text": ["HomepageTimeBoxText", ""],
+    "--home-current-label-color": ["HomepageCurrentLabelColor", ""],
+    "--home-next-label-color": ["HomepageNextLabelColor", ""],
+    "--home-current-card-bg": ["HomepageCurrentCardBg", ""],
+    "--home-current-subject-color": ["HomepageCurrentSubjectColor", ""],
+    "--home-current-details-color": ["HomepageCurrentDetailsColor", ""],
+    "--home-current-countdown-bg": ["HomepageCurrentCountdownBg", ""],
+    "--home-current-countdown-text": ["HomepageCurrentCountdownText", ""],
+    "--home-next-card-bg": ["HomepageNextCardBg", ""],
+    "--home-next-subject-color": ["HomepageNextSubjectColor", ""],
+    "--home-next-details-color": ["HomepageNextDetailsColor", ""],
+    "--home-next-countdown-bg": ["HomepageNextCountdownBg", ""],
+    "--home-next-countdown-text": ["HomepageNextCountdownText", ""],
+    "--home-schedule-title-color": ["HomepageScheduleTitleColor", ""],
+    "--home-schedule-panel-bg": ["HomepageSchedulePanelBg", ""],
+    "--home-schedule-card-bg": ["HomepageScheduleCardBg", ""],
+    "--home-schedule-card-text": ["HomepageScheduleCardText", ""],
+    "--home-schedule-time-color": ["HomepageScheduleTimeColor", ""],
+    "--home-schedule-details-color": ["HomepageScheduleDetailsColor", ""],
+    "--home-schedule-current-badge-bg": ["HomepageScheduleCurrentBadgeBg", ""],
+    "--home-schedule-current-badge-text": ["HomepageScheduleCurrentBadgeText", ""],
+    "--home-schedule-button-bg": ["HomepageScheduleButtonBg", ""],
+    "--home-schedule-button-text": ["HomepageScheduleButtonText", ""],
+    "--home-announcements-title-color": ["HomepageAnnouncementsTitleColor", ""],
+    "--home-announcement-panel-bg": ["HomepageAnnouncementPanelBg", ""],
+    "--home-announcement-card-bg": ["HomepageAnnouncementCardBg", ""],
+    "--home-announcement-text-color": ["HomepageAnnouncementTextColor", ""],
+    "--home-announcement-chip-bg": ["HomepageAnnouncementChipBg", ""],
+    "--home-announcement-chip-text": ["HomepageAnnouncementChipText", ""],
+    "--home-announcement-button-bg": ["HomepageAnnouncementButtonBg", ""],
+    "--home-announcement-button-text": ["HomepageAnnouncementButtonText", ""],
+    "--home-things-title-color": ["HomepageThingsTitleColor", ""],
+    "--home-things-panel-bg": ["HomepageThingsPanelBg", ""],
+    "--home-things-item-bg": ["HomepageThingsItemBg", ""],
+    "--home-things-item-text": ["HomepageThingsItemText", ""],
+    "--home-things-subject-text": ["HomepageThingsSubjectText", ""],
+    "--home-things-status-bg": ["HomepageThingsStatusBg", ""],
+    "--home-things-status-text": ["HomepageThingsStatusText", ""],
+    "--home-things-summary-bg": ["HomepageThingsSummaryBg", ""],
+    "--home-things-summary-text": ["HomepageThingsSummaryText", ""],
+    "--home-prayer-label-color": ["HomepagePrayerLabelColor", ""],
+    "--home-prayer-card-bg": ["HomepagePrayerCardBg", ""],
+    "--home-prayer-name-color": ["HomepagePrayerNameColor", ""],
+    "--home-cleaners-label-color": ["HomepageCleanersLabelColor", ""],
+    "--home-cleaners-text-color": ["HomepageCleanersTextColor", ""],
+    "--home-birthday-label-color": ["HomepageBirthdayLabelColor", ""],
+    "--home-birthday-card-bg": ["HomepageBirthdayCardBg", ""],
+    "--home-birthday-text-color": ["HomepageBirthdayTextColor", ""],
+    "--home-adviser-title-color": ["HomepageAdviserRemindersTitleColor", ""],
+    "--home-ticker-bg": ["HomepageTickerBg", ""],
+    "--home-ticker-text": ["HomepageTickerText", ""]
+  };
+
+  Object.entries(designMap).forEach(([cssVar, [settingKey, fallback]]) => {
+    applyHomepageVar(root, cssVar, getHomepageSetting(settings, settingKey, fallback));
+  });
+
+  document.body.dataset.homeShadowStyle = getHomepageSetting(settings, "HomepageShadowStyle", "classic");
+  document.body.dataset.useSubjectScheduleColors = getHomepageBool(settings, "HomepageUseSubjectScheduleColors", true) ? "yes" : "no";
+  document.body.dataset.useSubjectPeriodColors = getHomepageBool(settings, "HomepageUseSubjectPeriodColors", true) ? "yes" : "no";
+
+  setHomepageText(".current .label", getHomepageSetting(settings, "HomepageCurrentLabelText", "Current Period"));
+  setHomepageText(".next .label", getHomepageSetting(settings, "HomepageNextLabelText", "Next Period"));
+  setHomepageText(".scheduleCard .scheduleHeader h2", getHomepageSetting(settings, "HomepageTodayScheduleTitle", "Today's Schedule"));
+  setHomepageText("#announcementTitle", getHomepageSetting(settings, "HomepageAnnouncementsTitleText", "Subject Announcements"));
+  setHomepageText(".thingsCard .cardHeader h2", getHomepageSetting(settings, "HomepageThingsTitleText", "Things to Bring"));
+  setHomepageText(".prayer .label", getHomepageSetting(settings, "HomepagePrayerLabelText", "Prayer Leader"));
+  setHomepageText(".birthdayCard .label", getHomepageSetting(settings, "HomepageBirthdayLabelText", "Birthday Corner"));
+  setHomepageText(".adviserReminderHeader h2", getHomepageSetting(settings, "HomepageAdviserRemindersTitleText", "Adviser Reminders"));
+  setHomepageText(".quoteLabel", getHomepageSetting(settings, "HomepageQuoteLabelTextValue", "Daily Kindness Quote"));
+}
+
+function getHomeCssVar(name, fallback = "") {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+}
+
+function autoFitSingleLine(element, options = {}) {
+  if (!element) return;
+  const min = Number(options.min || 22);
+  const max = Number(options.max || 42);
+  element.style.whiteSpace = "nowrap";
+  element.style.overflow = "hidden";
+  element.style.textOverflow = "ellipsis";
+  element.style.fontSize = `${max}px`;
+  window.requestAnimationFrame(() => {
+    let size = max;
+    while (size > min && element.scrollWidth > element.clientWidth) {
+      size -= 1;
+      element.style.fontSize = `${size}px`;
+    }
+  });
+}
+
+function autoFitPeriodSubject(element) {
+  autoFitSingleLine(element, { min: 24, max: 42 });
+}
+
+
 function renderDashboard(data) {
   if (!data || !data.settings) return;
 
@@ -418,6 +560,8 @@ function renderDashboard(data) {
 
   document.getElementById("sectionText").textContent =
     `${data.settings.Section || ""} • S.Y. ${data.settings.SchoolYear || ""} • ${data.settings.Motto || ""}`;
+
+  applyHomepageDesignSettings(data.settings || {});
 
   document.getElementById("dateText").textContent =
     `${data.day}, ${data.date}`;
@@ -641,101 +785,96 @@ function renderCurrentSubject(item) {
   const subjectEl = document.getElementById("currentSubject");
   const detailsEl = document.getElementById("currentDetails");
   const countdownEl = document.getElementById("currentCountdownText");
+  const labelEl = card?.querySelector(".label");
+  const useSubjectColors = getHomepageBool(homepageDesignSettings, "HomepageUseSubjectPeriodColors", true);
+  const overrideText = getHomepageBool(homepageDesignSettings, "HomepageOverridePeriodTextColors", false);
 
   if (item) {
-    const color = item.Color || getSubjectColor(item.Subject);
-    const textColor = getScheduleTextColor(item.Subject, color);
+    const subjectBg = item.Color || getSubjectColor(item.Subject);
+    const autoTextColor = getScheduleTextColor(item.Subject, subjectBg);
+    const cardBg = useSubjectColors ? subjectBg : getHomeCssVar("--home-current-card-bg", subjectBg);
+    const subjectTextColor = overrideText ? getHomeCssVar("--home-current-subject-color", autoTextColor) : autoTextColor;
+    const detailsColor = overrideText ? getHomeCssVar("--home-current-details-color", autoTextColor) : autoTextColor;
 
-    card.style.background = color;
-    card.style.color = textColor;
-
-    subjectEl.style.color = textColor;
-    detailsEl.style.color = textColor;
+    card.style.background = cardBg;
+    card.style.color = subjectTextColor;
+    subjectEl.style.color = subjectTextColor;
+    detailsEl.style.color = detailsColor;
+    if (labelEl) labelEl.style.color = getHomeCssVar("--home-current-label-color", subjectTextColor);
 
     if (countdownEl) {
-      countdownEl.style.color = textColor === "#111" ? "#111" : "#fff";
-      countdownEl.style.background =
-        textColor === "#111"
-          ? "rgba(255,255,255,.65)"
-          : "rgba(0,0,0,.45)";
-      countdownEl.style.borderColor =
-        textColor === "#111"
-          ? "rgba(0,0,0,.35)"
-          : "rgba(255,255,255,.35)";
+      countdownEl.style.color = getHomeCssVar("--home-current-countdown-text", autoTextColor === "#111" ? "#111" : "#fff");
+      countdownEl.style.background = getHomeCssVar("--home-current-countdown-bg", autoTextColor === "#111" ? "rgba(255,255,255,.65)" : "rgba(0,0,0,.45)");
+      countdownEl.style.borderColor = "rgba(0,0,0,.25)";
     }
 
-    subjectEl.innerHTML = renderScheduleSubjectText(item, textColor);
-
+    subjectEl.innerHTML = renderScheduleSubjectText(item, subjectTextColor);
     renderPeriodDetails(detailsEl, item);
+    autoFitPeriodSubject(subjectEl);
   } else {
-    card.style.background = "#111";
-    card.style.color = "#fff";
-
-    subjectEl.style.color = "#fff";
-    detailsEl.style.color = "#fff";
-
+    card.style.background = getHomeCssVar("--home-current-card-bg", "#111");
+    card.style.color = getHomeCssVar("--home-current-subject-color", "#fff");
+    subjectEl.style.color = getHomeCssVar("--home-current-subject-color", "#fff");
+    detailsEl.style.color = getHomeCssVar("--home-current-details-color", "#fff");
+    if (labelEl) labelEl.style.color = getHomeCssVar("--home-current-label-color", "#ffd700");
     if (countdownEl) {
-      countdownEl.style.color = "#111";
-      countdownEl.style.background = "rgba(255, 215, 0, .95)";
+      countdownEl.style.color = getHomeCssVar("--home-current-countdown-text", "#111");
+      countdownEl.style.background = getHomeCssVar("--home-current-countdown-bg", "rgba(255, 215, 0, .95)");
       countdownEl.style.borderColor = "rgba(0,0,0,.35)";
     }
-
-    document.getElementById("currentSubject").textContent =
-      "No current period";
-
-    document.getElementById("currentDetails").textContent =
-      "Free time / no scheduled period";
+    subjectEl.textContent = "No current period";
+    detailsEl.textContent = "Free time / no scheduled period";
+    autoFitPeriodSubject(subjectEl);
   }
 }
+
 function renderNextSubject(item) {
   const card = document.querySelector(".next");
   const subjectEl = document.getElementById("nextSubject");
   const detailsEl = document.getElementById("nextDetails");
   const countdownEl = document.getElementById("countdownText");
+  const labelEl = card?.querySelector(".label");
+  const useSubjectColors = getHomepageBool(homepageDesignSettings, "HomepageUseSubjectPeriodColors", true);
+  const overrideText = getHomepageBool(homepageDesignSettings, "HomepageOverridePeriodTextColors", false);
 
   if (item) {
-    const color = item.Color || getSubjectColor(item.Subject);
-    const textColor = getScheduleTextColor(item.Subject, color);
+    const subjectBg = item.Color || getSubjectColor(item.Subject);
+    const autoTextColor = getScheduleTextColor(item.Subject, subjectBg);
+    const cardBg = useSubjectColors ? subjectBg : getHomeCssVar("--home-next-card-bg", subjectBg);
+    const subjectTextColor = overrideText ? getHomeCssVar("--home-next-subject-color", autoTextColor) : autoTextColor;
+    const detailsColor = overrideText ? getHomeCssVar("--home-next-details-color", autoTextColor) : autoTextColor;
 
-    card.style.background = color;
-    card.style.color = textColor;
-
-    subjectEl.style.color = textColor;
-    detailsEl.style.color = textColor;
+    card.style.background = cardBg;
+    card.style.color = subjectTextColor;
+    subjectEl.style.color = subjectTextColor;
+    detailsEl.style.color = detailsColor;
+    if (labelEl) labelEl.style.color = getHomeCssVar("--home-next-label-color", subjectTextColor);
 
     if (countdownEl) {
-      countdownEl.style.color = textColor === "#111" ? "#111" : "#fff";
-      countdownEl.style.background =
-        textColor === "#111"
-          ? "rgba(255,255,255,.65)"
-          : "rgba(0,0,0,.45)";
+      countdownEl.style.color = getHomeCssVar("--home-next-countdown-text", autoTextColor === "#111" ? "#111" : "#fff");
+      countdownEl.style.background = getHomeCssVar("--home-next-countdown-bg", autoTextColor === "#111" ? "rgba(255,255,255,.65)" : "rgba(0,0,0,.45)");
     }
 
-    subjectEl.innerHTML = renderScheduleSubjectText(item, textColor);
-
+    subjectEl.innerHTML = renderScheduleSubjectText(item, subjectTextColor);
     renderPeriodDetails(detailsEl, item);
+    autoFitPeriodSubject(subjectEl);
   } else {
-    card.style.background = "#fff7c7";
-    card.style.color = "#111";
-
-    subjectEl.style.color = "#111";
-    detailsEl.style.color = "#111";
-
+    card.style.background = getHomeCssVar("--home-next-card-bg", "#fff7c7");
+    card.style.color = getHomeCssVar("--home-next-subject-color", "#111");
+    subjectEl.style.color = getHomeCssVar("--home-next-subject-color", "#111");
+    detailsEl.style.color = getHomeCssVar("--home-next-details-color", "#111");
+    if (labelEl) labelEl.style.color = getHomeCssVar("--home-next-label-color", "#111");
     if (countdownEl) {
-      countdownEl.style.color = "#fff";
-      countdownEl.style.background = "rgba(0, 0, 0, .44)";
+      countdownEl.style.color = getHomeCssVar("--home-next-countdown-text", "#fff");
+      countdownEl.style.background = getHomeCssVar("--home-next-countdown-bg", "rgba(0, 0, 0, .44)");
     }
-
-    document.getElementById("nextSubject").textContent =
-      "No next period";
-
-    document.getElementById("nextDetails").textContent =
-      "End of schedule";
-
-    document.getElementById("countdownText").textContent =
-      "No upcoming period";
+    subjectEl.textContent = "No next period";
+    detailsEl.textContent = "End of schedule";
+    countdownEl.textContent = "No upcoming period";
+    autoFitPeriodSubject(subjectEl);
   }
 }
+
 
 function renderPrayerLeader(item) {
   document.getElementById("prayerLeader").textContent =
@@ -788,10 +927,15 @@ function renderSchedule(items, currentSubject) {
   const currentKey = currentSubject
     ? `${currentSubject.Subject || ""}|${currentSubject.StartTime || ""}|${currentSubject.EndTime || ""}`
     : "";
+  const useSubjectScheduleColors = getHomepageBool(homepageDesignSettings, "HomepageUseSubjectScheduleColors", true);
 
   box.innerHTML = items.map(item => {
-    const color = item.Color || getSubjectColor(item.Subject);
-    const textColor = getScheduleTextColor(item.Subject, color);
+    const subjectColor = item.Color || getSubjectColor(item.Subject);
+    const autoTextColor = getScheduleTextColor(item.Subject, subjectColor);
+    const cardColor = useSubjectScheduleColors ? subjectColor : getHomeCssVar("--home-schedule-card-bg", subjectColor);
+    const textColor = useSubjectScheduleColors ? autoTextColor : getHomeCssVar("--home-schedule-card-text", autoTextColor);
+    const timeColor = useSubjectScheduleColors ? autoTextColor : getHomeCssVar("--home-schedule-time-color", textColor);
+    const detailColor = useSubjectScheduleColors ? autoTextColor : getHomeCssVar("--home-schedule-details-color", textColor);
     const canOpenSubjectDetails = isSubjectDetailsScheduleItem(item);
 
     const isCurrent =
@@ -803,11 +947,11 @@ function renderSchedule(items, currentSubject) {
     return `
   <div class="schedule-item ${isCurrent ? "current-row" : ""}"
        ${canOpenSubjectDetails ? `data-subject-popup="${escapeHtml(item.Subject || "")}"` : ""}
-       style="background:${color}; color:${textColor};">
+       style="background:${cardColor}; color:${textColor};">
     ${isCurrent ? `<div class="current-badge">▶ CURRENT PERIOD</div>` : ""}
-    <strong style="color:${textColor};">${item.StartTime} - ${item.EndTime}</strong><br>
+    <strong style="color:${timeColor};">${item.StartTime} - ${item.EndTime}</strong><br>
     <span class="subject-name" style="color:${textColor};">${renderScheduleSubjectText(item, textColor)}</span><br>
-    <small style="color:${textColor}; opacity:.9;">${item.Teacher} • ${item.Room}</small>
+    <small style="color:${detailColor}; opacity:.9;">${item.Teacher} • ${item.Room}</small>
   </div>
 `;
   }).join("");

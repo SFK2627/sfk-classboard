@@ -1727,3 +1727,32 @@ body.toolModalOpen {
     margin: auto !important;
   }
 }
+
+
+/* v69 PANEL NAV LINKS */
+.panelNavActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.panelNavBtn,
+.panelNavBtn:visited {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 9px 12px;
+  border-radius: 999px;
+  border: 2px solid #111;
+  background: #fff7c7;
+  color: #111;
+  font-weight: 900;
+  text-decoration: none;
+  box-shadow: 2px 2px 0 #111;
+}
+@media (max-width: 720px) {
+  .panelNavActions { justify-content: flex-start; }
+}

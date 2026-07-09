@@ -16,7 +16,7 @@
   <link rel="manifest" href="admin.webmanifest?v=portrait-reminder-v1" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
-  <link rel="stylesheet" href="admin.css?v=gc-admin-style-v14" />
+  <link rel="stylesheet" href="admin.css?v=homepage-design-studio-v69" />
   <script src="orientation-lock.js?v=appwide-v6" defer></script>
 </head>
 
@@ -53,7 +53,11 @@
           <p>Grade 8 - St. Faustina Kowalska • S.Y. 2026–2027 • #BeKind</p>
         </div>
 
-        <button class="logoutBtn" onclick="logoutAdmin()">Logout</button>
+        <div class="panelNavActions">
+          <a class="panelNavBtn" href="index.html">🏠 Homepage</a>
+          <a class="panelNavBtn" href="officer.html">👥 Officers</a>
+          <button class="logoutBtn" onclick="logoutAdmin()">Logout</button>
+        </div>
       </header>
 
       <!-- CREATE / ADD DATA -->
@@ -82,6 +86,172 @@
               <small>Deletes messages, reactions, poll votes, scheduled posts, and saved copies. GC member accounts are not affected.</small>
             </div>
             <button id="chatClearAll" type="button">Delete Entire Conversation</button>
+          </div>
+        </div>
+
+        <!-- HOMEPAGE DESIGN SETTINGS -->
+        <div class="formCard homepageDesignCard homepageDesignStudio">
+          <h2>🎨 Homepage Design Studio</h2>
+          <p class="fieldHint">Customize the homepage only. Admin and Officer pages will stay unchanged.</p>
+
+          <div class="designPresetRow designStickyActions">
+            <a class="panelNavBtn" href="index.html">🏠 Preview Homepage</a>
+            <button type="button" onclick="applyHomepageDesignPreset('classic')">Original ClassBoard</button>
+            <button type="button" onclick="applyHomepageDesignPreset('schoolGold')">School Gold</button>
+            <button type="button" onclick="applyHomepageDesignPreset('pastel')">Soft Pastel</button>
+            <button type="button" onclick="applyHomepageDesignPreset('modernBlue')">Modern Blue</button>
+            <button type="button" onclick="applyHomepageDesignPreset('dark')">Dark Premium</button>
+            <button type="button" class="dangerSoftBtn" onclick="resetHomepageDesignForm(true)">Restore Default</button>
+          </div>
+
+          <details class="designGroup" open>
+            <summary>🏠 Global Homepage</summary>
+            <div class="designSettingGrid">
+              <label>Page Background <input id="designHomepageBgColor" type="color" value="#f7c600"></label>
+              <label>Main Text <input id="designHomepageTextColor" type="color" value="#111111"></label>
+              <label>Default Card Background <input id="designCardBgColor" type="color" value="#ffffff"></label>
+              <label>Default Card Text <input id="designCardTextColor" type="color" value="#111111"></label>
+              <label>Card Border <input id="designCardBorderColor" type="color" value="#111111"></label>
+              <label>Card Shadow <input id="designCardShadowColor" type="color" value="#111111"></label>
+              <label>Accent / Buttons <input id="designAccentColor" type="color" value="#f7c600"></label>
+              <label>Accent Text <input id="designAccentTextColor" type="color" value="#111111"></label>
+              <label>Card Radius
+                <select id="designCardRadius">
+                  <option value="12px">Small</option>
+                  <option value="16px" selected>Original</option>
+                  <option value="22px">Round</option>
+                  <option value="30px">Extra Round</option>
+                </select>
+              </label>
+              <label>Shadow Style
+                <select id="designShadowStyle">
+                  <option value="classic" selected>Original Block Shadow</option>
+                  <option value="soft">Soft Floating Shadow</option>
+                  <option value="none">No Shadow</option>
+                </select>
+              </label>
+            </div>
+          </details>
+
+          <details class="designGroup" open>
+            <summary>🔝 Top Bar / Clock / Quote</summary>
+            <div class="designSettingGrid">
+              <label>Top Bar Background <input id="designTopbarBg" type="color" value="#111111"></label>
+              <label>Top Bar Text <input id="designTopbarText" type="color" value="#ffffff"></label>
+              <label>ClassBoard Title Color <input id="designBrandTitleColor" type="color" value="#ffffff"></label>
+              <label>Section/Motto Text <input id="designBrandSubtitleColor" type="color" value="#ffd700"></label>
+              <label>Quote Box Background <input id="designQuoteBg" type="color" value="#1f1f1f"></label>
+              <label>Quote Text <input id="designQuoteText" type="color" value="#ffffff"></label>
+              <label>Quote Label Background <input id="designQuoteLabelBg" type="color" value="#ffd700"></label>
+              <label>Quote Label Text <input id="designQuoteLabelText" type="color" value="#111111"></label>
+              <label>Clock Box Background <input id="designTimeBoxBg" type="color" value="#ffd700"></label>
+              <label>Clock Text <input id="designTimeBoxText" type="color" value="#111111"></label>
+              <label>Quote Label Text Value <input id="designQuoteLabelTextValue" type="text" value="Daily Kindness Quote"></label>
+            </div>
+          </details>
+
+          <details class="designGroup" open>
+            <summary>⏱ Current / Next Period Cards</summary>
+            <div class="designSettingGrid">
+              <label class="designCheckRow"><input id="designUseSubjectPeriodColors" type="checkbox" checked> Use subject color as card background</label>
+              <label class="designCheckRow"><input id="designOverridePeriodTextColors" type="checkbox"> Customize subject/details text colors manually</label>
+              <label>Current label text <input id="designCurrentLabelText" type="text" value="Current Period"></label>
+              <label>Current label color <input id="designCurrentLabelColor" type="color" value="#ffd700"></label>
+              <label>Current card background <input id="designCurrentCardBg" type="color" value="#111111"></label>
+              <label>Current subject text <input id="designCurrentSubjectColor" type="color" value="#ffffff"></label>
+              <label>Current details text <input id="designCurrentDetailsColor" type="color" value="#ffffff"></label>
+              <label>Current countdown background <input id="designCurrentCountdownBg" type="color" value="#ffd700"></label>
+              <label>Current countdown text <input id="designCurrentCountdownText" type="color" value="#111111"></label>
+              <label>Next label text <input id="designNextLabelText" type="text" value="Next Period"></label>
+              <label>Next label color <input id="designNextLabelColor" type="color" value="#111111"></label>
+              <label>Next card background <input id="designNextCardBg" type="color" value="#fff7c7"></label>
+              <label>Next subject text <input id="designNextSubjectColor" type="color" value="#111111"></label>
+              <label>Next details text <input id="designNextDetailsColor" type="color" value="#111111"></label>
+              <label>Next countdown background <input id="designNextCountdownBg" type="color" value="#111111"></label>
+              <label>Next countdown text <input id="designNextCountdownText" type="color" value="#ffffff"></label>
+            </div>
+            <p class="fieldHint">Long subject names like “Araling Panlipunan 8” will auto-shrink to stay one line.</p>
+          </details>
+
+          <details class="designGroup" open>
+            <summary>📅 Today's Schedule</summary>
+            <div class="designSettingGrid">
+              <label class="designCheckRow"><input id="designUseSubjectScheduleColors" type="checkbox" checked> Use subject colors for schedule cards</label>
+              <label>Schedule title text <input id="designTodayScheduleTitle" type="text" value="Today's Schedule"></label>
+              <label>Schedule title color <input id="designScheduleTitleColor" type="color" value="#111111"></label>
+              <label>Schedule panel background <input id="designSchedulePanelBg" type="color" value="#ffffff"></label>
+              <label>Schedule item background <input id="designScheduleCardBg" type="color" value="#ffffff"></label>
+              <label>Schedule item text <input id="designScheduleCardText" type="color" value="#111111"></label>
+              <label>Schedule time text <input id="designScheduleTimeColor" type="color" value="#111111"></label>
+              <label>Schedule details text <input id="designScheduleDetailsColor" type="color" value="#111111"></label>
+              <label>Current schedule badge bg <input id="designScheduleCurrentBadgeBg" type="color" value="#111111"></label>
+              <label>Current schedule badge text <input id="designScheduleCurrentBadgeText" type="color" value="#ffd700"></label>
+              <label>Week View button bg <input id="designScheduleButtonBg" type="color" value="#111111"></label>
+              <label>Week View button text <input id="designScheduleButtonText" type="color" value="#ffd700"></label>
+            </div>
+          </details>
+
+          <details class="designGroup" open>
+            <summary>📢 Announcements</summary>
+            <div class="designSettingGrid">
+              <label>Title text <input id="designAnnouncementsTitleText" type="text" value="Subject Announcements"></label>
+              <label>Title color <input id="designAnnouncementsTitleColor" type="color" value="#111111"></label>
+              <label>Panel background <input id="designAnnouncementPanelBg" type="color" value="#ffffff"></label>
+              <label>Announcement card bg <input id="designAnnouncementCardBg" type="color" value="#fff7c7"></label>
+              <label>Main announcement text <input id="designAnnouncementTextColor" type="color" value="#111111"></label>
+              <label>Posted/date chip bg <input id="designAnnouncementChipBg" type="color" value="#111111"></label>
+              <label>Posted/date chip text <input id="designAnnouncementChipText" type="color" value="#ffd700"></label>
+              <label>Pause button bg <input id="designAnnouncementButtonBg" type="color" value="#111111"></label>
+              <label>Pause button text <input id="designAnnouncementButtonText" type="color" value="#ffd700"></label>
+            </div>
+          </details>
+
+          <details class="designGroup" open>
+            <summary>🎒 Things to Bring</summary>
+            <div class="designSettingGrid">
+              <label>Title text <input id="designThingsTitleText" type="text" value="Things to Bring"></label>
+              <label>Title color <input id="designThingsTitleColor" type="color" value="#111111"></label>
+              <label>Panel background <input id="designThingsPanelBg" type="color" value="#ffffff"></label>
+              <label>Item background <input id="designThingsItemBg" type="color" value="#fff7c7"></label>
+              <label>Item text <input id="designThingsItemText" type="color" value="#111111"></label>
+              <label>Subject text <input id="designThingsSubjectText" type="color" value="#111111"></label>
+              <label>Status badge bg <input id="designThingsStatusBg" type="color" value="#111111"></label>
+              <label>Status badge text <input id="designThingsStatusText" type="color" value="#ffd700"></label>
+              <label>Summary badge bg <input id="designThingsSummaryBg" type="color" value="#111111"></label>
+              <label>Summary badge text <input id="designThingsSummaryText" type="color" value="#ffd700"></label>
+            </div>
+          </details>
+
+          <details class="designGroup">
+            <summary>🙏 Prayer / 🧹 Cleaners / 🎂 Birthday</summary>
+            <div class="designSettingGrid">
+              <label>Prayer label text <input id="designPrayerLabelText" type="text" value="Prayer Leader"></label>
+              <label>Prayer label color <input id="designPrayerLabelColor" type="color" value="#555555"></label>
+              <label>Prayer card background <input id="designPrayerCardBg" type="color" value="#ffffff"></label>
+              <label>Prayer name color <input id="designPrayerNameColor" type="color" value="#111111"></label>
+              <label>Cleaners label color <input id="designCleanersLabelColor" type="color" value="#555555"></label>
+              <label>Cleaners name color <input id="designCleanersTextColor" type="color" value="#111111"></label>
+              <label>Birthday label text <input id="designBirthdayLabelText" type="text" value="Birthday Corner"></label>
+              <label>Birthday label color <input id="designBirthdayLabelColor" type="color" value="#555555"></label>
+              <label>Birthday card background <input id="designBirthdayCardBg" type="color" value="#ffffff"></label>
+              <label>Birthday text color <input id="designBirthdayTextColor" type="color" value="#111111"></label>
+            </div>
+          </details>
+
+          <details class="designGroup">
+            <summary>📝 Other Homepage Labels</summary>
+            <div class="designSettingGrid">
+              <label>Adviser reminders title <input id="designAdviserRemindersTitleText" type="text" value="Adviser Reminders"></label>
+              <label>Adviser reminders title color <input id="designAdviserRemindersTitleColor" type="color" value="#111111"></label>
+              <label>Footer ticker bg <input id="designTickerBg" type="color" value="#111111"></label>
+              <label>Footer ticker text <input id="designTickerText" type="color" value="#ffd700"></label>
+            </div>
+          </details>
+
+          <div class="designSaveBar">
+            <button type="button" onclick="saveHomepageDesignSettings()">💾 Save Homepage Design</button>
+            <button type="button" class="dangerSoftBtn" onclick="restoreHomepageDesignDefaults()">↩ Restore Original Defaults</button>
+            <small id="homepageDesignStatus" class="fieldHint"></small>
           </div>
         </div>
 
@@ -565,9 +735,9 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js?v=2-secure-auth"></script>
   <script src="auth.js?v=admin-officer-rescue-v2"></script>
-  <script src="firebase-adapter.js?v=media-fix-v2"></script>
+  <script src="firebase-adapter.js?v=homepage-design-v68"></script>
   <script src="pwa.js?v=15-pwa-polish"></script>
-  <script src="class-chat-admin.js?v=gc-tools-visible-v13"></script>
-  <script src="admin.js?v=gc-tools-visible-v13"></script>
+  <script src="class-chat-admin.js?v=homepage-design-v68"></script>
+  <script src="admin.js?v=homepage-design-v68"></script>
 </body>
 </html>

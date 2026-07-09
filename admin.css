@@ -2250,3 +2250,211 @@ body.toolModalOpen {
   color: rgba(17,17,17,.72);
   line-height: 1.42;
 }
+
+
+/* v68 Homepage Design Settings */
+.homepageDesignCard {
+  border: 3px solid rgba(247, 198, 0, .55) !important;
+  background: linear-gradient(180deg, #fffdf0, #fff7c7) !important;
+}
+
+.designSettingGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  margin: 12px 0 16px;
+}
+
+.designSettingGrid label {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.76);
+  border: 1px solid rgba(0,0,0,.08);
+  font-weight: 900;
+  color: #111;
+}
+
+.designSettingGrid input[type="color"] {
+  width: 100%;
+  height: 46px;
+  padding: 3px;
+  border: 0;
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.designSettingGrid input[type="text"] {
+  min-height: 42px;
+  border-radius: 12px;
+}
+
+.designPresetRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.designPresetRow button {
+  width: auto !important;
+  min-height: 38px !important;
+  padding: 8px 12px !important;
+  border-radius: 999px !important;
+  background: #111 !important;
+  color: #ffd000 !important;
+}
+
+.designMiniTitle {
+  margin: 14px 0 4px;
+  color: #111;
+  font-size: 1rem;
+}
+
+
+/* v69 HOMEPAGE DESIGN STUDIO */
+.panelNavActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.panelNavBtn,
+.panelNavBtn:visited {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 9px 12px;
+  border-radius: 999px;
+  border: 2px solid #111;
+  background: #fff7c7;
+  color: #111;
+  font-weight: 900;
+  text-decoration: none;
+  box-shadow: 2px 2px 0 #111;
+}
+
+.homepageDesignStudio {
+  grid-column: 1 / -1;
+  background: linear-gradient(180deg, #fffdf2, #fff4bc);
+  border: 3px solid #111;
+}
+
+.designStickyActions {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px;
+  margin: 8px 0 14px;
+  border-radius: 16px;
+  background: rgba(255,255,255,.92);
+  border: 2px solid rgba(0,0,0,.12);
+  backdrop-filter: blur(6px);
+}
+
+.designGroup {
+  margin: 12px 0;
+  border: 2px solid rgba(0,0,0,.12);
+  border-radius: 18px;
+  background: rgba(255,255,255,.72);
+  overflow: hidden;
+}
+
+.designGroup summary {
+  cursor: pointer;
+  padding: 13px 15px;
+  background: #111;
+  color: #ffd700;
+  font-weight: 950;
+  letter-spacing: .2px;
+}
+
+.designGroup .designSettingGrid {
+  padding: 14px;
+}
+
+.designSettingGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+}
+
+.designSettingGrid label {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.86);
+  border: 1px solid rgba(0,0,0,.10);
+  font-weight: 850;
+}
+
+.designSettingGrid input[type="color"] {
+  width: 100%;
+  min-height: 42px;
+  padding: 4px;
+  border-radius: 10px;
+  border: 2px solid rgba(0,0,0,.18);
+  background: white;
+}
+
+.designSettingGrid input[type="text"],
+.designSettingGrid select {
+  min-height: 40px;
+  border-radius: 10px;
+  border: 2px solid rgba(0,0,0,.18);
+  padding: 8px 10px;
+  font-weight: 800;
+}
+
+.designCheckRow {
+  display: flex !important;
+  grid-template-columns: auto 1fr !important;
+  align-items: center;
+  gap: 10px !important;
+  background: #111 !important;
+  color: #ffd700;
+}
+
+.designCheckRow input {
+  width: 22px;
+  height: 22px;
+}
+
+.designSaveBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 16px;
+  background: #111;
+  color: #ffd700;
+}
+
+.dangerSoftBtn {
+  background: #fff1f2 !important;
+  color: #9f1239 !important;
+  border-color: #9f1239 !important;
+}
+
+@media (max-width: 720px) {
+  .adminTopbar,
+  .officerTopbar {
+    align-items: stretch;
+  }
+  .panelNavActions {
+    justify-content: flex-start;
+  }
+}

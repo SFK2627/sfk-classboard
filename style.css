@@ -10199,3 +10199,242 @@ button.timeCapsuleOpen:hover {
 .subjectDetailsCard {
   --subject-family-match-fix: v67;
 }
+
+
+/* v68 Admin-controlled homepage design */
+:root {
+  --home-design-bg: initial;
+  --home-design-text: initial;
+  --home-design-card-bg: initial;
+  --home-design-card-text: initial;
+  --home-design-accent: initial;
+  --home-design-accent-text: initial;
+  --home-current-label-color: initial;
+  --home-next-label-color: initial;
+  --home-period-details-color: initial;
+  --home-countdown-text-color: initial;
+  --home-schedule-title-color: initial;
+  --home-schedule-card-bg: initial;
+  --home-schedule-card-text: initial;
+  --home-announcements-title-color: initial;
+  --home-things-title-color: initial;
+}
+
+body {
+  background: var(--home-design-bg, inherit) !important;
+  color: var(--home-design-text, inherit) !important;
+}
+
+.card:not(.current):not(.next):not(.scheduleCard),
+.sideCard {
+  background: var(--home-design-card-bg, inherit) !important;
+  color: var(--home-design-card-text, inherit) !important;
+}
+
+.card:not(.current):not(.next):not(.scheduleCard) h2,
+.sideCard h2,
+.card:not(.current):not(.next):not(.scheduleCard) p,
+.sideCard p,
+.card:not(.current):not(.next):not(.scheduleCard) small,
+.sideCard small {
+  color: var(--home-design-card-text, inherit);
+}
+
+.current .label { color: var(--home-current-label-color, inherit) !important; }
+.next .label { color: var(--home-next-label-color, inherit) !important; }
+.current #currentDetails,
+.next #nextDetails { color: var(--home-period-details-color, inherit) !important; }
+.currentCountdown,
+.countdown { color: var(--home-countdown-text-color, inherit) !important; }
+
+.scheduleCard {
+  background: var(--home-schedule-card-bg, inherit) !important;
+  color: var(--home-schedule-card-text, inherit) !important;
+}
+
+.scheduleCard .scheduleHeader h2 {
+  color: var(--home-schedule-title-color, inherit) !important;
+}
+
+.scheduleCard .scheduleHeaderActions button,
+.todayScheduleToggle,
+.weeklyScheduleBtn,
+.memoriesDashboardBtn {
+  background: var(--home-design-accent, #f7c600) !important;
+  color: var(--home-design-accent-text, #111) !important;
+  border-color: color-mix(in srgb, var(--home-design-accent, #f7c600) 65%, #111 35%) !important;
+}
+
+#announcementTitle { color: var(--home-announcements-title-color, inherit) !important; }
+.thingsCard .cardHeader h2 { color: var(--home-things-title-color, inherit) !important; }
+.announcementProgressFill,
+#announcementProgressFill { background: var(--home-design-accent, #f7c600) !important; }
+
+
+/* v69 HOMEPAGE DESIGN STUDIO OUTPUT */
+:root {
+  --home-design-bg: #f7c600;
+  --home-design-text: #111111;
+  --home-design-card-bg: #ffffff;
+  --home-design-card-text: #111111;
+  --home-design-card-border: #111111;
+  --home-design-card-shadow: #111111;
+  --home-design-accent: #f7c600;
+  --home-design-accent-text: #111111;
+  --home-card-radius: 16px;
+  --home-topbar-bg: #111111;
+  --home-topbar-text: #ffffff;
+  --home-brand-title-color: #ffffff;
+  --home-brand-subtitle-color: #ffd700;
+  --home-quote-bg: #1f1f1f;
+  --home-quote-text: #ffffff;
+  --home-quote-label-bg: #ffd700;
+  --home-quote-label-text: #111111;
+  --home-timebox-bg: #ffd700;
+  --home-timebox-text: #111111;
+  --home-schedule-title-color: #111111;
+  --home-schedule-panel-bg: #ffffff;
+  --home-schedule-button-bg: #111111;
+  --home-schedule-button-text: #ffd700;
+  --home-announcements-title-color: #111111;
+  --home-announcement-panel-bg: #ffffff;
+  --home-announcement-card-bg: #fff7c7;
+  --home-announcement-text-color: #111111;
+  --home-announcement-chip-bg: #111111;
+  --home-announcement-chip-text: #ffd700;
+  --home-announcement-button-bg: #111111;
+  --home-announcement-button-text: #ffd700;
+  --home-things-title-color: #111111;
+  --home-things-panel-bg: #ffffff;
+  --home-things-item-bg: #fff7c7;
+  --home-things-item-text: #111111;
+  --home-things-subject-text: #111111;
+  --home-things-status-bg: #111111;
+  --home-things-status-text: #ffd700;
+  --home-things-summary-bg: #111111;
+  --home-things-summary-text: #ffd700;
+  --home-prayer-card-bg: #ffffff;
+  --home-prayer-label-color: #555555;
+  --home-prayer-name-color: #111111;
+  --home-cleaners-label-color: #555555;
+  --home-cleaners-text-color: #111111;
+  --home-birthday-card-bg: #ffffff;
+  --home-birthday-label-color: #555555;
+  --home-birthday-text-color: #111111;
+  --home-adviser-title-color: #111111;
+  --home-ticker-bg: #111111;
+  --home-ticker-text: #ffd700;
+}
+
+body {
+  background: var(--home-design-bg) !important;
+  color: var(--home-design-text) !important;
+}
+
+.card,
+.scheduleCard,
+.announcementsCard,
+.thingsCard,
+.sideCard {
+  background: var(--home-design-card-bg);
+  color: var(--home-design-card-text);
+  border-color: var(--home-design-card-border) !important;
+  border-radius: var(--home-card-radius) !important;
+}
+
+body[data-home-shadow-style="classic"] .card,
+body[data-home-shadow-style="classic"] .topbar {
+  box-shadow: 4px 4px 0 var(--home-design-card-shadow) !important;
+}
+
+body[data-home-shadow-style="soft"] .card,
+body[data-home-shadow-style="soft"] .topbar {
+  box-shadow: 0 14px 34px rgba(0,0,0,.20) !important;
+}
+
+body[data-home-shadow-style="none"] .card,
+body[data-home-shadow-style="none"] .topbar {
+  box-shadow: none !important;
+}
+
+.topbar {
+  background: var(--home-topbar-bg) !important;
+  color: var(--home-topbar-text) !important;
+  border-radius: var(--home-card-radius) !important;
+}
+
+.topbar h1 { color: var(--home-brand-title-color) !important; }
+.topbar p { color: var(--home-brand-subtitle-color) !important; }
+.topQuoteBox { background: var(--home-quote-bg) !important; }
+.topQuoteBox #dailyQuote { color: var(--home-quote-text) !important; }
+.quoteLabel { background: var(--home-quote-label-bg) !important; color: var(--home-quote-label-text) !important; }
+.timeBox { background: var(--home-timebox-bg) !important; color: var(--home-timebox-text) !important; }
+.timeBox h2, .timeBox p { color: var(--home-timebox-text) !important; }
+
+.current .label { color: var(--home-current-label-color) !important; }
+.next .label { color: var(--home-next-label-color) !important; }
+.current h2, .next h2 {
+  display: block;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 100%;
+}
+.current #currentDetails { color: var(--home-current-details-color); }
+.next #nextDetails { color: var(--home-next-details-color); }
+
+.scheduleCard { background: var(--home-schedule-panel-bg) !important; }
+.scheduleCard .scheduleHeader h2 { color: var(--home-schedule-title-color) !important; }
+.weeklyScheduleBtn,
+.todayScheduleToggle,
+.memoriesDashboardBtn {
+  background: var(--home-schedule-button-bg) !important;
+  color: var(--home-schedule-button-text) !important;
+  border-color: var(--home-schedule-button-text) !important;
+}
+.current-badge {
+  background: var(--home-schedule-current-badge-bg) !important;
+  color: var(--home-schedule-current-badge-text) !important;
+}
+body[data-use-subject-schedule-colors="no"] .schedule-item {
+  background: var(--home-schedule-card-bg) !important;
+  color: var(--home-schedule-card-text) !important;
+}
+
+.announcementsCard { background: var(--home-announcement-panel-bg) !important; }
+#announcementTitle { color: var(--home-announcements-title-color) !important; }
+.announcement-item { background: var(--home-announcement-card-bg) !important; color: var(--home-announcement-text-color) !important; }
+.announcement-main-text,
+.announcement-center-content,
+.announcement-item .formattedText { color: var(--home-announcement-text-color) !important; }
+.announcement-posted-chip,
+.priority-mini { background: var(--home-announcement-chip-bg) !important; color: var(--home-announcement-chip-text) !important; }
+.announcementTimerToggle,
+.announcement-btn,
+.announcement-controls button {
+  background: var(--home-announcement-button-bg) !important;
+  color: var(--home-announcement-button-text) !important;
+}
+
+.thingsCard { background: var(--home-things-panel-bg) !important; }
+.thingsCard .cardHeader h2 { color: var(--home-things-title-color) !important; }
+.thingsCard .thing-item { background: var(--home-things-item-bg) !important; color: var(--home-things-item-text) !important; }
+.thingsCard .thing-detail, .thingsCard .thing-item small { color: var(--home-things-item-text) !important; }
+.thingsCard .thing-subject { color: var(--home-things-subject-text) !important; }
+.thingsCard .bring-status { background: var(--home-things-status-bg) !important; color: var(--home-things-status-text) !important; }
+.bringSummary { background: var(--home-things-summary-bg) !important; color: var(--home-things-summary-text) !important; border-color: var(--home-things-summary-text) !important; }
+
+.prayer { background: var(--home-prayer-card-bg) !important; }
+.prayer .label { color: var(--home-prayer-label-color) !important; }
+.prayer h2, .prayerLeaderLink { color: var(--home-prayer-name-color) !important; }
+.cleanersMini span { color: var(--home-cleaners-label-color) !important; }
+.cleanersMini strong { color: var(--home-cleaners-text-color) !important; }
+
+.birthdayCard { background: var(--home-birthday-card-bg) !important; color: var(--home-birthday-text-color) !important; }
+.birthdayCard .label { color: var(--home-birthday-label-color) !important; }
+.birthdayCard * { color: inherit; }
+.birthdayCard .label { color: var(--home-birthday-label-color) !important; }
+
+.adviserReminderHeader h2 { color: var(--home-adviser-title-color) !important; }
+.ticker { background: var(--home-ticker-bg) !important; color: var(--home-ticker-text) !important; }
+.ticker * { color: var(--home-ticker-text) !important; }

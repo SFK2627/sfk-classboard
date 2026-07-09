@@ -86,6 +86,7 @@ function showAdminPanel() {
   initAdminToolLauncher();
   initRichTextEditors();
   setTodayForDateInputs();
+  loadHomepageDesignSettings();
 }
 
 function initAdminToolLauncher() {
@@ -2127,4 +2128,313 @@ function renderTeacherOptions(selectedValue) {
   }
 
   return options;
+}
+
+
+/* HOMEPAGE DESIGN SETTINGS - v69 DESIGN STUDIO */
+const HOMEPAGE_DESIGN_FIELDS = {
+  "HomepageBgColor": "designHomepageBgColor",
+  "HomepageTextColor": "designHomepageTextColor",
+  "HomepageCardBgColor": "designCardBgColor",
+  "HomepageCardTextColor": "designCardTextColor",
+  "HomepageCardBorderColor": "designCardBorderColor",
+  "HomepageCardShadowColor": "designCardShadowColor",
+  "HomepageAccentColor": "designAccentColor",
+  "HomepageAccentTextColor": "designAccentTextColor",
+  "HomepageCardRadius": "designCardRadius",
+  "HomepageShadowStyle": "designShadowStyle",
+  "HomepageTopbarBg": "designTopbarBg",
+  "HomepageTopbarText": "designTopbarText",
+  "HomepageBrandTitleColor": "designBrandTitleColor",
+  "HomepageBrandSubtitleColor": "designBrandSubtitleColor",
+  "HomepageQuoteBg": "designQuoteBg",
+  "HomepageQuoteText": "designQuoteText",
+  "HomepageQuoteLabelBg": "designQuoteLabelBg",
+  "HomepageQuoteLabelText": "designQuoteLabelText",
+  "HomepageTimeBoxBg": "designTimeBoxBg",
+  "HomepageTimeBoxText": "designTimeBoxText",
+  "HomepageQuoteLabelTextValue": "designQuoteLabelTextValue",
+  "HomepageUseSubjectPeriodColors": "designUseSubjectPeriodColors",
+  "HomepageOverridePeriodTextColors": "designOverridePeriodTextColors",
+  "HomepageCurrentLabelText": "designCurrentLabelText",
+  "HomepageCurrentLabelColor": "designCurrentLabelColor",
+  "HomepageCurrentCardBg": "designCurrentCardBg",
+  "HomepageCurrentSubjectColor": "designCurrentSubjectColor",
+  "HomepageCurrentDetailsColor": "designCurrentDetailsColor",
+  "HomepageCurrentCountdownBg": "designCurrentCountdownBg",
+  "HomepageCurrentCountdownText": "designCurrentCountdownText",
+  "HomepageNextLabelText": "designNextLabelText",
+  "HomepageNextLabelColor": "designNextLabelColor",
+  "HomepageNextCardBg": "designNextCardBg",
+  "HomepageNextSubjectColor": "designNextSubjectColor",
+  "HomepageNextDetailsColor": "designNextDetailsColor",
+  "HomepageNextCountdownBg": "designNextCountdownBg",
+  "HomepageNextCountdownText": "designNextCountdownText",
+  "HomepageUseSubjectScheduleColors": "designUseSubjectScheduleColors",
+  "HomepageTodayScheduleTitle": "designTodayScheduleTitle",
+  "HomepageScheduleTitleColor": "designScheduleTitleColor",
+  "HomepageSchedulePanelBg": "designSchedulePanelBg",
+  "HomepageScheduleCardBg": "designScheduleCardBg",
+  "HomepageScheduleCardText": "designScheduleCardText",
+  "HomepageScheduleTimeColor": "designScheduleTimeColor",
+  "HomepageScheduleDetailsColor": "designScheduleDetailsColor",
+  "HomepageScheduleCurrentBadgeBg": "designScheduleCurrentBadgeBg",
+  "HomepageScheduleCurrentBadgeText": "designScheduleCurrentBadgeText",
+  "HomepageScheduleButtonBg": "designScheduleButtonBg",
+  "HomepageScheduleButtonText": "designScheduleButtonText",
+  "HomepageAnnouncementsTitleText": "designAnnouncementsTitleText",
+  "HomepageAnnouncementsTitleColor": "designAnnouncementsTitleColor",
+  "HomepageAnnouncementPanelBg": "designAnnouncementPanelBg",
+  "HomepageAnnouncementCardBg": "designAnnouncementCardBg",
+  "HomepageAnnouncementTextColor": "designAnnouncementTextColor",
+  "HomepageAnnouncementChipBg": "designAnnouncementChipBg",
+  "HomepageAnnouncementChipText": "designAnnouncementChipText",
+  "HomepageAnnouncementButtonBg": "designAnnouncementButtonBg",
+  "HomepageAnnouncementButtonText": "designAnnouncementButtonText",
+  "HomepageThingsTitleText": "designThingsTitleText",
+  "HomepageThingsTitleColor": "designThingsTitleColor",
+  "HomepageThingsPanelBg": "designThingsPanelBg",
+  "HomepageThingsItemBg": "designThingsItemBg",
+  "HomepageThingsItemText": "designThingsItemText",
+  "HomepageThingsSubjectText": "designThingsSubjectText",
+  "HomepageThingsStatusBg": "designThingsStatusBg",
+  "HomepageThingsStatusText": "designThingsStatusText",
+  "HomepageThingsSummaryBg": "designThingsSummaryBg",
+  "HomepageThingsSummaryText": "designThingsSummaryText",
+  "HomepagePrayerLabelText": "designPrayerLabelText",
+  "HomepagePrayerLabelColor": "designPrayerLabelColor",
+  "HomepagePrayerCardBg": "designPrayerCardBg",
+  "HomepagePrayerNameColor": "designPrayerNameColor",
+  "HomepageCleanersLabelColor": "designCleanersLabelColor",
+  "HomepageCleanersTextColor": "designCleanersTextColor",
+  "HomepageBirthdayLabelText": "designBirthdayLabelText",
+  "HomepageBirthdayLabelColor": "designBirthdayLabelColor",
+  "HomepageBirthdayCardBg": "designBirthdayCardBg",
+  "HomepageBirthdayTextColor": "designBirthdayTextColor",
+  "HomepageAdviserRemindersTitleText": "designAdviserRemindersTitleText",
+  "HomepageAdviserRemindersTitleColor": "designAdviserRemindersTitleColor",
+  "HomepageTickerBg": "designTickerBg",
+  "HomepageTickerText": "designTickerText"
+};
+
+const HOMEPAGE_DESIGN_DEFAULTS = {
+  "HomepageBgColor": "#f7c600",
+  "HomepageTextColor": "#111111",
+  "HomepageCardBgColor": "#ffffff",
+  "HomepageCardTextColor": "#111111",
+  "HomepageCardBorderColor": "#111111",
+  "HomepageCardShadowColor": "#111111",
+  "HomepageAccentColor": "#f7c600",
+  "HomepageAccentTextColor": "#111111",
+  "HomepageCardRadius": "16px",
+  "HomepageShadowStyle": "classic",
+  "HomepageTopbarBg": "#111111",
+  "HomepageTopbarText": "#ffffff",
+  "HomepageBrandTitleColor": "#ffffff",
+  "HomepageBrandSubtitleColor": "#ffd700",
+  "HomepageQuoteBg": "#1f1f1f",
+  "HomepageQuoteText": "#ffffff",
+  "HomepageQuoteLabelBg": "#ffd700",
+  "HomepageQuoteLabelText": "#111111",
+  "HomepageTimeBoxBg": "#ffd700",
+  "HomepageTimeBoxText": "#111111",
+  "HomepageQuoteLabelTextValue": "Daily Kindness Quote",
+  "HomepageUseSubjectPeriodColors": "YES",
+  "HomepageOverridePeriodTextColors": "NO",
+  "HomepageCurrentLabelText": "Current Period",
+  "HomepageCurrentLabelColor": "#ffd700",
+  "HomepageCurrentCardBg": "#111111",
+  "HomepageCurrentSubjectColor": "#ffffff",
+  "HomepageCurrentDetailsColor": "#ffffff",
+  "HomepageCurrentCountdownBg": "#ffd700",
+  "HomepageCurrentCountdownText": "#111111",
+  "HomepageNextLabelText": "Next Period",
+  "HomepageNextLabelColor": "#111111",
+  "HomepageNextCardBg": "#fff7c7",
+  "HomepageNextSubjectColor": "#111111",
+  "HomepageNextDetailsColor": "#111111",
+  "HomepageNextCountdownBg": "#111111",
+  "HomepageNextCountdownText": "#ffffff",
+  "HomepageUseSubjectScheduleColors": "YES",
+  "HomepageTodayScheduleTitle": "Today's Schedule",
+  "HomepageScheduleTitleColor": "#111111",
+  "HomepageSchedulePanelBg": "#ffffff",
+  "HomepageScheduleCardBg": "#ffffff",
+  "HomepageScheduleCardText": "#111111",
+  "HomepageScheduleTimeColor": "#111111",
+  "HomepageScheduleDetailsColor": "#111111",
+  "HomepageScheduleCurrentBadgeBg": "#111111",
+  "HomepageScheduleCurrentBadgeText": "#ffd700",
+  "HomepageScheduleButtonBg": "#111111",
+  "HomepageScheduleButtonText": "#ffd700",
+  "HomepageAnnouncementsTitleText": "Subject Announcements",
+  "HomepageAnnouncementsTitleColor": "#111111",
+  "HomepageAnnouncementPanelBg": "#ffffff",
+  "HomepageAnnouncementCardBg": "#fff7c7",
+  "HomepageAnnouncementTextColor": "#111111",
+  "HomepageAnnouncementChipBg": "#111111",
+  "HomepageAnnouncementChipText": "#ffd700",
+  "HomepageAnnouncementButtonBg": "#111111",
+  "HomepageAnnouncementButtonText": "#ffd700",
+  "HomepageThingsTitleText": "Things to Bring",
+  "HomepageThingsTitleColor": "#111111",
+  "HomepageThingsPanelBg": "#ffffff",
+  "HomepageThingsItemBg": "#fff7c7",
+  "HomepageThingsItemText": "#111111",
+  "HomepageThingsSubjectText": "#111111",
+  "HomepageThingsStatusBg": "#111111",
+  "HomepageThingsStatusText": "#ffd700",
+  "HomepageThingsSummaryBg": "#111111",
+  "HomepageThingsSummaryText": "#ffd700",
+  "HomepagePrayerLabelText": "Prayer Leader",
+  "HomepagePrayerLabelColor": "#555555",
+  "HomepagePrayerCardBg": "#ffffff",
+  "HomepagePrayerNameColor": "#111111",
+  "HomepageCleanersLabelColor": "#555555",
+  "HomepageCleanersTextColor": "#111111",
+  "HomepageBirthdayLabelText": "Birthday Corner",
+  "HomepageBirthdayLabelColor": "#555555",
+  "HomepageBirthdayCardBg": "#ffffff",
+  "HomepageBirthdayTextColor": "#111111",
+  "HomepageAdviserRemindersTitleText": "Adviser Reminders",
+  "HomepageAdviserRemindersTitleColor": "#111111",
+  "HomepageTickerBg": "#111111",
+  "HomepageTickerText": "#ffd700"
+};
+
+const HOMEPAGE_DESIGN_CHECKBOX_KEYS = [
+  "HomepageUseSubjectPeriodColors",
+  "HomepageOverridePeriodTextColors",
+  "HomepageUseSubjectScheduleColors"
+];
+
+function normalizeHomepageDesignValue(key, value) {
+  if (HOMEPAGE_DESIGN_CHECKBOX_KEYS.includes(key)) {
+    return String(value || "").trim().toUpperCase() === "YES" ? "YES" : "NO";
+  }
+  return String(value || "").trim();
+}
+
+function fillHomepageDesignForm(settings = {}) {
+  Object.entries(HOMEPAGE_DESIGN_FIELDS).forEach(([key, id]) => {
+    const input = document.getElementById(id);
+    if (!input) return;
+    const value = normalizeHomepageDesignValue(key, settings[key] || HOMEPAGE_DESIGN_DEFAULTS[key] || "");
+    if (input.type === "checkbox") {
+      input.checked = value === "YES";
+    } else {
+      input.value = value;
+    }
+  });
+}
+
+async function loadHomepageDesignSettings() {
+  try {
+    const response = await fetch(`${ADMIN_API_URL}?type=settings`, { cache: "no-store" });
+    const settings = await response.json();
+    fillHomepageDesignForm(settings || {});
+  } catch (error) {
+    fillHomepageDesignForm(HOMEPAGE_DESIGN_DEFAULTS);
+  }
+}
+
+function collectHomepageDesignSettings() {
+  const payload = {};
+  Object.entries(HOMEPAGE_DESIGN_FIELDS).forEach(([key, id]) => {
+    const input = document.getElementById(id);
+    if (!input) return;
+    payload[key] = input.type === "checkbox" ? (input.checked ? "YES" : "NO") : String(input.value || "").trim();
+  });
+  return payload;
+}
+
+async function saveHomepageDesignSettings() {
+  const status = document.getElementById("homepageDesignStatus");
+  if (status) status.textContent = "Saving homepage design...";
+  const saved = await sendAdminData("homepageDesign", collectHomepageDesignSettings());
+  if (status) status.textContent = saved ? "Saved. Open Homepage or hard refresh to see the design." : "Unable to save design settings.";
+}
+
+function resetHomepageDesignForm(ask = false) {
+  if (ask && !confirm("Restore the original ClassBoard design in this form? Click Save after this to apply it.")) return;
+  fillHomepageDesignForm(HOMEPAGE_DESIGN_DEFAULTS);
+}
+
+async function restoreHomepageDesignDefaults() {
+  if (!confirm("Restore original homepage colors and labels now?")) return;
+  fillHomepageDesignForm(HOMEPAGE_DESIGN_DEFAULTS);
+  await saveHomepageDesignSettings();
+}
+
+function applyHomepageDesignPreset(name) {
+  const presets = {
+    classic: HOMEPAGE_DESIGN_DEFAULTS,
+    schoolGold: {
+      ...HOMEPAGE_DESIGN_DEFAULTS,
+      HomepageBgColor: "#f7c600",
+      HomepageTopbarBg: "#111111",
+      HomepageAccentColor: "#ffd700",
+      HomepageScheduleButtonBg: "#111111",
+      HomepageScheduleButtonText: "#ffd700"
+    },
+    pastel: {
+      ...HOMEPAGE_DESIGN_DEFAULTS,
+      HomepageBgColor: "#fff1f7",
+      HomepageTopbarBg: "#6d28d9",
+      HomepageCardBorderColor: "#f9a8d4",
+      HomepageAccentColor: "#f9a8d4",
+      HomepageCurrentLabelColor: "#be185d",
+      HomepageNextLabelColor: "#7c3aed",
+      HomepageScheduleTitleColor: "#be185d",
+      HomepageAnnouncementsTitleColor: "#be185d",
+      HomepageThingsTitleColor: "#7c3aed"
+    },
+    modernBlue: {
+      ...HOMEPAGE_DESIGN_DEFAULTS,
+      HomepageBgColor: "#dbeafe",
+      HomepageTopbarBg: "#0f172a",
+      HomepageBrandSubtitleColor: "#93c5fd",
+      HomepageAccentColor: "#2563eb",
+      HomepageAccentTextColor: "#ffffff",
+      HomepageCardBorderColor: "#1d4ed8",
+      HomepageCurrentLabelColor: "#dbeafe",
+      HomepageNextLabelColor: "#1d4ed8",
+      HomepageScheduleTitleColor: "#1d4ed8",
+      HomepageAnnouncementsTitleColor: "#1d4ed8",
+      HomepageThingsTitleColor: "#1d4ed8",
+      HomepageScheduleButtonBg: "#1d4ed8",
+      HomepageScheduleButtonText: "#ffffff"
+    },
+    dark: {
+      ...HOMEPAGE_DESIGN_DEFAULTS,
+      HomepageBgColor: "#101014",
+      HomepageTextColor: "#fff8d8",
+      HomepageCardBgColor: "#1d1d24",
+      HomepageCardTextColor: "#fff8d8",
+      HomepageCardBorderColor: "#ffd000",
+      HomepageCardShadowColor: "#000000",
+      HomepageTopbarBg: "#000000",
+      HomepageTopbarText: "#fff8d8",
+      HomepageAccentColor: "#ffd000",
+      HomepageAccentTextColor: "#111111",
+      HomepageCurrentLabelColor: "#ffd000",
+      HomepageNextLabelColor: "#ffd000",
+      HomepagePeriodDetailsColor: "#fff8d8",
+      HomepageScheduleTitleColor: "#ffd000",
+      HomepageSchedulePanelBg: "#1d1d24",
+      HomepageScheduleCardBg: "#2b2b35",
+      HomepageScheduleCardText: "#fff8d8",
+      HomepageAnnouncementPanelBg: "#1d1d24",
+      HomepageAnnouncementCardBg: "#2b2b35",
+      HomepageAnnouncementTextColor: "#fff8d8",
+      HomepageThingsPanelBg: "#1d1d24",
+      HomepageThingsItemBg: "#2b2b35",
+      HomepageThingsItemText: "#fff8d8",
+      HomepagePrayerCardBg: "#1d1d24",
+      HomepageBirthdayCardBg: "#1d1d24",
+      HomepageTickerBg: "#000000",
+      HomepageTickerText: "#ffd000"
+    }
+  };
+  fillHomepageDesignForm(presets[name] || HOMEPAGE_DESIGN_DEFAULTS);
 }
