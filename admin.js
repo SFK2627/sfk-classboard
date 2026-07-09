@@ -2727,39 +2727,39 @@ function renderHomepagePresetGallery() {
     return matchesCategory && matchesSearch;
   });
 
+  gallery.className = "themePresetGalleryV79";
+
   if (!filtered.length) {
-    gallery.innerHTML = `<p class="fieldHint">No preset found. Try another keyword, choose All themes, or save your current colors as a custom preset.</p>`;
+    gallery.innerHTML = `<div class="presetEmptyV79"><strong>No preset found.</strong><span>Try another keyword, choose All themes, or save your current colors as a custom preset.</span></div>`;
     return;
   }
 
   gallery.innerHTML = filtered.map((preset) => {
     const settings = preset.settings || {};
-    const swatches = (preset.swatches || []).map(color => `<span style="background:${escapeAdminText(color)}"></span>`).join("");
+    const bg = escapeAdminText(settings.HomepageBgColor || "#f7c600");
+    const top = escapeAdminText(settings.HomepageTopbarBg || "#111111");
+    const card = escapeAdminText(settings.HomepageCardBgColor || "#ffffff");
+    const accent = escapeAdminText(settings.HomepageAccentColor || "#ffd000");
+    const border = escapeAdminText(settings.HomepageCardBorderColor || "#111111");
+    const name = escapeAdminText(preset.name);
+    const desc = escapeAdminText(preset.description);
+    const id = escapeAdminText(preset.id);
+    const categoryText = preset.custom ? "custom" : escapeAdminText(preset.category);
+    const swatches = (preset.swatches || [bg, top, card, accent]).slice(0, 6).map(color => `<span class="presetSwatchV79" style="background:${escapeAdminText(color)}"></span>`).join("");
     return `
-      <article class="themePresetCard">
-        <div class="themePresetPreview"
-          style="--preset-bg:${escapeAdminText(settings.HomepageBgColor || '#f7c600')}; --preset-top:${escapeAdminText(settings.HomepageTopbarBg || '#111111')}; --preset-card:${escapeAdminText(settings.HomepageCardBgColor || '#ffffff')}; --preset-accent:${escapeAdminText(settings.HomepageAccentColor || '#ffd000')}; --preset-border:${escapeAdminText(settings.HomepageCardBorderColor || '#111111')};">
-          <div class="presetMiniTop"></div>
-          <div class="presetMiniCard"></div>
-          <div class="presetMiniSide"></div>
+      <article class="presetCardV79" style="--p-bg:${bg};--p-top:${top};--p-card:${card};--p-accent:${accent};--p-border:${border};">
+        <div class="presetPreviewV79" aria-hidden="true"><div class="presetTopbarV79"></div><div class="presetMainCardV79"></div><div class="presetSideCardV79"></div><div class="presetBottomV79"></div></div>
+        <div class="presetInfoV79">
+          <div class="presetBadgeLineV79"><span class="presetBadgeV79 ${preset.custom ? "isCustom" : ""}">${categoryText}</span>${preset.custom ? `<button type="button" class="presetDeleteV79" onclick="deleteCustomHomepagePreset('${id}')">Delete</button>` : ""}</div>
+          <strong>${name}</strong><p>${desc}</p><div class="presetSwatchesV79">${swatches}</div>
         </div>
-        <div class="themePresetBadgeRow">
-          <span class="themePresetBadge ${preset.custom ? "custom" : ""}">${preset.custom ? "custom" : escapeAdminText(preset.category)}</span>
-          ${preset.custom ? `<button type="button" class="themePresetDeleteBtn" onclick="deleteCustomHomepagePreset('${escapeAdminText(preset.id)}')" title="Delete custom preset">Delete</button>` : ""}
-        </div>
-        <div class="themePresetSwatches">${swatches}</div>
-        <div class="themePresetMeta">
-          <strong>${escapeAdminText(preset.name)}</strong>
-          <small>${escapeAdminText(preset.description)}</small>
-        </div>
-        <div class="themePresetActions">
-          <button type="button" onclick="applyHomepageDesignPreset('${escapeAdminText(preset.id)}')">Preview</button>
-          <button type="button" onclick="applyAndSaveHomepageDesignPreset('${escapeAdminText(preset.id)}')">Pick + Save</button>
-        </div>
-      </article>
-    `;
+        <div class="presetActionsV79"><button type="button" class="presetPreviewBtnV79" onclick="applyHomepageDesignPreset('${id}')">Preview</button><button type="button" class="presetSaveBtnV79" onclick="applyAndSaveHomepageDesignPreset('${id}')">Pick + Save</button></div>
+      </article>`;
   }).join("");
 }
+
+// v79 preset gallery marker
+
 // v75 preset gallery marker
 
 // v77 homepage design studio UX marker
