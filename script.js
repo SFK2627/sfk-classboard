@@ -58,6 +58,8 @@ let lastBirthdayDisplayKey = "";
 let birthdayYearModalReady = false;
 let lastBirthdayModalFocus = null;
 let activeBirthdayMonth = null;
+const BIRTHDAY_MUSIC_SRC = "birthday-music.mp3?v=birthday-sound-v101";
+let birthdayMusicAudio = null;
 let weeklyScheduleData = [];
 let weeklyDailyInfoData = [];
 let activeWeeklyDay = "Monday";
@@ -3728,10 +3730,14 @@ function initBirthdayYearModal() {
 
   birthdayYearModalReady = true;
 
-  trigger.addEventListener("click", openBirthdayYearModal);
+  trigger.addEventListener("click", () => {
+    playBirthdayMusic();
+    openBirthdayYearModal();
+  });
   trigger.addEventListener("keydown", (event) => {
     if (event.key !== "Enter" && event.key !== " ") return;
     event.preventDefault();
+    playBirthdayMusic();
     openBirthdayYearModal();
   });
 
@@ -3743,6 +3749,39 @@ function initBirthdayYearModal() {
       closeBirthdayYearModal();
     }
   });
+}
+
+function getBirthdayMusicAudio() {
+  if (birthdayMusicAudio) return birthdayMusicAudio;
+
+  birthdayMusicAudio = new Audio(BIRTHDAY_MUSIC_SRC);
+  birthdayMusicAudio.loop = true;
+  birthdayMusicAudio.preload = "auto";
+  birthdayMusicAudio.volume = 0.88;
+  return birthdayMusicAudio;
+}
+
+function playBirthdayMusic() {
+  try {
+    const audio = getBirthdayMusicAudio();
+    audio.loop = true;
+    audio.currentTime = 0;
+    const playPromise = audio.play();
+    if (playPromise && typeof playPromise.catch === "function") {
+      playPromise.catch(() => {
+        // Browser sound permission can still block audio on some devices.
+        // The birthday date click is a user gesture, so a second tap usually unlocks it.
+      });
+    }
+  } catch (error) {}
+}
+
+function stopBirthdayMusic() {
+  if (!birthdayMusicAudio) return;
+  try {
+    birthdayMusicAudio.pause();
+    birthdayMusicAudio.currentTime = 0;
+  } catch (error) {}
 }
 
 function openBirthdayYearModal() {
@@ -3765,6 +3804,7 @@ function closeBirthdayYearModal() {
   const modal = document.getElementById("birthdayYearModal");
   if (!modal || !modal.classList.contains("isOpen")) return;
 
+  stopBirthdayMusic();
   modal.classList.remove("isOpen");
   document.body.classList.remove("birthdayYearModalOpen");
 

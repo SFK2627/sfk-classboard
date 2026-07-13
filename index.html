@@ -10,10 +10,10 @@
 
   <title>SFK ClassBoard</title>
 
-  <link rel="manifest" href="manifest.webmanifest?v=loading-sound-fix-shortcut-toggle-v99" />
+  <link rel="manifest" href="manifest.webmanifest?v=birthday-sound-v101" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
-  <link rel="stylesheet" href="style.css?v=loading-sound-fix-shortcut-toggle-v99" />
+  <link rel="stylesheet" href="style.css?v=birthday-sound-v101" />
   <link rel="stylesheet" href="class-chat.css?v=gc-everyone-inline-v29" />
   <link rel="stylesheet" href="time-capsule.css?v=gc-timecapsule-buttons-v16" />
 
@@ -1608,22 +1608,27 @@
     const SFK_INTRO_SOUND_DEFAULT_ID = "soft-chime";
     const SFK_INTRO_SETTINGS_URL = "https://script.google.com/macros/s/AKfycbzCjWVnO-ZNvKTNqKN1zVscNsfPox0uDnO1QTSbBCrMFaS79tfL3mopHa2pH7gHczYeOA/exec";
     const SFK_INTRO_SOUND_OPTIONS = [
-      { id: "soft-chime", name: "Soft Chime", pad: [[261.63,0,9.65,"sine",0.14],[329.63,.08,9.45,"triangle",0.09],[392,.16,9.25,"sine",0.08]], notes: [[523.25,0,1.25,"triangle",0.50],[659.25,.18,1.45,"sine",0.48],[783.99,.42,1.60,"triangle",0.40],[1046.5,.78,1.70,"sine",0.25],[587.33,2.05,1.55,"triangle",0.34],[739.99,2.38,1.70,"sine",0.30],[987.77,2.85,1.95,"triangle",0.21],[523.25,4.30,1.65,"triangle",0.29],[698.46,4.72,1.85,"sine",0.24],[880,5.18,2.0,"triangle",0.19],[659.25,6.62,1.80,"sine",0.23],[783.99,7.05,1.90,"triangle",0.18],[1046.5,7.62,2.10,"sine",0.14]] },
-      { id: "school-bell", name: "School Bell", pad: [[196,0,9.6,"triangle",0.08],[392,.1,9.4,"sine",0.07]], notes: [[784,0,.9,"sine",0.54],[784,.72,.9,"sine",0.50],[987.77,1.55,1.05,"triangle",0.36],[784,2.6,.9,"sine",0.46],[784,3.28,.9,"sine",0.42],[1046.5,4.35,1.15,"triangle",0.30],[659.25,6.15,1.2,"sine",0.28],[880,7.0,1.5,"triangle",0.22]] },
-      { id: "sparkle-intro", name: "Sparkle Intro", pad: [[293.66,0,9.7,"sine",0.10],[440,.12,9.45,"triangle",0.08]], notes: [[880,0,.75,"triangle",0.38],[1174.66,.14,.82,"sine",0.32],[1567.98,.34,.95,"triangle",0.25],[1318.51,1.20,.9,"sine",0.25],[987.77,1.65,1.15,"triangle",0.30],[1174.66,2.55,1.0,"sine",0.28],[1760,3.10,1.25,"triangle",0.16],[880,5.2,1.25,"triangle",0.25],[1318.51,6.05,1.35,"sine",0.22],[1567.98,7.1,1.6,"triangle",0.16]] },
-      { id: "calm-welcome", name: "Calm Welcome", pad: [[220,0,9.75,"sine",0.16],[277.18,.08,9.55,"sine",0.10],[329.63,.18,9.35,"triangle",0.07]], notes: [[440,.25,1.8,"sine",0.24],[554.37,1.3,2.1,"triangle",0.22],[659.25,2.9,2.0,"sine",0.18],[493.88,5.15,1.9,"triangle",0.21],[587.33,6.25,2.2,"sine",0.17],[739.99,7.6,2.0,"triangle",0.13]] },
-      { id: "timer-pulse", name: "Timer Pulse", pad: [[246.94,0,9.5,"square",0.035],[493.88,.06,9.35,"sine",0.055]], notes: [[493.88,0,.42,"square",0.23],[493.88,.55,.42,"square",0.20],[493.88,1.10,.42,"square",0.20],[659.25,1.75,.52,"triangle",0.24],[493.88,2.45,.42,"square",0.20],[493.88,3.0,.42,"square",0.20],[739.99,3.70,.62,"triangle",0.22],[493.88,4.8,.42,"square",0.18],[493.88,5.35,.42,"square",0.18],[880,6.1,.72,"triangle",0.18],[659.25,7.35,1.4,"sine",0.16]] },
-      { id: "cute-pop", name: "Cute Pop", pad: [[329.63,0,9.5,"triangle",0.08],[493.88,.08,9.3,"sine",0.06]], notes: [[659.25,0,.6,"triangle",0.32],[783.99,.34,.65,"triangle",0.30],[987.77,.72,.8,"sine",0.24],[523.25,1.75,.55,"triangle",0.30],[659.25,2.07,.65,"triangle",0.28],[880,2.48,.75,"sine",0.22],[587.33,4.25,.65,"triangle",0.24],[739.99,4.68,.75,"sine",0.22],[987.77,5.18,.9,"triangle",0.18],[783.99,6.88,1.2,"sine",0.16]] },
-      { id: "clean-startup", name: "Clean Startup", pad: [[174.61,0,9.7,"sine",0.13],[349.23,.1,9.45,"triangle",0.07]], notes: [[349.23,0,1.25,"sine",0.28],[440,.35,1.35,"triangle",0.25],[523.25,.78,1.5,"sine",0.22],[698.46,1.4,1.6,"triangle",0.18],[440,3.2,1.35,"sine",0.21],[554.37,3.75,1.5,"triangle",0.18],[659.25,4.45,1.7,"sine",0.15],[880,6.7,1.8,"triangle",0.12]] },
-      { id: "happy-bell", name: "Happy Bell", pad: [[261.63,0,9.65,"triangle",0.10],[523.25,.12,9.4,"sine",0.06]], notes: [[523.25,0,.95,"triangle",0.40],[659.25,.25,1.05,"sine",0.36],[783.99,.55,1.12,"triangle",0.30],[1046.5,1.05,1.25,"sine",0.20],[783.99,2.45,1.0,"triangle",0.28],[987.77,2.82,1.1,"sine",0.22],[1174.66,3.25,1.25,"triangle",0.18],[659.25,5.55,1.2,"sine",0.22],[880,6.2,1.35,"triangle",0.18],[1046.5,7.05,1.6,"sine",0.14]] },
-      { id: "digital-ding", name: "Digital Ding", pad: [[220,0,9.55,"sine",0.07],[440,.08,9.35,"square",0.025]], notes: [[880,0,.45,"sine",0.36],[1320,.18,.35,"triangle",0.20],[660,.72,.45,"sine",0.32],[990,.9,.35,"triangle",0.18],[880,1.7,.45,"sine",0.30],[1320,1.88,.35,"triangle",0.16],[1108.73,3.3,.55,"sine",0.22],[1479.98,3.55,.42,"triangle",0.12],[880,5.6,.65,"sine",0.20],[1174.66,5.92,.5,"triangle",0.14],[1567.98,7.0,.95,"sine",0.10]] },
-      { id: "warm-glow", name: "Warm Glow", pad: [[196,0,9.8,"sine",0.16],[246.94,.12,9.6,"triangle",0.11],[392,.25,9.25,"sine",0.07]], notes: [[392,.2,1.8,"sine",0.24],[493.88,1.25,2.0,"triangle",0.22],[587.33,2.55,2.2,"sine",0.18],[440,4.9,2.0,"triangle",0.18],[554.37,6.0,2.1,"sine",0.16],[783.99,7.35,1.9,"triangle",0.12]] },
-      { id: "classroom-tone", name: "Classroom Tone", pad: [[261.63,0,9.65,"sine",0.12],[392,.08,9.45,"triangle",0.08]], notes: [[659.25,0,1.0,"triangle",0.34],[523.25,.55,1.0,"sine",0.28],[659.25,1.25,1.1,"triangle",0.30],[783.99,2.05,1.15,"sine",0.24],[659.25,3.4,1.0,"triangle",0.26],[523.25,4.0,1.0,"sine",0.22],[880,5.15,1.3,"triangle",0.20],[783.99,6.55,1.4,"sine",0.16]] },
-      { id: "magic-intro", name: "Magic Intro", pad: [[233.08,0,9.7,"sine",0.11],[349.23,.1,9.5,"triangle",0.075]], notes: [[932.33,0,.85,"triangle",0.30],[1244.51,.22,1.0,"sine",0.24],[1864.66,.58,1.15,"triangle",0.12],[698.46,1.55,1.05,"sine",0.24],[1046.5,2.05,1.2,"triangle",0.18],[1396.91,2.65,1.35,"sine",0.13],[830.61,4.65,1.2,"triangle",0.18],[1108.73,5.35,1.4,"sine",0.15],[1567.98,6.35,1.65,"triangle",0.10]] },
-      { id: "focus-tone", name: "Focus Tone", pad: [[164.81,0,9.8,"sine",0.15],[246.94,.12,9.55,"sine",0.09],[329.63,.22,9.35,"triangle",0.06]], notes: [[329.63,.55,2.1,"sine",0.22],[493.88,1.7,2.2,"triangle",0.18],[659.25,3.15,2.0,"sine",0.14],[493.88,5.8,1.9,"triangle",0.15],[739.99,7.0,1.8,"sine",0.11]] },
-      { id: "gentle-alert", name: "Gentle Alert", pad: [[246.94,0,9.65,"sine",0.12],[369.99,.1,9.45,"triangle",0.08]], notes: [[739.99,0,.85,"sine",0.30],[739.99,.62,.85,"sine",0.27],[587.33,1.6,1.15,"triangle",0.25],[739.99,2.45,.95,"sine",0.24],[880,3.4,1.05,"triangle",0.20],[587.33,5.55,1.2,"sine",0.18],[739.99,6.4,1.3,"triangle",0.15],[987.77,7.25,1.55,"sine",0.11]] },
-      { id: "classic-bekind", name: "Classic BeKind", pad: [[261.63,0,9.7,"sine",0.14],[329.63,.08,9.5,"triangle",0.10],[392,.2,9.25,"sine",0.075]], notes: [[523.25,0,1.1,"triangle",0.42],[659.25,.32,1.2,"sine",0.36],[783.99,.72,1.35,"triangle",0.30],[659.25,2.1,1.15,"sine",0.28],[783.99,2.55,1.2,"triangle",0.24],[1046.5,3.1,1.5,"sine",0.17],[523.25,5.0,1.2,"triangle",0.24],[659.25,5.6,1.35,"sine",0.20],[783.99,6.35,1.5,"triangle",0.16],[1046.5,7.35,1.8,"sine",0.12]] }
-    ];
+  { id: "soft-chime", icon: "✨", name: "Soft Chime", desc: "Clean soft chime welcome", pad: [[261.63,0,9.65,"sine",0.14],[329.63,.08,9.45,"triangle",0.09],[392,.16,9.25,"sine",0.08]], notes: [[523.25,0,1.25,"triangle",0.50],[659.25,.18,1.45,"sine",0.48],[783.99,.42,1.60,"triangle",0.40],[1046.5,.78,1.70,"sine",0.25],[587.33,2.05,1.55,"triangle",0.34],[739.99,2.38,1.70,"sine",0.30],[987.77,2.85,1.95,"triangle",0.21],[523.25,4.30,1.65,"triangle",0.29],[698.46,4.72,1.85,"sine",0.24],[880,5.18,2.0,"triangle",0.19],[659.25,6.62,1.80,"sine",0.23],[783.99,7.05,1.90,"triangle",0.18],[1046.5,7.62,2.10,"sine",0.14]] },
+  { id: "school-bell", icon: "🔔", name: "School Bell", desc: "Classic classroom bell tone", pad: [[196,0,9.6,"triangle",0.08],[392,.1,9.4,"sine",0.07]], notes: [[784,0,.9,"sine",0.54],[784,.72,.9,"sine",0.50],[987.77,1.55,1.05,"triangle",0.36],[784,2.6,.9,"sine",0.46],[784,3.28,.9,"sine",0.42],[1046.5,4.35,1.15,"triangle",0.30],[659.25,6.15,1.2,"sine",0.28],[880,7.0,1.5,"triangle",0.22]] },
+  { id: "sparkle-intro", icon: "🌟", name: "Sparkle Intro", desc: "Bright magical sparkle", pad: [[293.66,0,9.7,"sine",0.10],[440,.12,9.45,"triangle",0.08]], notes: [[880,0,.75,"triangle",0.38],[1174.66,.14,.82,"sine",0.32],[1567.98,.34,.95,"triangle",0.25],[1318.51,1.20,.9,"sine",0.25],[987.77,1.65,1.15,"triangle",0.30],[1174.66,2.55,1.0,"sine",0.28],[1760,3.10,1.25,"triangle",0.16],[880,5.2,1.25,"triangle",0.25],[1318.51,6.05,1.35,"sine",0.22],[1567.98,7.1,1.6,"triangle",0.16]] },
+  { id: "calm-welcome", icon: "🌤️", name: "Calm Welcome", desc: "Relaxed warm opening", pad: [[220,0,9.75,"sine",0.16],[277.18,.08,9.55,"sine",0.10],[329.63,.18,9.35,"triangle",0.07]], notes: [[440,.25,1.8,"sine",0.24],[554.37,1.3,2.1,"triangle",0.22],[659.25,2.9,2.0,"sine",0.18],[493.88,5.15,1.9,"triangle",0.21],[587.33,6.25,2.2,"sine",0.17],[739.99,7.6,2.0,"triangle",0.13]] },
+  { id: "timer-pulse", icon: "⏱️", name: "Timer Pulse", desc: "Timer/game pulse sound", pad: [[246.94,0,9.5,"square",0.035],[493.88,.06,9.35,"sine",0.055]], notes: [[493.88,0,.42,"square",0.23],[493.88,.55,.42,"square",0.20],[493.88,1.10,.42,"square",0.20],[659.25,1.75,.52,"triangle",0.24],[493.88,2.45,.42,"square",0.20],[493.88,3.0,.42,"square",0.20],[739.99,3.70,.62,"triangle",0.22],[493.88,4.8,.42,"square",0.18],[493.88,5.35,.42,"square",0.18],[880,6.1,.72,"triangle",0.18],[659.25,7.35,1.4,"sine",0.16]] },
+  { id: "cute-pop", icon: "💛", name: "Cute Pop", desc: "Cute and friendly pops", pad: [[329.63,0,9.5,"triangle",0.08],[493.88,.08,9.3,"sine",0.06]], notes: [[659.25,0,.6,"triangle",0.32],[783.99,.34,.65,"triangle",0.30],[987.77,.72,.8,"sine",0.24],[523.25,1.75,.55,"triangle",0.30],[659.25,2.07,.65,"triangle",0.28],[880,2.48,.75,"sine",0.22],[587.33,4.25,.65,"triangle",0.24],[739.99,4.68,.75,"sine",0.22],[987.77,5.18,.9,"triangle",0.18],[783.99,6.88,1.2,"sine",0.16]] },
+  { id: "clean-startup", icon: "🚀", name: "Clean Startup", desc: "Modern startup intro", pad: [[174.61,0,9.7,"sine",0.13],[349.23,.1,9.45,"triangle",0.07]], notes: [[349.23,0,1.25,"sine",0.28],[440,.35,1.35,"triangle",0.25],[523.25,.78,1.5,"sine",0.22],[698.46,1.4,1.6,"triangle",0.18],[440,3.2,1.35,"sine",0.21],[554.37,3.75,1.5,"triangle",0.18],[659.25,4.45,1.7,"sine",0.15],[880,6.7,1.8,"triangle",0.12]] },
+  { id: "happy-bell", icon: "😊", name: "Happy Bell", desc: "Happy classroom welcome", pad: [[261.63,0,9.65,"triangle",0.10],[523.25,.12,9.4,"sine",0.06]], notes: [[523.25,0,.95,"triangle",0.40],[659.25,.25,1.05,"sine",0.36],[783.99,.55,1.12,"triangle",0.30],[1046.5,1.05,1.25,"sine",0.20],[783.99,2.45,1.0,"triangle",0.28],[987.77,2.82,1.1,"sine",0.22],[1174.66,3.25,1.25,"triangle",0.18],[659.25,5.55,1.2,"sine",0.22],[880,6.2,1.35,"triangle",0.18],[1046.5,7.05,1.6,"sine",0.14]] },
+  { id: "digital-ding", icon: "💻", name: "Digital Ding", desc: "Digital app sound", pad: [[220,0,9.55,"sine",0.07],[440,.08,9.35,"square",0.025]], notes: [[880,0,.45,"sine",0.36],[1320,.18,.35,"triangle",0.20],[660,.72,.45,"sine",0.32],[990,.9,.35,"triangle",0.18],[880,1.7,.45,"sine",0.30],[1320,1.88,.35,"triangle",0.16],[1108.73,3.3,.55,"sine",0.22],[1479.98,3.55,.42,"triangle",0.12],[880,5.6,.65,"sine",0.20],[1174.66,5.92,.5,"triangle",0.14],[1567.98,7.0,.95,"sine",0.10]] },
+  { id: "warm-glow", icon: "🌅", name: "Warm Glow", desc: "Warm soft glow tone", pad: [[196,0,9.8,"sine",0.16],[246.94,.12,9.6,"triangle",0.11],[392,.25,9.25,"sine",0.07]], notes: [[392,.2,1.8,"sine",0.24],[493.88,1.25,2.0,"triangle",0.22],[587.33,2.55,2.2,"sine",0.18],[440,4.9,2.0,"triangle",0.18],[554.37,6.0,2.1,"sine",0.16],[783.99,7.35,1.9,"triangle",0.12]] },
+  { id: "classroom-tone", icon: "🏫", name: "Classroom Tone", desc: "Simple class tone", pad: [[261.63,0,9.65,"sine",0.12],[392,.08,9.45,"triangle",0.08]], notes: [[659.25,0,1.0,"triangle",0.34],[523.25,.55,1.0,"sine",0.28],[659.25,1.25,1.1,"triangle",0.30],[783.99,2.05,1.15,"sine",0.24],[659.25,3.4,1.0,"triangle",0.26],[523.25,4.0,1.0,"sine",0.22],[880,5.15,1.3,"triangle",0.20],[783.99,6.55,1.4,"sine",0.16]] },
+  { id: "magic-intro", icon: "🪄", name: "Magic Intro", desc: "Magic sparkle opening", pad: [[233.08,0,9.7,"sine",0.11],[349.23,.1,9.5,"triangle",0.075]], notes: [[932.33,0,.85,"triangle",0.30],[1244.51,.22,1.0,"sine",0.24],[1864.66,.58,1.15,"triangle",0.12],[698.46,1.55,1.05,"sine",0.24],[1046.5,2.05,1.2,"triangle",0.18],[1396.91,2.65,1.35,"sine",0.13],[830.61,4.65,1.2,"triangle",0.18],[1108.73,5.35,1.4,"sine",0.15],[1567.98,6.35,1.65,"triangle",0.10]] },
+  { id: "focus-tone", icon: "🎯", name: "Focus Tone", desc: "Calm focus sound", pad: [[164.81,0,9.8,"sine",0.15],[246.94,.12,9.55,"sine",0.09],[329.63,.22,9.35,"triangle",0.06]], notes: [[329.63,.55,2.1,"sine",0.22],[493.88,1.7,2.2,"triangle",0.18],[659.25,3.15,2.0,"sine",0.14],[493.88,5.8,1.9,"triangle",0.15],[739.99,7.0,1.8,"sine",0.11]] },
+  { id: "gentle-alert", icon: "🔔", name: "Gentle Alert", desc: "Soft alert tone", pad: [[246.94,0,9.65,"sine",0.12],[369.99,.1,9.45,"triangle",0.08]], notes: [[739.99,0,.85,"sine",0.30],[739.99,.62,.85,"sine",0.27],[587.33,1.6,1.15,"triangle",0.25],[739.99,2.45,.95,"sine",0.24],[880,3.4,1.05,"triangle",0.20],[587.33,5.55,1.2,"sine",0.18],[739.99,6.4,1.3,"triangle",0.15],[987.77,7.25,1.55,"sine",0.11]] },
+  { id: "classic-bekind", icon: "🐨", name: "Classic BeKind", desc: "Classic SFK kindness sound", pad: [[261.63,0,9.7,"sine",0.14],[329.63,.08,9.5,"triangle",0.10],[392,.2,9.25,"sine",0.075]], notes: [[523.25,0,1.1,"triangle",0.42],[659.25,.32,1.2,"sine",0.36],[783.99,.72,1.35,"triangle",0.30],[659.25,2.1,1.15,"sine",0.28],[783.99,2.55,1.2,"triangle",0.24],[1046.5,3.1,1.5,"sine",0.17],[523.25,5.0,1.2,"triangle",0.24],[659.25,5.6,1.35,"sine",0.20],[783.99,6.35,1.5,"triangle",0.16],[1046.5,7.35,1.8,"sine",0.12]] },
+  { id: "bass-boost", icon: "🔊", name: "Bass Boost", desc: "Deep bass intro with bold pulses", pad: [[65.41,0,9.85,"sine",0.20],[130.81,0.02,9.75,"sawtooth",0.055],[196,0.08,9.55,"triangle",0.055]], notes: [[130.81,0,.46,"sine",0.46],[130.81,.58,.46,"sine",0.42],[164.81,1.16,.5,"sine",0.44],[196,1.74,.58,"triangle",0.36],[130.81,2.55,.44,"sine",0.42],[130.81,3.05,.44,"sine",0.38],[220,3.62,.62,"sawtooth",0.25],[261.63,4.55,.72,"triangle",0.25],[130.81,5.55,.5,"sine",0.36],[196,6.18,.68,"sawtooth",0.22],[261.63,7.10,.9,"triangle",0.20],[329.63,8.05,1.2,"sine",0.17]] },
+  { id: "energetic-beat", icon: "⚡", name: "Energetic Beat", desc: "Fast upbeat loading energy", pad: [[98,0,9.65,"sine",0.12],[196,.05,9.55,"square",0.035],[392,.1,9.45,"triangle",0.06]], notes: [[392,0,.25,"square",0.28],[523.25,.25,.25,"triangle",0.26],[659.25,.5,.25,"square",0.25],[783.99,.75,.38,"triangle",0.22],[392,1.25,.25,"square",0.28],[523.25,1.5,.25,"triangle",0.26],[659.25,1.75,.25,"square",0.25],[880,2.0,.45,"triangle",0.20],[493.88,3.0,.28,"square",0.26],[659.25,3.28,.28,"triangle",0.24],[783.99,3.56,.28,"square",0.22],[987.77,3.86,.48,"triangle",0.18],[523.25,5.2,.35,"square",0.24],[698.46,5.55,.35,"triangle",0.22],[880,5.9,.45,"square",0.18],[1046.5,6.4,.75,"triangle",0.16],[659.25,7.65,.5,"square",0.18],[987.77,8.15,.9,"triangle",0.13]] },
+  { id: "power-start", icon: "🎮", name: "Power Start", desc: "Game-like power-on tone", pad: [[82.41,0,9.8,"sine",0.15],[164.81,.06,9.65,"sawtooth",0.05],[329.63,.12,9.5,"square",0.025]], notes: [[164.81,0,.38,"sine",0.38],[220,.42,.38,"sine",0.34],[293.66,.86,.45,"triangle",0.32],[392,1.36,.52,"sawtooth",0.25],[523.25,2.0,.62,"triangle",0.23],[659.25,2.72,.72,"square",0.16],[329.63,4.0,.48,"sine",0.28],[440,4.52,.5,"triangle",0.24],[587.33,5.08,.58,"sawtooth",0.20],[783.99,5.8,.72,"triangle",0.16],[987.77,7.1,1.1,"sine",0.12]] },
+  { id: "party-pop", icon: "🎉", name: "Party Pop", desc: "Fun birthday-style pop intro", pad: [[174.61,0,9.6,"triangle",0.10],[349.23,.08,9.45,"sine",0.07]], notes: [[523.25,0,.32,"triangle",0.34],[659.25,.28,.36,"sine",0.32],[783.99,.6,.4,"triangle",0.30],[1046.5,1.0,.55,"sine",0.22],[659.25,1.8,.32,"triangle",0.30],[783.99,2.08,.36,"sine",0.28],[987.77,2.42,.46,"triangle",0.24],[1174.66,3.0,.62,"sine",0.18],[523.25,4.2,.34,"triangle",0.28],[698.46,4.52,.38,"sine",0.24],[880,4.9,.5,"triangle",0.20],[1318.51,5.55,.72,"sine",0.14],[783.99,7.2,.8,"triangle",0.18],[1046.5,8.0,1.1,"sine",0.12]] },
+  { id: "deep-bell", icon: "🛎️", name: "Deep Bell", desc: "Deep bell with bass warmth", pad: [[73.42,0,9.85,"sine",0.18],[146.83,.08,9.65,"triangle",0.08],[293.66,.18,9.4,"sine",0.05]], notes: [[293.66,0,1.4,"triangle",0.32],[440,.3,1.5,"sine",0.24],[587.33,.72,1.65,"triangle",0.20],[293.66,2.8,1.2,"triangle",0.30],[493.88,3.1,1.35,"sine",0.22],[659.25,3.55,1.55,"triangle",0.16],[246.94,6.2,1.4,"triangle",0.28],[392,6.58,1.55,"sine",0.20],[523.25,7.1,1.8,"triangle",0.14]] }
+];
 
     let sfkIntroAudioContext = null;
     let sfkIntroSoundPlayPromise = null;
@@ -1665,7 +1670,9 @@
     }
 
     function getSfkIntroSelectedSoundId() {
-      if (isValidSfkIntroSoundId(sfkIntroSelectedSoundId)) return sfkIntroSelectedSoundId;
+      // Always prioritize the Admin-selected value saved on this device.
+      // The old code returned the default before checking localStorage,
+      // so the loading screen could fall back to Soft Chime even after Admin selected another sound.
       try {
         const saved = localStorage.getItem(SFK_INTRO_SOUND_CHOICE_KEY);
         if (isValidSfkIntroSoundId(saved)) {
@@ -1673,18 +1680,22 @@
           return saved;
         }
       } catch (error) {}
+
+      if (isValidSfkIntroSoundId(sfkIntroSelectedSoundId) && sfkIntroSelectedSoundId !== SFK_INTRO_SOUND_DEFAULT_ID) {
+        return sfkIntroSelectedSoundId;
+      }
+
       sfkIntroSelectedSoundId = SFK_INTRO_SOUND_DEFAULT_ID;
       return sfkIntroSelectedSoundId;
     }
 
-    async function prepareSfkIntroSoundChoice() {
+    function syncSfkIntroSoundChoiceInBackground() {
       getSfkIntroSelectedSoundId();
 
-      const timeoutPromise = new Promise((resolve) => window.setTimeout(resolve, 650));
-      const fetchPromise = (async () => {
+      (async () => {
         try {
           const controller = new AbortController();
-          const timer = window.setTimeout(() => controller.abort(), 580);
+          const timer = window.setTimeout(() => controller.abort(), 900);
           const response = await fetch(`${SFK_INTRO_SETTINGS_URL}?type=settings&introSound=${Date.now()}`, {
             cache: "no-store",
             signal: controller.signal
@@ -1700,8 +1711,6 @@
           // Offline or cached installed app: keep the last locally saved loading sound.
         }
       })();
-
-      await Promise.race([fetchPromise, timeoutPromise]);
     }
 
     function isSfkIntroSoundEnabled() {
@@ -1772,7 +1781,11 @@
         });
       }
 
-      prepareSfkIntroSoundChoice().finally(tryPlaySfkIntroSound);
+      // Play immediately on the loading screen using the saved/default sound.
+      // The admin setting syncs in the background so there is no startup sound delay.
+      getSfkIntroSelectedSoundId();
+      tryPlaySfkIntroSound();
+      syncSfkIntroSoundChoiceInBackground();
 
       const unlockSound = (event) => {
         const target = event && event.target;
@@ -1789,11 +1802,9 @@
     function tryPlaySfkIntroSound() {
       try { sessionStorage.removeItem(SFK_INTRO_SOUND_PLAYED_KEY); } catch (error) {}
       sfkIntroSoundPlayPromise = null;
-      window.setTimeout(() => {
-        playSfkIntroSound(false).then((played) => {
-          if (!played && isSfkIntroSoundEnabled()) updateSfkIntroSoundButton("pending");
-        });
-      }, 280);
+      playSfkIntroSound(false).then((played) => {
+        if (!played && isSfkIntroSoundEnabled()) updateSfkIntroSoundButton("pending");
+      });
     }
 
     async function playSfkIntroSound(fromUserGesture) {
@@ -1815,11 +1826,11 @@
 
           if (audioContext.state !== "running") return false;
 
-          const now = audioContext.currentTime + 0.035;
+          const now = audioContext.currentTime + 0.005;
           const introSoundDuration = 10.0;
           const master = audioContext.createGain();
           master.gain.setValueAtTime(0.0001, now);
-          master.gain.exponentialRampToValueAtTime(0.20, now + 0.08);
+          master.gain.exponentialRampToValueAtTime(0.21, now + 0.025);
           master.gain.exponentialRampToValueAtTime(0.105, now + 1.25);
           master.gain.setValueAtTime(0.105, now + 8.55);
           master.gain.exponentialRampToValueAtTime(0.0001, now + introSoundDuration);
@@ -1882,7 +1893,7 @@
       oscillator.frequency.exponentialRampToValueAtTime(frequency * 1.006, startTime + Math.min(duration, 0.45));
 
       gain.gain.setValueAtTime(0.0001, startTime);
-      gain.gain.exponentialRampToValueAtTime(Math.min(volume * 1.18, 0.72), startTime + 0.035);
+      gain.gain.exponentialRampToValueAtTime(Math.min(volume * 1.18, 0.72), startTime + 0.012);
       gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
 
       oscillator.connect(gain);
@@ -1907,13 +1918,13 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js?v=phone-login-v8"></script>
-  <script src="firebase-adapter.js?v=loading-sound-fix-shortcut-toggle-v99"></script>
-  <script src="script.js?v=loading-sound-fix-shortcut-toggle-v99"></script>
+  <script src="firebase-adapter.js?v=birthday-sound-v101"></script>
+  <script src="script.js?v=birthday-sound-v101"></script>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.16/dist/hls.min.js"></script>
   <script src="https://cdn.dashjs.org/v5.2.0/legacy/umd/dash.all.min.js"></script>
   <script src="time-capsule.js?v=gc-timecapsule-buttons-v16"></script>
   <script src="class-chat.js?v=gc-everyone-inline-v29"></script>
-  <script src="pwa.js?v=loading-sound-fix-shortcut-toggle-v99"></script>
+  <script src="pwa.js?v=birthday-sound-v101"></script>
 
   <script>
     window.sfkAnnouncementCloseEmergencyGuardV3 = true;

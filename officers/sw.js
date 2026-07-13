@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-officers-pwa-v99-loading-sound-fix-shortcut-toggle";
+const CACHE_NAME = "sfk-officers-pwa-v101-birthday-sound";
 const CACHE_PREFIXES_TO_DELETE = ["sfk-officers-pwa-"];
 const NAVIGATION_FALLBACK_URL = "./index.html";
 const NAVIGATION_TIMEOUT_MS = 2500;
@@ -8,11 +8,11 @@ const APP_SHELL = [
   "./index.html",
   "./manifest.webmanifest",
   "./sw.js",
-  "../officer.html?embedded=1&v=loading-sound-fix-shortcut-toggle-v99",
-  "../officer.css?v=loading-sound-fix-shortcut-toggle-v99",
-  "../officer.js?v=loading-sound-fix-shortcut-toggle-v99",
+  "../officer.html?embedded=1&v=birthday-sound-v101",
+  "../officer.css?v=birthday-sound-v101",
+  "../officer.js?v=birthday-sound-v101",
   "../firebase-config.js",
-  "../firebase-adapter.js?v=loading-sound-fix-shortcut-toggle-v99",
+  "../firebase-adapter.js?v=birthday-sound-v101",
   "../auth.js",
   "../orientation-lock.js",
   "../icons/icon-192.png",

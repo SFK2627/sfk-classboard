@@ -378,7 +378,8 @@
     const allowedSoundIds = new Set([
       "soft-chime", "school-bell", "sparkle-intro", "calm-welcome", "timer-pulse",
       "cute-pop", "clean-startup", "happy-bell", "digital-ding", "warm-glow",
-      "classroom-tone", "magic-intro", "focus-tone", "gentle-alert", "classic-bekind"
+      "classroom-tone", "magic-intro", "focus-tone", "gentle-alert", "classic-bekind",
+      "bass-boost", "energetic-beat", "power-start", "party-pop", "deep-bell"
     ]);
     const selectedId = String(payload?.LoadingSoundId || "").trim();
     if (!allowedSoundIds.has(selectedId)) {
