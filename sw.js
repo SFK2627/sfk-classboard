@@ -1,4 +1,8 @@
-const CACHE_NAME = "sfk-sw.js-shhh-floating-layer-v78";
+const CACHE_NAME = "sfk-main-pwa-v90-startup-safe";
+const CACHE_PREFIXES_TO_DELETE = ["sfk-main-pwa-", "sfk-sw.js-"];
+const NAVIGATION_FALLBACK_URL = "./index.html";
+const NAVIGATION_TIMEOUT_MS = 2500;
+
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -31,18 +35,33 @@ const APP_SHELL = [
   "./icons/icon-maskable-512.png"
 ];
 
+function appShellRequest(url) {
+  return new Request(new URL(url, self.location.href).toString(), {
+    cache: "reload",
+    credentials: "same-origin"
+  });
+}
+
 async function precacheAppShell() {
   const cache = await caches.open(CACHE_NAME);
   await Promise.all(
-    APP_SHELL.map((url) => cache.add(url).catch((error) => {
-      console.warn("SFK cache skipped:", url, error);
-    }))
+    APP_SHELL.map(async (url) => {
+      try {
+        await cache.add(appShellRequest(url));
+      } catch (error) {
+        console.warn("SFK cache skipped:", url, error);
+      }
+    })
   );
 }
 
 async function trimOldCaches() {
   const keys = await caches.keys();
-  await Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)));
+  await Promise.all(
+    keys
+      .filter((key) => key !== CACHE_NAME && CACHE_PREFIXES_TO_DELETE.some((prefix) => key.startsWith(prefix)))
+      .map((key) => caches.delete(key))
+  );
 }
 
 function shouldCache(response) {
@@ -50,41 +69,95 @@ function shouldCache(response) {
 }
 
 async function cacheMatch(request) {
-  const cached = await caches.match(request, { ignoreSearch: true });
+  const cache = await caches.open(CACHE_NAME);
+  const cached = await cache.match(request, { ignoreSearch: true });
   if (cached) return cached;
 
   const url = new URL(request.url);
   if (url.pathname.endsWith("/")) {
-    return caches.match("./index.html", { ignoreSearch: true });
+    return cache.match(NAVIGATION_FALLBACK_URL, { ignoreSearch: true });
   }
   return null;
 }
 
-async function networkFirst(request) {
+async function navigationFallback() {
+  const cache = await caches.open(CACHE_NAME);
+  return (
+    (await cache.match(NAVIGATION_FALLBACK_URL, { ignoreSearch: true })) ||
+    (await cache.match("./", { ignoreSearch: true })) ||
+    null
+  );
+}
+
+function fetchWithTimeout(request, timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  return fetch(request, {
+    cache: "no-store",
+    credentials: "same-origin",
+    signal: controller.signal
+  }).finally(() => clearTimeout(timer));
+}
+
+async function updateNavigationCache(request, event) {
   const cache = await caches.open(CACHE_NAME);
   try {
-    const response = await fetch(request);
-    if (shouldCache(response)) await cache.put(request, response.clone());
+    const preloadResponse = event.preloadResponse ? await event.preloadResponse : null;
+    const response = preloadResponse || await fetch(request, { cache: "no-store", credentials: "same-origin" });
+    if (shouldCache(response)) {
+      await cache.put(NAVIGATION_FALLBACK_URL, response.clone());
+      await cache.put(request, response.clone());
+    }
     return response;
   } catch (error) {
-    const cached = await cacheMatch(request);
-    return cached || caches.match("./index.html", { ignoreSearch: true });
+    return null;
   }
 }
 
-async function staleWhileRevalidate(request, event) {
-  const cache = await caches.open(CACHE_NAME);
+async function handleNavigation(request, event) {
+  const cached = await navigationFallback();
+
+  if (cached) {
+    event.waitUntil(updateNavigationCache(request, event));
+    return cached;
+  }
+
+  try {
+    const response = await fetchWithTimeout(request, NAVIGATION_TIMEOUT_MS);
+    if (shouldCache(response)) {
+      const cache = await caches.open(CACHE_NAME);
+      event.waitUntil(cache.put(NAVIGATION_FALLBACK_URL, response.clone()));
+    }
+    return response;
+  } catch (error) {
+    const fallback = await navigationFallback();
+    return fallback || new Response("SFK ClassBoard is loading. Please close and open the app again if this stays on screen.", {
+      status: 503,
+      headers: { "Content-Type": "text/plain; charset=utf-8" }
+    });
+  }
+}
+
+async function cacheFirstWithRefresh(request, event) {
   const cached = await cacheMatch(request);
-  const fetchPromise = fetch(request)
+  const cache = await caches.open(CACHE_NAME);
+
+  const refreshPromise = fetch(request, { credentials: "same-origin" })
     .then((response) => {
       if (shouldCache(response)) {
-        event.waitUntil(cache.put(request, response.clone()));
+        return cache.put(request, response.clone()).then(() => response);
       }
       return response;
     })
-    .catch(() => cached || Response.error());
+    .catch(() => null);
 
-  return cached || fetchPromise;
+  if (cached) {
+    event.waitUntil(refreshPromise);
+    return cached;
+  }
+
+  const response = await refreshPromise;
+  return response || Response.error();
 }
 
 self.addEventListener("install", (event) => {
@@ -93,8 +166,20 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(trimOldCaches());
-  self.clients.claim();
+  event.waitUntil((async () => {
+    if (self.registration.navigationPreload) {
+      await self.registration.navigationPreload.enable().catch(() => {});
+    }
+    await trimOldCaches();
+    await self.clients.claim();
+  })());
+});
+
+self.addEventListener("message", (event) => {
+  if (!event.data || !event.data.type) return;
+  if (String(event.data.type).includes("SKIP_WAITING")) {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener("fetch", (event) => {
@@ -102,11 +187,12 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
 
   if (request.method !== "GET" || url.origin !== self.location.origin) return;
+  if (request.cache === "only-if-cached" && request.mode !== "same-origin") return;
 
   if (request.mode === "navigate" || request.destination === "document") {
-    event.respondWith(networkFirst(request));
+    event.respondWith(handleNavigation(request, event));
     return;
   }
 
-  event.respondWith(staleWhileRevalidate(request, event));
+  event.respondWith(cacheFirstWithRefresh(request, event));
 });

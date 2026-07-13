@@ -1,62 +1,102 @@
-let deferredInstallPrompt = null;
+(() => {
+  let deferredInstallPrompt = null;
 
-const installButton = document.getElementById("installAppBtn");
-const MEDIA_FIX_RELOAD_KEY = "sfkMediaFixV8ControllerReloaded";
+  const installButton = document.getElementById("installAppBtn");
+  const SW_URL = "./sw.js?v=startup-safe-v90";
+  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV90";
+  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV90";
 
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js").then((registration) => {
+  function isStandaloneApp() {
+    return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  }
+
+  function reloadOnce(key) {
+    try {
+      if (sessionStorage.getItem(key) === "1") return;
+      sessionStorage.setItem(key, "1");
+      window.location.reload();
+    } catch (error) {
+      window.location.reload();
+    }
+  }
+
+  function askWorkerToActivate(worker) {
+    if (!worker) return;
+    try {
+      worker.postMessage({ type: "SFK_SKIP_WAITING_STARTUP_SAFE_V90" });
+    } catch (error) {}
+  }
+
+  async function setupServiceWorker() {
+    if (!("serviceWorker" in navigator)) return;
+
+    try {
+      const registration = await navigator.serviceWorker.register(SW_URL, {
+        scope: "./",
+        updateViaCache: "none"
+      });
+
       registration.update().catch(() => {});
-
-      if (registration.waiting) {
-        registration.waiting.postMessage({ type: "SFK_SKIP_WAITING_V8" });
-      }
+      askWorkerToActivate(registration.waiting);
 
       registration.addEventListener("updatefound", () => {
         const worker = registration.installing;
         if (!worker) return;
         worker.addEventListener("statechange", () => {
           if (worker.state === "installed" && navigator.serviceWorker.controller) {
-            worker.postMessage({ type: "SFK_SKIP_WAITING_V8" });
+            askWorkerToActivate(worker);
           }
         });
       });
-    }).catch((error) => {
+
+      window.addEventListener("pageshow", () => registration.update().catch(() => {}));
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") registration.update().catch(() => {});
+      });
+    } catch (error) {
       console.warn("Service worker registration failed:", error);
+    }
+  }
+
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      reloadOnce(CONTROLLER_RELOAD_KEY);
     });
 
-    navigator.serviceWorker.addEventListener("controllerchange", () => {
-      try {
-        if (sessionStorage.getItem(MEDIA_FIX_RELOAD_KEY) === "1") return;
-        sessionStorage.setItem(MEDIA_FIX_RELOAD_KEY, "1");
-        window.location.reload();
-      } catch (error) {
-        window.location.reload();
+    window.addEventListener("load", () => {
+      setupServiceWorker();
+
+      if (isStandaloneApp()) {
+        window.setTimeout(() => {
+          if (!navigator.serviceWorker.controller) {
+            reloadOnce(STANDALONE_BOOT_RELOAD_KEY);
+          }
+        }, 4000);
       }
     });
+  }
+
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+    if (installButton) installButton.hidden = false;
   });
-}
 
-window.addEventListener("beforeinstallprompt", (event) => {
-  event.preventDefault();
-  deferredInstallPrompt = event;
-  if (installButton) installButton.hidden = false;
-});
+  installButton?.addEventListener("click", async () => {
+    if (!deferredInstallPrompt) return;
 
-installButton?.addEventListener("click", async () => {
-  if (!deferredInstallPrompt) return;
+    installButton.hidden = true;
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+  });
 
-  installButton.hidden = true;
-  deferredInstallPrompt.prompt();
-  await deferredInstallPrompt.userChoice;
-  deferredInstallPrompt = null;
-});
+  window.addEventListener("appinstalled", () => {
+    deferredInstallPrompt = null;
+    if (installButton) installButton.hidden = true;
+  });
 
-window.addEventListener("appinstalled", () => {
-  deferredInstallPrompt = null;
-  if (installButton) installButton.hidden = true;
-});
-
-if (window.matchMedia("(display-mode: standalone)").matches && installButton) {
-  installButton.hidden = true;
-}
+  if (isStandaloneApp() && installButton) {
+    installButton.hidden = true;
+  }
+})();
