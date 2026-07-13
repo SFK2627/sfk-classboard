@@ -5002,6 +5002,8 @@ heartAnnouncement = async function heartAnnouncementV3(id) {
    Noise-level monitor only. No voice recording.
 ========================================================= */
 const SHHH_MODE_STORAGE_KEY = "sfkClassBoardShhhModeSettings";
+const SHHH_MODE_DAILY_COUNTS_KEY = "sfkClassBoardShhhModeDailyCountsV2";
+const SHHH_DAILY_HISTORY_LIMIT = 500;
 const SHHH_DESKTOP_MEDIA_QUERY = "(min-width: 1024px) and (pointer: fine)";
 const SHHH_SENSITIVITY_DEFAULT = 65;
 const SHHH_SENSITIVITY_MIN = 0;
@@ -5047,6 +5049,10 @@ function initDesktopShhhMode() {
   restoreShhhModeSettings();
   syncShhhModeAvailability();
   window.addEventListener("resize", syncShhhModeAvailability);
+  window.addEventListener("pageshow", syncShhhDailyCountsFromStorage);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") syncShhhDailyCountsFromStorage();
+  });
   window.addEventListener("beforeunload", stopShhhMode);
 }
 
@@ -5129,6 +5135,7 @@ function createShhhModeUi() {
           <strong id="shhhModeTotalCount">0</strong>
         </article>
         <button id="shhhModeResetCount" type="button">Reset Count</button>
+        <small id="shhhModeTodayHint" class="shhhModeTodayHint">Saved for today until Reset Count.</small>
       </div>
 
       <div class="shhhModeControls">
@@ -5308,6 +5315,141 @@ function forceShhhSensitivitySlider() {
 }
 
 
+function getShhhLocalDayKey(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function readShhhDailyCountsStore() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(SHHH_MODE_DAILY_COUNTS_KEY) || "{}");
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+  } catch (error) {
+    return {};
+  }
+}
+
+function writeShhhDailyCountsStore(store) {
+  try {
+    localStorage.setItem(SHHH_MODE_DAILY_COUNTS_KEY, JSON.stringify(store || {}));
+  } catch (error) {
+    // Daily count history is helpful, but Shhh Mode must still work without storage.
+  }
+}
+
+function sanitizeShhhDailyCounts(value, dayKey = getShhhLocalDayKey()) {
+  const record = value && typeof value === "object" ? value : {};
+  const events = Array.isArray(record.events) ? record.events.slice(-SHHH_DAILY_HISTORY_LIMIT) : [];
+  return {
+    dateKey: String(record.dateKey || dayKey),
+    autoCount: Math.max(0, Number(record.autoCount) || 0),
+    totalCount: Math.max(0, Number(record.totalCount) || 0),
+    events,
+    updatedAt: String(record.updatedAt || ""),
+    resetAt: String(record.resetAt || "")
+  };
+}
+
+function pruneShhhDailyCountsStore(store) {
+  const nextStore = store && typeof store === "object" ? { ...store } : {};
+  const dayKeys = Object.keys(nextStore).filter((key) => /^\d{4}-\d{2}-\d{2}$/.test(key)).sort();
+  while (dayKeys.length > 45) {
+    const key = dayKeys.shift();
+    if (key) delete nextStore[key];
+  }
+  return nextStore;
+}
+
+function getLegacyShhhCounts(savedSettings = null) {
+  try {
+    const saved = savedSettings && typeof savedSettings === "object"
+      ? savedSettings
+      : JSON.parse(localStorage.getItem(SHHH_MODE_STORAGE_KEY) || "{}");
+    return {
+      autoCount: Math.max(0, Number(saved.autoCount) || 0),
+      totalCount: Math.max(0, Number(saved.totalCount) || 0)
+    };
+  } catch (error) {
+    return { autoCount: 0, totalCount: 0 };
+  }
+}
+
+function restoreShhhDailyCounts(savedSettings = null) {
+  const todayKey = getShhhLocalDayKey();
+  const store = readShhhDailyCountsStore();
+  const hasToday = Object.prototype.hasOwnProperty.call(store, todayKey);
+  let todayCounts = hasToday ? sanitizeShhhDailyCounts(store[todayKey], todayKey) : null;
+
+  // One-time migration from the older settings-only count storage.
+  // After migration, refresh/close-open will use the daily record instead of resetting to 0.
+  if (!todayCounts && !store.__legacyMigrated) {
+    const legacy = getLegacyShhhCounts(savedSettings);
+    if (legacy.autoCount > 0 || legacy.totalCount > 0) {
+      todayCounts = sanitizeShhhDailyCounts({
+        dateKey: todayKey,
+        autoCount: legacy.autoCount,
+        totalCount: legacy.totalCount,
+        events: [{
+          time: new Date().toISOString(),
+          type: "migrated",
+          autoCount: legacy.autoCount,
+          totalCount: legacy.totalCount
+        }],
+        updatedAt: new Date().toISOString()
+      }, todayKey);
+    }
+    store.__legacyMigrated = true;
+  }
+
+  if (!todayCounts) todayCounts = sanitizeShhhDailyCounts({}, todayKey);
+
+  shhhMode.autoCount = todayCounts.autoCount;
+  shhhMode.totalCount = todayCounts.totalCount;
+  store[todayKey] = todayCounts;
+  writeShhhDailyCountsStore(pruneShhhDailyCountsStore(store));
+  return todayCounts;
+}
+
+function saveShhhDailyCounts(reason = "update", manual = false) {
+  const todayKey = getShhhLocalDayKey();
+  const nowIso = new Date().toISOString();
+  const store = readShhhDailyCountsStore();
+  const todayCounts = sanitizeShhhDailyCounts(store[todayKey], todayKey);
+
+  todayCounts.autoCount = Math.max(0, Number(shhhMode.autoCount) || 0);
+  todayCounts.totalCount = Math.max(0, Number(shhhMode.totalCount) || 0);
+  todayCounts.updatedAt = nowIso;
+
+  if (reason === "trigger") {
+    todayCounts.events.push({
+      time: nowIso,
+      type: manual ? "manual-test" : "auto-shhh",
+      autoCount: todayCounts.autoCount,
+      totalCount: todayCounts.totalCount
+    });
+    todayCounts.events = todayCounts.events.slice(-SHHH_DAILY_HISTORY_LIMIT);
+  }
+
+  if (reason === "reset") {
+    todayCounts.events = [];
+    todayCounts.resetAt = nowIso;
+  }
+
+  store.__legacyMigrated = true;
+  store[todayKey] = todayCounts;
+  writeShhhDailyCountsStore(pruneShhhDailyCountsStore(store));
+  return todayCounts;
+}
+
+function syncShhhDailyCountsFromStorage() {
+  const todayCounts = restoreShhhDailyCounts();
+  updateShhhModeUi();
+  return todayCounts;
+}
+
+
 function restoreShhhModeSettings() {
   try {
     const saved = JSON.parse(localStorage.getItem(SHHH_MODE_STORAGE_KEY) || "{}");
@@ -5317,8 +5459,7 @@ function restoreShhhModeSettings() {
     if ([5000, 10000, 20000].includes(Number(saved.cooldownMs))) {
       shhhMode.cooldownMs = Number(saved.cooldownMs);
     }
-    shhhMode.autoCount = Math.max(0, Number(saved.autoCount) || 0);
-    shhhMode.totalCount = Math.max(0, Number(saved.totalCount) || 0);
+    restoreShhhDailyCounts(saved);
     shhhMode.muted = Boolean(saved.muted);
     shhhMode.voiceEnabled = typeof saved.voiceEnabled === "boolean" ? saved.voiceEnabled : true;
     shhhMode.randomVoiceEnabled = typeof saved.randomVoiceEnabled === "boolean" ? saved.randomVoiceEnabled : true;
@@ -5782,10 +5923,14 @@ function speakBeQuietVoice(manual = false) {
 }
 
 function recordShhhPlayed(manual = false) {
+  // Keep today's Shhh count/history alive across refresh, close-open, and installed app reloads.
+  // A new browser session must continue the same daily count until Reset Count is clicked.
+  restoreShhhDailyCounts();
   shhhMode.totalCount = Math.max(0, Number(shhhMode.totalCount) || 0) + 1;
   if (!manual) {
     shhhMode.autoCount = Math.max(0, Number(shhhMode.autoCount) || 0) + 1;
   }
+  saveShhhDailyCounts("trigger", manual);
   saveShhhModeSettings();
   updateShhhModeUi();
 }
@@ -5793,9 +5938,10 @@ function recordShhhPlayed(manual = false) {
 function resetShhhCounts() {
   shhhMode.autoCount = 0;
   shhhMode.totalCount = 0;
+  saveShhhDailyCounts("reset");
   saveShhhModeSettings();
   updateShhhModeUi("Count reset");
-  showSoundAlert("Shhh count reset.");
+  showSoundAlert("Today's Shhh count reset.");
 }
 
 function updateQuoteNoiseMeter(statusOverride = "") {
@@ -5842,6 +5988,7 @@ function updateShhhModeUi(statusOverride = "") {
   const panel = document.getElementById("shhhModePanel");
   const autoCount = document.getElementById("shhhModeAutoCount");
   const totalCount = document.getElementById("shhhModeTotalCount");
+  const todayHint = document.getElementById("shhhModeTodayHint");
   const mute = document.getElementById("shhhModeMute");
   const voice = document.getElementById("shhhModeVoice");
   const randomVoice = document.getElementById("shhhRandomVoice");
@@ -5887,6 +6034,9 @@ function updateShhhModeUi(statusOverride = "") {
   }
   if (totalCount) {
     totalCount.textContent = String(Math.max(0, Number(shhhMode.totalCount) || 0));
+  }
+  if (todayHint) {
+    todayHint.textContent = `Saved for ${getShhhLocalDayKey()} until Reset Count.`;
   }
   if (mute) {
     mute.checked = Boolean(shhhMode.muted);

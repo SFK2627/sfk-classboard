@@ -3,10 +3,10 @@
   "name": "SFK Admin",
   "short_name": "SFK Admin",
   "description": "SFK ClassBoard admin panel",
-  "start_url": "./",
+  "start_url": "./index.html?source=pwa-nav-route-safe-v91",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait-primary",
+  "orientation": "portrait",
   "background_color": "#fff8dc",
   "theme_color": "#f7c600",
   "icons": [
