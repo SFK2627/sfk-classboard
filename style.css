@@ -6576,6 +6576,7 @@ body.birthdayYearModalOpen {
 .birthdayYearBackdrop {
   position: absolute;
   inset: 0;
+  z-index: 0;
   background:
     radial-gradient(circle at 20% 20%, rgba(255,255,255,.18), transparent 18%),
     radial-gradient(circle at 85% 12%, rgba(255,209,102,.18), transparent 14%),
@@ -6587,6 +6588,7 @@ body.birthdayYearModalOpen {
 
 .birthdayYearPanel {
   position: relative;
+  z-index: 2;
   width: min(820px, 96vw);
   max-height: min(84vh, 800px);
   overflow: hidden;
@@ -6618,6 +6620,121 @@ body.birthdayYearModalOpen {
 .birthdayYearModal.isOpen .birthdayYearBackdrop {
   opacity: 1;
 }
+
+.birthdayCelebrationLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .22s ease;
+}
+
+.birthdayYearModal.isOpen .birthdayCelebrationLayer.isActive {
+  opacity: 1;
+}
+
+.birthdayBalloon {
+  position: absolute;
+  left: var(--x, 50%);
+  bottom: -18vh;
+  font-size: var(--size, 2.6rem);
+  line-height: 1;
+  filter: drop-shadow(0 8px 8px rgba(0,0,0,.18));
+  animation:
+    birthdayBalloonFloat var(--duration, 9s) linear infinite,
+    birthdayBalloonSway var(--sway-duration, 3.4s) ease-in-out infinite alternate;
+  animation-delay: var(--delay, 0s), calc(var(--delay, 0s) * .45);
+  transform: translate3d(0, 0, 0);
+  opacity: .95;
+  will-change: transform;
+}
+
+.birthdayBalloon::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 80%;
+  width: 1px;
+  height: clamp(28px, 6vh, 58px);
+  background: rgba(255,255,255,.62);
+  transform: translateX(-50%);
+}
+
+.birthdayConfettiPiece {
+  position: absolute;
+  top: -12vh;
+  left: var(--x, 50%);
+  width: var(--w, 9px);
+  height: var(--h, 14px);
+  border-radius: 3px;
+  background: var(--confetti-color, #ffd700);
+  box-shadow: 0 0 8px rgba(255,255,255,.18);
+  animation: birthdayConfettiFall var(--duration, 4.4s) linear infinite;
+  animation-delay: var(--delay, 0s);
+  transform: rotate(var(--rotation, 0deg));
+  opacity: .9;
+  will-change: transform;
+}
+
+.birthdaySparkleBurst {
+  position: absolute;
+  left: var(--x, 50%);
+  top: var(--y, 50%);
+  font-size: var(--size, 1.2rem);
+  line-height: 1;
+  animation: birthdaySparklePulse var(--duration, 2.4s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+  opacity: .84;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,.16));
+}
+
+@keyframes birthdayBalloonFloat {
+  0% {
+    transform: translate3d(0, 18vh, 0) rotate(-4deg);
+    opacity: 0;
+  }
+  8% {
+    opacity: .96;
+  }
+  88% {
+    opacity: .96;
+  }
+  100% {
+    transform: translate3d(0, -128vh, 0) rotate(7deg);
+    opacity: 0;
+  }
+}
+
+@keyframes birthdayBalloonSway {
+  from { margin-left: -18px; }
+  to { margin-left: 18px; }
+}
+
+@keyframes birthdayConfettiFall {
+  0% {
+    transform: translate3d(0, -14vh, 0) rotate(var(--rotation, 0deg));
+    opacity: 0;
+  }
+  9% { opacity: .94; }
+  100% {
+    transform: translate3d(var(--drift, 28px), 118vh, 0) rotate(calc(var(--rotation, 0deg) + 580deg));
+    opacity: 0;
+  }
+}
+
+@keyframes birthdaySparklePulse {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(.65) rotate(-8deg);
+    opacity: .18;
+  }
+  45% {
+    transform: translate3d(0, -10px, 0) scale(1.2) rotate(9deg);
+    opacity: .98;
+  }
+}
+
 
 .birthdayYearModal.isOpen .birthdayYearPanel {
   transform: translateY(0) scale(1);
@@ -7139,6 +7256,28 @@ body.birthdayYearModalOpen {
 @media (max-width: 700px) and (orientation: landscape) {
   body.birthdayYearModalOpen {
     overflow: hidden;
+  }
+}
+
+
+@media (max-width: 700px) {
+  .birthdayBalloon {
+    font-size: calc(var(--size, 2.2rem) * .82);
+  }
+
+  .birthdayConfettiPiece {
+    width: calc(var(--w, 8px) * .85);
+    height: calc(var(--h, 13px) * .85);
+  }
+
+  .birthdaySparkleBurst {
+    font-size: calc(var(--size, 1.1rem) * .9);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .birthdayCelebrationLayer {
+    display: none !important;
   }
 }
 

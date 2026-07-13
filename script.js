@@ -58,8 +58,9 @@ let lastBirthdayDisplayKey = "";
 let birthdayYearModalReady = false;
 let lastBirthdayModalFocus = null;
 let activeBirthdayMonth = null;
-const BIRTHDAY_MUSIC_SRC = "birthday-music.mp3?v=birthday-sound-v101";
+const BIRTHDAY_MUSIC_SRC = "birthday-music.mp3?v=birthday-celebration-v102";
 let birthdayMusicAudio = null;
+let birthdayCelebrationCleanupTimer = null;
 let weeklyScheduleData = [];
 let weeklyDailyInfoData = [];
 let activeWeeklyDay = "Monday";
@@ -3784,6 +3785,107 @@ function stopBirthdayMusic() {
   } catch (error) {}
 }
 
+
+function getBirthdayCelebrationLayer() {
+  const modal = document.getElementById("birthdayYearModal");
+  if (!modal) return null;
+
+  let layer = document.getElementById("birthdayCelebrationLayer");
+  if (!layer) {
+    layer = document.createElement("div");
+    layer.id = "birthdayCelebrationLayer";
+    layer.className = "birthdayCelebrationLayer";
+    layer.setAttribute("aria-hidden", "true");
+    const panel = modal.querySelector(".birthdayYearPanel");
+    modal.insertBefore(layer, panel || null);
+  }
+  return layer;
+}
+
+function startBirthdayCelebration() {
+  const layer = getBirthdayCelebrationLayer();
+  if (!layer) return;
+
+  if (birthdayCelebrationCleanupTimer) {
+    clearTimeout(birthdayCelebrationCleanupTimer);
+    birthdayCelebrationCleanupTimer = null;
+  }
+
+  const records = getSortedBirthdayRecords(latestData?.birthdays || []);
+  if (!records.length) {
+    stopBirthdayCelebration(true);
+    return;
+  }
+
+  if (layer.dataset.ready !== "1") {
+    const balloonIcons = ["🎈", "🎉", "🎂", "🎁", "🥳", "🎊"];
+    const confettiColors = ["#ffd700", "#ff6b9a", "#6bd6ff", "#7ee787", "#b28dff", "#ff9f43", "#ffffff"];
+    const sparkleIcons = ["✨", "⭐", "💛", "🎊", "🎉"];
+    const parts = [];
+
+    for (let i = 0; i < 14; i++) {
+      const x = 3 + ((i * 19) % 94);
+      const size = 1.95 + ((i % 5) * 0.26);
+      const duration = 8.4 + ((i % 6) * 0.75);
+      const delay = -1 * ((i * 0.82) % 8.6);
+      const swayDuration = 2.7 + ((i % 4) * 0.45);
+      const icon = balloonIcons[i % balloonIcons.length];
+      parts.push(`<span class="birthdayBalloon" style="--x:${x}%;--size:${size}rem;--duration:${duration}s;--delay:${delay}s;--sway-duration:${swayDuration}s;">${icon}</span>`);
+    }
+
+    for (let i = 0; i < 68; i++) {
+      const x = (i * 37) % 100;
+      const width = 6 + (i % 4) * 2;
+      const height = 10 + (i % 5) * 2;
+      const duration = 3.1 + ((i % 8) * 0.35);
+      const delay = -1 * ((i * 0.19) % 4.8);
+      const drift = ((i % 2 === 0 ? 1 : -1) * (16 + (i % 7) * 10));
+      const rotation = (i * 31) % 180;
+      const color = confettiColors[i % confettiColors.length];
+      parts.push(`<i class="birthdayConfettiPiece" style="--x:${x}%;--w:${width}px;--h:${height}px;--duration:${duration}s;--delay:${delay}s;--drift:${drift}px;--rotation:${rotation}deg;--confetti-color:${color};"></i>`);
+    }
+
+    for (let i = 0; i < 16; i++) {
+      const x = 5 + ((i * 23) % 90);
+      const y = 8 + ((i * 17) % 76);
+      const size = 0.95 + ((i % 5) * 0.16);
+      const duration = 2.0 + ((i % 5) * 0.28);
+      const delay = -1 * ((i * 0.33) % 2.7);
+      const icon = sparkleIcons[i % sparkleIcons.length];
+      parts.push(`<span class="birthdaySparkleBurst" style="--x:${x}%;--y:${y}%;--size:${size}rem;--duration:${duration}s;--delay:${delay}s;">${icon}</span>`);
+    }
+
+    layer.innerHTML = parts.join("");
+    layer.dataset.ready = "1";
+  }
+
+  layer.classList.add("isActive");
+}
+
+function stopBirthdayCelebration(clearNow = false) {
+  const layer = document.getElementById("birthdayCelebrationLayer");
+  if (!layer) return;
+
+  layer.classList.remove("isActive");
+
+  if (birthdayCelebrationCleanupTimer) {
+    clearTimeout(birthdayCelebrationCleanupTimer);
+    birthdayCelebrationCleanupTimer = null;
+  }
+
+  const cleanup = () => {
+    layer.innerHTML = "";
+    layer.dataset.ready = "0";
+    birthdayCelebrationCleanupTimer = null;
+  };
+
+  if (clearNow) {
+    cleanup();
+  } else {
+    birthdayCelebrationCleanupTimer = window.setTimeout(cleanup, 260);
+  }
+}
+
 function openBirthdayYearModal() {
   const modal = document.getElementById("birthdayYearModal");
   if (!modal) return;
@@ -3793,6 +3895,7 @@ function openBirthdayYearModal() {
   renderBirthdayYearModal(latestData?.birthdays || []);
   modal.setAttribute("aria-hidden", "false");
   document.body.classList.add("birthdayYearModalOpen");
+  startBirthdayCelebration();
 
   requestAnimationFrame(() => {
     modal.classList.add("isOpen");
@@ -3805,6 +3908,7 @@ function closeBirthdayYearModal() {
   if (!modal || !modal.classList.contains("isOpen")) return;
 
   stopBirthdayMusic();
+  stopBirthdayCelebration();
   modal.classList.remove("isOpen");
   document.body.classList.remove("birthdayYearModalOpen");
 

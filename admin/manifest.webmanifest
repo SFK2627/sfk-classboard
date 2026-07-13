@@ -3,7 +3,7 @@
   "name": "SFK Admin",
   "short_name": "SFK Admin",
   "description": "SFK ClassBoard admin panel",
-  "start_url": "./index.html?source=admin-pwa-birthday-sound-v101",
+  "start_url": "./index.html?source=admin-pwa-birthday-celebration-v102",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",

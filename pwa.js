@@ -2,9 +2,9 @@
   let deferredInstallPrompt = null;
 
   const installButton = document.getElementById("installAppBtn");
-  const SW_URL = "./sw.js?v=birthday-sound-v101";
-  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV101BirthdaySound";
-  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV101BirthdaySound";
+  const SW_URL = "./sw.js?v=birthday-celebration-v102";
+  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV102BirthdayCelebration";
+  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV102BirthdayCelebration";
 
   function isStandaloneApp() {
     return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
@@ -23,7 +23,7 @@
   function askWorkerToActivate(worker) {
     if (!worker) return;
     try {
-      worker.postMessage({ type: "SFK_SKIP_WAITING_BIRTHDAY_SOUND_V101" });
+      worker.postMessage({ type: "SFK_SKIP_WAITING_BIRTHDAY_CELEBRATION_V102" });
     } catch (error) {}
   }
 

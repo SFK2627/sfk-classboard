@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-admin-pwa-v101-birthday-sound";
+const CACHE_NAME = "sfk-admin-pwa-v102-birthday-celebration";
 const CACHE_PREFIXES_TO_DELETE = ["sfk-admin-pwa-"];
 const NAVIGATION_FALLBACK_URL = "./index.html";
 const NAVIGATION_TIMEOUT_MS = 2500;
@@ -8,12 +8,12 @@ const APP_SHELL = [
   "./index.html",
   "./manifest.webmanifest",
   "./sw.js",
-  "../admin.html?embedded=1&v=birthday-sound-v101",
-  "../admin.css?v=birthday-sound-v101",
-  "../admin.js?v=birthday-sound-v101",
+  "../admin.html?embedded=1&v=birthday-celebration-v102",
+  "../admin.css?v=birthday-celebration-v102",
+  "../admin.js?v=birthday-celebration-v102",
   "../class-chat-admin.js",
   "../firebase-config.js",
-  "../firebase-adapter.js?v=birthday-sound-v101",
+  "../firebase-adapter.js?v=birthday-celebration-v102",
   "../auth.js",
   "../orientation-lock.js",
   "../icons/icon-192.png",
