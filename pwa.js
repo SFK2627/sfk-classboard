@@ -2,9 +2,9 @@
   let deferredInstallPrompt = null;
 
   const installButton = document.getElementById("installAppBtn");
-  const SW_URL = "./sw.js?v=entry-sound-safe-v93";
-  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV93EntrySound";
-  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV93EntrySound";
+  const SW_URL = "./sw.js?v=entry-sound-icon-louder-v95";
+  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV94EntrySound10s";
+  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV94EntrySound10s";
 
   function isStandaloneApp() {
     return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
@@ -23,7 +23,7 @@
   function askWorkerToActivate(worker) {
     if (!worker) return;
     try {
-      worker.postMessage({ type: "SFK_SKIP_WAITING_ENTRY_SOUND_SAFE_V93" });
+      worker.postMessage({ type: "SFK_SKIP_WAITING_ENTRY_SOUND_10S_V94" });
     } catch (error) {}
   }
 

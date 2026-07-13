@@ -10,7 +10,7 @@
 
   <title>SFK ClassBoard</title>
 
-  <link rel="manifest" href="manifest.webmanifest?v=entry-sound-safe-v93" />
+  <link rel="manifest" href="manifest.webmanifest?v=entry-sound-icon-louder-v95" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
   <link rel="stylesheet" href="style.css?v=homepage-preset-redesign-v79" />
@@ -146,23 +146,33 @@
     }
 
     .sfkStartSound {
-      border: 2px solid rgba(255,255,255,.22);
-      background: rgba(255,255,255,.12);
+      border: 0;
+      background: transparent;
       color: #fff;
-      padding: 10px 14px;
-      font-size: clamp(.82rem, 1.08vw, .95rem);
+      width: 42px;
+      height: 42px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.45rem;
+      line-height: 1;
       cursor: pointer;
       border-radius: 999px;
       font-weight: 900;
-      box-shadow: 0 7px 18px rgba(0,0,0,.20);
-      transition: background .2s ease, opacity .2s ease, transform .2s ease;
+      box-shadow: none;
+      text-shadow: 0 3px 10px rgba(0,0,0,.45);
+      transition: opacity .2s ease, transform .2s ease, filter .2s ease;
       white-space: nowrap;
     }
 
     .sfkStartSound:hover,
     .sfkStartSkip:hover {
       transform: translateY(-1px);
-      background: rgba(255,255,255,.18);
+    }
+
+    .sfkStartSound:hover {
+      filter: drop-shadow(0 0 8px rgba(255,255,255,.55));
     }
 
     .sfkStartSound.is-off {
@@ -170,8 +180,8 @@
     }
 
     .sfkStartSound.is-pending {
-      background: rgba(247,198,0,.20);
-      border-color: rgba(247,198,0,.42);
+      opacity: .95;
+      filter: drop-shadow(0 0 8px rgba(247,198,0,.65));
     }
 
     .sfkStartBody {
@@ -407,10 +417,15 @@
         gap: 6px;
       }
 
-      .sfkStartSound,
       .sfkStartSkip {
         padding: 8px 10px;
         font-size: .78rem;
+      }
+
+      .sfkStartSound {
+        width: 38px;
+        height: 38px;
+        font-size: 1.28rem;
       }
 
       .sfkStartBody {
@@ -630,7 +645,7 @@
         <div class="sfkStartTop">
           <div class="sfkStartTag">🐨 Kindness First • #BeKind 🫶</div>
           <div class="sfkStartActions">
-            <button id="sfkIntroSoundButton" class="sfkStartSound" type="button" aria-pressed="true" title="Loading sound">🔊 Sound</button>
+            <button id="sfkIntroSoundButton" class="sfkStartSound" type="button" aria-pressed="true" title="Loading sound">🔊</button>
             <button class="sfkStartSkip" type="button" onclick="hideSfkIntro(true)">Skip</button>
           </div>
         </div>
@@ -1604,17 +1619,21 @@
       button.setAttribute("aria-pressed", state === "off" ? "false" : "true");
 
       if (state === "off") {
-        button.textContent = "🔇 Sound Off";
+        button.textContent = "🔇";
         button.title = "Turn loading sound on";
+        button.setAttribute("aria-label", "Turn loading sound on");
       } else if (state === "pending") {
-        button.textContent = "🔈 Tap Sound";
+        button.textContent = "🔈";
         button.title = "Tap to allow loading sound";
+        button.setAttribute("aria-label", "Tap to allow loading sound");
       } else if (state === "played") {
-        button.textContent = "🔊 Sound";
+        button.textContent = "🔊";
         button.title = "Loading sound played";
+        button.setAttribute("aria-label", "Loading sound played");
       } else {
-        button.textContent = "🔊 Sound";
+        button.textContent = "🔊";
         button.title = "Turn loading sound off";
+        button.setAttribute("aria-label", "Turn loading sound off");
       }
     }
 
@@ -1679,22 +1698,52 @@
           if (audioContext.state !== "running") return false;
 
           const now = audioContext.currentTime + 0.035;
+          const introSoundDuration = 10.0;
           const master = audioContext.createGain();
           master.gain.setValueAtTime(0.0001, now);
-          master.gain.exponentialRampToValueAtTime(0.18, now + 0.05);
-          master.gain.exponentialRampToValueAtTime(0.055, now + 0.62);
-          master.gain.exponentialRampToValueAtTime(0.0001, now + 1.42);
+          master.gain.exponentialRampToValueAtTime(0.20, now + 0.08);
+          master.gain.exponentialRampToValueAtTime(0.105, now + 1.25);
+          master.gain.setValueAtTime(0.105, now + 8.55);
+          master.gain.exponentialRampToValueAtTime(0.0001, now + introSoundDuration);
           master.connect(audioContext.destination);
 
-          playSfkTone(audioContext, master, 523.25, now, 0.65, "triangle", 0.58);
-          playSfkTone(audioContext, master, 659.25, now + 0.10, 0.72, "sine", 0.60);
-          playSfkTone(audioContext, master, 783.99, now + 0.22, 0.78, "triangle", 0.52);
-          playSfkTone(audioContext, master, 1046.50, now + 0.38, 0.90, "sine", 0.34);
-          playSfkTone(audioContext, master, 261.63, now, 1.20, "sine", 0.18);
+          const shimmerDelay = audioContext.createDelay(1.2);
+          const shimmerEcho = audioContext.createGain();
+          shimmerDelay.delayTime.setValueAtTime(0.32, now);
+          shimmerEcho.gain.setValueAtTime(0.22, now);
+          shimmerDelay.connect(shimmerEcho);
+          shimmerEcho.connect(master);
+
+          playSfkTone(audioContext, master, 261.63, now, 9.65, "sine", 0.14);
+          playSfkTone(audioContext, master, 329.63, now + 0.08, 9.45, "triangle", 0.09);
+          playSfkTone(audioContext, master, 392.00, now + 0.16, 9.25, "sine", 0.08);
+
+          const chimeNotes = [
+            [523.25, 0.00, 1.25, "triangle", 0.50],
+            [659.25, 0.18, 1.45, "sine", 0.48],
+            [783.99, 0.42, 1.60, "triangle", 0.40],
+            [1046.50, 0.78, 1.70, "sine", 0.25],
+            [587.33, 2.05, 1.55, "triangle", 0.34],
+            [739.99, 2.38, 1.70, "sine", 0.30],
+            [987.77, 2.85, 1.95, "triangle", 0.21],
+            [523.25, 4.30, 1.65, "triangle", 0.29],
+            [698.46, 4.72, 1.85, "sine", 0.24],
+            [880.00, 5.18, 2.00, "triangle", 0.19],
+            [659.25, 6.62, 1.80, "sine", 0.23],
+            [783.99, 7.05, 1.90, "triangle", 0.18],
+            [1046.50, 7.62, 2.10, "sine", 0.14]
+          ];
+
+          chimeNotes.forEach(([frequency, offset, duration, type, volume]) => {
+            playSfkTone(audioContext, master, frequency, now + offset, duration, type, volume);
+            playSfkTone(audioContext, shimmerDelay, frequency * 1.005, now + offset + 0.04, duration * 0.82, type, volume * 0.32);
+          });
 
           window.setTimeout(() => {
+            try { shimmerDelay.disconnect(); } catch (error) {}
+            try { shimmerEcho.disconnect(); } catch (error) {}
             try { master.disconnect(); } catch (error) {}
-          }, 1600);
+          }, 10600);
 
           sessionStorage.setItem(SFK_INTRO_SOUND_PLAYED_KEY, "YES");
           updateSfkIntroSoundButton("played");
@@ -1721,7 +1770,7 @@
       oscillator.frequency.exponentialRampToValueAtTime(frequency * 1.006, startTime + Math.min(duration, 0.45));
 
       gain.gain.setValueAtTime(0.0001, startTime);
-      gain.gain.exponentialRampToValueAtTime(volume, startTime + 0.035);
+      gain.gain.exponentialRampToValueAtTime(Math.min(volume * 1.18, 0.72), startTime + 0.035);
       gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
 
       oscillator.connect(gain);
@@ -1747,12 +1796,12 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js?v=phone-login-v8"></script>
   <script src="firebase-adapter.js?v=homepage-preset-redesign-v79"></script>
-  <script src="script.js?v=entry-sound-safe-v93"></script>
+  <script src="script.js?v=entry-sound-icon-louder-v95"></script>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.16/dist/hls.min.js"></script>
   <script src="https://cdn.dashjs.org/v5.2.0/legacy/umd/dash.all.min.js"></script>
   <script src="time-capsule.js?v=gc-timecapsule-buttons-v16"></script>
   <script src="class-chat.js?v=gc-everyone-inline-v29"></script>
-  <script src="pwa.js?v=entry-sound-safe-v93"></script>
+  <script src="pwa.js?v=entry-sound-icon-louder-v95"></script>
 
   <script>
     window.sfkAnnouncementCloseEmergencyGuardV3 = true;

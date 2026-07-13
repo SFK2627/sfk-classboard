@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-main-pwa-v93-entry-sound-safe";
+const CACHE_NAME = "sfk-main-pwa-v95-entry-sound-icon-louder";
 const CACHE_PREFIXES_TO_DELETE = ["sfk-main-pwa-", "sfk-sw.js-"];
 const NAVIGATION_FALLBACK_URL = "./index.html";
 const NAVIGATION_TIMEOUT_MS = 2500;
