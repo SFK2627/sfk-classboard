@@ -2,7 +2,7 @@
   let deferredInstallPrompt = null;
 
   const installButton = document.getElementById("installAppBtn");
-  const SW_URL = "./sw.js?v=birthday-celebration-v102";
+  const SW_URL = "./sw.js?v=birthday-mobile-center-v103";
   const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV102BirthdayCelebration";
   const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV102BirthdayCelebration";
 

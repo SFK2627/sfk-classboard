@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-officers-pwa-v102-birthday-celebration";
+const CACHE_NAME = "sfk-officers-pwa-v103-birthday-mobile-center";
 const CACHE_PREFIXES_TO_DELETE = ["sfk-officers-pwa-"];
 const NAVIGATION_FALLBACK_URL = "./index.html";
 const NAVIGATION_TIMEOUT_MS = 2500;
@@ -8,11 +8,11 @@ const APP_SHELL = [
   "./index.html",
   "./manifest.webmanifest",
   "./sw.js",
-  "../officer.html?embedded=1&v=birthday-celebration-v102",
-  "../officer.css?v=birthday-celebration-v102",
-  "../officer.js?v=birthday-celebration-v102",
+  "../officer.html?embedded=1&v=birthday-mobile-center-v103",
+  "../officer.css?v=birthday-mobile-center-v103",
+  "../officer.js?v=birthday-mobile-center-v103",
   "../firebase-config.js",
-  "../firebase-adapter.js?v=birthday-celebration-v102",
+  "../firebase-adapter.js?v=birthday-mobile-center-v103",
   "../auth.js",
   "../orientation-lock.js",
   "../icons/icon-192.png",
