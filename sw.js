@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-main-pwa-v91-nav-route-safe";
+const CACHE_NAME = "sfk-main-pwa-v93-entry-sound-safe";
 const CACHE_PREFIXES_TO_DELETE = ["sfk-main-pwa-", "sfk-sw.js-"];
 const NAVIGATION_FALLBACK_URL = "./index.html";
 const NAVIGATION_TIMEOUT_MS = 2500;

@@ -2,9 +2,9 @@
   let deferredInstallPrompt = null;
 
   const installButton = document.getElementById("installAppBtn");
-  const SW_URL = "./sw.js?v=shhh-daily-safe-v92";
-  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV92ShhhDaily";
-  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV92ShhhDaily";
+  const SW_URL = "./sw.js?v=entry-sound-safe-v93";
+  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV93EntrySound";
+  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV93EntrySound";
 
   function isStandaloneApp() {
     return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
@@ -23,7 +23,7 @@
   function askWorkerToActivate(worker) {
     if (!worker) return;
     try {
-      worker.postMessage({ type: "SFK_SKIP_WAITING_SHHH_DAILY_SAFE_V92" });
+      worker.postMessage({ type: "SFK_SKIP_WAITING_ENTRY_SOUND_SAFE_V93" });
     } catch (error) {}
   }
 
