@@ -10,7 +10,7 @@
 
   <title>SFK ClassBoard</title>
 
-  <link rel="manifest" href="manifest.webmanifest?v=entry-sound-icon-louder-v95" />
+  <link rel="manifest" href="manifest.webmanifest?v=top-pill-long-v97" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
   <link rel="stylesheet" href="style.css?v=homepage-preset-redesign-v79" />
@@ -279,6 +279,23 @@
       line-height: 1.2;
     }
 
+    .sfkStartMotto {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 16px;
+      border-radius: 999px;
+      color: #111;
+      background: linear-gradient(180deg, #fff7c6, #ffd84d);
+      border: 2px solid rgba(255,255,255,.82);
+      box-shadow: 0 10px 24px rgba(0,0,0,.20);
+      font-size: clamp(1rem, 1.75vw, 1.35rem);
+      font-weight: 1000;
+      line-height: 1.1;
+      letter-spacing: .01em;
+      text-transform: uppercase;
+    }
+
     .sfkStartTitle {
       margin: 0;
       color: #fff;
@@ -401,31 +418,36 @@
       }
 
       .sfkStartTop {
-        gap: 8px;
-      }
-
-      .sfkStartTag {
-        max-width: calc(100% - 178px);
-        padding: 8px 11px;
-        font-size: .78rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .sfkStartActions {
         gap: 6px;
       }
 
-      .sfkStartSkip {
+      .sfkStartTag {
+        flex: 1 1 auto;
+        min-width: 0;
+        max-width: calc(100% - 88px);
+        justify-content: center;
         padding: 8px 10px;
-        font-size: .78rem;
+        gap: 6px;
+        font-size: clamp(.62rem, 3.1vw, .76rem);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: clip;
+      }
+
+      .sfkStartActions {
+        flex: 0 0 auto;
+        gap: 4px;
+      }
+
+      .sfkStartSkip {
+        padding: 7px 9px;
+        font-size: .74rem;
       }
 
       .sfkStartSound {
-        width: 38px;
-        height: 38px;
-        font-size: 1.28rem;
+        width: 32px;
+        height: 36px;
+        font-size: 1.18rem;
       }
 
       .sfkStartBody {
@@ -467,6 +489,13 @@
         padding: 8px 11px;
         font-size: .78rem;
         max-width: 100%;
+      }
+
+      .sfkStartMotto {
+        padding: 8px 13px;
+        font-size: clamp(.86rem, 4.8vw, 1.12rem);
+        max-width: 100%;
+        white-space: nowrap;
       }
 
       .sfkStartTitle {
@@ -643,7 +672,7 @@
     <div id="sfkIntroOverlay" class="sfkStartIntro" aria-label="SFK ClassBoard Intro">
       <div class="sfkStartShell">
         <div class="sfkStartTop">
-          <div class="sfkStartTag">🐨 Kindness First • #BeKind 🫶</div>
+          <div class="sfkStartTag">🐨 Kindness First • #BeKind</div>
           <div class="sfkStartActions">
             <button id="sfkIntroSoundButton" class="sfkStartSound" type="button" aria-pressed="true" title="Loading sound">🔊</button>
             <button class="sfkStartSkip" type="button" onclick="hideSfkIntro(true)">Skip</button>
@@ -661,6 +690,7 @@
 
           <div class="sfkStartCopy">
             <div class="sfkStartPill">Grade 8 - St. Faustina Kowalska</div>
+            <div class="sfkStartMotto">Kindness First</div>
             <h1 class="sfkStartTitle">SFK ClassBoard</h1>
             <div class="sfkStartWord" aria-label="#BeKind"><span aria-hidden="true" style="--sfk-wave-index:0">#</span><span aria-hidden="true" style="--sfk-wave-index:1">B</span><span aria-hidden="true" style="--sfk-wave-index:2">e</span><span aria-hidden="true" style="--sfk-wave-index:3">K</span><span aria-hidden="true" style="--sfk-wave-index:4">i</span><span aria-hidden="true" style="--sfk-wave-index:5">n</span><span aria-hidden="true" style="--sfk-wave-index:6">d</span></div>
             <p class="sfkStartSubtitle">A kind class. A beautiful beginning.</p>
@@ -1796,12 +1826,12 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js?v=phone-login-v8"></script>
   <script src="firebase-adapter.js?v=homepage-preset-redesign-v79"></script>
-  <script src="script.js?v=entry-sound-icon-louder-v95"></script>
+  <script src="script.js?v=top-pill-long-v97"></script>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.16/dist/hls.min.js"></script>
   <script src="https://cdn.dashjs.org/v5.2.0/legacy/umd/dash.all.min.js"></script>
   <script src="time-capsule.js?v=gc-timecapsule-buttons-v16"></script>
   <script src="class-chat.js?v=gc-everyone-inline-v29"></script>
-  <script src="pwa.js?v=entry-sound-icon-louder-v95"></script>
+  <script src="pwa.js?v=top-pill-long-v97"></script>
 
   <script>
     window.sfkAnnouncementCloseEmergencyGuardV3 = true;
