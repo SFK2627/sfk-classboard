@@ -3,7 +3,7 @@
   "name": "SFK Admin",
   "short_name": "SFK Admin",
   "description": "SFK ClassBoard admin panel",
-  "start_url": "./index.html?source=pwa-startup-safe-v90",
+  "start_url": "./index.html?source=pwa-nav-route-safe-v91",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",

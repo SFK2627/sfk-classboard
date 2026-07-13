@@ -2,9 +2,9 @@
   let deferredInstallPrompt = null;
 
   const installButton = document.getElementById("installAppBtn");
-  const SW_URL = "./sw.js?v=startup-safe-v90";
-  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV90";
-  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV90";
+  const SW_URL = "./sw.js?v=nav-route-safe-v91";
+  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV91";
+  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV91";
 
   function isStandaloneApp() {
     return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
@@ -23,7 +23,7 @@
   function askWorkerToActivate(worker) {
     if (!worker) return;
     try {
-      worker.postMessage({ type: "SFK_SKIP_WAITING_STARTUP_SAFE_V90" });
+      worker.postMessage({ type: "SFK_SKIP_WAITING_NAV_ROUTE_SAFE_V91" });
     } catch (error) {}
   }
 

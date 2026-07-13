@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-main-pwa-v90-startup-safe";
+const CACHE_NAME = "sfk-main-pwa-v91-nav-route-safe";
 const CACHE_PREFIXES_TO_DELETE = ["sfk-main-pwa-", "sfk-sw.js-"];
 const NAVIGATION_FALLBACK_URL = "./index.html";
 const NAVIGATION_TIMEOUT_MS = 2500;
@@ -80,9 +80,33 @@ async function cacheMatch(request) {
   return null;
 }
 
-async function navigationFallback() {
+function isHomeNavigation(request) {
+  const url = new URL(request.url);
+  const scopeUrl = new URL(self.registration.scope);
+  const scopePath = scopeUrl.pathname.endsWith("/") ? scopeUrl.pathname : scopeUrl.pathname + "/";
+  return url.pathname === scopePath || url.pathname === scopePath + "index.html";
+}
+
+async function navigationCacheMatch(request) {
+  const cache = await caches.open(CACHE_NAME);
+  const exact = await cache.match(request, { ignoreSearch: true });
+  if (exact) return exact;
+
+  if (isHomeNavigation(request)) {
+    return (
+      (await cache.match(NAVIGATION_FALLBACK_URL, { ignoreSearch: true })) ||
+      (await cache.match("./", { ignoreSearch: true })) ||
+      null
+    );
+  }
+
+  return null;
+}
+
+async function navigationFallback(request) {
   const cache = await caches.open(CACHE_NAME);
   return (
+    (await navigationCacheMatch(request)) ||
     (await cache.match(NAVIGATION_FALLBACK_URL, { ignoreSearch: true })) ||
     (await cache.match("./", { ignoreSearch: true })) ||
     null
@@ -99,15 +123,24 @@ function fetchWithTimeout(request, timeoutMs) {
   }).finally(() => clearTimeout(timer));
 }
 
-async function updateNavigationCache(request, event) {
+async function saveNavigationResponse(request, response) {
+  if (!shouldCache(response)) return;
+
   const cache = await caches.open(CACHE_NAME);
+  await cache.put(request, response.clone());
+
+  // Keep the homepage fallback as homepage only.
+  // This prevents Admin/Officers clicks from showing the previous page first.
+  if (isHomeNavigation(request)) {
+    await cache.put(NAVIGATION_FALLBACK_URL, response.clone());
+  }
+}
+
+async function updateNavigationCache(request, event) {
   try {
     const preloadResponse = event.preloadResponse ? await event.preloadResponse : null;
     const response = preloadResponse || await fetch(request, { cache: "no-store", credentials: "same-origin" });
-    if (shouldCache(response)) {
-      await cache.put(NAVIGATION_FALLBACK_URL, response.clone());
-      await cache.put(request, response.clone());
-    }
+    await saveNavigationResponse(request, response.clone());
     return response;
   } catch (error) {
     return null;
@@ -115,7 +148,7 @@ async function updateNavigationCache(request, event) {
 }
 
 async function handleNavigation(request, event) {
-  const cached = await navigationFallback();
+  const cached = await navigationCacheMatch(request);
 
   if (cached) {
     event.waitUntil(updateNavigationCache(request, event));
@@ -124,13 +157,10 @@ async function handleNavigation(request, event) {
 
   try {
     const response = await fetchWithTimeout(request, NAVIGATION_TIMEOUT_MS);
-    if (shouldCache(response)) {
-      const cache = await caches.open(CACHE_NAME);
-      event.waitUntil(cache.put(NAVIGATION_FALLBACK_URL, response.clone()));
-    }
+    event.waitUntil(saveNavigationResponse(request, response.clone()));
     return response;
   } catch (error) {
-    const fallback = await navigationFallback();
+    const fallback = await navigationFallback(request);
     return fallback || new Response("SFK ClassBoard is loading. Please close and open the app again if this stays on screen.", {
       status: 503,
       headers: { "Content-Type": "text/plain; charset=utf-8" }
