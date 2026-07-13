@@ -16,7 +16,7 @@
   <link rel="manifest" href="admin.webmanifest?v=portrait-reminder-v1" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
-  <link rel="stylesheet" href="admin.css?v=homepage-admin-readable-v71" />
+  <link rel="stylesheet" href="admin.css?v=loading-sound-fix-shortcut-toggle-v99" />
   <script src="orientation-lock.js?v=appwide-v6" defer></script>
 </head>
 
@@ -333,6 +333,16 @@
             <small id="homepageDesignStatus" class="fieldHint"></small>
           </div>
           </section>
+        </div>
+
+
+
+        <!-- LOADING SOUND SETTINGS -->
+        <div class="formCard loadingSoundCard">
+          <h2>🔊 Loading Sound Settings</h2>
+          <p class="fieldHint">Choose the 10-second sound that plays on the ClassBoard loading screen. Preview first, then select the sound to use.</p>
+          <div id="loadingSoundOptions" class="loadingSoundOptions" aria-label="Loading sound choices"></div>
+          <small id="loadingSoundStatus" class="fieldHint">Loading sound choices...</small>
         </div>
 
         <!-- SUBJECT ANNOUNCEMENT -->
@@ -815,9 +825,9 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js?v=2-secure-auth"></script>
   <script src="auth.js?v=admin-officer-rescue-v2"></script>
-  <script src="firebase-adapter.js?v=homepage-preset-redesign-v79"></script>
-  <script src="pwa.js?v=nav-route-safe-v91"></script>
-  <script src="class-chat-admin.js?v=homepage-preset-redesign-v79"></script>
-  <script src="admin.js?v=homepage-preset-redesign-v79"></script>
+  <script src="firebase-adapter.js?v=loading-sound-fix-shortcut-toggle-v99"></script>
+  <script src="pwa.js?v=loading-sound-fix-shortcut-toggle-v99"></script>
+  <script src="class-chat-admin.js?v=loading-sound-fix-shortcut-toggle-v99"></script>
+  <script src="admin.js?v=loading-sound-fix-shortcut-toggle-v99"></script>
 </body>
 </html>

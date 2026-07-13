@@ -23,11 +23,34 @@ const TEXT_FORMAT_OPTIONS = ["center", "left", "right", "bullets", "numbers"];
 const MAX_ANNOUNCEMENT_ATTACHMENTS = 5;
 const MAX_ANNOUNCEMENT_ATTACHMENT_BYTES = 12 * 1024 * 1024;
 const TARGET_ANNOUNCEMENT_IMAGE_BYTES = 360 * 1024;
+const LOADING_SOUND_STORAGE_KEY = "sfkClassBoardIntroSoundChoice";
+const LOADING_SOUND_DEFAULT_ID = "soft-chime";
+const LOADING_SOUND_OPTIONS = [
+  { id: "soft-chime", name: "Soft Chime", pad: [[261.63,0,9.65,"sine",0.14],[329.63,.08,9.45,"triangle",0.09],[392,.16,9.25,"sine",0.08]], notes: [[523.25,0,1.25,"triangle",0.50],[659.25,.18,1.45,"sine",0.48],[783.99,.42,1.60,"triangle",0.40],[1046.5,.78,1.70,"sine",0.25],[587.33,2.05,1.55,"triangle",0.34],[739.99,2.38,1.70,"sine",0.30],[987.77,2.85,1.95,"triangle",0.21],[523.25,4.30,1.65,"triangle",0.29],[698.46,4.72,1.85,"sine",0.24],[880,5.18,2.0,"triangle",0.19],[659.25,6.62,1.80,"sine",0.23],[783.99,7.05,1.90,"triangle",0.18],[1046.5,7.62,2.10,"sine",0.14]] },
+  { id: "school-bell", name: "School Bell", pad: [[196,0,9.6,"triangle",0.08],[392,.1,9.4,"sine",0.07]], notes: [[784,0,.9,"sine",0.54],[784,.72,.9,"sine",0.50],[987.77,1.55,1.05,"triangle",0.36],[784,2.6,.9,"sine",0.46],[784,3.28,.9,"sine",0.42],[1046.5,4.35,1.15,"triangle",0.30],[659.25,6.15,1.2,"sine",0.28],[880,7.0,1.5,"triangle",0.22]] },
+  { id: "sparkle-intro", name: "Sparkle Intro", pad: [[293.66,0,9.7,"sine",0.10],[440,.12,9.45,"triangle",0.08]], notes: [[880,0,.75,"triangle",0.38],[1174.66,.14,.82,"sine",0.32],[1567.98,.34,.95,"triangle",0.25],[1318.51,1.20,.9,"sine",0.25],[987.77,1.65,1.15,"triangle",0.30],[1174.66,2.55,1.0,"sine",0.28],[1760,3.10,1.25,"triangle",0.16],[880,5.2,1.25,"triangle",0.25],[1318.51,6.05,1.35,"sine",0.22],[1567.98,7.1,1.6,"triangle",0.16]] },
+  { id: "calm-welcome", name: "Calm Welcome", pad: [[220,0,9.75,"sine",0.16],[277.18,.08,9.55,"sine",0.10],[329.63,.18,9.35,"triangle",0.07]], notes: [[440,.25,1.8,"sine",0.24],[554.37,1.3,2.1,"triangle",0.22],[659.25,2.9,2.0,"sine",0.18],[493.88,5.15,1.9,"triangle",0.21],[587.33,6.25,2.2,"sine",0.17],[739.99,7.6,2.0,"triangle",0.13]] },
+  { id: "timer-pulse", name: "Timer Pulse", pad: [[246.94,0,9.5,"square",0.035],[493.88,.06,9.35,"sine",0.055]], notes: [[493.88,0,.42,"square",0.23],[493.88,.55,.42,"square",0.20],[493.88,1.10,.42,"square",0.20],[659.25,1.75,.52,"triangle",0.24],[493.88,2.45,.42,"square",0.20],[493.88,3.0,.42,"square",0.20],[739.99,3.70,.62,"triangle",0.22],[493.88,4.8,.42,"square",0.18],[493.88,5.35,.42,"square",0.18],[880,6.1,.72,"triangle",0.18],[659.25,7.35,1.4,"sine",0.16]] },
+  { id: "cute-pop", name: "Cute Pop", pad: [[329.63,0,9.5,"triangle",0.08],[493.88,.08,9.3,"sine",0.06]], notes: [[659.25,0,.6,"triangle",0.32],[783.99,.34,.65,"triangle",0.30],[987.77,.72,.8,"sine",0.24],[523.25,1.75,.55,"triangle",0.30],[659.25,2.07,.65,"triangle",0.28],[880,2.48,.75,"sine",0.22],[587.33,4.25,.65,"triangle",0.24],[739.99,4.68,.75,"sine",0.22],[987.77,5.18,.9,"triangle",0.18],[783.99,6.88,1.2,"sine",0.16]] },
+  { id: "clean-startup", name: "Clean Startup", pad: [[174.61,0,9.7,"sine",0.13],[349.23,.1,9.45,"triangle",0.07]], notes: [[349.23,0,1.25,"sine",0.28],[440,.35,1.35,"triangle",0.25],[523.25,.78,1.5,"sine",0.22],[698.46,1.4,1.6,"triangle",0.18],[440,3.2,1.35,"sine",0.21],[554.37,3.75,1.5,"triangle",0.18],[659.25,4.45,1.7,"sine",0.15],[880,6.7,1.8,"triangle",0.12]] },
+  { id: "happy-bell", name: "Happy Bell", pad: [[261.63,0,9.65,"triangle",0.10],[523.25,.12,9.4,"sine",0.06]], notes: [[523.25,0,.95,"triangle",0.40],[659.25,.25,1.05,"sine",0.36],[783.99,.55,1.12,"triangle",0.30],[1046.5,1.05,1.25,"sine",0.20],[783.99,2.45,1.0,"triangle",0.28],[987.77,2.82,1.1,"sine",0.22],[1174.66,3.25,1.25,"triangle",0.18],[659.25,5.55,1.2,"sine",0.22],[880,6.2,1.35,"triangle",0.18],[1046.5,7.05,1.6,"sine",0.14]] },
+  { id: "digital-ding", name: "Digital Ding", pad: [[220,0,9.55,"sine",0.07],[440,.08,9.35,"square",0.025]], notes: [[880,0,.45,"sine",0.36],[1320,.18,.35,"triangle",0.20],[660,.72,.45,"sine",0.32],[990,.9,.35,"triangle",0.18],[880,1.7,.45,"sine",0.30],[1320,1.88,.35,"triangle",0.16],[1108.73,3.3,.55,"sine",0.22],[1479.98,3.55,.42,"triangle",0.12],[880,5.6,.65,"sine",0.20],[1174.66,5.92,.5,"triangle",0.14],[1567.98,7.0,.95,"sine",0.10]] },
+  { id: "warm-glow", name: "Warm Glow", pad: [[196,0,9.8,"sine",0.16],[246.94,.12,9.6,"triangle",0.11],[392,.25,9.25,"sine",0.07]], notes: [[392,.2,1.8,"sine",0.24],[493.88,1.25,2.0,"triangle",0.22],[587.33,2.55,2.2,"sine",0.18],[440,4.9,2.0,"triangle",0.18],[554.37,6.0,2.1,"sine",0.16],[783.99,7.35,1.9,"triangle",0.12]] },
+  { id: "classroom-tone", name: "Classroom Tone", pad: [[261.63,0,9.65,"sine",0.12],[392,.08,9.45,"triangle",0.08]], notes: [[659.25,0,1.0,"triangle",0.34],[523.25,.55,1.0,"sine",0.28],[659.25,1.25,1.1,"triangle",0.30],[783.99,2.05,1.15,"sine",0.24],[659.25,3.4,1.0,"triangle",0.26],[523.25,4.0,1.0,"sine",0.22],[880,5.15,1.3,"triangle",0.20],[783.99,6.55,1.4,"sine",0.16]] },
+  { id: "magic-intro", name: "Magic Intro", pad: [[233.08,0,9.7,"sine",0.11],[349.23,.1,9.5,"triangle",0.075]], notes: [[932.33,0,.85,"triangle",0.30],[1244.51,.22,1.0,"sine",0.24],[1864.66,.58,1.15,"triangle",0.12],[698.46,1.55,1.05,"sine",0.24],[1046.5,2.05,1.2,"triangle",0.18],[1396.91,2.65,1.35,"sine",0.13],[830.61,4.65,1.2,"triangle",0.18],[1108.73,5.35,1.4,"sine",0.15],[1567.98,6.35,1.65,"triangle",0.10]] },
+  { id: "focus-tone", name: "Focus Tone", pad: [[164.81,0,9.8,"sine",0.15],[246.94,.12,9.55,"sine",0.09],[329.63,.22,9.35,"triangle",0.06]], notes: [[329.63,.55,2.1,"sine",0.22],[493.88,1.7,2.2,"triangle",0.18],[659.25,3.15,2.0,"sine",0.14],[493.88,5.8,1.9,"triangle",0.15],[739.99,7.0,1.8,"sine",0.11]] },
+  { id: "gentle-alert", name: "Gentle Alert", pad: [[246.94,0,9.65,"sine",0.12],[369.99,.1,9.45,"triangle",0.08]], notes: [[739.99,0,.85,"sine",0.30],[739.99,.62,.85,"sine",0.27],[587.33,1.6,1.15,"triangle",0.25],[739.99,2.45,.95,"sine",0.24],[880,3.4,1.05,"triangle",0.20],[587.33,5.55,1.2,"sine",0.18],[739.99,6.4,1.3,"triangle",0.15],[987.77,7.25,1.55,"sine",0.11]] },
+  { id: "classic-bekind", name: "Classic BeKind", pad: [[261.63,0,9.7,"sine",0.14],[329.63,.08,9.5,"triangle",0.10],[392,.2,9.25,"sine",0.075]], notes: [[523.25,0,1.1,"triangle",0.42],[659.25,.32,1.2,"sine",0.36],[783.99,.72,1.35,"triangle",0.30],[659.25,2.1,1.15,"sine",0.28],[783.99,2.55,1.2,"triangle",0.24],[1046.5,3.1,1.5,"sine",0.17],[523.25,5.0,1.2,"triangle",0.24],[659.25,5.6,1.35,"sine",0.20],[783.99,6.35,1.5,"triangle",0.16],[1046.5,7.35,1.8,"sine",0.12]] }
+];
+let currentLoadingSoundId = LOADING_SOUND_DEFAULT_ID;
+let adminLoadingSoundContext = null;
+
 
 document.addEventListener("DOMContentLoaded", () => {
   initAdminToolLauncher();
   initRichTextEditors();
   renderHomepagePresetGallery();
+  initLoadingSoundSettings();
 
   window.SFKAuth?.onAuthStateChanged((user, role) => {
     if (user && role === "admin") showAdminPanel();
@@ -88,6 +111,8 @@ function showAdminPanel() {
   initRichTextEditors();
   setTodayForDateInputs();
   loadHomepageDesignSettings();
+  initLoadingSoundSettings();
+  loadLoadingSoundSettings();
 }
 
 function initAdminToolLauncher() {
@@ -324,6 +349,174 @@ function clearFields(ids) {
   setTodayForDateInputs();
 }
 
+
+
+/* Loading Sound Settings */
+function isValidLoadingSoundId(id) {
+  return LOADING_SOUND_OPTIONS.some(option => option.id === id);
+}
+
+function getLoadingSoundOption(id) {
+  return LOADING_SOUND_OPTIONS.find(option => option.id === id) || LOADING_SOUND_OPTIONS[0];
+}
+
+function getLocalLoadingSoundId() {
+  try {
+    const saved = localStorage.getItem(LOADING_SOUND_STORAGE_KEY);
+    if (isValidLoadingSoundId(saved)) return saved;
+  } catch (error) {}
+  return LOADING_SOUND_DEFAULT_ID;
+}
+
+function setLoadingSoundStatus(message) {
+  const status = document.getElementById("loadingSoundStatus");
+  if (status) status.textContent = message;
+}
+
+function initLoadingSoundSettings() {
+  const list = document.getElementById("loadingSoundOptions");
+  if (!list || list.dataset.rendered === "true") return;
+  list.dataset.rendered = "true";
+  currentLoadingSoundId = getLocalLoadingSoundId();
+
+  list.innerHTML = LOADING_SOUND_OPTIONS.map((option, index) => `
+    <article class="loadingSoundOption" data-sound-id="${escapeAdminText(option.id)}">
+      <strong>${escapeAdminText(option.icon || "🔊")} ${index + 1}. ${escapeAdminText(option.name)}</strong>
+      <small>${escapeAdminText(option.desc || "10-second loading sound")}</small>
+      <div class="loadingSoundActions">
+        <button type="button" class="loadingSoundPreview" data-preview-sound="${escapeAdminText(option.id)}">▶ Preview</button>
+        <button type="button" class="loadingSoundUse" data-use-sound="${escapeAdminText(option.id)}">Use</button>
+      </div>
+    </article>
+  `).join("");
+
+  list.addEventListener("click", async (event) => {
+    const preview = event.target.closest("[data-preview-sound]");
+    const use = event.target.closest("[data-use-sound]");
+    if (preview) {
+      await playLoadingSoundPreview(preview.dataset.previewSound);
+      return;
+    }
+    if (use) {
+      await saveLoadingSoundChoice(use.dataset.useSound);
+    }
+  });
+
+  updateLoadingSoundSelectionUi();
+  setLoadingSoundStatus("Choose a loading sound. Preview first, then click Use.");
+}
+
+function updateLoadingSoundSelectionUi() {
+  document.querySelectorAll(".loadingSoundOption").forEach(card => {
+    const selected = card.dataset.soundId === currentLoadingSoundId;
+    card.classList.toggle("is-selected", selected);
+    const useButton = card.querySelector(".loadingSoundUse");
+    if (useButton) useButton.textContent = selected ? "Selected" : "Use";
+  });
+}
+
+async function loadLoadingSoundSettings() {
+  currentLoadingSoundId = getLocalLoadingSoundId();
+  updateLoadingSoundSelectionUi();
+
+  try {
+    const response = await fetch(`${ADMIN_API_URL}?type=settings`, { cache: "no-store" });
+    const settings = await response.json();
+    const selected = String(settings?.LoadingSoundId || "").trim();
+    if (isValidLoadingSoundId(selected)) {
+      currentLoadingSoundId = selected;
+      try { localStorage.setItem(LOADING_SOUND_STORAGE_KEY, selected); } catch (error) {}
+      updateLoadingSoundSelectionUi();
+      setLoadingSoundStatus(`Selected loading sound: ${getLoadingSoundOption(selected).name}`);
+    } else {
+      setLoadingSoundStatus(`Selected loading sound: ${getLoadingSoundOption(currentLoadingSoundId).name}`);
+    }
+  } catch (error) {
+    setLoadingSoundStatus(`Using this device selection: ${getLoadingSoundOption(currentLoadingSoundId).name}`);
+  }
+}
+
+async function saveLoadingSoundChoice(id) {
+  if (!isValidLoadingSoundId(id)) return;
+  currentLoadingSoundId = id;
+  try { localStorage.setItem(LOADING_SOUND_STORAGE_KEY, id); } catch (error) {}
+  updateLoadingSoundSelectionUi();
+  setLoadingSoundStatus("Saving loading sound...");
+
+  const saved = await sendAdminData("loadingSoundSettings", { LoadingSoundId: id });
+  if (saved) {
+    setLoadingSoundStatus(`Saved. Loading screen will use: ${getLoadingSoundOption(id).name}`);
+  } else {
+    setLoadingSoundStatus(`Saved on this device only for now: ${getLoadingSoundOption(id).name}`);
+  }
+}
+
+async function playLoadingSoundPreview(id) {
+  const option = getLoadingSoundOption(id);
+  setLoadingSoundStatus(`Previewing: ${option.name}`);
+
+  try {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) throw new Error("No AudioContext");
+    const context = adminLoadingSoundContext || new AudioContextClass();
+    adminLoadingSoundContext = context;
+    if (context.state === "suspended") await context.resume();
+
+    const now = context.currentTime + 0.035;
+    const duration = 10.0;
+    const master = context.createGain();
+    master.gain.setValueAtTime(0.0001, now);
+    master.gain.exponentialRampToValueAtTime(0.22, now + 0.08);
+    master.gain.exponentialRampToValueAtTime(0.12, now + 1.1);
+    master.gain.setValueAtTime(0.12, now + 8.55);
+    master.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    master.connect(context.destination);
+
+    const shimmerDelay = context.createDelay(1.2);
+    const shimmerEcho = context.createGain();
+    shimmerDelay.delayTime.setValueAtTime(0.32, now);
+    shimmerEcho.gain.setValueAtTime(0.22, now);
+    shimmerDelay.connect(shimmerEcho);
+    shimmerEcho.connect(master);
+
+    scheduleAdminLoadingSound(context, master, shimmerDelay, now, option);
+
+    window.setTimeout(() => {
+      try { shimmerDelay.disconnect(); } catch (error) {}
+      try { shimmerEcho.disconnect(); } catch (error) {}
+      try { master.disconnect(); } catch (error) {}
+      setLoadingSoundStatus(`Preview finished: ${option.name}`);
+    }, 10600);
+  } catch (error) {
+    setLoadingSoundStatus("Preview could not play. Try clicking again or check browser sound permission.");
+  }
+}
+
+function scheduleAdminLoadingSound(context, master, shimmerDelay, now, option) {
+  (option.pad || []).forEach(([frequency, offset, duration, type, volume]) => {
+    playAdminLoadingTone(context, master, frequency, now + Number(offset || 0), duration || 1, type || "sine", volume || 0.08);
+  });
+  (option.notes || []).forEach(([frequency, offset, duration, type, volume]) => {
+    const start = now + Number(offset || 0);
+    playAdminLoadingTone(context, master, frequency, start, duration || 1, type || "triangle", volume || 0.22);
+    playAdminLoadingTone(context, shimmerDelay, frequency * 1.005, start + 0.04, (duration || 1) * 0.82, type || "triangle", (volume || 0.22) * 0.32);
+  });
+}
+
+function playAdminLoadingTone(context, destination, frequency, startTime, duration, type, volume) {
+  const oscillator = context.createOscillator();
+  const gain = context.createGain();
+  oscillator.type = type;
+  oscillator.frequency.setValueAtTime(frequency, startTime);
+  oscillator.frequency.exponentialRampToValueAtTime(frequency * 1.006, startTime + Math.min(duration, 0.45));
+  gain.gain.setValueAtTime(0.0001, startTime);
+  gain.gain.exponentialRampToValueAtTime(Math.min(volume * 1.18, 0.72), startTime + 0.035);
+  gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+  oscillator.connect(gain);
+  gain.connect(destination);
+  oscillator.start(startTime);
+  oscillator.stop(startTime + duration + 0.05);
+}
 
 /* RICH TEXT EDITOR FOR ANNOUNCEMENTS / THINGS TO BRING */
 const RICH_TEXT_PREFIX = "[rich]";

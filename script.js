@@ -549,6 +549,11 @@ function applyHomepageDesignSettings(settings = {}) {
   setHomepageText(".birthdayCard .label", getHomepageSetting(settings, "HomepageBirthdayLabelText", "Birthday Corner"));
   setHomepageText(".adviserReminderHeader h2", getHomepageSetting(settings, "HomepageAdviserRemindersTitleText", "Adviser Reminders"));
   setHomepageText(".quoteLabel", getHomepageSetting(settings, "HomepageQuoteLabelTextValue", "Daily Kindness Quote"));
+
+  const loadingSoundId = getHomepageSetting(settings, "LoadingSoundId", "");
+  if (loadingSoundId) {
+    try { localStorage.setItem("sfkClassBoardIntroSoundChoice", loadingSoundId); } catch (error) {}
+  }
 }
 
 function getHomeCssVar(name, fallback = "") {
@@ -5009,6 +5014,59 @@ const SHHH_SENSITIVITY_DEFAULT = 65;
 const SHHH_SENSITIVITY_MIN = 0;
 const SHHH_SENSITIVITY_MAX = 100;
 
+
+function isShhhShortcutTypingTarget(target) {
+  if (!target) return false;
+  const tagName = String(target.tagName || "").toLowerCase();
+  return Boolean(
+    target.isContentEditable ||
+    tagName === "input" ||
+    tagName === "textarea" ||
+    tagName === "select" ||
+    target.closest?.("[contenteditable='true'], .richEditorSurface")
+  );
+}
+
+function showShhhShortcutFeedback(message) {
+  showSoundAlert(message);
+}
+
+function initShhhModeKeyboardShortcuts() {
+  if (window.__sfkShhhShortcutReady) return;
+  window.__sfkShhhShortcutReady = true;
+
+  document.addEventListener("keydown", async (event) => {
+    if (!event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    if (isShhhShortcutTypingTarget(event.target)) return;
+
+    const key = String(event.key || "").toLowerCase();
+    if (!["s", "m"].includes(key)) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (key === "s") {
+      if (shhhMode.enabled) {
+        stopShhhMode();
+        showShhhShortcutFeedback("✅ Shhh Mode OFF");
+        return;
+      }
+
+      showShhhShortcutFeedback("🤫 Turning Shhh Mode ON...");
+      await startShhhMode();
+      showShhhShortcutFeedback(shhhMode.enabled ? "🤫 Shhh Mode ON" : "⚠️ Shhh Mode did not turn on");
+      return;
+    }
+
+    if (key === "m") {
+      shhhMode.muted = !shhhMode.muted;
+      saveShhhModeSettings();
+      updateShhhModeUi(shhhMode.muted ? "Sound muted" : "Sound on");
+      showShhhShortcutFeedback(shhhMode.muted ? "🔇 Shhh Mute ON" : "🔊 Shhh Mute OFF");
+    }
+  }, true);
+}
+
 function getShhhThreshold() {
   const value = Math.max(SHHH_SENSITIVITY_MIN, Math.min(
     SHHH_SENSITIVITY_MAX,
@@ -5053,6 +5111,7 @@ function initDesktopShhhMode() {
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") syncShhhDailyCountsFromStorage();
   });
+  initShhhModeKeyboardShortcuts();
   window.addEventListener("beforeunload", stopShhhMode);
 }
 

@@ -2,9 +2,9 @@
   let deferredInstallPrompt = null;
 
   const installButton = document.getElementById("installAppBtn");
-  const SW_URL = "./sw.js?v=top-pill-long-v97";
-  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV97TopPillLong";
-  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV97TopPillLong";
+  const SW_URL = "./sw.js?v=loading-sound-fix-shortcut-toggle-v99";
+  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV98LoadingSoundShortcuts";
+  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV98LoadingSoundShortcuts";
 
   function isStandaloneApp() {
     return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
@@ -23,7 +23,7 @@
   function askWorkerToActivate(worker) {
     if (!worker) return;
     try {
-      worker.postMessage({ type: "SFK_SKIP_WAITING_TOP_PILL_LONG_V97" });
+      worker.postMessage({ type: "SFK_SKIP_WAITING_LOADING_SOUND_SHORTCUTS_V98" });
     } catch (error) {}
   }
 

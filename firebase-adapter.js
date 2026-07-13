@@ -240,6 +240,11 @@
       return saveHomepageDesignSettings(payload);
     }
 
+    if (type === "loadingSoundSettings") {
+      requireFirebaseRole(["admin"]);
+      return saveLoadingSoundSettings(payload);
+    }
+
     if (TYPE_TO_SHEET[type]) {
       requireFirebaseRole(["admin"]);
       return addTypedRow(type, payload, sourceUrl);
@@ -367,6 +372,24 @@
     });
     await batch.commit();
     return { success: true, message: "Homepage design settings saved." };
+  }
+
+  async function saveLoadingSoundSettings(payload) {
+    const allowedSoundIds = new Set([
+      "soft-chime", "school-bell", "sparkle-intro", "calm-welcome", "timer-pulse",
+      "cute-pop", "clean-startup", "happy-bell", "digital-ding", "warm-glow",
+      "classroom-tone", "magic-intro", "focus-tone", "gentle-alert", "classic-bekind"
+    ]);
+    const selectedId = String(payload?.LoadingSoundId || "").trim();
+    if (!allowedSoundIds.has(selectedId)) {
+      return { success: false, message: "Invalid loading sound." };
+    }
+    const meta = getSheetMeta("Settings");
+    await db.collection(meta.collection).doc("LoadingSoundId").set(withMeta({
+      Key: "LoadingSoundId",
+      Value: selectedId
+    }), { merge: true });
+    return { success: true, message: "Loading sound saved." };
   }
 
   async function getTodayBoard() {

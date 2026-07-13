@@ -10,10 +10,10 @@
 
   <title>SFK ClassBoard</title>
 
-  <link rel="manifest" href="manifest.webmanifest?v=top-pill-long-v97" />
+  <link rel="manifest" href="manifest.webmanifest?v=loading-sound-fix-shortcut-toggle-v99" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
-  <link rel="stylesheet" href="style.css?v=homepage-preset-redesign-v79" />
+  <link rel="stylesheet" href="style.css?v=loading-sound-fix-shortcut-toggle-v99" />
   <link rel="stylesheet" href="class-chat.css?v=gc-everyone-inline-v29" />
   <link rel="stylesheet" href="time-capsule.css?v=gc-timecapsule-buttons-v16" />
 
@@ -96,7 +96,7 @@
       z-index: 2;
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-start;
       gap: 12px;
     }
 
@@ -116,6 +116,12 @@
       background: linear-gradient(180deg, #fff1a8, #ffd84d);
       border: 2px solid rgba(255,255,255,.90);
       font-size: clamp(.82rem, 1.2vw, 1rem);
+      flex: 0 1 auto;
+      width: auto;
+      max-width: calc(100% - 104px);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: clip;
     }
 
     .sfkStartSkip {
@@ -143,6 +149,7 @@
       justify-content: flex-end;
       gap: 8px;
       flex-wrap: wrap;
+      margin-left: auto;
     }
 
     .sfkStartSound {
@@ -280,7 +287,7 @@
     }
 
     .sfkStartMotto {
-      display: inline-flex;
+      display: none !important;
       align-items: center;
       justify-content: center;
       padding: 8px 16px;
@@ -422,11 +429,12 @@
       }
 
       .sfkStartTag {
-        flex: 1 1 auto;
+        flex: 0 1 auto;
+        width: auto;
         min-width: 0;
-        max-width: calc(100% - 88px);
+        max-width: calc(100% - 82px);
         justify-content: center;
-        padding: 8px 10px;
+        padding: 8px 12px;
         gap: 6px;
         font-size: clamp(.62rem, 3.1vw, .76rem);
         white-space: nowrap;
@@ -690,7 +698,6 @@
 
           <div class="sfkStartCopy">
             <div class="sfkStartPill">Grade 8 - St. Faustina Kowalska</div>
-            <div class="sfkStartMotto">Kindness First</div>
             <h1 class="sfkStartTitle">SFK ClassBoard</h1>
             <div class="sfkStartWord" aria-label="#BeKind"><span aria-hidden="true" style="--sfk-wave-index:0">#</span><span aria-hidden="true" style="--sfk-wave-index:1">B</span><span aria-hidden="true" style="--sfk-wave-index:2">e</span><span aria-hidden="true" style="--sfk-wave-index:3">K</span><span aria-hidden="true" style="--sfk-wave-index:4">i</span><span aria-hidden="true" style="--sfk-wave-index:5">n</span><span aria-hidden="true" style="--sfk-wave-index:6">d</span></div>
             <p class="sfkStartSubtitle">A kind class. A beautiful beginning.</p>
@@ -1597,9 +1604,30 @@
     const SFK_INTRO_SESSION_KEY = "sfkClassBoardIntroSeenThisSession";
     const SFK_INTRO_SOUND_ENABLED_KEY = "sfkClassBoardIntroSoundEnabled";
     const SFK_INTRO_SOUND_PLAYED_KEY = "sfkClassBoardIntroSoundPlayedThisSession";
+    const SFK_INTRO_SOUND_CHOICE_KEY = "sfkClassBoardIntroSoundChoice";
+    const SFK_INTRO_SOUND_DEFAULT_ID = "soft-chime";
+    const SFK_INTRO_SETTINGS_URL = "https://script.google.com/macros/s/AKfycbzCjWVnO-ZNvKTNqKN1zVscNsfPox0uDnO1QTSbBCrMFaS79tfL3mopHa2pH7gHczYeOA/exec";
+    const SFK_INTRO_SOUND_OPTIONS = [
+      { id: "soft-chime", name: "Soft Chime", pad: [[261.63,0,9.65,"sine",0.14],[329.63,.08,9.45,"triangle",0.09],[392,.16,9.25,"sine",0.08]], notes: [[523.25,0,1.25,"triangle",0.50],[659.25,.18,1.45,"sine",0.48],[783.99,.42,1.60,"triangle",0.40],[1046.5,.78,1.70,"sine",0.25],[587.33,2.05,1.55,"triangle",0.34],[739.99,2.38,1.70,"sine",0.30],[987.77,2.85,1.95,"triangle",0.21],[523.25,4.30,1.65,"triangle",0.29],[698.46,4.72,1.85,"sine",0.24],[880,5.18,2.0,"triangle",0.19],[659.25,6.62,1.80,"sine",0.23],[783.99,7.05,1.90,"triangle",0.18],[1046.5,7.62,2.10,"sine",0.14]] },
+      { id: "school-bell", name: "School Bell", pad: [[196,0,9.6,"triangle",0.08],[392,.1,9.4,"sine",0.07]], notes: [[784,0,.9,"sine",0.54],[784,.72,.9,"sine",0.50],[987.77,1.55,1.05,"triangle",0.36],[784,2.6,.9,"sine",0.46],[784,3.28,.9,"sine",0.42],[1046.5,4.35,1.15,"triangle",0.30],[659.25,6.15,1.2,"sine",0.28],[880,7.0,1.5,"triangle",0.22]] },
+      { id: "sparkle-intro", name: "Sparkle Intro", pad: [[293.66,0,9.7,"sine",0.10],[440,.12,9.45,"triangle",0.08]], notes: [[880,0,.75,"triangle",0.38],[1174.66,.14,.82,"sine",0.32],[1567.98,.34,.95,"triangle",0.25],[1318.51,1.20,.9,"sine",0.25],[987.77,1.65,1.15,"triangle",0.30],[1174.66,2.55,1.0,"sine",0.28],[1760,3.10,1.25,"triangle",0.16],[880,5.2,1.25,"triangle",0.25],[1318.51,6.05,1.35,"sine",0.22],[1567.98,7.1,1.6,"triangle",0.16]] },
+      { id: "calm-welcome", name: "Calm Welcome", pad: [[220,0,9.75,"sine",0.16],[277.18,.08,9.55,"sine",0.10],[329.63,.18,9.35,"triangle",0.07]], notes: [[440,.25,1.8,"sine",0.24],[554.37,1.3,2.1,"triangle",0.22],[659.25,2.9,2.0,"sine",0.18],[493.88,5.15,1.9,"triangle",0.21],[587.33,6.25,2.2,"sine",0.17],[739.99,7.6,2.0,"triangle",0.13]] },
+      { id: "timer-pulse", name: "Timer Pulse", pad: [[246.94,0,9.5,"square",0.035],[493.88,.06,9.35,"sine",0.055]], notes: [[493.88,0,.42,"square",0.23],[493.88,.55,.42,"square",0.20],[493.88,1.10,.42,"square",0.20],[659.25,1.75,.52,"triangle",0.24],[493.88,2.45,.42,"square",0.20],[493.88,3.0,.42,"square",0.20],[739.99,3.70,.62,"triangle",0.22],[493.88,4.8,.42,"square",0.18],[493.88,5.35,.42,"square",0.18],[880,6.1,.72,"triangle",0.18],[659.25,7.35,1.4,"sine",0.16]] },
+      { id: "cute-pop", name: "Cute Pop", pad: [[329.63,0,9.5,"triangle",0.08],[493.88,.08,9.3,"sine",0.06]], notes: [[659.25,0,.6,"triangle",0.32],[783.99,.34,.65,"triangle",0.30],[987.77,.72,.8,"sine",0.24],[523.25,1.75,.55,"triangle",0.30],[659.25,2.07,.65,"triangle",0.28],[880,2.48,.75,"sine",0.22],[587.33,4.25,.65,"triangle",0.24],[739.99,4.68,.75,"sine",0.22],[987.77,5.18,.9,"triangle",0.18],[783.99,6.88,1.2,"sine",0.16]] },
+      { id: "clean-startup", name: "Clean Startup", pad: [[174.61,0,9.7,"sine",0.13],[349.23,.1,9.45,"triangle",0.07]], notes: [[349.23,0,1.25,"sine",0.28],[440,.35,1.35,"triangle",0.25],[523.25,.78,1.5,"sine",0.22],[698.46,1.4,1.6,"triangle",0.18],[440,3.2,1.35,"sine",0.21],[554.37,3.75,1.5,"triangle",0.18],[659.25,4.45,1.7,"sine",0.15],[880,6.7,1.8,"triangle",0.12]] },
+      { id: "happy-bell", name: "Happy Bell", pad: [[261.63,0,9.65,"triangle",0.10],[523.25,.12,9.4,"sine",0.06]], notes: [[523.25,0,.95,"triangle",0.40],[659.25,.25,1.05,"sine",0.36],[783.99,.55,1.12,"triangle",0.30],[1046.5,1.05,1.25,"sine",0.20],[783.99,2.45,1.0,"triangle",0.28],[987.77,2.82,1.1,"sine",0.22],[1174.66,3.25,1.25,"triangle",0.18],[659.25,5.55,1.2,"sine",0.22],[880,6.2,1.35,"triangle",0.18],[1046.5,7.05,1.6,"sine",0.14]] },
+      { id: "digital-ding", name: "Digital Ding", pad: [[220,0,9.55,"sine",0.07],[440,.08,9.35,"square",0.025]], notes: [[880,0,.45,"sine",0.36],[1320,.18,.35,"triangle",0.20],[660,.72,.45,"sine",0.32],[990,.9,.35,"triangle",0.18],[880,1.7,.45,"sine",0.30],[1320,1.88,.35,"triangle",0.16],[1108.73,3.3,.55,"sine",0.22],[1479.98,3.55,.42,"triangle",0.12],[880,5.6,.65,"sine",0.20],[1174.66,5.92,.5,"triangle",0.14],[1567.98,7.0,.95,"sine",0.10]] },
+      { id: "warm-glow", name: "Warm Glow", pad: [[196,0,9.8,"sine",0.16],[246.94,.12,9.6,"triangle",0.11],[392,.25,9.25,"sine",0.07]], notes: [[392,.2,1.8,"sine",0.24],[493.88,1.25,2.0,"triangle",0.22],[587.33,2.55,2.2,"sine",0.18],[440,4.9,2.0,"triangle",0.18],[554.37,6.0,2.1,"sine",0.16],[783.99,7.35,1.9,"triangle",0.12]] },
+      { id: "classroom-tone", name: "Classroom Tone", pad: [[261.63,0,9.65,"sine",0.12],[392,.08,9.45,"triangle",0.08]], notes: [[659.25,0,1.0,"triangle",0.34],[523.25,.55,1.0,"sine",0.28],[659.25,1.25,1.1,"triangle",0.30],[783.99,2.05,1.15,"sine",0.24],[659.25,3.4,1.0,"triangle",0.26],[523.25,4.0,1.0,"sine",0.22],[880,5.15,1.3,"triangle",0.20],[783.99,6.55,1.4,"sine",0.16]] },
+      { id: "magic-intro", name: "Magic Intro", pad: [[233.08,0,9.7,"sine",0.11],[349.23,.1,9.5,"triangle",0.075]], notes: [[932.33,0,.85,"triangle",0.30],[1244.51,.22,1.0,"sine",0.24],[1864.66,.58,1.15,"triangle",0.12],[698.46,1.55,1.05,"sine",0.24],[1046.5,2.05,1.2,"triangle",0.18],[1396.91,2.65,1.35,"sine",0.13],[830.61,4.65,1.2,"triangle",0.18],[1108.73,5.35,1.4,"sine",0.15],[1567.98,6.35,1.65,"triangle",0.10]] },
+      { id: "focus-tone", name: "Focus Tone", pad: [[164.81,0,9.8,"sine",0.15],[246.94,.12,9.55,"sine",0.09],[329.63,.22,9.35,"triangle",0.06]], notes: [[329.63,.55,2.1,"sine",0.22],[493.88,1.7,2.2,"triangle",0.18],[659.25,3.15,2.0,"sine",0.14],[493.88,5.8,1.9,"triangle",0.15],[739.99,7.0,1.8,"sine",0.11]] },
+      { id: "gentle-alert", name: "Gentle Alert", pad: [[246.94,0,9.65,"sine",0.12],[369.99,.1,9.45,"triangle",0.08]], notes: [[739.99,0,.85,"sine",0.30],[739.99,.62,.85,"sine",0.27],[587.33,1.6,1.15,"triangle",0.25],[739.99,2.45,.95,"sine",0.24],[880,3.4,1.05,"triangle",0.20],[587.33,5.55,1.2,"sine",0.18],[739.99,6.4,1.3,"triangle",0.15],[987.77,7.25,1.55,"sine",0.11]] },
+      { id: "classic-bekind", name: "Classic BeKind", pad: [[261.63,0,9.7,"sine",0.14],[329.63,.08,9.5,"triangle",0.10],[392,.2,9.25,"sine",0.075]], notes: [[523.25,0,1.1,"triangle",0.42],[659.25,.32,1.2,"sine",0.36],[783.99,.72,1.35,"triangle",0.30],[659.25,2.1,1.15,"sine",0.28],[783.99,2.55,1.2,"triangle",0.24],[1046.5,3.1,1.5,"sine",0.17],[523.25,5.0,1.2,"triangle",0.24],[659.25,5.6,1.35,"sine",0.20],[783.99,6.35,1.5,"triangle",0.16],[1046.5,7.35,1.8,"sine",0.12]] }
+    ];
 
     let sfkIntroAudioContext = null;
     let sfkIntroSoundPlayPromise = null;
+    let sfkIntroSelectedSoundId = SFK_INTRO_SOUND_DEFAULT_ID;
 
     document.addEventListener("DOMContentLoaded", initSfkIntro);
 
@@ -1614,6 +1642,8 @@
       }
 
       sessionStorage.setItem(SFK_INTRO_SESSION_KEY, "YES");
+      try { sessionStorage.removeItem(SFK_INTRO_SOUND_PLAYED_KEY); } catch (error) {}
+      sfkIntroSoundPlayPromise = null;
       setupSfkIntroSound(intro);
 
       window.sfkIntroSkipTimer = window.setTimeout(() => {
@@ -1623,6 +1653,55 @@
       window.setTimeout(() => {
         hideSfkIntro(false);
       }, 30000);
+    }
+
+
+    function isValidSfkIntroSoundId(id) {
+      return SFK_INTRO_SOUND_OPTIONS.some((option) => option.id === id);
+    }
+
+    function getSfkIntroSoundOption(id) {
+      return SFK_INTRO_SOUND_OPTIONS.find((option) => option.id === id) || SFK_INTRO_SOUND_OPTIONS[0];
+    }
+
+    function getSfkIntroSelectedSoundId() {
+      if (isValidSfkIntroSoundId(sfkIntroSelectedSoundId)) return sfkIntroSelectedSoundId;
+      try {
+        const saved = localStorage.getItem(SFK_INTRO_SOUND_CHOICE_KEY);
+        if (isValidSfkIntroSoundId(saved)) {
+          sfkIntroSelectedSoundId = saved;
+          return saved;
+        }
+      } catch (error) {}
+      sfkIntroSelectedSoundId = SFK_INTRO_SOUND_DEFAULT_ID;
+      return sfkIntroSelectedSoundId;
+    }
+
+    async function prepareSfkIntroSoundChoice() {
+      getSfkIntroSelectedSoundId();
+
+      const timeoutPromise = new Promise((resolve) => window.setTimeout(resolve, 650));
+      const fetchPromise = (async () => {
+        try {
+          const controller = new AbortController();
+          const timer = window.setTimeout(() => controller.abort(), 580);
+          const response = await fetch(`${SFK_INTRO_SETTINGS_URL}?type=settings&introSound=${Date.now()}`, {
+            cache: "no-store",
+            signal: controller.signal
+          });
+          window.clearTimeout(timer);
+          if (!response.ok) return;
+          const settings = await response.json();
+          const selectedId = String(settings?.LoadingSoundId || "").trim();
+          if (!isValidSfkIntroSoundId(selectedId)) return;
+          sfkIntroSelectedSoundId = selectedId;
+          try { localStorage.setItem(SFK_INTRO_SOUND_CHOICE_KEY, selectedId); } catch (error) {}
+        } catch (error) {
+          // Offline or cached installed app: keep the last locally saved loading sound.
+        }
+      })();
+
+      await Promise.race([fetchPromise, timeoutPromise]);
     }
 
     function isSfkIntroSoundEnabled() {
@@ -1676,17 +1755,24 @@
           event.preventDefault();
           event.stopPropagation();
 
-          if (isSfkIntroSoundEnabled()) {
+          const hasAlreadyPlayed = sessionStorage.getItem(SFK_INTRO_SOUND_PLAYED_KEY) === "YES";
+          const isPending = button.classList.contains("is-pending");
+
+          if (isSfkIntroSoundEnabled() && hasAlreadyPlayed && !isPending) {
             setSfkIntroSoundEnabled(false);
             return;
           }
 
           setSfkIntroSoundEnabled(true);
-          playSfkIntroSound(true);
+          try { sessionStorage.removeItem(SFK_INTRO_SOUND_PLAYED_KEY); } catch (error) {}
+          sfkIntroSoundPlayPromise = null;
+          playSfkIntroSound(true).then((played) => {
+            updateSfkIntroSoundButton(played ? "played" : "pending");
+          });
         });
       }
 
-      tryPlaySfkIntroSound();
+      prepareSfkIntroSoundChoice().finally(tryPlaySfkIntroSound);
 
       const unlockSound = (event) => {
         const target = event && event.target;
@@ -1701,6 +1787,8 @@
     }
 
     function tryPlaySfkIntroSound() {
+      try { sessionStorage.removeItem(SFK_INTRO_SOUND_PLAYED_KEY); } catch (error) {}
+      sfkIntroSoundPlayPromise = null;
       window.setTimeout(() => {
         playSfkIntroSound(false).then((played) => {
           if (!played && isSfkIntroSoundEnabled()) updateSfkIntroSoundButton("pending");
@@ -1744,30 +1832,7 @@
           shimmerDelay.connect(shimmerEcho);
           shimmerEcho.connect(master);
 
-          playSfkTone(audioContext, master, 261.63, now, 9.65, "sine", 0.14);
-          playSfkTone(audioContext, master, 329.63, now + 0.08, 9.45, "triangle", 0.09);
-          playSfkTone(audioContext, master, 392.00, now + 0.16, 9.25, "sine", 0.08);
-
-          const chimeNotes = [
-            [523.25, 0.00, 1.25, "triangle", 0.50],
-            [659.25, 0.18, 1.45, "sine", 0.48],
-            [783.99, 0.42, 1.60, "triangle", 0.40],
-            [1046.50, 0.78, 1.70, "sine", 0.25],
-            [587.33, 2.05, 1.55, "triangle", 0.34],
-            [739.99, 2.38, 1.70, "sine", 0.30],
-            [987.77, 2.85, 1.95, "triangle", 0.21],
-            [523.25, 4.30, 1.65, "triangle", 0.29],
-            [698.46, 4.72, 1.85, "sine", 0.24],
-            [880.00, 5.18, 2.00, "triangle", 0.19],
-            [659.25, 6.62, 1.80, "sine", 0.23],
-            [783.99, 7.05, 1.90, "triangle", 0.18],
-            [1046.50, 7.62, 2.10, "sine", 0.14]
-          ];
-
-          chimeNotes.forEach(([frequency, offset, duration, type, volume]) => {
-            playSfkTone(audioContext, master, frequency, now + offset, duration, type, volume);
-            playSfkTone(audioContext, shimmerDelay, frequency * 1.005, now + offset + 0.04, duration * 0.82, type, volume * 0.32);
-          });
+          scheduleSfkIntroSound(audioContext, master, shimmerDelay, now, getSfkIntroSelectedSoundId());
 
           window.setTimeout(() => {
             try { shimmerDelay.disconnect(); } catch (error) {}
@@ -1789,6 +1854,23 @@
       })();
 
       return sfkIntroSoundPlayPromise;
+    }
+
+
+    function scheduleSfkIntroSound(audioContext, master, shimmerDelay, now, soundId) {
+      const option = getSfkIntroSoundOption(soundId);
+      const pad = Array.isArray(option.pad) ? option.pad : [];
+      const notes = Array.isArray(option.notes) ? option.notes : [];
+
+      pad.forEach(([frequency, offset, duration, type, volume]) => {
+        playSfkTone(audioContext, master, frequency, now + Number(offset || 0), duration || 1, type || "sine", volume || 0.08);
+      });
+
+      notes.forEach(([frequency, offset, duration, type, volume]) => {
+        const start = now + Number(offset || 0);
+        playSfkTone(audioContext, master, frequency, start, duration || 1, type || "triangle", volume || 0.22);
+        playSfkTone(audioContext, shimmerDelay, frequency * 1.005, start + 0.04, (duration || 1) * 0.82, type || "triangle", (volume || 0.22) * 0.32);
+      });
     }
 
     function playSfkTone(audioContext, destination, frequency, startTime, duration, type, volume) {
@@ -1825,13 +1907,13 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js?v=phone-login-v8"></script>
-  <script src="firebase-adapter.js?v=homepage-preset-redesign-v79"></script>
-  <script src="script.js?v=top-pill-long-v97"></script>
+  <script src="firebase-adapter.js?v=loading-sound-fix-shortcut-toggle-v99"></script>
+  <script src="script.js?v=loading-sound-fix-shortcut-toggle-v99"></script>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.16/dist/hls.min.js"></script>
   <script src="https://cdn.dashjs.org/v5.2.0/legacy/umd/dash.all.min.js"></script>
   <script src="time-capsule.js?v=gc-timecapsule-buttons-v16"></script>
   <script src="class-chat.js?v=gc-everyone-inline-v29"></script>
-  <script src="pwa.js?v=top-pill-long-v97"></script>
+  <script src="pwa.js?v=loading-sound-fix-shortcut-toggle-v99"></script>
 
   <script>
     window.sfkAnnouncementCloseEmergencyGuardV3 = true;

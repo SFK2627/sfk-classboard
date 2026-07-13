@@ -3,7 +3,7 @@
   "name": "SFK Officers",
   "short_name": "SFK Officers",
   "description": "SFK ClassBoard officers panel",
-  "start_url": "./index.html?source=pwa-nav-route-safe-v91",
+  "start_url": "./index.html?source=officers-pwa-loading-sound-fix-shortcut-toggle-v99",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
