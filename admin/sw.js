@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-admin-pwa-v109-studio-reset";
+const CACHE_NAME = "sfk-admin-pwa-v110-sound-boost";
 const CACHE_PREFIXES_TO_DELETE = ["sfk-admin-pwa-"];
 const NAVIGATION_FALLBACK_URL = "./index.html";
 const NAVIGATION_TIMEOUT_MS = 2500;
@@ -8,12 +8,12 @@ const APP_SHELL = [
   "./index.html",
   "./manifest.webmanifest",
   "./sw.js",
-  "../admin.html?embedded=1&v=homepage-studio-v109",
-  "../admin.css?v=homepage-studio-v109",
-  "../admin.js?v=homepage-studio-v109",
+  "../admin.html?embedded=1&v=loading-sound-boost-v110",
+  "../admin.css?v=loading-sound-boost-v110",
+  "../admin.js?v=loading-sound-boost-v110",
   "../class-chat-admin.js",
   "../firebase-config.js",
-  "../firebase-adapter.js?v=homepage-studio-v109",
+  "../firebase-adapter.js?v=loading-sound-boost-v110",
   "../auth.js",
   "../orientation-lock.js",
   "../icons/icon-192.png",

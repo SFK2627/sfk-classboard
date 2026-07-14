@@ -3,7 +3,7 @@
   "name": "SFK ClassBoard Admin",
   "short_name": "SFK Admin",
   "description": "SFK ClassBoard admin panel",
-  "start_url": "./admin.html?source=homepage-studio-v109",
+  "start_url": "./admin.html?source=loading-sound-boost-v110",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",

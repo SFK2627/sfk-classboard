@@ -467,20 +467,31 @@ async function playLoadingSoundPreview(id) {
     adminLoadingSoundContext = context;
     if (context.state === "suspended") await context.resume();
 
-    const now = context.currentTime + 0.035;
+    const now = context.currentTime + 0.015;
     const duration = 10.0;
     const master = context.createGain();
+    const compressor = context.createDynamicsCompressor ? context.createDynamicsCompressor() : null;
     master.gain.setValueAtTime(0.0001, now);
-    master.gain.exponentialRampToValueAtTime(0.22, now + 0.08);
-    master.gain.exponentialRampToValueAtTime(0.12, now + 1.1);
-    master.gain.setValueAtTime(0.12, now + 8.55);
+    master.gain.exponentialRampToValueAtTime(0.42, now + 0.04);
+    master.gain.exponentialRampToValueAtTime(0.24, now + 1.1);
+    master.gain.setValueAtTime(0.24, now + 8.55);
     master.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-    master.connect(context.destination);
+    if (compressor) {
+      compressor.threshold.setValueAtTime(-18, now);
+      compressor.knee.setValueAtTime(24, now);
+      compressor.ratio.setValueAtTime(4, now);
+      compressor.attack.setValueAtTime(0.004, now);
+      compressor.release.setValueAtTime(0.18, now);
+      master.connect(compressor);
+      compressor.connect(context.destination);
+    } else {
+      master.connect(context.destination);
+    }
 
     const shimmerDelay = context.createDelay(1.2);
     const shimmerEcho = context.createGain();
     shimmerDelay.delayTime.setValueAtTime(0.32, now);
-    shimmerEcho.gain.setValueAtTime(0.22, now);
+    shimmerEcho.gain.setValueAtTime(0.34, now);
     shimmerDelay.connect(shimmerEcho);
     shimmerEcho.connect(master);
 
@@ -490,6 +501,7 @@ async function playLoadingSoundPreview(id) {
       try { shimmerDelay.disconnect(); } catch (error) {}
       try { shimmerEcho.disconnect(); } catch (error) {}
       try { master.disconnect(); } catch (error) {}
+      try { if (compressor) compressor.disconnect(); } catch (error) {}
       setLoadingSoundStatus(`Preview finished: ${option.name}`);
     }, 10600);
   } catch (error) {
@@ -515,7 +527,7 @@ function playAdminLoadingTone(context, destination, frequency, startTime, durati
   oscillator.frequency.setValueAtTime(frequency, startTime);
   oscillator.frequency.exponentialRampToValueAtTime(frequency * 1.006, startTime + Math.min(duration, 0.45));
   gain.gain.setValueAtTime(0.0001, startTime);
-  gain.gain.exponentialRampToValueAtTime(Math.min(volume * 1.18, 0.72), startTime + 0.035);
+  gain.gain.exponentialRampToValueAtTime(Math.min(volume * 1.75, 0.92), startTime + 0.018);
   gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
   oscillator.connect(gain);
   gain.connect(destination);

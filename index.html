@@ -10,10 +10,10 @@
 
   <title>SFK ClassBoard</title>
 
-  <link rel="manifest" href="manifest.webmanifest?v=homepage-studio-v109" />
+  <link rel="manifest" href="manifest.webmanifest?v=loading-sound-boost-v110" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
-  <link rel="stylesheet" href="style.css?v=homepage-studio-v109" />
+  <link rel="stylesheet" href="style.css?v=loading-sound-boost-v110" />
   <link rel="stylesheet" href="class-chat.css?v=gc-everyone-inline-v29" />
   <link rel="stylesheet" href="time-capsule.css?v=gc-timecapsule-buttons-v16" />
 
@@ -2005,6 +2005,8 @@
     document.addEventListener("DOMContentLoaded", initSfkIntro);
 
     function initSfkIntro() {
+      if (window.__sfkIntroInitialized) return;
+      window.__sfkIntroInitialized = true;
       const intro = document.getElementById("sfkIntroOverlay");
       if (!intro) return;
 
@@ -2160,7 +2162,7 @@
         playSfkIntroSound(true);
       };
 
-      ["click", "touchend", "keydown"].forEach((type) => {
+      ["pointerdown", "mousedown", "click", "touchstart", "touchend", "keydown"].forEach((type) => {
         document.addEventListener(type, unlockSound, { once: true, passive: true });
       });
     }
@@ -2192,20 +2194,31 @@
 
           if (audioContext.state !== "running") return false;
 
-          const now = audioContext.currentTime + 0.005;
+          const now = audioContext.currentTime + 0.001;
           const introSoundDuration = 10.0;
           const master = audioContext.createGain();
+          const compressor = audioContext.createDynamicsCompressor ? audioContext.createDynamicsCompressor() : null;
           master.gain.setValueAtTime(0.0001, now);
-          master.gain.exponentialRampToValueAtTime(0.21, now + 0.025);
-          master.gain.exponentialRampToValueAtTime(0.105, now + 1.25);
-          master.gain.setValueAtTime(0.105, now + 8.55);
+          master.gain.exponentialRampToValueAtTime(0.42, now + 0.018);
+          master.gain.exponentialRampToValueAtTime(0.24, now + 1.25);
+          master.gain.setValueAtTime(0.24, now + 8.55);
           master.gain.exponentialRampToValueAtTime(0.0001, now + introSoundDuration);
-          master.connect(audioContext.destination);
+          if (compressor) {
+            compressor.threshold.setValueAtTime(-18, now);
+            compressor.knee.setValueAtTime(24, now);
+            compressor.ratio.setValueAtTime(4, now);
+            compressor.attack.setValueAtTime(0.004, now);
+            compressor.release.setValueAtTime(0.18, now);
+            master.connect(compressor);
+            compressor.connect(audioContext.destination);
+          } else {
+            master.connect(audioContext.destination);
+          }
 
           const shimmerDelay = audioContext.createDelay(1.2);
           const shimmerEcho = audioContext.createGain();
           shimmerDelay.delayTime.setValueAtTime(0.32, now);
-          shimmerEcho.gain.setValueAtTime(0.22, now);
+          shimmerEcho.gain.setValueAtTime(0.34, now);
           shimmerDelay.connect(shimmerEcho);
           shimmerEcho.connect(master);
 
@@ -2215,6 +2228,7 @@
             try { shimmerDelay.disconnect(); } catch (error) {}
             try { shimmerEcho.disconnect(); } catch (error) {}
             try { master.disconnect(); } catch (error) {}
+            try { if (compressor) compressor.disconnect(); } catch (error) {}
           }, 10600);
 
           sessionStorage.setItem(SFK_INTRO_SOUND_PLAYED_KEY, "YES");
@@ -2259,7 +2273,7 @@
       oscillator.frequency.exponentialRampToValueAtTime(frequency * 1.006, startTime + Math.min(duration, 0.45));
 
       gain.gain.setValueAtTime(0.0001, startTime);
-      gain.gain.exponentialRampToValueAtTime(Math.min(volume * 1.18, 0.72), startTime + 0.012);
+      gain.gain.exponentialRampToValueAtTime(Math.min(volume * 1.75, 0.92), startTime + 0.008);
       gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
 
       oscillator.connect(gain);
@@ -2280,19 +2294,23 @@
         if (intro.parentNode) intro.remove();
       }, isManual ? 220 : 460);
     }
+
+    // Start the intro as soon as this inline script is parsed, not later than needed.
+    // This gives desktop browsers the earliest possible auto-play attempt.
+    initSfkIntro();
   </script>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js?v=phone-login-v8"></script>
-  <script src="firebase-adapter.js?v=homepage-studio-v109"></script>
-  <script src="script.js?v=homepage-studio-v109"></script>
+  <script src="firebase-adapter.js?v=loading-sound-boost-v110"></script>
+  <script src="script.js?v=loading-sound-boost-v110"></script>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.16/dist/hls.min.js"></script>
   <script src="https://cdn.dashjs.org/v5.2.0/legacy/umd/dash.all.min.js"></script>
   <script src="time-capsule.js?v=gc-timecapsule-buttons-v16"></script>
   <script src="class-chat.js?v=gc-everyone-inline-v29"></script>
-  <script src="pwa.js?v=homepage-studio-v109"></script>
+  <script src="pwa.js?v=loading-sound-boost-v110"></script>
 
   <script>
     window.sfkAnnouncementCloseEmergencyGuardV3 = true;
