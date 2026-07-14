@@ -3,7 +3,7 @@
   "name": "SFK Officers",
   "short_name": "SFK Officers",
   "description": "SFK ClassBoard officers panel",
-  "start_url": "./index.html?source=officers-pwa-birthday-mobile-center-v103",
+  "start_url": "./index.html?source=homepage-studio-v109",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",

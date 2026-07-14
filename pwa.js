@@ -2,9 +2,9 @@
   let deferredInstallPrompt = null;
 
   const installButton = document.getElementById("installAppBtn");
-  const SW_URL = "./sw.js?v=birthday-mobile-center-v103";
-  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV102BirthdayCelebration";
-  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV102BirthdayCelebration";
+  const SW_URL = "./sw.js?v=homepage-studio-v109";
+  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV108HomepageStudio";
+  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV108HomepageStudio";
 
   function isStandaloneApp() {
     return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
@@ -23,7 +23,7 @@
   function askWorkerToActivate(worker) {
     if (!worker) return;
     try {
-      worker.postMessage({ type: "SFK_SKIP_WAITING_BIRTHDAY_CELEBRATION_V102" });
+      worker.postMessage({ type: "SFK_SKIP_WAITING_HOMEPAGE_STUDIO_V108" });
     } catch (error) {}
   }
 

@@ -10,10 +10,10 @@
 
   <title>SFK ClassBoard</title>
 
-  <link rel="manifest" href="manifest.webmanifest?v=birthday-mobile-center-v103" />
+  <link rel="manifest" href="manifest.webmanifest?v=homepage-studio-v109" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
-  <link rel="stylesheet" href="style.css?v=birthday-mobile-center-v103" />
+  <link rel="stylesheet" href="style.css?v=homepage-studio-v109" />
   <link rel="stylesheet" href="class-chat.css?v=gc-everyone-inline-v29" />
   <link rel="stylesheet" href="time-capsule.css?v=gc-timecapsule-buttons-v16" />
 
@@ -39,6 +39,7 @@
     #sfkIntroOverlay.sfkStartIntro::before {
       content: "";
       position: absolute;
+      z-index: 0;
       inset: -28px;
       background:
         linear-gradient(180deg, rgba(0,0,0,.36), rgba(0,0,0,.58)),
@@ -51,11 +52,194 @@
     #sfkIntroOverlay.sfkStartIntro::after {
       content: "";
       position: absolute;
+      z-index: 0;
       inset: 0;
       background:
         radial-gradient(circle at top, rgba(255,215,0,.22), transparent 36%),
         linear-gradient(135deg, rgba(247,198,0,.16), rgba(0,0,0,.16));
       pointer-events: none;
+    }
+
+    .sfkStartKindnessSky {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      overflow: hidden;
+      pointer-events: none;
+      contain: strict;
+      background:
+        radial-gradient(circle at 18% 20%, rgba(255,180,210,.22), transparent 30%),
+        radial-gradient(circle at 82% 82%, rgba(255,225,120,.22), transparent 34%),
+        radial-gradient(circle at 50% 10%, rgba(255,255,255,.10), transparent 38%);
+    }
+
+    .sfkStartLoveAura,
+    .sfkStartLoveRibbon,
+    .sfkStartLoveGlow,
+    .sfkStartLoveBeam,
+    .sfkStartLoveHalo,
+    .sfkStartKindnessSky span {
+      position: absolute;
+      pointer-events: none;
+      transform: translate3d(0,0,0);
+      will-change: transform, opacity, filter;
+    }
+
+    .sfkStartLoveAura {
+      inset: -18%;
+      opacity: .58;
+      background:
+        radial-gradient(circle at 28% 36%, rgba(255,105,180,.38), transparent 26%),
+        radial-gradient(circle at 70% 48%, rgba(255,226,110,.35), transparent 28%),
+        conic-gradient(from 95deg at 50% 50%, rgba(255,255,255,0), rgba(255,176,205,.28), rgba(255,221,94,.24), rgba(255,255,255,0), rgba(255,176,205,.20));
+      filter: blur(20px) saturate(1.2);
+      animation: sfkLoveAuraBreathe 12s ease-in-out infinite alternate;
+    }
+
+    .sfkStartLoveRibbon {
+      left: 50%;
+      top: 52%;
+      width: min(1100px, 118vw);
+      height: min(520px, 66vh);
+      border-radius: 50%;
+      transform: translate(-50%, -50%) rotate(-8deg);
+      opacity: .34;
+      background:
+        linear-gradient(95deg, transparent 0 22%, rgba(255,240,160,.18) 36%, rgba(255,145,192,.20) 48%, rgba(255,255,255,.14) 56%, transparent 76%);
+      filter: blur(8px);
+      animation: sfkLoveRibbonFlow 10s ease-in-out infinite alternate;
+    }
+
+    .sfkStartLoveGlow {
+      width: min(36vw, 420px);
+      aspect-ratio: 1;
+      border-radius: 999px;
+      opacity: .28;
+      filter: blur(34px);
+      background: radial-gradient(circle, rgba(255,120,168,.78), rgba(255,215,0,.12) 58%, transparent 72%);
+      animation: sfkLoveGlowDrift 9s ease-in-out infinite alternate;
+    }
+
+    .sfkStartLoveGlow.one {
+      left: -8vw;
+      top: 7vh;
+    }
+
+    .sfkStartLoveGlow.two {
+      right: -7vw;
+      bottom: 4vh;
+      background: radial-gradient(circle, rgba(255,230,120,.74), rgba(255,105,180,.18) 56%, transparent 72%);
+      animation-delay: -3.8s;
+    }
+
+    .sfkStartLoveBeam {
+      left: 50%;
+      top: 50%;
+      width: min(620px, 70vw);
+      height: min(620px, 70vw);
+      border-radius: 999px;
+      opacity: .26;
+      background:
+        repeating-conic-gradient(from 0deg, rgba(255,255,255,.15) 0 9deg, transparent 9deg 26deg),
+        radial-gradient(circle, transparent 0 42%, rgba(255,215,0,.14) 44%, transparent 68%);
+      filter: blur(1px);
+      animation: sfkLoveBeamSpin 28s linear infinite;
+    }
+
+    .sfkStartLoveHalo {
+      left: var(--x);
+      top: var(--y);
+      width: var(--size);
+      aspect-ratio: 1;
+      border-radius: 999px;
+      border: 2px solid rgba(255,238,152,.28);
+      box-shadow: inset 0 0 16px rgba(255,155,194,.12), 0 0 22px rgba(255,215,0,.12);
+      opacity: 0;
+      animation: sfkLoveHaloBloom var(--d) ease-in-out infinite;
+      animation-delay: var(--delay);
+    }
+
+    .sfkStartKindnessSky span {
+      left: var(--x);
+      bottom: -14vh;
+      font-size: var(--s);
+      opacity: 0;
+      filter: drop-shadow(0 8px 14px rgba(0,0,0,.28));
+      animation: sfkKindnessFloat var(--d) linear infinite;
+      animation-delay: var(--delay);
+    }
+
+    .sfkStartKindnessSky span.loveFloat {
+      animation-name: sfkKindnessLoveFloat;
+    }
+
+    .sfkStartKindnessSky span.loveSpark {
+      animation-name: sfkKindnessSparkleDrift;
+      filter: drop-shadow(0 0 12px rgba(255,236,160,.54));
+    }
+
+    .sfkStartKindnessSky span.lovePulse {
+      animation-name: sfkKindnessPulseFloat;
+      filter: drop-shadow(0 0 14px rgba(255,145,192,.48));
+    }
+
+    @keyframes sfkKindnessFloat {
+      0% { opacity: 0; transform: translate3d(0, 0, 0) scale(.72) rotate(-8deg); }
+      8% { opacity: .74; }
+      68% { opacity: .58; }
+      100% { opacity: 0; transform: translate3d(var(--drift), -122vh, 0) scale(1.12) rotate(var(--rot)); }
+    }
+
+    @keyframes sfkKindnessLoveFloat {
+      0% { opacity: 0; transform: translate3d(0, 0, 0) scale(.55) rotate(-10deg); }
+      10% { opacity: .80; }
+      38% { transform: translate3d(calc(var(--drift) * .45), -42vh, 0) scale(1.02) rotate(calc(var(--rot) * .35)); }
+      72% { opacity: .68; }
+      100% { opacity: 0; transform: translate3d(var(--drift), -126vh, 0) scale(1.28) rotate(var(--rot)); }
+    }
+
+    @keyframes sfkKindnessSparkleDrift {
+      0% { opacity: 0; transform: translate3d(0, 0, 0) scale(.38) rotate(0deg); }
+      12% { opacity: .95; }
+      42% { opacity: .48; transform: translate3d(calc(var(--drift) * -.25), -48vh, 0) scale(1.2) rotate(180deg); }
+      72% { opacity: .88; }
+      100% { opacity: 0; transform: translate3d(var(--drift), -120vh, 0) scale(.72) rotate(360deg); }
+    }
+
+    @keyframes sfkKindnessPulseFloat {
+      0% { opacity: 0; transform: translate3d(0, 0, 0) scale(.5) rotate(-6deg); }
+      10% { opacity: .78; }
+      22% { transform: translate3d(calc(var(--drift) * .22), -22vh, 0) scale(1.22) rotate(4deg); }
+      34% { transform: translate3d(calc(var(--drift) * .38), -38vh, 0) scale(.92) rotate(-5deg); }
+      60% { opacity: .68; transform: translate3d(calc(var(--drift) * .7), -72vh, 0) scale(1.18) rotate(calc(var(--rot) * .5)); }
+      100% { opacity: 0; transform: translate3d(var(--drift), -124vh, 0) scale(.82) rotate(var(--rot)); }
+    }
+
+    @keyframes sfkLoveAuraBreathe {
+      from { transform: scale(1) rotate(0deg); opacity: .42; }
+      to { transform: scale(1.08) rotate(6deg); opacity: .66; }
+    }
+
+    @keyframes sfkLoveRibbonFlow {
+      from { transform: translate(-50%, -50%) rotate(-9deg) scale(.96); opacity: .24; }
+      to { transform: translate(-50%, -50%) rotate(7deg) scale(1.05); opacity: .42; }
+    }
+
+    @keyframes sfkLoveGlowDrift {
+      from { transform: translate3d(0,0,0) scale(.96); opacity: .22; }
+      to { transform: translate3d(22px,-14px,0) scale(1.08); opacity: .42; }
+    }
+
+    @keyframes sfkLoveBeamSpin {
+      from { transform: translate(-50%, -50%) rotate(0deg) scale(.98); }
+      to { transform: translate(-50%, -50%) rotate(360deg) scale(1.04); }
+    }
+
+    @keyframes sfkLoveHaloBloom {
+      0% { opacity: 0; transform: scale(.55); }
+      18% { opacity: .44; }
+      72% { opacity: .16; }
+      100% { opacity: 0; transform: scale(1.65); }
     }
 
     #sfkIntroOverlay.sfkStartIntro.is-hidden {
@@ -664,6 +848,161 @@
       }
     }
 
+    /* v104 kindness loading background + no phone intro scroll */
+    html.sfk-intro-active,
+    body.sfk-intro-active {
+      overflow: hidden !important;
+      overscroll-behavior: none !important;
+    }
+
+    @media (max-width: 640px), (pointer: coarse) {
+      #sfkIntroOverlay.sfkStartIntro {
+        height: 100vh !important;
+        height: 100dvh !important;
+        max-height: 100dvh !important;
+        overflow: hidden !important;
+        padding: 8px !important;
+        touch-action: none;
+        overscroll-behavior: none !important;
+      }
+
+      .sfkStartShell {
+        width: 100% !important;
+        max-height: calc(100dvh - 16px) !important;
+        overflow: hidden !important;
+        gap: 8px !important;
+        padding: 11px !important;
+      }
+
+      .sfkStartBody {
+        min-height: 0 !important;
+        overflow: hidden !important;
+        align-items: center !important;
+        gap: 8px !important;
+      }
+
+      .sfkStartPhotoCard {
+        min-height: 0 !important;
+        padding: 7px !important;
+      }
+
+      .sfkStartPhoto {
+        min-height: 118px !important;
+        max-height: 34dvh !important;
+      }
+
+      .sfkStartCopy {
+        gap: 5px !important;
+        min-height: 0 !important;
+      }
+
+      .sfkStartPill,
+      .sfkStartSubtitle,
+      .sfkStartStatus {
+        line-height: 1.15 !important;
+      }
+
+      .sfkStartKindnessSky span {
+        font-size: calc(var(--s) * .82);
+        animation-duration: calc(var(--d) * 1.06);
+      }
+    }
+
+    @media (max-height: 700px) and (max-width: 640px) {
+      .sfkStartPhoto {
+        max-height: 28dvh !important;
+        min-height: 98px !important;
+      }
+
+      .sfkStartWord {
+        font-size: clamp(1.9rem, 11vw, 2.8rem) !important;
+      }
+
+      .sfkStartTitle {
+        font-size: clamp(1.14rem, 5.2vw, 1.55rem) !important;
+      }
+
+      .sfkStartStatus,
+      .sfkStartPill,
+      .sfkStartSubtitle {
+        font-size: .72rem !important;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .sfkStartKindnessSky span,
+      .sfkStartKindnessSky::before,
+      .sfkStartKindnessSky::after {
+        animation: none !important;
+      }
+    }
+
+
+
+    /* v105 richer love/kindness loading animation */
+    #sfkIntroOverlay.sfkStartIntro .sfkStartShell {
+      z-index: 3;
+      isolation: isolate;
+    }
+
+    #sfkIntroOverlay.sfkStartIntro .sfkStartShell::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background:
+        radial-gradient(circle at 18% 8%, rgba(255,255,255,.10), transparent 26%),
+        radial-gradient(circle at 86% 82%, rgba(255,215,0,.08), transparent 30%);
+      pointer-events: none;
+    }
+
+    @media (max-width: 640px), (pointer: coarse) {
+      .sfkStartLoveAura {
+        opacity: .50;
+        filter: blur(18px) saturate(1.12);
+      }
+
+      .sfkStartLoveRibbon {
+        width: 140vw;
+        height: 54dvh;
+        opacity: .26;
+      }
+
+      .sfkStartLoveBeam {
+        width: 88vw;
+        height: 88vw;
+        margin-left: -44vw;
+        margin-top: -44vw;
+        opacity: .18;
+      }
+
+      .sfkStartLoveGlow {
+        width: 52vw;
+        opacity: .24;
+      }
+
+      .sfkStartLoveHalo {
+        opacity: .78;
+      }
+
+      .sfkPhoneLightHide {
+        display: none !important;
+      }
+
+      .sfkStartKindnessSky span {
+        font-size: calc(var(--s) * .76) !important;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .sfkStartLoveAura,
+      .sfkStartLoveRibbon,
+      .sfkStartLoveGlow,
+      .sfkStartLoveBeam,
+      .sfkStartLoveHalo {
+        animation: none !important;
+      }
+    }
   </style>
 
   <script src="orientation-lock.js?v=appwide-v6" defer></script>
@@ -678,6 +1017,34 @@
     </button>
 
     <div id="sfkIntroOverlay" class="sfkStartIntro" aria-label="SFK ClassBoard Intro">
+      <div class="sfkStartKindnessSky" aria-hidden="true">
+        <div class="sfkStartLoveAura"></div>
+        <div class="sfkStartLoveRibbon"></div>
+        <div class="sfkStartLoveBeam"></div>
+        <div class="sfkStartLoveGlow one"></div>
+        <div class="sfkStartLoveGlow two"></div>
+        <div class="sfkStartLoveHalo" style="--x:8%;--y:18%;--size:min(26vw,260px);--d:8.5s;--delay:-2s"></div>
+        <div class="sfkStartLoveHalo" style="--x:68%;--y:10%;--size:min(22vw,230px);--d:10s;--delay:-6s"></div>
+        <div class="sfkStartLoveHalo" style="--x:75%;--y:62%;--size:min(30vw,310px);--d:11s;--delay:-4s"></div>
+        <span class="lovePulse" style="--x:4%;--s:1.6rem;--d:14s;--delay:-2s;--drift:48px;--rot:20deg">💖</span>
+        <span class="loveSpark" style="--x:10%;--s:1.08rem;--d:18s;--delay:-9s;--drift:-28px;--rot:-22deg">✨</span>
+        <span class="loveFloat" style="--x:16%;--s:1.75rem;--d:17s;--delay:-5s;--drift:58px;--rot:32deg">🫶</span>
+        <span class="lovePulse" style="--x:23%;--s:1.38rem;--d:15s;--delay:-11s;--drift:-34px;--rot:-18deg">💗</span>
+        <span class="loveSpark" style="--x:31%;--s:1.05rem;--d:19s;--delay:-4s;--drift:22px;--rot:16deg">🌟</span>
+        <span class="loveFloat" style="--x:38%;--s:1.48rem;--d:16s;--delay:-13s;--drift:48px;--rot:28deg">🤗</span>
+        <span class="lovePulse" style="--x:47%;--s:1.28rem;--d:18s;--delay:-7s;--drift:-52px;--rot:-26deg">💞</span>
+        <span class="loveSpark" style="--x:55%;--s:1.35rem;--d:14s;--delay:-10s;--drift:36px;--rot:24deg">💫</span>
+        <span class="lovePulse" style="--x:63%;--s:1.72rem;--d:20s;--delay:-6s;--drift:-42px;--rot:-30deg">💛</span>
+        <span class="loveFloat" style="--x:70%;--s:1.18rem;--d:15s;--delay:-1s;--drift:46px;--rot:19deg">💌</span>
+        <span class="lovePulse" style="--x:78%;--s:1.55rem;--d:17s;--delay:-12s;--drift:-38px;--rot:-20deg">💝</span>
+        <span class="loveSpark" style="--x:86%;--s:1.08rem;--d:19s;--delay:-8s;--drift:28px;--rot:15deg">✨</span>
+        <span class="loveFloat" style="--x:93%;--s:1.42rem;--d:16s;--delay:-3s;--drift:-58px;--rot:-24deg">🤍</span>
+        <span class="loveFloat sfkPhoneLightHide" style="--x:14%;--s:1.3rem;--d:21s;--delay:-15s;--drift:70px;--rot:26deg">🕊️</span>
+        <span class="lovePulse sfkPhoneLightHide" style="--x:34%;--s:1.18rem;--d:22s;--delay:-17s;--drift:-62px;--rot:-18deg">🌷</span>
+        <span class="loveSpark sfkPhoneLightHide" style="--x:50%;--s:1.08rem;--d:20s;--delay:-14s;--drift:40px;--rot:35deg">⭐</span>
+        <span class="loveFloat sfkPhoneLightHide" style="--x:67%;--s:1.22rem;--d:23s;--delay:-18s;--drift:-50px;--rot:-26deg">🌈</span>
+        <span class="lovePulse sfkPhoneLightHide" style="--x:88%;--s:1.3rem;--d:21s;--delay:-16s;--drift:44px;--rot:22deg">💕</span>
+      </div>
       <div class="sfkStartShell">
         <div class="sfkStartTop">
           <div class="sfkStartTag">🐨 Kindness First • #BeKind</div>
@@ -1641,13 +2008,11 @@
       const intro = document.getElementById("sfkIntroOverlay");
       if (!intro) return;
 
-      const alreadySeen = sessionStorage.getItem(SFK_INTRO_SESSION_KEY) === "YES";
-      if (alreadySeen) {
-        intro.remove();
-        return;
-      }
-
-      sessionStorage.setItem(SFK_INTRO_SESSION_KEY, "YES");
+      // Always show the loading screen on every real app load, refresh, F5, or PWA reopen.
+      // Do not remove it just because this browser tab already saw it once.
+      try { sessionStorage.removeItem(SFK_INTRO_SESSION_KEY); } catch (error) {}
+      document.documentElement.classList.add("sfk-intro-active");
+      document.body.classList.add("sfk-intro-active");
       try { sessionStorage.removeItem(SFK_INTRO_SOUND_PLAYED_KEY); } catch (error) {}
       sfkIntroSoundPlayPromise = null;
       setupSfkIntroSound(intro);
@@ -1908,6 +2273,8 @@
       if (!intro) return;
 
       window.clearTimeout(window.sfkIntroSkipTimer);
+      document.documentElement.classList.remove("sfk-intro-active");
+      document.body.classList.remove("sfk-intro-active");
       intro.classList.add("is-hidden");
       window.setTimeout(() => {
         if (intro.parentNode) intro.remove();
@@ -1919,13 +2286,13 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js?v=phone-login-v8"></script>
-  <script src="firebase-adapter.js?v=birthday-mobile-center-v103"></script>
-  <script src="script.js?v=birthday-mobile-center-v103"></script>
+  <script src="firebase-adapter.js?v=homepage-studio-v109"></script>
+  <script src="script.js?v=homepage-studio-v109"></script>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.16/dist/hls.min.js"></script>
   <script src="https://cdn.dashjs.org/v5.2.0/legacy/umd/dash.all.min.js"></script>
   <script src="time-capsule.js?v=gc-timecapsule-buttons-v16"></script>
   <script src="class-chat.js?v=gc-everyone-inline-v29"></script>
-  <script src="pwa.js?v=birthday-mobile-center-v103"></script>
+  <script src="pwa.js?v=homepage-studio-v109"></script>
 
   <script>
     window.sfkAnnouncementCloseEmergencyGuardV3 = true;

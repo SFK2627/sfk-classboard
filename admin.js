@@ -2608,12 +2608,18 @@ async function saveHomepageDesignSettings() {
 function resetHomepageDesignForm(ask = false) {
   if (ask && !confirm("Restore the original ClassBoard design in this form? Click Save after this to apply it.")) return;
   fillHomepageDesignForm(HOMEPAGE_DESIGN_DEFAULTS);
+  homepagePreviewPresetId = "";
+  clearHomepageActivePresetId();
+  renderHomepagePresetGallery();
 }
 
 async function restoreHomepageDesignDefaults() {
   if (!confirm("Restore original homepage colors and labels now?")) return;
   fillHomepageDesignForm(HOMEPAGE_DESIGN_DEFAULTS);
+  homepagePreviewPresetId = "";
+  clearHomepageActivePresetId();
   await saveHomepageDesignSettings();
+  renderHomepagePresetGallery();
 }
 
 
@@ -2632,6 +2638,29 @@ function buildHomepagePreset(id, name, category, description, swatches, override
 }
 
 const HOMEPAGE_CUSTOM_PRESETS_KEY = "sfk_homepage_custom_presets_v1";
+const HOMEPAGE_ACTIVE_PRESET_KEY = "sfk_homepage_active_preset_v107";
+let homepagePreviewPresetId = "";
+
+function getHomepageActivePresetId() {
+  try {
+    return localStorage.getItem(HOMEPAGE_ACTIVE_PRESET_KEY) || "";
+  } catch (error) {
+    return "";
+  }
+}
+
+function setHomepageActivePresetId(id) {
+  try {
+    localStorage.setItem(HOMEPAGE_ACTIVE_PRESET_KEY, String(id || ""));
+  } catch (error) {}
+}
+
+function clearHomepageActivePresetId() {
+  try {
+    localStorage.removeItem(HOMEPAGE_ACTIVE_PRESET_KEY);
+  } catch (error) {}
+}
+
 
 function getCustomHomepagePresets() {
   try {
@@ -2716,6 +2745,8 @@ function deleteCustomHomepagePreset(id) {
 
   const remaining = getCustomHomepagePresets().filter(item => item.id !== id);
   saveCustomHomepagePresets(remaining);
+  if (homepagePreviewPresetId === id) homepagePreviewPresetId = "";
+  if (getHomepageActivePresetId() === id) clearHomepageActivePresetId();
   renderHomepagePresetGallery();
   showToast("Custom preset deleted.");
 }
@@ -2882,13 +2913,19 @@ function getHomepageThemePreset(name) {
 function applyHomepageDesignPreset(name) {
   const preset = getHomepageThemePreset(name);
   fillHomepageDesignForm(preset.settings || HOMEPAGE_DESIGN_DEFAULTS);
+  homepagePreviewPresetId = preset.id;
   const status = document.getElementById("homepageDesignStatus");
-  if (status) status.textContent = `${preset.name} applied. Click Save Homepage Design to publish it.`;
+  if (status) status.textContent = `${preset.name} is previewed. Click Pick + Save to publish it.`;
+  renderHomepagePresetGallery();
 }
 
 async function applyAndSaveHomepageDesignPreset(name) {
-  applyHomepageDesignPreset(name);
+  const preset = getHomepageThemePreset(name);
+  fillHomepageDesignForm(preset.settings || HOMEPAGE_DESIGN_DEFAULTS);
+  homepagePreviewPresetId = "";
+  setHomepageActivePresetId(preset.id);
   await saveHomepageDesignSettings();
+  renderHomepagePresetGallery();
 }
 
 
@@ -2899,6 +2936,12 @@ function toggleHomepageDesignGroups() {
   groups.forEach(group => {
     group.open = shouldOpen;
   });
+}
+
+function scrollHomepageStudioSection(targetId) {
+  const target = document.getElementById(targetId) || document.querySelector(`.${targetId}`);
+  if (!target) return;
+  target.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function renderHomepagePresetGallery() {
@@ -2916,6 +2959,7 @@ function renderHomepagePresetGallery() {
 
   const query = String(searchInput?.value || "").trim().toLowerCase();
   const category = String(categorySelect?.value || "all");
+  const activePresetId = getHomepageActivePresetId();
 
   const allPresets = getAllHomepageThemePresets();
   const filtered = allPresets.filter((preset) => {
@@ -2925,10 +2969,10 @@ function renderHomepagePresetGallery() {
     return matchesCategory && matchesSearch;
   });
 
-  gallery.className = "themePresetGalleryV79";
+  gallery.className = "themePresetGallery themePresetGalleryV107";
 
   if (!filtered.length) {
-    gallery.innerHTML = `<div class="presetEmptyV79"><strong>No preset found.</strong><span>Try another keyword, choose All themes, or save your current colors as a custom preset.</span></div>`;
+    gallery.innerHTML = `<div class="presetEmptyV107"><strong>No preset found.</strong><span>Try All themes or save your current design as a custom preset.</span></div>`;
     return;
   }
 
@@ -2939,23 +2983,45 @@ function renderHomepagePresetGallery() {
     const card = escapeAdminText(settings.HomepageCardBgColor || "#ffffff");
     const accent = escapeAdminText(settings.HomepageAccentColor || "#ffd000");
     const border = escapeAdminText(settings.HomepageCardBorderColor || "#111111");
+    const text = escapeAdminText(settings.HomepageTextColor || "#111111");
     const name = escapeAdminText(preset.name);
     const desc = escapeAdminText(preset.description);
     const id = escapeAdminText(preset.id);
     const categoryText = preset.custom ? "custom" : escapeAdminText(preset.category);
-    const swatches = (preset.swatches || [bg, top, card, accent]).slice(0, 6).map(color => `<span class="presetSwatchV79" style="background:${escapeAdminText(color)}"></span>`).join("");
+    const isActive = activePresetId === preset.id;
+    const isPreview = !isActive && homepagePreviewPresetId === preset.id;
+    const statePill = isActive
+      ? `<span class="presetStateV107 active">✓ Selected</span>`
+      : (isPreview ? `<span class="presetStateV107 preview">👁 Previewing</span>` : `<span class="presetStateV107">Ready</span>`);
+    const swatches = (preset.swatches || [bg, top, card, accent]).slice(0, 6).map(color => `<span class="presetSwatchV107" style="background:${escapeAdminText(color)}"></span>`).join("");
+    const cardClasses = ["presetCardV107", isActive ? "isActive" : "", isPreview ? "isPreview" : "", preset.custom ? "isCustom" : ""].filter(Boolean).join(" ");
+
     return `
-      <article class="presetCardV79" style="--p-bg:${bg};--p-top:${top};--p-card:${card};--p-accent:${accent};--p-border:${border};">
-        <div class="presetPreviewV79" aria-hidden="true"><div class="presetTopbarV79"></div><div class="presetMainCardV79"></div><div class="presetSideCardV79"></div><div class="presetBottomV79"></div></div>
-        <div class="presetInfoV79">
-          <div class="presetBadgeLineV79"><span class="presetBadgeV79 ${preset.custom ? "isCustom" : ""}">${categoryText}</span>${preset.custom ? `<button type="button" class="presetDeleteV79" onclick="deleteCustomHomepagePreset('${id}')">Delete</button>` : ""}</div>
-          <strong>${name}</strong><p>${desc}</p><div class="presetSwatchesV79">${swatches}</div>
+      <article class="${cardClasses}" style="--p-bg:${bg};--p-top:${top};--p-card:${card};--p-accent:${accent};--p-border:${border};--p-text:${text};">
+        <button type="button" class="presetPreviewV107" onclick="applyHomepageDesignPreset('${id}')" aria-label="Preview ${name}">
+          <span class="presetMiniHeaderV107"></span>
+          <span class="presetMiniClockV107"></span>
+          <span class="presetMiniMainV107"></span>
+          <span class="presetMiniSideV107"></span>
+          <span class="presetMiniFooterV107"></span>
+        </button>
+        <div class="presetInfoV107">
+          <div class="presetTopLineV107">
+            <span class="presetBadgeV107 ${preset.custom ? "isCustom" : ""}">${categoryText}</span>
+            ${statePill}
+          </div>
+          <strong>${name}</strong>
+          <p>${desc}</p>
+          <div class="presetSwatchesV107" aria-hidden="true">${swatches}</div>
         </div>
-        <div class="presetActionsV79"><button type="button" class="presetPreviewBtnV79" onclick="applyHomepageDesignPreset('${id}')">Preview</button><button type="button" class="presetSaveBtnV79" onclick="applyAndSaveHomepageDesignPreset('${id}')">Pick + Save</button></div>
+        <div class="presetActionsV107">
+          <button type="button" class="presetPickSaveV107" onclick="applyAndSaveHomepageDesignPreset('${id}')">${isActive ? "✓ Saved" : "Pick + Save"}</button>
+          <button type="button" class="presetPreviewBtnV107" onclick="applyHomepageDesignPreset('${id}')">Preview</button>
+          ${preset.custom ? `<button type="button" class="presetDeleteV107" onclick="deleteCustomHomepagePreset('${id}')">Delete</button>` : ""}
+        </div>
       </article>`;
   }).join("");
 }
-
 // v79 preset gallery marker
 
 // v75 preset gallery marker

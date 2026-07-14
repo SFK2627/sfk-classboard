@@ -11646,3 +11646,131 @@ body[data-auto-subject-theme="yes"] .sideCard {
   font-size: 0.78rem;
   text-align: center;
 }
+
+
+/* =========================================================
+   v106 DESKTOP-ONLY SHHH HEADER COUNT BADGE
+   Shows today's Shhh count above the heart without changing phone layout.
+========================================================= */
+.shhhDesktopCountBadge {
+  position: absolute;
+  left: 32.5%;
+  top: 7px;
+  transform: translateX(-50%);
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 76px;
+  max-width: 128px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(255, 215, 0, .86);
+  background: linear-gradient(135deg, rgba(17,17,17,.88), rgba(39,39,39,.84));
+  color: #ffd700;
+  box-shadow: 0 7px 18px rgba(0,0,0,.22), inset 0 0 0 1px rgba(255,255,255,.08);
+  font-size: .72rem;
+  font-weight: 950;
+  line-height: 1;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.shhhDesktopCountBadge[hidden] {
+  display: none !important;
+}
+
+.shhhDesktopCountBadge span {
+  font-size: .9rem;
+  line-height: 1;
+}
+
+.shhhDesktopCountBadge em {
+  font-style: normal;
+  color: rgba(255,255,255,.88);
+  letter-spacing: .2px;
+}
+
+.shhhDesktopCountBadge strong {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  padding: 2px 5px;
+  border-radius: 999px;
+  background: #ffd700;
+  color: #111;
+  box-shadow: 0 0 10px rgba(255,215,0,.28);
+}
+
+.shhhDesktopCountBadge.is-live {
+  border-color: rgba(110, 231, 183, .9);
+  box-shadow: 0 7px 18px rgba(0,0,0,.22), 0 0 14px rgba(110,231,183,.18), inset 0 0 0 1px rgba(255,255,255,.08);
+}
+
+.shhhDesktopCountBadge.is-muted em::after {
+  content: ' muted';
+  margin-left: 3px;
+  color: rgba(255,255,255,.54);
+  font-size: .62rem;
+  font-weight: 850;
+}
+
+.shhhModeHeaderCountRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 !important;
+  border: 1.5px solid rgba(17,17,17,.18);
+  border-radius: 13px !important;
+  padding: 8px 10px !important;
+  background: rgba(255,255,255,.76);
+}
+
+.shhhModeHeaderCountRow input {
+  width: 19px !important;
+  height: 19px !important;
+  flex: 0 0 19px !important;
+  accent-color: #111;
+}
+
+.shhhModeHeaderCountRow span,
+.shhhModeHeaderCountRow strong,
+.shhhModeHeaderCountRow small {
+  min-width: 0;
+  display: block;
+}
+
+.shhhModeHeaderCountRow strong {
+  font-size: .82rem !important;
+  line-height: 1.1;
+  color: #111;
+}
+
+.shhhModeHeaderCountRow small {
+  margin-top: 2px;
+  color: rgba(17,17,17,.58);
+  font-size: .66rem !important;
+  line-height: 1.15 !important;
+}
+
+.shhhModeHeaderCountRow:has(input:checked) {
+  border-color: rgba(247,198,0,.62);
+  background: linear-gradient(135deg, rgba(255,243,190,.95), rgba(255,255,255,.86));
+}
+
+@media (max-width: 1023px), (pointer: coarse) {
+  .shhhDesktopCountBadge,
+  .shhhModeHeaderCountRow {
+    display: none !important;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1180px) and (pointer: fine) {
+  .shhhDesktopCountBadge {
+    top: 5px;
+    padding: 3px 7px;
+    font-size: .66rem;
+    min-width: 68px;
+  }
+}

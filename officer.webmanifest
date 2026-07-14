@@ -3,7 +3,7 @@
   "name": "SFK Officers Panel",
   "short_name": "SFK Officers",
   "description": "SFK ClassBoard officers panel",
-  "start_url": "./officer.html",
+  "start_url": "./officer.html?source=homepage-studio-v109",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",

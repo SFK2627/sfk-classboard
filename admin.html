@@ -16,7 +16,7 @@
   <link rel="manifest" href="admin.webmanifest?v=portrait-reminder-v1" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
-  <link rel="stylesheet" href="admin.css?v=birthday-mobile-center-v103" />
+  <link rel="stylesheet" href="admin.css?v=homepage-studio-v109" />
   <script src="orientation-lock.js?v=appwide-v6" defer></script>
 </head>
 
@@ -91,36 +91,42 @@
 
         <!-- HOMEPAGE DESIGN SETTINGS -->
         <div class="formCard homepageDesignCard homepageDesignStudio">
-          <div class="homepageStudioHero">
-            <div>
+          <div class="homepageStudioHero homepageStudioHeroV107">
+            <div class="homepageStudioIntroV107">
               <p class="studioEyebrow">Homepage only</p>
               <h2>🎨 Homepage Design Studio</h2>
-              <p class="fieldHint">Pick a theme first, then adjust only the colors/text you need. Admin and Officer pages stay unchanged.</p>
+              <p class="fieldHint">Choose a preset from the clean list, preview it, then save. Manual controls stay below for small color edits only.</p>
             </div>
-            <div class="studioHelpCard">
-              <strong>Easy workflow</strong>
-              <span>1. Choose preset</span>
-              <span>2. Edit small details</span>
-              <span>3. Save design</span>
+            <div class="studioWorkflowV107" aria-label="Design workflow">
+              <div class="studioStepCardV107"><strong>1</strong><span>Pick Preset</span><small>Choose a ready-made look.</small></div>
+              <div class="studioStepCardV107"><strong>2</strong><span>Preview / Save</span><small>One tap to publish.</small></div>
+              <div class="studioStepCardV107"><strong>3</strong><span>Fine Tune</span><small>Edit colors only if needed.</small></div>
             </div>
           </div>
 
-          <section class="themePresetPicker" aria-label="Homepage theme presets">
+          <div class="homepageStudioQuickNavV107" aria-label="Homepage design shortcuts">
+            <button type="button" onclick="scrollHomepageStudioSection('homepagePresetGallery')">🎨 Presets</button>
+            <button type="button" onclick="scrollHomepageStudioSection('manualDesignControls')">🛠 Fine Tune</button>
+            <button type="button" onclick="saveHomepageDesignSettings()">💾 Save Now</button>
+            <a class="panelNavBtn" href="index.html">🏠 Preview Homepage</a>
+          </div>
+
+          <section class="themePresetPicker themePresetPickerV107" aria-label="Homepage theme presets">
             <div class="themePresetTop">
               <div>
-                <h3>⚡ Quick Theme Presets</h3>
-                <p class="fieldHint">Choose a ready-made look, then save. You can still edit any color below.</p>
+                <h3>⚡ Choose a Preset First</h3>
+                <p class="fieldHint">Presets are now shown as clean readable rows on desktop and full-width cards on phone. Pick, preview, and save without clipped text.</p>
               </div>
               <div class="themePresetNavActions">
                 <a class="panelNavBtn" href="index.html">🏠 Preview Homepage</a>
-                <button type="button" class="customPresetSaveBtn" onclick="saveCurrentDesignAsCustomPreset()">➕ Save Current as Custom Preset</button>
+                <button type="button" class="customPresetSaveBtn" onclick="saveCurrentDesignAsCustomPreset()">➕ Save Current as Preset</button>
                 <button type="button" class="dangerSoftBtn" onclick="resetHomepageDesignForm(true)">Restore Default</button>
               </div>
             </div>
 
             <div class="themePresetFilters">
               <label>Search theme
-                <input id="homepagePresetSearch" type="search" placeholder="Try: pastel, dark, blue, soft, premium...">
+                <input id="homepagePresetSearch" type="search" placeholder="Search: pastel, blue, dark, premium, fun...">
               </label>
               <label>Theme category
                 <select id="homepagePresetCategory">
@@ -141,13 +147,13 @@
             </div>
           </section>
 
-          <section class="manualDesignControls" aria-label="Manual homepage design controls">
+          <section id="manualDesignControls" class="manualDesignControls" aria-label="Manual homepage design controls">
             <div class="manualDesignHeader">
               <div>
-                <h3>🛠 Manual Fine-Tuning</h3>
-                <p class="fieldHint">Open one section at a time. Color pickers now show as clean cards and work well on phone.</p>
+                <h3>🛠 Fine Tune After Preset</h3>
+                <p class="fieldHint">Most of the time, choose a preset and save. Open these sections only when you need specific color or label changes.</p>
               </div>
-              <button type="button" class="collapseDesignGroupsBtn" onclick="toggleHomepageDesignGroups()">Open / Close Sections</button>
+              <button type="button" class="collapseDesignGroupsBtn" onclick="toggleHomepageDesignGroups()">Open / Close All</button>
             </div>
 
           <details class="designGroup" open>
@@ -180,7 +186,7 @@
             </div>
           </details>
 
-          <details class="designGroup" open>
+          <details class="designGroup">
             <summary>🔝 Top Bar / Clock / Quote</summary>
             <div class="designSettingGrid">
               <label>Top Bar Background <input id="designTopbarBg" type="color" value="#111111"></label>
@@ -197,7 +203,7 @@
             </div>
           </details>
 
-          <details class="designGroup" open>
+          <details class="designGroup">
             <summary>⏱ Current / Next Period Cards</summary>
             <div class="designSettingGrid">
               <label class="designCheckRow"><input id="designUseSubjectPeriodColors" type="checkbox" checked> Use subject color as card background</label>
@@ -220,7 +226,7 @@
             <p class="fieldHint">Long subject names like “Araling Panlipunan 8” will auto-shrink to stay one line.</p>
           </details>
 
-          <details class="designGroup" open>
+          <details class="designGroup">
             <summary>📅 Today's Schedule</summary>
             <div class="designSettingGrid">
               <label class="designCheckRow"><input id="designUseSubjectScheduleColors" type="checkbox" checked> Use subject colors for schedule cards</label>
@@ -238,7 +244,7 @@
             </div>
           </details>
 
-          <details class="designGroup" open>
+          <details class="designGroup">
             <summary>📢 Announcements</summary>
             <div class="designSettingGrid">
               <label>Title text <input id="designAnnouncementsTitleText" type="text" value="Subject Announcements"></label>
@@ -253,7 +259,7 @@
             </div>
           </details>
 
-          <details class="designGroup" open>
+          <details class="designGroup">
             <summary>🎒 Things to Bring</summary>
             <div class="designSettingGrid">
               <label>Title text <input id="designThingsTitleText" type="text" value="Things to Bring"></label>
@@ -269,7 +275,7 @@
             </div>
           </details>
 
-          <details class="designGroup" open>
+          <details class="designGroup">
             <summary>🙏 Prayer / 🧹 Cleaners / 🎂 Birthday Detailed Colors</summary>
             <p class="fieldHint">These controls affect the exact homepage cards shown beside Current/Next Period.</p>
 
@@ -825,9 +831,9 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js?v=2-secure-auth"></script>
   <script src="auth.js?v=admin-officer-rescue-v2"></script>
-  <script src="firebase-adapter.js?v=birthday-mobile-center-v103"></script>
-  <script src="pwa.js?v=birthday-mobile-center-v103"></script>
-  <script src="class-chat-admin.js?v=birthday-mobile-center-v103"></script>
-  <script src="admin.js?v=birthday-mobile-center-v103"></script>
+  <script src="firebase-adapter.js?v=homepage-studio-v109"></script>
+  <script src="pwa.js?v=homepage-studio-v109"></script>
+  <script src="class-chat-admin.js?v=homepage-studio-v109"></script>
+  <script src="admin.js?v=homepage-studio-v109"></script>
 </body>
 </html>

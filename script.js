@@ -58,7 +58,7 @@ let lastBirthdayDisplayKey = "";
 let birthdayYearModalReady = false;
 let lastBirthdayModalFocus = null;
 let activeBirthdayMonth = null;
-const BIRTHDAY_MUSIC_SRC = "birthday-music.mp3?v=birthday-mobile-center-v103";
+const BIRTHDAY_MUSIC_SRC = "birthday-music.mp3?v=homepage-studio-v109";
 let birthdayMusicAudio = null;
 let birthdayCelebrationCleanupTimer = null;
 let weeklyScheduleData = [];
@@ -5240,6 +5240,7 @@ let shhhMode = {
   voiceEnabled: true,
   randomVoiceEnabled: true,
   visualEnabled: true,
+  showHeaderCount: true,
   sensitivityLevel: SHHH_SENSITIVITY_DEFAULT,
   micGainLevel: 100,
   noiseGateLevel: 20,
@@ -5265,8 +5266,58 @@ function isShhhModeDesktopAvailable() {
     && Boolean(navigator.mediaDevices?.getUserMedia);
 }
 
+
+function isShhhDesktopHeaderCountViewport() {
+  try {
+    return !IS_PHONE_DEVICE && Boolean(window.matchMedia?.(SHHH_DESKTOP_MEDIA_QUERY)?.matches);
+  } catch (error) {
+    return false;
+  }
+}
+
+function createShhhDesktopHeaderCountBadge() {
+  if (document.getElementById("shhhDesktopCountBadge")) return document.getElementById("shhhDesktopCountBadge");
+  const topbar = document.querySelector(".topbar");
+  if (!topbar) return null;
+
+  const badge = document.createElement("div");
+  badge.id = "shhhDesktopCountBadge";
+  badge.className = "shhhDesktopCountBadge";
+  badge.setAttribute("aria-live", "polite");
+  badge.setAttribute("aria-label", "Today's Shhh count");
+  badge.title = "Today's Shhh count";
+  badge.innerHTML = '<span aria-hidden="true">🤫</span><em>Shhh:</em><strong id="shhhDesktopCountValue">0</strong>';
+
+  const heartButton = document.querySelector(".topbarHeart");
+  if (heartButton?.parentElement === topbar) {
+    heartButton.insertAdjacentElement("afterend", badge);
+  } else {
+    topbar.appendChild(badge);
+  }
+  return badge;
+}
+
+function updateShhhDesktopHeaderCountBadge() {
+  const badge = createShhhDesktopHeaderCountBadge();
+  if (!badge) return;
+  const count = Math.max(0, Number(shhhMode.totalCount) || 0);
+  const shouldShow = shhhMode.showHeaderCount !== false && isShhhDesktopHeaderCountViewport();
+  badge.hidden = !shouldShow;
+  badge.classList.toggle("is-live", Boolean(shhhMode.enabled));
+  badge.classList.toggle("is-muted", Boolean(shhhMode.muted));
+  badge.title = `Today's Shhh count: ${count}`;
+  badge.setAttribute("aria-label", `Today's Shhh count: ${count}`);
+  const value = badge.querySelector("#shhhDesktopCountValue");
+  if (value) value.textContent = String(count);
+}
+
 function createShhhModeUi() {
-  if (document.getElementById("shhhModeOpen")) return;
+  if (document.getElementById("shhhModeOpen")) {
+    createShhhDesktopHeaderCountBadge();
+    updateShhhDesktopHeaderCountBadge();
+    return;
+  }
+  createShhhDesktopHeaderCountBadge();
 
   const header = document.querySelector(".adviserReminderHeader")
     || document.querySelector("#reminderList")?.previousElementSibling;
@@ -5408,6 +5459,14 @@ function createShhhModeUi() {
         </span>
       </label>
 
+      <label class="shhhModeHeaderCountRow">
+        <input id="shhhModeHeaderCount" type="checkbox" checked>
+        <span>
+          <strong>Desktop Header Count</strong>
+          <small>Shows today's Shhh number above the heart on desktop only.</small>
+        </span>
+      </label>
+
       <div class="shhhModeActions">
         <button id="shhhModeToggle" type="button">Turn On</button>
         <button id="shhhModeTest" type="button">Test Shhh</button>
@@ -5453,6 +5512,11 @@ function createShhhModeUi() {
     shhhMode.visualEnabled = Boolean(event.target.checked);
     saveShhhModeSettings();
     updateShhhModeUi(shhhMode.visualEnabled ? "Visual alert on" : "Visual alert off");
+  });
+  panel.querySelector("#shhhModeHeaderCount")?.addEventListener("change", (event) => {
+    shhhMode.showHeaderCount = Boolean(event.target.checked);
+    saveShhhModeSettings();
+    updateShhhModeUi(shhhMode.showHeaderCount ? "Desktop header count shown" : "Desktop header count hidden");
   });
   panel.querySelector("#shhhModeSensitivity")?.addEventListener("input", (event) => {
     shhhMode.sensitivityLevel = Math.max(0, Math.min(100, Number(event.target.value) || 0));
@@ -5667,6 +5731,7 @@ function restoreShhhModeSettings() {
     shhhMode.voiceEnabled = typeof saved.voiceEnabled === "boolean" ? saved.voiceEnabled : true;
     shhhMode.randomVoiceEnabled = typeof saved.randomVoiceEnabled === "boolean" ? saved.randomVoiceEnabled : true;
     shhhMode.visualEnabled = typeof saved.visualEnabled === "boolean" ? saved.visualEnabled : true;
+    shhhMode.showHeaderCount = typeof saved.showHeaderCount === "boolean" ? saved.showHeaderCount : true;
     shhhMode.micGainLevel = Math.max(0, Math.min(100, Number(saved.micGainLevel ?? 100)));
     shhhMode.noiseGateLevel = Math.max(0, Math.min(100, Number(saved.noiseGateLevel ?? 20)));
   } catch (error) {
@@ -5679,6 +5744,7 @@ function restoreShhhModeSettings() {
   const voice = document.getElementById("shhhModeVoice");
   const randomVoice = document.getElementById("shhhRandomVoice");
   const visual = document.getElementById("shhhModeVisual");
+  const headerCount = document.getElementById("shhhModeHeaderCount");
   const micGain = document.getElementById("shhhMicGain");
   const micGainValue = document.getElementById("shhhMicGainValue");
   const noiseGate = document.getElementById("shhhNoiseGate");
@@ -5693,6 +5759,7 @@ function restoreShhhModeSettings() {
   if (voice) voice.checked = Boolean(shhhMode.voiceEnabled);
   if (randomVoice) randomVoice.checked = Boolean(shhhMode.randomVoiceEnabled);
   if (visual) visual.checked = Boolean(shhhMode.visualEnabled);
+  if (headerCount) headerCount.checked = shhhMode.showHeaderCount !== false;
   updateShhhModeUi();
 }
 
@@ -5705,6 +5772,7 @@ function saveShhhModeSettings() {
       voiceEnabled: Boolean(shhhMode.voiceEnabled),
           randomVoiceEnabled: Boolean(shhhMode.randomVoiceEnabled),
       visualEnabled: Boolean(shhhMode.visualEnabled),
+      showHeaderCount: shhhMode.showHeaderCount !== false,
       micGainLevel: shhhMode.micGainLevel,
       noiseGateLevel: shhhMode.noiseGateLevel,
       autoCount: Math.max(0, Number(shhhMode.autoCount) || 0),
@@ -5729,6 +5797,7 @@ function syncShhhModeAvailability() {
   if (desktopOnly) desktopOnly.hidden = available;
   if (!available && shhhMode.enabled) stopShhhMode();
   updateShhhModeUi();
+  updateShhhDesktopHeaderCountBadge();
 }
 
 function openShhhModePanel() {
@@ -6196,6 +6265,7 @@ function updateShhhModeUi(statusOverride = "") {
   const voice = document.getElementById("shhhModeVoice");
   const randomVoice = document.getElementById("shhhRandomVoice");
   const visual = document.getElementById("shhhModeVisual");
+  const headerCount = document.getElementById("shhhModeHeaderCount");
   const testButton = document.getElementById("shhhModeTest");
   const micGain = document.getElementById("shhhMicGain");
   const micGainValue = document.getElementById("shhhMicGainValue");
@@ -6255,6 +6325,10 @@ function updateShhhModeUi(statusOverride = "") {
   if (visual) {
     visual.checked = Boolean(shhhMode.visualEnabled);
   }
+  if (headerCount) {
+    headerCount.checked = shhhMode.showHeaderCount !== false;
+  }
+  updateShhhDesktopHeaderCountBadge();
   if (testButton) {
     testButton.textContent = shhhMode.muted ? "Count Test" : "Test Shhh";
   }
