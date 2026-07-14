@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-main-pwa-v110-sound-boost";
+const CACHE_NAME = "sfk-main-pwa-v111-famous-tones";
 const CACHE_PREFIXES_TO_DELETE = ["sfk-main-pwa-", "sfk-sw.js-"];
 const NAVIGATION_FALLBACK_URL = "./index.html";
 const NAVIGATION_TIMEOUT_MS = 2500;
