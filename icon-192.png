@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-admin-pwa-v91-nav-route-safe";
+const CACHE_NAME = "sfk-admin-pwa-v111-famous-tones";
 const CACHE_PREFIXES_TO_DELETE = ["sfk-admin-pwa-"];
 const NAVIGATION_FALLBACK_URL = "./index.html";
 const NAVIGATION_TIMEOUT_MS = 2500;
@@ -8,12 +8,12 @@ const APP_SHELL = [
   "./index.html",
   "./manifest.webmanifest",
   "./sw.js",
-  "../admin.html?embedded=1&v=appwide-portrait-v6",
-  "../admin.css?v=no-billing-upload",
-  "../admin.js?v=no-billing-upload",
+  "../admin.html?embedded=1&v=famous-loading-tones-v111",
+  "../admin.css?v=famous-loading-tones-v111",
+  "../admin.js?v=famous-loading-tones-v111",
   "../class-chat-admin.js",
   "../firebase-config.js",
-  "../firebase-adapter.js",
+  "../firebase-adapter.js?v=famous-loading-tones-v111",
   "../auth.js",
   "../orientation-lock.js",
   "../icons/icon-192.png",

@@ -2,7 +2,7 @@
   let deferredInstallPrompt = null;
 
   const installButton = document.getElementById("installAppBtn");
-  const SW_URL = "./sw.js?v=loading-sound-boost-v110";
+  const SW_URL = "./sw.js?v=famous-loading-tones-v111";
   const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV108HomepageStudio";
   const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV108HomepageStudio";
 

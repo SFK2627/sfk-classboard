@@ -14,7 +14,7 @@
     a, button { display: inline-flex; justify-content: center; align-items: center; min-height: 46px; padding: 0 16px; border-radius: 12px; border: 2px solid #111; background: #f7c600; color: #111; font-weight: 800; text-decoration: none; cursor: pointer; }
     #status { font-weight: 800; color: #6b5200; }
   </style>
-  <script src="orientation-lock.js?v=appwide-v110-sound-boost" defer></script>
+  <script src="orientation-lock.js?v=appwide-v111-famous-tones" defer></script>
 </head>
 <body>
   <div class="card">
@@ -22,9 +22,9 @@
     <p id="status">Clearing old service workers and cache...</p>
     <p>Use this once after uploading the repair files. It fixes the raw code/manifest screen problem.</p>
     <div class="links">
-      <a href="admin.html?fresh=sound-boost-v110">Open Admin</a>
-      <a href="officer.html?fresh=sound-boost-v110">Open Officers</a>
-      <a href="index.html?fresh=sound-boost-v110">Open ClassBoard</a>
+      <a href="admin.html?fresh=famous-tones-v111">Open Admin</a>
+      <a href="officer.html?fresh=famous-tones-v111">Open Officers</a>
+      <a href="index.html?fresh=famous-tones-v111">Open ClassBoard</a>
       <button type="button" id="again">Clear Again</button>
     </div>
   </div>
@@ -34,10 +34,10 @@
       var params = new URLSearchParams(window.location.search);
       var go = (params.get('go') || '').toLowerCase();
       var target = go === 'officers' || go === 'officer'
-        ? 'officer.html?fresh=sound-boost-v110'
+        ? 'officer.html?fresh=famous-tones-v111'
         : go === 'home' || go === 'classboard'
-          ? 'index.html?fresh=sound-boost-v110'
-          : 'admin.html?fresh=sound-boost-v110';
+          ? 'index.html?fresh=famous-tones-v111'
+          : 'admin.html?fresh=famous-tones-v111';
       function unregisterAllWorkers() {
         if (!('serviceWorker' in navigator)) return Promise.resolve([]);
         return navigator.serviceWorker.getRegistrations().then(function (registrations) {

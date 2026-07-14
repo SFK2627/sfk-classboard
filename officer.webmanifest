@@ -3,7 +3,7 @@
   "name": "SFK Officers Panel",
   "short_name": "SFK Officers",
   "description": "SFK ClassBoard officers panel",
-  "start_url": "./officer.html?source=loading-sound-boost-v110",
+  "start_url": "./officer.html?source=famous-loading-tones-v111",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
