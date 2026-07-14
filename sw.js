@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-main-pwa-v111-famous-tones";
+const CACHE_NAME = "sfk-main-pwa-v112-autoplay-sound";
 const CACHE_PREFIXES_TO_DELETE = ["sfk-main-pwa-", "sfk-sw.js-"];
 const NAVIGATION_FALLBACK_URL = "./index.html";
 const NAVIGATION_TIMEOUT_MS = 2500;

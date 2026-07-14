@@ -58,7 +58,7 @@ let lastBirthdayDisplayKey = "";
 let birthdayYearModalReady = false;
 let lastBirthdayModalFocus = null;
 let activeBirthdayMonth = null;
-const BIRTHDAY_MUSIC_SRC = "birthday-music.mp3?v=famous-loading-tones-v111";
+const BIRTHDAY_MUSIC_SRC = "birthday-music.mp3?v=autoplay-sound-fix-v112";
 let birthdayMusicAudio = null;
 let birthdayCelebrationCleanupTimer = null;
 let weeklyScheduleData = [];

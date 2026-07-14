@@ -517,9 +517,9 @@ async function playLoadingSoundPreview(id) {
     const master = context.createGain();
     const compressor = context.createDynamicsCompressor ? context.createDynamicsCompressor() : null;
     master.gain.setValueAtTime(0.0001, now);
-    master.gain.exponentialRampToValueAtTime(0.42, now + 0.04);
-    master.gain.exponentialRampToValueAtTime(0.24, now + 1.1);
-    master.gain.setValueAtTime(0.24, now + 8.55);
+    master.gain.exponentialRampToValueAtTime(0.62, now + 0.025);
+    master.gain.exponentialRampToValueAtTime(0.36, now + 1.1);
+    master.gain.setValueAtTime(0.36, now + 8.55);
     master.gain.exponentialRampToValueAtTime(0.0001, now + duration);
     if (compressor) {
       compressor.threshold.setValueAtTime(-18, now);
@@ -572,7 +572,7 @@ function playAdminLoadingTone(context, destination, frequency, startTime, durati
   oscillator.frequency.setValueAtTime(frequency, startTime);
   oscillator.frequency.exponentialRampToValueAtTime(frequency * 1.006, startTime + Math.min(duration, 0.45));
   gain.gain.setValueAtTime(0.0001, startTime);
-  gain.gain.exponentialRampToValueAtTime(Math.min(volume * 1.75, 0.92), startTime + 0.018);
+  gain.gain.exponentialRampToValueAtTime(Math.min(volume * 2.15, 1.0), startTime + 0.018);
   gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
   oscillator.connect(gain);
   gain.connect(destination);

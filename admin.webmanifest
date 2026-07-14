@@ -3,7 +3,7 @@
   "name": "SFK ClassBoard Admin",
   "short_name": "SFK Admin",
   "description": "SFK ClassBoard admin panel",
-  "start_url": "./admin.html?source=famous-loading-tones-v111",
+  "start_url": "./admin.html?source=autoplay-sound-fix-v112",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",

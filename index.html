@@ -10,10 +10,10 @@
 
   <title>SFK ClassBoard</title>
 
-  <link rel="manifest" href="manifest.webmanifest?v=famous-loading-tones-v111" />
+  <link rel="manifest" href="manifest.webmanifest?v=autoplay-sound-fix-v112" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
-  <link rel="stylesheet" href="style.css?v=famous-loading-tones-v111" />
+  <link rel="stylesheet" href="style.css?v=autoplay-sound-fix-v112" />
   <link rel="stylesheet" href="class-chat.css?v=gc-everyone-inline-v29" />
   <link rel="stylesheet" href="time-capsule.css?v=gc-timecapsule-buttons-v16" />
 
@@ -1973,6 +1973,7 @@
     const SFK_INTRO_SOUND_ENABLED_KEY = "sfkClassBoardIntroSoundEnabled";
     const SFK_INTRO_SOUND_PLAYED_KEY = "sfkClassBoardIntroSoundPlayedThisSession";
     const SFK_INTRO_SOUND_CHOICE_KEY = "sfkClassBoardIntroSoundChoice";
+    const SFK_INTRO_SOUND_AUTOPLAY_FIX_KEY = "sfkClassBoardIntroAutoplayFixV112";
     const SFK_INTRO_SOUND_DEFAULT_ID = "soft-chime";
     const SFK_INTRO_SETTINGS_URL = "https://script.google.com/macros/s/AKfycbzCjWVnO-ZNvKTNqKN1zVscNsfPox0uDnO1QTSbBCrMFaS79tfL3mopHa2pH7gHczYeOA/exec";
     const SFK_INTRO_SOUND_OPTIONS = [
@@ -2046,6 +2047,7 @@
     let sfkIntroAudioContext = null;
     let sfkIntroSoundPlayPromise = null;
     let sfkIntroSelectedSoundId = SFK_INTRO_SOUND_DEFAULT_ID;
+    let sfkIntroAutoplayRetryTimers = [];
 
     document.addEventListener("DOMContentLoaded", initSfkIntro);
 
@@ -2061,6 +2063,15 @@
       document.documentElement.classList.add("sfk-intro-active");
       document.body.classList.add("sfk-intro-active");
       try { sessionStorage.removeItem(SFK_INTRO_SOUND_PLAYED_KEY); } catch (error) {}
+      try {
+        // v112 self-heal: older installed copies sometimes kept the loading sound
+        // in a muted/played state, so desktop appeared to have no autoplay at all.
+        // Turn it back on once after this update; the user can still mute it again.
+        if (localStorage.getItem(SFK_INTRO_SOUND_AUTOPLAY_FIX_KEY) !== "YES") {
+          localStorage.setItem(SFK_INTRO_SOUND_ENABLED_KEY, "ON");
+          localStorage.setItem(SFK_INTRO_SOUND_AUTOPLAY_FIX_KEY, "YES");
+        }
+      } catch (error) {}
       sfkIntroSoundPlayPromise = null;
       setupSfkIntroSound(intro);
 
@@ -2120,6 +2131,11 @@
           if (!isValidSfkIntroSoundId(selectedId)) return;
           sfkIntroSelectedSoundId = selectedId;
           try { localStorage.setItem(SFK_INTRO_SOUND_CHOICE_KEY, selectedId); } catch (error) {}
+          // If autoplay was blocked early while waiting for the admin setting,
+          // retry immediately with the selected sound as soon as it arrives.
+          if (document.getElementById("sfkIntroOverlay") && sessionStorage.getItem(SFK_INTRO_SOUND_PLAYED_KEY) !== "YES") {
+            tryPlaySfkIntroSound();
+          }
         } catch (error) {
           // Offline or cached installed app: keep the last locally saved loading sound.
         }
@@ -2194,22 +2210,51 @@
         });
       }
 
-      // Play immediately on the loading screen using the saved/default sound.
-      // The admin setting syncs in the background so there is no startup sound delay.
-      getSfkIntroSelectedSoundId();
-      tryPlaySfkIntroSound();
-      syncSfkIntroSoundChoiceInBackground();
-
       const unlockSound = (event) => {
         const target = event && event.target;
         if (target && target.closest && target.closest(".sfkStartSkip")) return;
         if (!document.getElementById("sfkIntroOverlay")) return;
-        playSfkIntroSound(true);
+        if (sessionStorage.getItem(SFK_INTRO_SOUND_PLAYED_KEY) === "YES") return;
+        playSfkIntroSound(true).then((played) => {
+          if (played) removeSfkIntroUnlockListeners(unlockSound);
+        });
       };
 
       ["pointerdown", "mousedown", "click", "touchstart", "touchend", "keydown"].forEach((type) => {
-        document.addEventListener(type, unlockSound, { once: true, passive: true });
+        // Keep these active until sound actually plays. In the old build a single
+        // blocked event could consume the one-time listener, causing no sound.
+        document.addEventListener(type, unlockSound, { passive: true, capture: true });
       });
+
+      // Play immediately on the loading screen using the saved/default sound.
+      // Also retry a few times while the loading card is visible. This restores
+      // the desktop autoplay feel from the earlier build without waiting for a click.
+      getSfkIntroSelectedSoundId();
+      startSfkIntroAutoplayRetries();
+      tryPlaySfkIntroSound();
+      syncSfkIntroSoundChoiceInBackground();
+    }
+
+    function removeSfkIntroUnlockListeners(handler) {
+      if (!handler) return;
+      ["pointerdown", "mousedown", "click", "touchstart", "touchend", "keydown"].forEach((type) => {
+        try { document.removeEventListener(type, handler, { capture: true }); } catch (error) {}
+      });
+    }
+
+    function startSfkIntroAutoplayRetries() {
+      sfkIntroAutoplayRetryTimers.forEach((timer) => window.clearTimeout(timer));
+      sfkIntroAutoplayRetryTimers = [0, 45, 120, 260, 520, 900, 1400, 2200, 3400].map((delay) =>
+        window.setTimeout(() => {
+          if (!document.getElementById("sfkIntroOverlay")) return;
+          if (!isSfkIntroSoundEnabled()) return;
+          if (sessionStorage.getItem(SFK_INTRO_SOUND_PLAYED_KEY) === "YES") return;
+          sfkIntroSoundPlayPromise = null;
+          playSfkIntroSound(false).then((played) => {
+            if (!played && isSfkIntroSoundEnabled()) updateSfkIntroSoundButton("pending");
+          });
+        }, delay)
+      );
     }
 
     function tryPlaySfkIntroSound() {
@@ -2244,9 +2289,9 @@
           const master = audioContext.createGain();
           const compressor = audioContext.createDynamicsCompressor ? audioContext.createDynamicsCompressor() : null;
           master.gain.setValueAtTime(0.0001, now);
-          master.gain.exponentialRampToValueAtTime(0.42, now + 0.018);
-          master.gain.exponentialRampToValueAtTime(0.24, now + 1.25);
-          master.gain.setValueAtTime(0.24, now + 8.55);
+          master.gain.exponentialRampToValueAtTime(0.62, now + 0.012);
+          master.gain.exponentialRampToValueAtTime(0.36, now + 1.15);
+          master.gain.setValueAtTime(0.36, now + 8.55);
           master.gain.exponentialRampToValueAtTime(0.0001, now + introSoundDuration);
           if (compressor) {
             compressor.threshold.setValueAtTime(-18, now);
@@ -2318,7 +2363,7 @@
       oscillator.frequency.exponentialRampToValueAtTime(frequency * 1.006, startTime + Math.min(duration, 0.45));
 
       gain.gain.setValueAtTime(0.0001, startTime);
-      gain.gain.exponentialRampToValueAtTime(Math.min(volume * 1.75, 0.92), startTime + 0.008);
+      gain.gain.exponentialRampToValueAtTime(Math.min(volume * 2.15, 1.0), startTime + 0.008);
       gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
 
       oscillator.connect(gain);
@@ -2332,6 +2377,8 @@
       if (!intro) return;
 
       window.clearTimeout(window.sfkIntroSkipTimer);
+      sfkIntroAutoplayRetryTimers.forEach((timer) => window.clearTimeout(timer));
+      sfkIntroAutoplayRetryTimers = [];
       document.documentElement.classList.remove("sfk-intro-active");
       document.body.classList.remove("sfk-intro-active");
       intro.classList.add("is-hidden");
@@ -2349,13 +2396,13 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js?v=phone-login-v8"></script>
-  <script src="firebase-adapter.js?v=famous-loading-tones-v111"></script>
-  <script src="script.js?v=famous-loading-tones-v111"></script>
+  <script src="firebase-adapter.js?v=autoplay-sound-fix-v112"></script>
+  <script src="script.js?v=autoplay-sound-fix-v112"></script>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.16/dist/hls.min.js"></script>
   <script src="https://cdn.dashjs.org/v5.2.0/legacy/umd/dash.all.min.js"></script>
   <script src="time-capsule.js?v=gc-timecapsule-buttons-v16"></script>
   <script src="class-chat.js?v=gc-everyone-inline-v29"></script>
-  <script src="pwa.js?v=famous-loading-tones-v111"></script>
+  <script src="pwa.js?v=autoplay-sound-fix-v112"></script>
 
   <script>
     window.sfkAnnouncementCloseEmergencyGuardV3 = true;

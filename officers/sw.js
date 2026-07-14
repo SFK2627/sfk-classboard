@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-officers-pwa-v111-famous-tones";
+const CACHE_NAME = "sfk-officers-pwa-v112-autoplay-sound";
 const CACHE_PREFIXES_TO_DELETE = ["sfk-officers-pwa-"];
 const NAVIGATION_FALLBACK_URL = "./index.html";
 const NAVIGATION_TIMEOUT_MS = 2500;
@@ -8,11 +8,11 @@ const APP_SHELL = [
   "./index.html",
   "./manifest.webmanifest",
   "./sw.js",
-  "../officer.html?embedded=1&v=famous-loading-tones-v111",
-  "../officer.css?v=famous-loading-tones-v111",
-  "../officer.js?v=famous-loading-tones-v111",
+  "../officer.html?embedded=1&v=autoplay-sound-fix-v112",
+  "../officer.css?v=autoplay-sound-fix-v112",
+  "../officer.js?v=autoplay-sound-fix-v112",
   "../firebase-config.js",
-  "../firebase-adapter.js?v=famous-loading-tones-v111",
+  "../firebase-adapter.js?v=autoplay-sound-fix-v112",
   "../auth.js",
   "../orientation-lock.js",
   "../icons/icon-192.png",
