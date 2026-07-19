@@ -1,0 +1,237 @@
+# Presentation Hub - Website Only Version
+
+This is the static website version of Presentation Hub. You can open `index.html` directly or upload the folder to static hosting.
+
+## What works locally
+
+- Upload multiple PDF and PPTX files
+- Search and sort presentation cards
+- Open presentations
+- PDF rendering with real page layout, images, colors, and thumbnails using PDF.js
+- PPTX visual rendering using PPTXjs when online/CDN scripts are available
+- Next / Previous / Jump page
+- Fullscreen
+- Auto-slide timing
+- Timer overlay
+- Dark mode
+
+## Important PPTX note
+
+The app now attempts to render PowerPoint slides visually, including colors, images, and layouts, through PPTXjs.
+
+However, browser-only PowerPoint rendering is still not as perfect as PowerPoint itself. For the most accurate output, especially for complex PowerPoint files with custom fonts, animations, SmartArt, or unusual layouts, export the PPTX as PDF first and upload the PDF. PDF mode is the most accurate mode.
+
+## Firebase remote setup
+
+Your Firebase config is already placed in `firebase-config.js`.
+
+To make phone remote work:
+
+1. Open Firebase Console.
+2. Enable Authentication > Anonymous.
+3. Create Firestore Database.
+4. Add these Firestore rules:
+
+```txt
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /presentationHubSessions/{sessionId} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+```
+
+## Best way to use with phone remote
+
+Upload the whole folder to Netlify, Firebase Hosting, GitHub Pages, or any web host. Phone remote works best when both laptop and phone open the same hosted website URL.
+
+
+## Update notes
+
+This version improves GitHub Pages usage:
+
+- Heavy PowerPoint rendering libraries are lazy-loaded only when a PPTX is opened, so the home screen loads faster.
+- Firebase sign-in no longer blocks the dashboard while loading.
+- Fullscreen now uses a true presentation mode: sidebar is hidden, the viewer fills the whole screen, and the toolbar appears only when the mouse moves.
+- Keyboard shortcuts still work in viewer mode: Arrow Right, Arrow Left, F, and Esc.
+- The service worker now uses a fresh cache name and network-first updates so GitHub Pages changes are less likely to stay stuck on an old cached version.
+
+## Latest update notes
+
+This build improves the presentation behavior requested for GitHub Pages:
+
+- Fullscreen now targets the entire monitor area and removes sidebar spacing, borders, rounded corners, and shadows.
+- QR and setup modals are moved into the active fullscreen container, so they remain visible while the viewer is fullscreen.
+- PDF rendering now uses high-DPI canvas rendering for clearer fullscreen output.
+- Phone remote preview now sends a larger, clearer current-page image.
+- Host phones can pinch on the preview to zoom the desktop viewer in real time.
+- PPTX no longer falls back to a plain text-only slide view when visual rendering fails. It shows a clear warning instead, because exact PPTX rendering needs visual rendering or PDF export.
+
+For PowerPoint files that must look exactly like the original, use PowerPoint/WPS/Canva export to PDF first, then upload the PDF into Presentation Hub. That is the recommended exact mode.
+
+## Timer, autoplay, and phone preview update
+
+This build adds the requested production presentation controls:
+
+- Auto Play now has a clear **Timing Mode**:
+  - **Global**: every page/slide uses the same interval.
+  - **Per-slide**: manually set the timing for the current page/slide; slides without custom timing fall back to the global interval.
+- The slide timer resets every time Auto Play moves to a new page/slide.
+- Pause freezes both Auto Play and the visible timer.
+- Resume continues from the paused time.
+- Stop fully stops Auto Play and resets the visible timer.
+- Phone remote layout has been tightened so the preview no longer overlaps or pushes past the control sections.
+- The phone remote now has **Fullscreen Preview**. Open it, rotate the phone landscape, then pinch and drag the preview. The desktop viewer receives the same zoom and focus area.
+
+Reminder: for exact PowerPoint colors, pictures, fonts, and layouts, the most reliable workflow is still to export PPTX to PDF first, then upload the PDF.
+
+
+## Smooth fullscreen, countdown alert, and transitions update
+
+This build adds:
+
+- A smoother phone **Fullscreen Preview** using dynamic mobile viewport sizing so the bottom part of the slide is not cut off.
+- Phone fullscreen preview starts in contain/fit mode so the whole slide is visible first, then pinch zoom and drag can focus on one area.
+- Auto Play **Last 5-sec alert** options in the Controls panel:
+  - Off
+  - Sound only
+  - Voice count
+  - Sound + voice count
+- PDF/page transition choices in the Controls panel:
+  - Fade
+  - Slide left
+  - Slide right
+  - Slide up
+  - Zoom in
+  - Zoom out
+  - Soft blur
+  - None
+- Adjacent PDF page caching to make moving to the next/previous page feel smoother.
+
+PowerPoint note: the browser PPTX renderer has been kept visual-only and improved for sizing, but Microsoft PowerPoint transitions/animations and very complex designs still cannot be guaranteed on GitHub Pages. For exact PPT/PPTX appearance, export to PDF first and present the PDF.
+
+
+## Phone fullscreen preview fix
+
+This version fixes the phone fullscreen preview so the top title bar and bottom hint bar no longer cover the slide. The whole slide is visible first, then pinch zoom and drag can focus an area and sync that viewport to the desktop viewer.
+
+
+## Latest update
+
+- Added a live Timer size slider in desktop Controls.
+- Added a live Timer size slider in the phone Host remote.
+- Opacity slider now updates live in smaller steps.
+
+## Sound/Voice alert note
+If the last-5-second alert does not play, open Controls and press **Test alert** once on the desktop viewer. Browsers require one user action before WebAudio or voice countdown can play, especially when Auto Play is started from a phone remote.
+
+## Folder organization
+
+This version adds local folders. Use **+ Folder** on the dashboard, click a folder chip to view it, and use the folder selector on each card to move files or Canva links into a folder. Folder names can be renamed with the pencil button. Deleting a folder does not delete the presentations; it moves them back to **Unfiled**.
+
+## Canva link viewer
+
+Use **Add Canva link** and paste a Canva public view link, smart embed link, or embed iframe code. The app will open the Canva design in the viewer with fullscreen support. Because Canva is embedded as an external website, the app cannot reliably control Canva's internal slide transitions or read its private slide thumbnails; use Canva's public view/embed settings for best results.
+
+
+## Folder drag-and-drop
+
+Presentation cards can be dragged directly into any folder chip. You can also drag PDF/PPTX files from your computer onto a folder chip to upload them directly into that folder. Drop onto Unfiled to remove a file from folders.
+
+## Remote controls visibility fix
+
+If the phone opens only the slide preview, scan the **Control QR / Host remote** code. The Viewer QR is intentionally view-only. This build also defaults remote links to host controls when the role is missing and adds a **Controls** button inside fullscreen phone preview so you can always return to the remote dashboard.
+
+
+## Premium Smooth Transition Update
+
+This build improves PDF slide changes with a double-buffer renderer. The next PDF page renders on a fresh hidden canvas first, then the app swaps it in using the selected web-app transition. This removes the leftover/ghost-like transition effect that can appear on PDFs exported from Canva or other design tools.
+
+Tips:
+- For the smoothest result, keep **Slide transition** set to Fade, Slide left, or Zoom in.
+- If you want instant changes, choose **None**.
+- After uploading to GitHub Pages, hard refresh the desktop browser and clear the phone browser site data if the old version is still cached.
+
+## Premium controls and portrait phone remote update
+
+This build improves the presentation control experience:
+
+- Desktop toolbar and control settings have a more premium glass-panel design.
+- Phone host remote now opens to a polished control dashboard first, not fullscreen preview.
+- Phone preview fullscreen stays portrait-friendly; it no longer forces landscape orientation.
+- Host commands are lighter and faster: slide/control state is sent first, while heavy preview thumbnails update after.
+- PDF transition behavior keeps the selected app transition style and avoids leaving old Canva-exported PDF frames behind.
+
+If GitHub Pages still shows the old interface, hard refresh on desktop and clear site data on the phone.
+
+
+## Presentation Hub Pro v10 update
+
+This build focuses on stability and polish instead of only adding features.
+
+- Phone QR host mode now opens the control dashboard first.
+- Host commands publish the new slide/control state immediately, while preview thumbnails update after, reducing perceived delay.
+- Phone remote adds premium Presentation controls: fullscreen toggle, transition selector, timer position, timer mode, fit slide, and reset time.
+- Phone preview stays portrait-first and opens only when the user taps **Portrait Preview**.
+- Remote preview thumbnails are compressed more efficiently to avoid slowing down Firestore command updates.
+- PDF transitions keep using the app's selected transition effect with the double-buffered canvas engine.
+- Desktop and phone controls have improved premium spacing, grouping, and readable dropdowns.
+
+For perfect PPTX design fidelity, export PPTX/Canva to PDF first and upload the PDF. A static GitHub Pages site cannot run LibreOffice conversion, so exact PowerPoint conversion needs an optional backend server.
+
+
+## Pro v10.2 voice/monitor preview update
+
+- Added clean countdown voice style choices without exposing browser voice names.
+- Added a desktop-monitor frame inside Portrait Preview so the phone shows a monitor-like representation of the desktop view while pinching and panning.
+- Kept the update targeted to the countdown voice selector and portrait preview layer.
+
+
+## Pro v10.10 Magic Effects repair
+- Magic Effects list is hidden by default on phone host.
+- Added visible Magic Settings: sound on/off, volume slider, intensity selector, and test button.
+- Desktop effects are rendered through a fixed full-screen overlay so the main animation is centered, including in fullscreen mode.
+- Only Magic Effects panel/overlay/sound controls were changed.
+
+
+## v10.13 Magic Polish Pass
+- Rebalanced per-effect sound mix levels for more consistent loudness.
+- Added smoother, more premium overlay polish and richer curtain/confetti/bubbles styling.
+- Fine-tuned quiet/shoosh voice delivery and mix.
+
+## Version 11 - Classroom Randomizer
+
+New features:
+- Google account sign-in for syncing classroom sections and student names.
+- Local-first saving: data remains usable offline and syncs when signed in.
+- Random name picker with optional remove-after-picked.
+- Group dice from 2 to 20 groups.
+- Balanced grouping assigns among the currently smallest groups.
+- Phone remote section selector and Pick / Roll / Pick + Roll controls.
+- Revised curtain reveal, canvas confetti/bubbles, and readable moving spotlight.
+
+### Firebase Authentication setup
+1. Open Firebase Console > Authentication > Sign-in method.
+2. Enable Google.
+3. Add the deployed GitHub Pages domain to Authentication > Settings > Authorized domains.
+4. Keep Anonymous enabled because the phone remote uses an anonymous session before an optional Google sign-in.
+
+### Recommended Firestore rules
+Replace PROJECT_OWNER_EMAIL with the Google account that owns the classroom data if you want stricter access. The general rules below allow authenticated users to access only their own classroom document while preserving remote sessions.
+
+```rules
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /presentationHubSessions/{sessionId} {
+      allow read, write: if request.auth != null;
+    }
+    match /presentationHubUsers/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
+```
