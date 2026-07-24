@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-admin-pwa-v112-autoplay-sound";
+const CACHE_NAME = "sfk-admin-pwa-v117-shortcut-reliable";
 const CACHE_PREFIXES_TO_DELETE = ["sfk-admin-pwa-"];
 const NAVIGATION_FALLBACK_URL = "./index.html";
 const NAVIGATION_TIMEOUT_MS = 2500;
@@ -8,12 +8,12 @@ const APP_SHELL = [
   "./index.html",
   "./manifest.webmanifest",
   "./sw.js",
-  "../admin.html?embedded=1&v=autoplay-sound-fix-v112",
-  "../admin.css?v=autoplay-sound-fix-v112",
-  "../admin.js?v=autoplay-sound-fix-v112",
+  "../admin.html?embedded=1&v=shortcut-reliable-v117",
+  "../admin.css?v=shortcut-reliable-v117",
+  "../admin.js?v=shortcut-reliable-v117",
   "../class-chat-admin.js",
   "../firebase-config.js",
-  "../firebase-adapter.js?v=autoplay-sound-fix-v112",
+  "../firebase-adapter.js?v=shortcut-reliable-v117",
   "../auth.js",
   "../orientation-lock.js",
   "../icons/icon-192.png",

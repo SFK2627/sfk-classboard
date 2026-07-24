@@ -5175,6 +5175,410 @@ function showShhhShortcutFeedback(message) {
   showSoundAlert(message);
 }
 
+let sfkSingingBowlAudio = {
+  context: null,
+  stops: [],
+  element: null,
+  activeKey: null,
+  boostNodes: null
+};
+
+let sfkOShortcutAudio = {
+  element: null,
+  activeKey: null,
+  boostNodes: null
+};
+
+let sfkShortcutBoostContext = null;
+
+async function getShortcutBoostContext() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return null;
+  const context = sfkShortcutBoostContext || new AudioContextClass();
+  sfkShortcutBoostContext = context;
+  if (context.state === "suspended") await context.resume();
+  return context;
+}
+
+function disconnectShortcutAudioBoost(state) {
+  const nodes = state?.boostNodes;
+  if (!nodes) return;
+  ["source", "bass", "shine", "gain", "compressor", "out"].forEach((key) => {
+    try { nodes[key]?.disconnect?.(); } catch (error) {}
+  });
+  state.boostNodes = null;
+}
+
+async function attachShortcutAudioBoost(audio, state, options = {}) {
+  const context = await getShortcutBoostContext();
+  if (!context || !audio || !state) return null;
+
+  disconnectShortcutAudioBoost(state);
+
+  const source = context.createMediaElementSource(audio);
+  const bass = context.createBiquadFilter();
+  const shine = context.createBiquadFilter();
+  const gain = context.createGain();
+  const compressor = context.createDynamicsCompressor();
+  const out = context.createGain();
+
+  bass.type = "lowshelf";
+  bass.frequency.setValueAtTime(options.bassFrequency || 240, context.currentTime);
+  bass.gain.setValueAtTime(options.bassGain ?? 4.5, context.currentTime);
+
+  shine.type = "highshelf";
+  shine.frequency.setValueAtTime(options.shineFrequency || 2600, context.currentTime);
+  shine.gain.setValueAtTime(options.shineGain ?? 2.5, context.currentTime);
+
+  gain.gain.setValueAtTime(options.boost ?? 2.15, context.currentTime);
+
+  compressor.threshold.setValueAtTime(options.threshold ?? -18, context.currentTime);
+  compressor.knee.setValueAtTime(18, context.currentTime);
+  compressor.ratio.setValueAtTime(options.ratio ?? 4.2, context.currentTime);
+  compressor.attack.setValueAtTime(0.002, context.currentTime);
+  compressor.release.setValueAtTime(0.28, context.currentTime);
+
+  out.gain.setValueAtTime(options.output ?? 0.98, context.currentTime);
+
+  source.connect(bass);
+  bass.connect(shine);
+  shine.connect(gain);
+  gain.connect(compressor);
+  compressor.connect(out);
+  out.connect(context.destination);
+
+  state.boostNodes = { source, bass, shine, gain, compressor, out };
+  return context;
+}
+
+function stopSingingBowlShortcutSound(showFeedback = false) {
+  const wasPlaying = Boolean(sfkSingingBowlAudio.element || sfkSingingBowlAudio.stops?.length || sfkSingingBowlAudio.activeKey === "p");
+  disconnectShortcutAudioBoost(sfkSingingBowlAudio);
+  if (sfkSingingBowlAudio.element) {
+    try {
+      sfkSingingBowlAudio.element.pause();
+      sfkSingingBowlAudio.element.currentTime = 0;
+      sfkSingingBowlAudio.element.src = "";
+      sfkSingingBowlAudio.element.load?.();
+    } catch (error) {}
+    sfkSingingBowlAudio.element = null;
+  }
+
+  const stops = Array.isArray(sfkSingingBowlAudio.stops) ? sfkSingingBowlAudio.stops : [];
+  stops.forEach((stop) => {
+    try {
+      stop();
+    } catch (error) {}
+  });
+  sfkSingingBowlAudio.stops = [];
+  sfkSingingBowlAudio.activeKey = null;
+  if (showFeedback && wasPlaying) showSoundAlert("⏹ Singing Bowl Stopped");
+}
+
+function stopOShortcutSound(showFeedback = false) {
+  const wasPlaying = Boolean(sfkOShortcutAudio.element || sfkOShortcutAudio.activeKey === "o");
+  disconnectShortcutAudioBoost(sfkOShortcutAudio);
+  if (sfkOShortcutAudio.element) {
+    try {
+      sfkOShortcutAudio.element.pause();
+      sfkOShortcutAudio.element.currentTime = 0;
+      sfkOShortcutAudio.element.src = "";
+      sfkOShortcutAudio.element.load?.();
+    } catch (error) {}
+    sfkOShortcutAudio.element = null;
+  }
+  sfkOShortcutAudio.activeKey = null;
+  if (showFeedback && wasPlaying) showSoundAlert("⏹ O Sound Stopped");
+}
+
+function stopAllShortcutSounds(exceptKey = "") {
+  if (exceptKey !== "p") stopSingingBowlShortcutSound(false);
+  if (exceptKey !== "o") stopOShortcutSound(false);
+}
+
+async function playSingingBowlAudioFile() {
+  const audio = new Audio("tibetan-singing-bowl.mp3?v=shortcut-reliable-v117");
+  audio.preload = "auto";
+  audio.volume = 1;
+  audio.currentTime = 0;
+  audio.playsInline = true;
+  sfkSingingBowlAudio.element = audio;
+  sfkSingingBowlAudio.activeKey = "p";
+
+  const clearElement = () => {
+    if (sfkSingingBowlAudio.element === audio) {
+      sfkSingingBowlAudio.element = null;
+      sfkSingingBowlAudio.activeKey = null;
+    }
+  };
+  audio.addEventListener("ended", clearElement, { once: true });
+  audio.addEventListener("error", clearElement, { once: true });
+
+  // Play FIRST while the P key press is still the active user gesture.
+  // The previous loud booster used WebAudio before audio.play(), which can
+  // make some browsers lose the gesture and play nothing. The MP3 itself is
+  // already normalized, so direct playback is the safest classroom behavior.
+  const playPromise = audio.play();
+  showSoundAlert("🔔 Singing Bowl Playing");
+  if (playPromise && typeof playPromise.then === "function") {
+    await playPromise;
+  }
+}
+
+async function playGeneratedSingingBowlFallback() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) {
+    showSoundAlert("Tibetan bowl sound is not supported on this browser.");
+    return;
+  }
+
+  const context = sfkSingingBowlAudio.context || new AudioContextClass();
+  sfkSingingBowlAudio.context = context;
+  if (context.state === "suspended") await context.resume();
+
+  const now = context.currentTime;
+  const duration = 9.0;
+  const master = context.createGain();
+  const compressor = context.createDynamicsCompressor();
+  const lowpass = context.createBiquadFilter();
+  const lowshelf = context.createBiquadFilter();
+  const delay = context.createDelay(1.4);
+  const feedback = context.createGain();
+  const delayWet = context.createGain();
+
+  lowpass.type = "lowpass";
+  lowpass.frequency.setValueAtTime(9800, now);
+  lowpass.frequency.exponentialRampToValueAtTime(4100, now + duration);
+
+  lowshelf.type = "lowshelf";
+  lowshelf.frequency.setValueAtTime(240, now);
+  lowshelf.gain.setValueAtTime(5.5, now);
+
+  compressor.threshold.setValueAtTime(-26, now);
+  compressor.knee.setValueAtTime(24, now);
+  compressor.ratio.setValueAtTime(5.5, now);
+  compressor.attack.setValueAtTime(0.002, now);
+  compressor.release.setValueAtTime(0.48, now);
+
+  master.gain.setValueAtTime(0.0001, now);
+  master.gain.exponentialRampToValueAtTime(1.75, now + 0.045);
+  master.gain.exponentialRampToValueAtTime(1.18, now + 0.55);
+  master.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+  delay.delayTime.setValueAtTime(0.31, now);
+  feedback.gain.setValueAtTime(0.42, now);
+  delayWet.gain.setValueAtTime(0.28, now);
+
+  master.connect(lowpass);
+  lowpass.connect(lowshelf);
+  lowshelf.connect(compressor);
+  compressor.connect(context.destination);
+  lowshelf.connect(delay);
+  delay.connect(feedback);
+  feedback.connect(delay);
+  delay.connect(delayWet);
+  delayWet.connect(context.destination);
+
+  const stopFns = [];
+  const partials = [
+    { freq: 174.6, gain: 0.62, detune: -2, decay: duration, type: "sine", pan: -0.08 },
+    { freq: 176.1, gain: 0.22, detune: 1, decay: duration * 0.96, type: "sine", pan: 0.12 },
+    { freq: 261.8, gain: 0.34, detune: 3, decay: duration * 0.82, type: "sine", pan: -0.22 },
+    { freq: 264.2, gain: 0.14, detune: -3, decay: duration * 0.76, type: "sine", pan: 0.18 },
+    { freq: 349.4, gain: 0.24, detune: 2, decay: duration * 0.66, type: "triangle", pan: 0.22 },
+    { freq: 392.0, gain: 0.16, detune: -2, decay: duration * 0.58, type: "triangle", pan: -0.18 },
+    { freq: 523.3, gain: 0.14, detune: 4, decay: duration * 0.50, type: "sine", pan: 0.08 },
+    { freq: 694.0, gain: 0.09, detune: -4, decay: duration * 0.40, type: "triangle", pan: -0.25 },
+    { freq: 880.0, gain: 0.065, detune: 5, decay: duration * 0.34, type: "sine", pan: 0.26 },
+    { freq: 1320.0, gain: 0.04, detune: -5, decay: duration * 0.24, type: "triangle", pan: -0.12 }
+  ];
+
+  partials.forEach((tone, index) => {
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    const pan = context.createStereoPanner ? context.createStereoPanner() : null;
+    const shimmer = context.createOscillator();
+    const shimmerGain = context.createGain();
+    const startOffset = index * 0.012;
+
+    oscillator.type = tone.type || "sine";
+    oscillator.frequency.setValueAtTime(tone.freq, now + startOffset);
+    oscillator.frequency.exponentialRampToValueAtTime(tone.freq * 0.992, now + tone.decay);
+    oscillator.detune.setValueAtTime(tone.detune || 0, now + startOffset);
+
+    shimmer.type = "sine";
+    shimmer.frequency.setValueAtTime(0.18 + index * 0.045, now);
+    shimmerGain.gain.setValueAtTime(1.6 + index * 0.12, now);
+    shimmer.connect(shimmerGain);
+    shimmerGain.connect(oscillator.detune);
+
+    gain.gain.setValueAtTime(0.0001, now + startOffset);
+    gain.gain.exponentialRampToValueAtTime(tone.gain, now + startOffset + 0.028);
+    gain.gain.exponentialRampToValueAtTime(tone.gain * 0.38, now + startOffset + 0.42);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + tone.decay);
+
+    oscillator.connect(gain);
+    if (pan) {
+      pan.pan.setValueAtTime(tone.pan || 0, now + startOffset);
+      gain.connect(pan);
+      pan.connect(master);
+    } else {
+      gain.connect(master);
+    }
+
+    oscillator.start(now + startOffset);
+    shimmer.start(now + startOffset);
+    oscillator.stop(now + duration + 0.1);
+    shimmer.stop(now + duration + 0.1);
+    stopFns.push(() => {
+      try { oscillator.stop(); } catch (error) {}
+      try { shimmer.stop(); } catch (error) {}
+      try { oscillator.disconnect(); } catch (error) {}
+      try { shimmer.disconnect(); } catch (error) {}
+      try { shimmerGain.disconnect(); } catch (error) {}
+      try { gain.disconnect(); } catch (error) {}
+      if (pan) { try { pan.disconnect(); } catch (error) {} }
+    });
+  });
+
+  const strikeLength = Math.floor(context.sampleRate * 0.42);
+  const strikeBuffer = context.createBuffer(1, strikeLength, context.sampleRate);
+  const data = strikeBuffer.getChannelData(0);
+  for (let i = 0; i < strikeLength; i += 1) {
+    const t = i / strikeLength;
+    const envelope = Math.pow(1 - t, 3.1);
+    data[i] = (Math.random() * 2 - 1) * 0.62 * envelope;
+  }
+
+  const strike = context.createBufferSource();
+  const strikeFilter = context.createBiquadFilter();
+  const strikeGain = context.createGain();
+  strikeFilter.type = "bandpass";
+  strikeFilter.frequency.setValueAtTime(540, now);
+  strikeFilter.frequency.exponentialRampToValueAtTime(880, now + 0.12);
+  strikeFilter.Q.setValueAtTime(8.5, now);
+  strikeGain.gain.setValueAtTime(0.0001, now);
+  strikeGain.gain.exponentialRampToValueAtTime(1.18, now + 0.012);
+  strikeGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.58);
+  strike.buffer = strikeBuffer;
+  strike.connect(strikeFilter);
+  strikeFilter.connect(strikeGain);
+  strikeGain.connect(master);
+  strike.start(now);
+  strike.stop(now + 0.65);
+  stopFns.push(() => {
+    try { strike.stop(); } catch (error) {}
+    try { strike.disconnect(); } catch (error) {}
+    try { strikeFilter.disconnect(); } catch (error) {}
+    try { strikeGain.disconnect(); } catch (error) {}
+  });
+
+  const cleanupTimer = window.setTimeout(() => {
+    stopSingingBowlShortcutSound();
+  }, Math.ceil((duration + 0.5) * 1000));
+
+  stopFns.push(() => {
+    window.clearTimeout(cleanupTimer);
+    try { master.disconnect(); } catch (error) {}
+    try { compressor.disconnect(); } catch (error) {}
+    try { lowpass.disconnect(); } catch (error) {}
+    try { lowshelf.disconnect(); } catch (error) {}
+    try { delay.disconnect(); } catch (error) {}
+    try { feedback.disconnect(); } catch (error) {}
+    try { delayWet.disconnect(); } catch (error) {}
+  });
+
+  sfkSingingBowlAudio.stops = stopFns;
+  sfkSingingBowlAudio.activeKey = "p";
+  showSoundAlert("🔔 Singing Bowl Playing");
+}
+
+async function playSingingBowlShortcutSound() {
+  try {
+    if (sfkSingingBowlAudio.activeKey === "p" || sfkSingingBowlAudio.element || sfkSingingBowlAudio.stops?.length) {
+      stopSingingBowlShortcutSound(true);
+      return;
+    }
+
+    stopAllShortcutSounds("p");
+    try {
+      await playSingingBowlAudioFile();
+    } catch (audioError) {
+      console.warn("Real singing bowl audio failed; using generated fallback:", audioError);
+      await playGeneratedSingingBowlFallback();
+    }
+  } catch (error) {
+    console.warn("Singing bowl shortcut failed:", error);
+    showSoundAlert("Tap/click once, then press P for the singing bowl.");
+  }
+}
+
+async function playOShortcutSound() {
+  try {
+    if (sfkOShortcutAudio.activeKey === "o" || sfkOShortcutAudio.element) {
+      stopOShortcutSound(true);
+      return;
+    }
+
+    stopAllShortcutSounds("o");
+
+    const audio = new Audio("o-shortcut-sound.mp3?v=o-sound-reliable-v117");
+    audio.preload = "auto";
+    audio.volume = 1;
+    audio.currentTime = 0;
+    audio.playsInline = true;
+    sfkOShortcutAudio.element = audio;
+    sfkOShortcutAudio.activeKey = "o";
+
+    const clearElement = () => {
+      if (sfkOShortcutAudio.element === audio) {
+        sfkOShortcutAudio.element = null;
+        sfkOShortcutAudio.activeKey = null;
+      }
+    };
+    audio.addEventListener("ended", clearElement, { once: true });
+    audio.addEventListener("error", clearElement, { once: true });
+
+    // Same reliability rule as P: start direct playback immediately on the
+    // O key press. No async audio routing before play, so it will not go silent
+    // on GitHub Pages / installed PWA.
+    const playPromise = audio.play();
+    showSoundAlert("🔊 O Sound Playing");
+    if (playPromise && typeof playPromise.then === "function") {
+      await playPromise;
+    }
+  } catch (error) {
+    console.warn("O shortcut sound failed:", error);
+    stopOShortcutSound(false);
+    showSoundAlert("Tap/click once, then press O for the uploaded sound.");
+  }
+}
+
+function initSingingBowlKeyboardShortcut() {
+  if (window.__sfkSingingBowlShortcutReady) return;
+  window.__sfkSingingBowlShortcutReady = true;
+
+  document.addEventListener("keydown", (event) => {
+    if (event.repeat || event.altKey || event.ctrlKey || event.metaKey) return;
+    if (isShhhShortcutTypingTarget(event.target)) return;
+
+    const key = String(event.key || "").toLowerCase();
+    if (!["p", "o"].includes(key)) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (key === "p") {
+      playSingingBowlShortcutSound();
+      return;
+    }
+
+    if (key === "o") {
+      playOShortcutSound();
+    }
+  }, true);
+}
+
 function initShhhModeKeyboardShortcuts() {
   if (window.__sfkShhhShortcutReady) return;
   window.__sfkShhhShortcutReady = true;
@@ -5257,7 +5661,12 @@ function initDesktopShhhMode() {
     if (document.visibilityState === "visible") syncShhhDailyCountsFromStorage();
   });
   initShhhModeKeyboardShortcuts();
-  window.addEventListener("beforeunload", stopShhhMode);
+  initSingingBowlKeyboardShortcut();
+  window.addEventListener("beforeunload", () => {
+    stopShhhMode();
+    stopSingingBowlShortcutSound();
+    stopOShortcutSound();
+  });
 }
 
 function isShhhModeDesktopAvailable() {

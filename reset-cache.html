@@ -14,7 +14,7 @@
     a, button { display: inline-flex; justify-content: center; align-items: center; min-height: 46px; padding: 0 16px; border-radius: 12px; border: 2px solid #111; background: #f7c600; color: #111; font-weight: 800; text-decoration: none; cursor: pointer; }
     #status { font-weight: 800; color: #6b5200; }
   </style>
-  <script src="orientation-lock.js?v=appwide-v112-autoplay-sound" defer></script>
+  <script src="orientation-lock.js?v=appwide-v115-shortcut-toggle" defer></script>
 </head>
 <body>
   <div class="card">
@@ -22,9 +22,9 @@
     <p id="status">Clearing old service workers and cache...</p>
     <p>Use this once after uploading the repair files. It fixes the raw code/manifest screen problem.</p>
     <div class="links">
-      <a href="admin.html?fresh=autoplay-sound-v112">Open Admin</a>
-      <a href="officer.html?fresh=autoplay-sound-v112">Open Officers</a>
-      <a href="index.html?fresh=autoplay-sound-v112">Open ClassBoard</a>
+      <a href="admin.html?fresh=shortcut-toggle-v115">Open Admin</a>
+      <a href="officer.html?fresh=shortcut-toggle-v115">Open Officers</a>
+      <a href="index.html?fresh=shortcut-toggle-v115">Open ClassBoard</a>
       <button type="button" id="again">Clear Again</button>
     </div>
   </div>
@@ -34,10 +34,10 @@
       var params = new URLSearchParams(window.location.search);
       var go = (params.get('go') || '').toLowerCase();
       var target = go === 'officers' || go === 'officer'
-        ? 'officer.html?fresh=autoplay-sound-v112'
+        ? 'officer.html?fresh=shortcut-toggle-v115'
         : go === 'home' || go === 'classboard'
-          ? 'index.html?fresh=autoplay-sound-v112'
-          : 'admin.html?fresh=autoplay-sound-v112';
+          ? 'index.html?fresh=shortcut-toggle-v115'
+          : 'admin.html?fresh=shortcut-toggle-v115';
       function unregisterAllWorkers() {
         if (!('serviceWorker' in navigator)) return Promise.resolve([]);
         return navigator.serviceWorker.getRegistrations().then(function (registrations) {

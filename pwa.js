@@ -2,9 +2,9 @@
   let deferredInstallPrompt = null;
 
   const installButton = document.getElementById("installAppBtn");
-  const SW_URL = "./sw.js?v=autoplay-sound-fix-v112";
-  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV108HomepageStudio";
-  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV108HomepageStudio";
+  const SW_URL = "./sw.js?v=shortcut-reliable-v117";
+  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV113SingingBowl";
+  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV113SingingBowl";
 
   function isStandaloneApp() {
     return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
@@ -23,7 +23,7 @@
   function askWorkerToActivate(worker) {
     if (!worker) return;
     try {
-      worker.postMessage({ type: "SFK_SKIP_WAITING_HOMEPAGE_STUDIO_V108" });
+      worker.postMessage({ type: "SFK_SKIP_WAITING_SINGING_BOWL_V113" });
     } catch (error) {}
   }
 

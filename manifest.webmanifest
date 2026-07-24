@@ -3,7 +3,7 @@
   "name": "SFK ClassBoard",
   "short_name": "SFK Board",
   "description": "Grade 8 St. Faustina Kowalska ClassBoard",
-  "start_url": "./index.html?source=pwa-autoplay-sound-fix-v112",
+  "start_url": "./index.html?source=pwa-shortcut-reliable-v117",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",

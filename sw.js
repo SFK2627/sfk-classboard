@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-main-pwa-v112-autoplay-sound";
+const CACHE_NAME = "sfk-main-pwa-v117-shortcut-reliable";
 const CACHE_PREFIXES_TO_DELETE = ["sfk-main-pwa-", "sfk-sw.js-"];
 const NAVIGATION_FALLBACK_URL = "./index.html";
 const NAVIGATION_TIMEOUT_MS = 2500;
@@ -31,6 +31,8 @@ const APP_SHELL = [
   "./manifest.webmanifest",
   "./class-photo.jpg",
   "./birthday-music.mp3",
+  "./tibetan-singing-bowl.mp3",
+  "./o-shortcut-sound.mp3",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/icon-maskable-512.png"
