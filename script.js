@@ -675,6 +675,7 @@ function autoFitPeriodSubject(element) {
 
 
 const CLASSBOARD_PAGE_LOCK_DEFAULT_MESSAGE = "NOT AVAILABLE. Students forgot to be Kind a little.";
+const CLASSBOARD_PAGE_LOCK_IMAGE = "page-lock-kindness-poster.jpg";
 
 function isClassBoardPageLocked(settings = {}) {
   const text = String(settings?.PageLockEnabled || "").trim().toUpperCase();
@@ -714,12 +715,95 @@ function showClassBoardPageLock(settings = {}) {
   }
 
   screen.innerHTML = `
-    <div class="sfkPageLockCard" role="status" aria-live="polite">
-      <div class="sfkPageLockIcon" aria-hidden="true">🔒</div>
-      <p class="sfkPageLockEyebrow">SFK ClassBoard</p>
-      <h1>NOT AVAILABLE</h1>
-      <p class="sfkPageLockMessage">${escapeHtml(message)}</p>
-      <p class="sfkPageLockSubtext">Please come back when the class page is reopened.</p>
+    <div class="sfkPageLockBackdrop" aria-hidden="true">
+      <img class="sfkPageLockBackdropImage" src="${CLASSBOARD_PAGE_LOCK_IMAGE}" alt="" loading="eager" decoding="async" />
+      <div class="sfkPageLockBackdropShade"></div>
+      <div class="sfkPageLockAurora"></div>
+      <div class="sfkPageLockShimmer"></div>
+      <div class="sfkPageLockDustField"></div>
+      <div class="sfkPageLockParticles">
+        <span class="sfkParticle sfkParticle1"></span>
+        <span class="sfkParticle sfkParticle2"></span>
+        <span class="sfkParticle sfkParticle3"></span>
+        <span class="sfkParticle sfkParticle4"></span>
+        <span class="sfkParticle sfkParticle5"></span>
+        <span class="sfkParticle sfkParticle6"></span>
+        <span class="sfkParticle sfkParticle7"></span>
+        <span class="sfkParticle sfkParticle8"></span>
+        <span class="sfkParticle sfkParticle9"></span>
+        <span class="sfkParticle sfkParticle10"></span>
+        <span class="sfkParticle sfkParticle11"></span>
+        <span class="sfkParticle sfkParticle12"></span>
+        <span class="sfkParticle sfkParticle13"></span>
+        <span class="sfkParticle sfkParticle14"></span>
+        <span class="sfkParticle sfkParticle15"></span>
+        <span class="sfkParticle sfkParticle16"></span>
+        <span class="sfkParticle sfkParticle17"></span>
+        <span class="sfkParticle sfkParticle18"></span>
+        <span class="sfkParticle sfkParticle19"></span>
+        <span class="sfkParticle sfkParticle20"></span>
+        <span class="sfkParticle sfkParticle21"></span>
+        <span class="sfkParticle sfkParticle22"></span>
+        <span class="sfkParticle sfkParticle23"></span>
+        <span class="sfkParticle sfkParticle24"></span>
+        <span class="sfkParticle sfkParticle25"></span>
+        <span class="sfkParticle sfkParticle26"></span>
+        <span class="sfkParticle sfkParticle27"></span>
+        <span class="sfkParticle sfkParticle28"></span>
+        <span class="sfkParticle sfkParticle29"></span>
+        <span class="sfkParticle sfkParticle30"></span>
+        <span class="sfkParticle sfkParticle31"></span>
+        <span class="sfkParticle sfkParticle32"></span>
+        <span class="sfkParticle sfkParticle33"></span>
+        <span class="sfkParticle sfkParticle34"></span>
+        <span class="sfkParticle sfkParticle35"></span>
+        <span class="sfkParticle sfkParticle36"></span>
+        <span class="sfkParticle sfkParticle37"></span>
+        <span class="sfkParticle sfkParticle38"></span>
+        <span class="sfkParticle sfkParticle39"></span>
+        <span class="sfkParticle sfkParticle40"></span>
+      </div>
+      <div class="sfkPageLockLeaves">
+        <span class="sfkLeaf sfkLeaf1"></span>
+        <span class="sfkLeaf sfkLeaf2"></span>
+        <span class="sfkLeaf sfkLeaf3"></span>
+        <span class="sfkLeaf sfkLeaf4"></span>
+        <span class="sfkLeaf sfkLeaf5"></span>
+        <span class="sfkLeaf sfkLeaf6"></span>
+        <span class="sfkLeaf sfkLeaf7"></span>
+        <span class="sfkLeaf sfkLeaf8"></span>
+        <span class="sfkLeaf sfkLeaf9"></span>
+        <span class="sfkLeaf sfkLeaf10"></span>
+        <span class="sfkLeaf sfkLeaf11"></span>
+        <span class="sfkLeaf sfkLeaf12"></span>
+        <span class="sfkLeaf sfkLeaf13"></span>
+        <span class="sfkLeaf sfkLeaf14"></span>
+        <span class="sfkLeaf sfkLeaf15"></span>
+        <span class="sfkLeaf sfkLeaf16"></span>
+        <span class="sfkLeaf sfkLeaf17"></span>
+        <span class="sfkLeaf sfkLeaf18"></span>
+        <span class="sfkLeaf sfkLeaf19"></span>
+        <span class="sfkLeaf sfkLeaf20"></span>
+        <span class="sfkLeaf sfkLeaf21"></span>
+        <span class="sfkLeaf sfkLeaf22"></span>
+        <span class="sfkLeaf sfkLeaf23"></span>
+        <span class="sfkLeaf sfkLeaf24"></span>
+      </div>
+    </div>
+    <div class="sfkPageLockCard sfkPageLockCardAlive" role="status" aria-live="polite">
+      <div class="sfkPageLockTopline">
+        <div class="sfkPageLockIcon" aria-hidden="true">🔒</div>
+        <p class="sfkPageLockEyebrow">SFK ClassBoard</p>
+      </div>
+      <div class="sfkPageLockHeroStage">
+        <div class="sfkPageLockHeroGlow" aria-hidden="true"></div>
+        <img class="sfkPageLockHero" src="${CLASSBOARD_PAGE_LOCK_IMAGE}" alt="Kindness poster" loading="eager" decoding="async" onerror="this.closest('.sfkPageLockHeroStage')?.classList.add('is-missing')" />
+      </div>
+      <div class="sfkPageLockMessagePanel">
+        <h1>NOT AVAILABLE</h1>
+        <p class="sfkPageLockMessage">${escapeHtml(message)}</p>
+        <p class="sfkPageLockSubtext">Please come back when the class page is reopened.</p>
+      </div>
     </div>
   `;
 }
