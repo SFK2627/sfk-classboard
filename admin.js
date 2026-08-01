@@ -101,6 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initRichTextEditors();
   renderHomepagePresetGallery();
   initLoadingSoundSettings();
+  loadPageLockSettings();
 
   window.SFKAuth?.onAuthStateChanged((user, role) => {
     if (user && role === "admin") showAdminPanel();
@@ -163,6 +164,7 @@ function showAdminPanel() {
   loadHomepageDesignSettings();
   initLoadingSoundSettings();
   loadLoadingSoundSettings();
+  loadPageLockSettings();
 }
 
 function initAdminToolLauncher() {
@@ -400,6 +402,81 @@ function clearFields(ids) {
 }
 
 
+
+
+/* Page Lock Settings */
+const PAGE_LOCK_DEFAULT_MESSAGE = "NOT AVAILABLE. Students forgot to be Kind a little.";
+
+function normalizePageLockEnabled(value) {
+  const text = String(value || "").trim().toUpperCase();
+  return ["YES", "TRUE", "1", "ON", "LOCKED"].includes(text);
+}
+
+function fillPageLockForm(settings = {}) {
+  const enabled = document.getElementById("pageLockEnabled");
+  const message = document.getElementById("pageLockMessage");
+  const status = document.getElementById("pageLockStatus");
+
+  const isLocked = normalizePageLockEnabled(settings.PageLockEnabled);
+  if (enabled) enabled.checked = isLocked;
+  if (message) message.value = String(settings.PageLockMessage || PAGE_LOCK_DEFAULT_MESSAGE).trim() || PAGE_LOCK_DEFAULT_MESSAGE;
+  if (status) status.textContent = isLocked ? "Current status: LOCKED for students." : "Current status: unlocked.";
+}
+
+async function loadPageLockSettings() {
+  const status = document.getElementById("pageLockStatus");
+  if (status) status.textContent = "Loading page lock status...";
+
+  try {
+    const response = await fetch(`${ADMIN_API_URL}?type=settings`, { cache: "no-store" });
+    const settings = await response.json();
+    fillPageLockForm(settings || {});
+  } catch (error) {
+    fillPageLockForm({ PageLockEnabled: "NO", PageLockMessage: PAGE_LOCK_DEFAULT_MESSAGE });
+    if (status) status.textContent = "Could not load status. Default shown.";
+  }
+}
+
+function collectPageLockSettings() {
+  const enabled = document.getElementById("pageLockEnabled")?.checked ? "YES" : "NO";
+  const message = String(document.getElementById("pageLockMessage")?.value || PAGE_LOCK_DEFAULT_MESSAGE).trim() || PAGE_LOCK_DEFAULT_MESSAGE;
+  return {
+    PageLockEnabled: enabled,
+    PageLockMessage: message.slice(0, 180)
+  };
+}
+
+async function savePageLockSettings() {
+  const payload = collectPageLockSettings();
+  const status = document.getElementById("pageLockStatus");
+  if (status) status.textContent = payload.PageLockEnabled === "YES" ? "Locking homepage..." : "Unlocking homepage...";
+
+  const saved = await sendAdminData("pageLockSettings", payload);
+  if (status) {
+    status.textContent = saved
+      ? (payload.PageLockEnabled === "YES" ? "Saved: homepage is LOCKED for students." : "Saved: homepage is unlocked.")
+      : "Unable to save page lock settings.";
+  }
+
+  if (saved) {
+    try {
+      localStorage.setItem("sfkClassBoardPageLockUpdatedAt", String(Date.now()));
+      if (typeof BroadcastChannel !== "undefined") {
+        const channel = new BroadcastChannel("sfk-classboard-updates");
+        channel.postMessage({ type: "page-lock-updated", locked: payload.PageLockEnabled === "YES" });
+        channel.close();
+      }
+    } catch (error) {}
+  }
+}
+
+function quickSetPageLock(locked) {
+  const enabled = document.getElementById("pageLockEnabled");
+  const message = document.getElementById("pageLockMessage");
+  if (enabled) enabled.checked = Boolean(locked);
+  if (message && !String(message.value || "").trim()) message.value = PAGE_LOCK_DEFAULT_MESSAGE;
+  savePageLockSettings();
+}
 
 /* Loading Sound Settings */
 function isValidLoadingSoundId(id) {

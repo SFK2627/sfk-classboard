@@ -16,7 +16,7 @@
   <link rel="manifest" href="admin.webmanifest?v=portrait-reminder-v1" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
-  <link rel="stylesheet" href="admin.css?v=shortcut-toggle-v115" />
+  <link rel="stylesheet" href="admin.css?v=page-lock-v119" />
   <script src="orientation-lock.js?v=appwide-v6" defer></script>
 </head>
 
@@ -62,6 +62,28 @@
 
       <!-- CREATE / ADD DATA -->
       <section class="adminGrid">
+
+        <!-- PAGE LOCK SETTINGS -->
+        <div class="formCard pageLockCard highlightCard">
+          <h2>🔒 Page Lock</h2>
+          <p class="fieldHint">Temporarily hide the student homepage when the class needs a reset. Admin and officer pages will stay available.</p>
+
+          <label class="pageLockSwitch" for="pageLockEnabled">
+            <input id="pageLockEnabled" type="checkbox" />
+            <span>Show lock screen to students</span>
+          </label>
+
+          <label for="pageLockMessage">Lock screen message</label>
+          <textarea id="pageLockMessage" rows="4" maxlength="180" placeholder="NOT AVAILABLE. Students forgot to be Kind a little.">NOT AVAILABLE. Students forgot to be Kind a little.</textarea>
+
+          <div class="pageLockActions">
+            <button type="button" onclick="quickSetPageLock(true)">🔒 Lock Page</button>
+            <button type="button" onclick="quickSetPageLock(false)">🔓 Unlock Page</button>
+          </div>
+
+          <button type="button" onclick="savePageLockSettings()">💾 Save Page Lock</button>
+          <small id="pageLockStatus" class="fieldHint">Loading page lock status...</small>
+        </div>
 
         <!-- GC ADMIN TOOLS -->
         <div class="formCard chatRosterCard">
@@ -831,9 +853,9 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js?v=2-secure-auth"></script>
   <script src="auth.js?v=admin-officer-rescue-v2"></script>
-  <script src="firebase-adapter.js?v=shortcut-toggle-v115"></script>
-  <script src="pwa.js?v=shortcut-toggle-v115"></script>
-  <script src="class-chat-admin.js?v=shortcut-toggle-v115"></script>
-  <script src="admin.js?v=shortcut-toggle-v115"></script>
+  <script src="firebase-adapter.js?v=page-lock-v119"></script>
+  <script src="pwa.js?v=page-lock-v119"></script>
+  <script src="class-chat-admin.js?v=page-lock-v119"></script>
+  <script src="admin.js?v=page-lock-v119"></script>
 </body>
 </html>

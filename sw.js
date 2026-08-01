@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-main-pwa-v117-shortcut-reliable";
+const CACHE_NAME = "sfk-main-pwa-v119-page-lock";
 const CACHE_PREFIXES_TO_DELETE = ["sfk-main-pwa-", "sfk-sw.js-"];
 const NAVIGATION_FALLBACK_URL = "./index.html";
 const NAVIGATION_TIMEOUT_MS = 2500;
@@ -30,9 +30,6 @@ const APP_SHELL = [
   "./officer.js",
   "./manifest.webmanifest",
   "./class-photo.jpg",
-  "./birthday-music.mp3",
-  "./tibetan-singing-bowl.mp3",
-  "./o-shortcut-sound.mp3",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/icon-maskable-512.png"
@@ -68,7 +65,7 @@ async function trimOldCaches() {
 }
 
 function shouldCache(response) {
-  return response && response.ok && response.type === "basic";
+  return response && response.status === 200 && response.type === "basic";
 }
 
 async function cacheMatch(request) {
@@ -221,6 +218,14 @@ self.addEventListener("fetch", (event) => {
 
   if (request.method !== "GET" || url.origin !== self.location.origin) return;
   if (request.cache === "only-if-cached" && request.mode !== "same-origin") return;
+
+  // Range requests are common for audio/video metadata and seeking.
+  // Do not route them through Cache API because partial 206 responses can
+  // fail cache.put() and break playback on some browsers.
+  if (request.headers.has("range")) {
+    event.respondWith(fetch(request));
+    return;
+  }
 
   if (request.mode === "navigate" || request.destination === "document") {
     event.respondWith(handleNavigation(request, event));

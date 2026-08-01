@@ -10,7 +10,7 @@ const ANNOUNCEMENT_ROTATE_MS = 10000;
 const BIRTHDAY_ROTATE_MS = 30000;
 const CACHE_KEY = "sfkClassBoardData";
 const CLASSBOARD_MEDIA_FIX_CACHE_VERSION_KEY = "sfkClassBoardMediaFixVersion";
-const CLASSBOARD_MEDIA_FIX_CACHE_VERSION = "homepage-admin-readable-v71";
+const CLASSBOARD_MEDIA_FIX_CACHE_VERSION = "homepage-page-lock-v119";
 const ANNOUNCEMENT_HEARTS_KEY = "sfkClassBoardHeartedAnnouncements";
 
 try {
@@ -150,12 +150,14 @@ function initClassBoard() {
   });
   window.addEventListener("storage", (event) => {
     if (event.key === "sfkClassBoardAnnouncementUpdatedAt") startAnnouncementFastRefreshBurst("admin-saved");
+    if (event.key === "sfkClassBoardPageLockUpdatedAt") startAnnouncementFastRefreshBurst("page-lock-updated");
   });
   try {
     if (typeof BroadcastChannel !== "undefined") {
       const channel = new BroadcastChannel("sfk-classboard-updates");
       channel.addEventListener("message", (event) => {
         if (event.data?.type === "announcement-updated") startAnnouncementFastRefreshBurst("announcement-broadcast");
+        if (event.data?.type === "page-lock-updated") startAnnouncementFastRefreshBurst("page-lock-broadcast");
       });
     }
   } catch (error) {
@@ -671,8 +673,74 @@ function autoFitPeriodSubject(element) {
 }
 
 
+
+const CLASSBOARD_PAGE_LOCK_DEFAULT_MESSAGE = "NOT AVAILABLE. Students forgot to be Kind a little.";
+
+function isClassBoardPageLocked(settings = {}) {
+  const text = String(settings?.PageLockEnabled || "").trim().toUpperCase();
+  return ["YES", "TRUE", "1", "ON", "LOCKED"].includes(text);
+}
+
+function getClassBoardPageLockMessage(settings = {}) {
+  return String(settings?.PageLockMessage || CLASSBOARD_PAGE_LOCK_DEFAULT_MESSAGE).trim() || CLASSBOARD_PAGE_LOCK_DEFAULT_MESSAGE;
+}
+
+function showClassBoardPageLock(settings = {}) {
+  const message = getClassBoardPageLockMessage(settings);
+  const app = document.querySelector(".app") || document.body;
+  let screen = document.getElementById("sfkPageLockScreen");
+
+  document.body.classList.add("classBoardPageLocked");
+  document.documentElement.classList.add("classBoardPageLocked");
+  announcementRotationPaused = true;
+  window.clearTimeout(announcementRotateTimer);
+  window.clearTimeout(announcementFastRefreshTimer);
+
+  const intro = document.getElementById("sfkIntroOverlay");
+  if (intro) {
+    intro.classList.add("is-hidden");
+    intro.hidden = true;
+    intro.style.display = "none";
+  }
+
+  const audioOverlay = document.getElementById("audioStartOverlay");
+  if (audioOverlay) audioOverlay.classList.add("hidden");
+
+  if (!screen) {
+    screen = document.createElement("section");
+    screen.id = "sfkPageLockScreen";
+    screen.className = "sfkPageLockScreen";
+    app.insertBefore(screen, app.firstChild || null);
+  }
+
+  screen.innerHTML = `
+    <div class="sfkPageLockCard" role="status" aria-live="polite">
+      <div class="sfkPageLockIcon" aria-hidden="true">🔒</div>
+      <p class="sfkPageLockEyebrow">SFK ClassBoard</p>
+      <h1>NOT AVAILABLE</h1>
+      <p class="sfkPageLockMessage">${escapeHtml(message)}</p>
+      <p class="sfkPageLockSubtext">Please come back when the class page is reopened.</p>
+    </div>
+  `;
+}
+
+function hideClassBoardPageLock() {
+  document.body.classList.remove("classBoardPageLocked");
+  document.documentElement.classList.remove("classBoardPageLocked");
+  const screen = document.getElementById("sfkPageLockScreen");
+  if (screen) screen.remove();
+  announcementRotationPaused = false;
+}
+
 function renderDashboard(data) {
   if (!data || !data.settings) return;
+
+  if (isClassBoardPageLocked(data.settings)) {
+    showClassBoardPageLock(data.settings);
+    return;
+  }
+
+  hideClassBoardPageLock();
 
   document.getElementById("dashboardTitle").textContent =
     data.settings.DashboardTitle || "SFK ClassBoard";

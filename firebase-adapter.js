@@ -245,6 +245,11 @@
       return saveLoadingSoundSettings(payload);
     }
 
+    if (type === "pageLockSettings") {
+      requireFirebaseRole(["admin"]);
+      return savePageLockSettings(payload);
+    }
+
     if (TYPE_TO_SHEET[type]) {
       requireFirebaseRole(["admin"]);
       return addTypedRow(type, payload, sourceUrl);
@@ -372,6 +377,36 @@
     });
     await batch.commit();
     return { success: true, message: "Homepage design settings saved." };
+  }
+
+
+  async function savePageLockSettings(payload) {
+    const enabledText = String(payload?.PageLockEnabled || "NO").trim().toUpperCase();
+    const enabled = ["YES", "TRUE", "1", "ON", "LOCKED"].includes(enabledText) ? "YES" : "NO";
+    const message = String(payload?.PageLockMessage || "NOT AVAILABLE. Students forgot to be Kind a little.")
+      .trim()
+      .slice(0, 180) || "NOT AVAILABLE. Students forgot to be Kind a little.";
+
+    const meta = getSheetMeta("Settings");
+    const batch = db.batch();
+    batch.set(db.collection(meta.collection).doc("PageLockEnabled"), withMeta({
+      Key: "PageLockEnabled",
+      Value: enabled
+    }), { merge: true });
+    batch.set(db.collection(meta.collection).doc("PageLockMessage"), withMeta({
+      Key: "PageLockMessage",
+      Value: message
+    }), { merge: true });
+    batch.set(db.collection(meta.collection).doc("PageLockUpdatedAt"), withMeta({
+      Key: "PageLockUpdatedAt",
+      Value: new Date().toISOString()
+    }), { merge: true });
+    await batch.commit();
+    return {
+      success: true,
+      message: enabled === "YES" ? "Homepage locked for students." : "Homepage unlocked.",
+      locked: enabled === "YES"
+    };
   }
 
   async function saveLoadingSoundSettings(payload) {

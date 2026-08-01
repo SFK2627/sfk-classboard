@@ -1,0 +1,27 @@
+UPLOAD / REPLACE THESE FILES ONLY IN YOUR GITHUB REPOSITORY ROOT:
+
+1. index.html
+2. class-photo.jpg
+3. style.css
+4. script.js
+5. admin.html
+6. admin.css
+7. admin.js
+8. firebase-adapter.js
+9. pwa.js
+10. sw.js
+11. manifest.webmanifest
+
+Do NOT upload the MP3 files again.
+Do NOT upload old backup files like index (1).html or sw (5).js.
+
+After uploading, open reset-cache.html once, then refresh the website.
+
+Admin Page Lock:
+- Go to admin.html
+- Find 🔒 Page Lock
+- Click Lock Page or Unlock Page
+
+Locked visitor message:
+NOT AVAILABLE
+Students forgot to be Kind a little.
