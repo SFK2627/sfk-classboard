@@ -830,7 +830,7 @@ function renderDashboard(data) {
     data.settings.DashboardTitle || "SFK ClassBoard";
 
   document.getElementById("sectionText").textContent =
-    `${data.settings.Section || ""} • S.Y. ${data.settings.SchoolYear || ""} • ${data.settings.Motto || ""}`;
+    `${data.settings.Section || ""} • S.Y. ${data.settings.SchoolYear || ""}`;
 
   applyHomepageDesignSettings(data.settings || {});
 
@@ -1709,7 +1709,14 @@ function renderAnnouncements(items) {
 
   if (!items || items.length === 0) {
     title.textContent = "Subject Announcements";
-    box.innerHTML = `<p>No announcements yet.</p>`;
+    box.innerHTML = `
+      <div class="announcementEmptyState" role="status" aria-live="polite">
+        <div class="announcementEmptyIcon" aria-hidden="true">📢</div>
+        <div class="announcementEmptyTextWrap">
+          <h3>No announcements yet</h3>
+          <p>Everything is quiet for now. Please wait for the next class update.</p>
+        </div>
+      </div>`;
     return;
   }
 
@@ -4359,12 +4366,14 @@ function renderTicker(items) {
 
   if (!items || items.length === 0) {
     ticker.textContent = "📢 Welcome to SFK ClassBoard";
+    ticker.dataset.marquee = ticker.textContent;
     return;
   }
 
   ticker.textContent = items
     .map(item => `📢 ${item.Message}`)
     .join("     •     ");
+  ticker.dataset.marquee = ticker.textContent;
 }
 
 function updateCountdownAndBell() {
@@ -5862,7 +5871,7 @@ function updateShhhDesktopHeaderCountBadge() {
   const badge = createShhhDesktopHeaderCountBadge();
   if (!badge) return;
   const count = Math.max(0, Number(shhhMode.totalCount) || 0);
-  const shouldShow = shhhMode.showHeaderCount !== false && isShhhDesktopHeaderCountViewport();
+  const shouldShow = isShhhDesktopHeaderCountViewport();
   badge.hidden = !shouldShow;
   badge.classList.toggle("is-live", Boolean(shhhMode.enabled));
   badge.classList.toggle("is-muted", Boolean(shhhMode.muted));

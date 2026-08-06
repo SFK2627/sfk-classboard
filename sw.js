@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-main-pwa-v126-page-lock-seamless";
+const CACHE_NAME = "sfk-main-pwa-v180-schedule-clean-dots";
 const CACHE_PREFIXES_TO_DELETE = ["sfk-main-pwa-", "sfk-sw.js-"];
 const NAVIGATION_FALLBACK_URL = "./index.html";
 const NAVIGATION_TIMEOUT_MS = 2500;
@@ -31,6 +31,7 @@ const APP_SHELL = [
   "./manifest.webmanifest",
   "./class-photo.jpg",
   "./page-lock-kindness-poster.jpg",
+  "./st-faustina-portrait.png",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/icon-maskable-512.png"
