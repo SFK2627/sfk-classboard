@@ -19650,3 +19650,165 @@ body.classBoardPageLocked .app > :not(#sfkPageLockScreen) {
     text-overflow: clip !important;
   }
 }
+
+/* =========================================================
+   v240 THINGS TO BRING FULL TITLE + EDGE-TO-EDGE CONTENT
+   - show the complete subject/topic name (no ellipsis)
+   - keep deadline/status beside the subject whenever space allows
+   - if the title is genuinely long, wrap it instead of cutting it
+   - widen the actual Things to Bring content area left/right
+   - Adviser Reminder item follows the configured Things-to-Bring item color
+   Desktop layout only; phone layout remains unchanged.
+========================================================= */
+@media (min-width: 901px) {
+  /* Use more of the side card's real width instead of wasting it on inner gutters. */
+  .thingsCard #thingsList {
+    width: calc(100% + 12px) !important;
+    max-width: none !important;
+    margin-left: -6px !important;
+    margin-right: -6px !important;
+    padding-left: 6px !important;
+    padding-right: 6px !important;
+    box-sizing: border-box !important;
+  }
+
+  .thingsCard .thing-item {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding-left: 14px !important;
+    padding-right: 10px !important;
+  }
+
+  /* Full subject + deadline line. Never replace either with an ellipsis. */
+  .thingsCard .thing-topline {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    margin: 0 0 5px 0 !important;
+  }
+
+  .thingsCard .thing-subject {
+    display: block !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    width: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+    line-height: 1.08 !important;
+  }
+
+  .thingsCard .bring-status {
+    display: inline-flex !important;
+    flex: 0 0 auto !important;
+    max-width: none !important;
+    width: auto !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    margin: 0 !important;
+    align-self: flex-start !important;
+  }
+
+  .thingsCard .thing-detail {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* The actual Adviser Reminder follows the same configurable item palette
+     used by Things to Bring, including custom colors set from the admin UI. */
+  .sideCard #reminderList .reminder-item {
+    background: var(--home-things-item-bg) !important;
+    color: var(--home-things-item-text) !important;
+  }
+
+  .sideCard #reminderList .reminder-item,
+  .sideCard #reminderList .reminder-item p,
+  .sideCard #reminderList .reminder-item span,
+  .sideCard #reminderList .reminder-item strong,
+  .sideCard #reminderList .reminder-item em,
+  .sideCard #reminderList .reminder-item li {
+    color: var(--home-things-item-text) !important;
+  }
+}
+
+/* =========================================================
+   v241 LARGER PRAYER LEADER LABEL
+   - keep label left aligned
+   - enlarge label only; centered leader name remains untouched
+========================================================= */
+@media (min-width: 901px) {
+  .heroGrid .prayer .label,
+  .heroGrid .prayerLeaderLink .label {
+    font-size: clamp(.94rem, 1.02vw, 1.08rem) !important;
+    line-height: 1.05 !important;
+    font-weight: 800 !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .heroGrid .prayer .label,
+  .heroGrid .prayerLeaderLink .label {
+    font-size: .92rem !important;
+    line-height: 1.05 !important;
+    font-weight: 800 !important;
+  }
+}
+
+/* =========================================================
+   v242 THINGS TO BRING — RESTORE SUBJECT-BASED TEXT COLORS
+   - subject/topic title color changes by detected subject again
+   - overrides the Design Studio fallback color only for known subjects
+   - preserves v240 full-title + deadline layout
+========================================================= */
+.thingsCard .thing-subject.subject-english {
+  color: #e75480 !important;
+}
+
+.thingsCard .thing-subject.subject-mathematics,
+.thingsCard .thing-subject.subject-math {
+  color: #15803d !important;
+}
+
+.thingsCard .thing-subject.subject-science {
+  color: #c89b00 !important;
+}
+
+.thingsCard .thing-subject.subject-ict,
+.thingsCard .thing-subject.subject-le {
+  color: #d11f1f !important;
+}
+
+.thingsCard .thing-subject.subject-filipino,
+.thingsCard .thing-subject.subject-ENGLISH {
+  color: #8b5a2b !important;
+}
+
+.thingsCard .thing-subject.subject-cled {
+  color: #7c3aed !important;
+}
+
+.thingsCard .thing-subject.subject-ap {
+  color: #2563eb !important;
+}
+
+.thingsCard .thing-subject.subject-mapeh {
+  color: #111111 !important;
+}
+
+.thingsCard .thing-subject.subject-homeroom {
+  color: #444444 !important;
+}

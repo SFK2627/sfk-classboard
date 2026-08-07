@@ -70,6 +70,7 @@ let homepageDesignSettings = {};
 let lastPrayerTriggerKey = "";
 let lastScheduleAutoScrollKey = "";
 let isTodayScheduleOpen = false;
+let lastThingsToBringManilaDateKey = "";
 
 function safeSetClassBoardCache(value) {
   try {
@@ -144,10 +145,19 @@ function initClassBoard() {
 
   setInterval(loadClassBoard, DATA_REFRESH_MS);
   startAnnouncementFastRefreshBurst("startup");
-  window.addEventListener("focus", () => startAnnouncementFastRefreshBurst("window-focus"));
-  window.addEventListener("pageshow", () => startAnnouncementFastRefreshBurst("pageshow"));
+  window.addEventListener("focus", () => {
+    refreshThingsToBringForManilaDay();
+    startAnnouncementFastRefreshBurst("window-focus");
+  });
+  window.addEventListener("pageshow", () => {
+    refreshThingsToBringForManilaDay();
+    startAnnouncementFastRefreshBurst("pageshow");
+  });
   document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) startAnnouncementFastRefreshBurst("visible");
+    if (!document.hidden) {
+      refreshThingsToBringForManilaDay();
+      startAnnouncementFastRefreshBurst("visible");
+    }
   });
   window.addEventListener("storage", (event) => {
     if (event.key === "sfkClassBoardAnnouncementUpdatedAt") startAnnouncementFastRefreshBurst("admin-saved");
@@ -3935,6 +3945,28 @@ function getManilaDateKey(date) {
   return `${year}-${month}-${day}`;
 }
 
+// Keep Things to Bring countdown labels correct across midnight without
+// rebuilding the entire dashboard. This preserves Today's Schedule scroll,
+// current-period focus, and subject marquee state.
+function refreshThingsToBringForManilaDay(now = new Date()) {
+  const currentDateKey = getManilaDateKey(now);
+
+  if (!lastThingsToBringManilaDateKey) {
+    lastThingsToBringManilaDateKey = currentDateKey;
+    return false;
+  }
+
+  if (currentDateKey === lastThingsToBringManilaDateKey) return false;
+
+  lastThingsToBringManilaDateKey = currentDateKey;
+
+  if (latestData && Array.isArray(latestData.thingsToBring)) {
+    renderThings(latestData.thingsToBring);
+  }
+
+  return true;
+}
+
 function getAnnouncementDateKey(value) {
   if (!value) return "";
   const text = String(value).trim();
@@ -4240,16 +4272,29 @@ function formatShortBringDate(dateParts) {
 function getThingSubjectClass(subject) {
   const sub = String(subject || "").toLowerCase().trim();
 
-  if (sub.includes("mapeh")) return "subject-mapeh";
-  if (sub.includes("cled") || sub.includes("christian") || sub.includes("religion")) return "subject-cled";
+  if (sub.includes("mapeh") || /\b(music|arts?|health|p\.?e\.?|physical education)\b/.test(sub)) {
+    return "subject-mapeh";
+  }
+
+  if (
+    sub.includes("cled") ||
+    sub.includes("christian") ||
+    sub.includes("religion") ||
+    sub.includes("holy eucharist") ||
+    sub.includes("eucharist") ||
+    /\bcle\b/.test(sub)
+  ) {
+    return "subject-cled";
+  }
+
   if (sub.includes("math")) return "subject-mathematics";
-  if (sub.includes("ict")) return "subject-ict";
-  if (sub.includes("le")) return "subject-le";
+  if (/\bict\b/.test(sub) || sub.includes("computer")) return "subject-ict";
+  if (/\ble\b/.test(sub) || sub.includes("livelihood")) return "subject-le";
   if (sub.includes("english")) return "subject-english";
-  if (sub.includes("English") || sub.includes("filipno")) return "subject-English";
+  if (sub.includes("filipino") || sub.includes("filipno")) return "subject-filipino";
   if (sub.includes("science")) return "subject-science";
   if (sub.includes("araling") || /\bap\b/.test(sub)) return "subject-ap";
-  if (sub.includes("homeroom")) return "subject-homeroom";
+  if (sub.includes("homeroom") || sub.includes("advisory")) return "subject-homeroom";
 
   return "subject-homeroom";
 }
@@ -5277,6 +5322,7 @@ function fitDesktopHeaderTime(timeEl) {
 
 function updateClock() {
   const now = new Date();
+  refreshThingsToBringForManilaDay(now);
   const timeEl = document.getElementById("timeText");
   if (!timeEl) return;
 
