@@ -116,6 +116,7 @@ function initClassBoard() {
   initClassBoardAccessMenu();
   initBirthdayYearModal();
   initDesktopShhhMode();
+  initDesktopFloatClock();
 
   const audioOverlay = document.getElementById("audioStartOverlay");
   if (audioOverlay) {
@@ -175,6 +176,256 @@ function initClassBoard() {
 
   syncTodayScheduleToggle();
   window.addEventListener("resize", syncTodayScheduleToggle);
+}
+
+
+let classBoardFloatClockWindow = null;
+let classBoardFloatClockTimer = null;
+
+function isDesktopFloatClockAvailable() {
+  return Boolean(
+    window.matchMedia &&
+    window.matchMedia("(min-width: 901px)").matches &&
+    window.documentPictureInPicture &&
+    typeof window.documentPictureInPicture.requestWindow === "function"
+  );
+}
+
+function formatFloatClockTime(now = new Date()) {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Manila",
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true
+  }).format(now);
+}
+
+function formatFloatClockDate(now = new Date()) {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Manila",
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric"
+  }).format(now);
+}
+
+function updateDesktopFloatClockButton() {
+  const button = document.getElementById("desktopFloatClockBtn");
+  if (!button) return;
+
+  const isOpen = Boolean(classBoardFloatClockWindow && !classBoardFloatClockWindow.closed);
+  button.classList.toggle("is-active", isOpen);
+  button.setAttribute("aria-pressed", isOpen ? "true" : "false");
+  button.setAttribute("aria-label", isOpen ? "Hide floating clock" : "Float clock above other apps");
+  button.title = isOpen ? "Hide floating clock" : "Float clock";
+  button.innerHTML = isOpen ? '<span aria-hidden="true">×</span>' : '<span aria-hidden="true">▣</span>';
+}
+
+function stopDesktopFloatClockTimer() {
+  if (classBoardFloatClockTimer == null) return;
+  try {
+    if (classBoardFloatClockWindow && !classBoardFloatClockWindow.closed) {
+      classBoardFloatClockWindow.clearInterval(classBoardFloatClockTimer);
+    } else {
+      window.clearInterval(classBoardFloatClockTimer);
+    }
+  } catch (error) {
+    window.clearInterval(classBoardFloatClockTimer);
+  }
+  classBoardFloatClockTimer = null;
+}
+
+function renderDesktopFloatClock() {
+  const pipWindow = classBoardFloatClockWindow;
+  if (!pipWindow || pipWindow.closed) return;
+
+  const timeNode = pipWindow.document.getElementById("sfkFloatTime");
+  const dateNode = pipWindow.document.getElementById("sfkFloatDate");
+  const now = new Date();
+
+  if (timeNode) timeNode.textContent = formatFloatClockTime(now);
+  if (dateNode) dateNode.textContent = formatFloatClockDate(now);
+}
+
+function closeDesktopFloatClock() {
+  stopDesktopFloatClockTimer();
+
+  const pipWindow = classBoardFloatClockWindow;
+  classBoardFloatClockWindow = null;
+
+  if (pipWindow && !pipWindow.closed) {
+    try { pipWindow.close(); } catch (error) {}
+  }
+
+  updateDesktopFloatClockButton();
+}
+
+async function openDesktopFloatClock() {
+  if (classBoardFloatClockWindow && !classBoardFloatClockWindow.closed) {
+    try { classBoardFloatClockWindow.focus(); } catch (error) {}
+    return;
+  }
+
+  if (!isDesktopFloatClockAvailable()) {
+    window.alert("Floating Clock needs a recent Chrome or Edge desktop browser. Please update the browser and open ClassBoard over HTTPS.");
+    return;
+  }
+
+  let pipWindow;
+  try {
+    pipWindow = await window.documentPictureInPicture.requestWindow({
+      width: 390,
+      height: 168
+    });
+  } catch (error) {
+    console.warn("Unable to open ClassBoard floating clock:", error);
+    return;
+  }
+
+  classBoardFloatClockWindow = pipWindow;
+
+  const pipDoc = pipWindow.document;
+  pipDoc.title = "SFK Floating Clock";
+  pipDoc.documentElement.lang = "en";
+  pipDoc.body.innerHTML = `
+    <main class="sfkFloatClock" aria-label="SFK ClassBoard floating clock">
+      <div class="sfkFloatClockTopline">
+        <span class="sfkFloatClockLabel">SFK CLASSBOARD</span>
+        <button id="sfkFloatHideBtn" class="sfkFloatHideBtn" type="button" aria-label="Hide floating clock">Hide</button>
+      </div>
+      <div id="sfkFloatTime" class="sfkFloatTime">--:--:-- --</div>
+      <div id="sfkFloatDate" class="sfkFloatDate">Loading date...</div>
+    </main>
+  `;
+
+  const style = pipDoc.createElement("style");
+  style.textContent = `
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #071426;
+      color: #fff;
+    }
+    .sfkFloatClock {
+      width: 100%;
+      height: 100%;
+      padding: 13px 16px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background:
+        radial-gradient(circle at 88% 0%, rgba(247,198,0,.17), transparent 34%),
+        linear-gradient(145deg, #08172c, #0b2347);
+      border: 3px solid #f7c600;
+      outline: 2px solid #111;
+      outline-offset: -7px;
+    }
+    .sfkFloatClockTopline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 25px;
+    }
+    .sfkFloatClockLabel {
+      display: inline-flex;
+      align-items: center;
+      min-width: 0;
+      color: #f7c600;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .16em;
+      white-space: nowrap;
+    }
+    .sfkFloatHideBtn {
+      flex: 0 0 auto;
+      padding: 5px 10px;
+      border: 1px solid rgba(255,255,255,.34);
+      border-radius: 999px;
+      background: rgba(255,255,255,.10);
+      color: #fff;
+      font: inherit;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .sfkFloatHideBtn:hover { background: rgba(247,198,0,.2); border-color: #f7c600; }
+    .sfkFloatTime {
+      margin-top: 3px;
+      text-align: center;
+      color: #fff;
+      font-size: clamp(36px, 13vw, 58px);
+      font-weight: 950;
+      line-height: .98;
+      letter-spacing: -.055em;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      text-shadow: 0 6px 18px rgba(0,0,0,.3);
+    }
+    .sfkFloatDate {
+      margin-top: 6px;
+      text-align: center;
+      color: #dbe8ff;
+      font-size: clamp(12px, 4vw, 17px);
+      font-weight: 700;
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  `;
+  pipDoc.head.appendChild(style);
+
+  pipDoc.getElementById("sfkFloatHideBtn")?.addEventListener("click", () => closeDesktopFloatClock());
+
+  pipWindow.addEventListener("pagehide", () => {
+    stopDesktopFloatClockTimer();
+    classBoardFloatClockWindow = null;
+    updateDesktopFloatClockButton();
+  }, { once: true });
+
+  renderDesktopFloatClock();
+  classBoardFloatClockTimer = pipWindow.setInterval(renderDesktopFloatClock, 1000);
+  updateDesktopFloatClockButton();
+}
+
+function initDesktopFloatClock() {
+  const timeBox = document.getElementById("classBoardAccessTrigger");
+  if (!timeBox || document.getElementById("desktopFloatClockBtn")) return;
+
+  const button = document.createElement("button");
+  button.id = "desktopFloatClockBtn";
+  button.className = "desktopFloatClockBtn";
+  button.type = "button";
+  button.setAttribute("aria-pressed", "false");
+  button.setAttribute("aria-label", "Float clock above other apps");
+  button.title = "Float clock";
+  button.innerHTML = '<span aria-hidden="true">▣</span>';
+
+  button.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (classBoardFloatClockWindow && !classBoardFloatClockWindow.closed) {
+      closeDesktopFloatClock();
+    } else {
+      openDesktopFloatClock();
+    }
+  });
+
+  button.addEventListener("keydown", (event) => event.stopPropagation());
+  timeBox.appendChild(button);
+
+  const syncVisibility = () => {
+    button.hidden = !(window.matchMedia && window.matchMedia("(min-width: 901px)").matches);
+  };
+  syncVisibility();
+  window.addEventListener("resize", syncVisibility);
+  updateDesktopFloatClockButton();
 }
 
 function initClassBoardAccessMenu() {
@@ -867,6 +1118,225 @@ function hideClassBoardPageLock() {
   announcementRotationPaused = false;
 }
 
+
+/* =========================================================
+   v206 ROTATING CLASSBOARD HEADING
+   Base title: 5 seconds. Random name: 3 seconds.
+   Every name is shown once before the pool reshuffles.
+========================================================= */
+const SFK_ROTATING_HEADING_NAMES = [
+  "Lord Rani Karl",
+  "Johnreeve Khari",
+  "Jayren",
+  "Rojer Jyuan",
+  "John Manuel",
+  "Leobert Joros",
+  "Marcus Brent",
+  "Robin Dale",
+  "Dan Leonard",
+  "Oliver Francois",
+  "Kellin Chase",
+  "Andrei James",
+  "Blaine Xander",
+  "Argi Caleb",
+  "Ram Jacob",
+  "Shawn Rowin",
+  "John Miguel",
+  "Juancho Jakob",
+  "Dion Carlo",
+  "Mael",
+  "Marcus Carsten",
+  "Alleria Jhane",
+  "Elijah",
+  "Cassandra Vielle",
+  "Mary Joice",
+  "Kyrie Blaire",
+  "Brina Marce",
+  "Kreezha Cylee",
+  "Rich Anne Mary",
+  "Azzurie",
+  "Jayra",
+  "Breeana Klein",
+  "Keiszha Andrea",
+  "Johanna",
+  "Arnie",
+  "Yumi Dennise",
+  "Ckeannie Aliyah",
+  "Christin Louhrayne",
+  "Gillian Venice",
+  "Jasmin Sia",
+  "Sofia Marie",
+  "Joella Vian",
+  "Ellerie Mich",
+  "Sir JR"
+];
+
+const SFK_HEADING_BASE_MS = 5000;
+const SFK_HEADING_NAME_MS = 3000;
+const SFK_HEADING_EXIT_MS = 260;
+const SFK_HEADING_ENTER_MS = 520;
+let sfkHeadingBaseText = "SFK ClassBoard";
+let sfkHeadingNameQueue = [];
+let sfkHeadingLastName = "";
+let sfkHeadingTimer = 0;
+let sfkHeadingTransitionTimer = 0;
+let sfkHeadingShowingBase = true;
+let sfkHeadingRotationStarted = false;
+
+function getSfkRandomIndex(maxExclusive) {
+  if (maxExclusive <= 1) return 0;
+
+  if (window.crypto && typeof window.crypto.getRandomValues === "function") {
+    const values = new Uint32Array(1);
+    const limit = Math.floor(0x100000000 / maxExclusive) * maxExclusive;
+    let value = 0;
+    do {
+      window.crypto.getRandomValues(values);
+      value = values[0];
+    } while (value >= limit);
+    return value % maxExclusive;
+  }
+
+  return Math.floor(Math.random() * maxExclusive);
+}
+
+function isSfkHeadingOrderTooPredictable(queue) {
+  if (queue.length < 4) return false;
+
+  const original = SFK_ROTATING_HEADING_NAMES;
+  const samePositions = queue.reduce((count, name, index) => count + (name === original[index] ? 1 : 0), 0);
+  const alphabetical = [...queue].sort((a, b) => a.localeCompare(b));
+  const matchesAlphabetical = queue.every((name, index) => name === alphabetical[index]);
+  const matchesReverseAlphabetical = queue.every((name, index) => name === alphabetical[alphabetical.length - 1 - index]);
+
+  return samePositions > Math.ceil(queue.length * .22) || matchesAlphabetical || matchesReverseAlphabetical;
+}
+
+function shuffleSfkHeadingNames() {
+  let queue = [];
+  let attempts = 0;
+
+  do {
+    queue = [...SFK_ROTATING_HEADING_NAMES];
+    for (let i = queue.length - 1; i > 0; i -= 1) {
+      const j = getSfkRandomIndex(i + 1);
+      [queue[i], queue[j]] = [queue[j], queue[i]];
+    }
+    attempts += 1;
+  } while (attempts < 8 && isSfkHeadingOrderTooPredictable(queue));
+
+  // Avoid a back-to-back repeat when a new full round begins.
+  if (queue.length > 1 && sfkHeadingLastName && queue[0] === sfkHeadingLastName) {
+    const swapIndex = 1 + getSfkRandomIndex(queue.length - 1);
+    [queue[0], queue[swapIndex]] = [queue[swapIndex], queue[0]];
+  }
+
+  sfkHeadingNameQueue = queue;
+}
+function getNextSfkHeadingName() {
+  if (!sfkHeadingNameQueue.length) shuffleSfkHeadingNames();
+  const nextName = sfkHeadingNameQueue.shift() || "";
+  sfkHeadingLastName = nextName;
+  return nextName;
+}
+
+function fitSfkDashboardHeading() {
+  const title = document.getElementById("dashboardTitle");
+  if (!title) return;
+
+  title.style.removeProperty("font-size");
+  title.style.removeProperty("letter-spacing");
+  title.classList.remove("sfkHeadingTight", "sfkHeadingVeryTight");
+
+  requestAnimationFrame(() => {
+    if (!title.isConnected) return;
+    const available = Math.max(1, title.clientWidth);
+    const needed = Math.max(1, title.scrollWidth);
+    if (needed <= available) return;
+
+    const ratio = available / needed;
+    if (ratio < 0.82) title.classList.add("sfkHeadingVeryTight");
+    else title.classList.add("sfkHeadingTight");
+
+    requestAnimationFrame(() => {
+      if (!title.isConnected || title.scrollWidth <= title.clientWidth) return;
+      const computed = window.getComputedStyle(title);
+      const currentSize = parseFloat(computed.fontSize) || 24;
+      const fitRatio = Math.max(.66, Math.min(1, title.clientWidth / Math.max(1, title.scrollWidth)));
+      title.style.setProperty("font-size", `${Math.max(14, currentSize * fitRatio * .985)}px`, "important");
+    });
+  });
+}
+
+function setSfkHeadingText(nextText, animate = true) {
+  const title = document.getElementById("dashboardTitle");
+  if (!title) return;
+
+  window.clearTimeout(sfkHeadingTransitionTimer);
+  title.classList.remove("sfkHeadingLeaving", "sfkHeadingEntering");
+
+  const applyText = () => {
+    title.textContent = nextText;
+    title.title = nextText;
+    fitSfkDashboardHeading();
+
+    if (!animate) return;
+
+    // Restart the entrance animation even when transitions happen repeatedly.
+    void title.offsetWidth;
+    title.classList.add("sfkHeadingEntering");
+    sfkHeadingTransitionTimer = window.setTimeout(() => {
+      title.classList.remove("sfkHeadingEntering");
+    }, SFK_HEADING_ENTER_MS);
+  };
+
+  if (!animate || title.textContent === nextText) {
+    applyText();
+    return;
+  }
+
+  title.classList.add("sfkHeadingLeaving");
+  sfkHeadingTransitionTimer = window.setTimeout(() => {
+    title.classList.remove("sfkHeadingLeaving");
+    applyText();
+  }, SFK_HEADING_EXIT_MS);
+}
+function setSfkDashboardBaseTitle(value) {
+  sfkHeadingBaseText = String(value || "SFK ClassBoard").trim() || "SFK ClassBoard";
+  if (sfkHeadingShowingBase) setSfkHeadingText(sfkHeadingBaseText, false);
+}
+
+function scheduleNextSfkHeadingSwap(delay) {
+  window.clearTimeout(sfkHeadingTimer);
+  sfkHeadingTimer = window.setTimeout(() => {
+    if (sfkHeadingShowingBase) {
+      const nextName = getNextSfkHeadingName();
+      sfkHeadingShowingBase = false;
+      setSfkHeadingText(nextName, true);
+      scheduleNextSfkHeadingSwap(SFK_HEADING_NAME_MS + SFK_HEADING_EXIT_MS);
+    } else {
+      sfkHeadingShowingBase = true;
+      setSfkHeadingText(sfkHeadingBaseText, true);
+      scheduleNextSfkHeadingSwap(SFK_HEADING_BASE_MS + SFK_HEADING_EXIT_MS);
+    }
+  }, delay);
+}
+
+function startSfkHeadingRotation() {
+  if (sfkHeadingRotationStarted) return;
+  const title = document.getElementById("dashboardTitle");
+  if (!title) return;
+
+  sfkHeadingRotationStarted = true;
+  sfkHeadingShowingBase = true;
+  sfkHeadingBaseText = String(title.textContent || sfkHeadingBaseText).trim() || "SFK ClassBoard";
+  setSfkHeadingText(sfkHeadingBaseText, false);
+  shuffleSfkHeadingNames();
+  scheduleNextSfkHeadingSwap(SFK_HEADING_BASE_MS);
+
+  window.addEventListener("resize", fitSfkDashboardHeading, { passive: true });
+}
+
 function renderDashboard(data) {
   if (!data || !data.settings) return;
 
@@ -877,8 +1347,9 @@ function renderDashboard(data) {
 
   hideClassBoardPageLock();
 
-  document.getElementById("dashboardTitle").textContent =
-    data.settings.DashboardTitle || "SFK ClassBoard";
+  setSfkDashboardBaseTitle(
+    data.settings.DashboardTitle || "SFK ClassBoard"
+  );
 
   document.getElementById("sectionText").textContent =
     `${data.settings.Section || ""} • S.Y. ${data.settings.SchoolYear || ""}`;
@@ -1238,6 +1709,7 @@ function renderSchedule(items, currentSubject) {
   const box = document.getElementById("scheduleList");
 
   if (!items || items.length === 0) {
+    box.classList.remove("all-periods-complete");
     box.innerHTML = `<p>No schedule for today.</p>`;
     syncTodayScheduleToggle();
     if (!lastScheduleAutoScrollKey) {
@@ -1251,6 +1723,16 @@ function renderSchedule(items, currentSubject) {
     ? `${currentSubject.Subject || ""}|${currentSubject.StartTime || ""}|${currentSubject.EndTime || ""}`
     : "";
   const useSubjectScheduleColors = getHomepageBool(homepageDesignSettings, "HomepageUseSubjectScheduleColors", true);
+  const nowMinutes = getCurrentManilaMinutes();
+  const validEndMinutes = items
+    .map((item) => timeToMinutes(item.EndTime))
+    .filter((value) => value > 0);
+  const allScheduleComplete =
+    validEndMinutes.length > 0 &&
+    !currentSubject &&
+    validEndMinutes.every((endMinutes) => endMinutes <= nowMinutes);
+
+  box.classList.toggle("all-periods-complete", allScheduleComplete);
 
   box.innerHTML = items.map(item => {
     const subjectColor = item.Color || getSubjectColor(item.Subject);
@@ -1266,9 +1748,13 @@ function renderSchedule(items, currentSubject) {
       item.Subject === currentSubject.Subject &&
       item.StartTime === currentSubject.StartTime &&
       item.EndTime === currentSubject.EndTime;
+    const startMinutes = timeToMinutes(item.StartTime);
+    const endMinutes = timeToMinutes(item.EndTime);
+    const isPast = !isCurrent && endMinutes > 0 && endMinutes <= nowMinutes;
+    const scheduleStateClass = isCurrent ? "current-row" : (isPast ? "past-row" : "future-row");
 
     return `
-  <div class="schedule-item ${isCurrent ? "current-row" : ""}"
+  <div class="schedule-item ${scheduleStateClass}"
        ${isCurrent ? `aria-current="true" tabindex="-1"` : ""}
        ${canOpenSubjectDetails ? `data-subject-popup="${escapeHtml(item.Subject || "")}"` : ""}
        style="background:${cardColor}; color:${textColor};">
@@ -7050,3 +7536,11 @@ initClassBoard();
   }
   window.addEventListener('load', ensureButtons, { once: true });
 })();
+
+
+/* v206: start rotating heading on desktop and phone. */
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", startSfkHeadingRotation, { once: true });
+} else {
+  startSfkHeadingRotation();
+}

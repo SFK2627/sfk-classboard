@@ -16871,3 +16871,1466 @@ body.classBoardPageLocked .app > :not(#sfkPageLockScreen) {
     text-overflow: ellipsis !important;
   }
 }
+
+/* =========================================================
+   v195 MOBILE HEADER REDESIGN
+   Compact portrait + title + clock layout for phones only.
+========================================================= */
+@media (max-width: 900px) {
+  .topbar {
+    display: grid !important;
+    grid-template-columns: 96px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 14px !important;
+    row-gap: 9px !important;
+    min-height: 0 !important;
+    height: auto !important;
+    padding: 14px !important;
+    border-radius: 24px !important;
+    overflow: hidden !important;
+    align-items: center !important;
+  }
+
+  .brandBox,
+  .brandIdentity {
+    display: contents !important;
+  }
+
+  .brandPortraitWrap {
+    grid-column: 1 !important;
+    grid-row: 1 / span 2 !important;
+    width: 96px !important;
+    height: 128px !important;
+    min-width: 96px !important;
+    min-height: 128px !important;
+    margin: 0 !important;
+    padding: 3px !important;
+    border-radius: 20px !important;
+    align-self: stretch !important;
+  }
+
+  .brandPortrait {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center 18% !important;
+    border-radius: 17px !important;
+  }
+
+  .brandTextBlock {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    min-width: 0 !important;
+    align-self: end !important;
+    padding: 0 !important;
+  }
+
+  .topbar h1,
+  #dashboardTitle {
+    margin: 0 !important;
+    font-size: clamp(1.62rem, 7.1vw, 2.15rem) !important;
+    line-height: .98 !important;
+    letter-spacing: -0.035em !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .topbar p,
+  #sectionText {
+    margin-top: 5px !important;
+    font-size: clamp(.78rem, 3.4vw, .96rem) !important;
+    line-height: 1.15 !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+  }
+
+  .topbarHeart,
+  .topbarHeart.shhhModeOpen,
+  .shhhDesktopCountBadge,
+  .topQuoteBox {
+    display: none !important;
+  }
+
+  .timeBox {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 9px 12px !important;
+    border-radius: 16px !important;
+    text-align: left !important;
+    align-self: start !important;
+    justify-self: stretch !important;
+    overflow: hidden !important;
+  }
+
+  .timeBox h2,
+  .timeBox h2.phoneCompactTime {
+    justify-content: flex-start !important;
+    width: 100% !important;
+    margin: 0 !important;
+    font-size: clamp(1.35rem, 5.8vw, 1.75rem) !important;
+    line-height: 1 !important;
+    letter-spacing: -0.035em !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+  }
+
+  .timeBox h2::before,
+  .timeBox h2.phoneCompactTime::before {
+    width: 25px !important;
+    height: 25px !important;
+    flex: 0 0 25px !important;
+    font-size: .82rem !important;
+  }
+
+  .timeBox p {
+    margin-top: 4px !important;
+    font-size: clamp(.68rem, 2.8vw, .82rem) !important;
+    line-height: 1.1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .topbar {
+    grid-template-columns: 82px minmax(0, 1fr) !important;
+    column-gap: 11px !important;
+    padding: 12px !important;
+  }
+
+  .brandPortraitWrap {
+    width: 82px !important;
+    min-width: 82px !important;
+    height: 116px !important;
+    min-height: 116px !important;
+  }
+
+  .topbar h1,
+  #dashboardTitle {
+    font-size: 1.48rem !important;
+  }
+}
+
+
+/* =========================================================
+   v197 MOBILE HEADER COMPACT REFINEMENT
+   - portrait truly centered on the left
+   - subtitle forced to one line
+   - smaller time box to reduce overall header height
+========================================================= */
+@media (max-width: 900px) {
+  .topbar {
+    grid-template-columns: 84px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 12px !important;
+    row-gap: 6px !important;
+    padding: 12px 13px !important;
+    border-radius: 22px !important;
+    align-items: center !important;
+  }
+
+  .brandPortraitWrap {
+    grid-column: 1 !important;
+    grid-row: 1 / span 2 !important;
+    width: 84px !important;
+    height: 108px !important;
+    min-width: 84px !important;
+    min-height: 108px !important;
+    margin: 0 !important;
+    padding: 3px !important;
+    border-radius: 18px !important;
+    align-self: center !important;
+    justify-self: start !important;
+  }
+
+  .brandPortrait {
+    border-radius: 15px !important;
+    object-position: center 16% !important;
+  }
+
+  .brandTextBlock {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    align-self: end !important;
+  }
+
+  .topbar h1,
+  #dashboardTitle {
+    font-size: clamp(1.5rem, 6.5vw, 2.05rem) !important;
+    line-height: .95 !important;
+    letter-spacing: -0.04em !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .topbar p,
+  #sectionText {
+    display: block !important;
+    margin-top: 3px !important;
+    font-size: clamp(.74rem, 2.8vw, .92rem) !important;
+    line-height: 1.05 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    -webkit-line-clamp: unset !important;
+    -webkit-box-orient: unset !important;
+  }
+
+  .timeBox {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    padding: 7px 10px !important;
+    border-radius: 14px !important;
+    min-height: 0 !important;
+    align-self: start !important;
+  }
+
+  .timeBox h2,
+  .timeBox h2.phoneCompactTime {
+    font-size: clamp(1.22rem, 5.2vw, 1.62rem) !important;
+    line-height: .98 !important;
+    letter-spacing: -0.04em !important;
+  }
+
+  .timeBox h2::before,
+  .timeBox h2.phoneCompactTime::before {
+    width: 23px !important;
+    height: 23px !important;
+    flex: 0 0 23px !important;
+    font-size: .78rem !important;
+  }
+
+  .timeBox p {
+    margin-top: 2px !important;
+    font-size: clamp(.66rem, 2.4vw, .8rem) !important;
+    line-height: 1.05 !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .topbar {
+    grid-template-columns: 74px minmax(0, 1fr) !important;
+    column-gap: 10px !important;
+    row-gap: 5px !important;
+    padding: 11px !important;
+  }
+
+  .brandPortraitWrap {
+    width: 74px !important;
+    height: 96px !important;
+    min-width: 74px !important;
+    min-height: 96px !important;
+    border-radius: 16px !important;
+  }
+
+  .brandPortrait {
+    border-radius: 13px !important;
+  }
+
+  .topbar h1,
+  #dashboardTitle {
+    font-size: 1.38rem !important;
+  }
+
+  .topbar p,
+  #sectionText {
+    font-size: .7rem !important;
+  }
+
+  .timeBox {
+    padding: 6px 9px !important;
+  }
+
+  .timeBox h2,
+  .timeBox h2.phoneCompactTime {
+    font-size: 1.14rem !important;
+  }
+
+  .timeBox p {
+    font-size: .64rem !important;
+  }
+}
+
+
+/* =========================================================
+   v198 MOBILE HEADER COMPACT TIME + QUOTE
+   - add visible frame to St. Faustina portrait
+   - reduce time box width
+   - show compact quote card on mobile
+   - keep subtitle one-line and header compact
+========================================================= */
+@media (max-width: 900px) {
+  .topbar {
+    grid-template-columns: 84px minmax(152px, 1.08fr) minmax(118px, .82fr) !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 12px !important;
+    row-gap: 6px !important;
+    padding: 12px 13px !important;
+    align-items: center !important;
+  }
+
+  .brandPortraitWrap {
+    grid-column: 1 !important;
+    grid-row: 1 / span 2 !important;
+    width: 84px !important;
+    height: 108px !important;
+    min-width: 84px !important;
+    min-height: 108px !important;
+    padding: 4px !important;
+    margin: 0 !important;
+    border-radius: 18px !important;
+    align-self: center !important;
+    justify-self: start !important;
+    background: linear-gradient(180deg, #ffe58d 0%, #d3a132 100%) !important;
+    border: 1.5px solid rgba(255,255,255,.88) !important;
+    box-shadow: 0 10px 20px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.3) !important;
+  }
+
+  .brandPortrait {
+    border-radius: 13px !important;
+    border: 1px solid rgba(255,255,255,.38) !important;
+    object-position: center 16% !important;
+  }
+
+  .brandTextBlock {
+    grid-column: 2 / 4 !important;
+    grid-row: 1 !important;
+    min-width: 0 !important;
+  }
+
+  .topbar h1,
+  #dashboardTitle {
+    font-size: clamp(1.48rem, 6vw, 2rem) !important;
+    line-height: .95 !important;
+    letter-spacing: -0.045em !important;
+  }
+
+  .topbar p,
+  #sectionText {
+    display: block !important;
+    margin-top: 3px !important;
+    font-size: clamp(.72rem, 2.5vw, .88rem) !important;
+    line-height: 1.03 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .timeBox {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    padding: 7px 10px !important;
+    border-radius: 14px !important;
+    min-height: 0 !important;
+    align-self: stretch !important;
+    justify-self: stretch !important;
+  }
+
+  .timeBox h2,
+  .timeBox h2.phoneCompactTime {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    font-size: clamp(1.12rem, 4vw, 1.48rem) !important;
+    line-height: .98 !important;
+    letter-spacing: -0.045em !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: clip !important;
+    font-variant-numeric: tabular-nums !important;
+  }
+
+  .timeBox h2::before,
+  .timeBox h2.phoneCompactTime::before {
+    display: none !important;
+    content: none !important;
+  }
+
+  .timeBox p {
+    margin-top: 2px !important;
+    font-size: clamp(.64rem, 2.15vw, .76rem) !important;
+    line-height: 1.02 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .topQuoteBox {
+    display: flex !important;
+    grid-column: 3 !important;
+    grid-row: 2 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    align-self: stretch !important;
+    justify-self: stretch !important;
+    padding: 6px 8px !important;
+    border-radius: 14px !important;
+    background: rgba(255, 222, 97, .18) !important;
+    border: 1.5px solid rgba(255, 218, 97, .52) !important;
+    text-align: left !important;
+    justify-content: center !important;
+  }
+
+  .quoteLabel {
+    align-self: flex-start !important;
+    margin-bottom: 3px !important;
+    padding: 2px 6px !important;
+    font-size: .5rem !important;
+    letter-spacing: .08em !important;
+  }
+
+  .topQuoteBox #dailyQuote {
+    font-size: clamp(.62rem, 1.95vw, .74rem) !important;
+    line-height: 1.08 !important;
+    font-weight: 800 !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .topQuoteBox #quoteAuthor {
+    display: none !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar {
+    grid-template-columns: 74px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto auto !important;
+    column-gap: 10px !important;
+    row-gap: 5px !important;
+    padding: 11px !important;
+  }
+
+  .brandPortraitWrap {
+    width: 74px !important;
+    height: 96px !important;
+    min-width: 74px !important;
+    min-height: 96px !important;
+    border-radius: 16px !important;
+  }
+
+  .brandPortrait {
+    border-radius: 11px !important;
+  }
+
+  .brandTextBlock {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+  }
+
+  .topbar h1,
+  #dashboardTitle {
+    font-size: 1.38rem !important;
+  }
+
+  .topbar p,
+  #sectionText {
+    font-size: .7rem !important;
+  }
+
+  .timeBox {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    padding: 6px 9px !important;
+  }
+
+  .timeBox h2,
+  .timeBox h2.phoneCompactTime {
+    font-size: 1.14rem !important;
+  }
+
+  .timeBox p {
+    font-size: .63rem !important;
+  }
+
+  .topQuoteBox {
+    grid-column: 2 !important;
+    grid-row: 3 !important;
+    padding: 6px 8px !important;
+  }
+
+  .topQuoteBox #dailyQuote {
+    font-size: .68rem !important;
+  }
+}
+
+
+/* =========================================================
+   v200 PHONE HEADER REAL COMPACT + DESKTOP TIMELINE COMPLETION
+   Strong final overrides placed last so older mobile rules cannot win.
+========================================================= */
+@media (max-width: 900px) {
+  .topbar {
+    display: grid !important;
+    grid-template-columns: 84px 104px minmax(0, 1fr) !important;
+    grid-template-rows: auto 52px !important;
+    column-gap: 9px !important;
+    row-gap: 5px !important;
+    min-height: 0 !important;
+    height: auto !important;
+    padding: 10px 11px !important;
+    align-items: center !important;
+    overflow: hidden !important;
+  }
+
+  .brandBox,
+  .brandIdentity {
+    display: contents !important;
+  }
+
+  .brandPortraitWrap {
+    grid-column: 1 !important;
+    grid-row: 1 / span 2 !important;
+    width: 84px !important;
+    height: 106px !important;
+    min-width: 84px !important;
+    min-height: 106px !important;
+    margin: 0 !important;
+    padding: 4px !important;
+    align-self: center !important;
+    justify-self: center !important;
+    border-radius: 18px !important;
+    background: linear-gradient(180deg, #ffe78b 0%, #d8a536 100%) !important;
+    border: 2px solid #fff !important;
+    box-shadow: 0 0 0 2px #f7c600, 0 8px 16px rgba(0,0,0,.24) !important;
+  }
+
+  .brandPortrait {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center 16% !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(17,17,17,.28) !important;
+  }
+
+  .brandTextBlock {
+    grid-column: 2 / 4 !important;
+    grid-row: 1 !important;
+    min-width: 0 !important;
+    align-self: end !important;
+  }
+
+  .topbar h1,
+  #dashboardTitle {
+    margin: 0 !important;
+    font-size: clamp(1.42rem, 5.65vw, 1.9rem) !important;
+    line-height: .94 !important;
+    letter-spacing: -0.045em !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .topbar p,
+  #sectionText {
+    display: block !important;
+    margin-top: 3px !important;
+    font-size: clamp(.68rem, 2.35vw, .84rem) !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    -webkit-line-clamp: unset !important;
+    -webkit-box-orient: unset !important;
+  }
+
+  .topbarHeart,
+  .topbarHeart.shhhModeOpen,
+  .shhhDesktopCountBadge {
+    display: none !important;
+  }
+
+  .timeBox {
+    display: flex !important;
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    width: 104px !important;
+    min-width: 104px !important;
+    max-width: 104px !important;
+    height: 52px !important;
+    min-height: 52px !important;
+    max-height: 52px !important;
+    margin: 0 !important;
+    padding: 5px 6px !important;
+    border-radius: 12px !important;
+    box-sizing: border-box !important;
+    align-self: center !important;
+    justify-self: start !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+  }
+
+  .timeBox h2,
+  .timeBox h2.phoneCompactTime {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    font-size: .96rem !important;
+    line-height: .95 !important;
+    letter-spacing: -0.055em !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    font-variant-numeric: tabular-nums !important;
+  }
+
+  .timeBox h2::before,
+  .timeBox h2.phoneCompactTime::before {
+    content: none !important;
+    display: none !important;
+  }
+
+  .timeBox h2.phoneCompactTime .timeMain {
+    font-size: 1em !important;
+  }
+
+  .timeBox h2.phoneCompactTime .timeSeconds {
+    font-size: .48em !important;
+    margin-left: .01em !important;
+    letter-spacing: -0.05em !important;
+  }
+
+  .timeBox h2.phoneCompactTime .timePeriod {
+    font-size: .62em !important;
+    margin-left: .08em !important;
+    letter-spacing: -0.045em !important;
+  }
+
+  .timeBox p {
+    width: 100% !important;
+    margin-top: 2px !important;
+    font-size: .51rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .topQuoteBox {
+    display: flex !important;
+    grid-column: 3 !important;
+    grid-row: 2 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: 52px !important;
+    min-height: 52px !important;
+    max-height: 52px !important;
+    margin: 0 !important;
+    padding: 5px 8px !important;
+    border-radius: 12px !important;
+    box-sizing: border-box !important;
+    align-self: center !important;
+    justify-self: stretch !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    text-align: left !important;
+  }
+
+  .quoteLabel {
+    align-self: flex-start !important;
+    margin: 0 0 2px 0 !important;
+    padding: 2px 5px !important;
+    font-size: .43rem !important;
+    line-height: 1 !important;
+    letter-spacing: .07em !important;
+    white-space: nowrap !important;
+  }
+
+  .topQuoteBox #dailyQuote {
+    display: -webkit-box !important;
+    margin: 0 !important;
+    color: #fff !important;
+    font-size: clamp(.61rem, 2vw, .76rem) !important;
+    line-height: 1.08 !important;
+    font-weight: 800 !important;
+    -webkit-line-clamp: 3 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .topQuoteBox #quoteAuthor {
+    display: none !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .topbar {
+    grid-template-columns: 74px 96px minmax(0, 1fr) !important;
+    grid-template-rows: auto 50px !important;
+    column-gap: 8px !important;
+    padding: 9px 10px !important;
+  }
+
+  .brandPortraitWrap {
+    width: 74px !important;
+    height: 96px !important;
+    min-width: 74px !important;
+    min-height: 96px !important;
+  }
+
+  .topbar h1,
+  #dashboardTitle {
+    font-size: 1.3rem !important;
+  }
+
+  .topbar p,
+  #sectionText {
+    font-size: .65rem !important;
+  }
+
+  .timeBox {
+    width: 96px !important;
+    min-width: 96px !important;
+    max-width: 96px !important;
+    height: 50px !important;
+    min-height: 50px !important;
+    max-height: 50px !important;
+    padding: 5px !important;
+  }
+
+  .timeBox h2,
+  .timeBox h2.phoneCompactTime {
+    font-size: .88rem !important;
+  }
+
+  .timeBox p {
+    font-size: .47rem !important;
+  }
+
+  .topQuoteBox {
+    height: 50px !important;
+    min-height: 50px !important;
+    max-height: 50px !important;
+    padding: 5px 7px !important;
+  }
+
+  .topQuoteBox #dailyQuote {
+    font-size: .6rem !important;
+  }
+}
+
+/* Desktop Today's Schedule progress timeline */
+@media (min-width: 901px) {
+  .scheduleCard #scheduleList,
+  #scheduleList {
+    position: relative !important;
+    background-color: #fffdf7 !important;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      #111 0 5px,
+      transparent 5px 9px
+    ) !important;
+    background-repeat: no-repeat !important;
+    background-size: 2px 100% !important;
+    background-position: 10px 0 !important;
+  }
+
+  .scheduleCard #scheduleList.all-periods-complete,
+  #scheduleList.all-periods-complete {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      #f7c600 0 6px,
+      #111 6px 9px
+    ) !important;
+  }
+
+  .scheduleCard .schedule-item::after,
+  #scheduleList .schedule-item::after {
+    content: none !important;
+    display: none !important;
+  }
+
+  .scheduleCard .schedule-item::before,
+  #scheduleList .schedule-item::before {
+    content: "" !important;
+    display: block !important;
+    position: absolute !important;
+    left: -11px !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 8px !important;
+    height: 8px !important;
+    border-radius: 999px !important;
+    background: #111 !important;
+    border: 0 !important;
+    box-shadow: 0 0 0 2px rgba(255,255,255,.62) !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    z-index: 4 !important;
+  }
+
+  .scheduleCard .schedule-item.past-row::before,
+  #scheduleList .schedule-item.past-row::before,
+  .scheduleCard #scheduleList.all-periods-complete .schedule-item::before,
+  #scheduleList.all-periods-complete .schedule-item::before {
+    width: 10px !important;
+    height: 10px !important;
+    background: #f7c600 !important;
+    border: 2px solid #111 !important;
+    box-shadow: 0 0 0 2px rgba(255,255,255,.72) !important;
+  }
+
+  .scheduleCard .schedule-item.current-row::before,
+  #scheduleList .schedule-item.current-row::before {
+    width: 10px !important;
+    height: 10px !important;
+    background: #f7c600 !important;
+    border: 2px solid #111 !important;
+    box-shadow: 0 0 0 2px rgba(255,255,255,.74), 0 0 0 6px rgba(247,198,0,.18) !important;
+  }
+}
+
+
+/* =========================================================
+   v201 MOBILE HEADER REPAIR + BLACK-DOMINANT SCHEDULE PROGRESS
+========================================================= */
+@media (max-width: 900px) {
+  .topbar {
+    grid-template-columns: 84px 120px minmax(0, 1fr) !important;
+    grid-template-rows: auto 58px !important;
+    column-gap: 10px !important;
+    row-gap: 5px !important;
+    padding: 10px 11px !important;
+    min-height: 0 !important;
+    height: auto !important;
+    align-items: center !important;
+    overflow: hidden !important;
+  }
+
+  .brandPortraitWrap {
+    grid-column: 1 !important;
+    grid-row: 1 / span 2 !important;
+    width: 84px !important;
+    height: 104px !important;
+    min-width: 84px !important;
+    min-height: 104px !important;
+    align-self: center !important;
+    justify-self: center !important;
+  }
+
+  .brandTextBlock {
+    grid-column: 2 / 4 !important;
+    grid-row: 1 !important;
+    min-width: 0 !important;
+    align-self: end !important;
+  }
+
+  .topbar h1,
+  #dashboardTitle {
+    font-size: clamp(1.42rem, 5.55vw, 1.9rem) !important;
+    line-height: .95 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .topbar p,
+  #sectionText {
+    margin-top: 3px !important;
+    font-size: clamp(.69rem, 2.3vw, .84rem) !important;
+    line-height: 1.02 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .timeBox {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    width: 120px !important;
+    min-width: 120px !important;
+    max-width: 120px !important;
+    height: 58px !important;
+    min-height: 58px !important;
+    max-height: 58px !important;
+    padding: 6px 8px !important;
+    border-radius: 13px !important;
+    align-self: center !important;
+    justify-self: start !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+  }
+
+  .timeBox h2,
+  .timeBox h2.phoneCompactTime {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    font-size: 1.08rem !important;
+    line-height: 1 !important;
+    letter-spacing: -0.05em !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    font-variant-numeric: tabular-nums !important;
+  }
+
+  .timeBox h2.phoneCompactTime .timeMain { font-size: 1em !important; }
+  .timeBox h2.phoneCompactTime .timeSeconds {
+    font-size: .46em !important;
+    margin-left: .01em !important;
+  }
+  .timeBox h2.phoneCompactTime .timePeriod {
+    font-size: .58em !important;
+    margin-left: .07em !important;
+  }
+
+  .timeBox p,
+  #dateText {
+    display: block !important;
+    width: 100% !important;
+    margin: 4px 0 0 !important;
+    font-size: .56rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+  }
+
+  .topQuoteBox {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-column: 3 !important;
+    grid-row: 2 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: 58px !important;
+    min-height: 58px !important;
+    max-height: 58px !important;
+    padding: 6px 9px !important;
+    border-radius: 13px !important;
+    align-self: center !important;
+    justify-self: stretch !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    text-align: left !important;
+  }
+
+  .quoteLabel {
+    display: inline-flex !important;
+    width: max-content !important;
+    max-width: 100% !important;
+    align-self: flex-start !important;
+    margin: 0 0 3px !important;
+    padding: 2px 6px !important;
+    font-size: 0 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+
+  .quoteLabel::after {
+    content: "DAILY QUOTE" !important;
+    font-size: .46rem !important;
+    font-weight: 900 !important;
+    letter-spacing: .08em !important;
+    line-height: 1 !important;
+  }
+
+  .topQuoteBox #dailyQuote {
+    display: -webkit-box !important;
+    width: 100% !important;
+    margin: 0 !important;
+    font-size: clamp(.64rem, 2.05vw, .78rem) !important;
+    line-height: 1.08 !important;
+    font-weight: 800 !important;
+    -webkit-line-clamp: 3 !important;
+    -webkit-box-orient: vertical !important;
+    white-space: normal !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .topQuoteBox #quoteAuthor { display: none !important; }
+}
+
+@media (max-width: 430px) {
+  .topbar {
+    grid-template-columns: 74px 112px minmax(0, 1fr) !important;
+    grid-template-rows: auto 56px !important;
+    column-gap: 8px !important;
+    padding: 9px 10px !important;
+  }
+
+  .brandPortraitWrap {
+    width: 74px !important;
+    height: 96px !important;
+    min-width: 74px !important;
+    min-height: 96px !important;
+  }
+
+  .topbar h1,
+  #dashboardTitle { font-size: 1.3rem !important; }
+
+  .topbar p,
+  #sectionText { font-size: .65rem !important; }
+
+  .timeBox {
+    width: 112px !important;
+    min-width: 112px !important;
+    max-width: 112px !important;
+    height: 56px !important;
+    min-height: 56px !important;
+    max-height: 56px !important;
+    padding: 6px 7px !important;
+  }
+
+  .timeBox h2,
+  .timeBox h2.phoneCompactTime { font-size: 1rem !important; }
+
+  .timeBox p,
+  #dateText {
+    margin-top: 4px !important;
+    font-size: .52rem !important;
+  }
+
+  .topQuoteBox {
+    height: 56px !important;
+    min-height: 56px !important;
+    max-height: 56px !important;
+    padding: 6px 8px !important;
+  }
+
+  .topQuoteBox #dailyQuote { font-size: .63rem !important; }
+}
+
+@media (min-width: 901px) {
+  .scheduleCard #scheduleList,
+  #scheduleList {
+    background-color: #fffdf7 !important;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      #111 0 6px,
+      transparent 6px 9px
+    ) !important;
+    background-repeat: no-repeat !important;
+    background-size: 3px 100% !important;
+    background-position: 10px 0 !important;
+  }
+
+  .scheduleCard .schedule-item.past-row::after,
+  #scheduleList .schedule-item.past-row::after,
+  .scheduleCard .schedule-item.current-row::after,
+  #scheduleList .schedule-item.current-row::after {
+    content: "" !important;
+    display: block !important;
+    position: absolute !important;
+    left: -11px !important;
+    top: -6px !important;
+    bottom: -6px !important;
+    width: 3px !important;
+    transform: translateX(-50%) !important;
+    background: repeating-linear-gradient(
+      to bottom,
+      #111 0 7px,
+      #f7c600 7px 9px
+    ) !important;
+    opacity: 1 !important;
+    z-index: 2 !important;
+    pointer-events: none !important;
+  }
+
+  .scheduleCard .schedule-item.current-row::after,
+  #scheduleList .schedule-item.current-row::after {
+    bottom: 50% !important;
+  }
+
+  .scheduleCard #scheduleList.all-periods-complete,
+  #scheduleList.all-periods-complete {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      #111 0 7px,
+      #f7c600 7px 9px
+    ) !important;
+    background-size: 3px 100% !important;
+  }
+
+  .scheduleCard .schedule-item.past-row::before,
+  #scheduleList .schedule-item.past-row::before,
+  .scheduleCard .schedule-item.current-row::before,
+  #scheduleList .schedule-item.current-row::before,
+  .scheduleCard #scheduleList.all-periods-complete .schedule-item::before,
+  #scheduleList.all-periods-complete .schedule-item::before {
+    width: 10px !important;
+    height: 10px !important;
+    background: #111 !important;
+    border: 2px solid #f7c600 !important;
+    box-shadow: 0 0 0 2px #111, 0 0 0 3px rgba(247,198,0,.32) !important;
+  }
+
+  .scheduleCard .schedule-item.future-row::before,
+  #scheduleList .schedule-item.future-row::before {
+    background: #111 !important;
+    border: 0 !important;
+    box-shadow: 0 0 0 2px rgba(255,255,255,.62) !important;
+  }
+}
+
+
+/* =========================================================
+   v202 MOBILE TIME EMPHASIS
+   Larger, truly centered clock while keeping the date visible.
+========================================================= */
+@media (max-width: 900px) {
+  .timeBox {
+    align-items: center !important;
+    text-align: center !important;
+    padding-left: 5px !important;
+    padding-right: 5px !important;
+  }
+
+  .timeBox h2,
+  .timeBox h2.phoneCompactTime {
+    display: flex !important;
+    align-items: baseline !important;
+    justify-content: center !important;
+    width: 100% !important;
+    font-size: 1.38rem !important;
+    line-height: .96 !important;
+    letter-spacing: -0.055em !important;
+    text-align: center !important;
+    overflow: visible !important;
+  }
+
+  .timeBox h2.phoneCompactTime .timeMain {
+    font-size: 1em !important;
+    font-weight: 950 !important;
+  }
+
+  .timeBox h2.phoneCompactTime .timeSeconds {
+    font-size: .44em !important;
+    margin-left: .015em !important;
+    letter-spacing: -0.02em !important;
+  }
+
+  .timeBox h2.phoneCompactTime .timePeriod {
+    font-size: .55em !important;
+    margin-left: .08em !important;
+    letter-spacing: 0 !important;
+  }
+
+  .timeBox p,
+  #dateText {
+    text-align: center !important;
+    font-size: .56rem !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .timeBox h2,
+  .timeBox h2.phoneCompactTime {
+    font-size: 1.28rem !important;
+  }
+
+  .timeBox p,
+  #dateText {
+    font-size: .51rem !important;
+  }
+}
+
+
+/* =========================================================
+   v203 MOBILE QUOTE COLOR + CLOCK VERTICAL CENTER
+   - mobile quote matches desktop cream/white card
+   - clock content shifted slightly downward for visual centering
+   - full weekday/date forced to stay on one line
+========================================================= */
+@media (max-width: 900px) {
+  .topQuoteBox {
+    background: linear-gradient(180deg, #fffef8 0%, #fffaf0 100%) !important;
+    border: 1px solid rgba(242, 204, 124, .72) !important;
+    box-shadow: 0 8px 18px rgba(6, 21, 47, .12), inset 0 -3px 0 rgba(17,17,17,.05) !important;
+    color: #081126 !important;
+    text-align: center !important;
+    align-items: center !important;
+  }
+
+  .quoteLabel {
+    align-self: center !important;
+    background: #050505 !important;
+    color: #fff !important;
+    border: 0 !important;
+    box-shadow: 0 5px 12px rgba(0,0,0,.13) !important;
+  }
+
+  .topQuoteBox #dailyQuote {
+    color: #081126 !important;
+    text-align: center !important;
+  }
+
+  .timeBox h2,
+  .timeBox h2.phoneCompactTime {
+    position: relative !important;
+    top: 2px !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  .timeBox p,
+  #dateText {
+    position: relative !important;
+    top: 2px !important;
+    margin-top: 4px !important;
+    font-size: .54rem !important;
+    letter-spacing: -0.025em !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    transform: scaleX(.90) !important;
+    transform-origin: center center !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .timeBox p,
+  #dateText {
+    font-size: .50rem !important;
+    letter-spacing: -0.035em !important;
+    transform: scaleX(.86) !important;
+  }
+}
+
+
+/* =========================================================
+   v204 MOBILE CLOCK - LARGER BUT GUARANTEED TO FIT
+   Keep the existing mobile header layout; enlarge only the clock.
+========================================================= */
+@media (max-width: 900px) {
+  .timeBox h2,
+  .timeBox h2.phoneCompactTime {
+    font-size: 1.62rem !important;
+    line-height: .92 !important;
+    letter-spacing: -0.06em !important;
+    justify-content: center !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    transform: translateY(3px) scaleX(.88) !important;
+    transform-origin: center center !important;
+  }
+
+  .timeBox h2.phoneCompactTime .timeMain {
+    font-size: 1em !important;
+    font-weight: 950 !important;
+  }
+
+  .timeBox h2.phoneCompactTime .timeSeconds {
+    font-size: .42em !important;
+    margin-left: .01em !important;
+    letter-spacing: -0.02em !important;
+  }
+
+  .timeBox h2.phoneCompactTime .timePeriod {
+    font-size: .50em !important;
+    margin-left: .06em !important;
+    letter-spacing: -.01em !important;
+  }
+
+  .timeBox p,
+  #dateText {
+    margin-top: 5px !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .timeBox h2,
+  .timeBox h2.phoneCompactTime {
+    font-size: 1.48rem !important;
+    transform: translateY(3px) scaleX(.88) !important;
+  }
+}
+
+/* =========================================================
+   v205 DESKTOP FLOAT CLOCK / DOCUMENT PICTURE-IN-PICTURE
+   Desktop only. Adds a compact control inside the main time card.
+========================================================= */
+@media (min-width: 901px) {
+  .timeBox,
+  #classBoardAccessTrigger {
+    position: relative !important;
+  }
+
+  .desktopFloatClockBtn {
+    position: absolute !important;
+    top: 8px !important;
+    right: 8px !important;
+    z-index: 8 !important;
+    width: 29px !important;
+    height: 29px !important;
+    display: inline-grid !important;
+    place-items: center !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 1px solid rgba(255,255,255,.30) !important;
+    border-radius: 9px !important;
+    background: rgba(0,0,0,.28) !important;
+    color: #fff !important;
+    box-shadow: 0 5px 12px rgba(0,0,0,.18) !important;
+    font: inherit !important;
+    font-size: 16px !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+    cursor: pointer !important;
+    opacity: .84 !important;
+    transition: transform .16s ease, opacity .16s ease, background .16s ease, border-color .16s ease !important;
+  }
+
+  .desktopFloatClockBtn:hover,
+  .desktopFloatClockBtn:focus-visible {
+    opacity: 1 !important;
+    transform: translateY(-1px) !important;
+    background: #111 !important;
+    border-color: #f7c600 !important;
+    outline: none !important;
+  }
+
+  .desktopFloatClockBtn.is-active {
+    opacity: 1 !important;
+    background: #111 !important;
+    color: #f7c600 !important;
+    border-color: #f7c600 !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .desktopFloatClockBtn {
+    display: none !important;
+  }
+}
+
+
+/* =========================================================
+   v206 ROTATING HEADING VISUALS — desktop + phone
+========================================================= */
+#dashboardTitle {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: clip !important;
+  max-width: 100% !important;
+  transform-origin: left center !important;
+  transition: opacity .18s ease, transform .18s ease !important;
+  will-change: opacity, transform !important;
+}
+
+#dashboardTitle.sfkHeadingChanging {
+  opacity: 0 !important;
+  transform: translateY(4px) scale(.985) !important;
+}
+
+#dashboardTitle.sfkHeadingTight {
+  font-size: clamp(1.95rem, 2.35vw, 3rem) !important;
+  letter-spacing: -.055em !important;
+}
+
+#dashboardTitle.sfkHeadingVeryTight {
+  font-size: clamp(1.65rem, 2vw, 2.6rem) !important;
+  letter-spacing: -.065em !important;
+}
+
+@media (max-width: 900px) {
+  #dashboardTitle.sfkHeadingTight {
+    font-size: clamp(1.22rem, 5.15vw, 1.72rem) !important;
+    letter-spacing: -.05em !important;
+  }
+
+  #dashboardTitle.sfkHeadingVeryTight {
+    font-size: clamp(1.04rem, 4.55vw, 1.52rem) !important;
+    letter-spacing: -.06em !important;
+  }
+}
+
+
+/* =========================================================
+   v207 ROTATING HEADING — richer transition + true shuffle
+   Smooth blur/slide exit, soft gold pop-in. Desktop + phone.
+========================================================= */
+#dashboardTitle {
+  position: relative !important;
+  transform-origin: left center !important;
+  will-change: opacity, transform, filter !important;
+}
+
+#dashboardTitle.sfkHeadingLeaving {
+  animation: sfkHeadingLeaveV207 .26s cubic-bezier(.4,0,.8,.2) both !important;
+}
+
+#dashboardTitle.sfkHeadingEntering {
+  animation: sfkHeadingEnterV207 .52s cubic-bezier(.18,.82,.24,1) both !important;
+}
+
+@keyframes sfkHeadingLeaveV207 {
+  0% {
+    opacity: 1;
+    transform: translate3d(0,0,0) scale(1);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(-12px,-3px,0) scale(.975);
+    filter: blur(4px);
+  }
+}
+
+@keyframes sfkHeadingEnterV207 {
+  0% {
+    opacity: 0;
+    transform: translate3d(14px,5px,0) scale(.97);
+    filter: blur(5px);
+    text-shadow: 0 0 0 rgba(255,215,0,0);
+  }
+  48% {
+    opacity: 1;
+    transform: translate3d(-2px,0,0) scale(1.012);
+    filter: blur(0);
+    text-shadow: 0 0 18px rgba(255,215,0,.24);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0,0,0) scale(1);
+    filter: blur(0);
+    text-shadow: inherit;
+  }
+}
+
+@media (max-width: 900px) {
+  #dashboardTitle.sfkHeadingLeaving {
+    animation-duration: .24s !important;
+  }
+
+  #dashboardTitle.sfkHeadingEntering {
+    animation-duration: .48s !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #dashboardTitle.sfkHeadingLeaving,
+  #dashboardTitle.sfkHeadingEntering {
+    animation: none !important;
+  }
+}
