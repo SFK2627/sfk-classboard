@@ -651,26 +651,77 @@ function applyAutoSubjectHomepageTheme(periodState = {}) {
   setAutoSubjectVar(root, "--home-ticker-text", subjectColor);
 }
 
-function autoFitSingleLine(element, options = {}) {
+function ensureSingleLineMarqueeTrack(element) {
+  if (!element) return null;
+
+  let track = Array.from(element.children || []).find((child) =>
+    child.classList?.contains("sfk-marquee-track")
+  );
+
+  if (track) return track;
+
+  track = document.createElement("span");
+  track.className = "sfk-marquee-track";
+
+  while (element.firstChild) {
+    track.appendChild(element.firstChild);
+  }
+
+  element.appendChild(track);
+  return track;
+}
+
+function setupSingleLineMarquee(element, options = {}) {
   if (!element) return;
-  const min = Number(options.min || 22);
-  const max = Number(options.max || 42);
-  element.style.whiteSpace = "nowrap";
-  element.style.overflow = "hidden";
-  element.style.textOverflow = "ellipsis";
-  element.style.fontSize = `${max}px`;
+
+  const track = ensureSingleLineMarqueeTrack(element);
+  if (!track) return;
+
+  element.classList.remove("sfk-marquee-active");
+  element.style.removeProperty("--sfk-marquee-distance");
+  element.style.removeProperty("--sfk-marquee-duration");
+
   window.requestAnimationFrame(() => {
-    let size = max;
-    while (size > min && element.scrollWidth > element.clientWidth) {
-      size -= 1;
-      element.style.fontSize = `${size}px`;
-    }
+    const availableWidth = Math.max(0, element.clientWidth);
+    const contentWidth = Math.ceil(
+      Math.max(track.scrollWidth || 0, track.getBoundingClientRect().width || 0)
+    );
+    const overflowDistance = Math.ceil(contentWidth - availableWidth);
+
+    if (availableWidth <= 0 || overflowDistance <= 4) return;
+
+    // Slow travel in both directions, with a short pause at each end.
+    const pixelsPerSecond = Number(options.pixelsPerSecond || 22);
+    const travelSeconds = overflowDistance / Math.max(12, pixelsPerSecond);
+    const duration = Math.min(42, Math.max(20, 10 + travelSeconds * 2));
+
+    element.style.setProperty("--sfk-marquee-distance", `${overflowDistance}px`);
+    element.style.setProperty("--sfk-marquee-duration", `${duration.toFixed(2)}s`);
+    element.classList.add("sfk-marquee-active");
   });
 }
 
-function autoFitPeriodSubject(element) {
-  autoFitSingleLine(element, { min: 24, max: 42 });
+function autoFitSingleLine(element) {
+  setupSingleLineMarquee(element);
 }
+
+function autoFitPeriodSubject(element) {
+  setupSingleLineMarquee(element, { pixelsPerSecond: 16 });
+}
+
+let sfkMarqueeResizeTimer = 0;
+
+function refreshSingleLineMarquees() {
+  const currentSubject = document.getElementById("currentSubject");
+  if (currentSubject) {
+    setupSingleLineMarquee(currentSubject, { pixelsPerSecond: 16 });
+  }
+}
+
+window.addEventListener("resize", () => {
+  window.clearTimeout(sfkMarqueeResizeTimer);
+  sfkMarqueeResizeTimer = window.setTimeout(refreshSingleLineMarquees, 180);
+});
 
 
 
@@ -1129,7 +1180,7 @@ function renderNextSubject(item) {
 
     subjectEl.innerHTML = renderScheduleSubjectText(item, subjectTextColor);
     renderPeriodDetails(detailsEl, item);
-    autoFitPeriodSubject(subjectEl);
+
   } else {
     card.style.background = getHomeCssVar("--home-next-card-bg", "#fff7c7");
     card.style.color = getHomeCssVar("--home-next-subject-color", "#111");
@@ -1143,7 +1194,7 @@ function renderNextSubject(item) {
     subjectEl.textContent = "No next period";
     detailsEl.textContent = "End of schedule";
     countdownEl.textContent = "No upcoming period";
-    autoFitPeriodSubject(subjectEl);
+
   }
 }
 
@@ -1218,10 +1269,11 @@ function renderSchedule(items, currentSubject) {
 
     return `
   <div class="schedule-item ${isCurrent ? "current-row" : ""}"
+       ${isCurrent ? `aria-current="true" tabindex="-1"` : ""}
        ${canOpenSubjectDetails ? `data-subject-popup="${escapeHtml(item.Subject || "")}"` : ""}
        style="background:${cardColor}; color:${textColor};">
+    <strong class="schedule-time" style="color:${timeColor};">${item.StartTime} - ${item.EndTime}</strong><br>
     ${isCurrent ? `<div class="current-badge">▶ CURRENT PERIOD</div>` : ""}
-    <strong style="color:${timeColor};">${item.StartTime} - ${item.EndTime}</strong><br>
     <span class="subject-name" style="color:${textColor};">${renderScheduleSubjectText(item, textColor)}</span><br>
     <small style="color:${detailColor}; opacity:.9;">${item.Teacher} • ${item.Room}</small>
   </div>
@@ -1670,29 +1722,48 @@ function toggleTodaySchedule() {
   }
 }
 
-function scrollToCurrentSchedule() {
+function scrollToCurrentSchedule(attempt = 0) {
   const scheduleBox = document.getElementById("scheduleList");
   if (!scheduleBox) return;
 
-  const currentRow = scheduleBox.querySelector(".current-row");
+  window.setTimeout(() => {
+    const currentRow = scheduleBox.querySelector(".current-row");
+    if (!currentRow) return;
 
-  setTimeout(() => {
-    if (currentRow) {
-      const boxRect = scheduleBox.getBoundingClientRect();
-      const rowRect = currentRow.getBoundingClientRect();
-
-      const offset =
-        rowRect.top -
-        boxRect.top -
-        scheduleBox.clientHeight / 2 +
-        currentRow.clientHeight / 2;
-
-      scheduleBox.scrollTo({
-        top: scheduleBox.scrollTop + offset,
-        behavior: "smooth"
-      });
+    // The panel may still be opening or laying itself out on phones.
+    // Retry briefly until its scrollable height is ready.
+    if (scheduleBox.clientHeight <= 0 && attempt < 4) {
+      scrollToCurrentSchedule(attempt + 1);
+      return;
     }
-  }, 300);
+
+    const maxScrollTop = Math.max(0, scheduleBox.scrollHeight - scheduleBox.clientHeight);
+    const centeredTop = Math.max(
+      0,
+      Math.min(
+        maxScrollTop,
+        currentRow.offsetTop - (scheduleBox.clientHeight - currentRow.offsetHeight) / 2
+      )
+    );
+
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    scheduleBox.scrollTo({
+      top: centeredTop,
+      behavior: prefersReducedMotion ? "auto" : "smooth"
+    });
+
+    // Give the current schedule keyboard focus without moving the whole page.
+    try {
+      currentRow.focus({ preventScroll: true });
+    } catch (error) {
+      currentRow.focus();
+    }
+
+    currentRow.classList.remove("current-focus-pulse");
+    void currentRow.offsetWidth;
+    currentRow.classList.add("current-focus-pulse");
+  }, attempt === 0 ? 120 : 160);
 }
 
 function normalizeAnnouncementIndex(index, total) {

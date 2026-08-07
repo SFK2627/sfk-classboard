@@ -12,6 +12,64 @@ body {
   background: linear-gradient(135deg, #f7c600, #ffdf3a);
   color: #111;
   overflow: hidden;
+  position: relative;
+  isolation: isolate;
+}
+
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  inset: -14%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+body::before {
+  background:
+    radial-gradient(circle at 14% 18%, rgba(255,255,255,.28) 0 10%, transparent 28%),
+    radial-gradient(circle at 82% 16%, rgba(255,236,158,.34) 0 11%, transparent 30%),
+    radial-gradient(circle at 80% 82%, rgba(255,170,0,.26) 0 12%, transparent 34%),
+    radial-gradient(circle at 18% 86%, rgba(255,255,255,.18) 0 10%, transparent 30%),
+    radial-gradient(circle at 52% 48%, rgba(255,214,51,.16) 0 15%, transparent 38%);
+  filter: blur(12px);
+  opacity: .95;
+  animation: sfkBackgroundFloat 20s ease-in-out infinite alternate;
+}
+
+body::after {
+  inset: 0;
+  background:
+    linear-gradient(115deg, rgba(255,255,255,.2), rgba(255,255,255,0) 36%),
+    radial-gradient(circle at center, rgba(255,255,255,.08) 0 1px, transparent 1.2px);
+  background-size: 100% 100%, 22px 22px;
+  opacity: .38;
+  mix-blend-mode: soft-light;
+  animation: sfkBackgroundDrift 26s linear infinite;
+}
+
+@keyframes sfkBackgroundFloat {
+  0% {
+    transform: translate3d(-2.5%, -1.5%, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(1.5%, 2%, 0) scale(1.04);
+  }
+  100% {
+    transform: translate3d(3%, -2%, 0) scale(1.08);
+  }
+}
+
+@keyframes sfkBackgroundDrift {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(-14px, 12px, 0);
+  }
+  100% {
+    transform: translate3d(14px, -10px, 0);
+  }
 }
 
 .app {
@@ -20,6 +78,8 @@ body {
   display: grid;
   grid-template-rows: auto 145px 1fr auto;
   gap: 7px;
+  position: relative;
+  z-index: 1;
 }
 
 /* TOP BAR */
@@ -16596,5 +16656,218 @@ body.classBoardPageLocked .app > :not(#sfkPageLockScreen) {
     margin-top: 3px !important;
     padding: 3px 8px !important;
     font-size: .62rem !important;
+  }
+}
+
+
+/* =========================================================
+   v187 DESKTOP QUOTE CARD WIDER + SMALL SAFE GAPS
+   Base: v186. Widen only the desktop Daily Kindness Quote card.
+   Keep a small visual gap from the Shhh counter/heart and time card.
+   Phone/tablet layouts are unchanged.
+========================================================= */
+@media (min-width: 901px) {
+  .topbar {
+    grid-template-columns: minmax(460px, 500px) 54px minmax(0, 1fr) 260px !important;
+    column-gap: 8px !important;
+  }
+
+  .topQuoteBox {
+    width: calc(100% + 22px) !important;
+    max-width: none !important;
+    margin-left: -22px !important;
+    margin-right: 0 !important;
+  }
+
+  .timeBox {
+    width: 260px !important;
+    min-width: 260px !important;
+    max-width: 260px !important;
+    margin-left: 0 !important;
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1500px) {
+  .topbar {
+    grid-template-columns: minmax(390px, 430px) 48px minmax(0, 1fr) 260px !important;
+    column-gap: 8px !important;
+  }
+}
+
+/* =========================================================
+   v190 HEART + SHHH COUNTER FURTHER LEFT
+   Base: v189. Move the desktop heart icon and its counter
+   another small step left together. No other layout changes.
+========================================================= */
+@media (min-width: 901px) {
+  .topbarHeart,
+  .topbarHeart.shhhModeOpen,
+  .shhhDesktopCountBadge {
+    left: -18px !important;
+  }
+}
+
+
+/* =========================================================
+   v191 CURRENT SCHEDULE ALIGNMENT + AUTO FOCUS
+   Keep the current period time in the same left column as every
+   other schedule, retain its badge, add a black/yellow highlight,
+   and visually confirm the row selected by automatic scrolling.
+========================================================= */
+.scheduleCard .schedule-item > .schedule-time,
+#scheduleList .schedule-item > .schedule-time {
+  grid-column: 1 !important;
+  grid-row: 1 / span 4 !important;
+  align-self: stretch !important;
+}
+
+.scheduleCard .schedule-item.current-row,
+#scheduleList .schedule-item.current-row {
+  border: 3px solid #111 !important;
+  outline: 3px solid #ffd700 !important;
+  outline-offset: -6px !important;
+  box-shadow:
+    0 0 0 2px #111,
+    0 12px 24px rgba(17, 17, 17, .22) !important;
+}
+
+.scheduleCard .schedule-item.current-row > .schedule-time,
+#scheduleList .schedule-item.current-row > .schedule-time {
+  color: inherit !important;
+  border-right-color: rgba(17, 17, 17, .28) !important;
+}
+
+.scheduleCard .current-row:focus,
+.scheduleCard .current-row:focus-visible,
+#scheduleList .current-row:focus,
+#scheduleList .current-row:focus-visible {
+  outline: 3px solid #ffd700 !important;
+  outline-offset: -6px !important;
+}
+
+.scheduleCard .current-row.current-focus-pulse,
+#scheduleList .current-row.current-focus-pulse {
+  animation: sfkCurrentScheduleFocus 1.05s ease-out 1;
+}
+
+@keyframes sfkCurrentScheduleFocus {
+  0% {
+    filter: brightness(1);
+    transform: scale(1);
+  }
+  42% {
+    filter: brightness(1.08);
+    transform: scale(.992);
+  }
+  100% {
+    filter: brightness(1);
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scheduleCard .current-row.current-focus-pulse,
+  #scheduleList .current-row.current-focus-pulse {
+    animation: none !important;
+  }
+}
+
+/* =========================================================
+   v194 NOW LEARNING — CURRENT SUBJECT ONLY MARQUEE
+   Only the subject name inside NOW LEARNING moves when it truly
+   overflows. Today’s Schedule and Next Period stay as clean,
+   single-line text with no native scroll controls.
+========================================================= */
+#currentSubject,
+#nextSubject,
+.scheduleCard .subject-name,
+#scheduleList .subject-name {
+  display: block !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  white-space: nowrap !important;
+  overflow-x: hidden !important;
+  overflow-y: hidden !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  overscroll-behavior: none !important;
+  height: 1.2em !important;
+  max-height: 1.2em !important;
+  line-height: 1.2 !important;
+  clip-path: inset(0) !important;
+}
+
+/* Non-marquee names remain one line and show an ellipsis if needed. */
+#nextSubject,
+.scheduleCard .subject-name,
+#scheduleList .subject-name {
+  text-overflow: ellipsis !important;
+}
+
+/* NOW LEARNING starts at the left and clips cleanly while moving. */
+#currentSubject {
+  text-overflow: clip !important;
+}
+
+#currentSubject::-webkit-scrollbar,
+#nextSubject::-webkit-scrollbar,
+.scheduleCard .subject-name::-webkit-scrollbar,
+#scheduleList .subject-name::-webkit-scrollbar,
+.sfk-marquee-track::-webkit-scrollbar,
+.sfk-marquee-track .schedule-text-link::-webkit-scrollbar,
+#currentSubject::-webkit-scrollbar-button,
+#nextSubject::-webkit-scrollbar-button,
+.scheduleCard .subject-name::-webkit-scrollbar-button,
+#scheduleList .subject-name::-webkit-scrollbar-button,
+.sfk-marquee-track::-webkit-scrollbar-button,
+.sfk-marquee-track .schedule-text-link::-webkit-scrollbar-button {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+  background: transparent !important;
+}
+
+#currentSubject .sfk-marquee-track {
+  display: inline-block !important;
+  width: max-content !important;
+  min-width: max-content !important;
+  max-width: none !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+  vertical-align: top !important;
+}
+
+#currentSubject .sfk-marquee-track .schedule-text-link {
+  display: inline-block !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+}
+
+#currentSubject.sfk-marquee-active .sfk-marquee-track {
+  animation: sfkNowLearningSlowReturn var(--sfk-marquee-duration, 24s) ease-in-out infinite;
+}
+
+@keyframes sfkNowLearningSlowReturn {
+  0%, 16% {
+    transform: translate3d(0, 0, 0);
+  }
+  46%, 62% {
+    transform: translate3d(calc(-1 * var(--sfk-marquee-distance, 0px)), 0, 0);
+  }
+  92%, 100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #currentSubject.sfk-marquee-active .sfk-marquee-track {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  #currentSubject {
+    text-overflow: ellipsis !important;
   }
 }
