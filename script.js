@@ -928,28 +928,128 @@ function setupSingleLineMarquee(element, options = {}) {
   const track = ensureSingleLineMarqueeTrack(element);
   if (!track) return;
 
+  // Stop anything left by a previous render/measurement.
+  if (track._sfkMarqueeAnimation) {
+    try { track._sfkMarqueeAnimation.cancel(); } catch (_) {}
+    track._sfkMarqueeAnimation = null;
+  }
+  track.getAnimations?.().forEach((animation) => {
+    try { animation.cancel(); } catch (_) {}
+  });
+
   element.classList.remove("sfk-marquee-active");
   element.style.removeProperty("--sfk-marquee-distance");
   element.style.removeProperty("--sfk-marquee-duration");
+  track.style.removeProperty("animation");
+  track.style.removeProperty("transform");
 
-  window.requestAnimationFrame(() => {
-    const availableWidth = Math.max(0, element.clientWidth);
-    const contentWidth = Math.ceil(
-      Math.max(track.scrollWidth || 0, track.getBoundingClientRect().width || 0)
-    );
-    const overflowDistance = Math.ceil(contentWidth - availableWidth);
+  const measureTextWidth = () => {
+    const text = String(track.textContent || "").replace(/\s+/g, " ").trim();
+    if (!text) return 0;
+
+    // Canvas measurement is independent of clipping/scrollWidth quirks.
+    try {
+      const style = window.getComputedStyle(element);
+      const canvas = setupSingleLineMarquee._measureCanvas ||
+        (setupSingleLineMarquee._measureCanvas = document.createElement("canvas"));
+      const context = canvas.getContext("2d");
+      if (context) {
+        context.font = `${style.fontStyle || "normal"} ${style.fontWeight || "400"} ${style.fontSize || "16px"} ${style.fontFamily || "sans-serif"}`;
+        const letterSpacing = parseFloat(style.letterSpacing) || 0;
+        const measured = context.measureText(text).width + Math.max(0, text.length - 1) * letterSpacing;
+        if (Number.isFinite(measured) && measured > 0) return Math.ceil(measured);
+      }
+    } catch (_) {}
+
+    // Fallback: temporary natural-width clone outside the clipped viewport.
+    const probe = track.cloneNode(true);
+    probe.removeAttribute("style");
+    Object.assign(probe.style, {
+      position: "fixed",
+      left: "-100000px",
+      top: "-100000px",
+      display: "inline-block",
+      width: "max-content",
+      minWidth: "max-content",
+      maxWidth: "none",
+      whiteSpace: "nowrap",
+      visibility: "hidden",
+      pointerEvents: "none",
+      animation: "none",
+      transform: "none"
+    });
+    document.body.appendChild(probe);
+    const width = Math.ceil(probe.getBoundingClientRect().width || probe.scrollWidth || 0);
+    probe.remove();
+    return width;
+  };
+
+  const measureAndStart = () => {
+    if (!element.isConnected || !track.isConnected) return;
+
+    // Reset first so we always measure the real viewport, not a translated track.
+    element.classList.remove("sfk-marquee-active");
+    track.style.removeProperty("animation");
+    track.style.removeProperty("transform");
+
+    const availableWidth = Math.floor(element.clientWidth || element.getBoundingClientRect().width || 0);
+    const contentWidth = measureTextWidth();
+    let overflowDistance = Math.ceil(contentWidth - availableWidth);
+
+    // Extra fallback for edge cases where the browser reports a suspiciously small
+    // width despite visibly long text. This keeps long schedule names readable.
+    const plainText = String(track.textContent || "").replace(/\s+/g, " ").trim();
+    if (availableWidth > 0 && overflowDistance <= 4 && plainText.length >= 28) {
+      const estimatedWidth = Math.ceil(plainText.length * (parseFloat(getComputedStyle(element).fontSize) || 18) * 0.57);
+      overflowDistance = Math.max(overflowDistance, estimatedWidth - availableWidth);
+    }
 
     if (availableWidth <= 0 || overflowDistance <= 4) return;
 
-    // Slow travel in both directions, with a short pause at each end.
-    const pixelsPerSecond = Number(options.pixelsPerSecond || 22);
-    const travelSeconds = overflowDistance / Math.max(12, pixelsPerSecond);
-    const duration = Math.min(42, Math.max(20, 10 + travelSeconds * 2));
+    // Reveal the final letters fully, but keep the motion calm and slow.
+    const travelDistance = Math.max(10, overflowDistance + 10);
+    const pixelsPerSecond = Math.max(8, Number(options.pixelsPerSecond || 10));
+    const oneWaySeconds = travelDistance / pixelsPerSecond;
+    const fullCycleSeconds = Math.min(52, Math.max(24, (oneWaySeconds * 2) + 7));
 
-    element.style.setProperty("--sfk-marquee-distance", `${overflowDistance}px`);
-    element.style.setProperty("--sfk-marquee-duration", `${duration.toFixed(2)}s`);
+    element.style.setProperty("--sfk-marquee-distance", `${travelDistance}px`);
+    element.style.setProperty("--sfk-marquee-duration", `${fullCycleSeconds.toFixed(2)}s`);
     element.classList.add("sfk-marquee-active");
+
+    // Inline !important ensures later stylesheet overrides cannot silently disable it.
+    track.style.setProperty(
+      "animation",
+      `sfkTodayScheduleSubjectSlowMarquee ${fullCycleSeconds.toFixed(2)}s ease-in-out infinite`,
+      "important"
+    );
+  };
+
+  // Let the schedule grid settle, then measure more than once so live updates/fonts
+  // cannot leave the marquee in a stale non-moving state.
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(measureAndStart);
   });
+  window.setTimeout(measureAndStart, 180);
+  window.setTimeout(measureAndStart, 520);
+
+  if (document.fonts?.ready) {
+    document.fonts.ready.then(() => {
+      if (!element.isConnected) return;
+      window.requestAnimationFrame(measureAndStart);
+    }).catch(() => {});
+  }
+
+  if (typeof ResizeObserver === "function") {
+    if (element._sfkMarqueeResizeObserver) {
+      try { element._sfkMarqueeResizeObserver.disconnect(); } catch (_) {}
+    }
+    let resizeTimer = 0;
+    element._sfkMarqueeResizeObserver = new ResizeObserver(() => {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(measureAndStart, 90);
+    });
+    element._sfkMarqueeResizeObserver.observe(element);
+  }
 }
 
 function autoFitSingleLine(element) {
@@ -962,11 +1062,21 @@ function autoFitPeriodSubject(element) {
 
 let sfkMarqueeResizeTimer = 0;
 
+function setupTodayScheduleSubjectMarquees() {
+  if (!window.matchMedia("(min-width: 901px)").matches) return;
+
+  document.querySelectorAll("#scheduleList .subject-name").forEach((element) => {
+    setupSingleLineMarquee(element, { pixelsPerSecond: 10 });
+  });
+}
+
 function refreshSingleLineMarquees() {
   const currentSubject = document.getElementById("currentSubject");
   if (currentSubject) {
     setupSingleLineMarquee(currentSubject, { pixelsPerSecond: 16 });
   }
+
+  setupTodayScheduleSubjectMarquees();
 }
 
 window.addEventListener("resize", () => {
@@ -1356,8 +1466,11 @@ function renderDashboard(data) {
 
   applyHomepageDesignSettings(data.settings || {});
 
-  document.getElementById("dateText").textContent =
-    `${data.day}, ${data.date}`;
+  const headerDateEl = document.getElementById("dateText");
+  if (headerDateEl) {
+    headerDateEl.textContent = `${data.day}, ${data.date}`;
+    requestAnimationFrame(() => fitDesktopHeaderDate(headerDateEl));
+  }
 
   const periodState = getDisplayPeriodState(data.schedule || [], data.currentSubject, data.nextSubject);
   applyAutoSubjectHomepageTheme(periodState);
@@ -1758,7 +1871,11 @@ function renderSchedule(items, currentSubject) {
        ${isCurrent ? `aria-current="true" tabindex="-1"` : ""}
        ${canOpenSubjectDetails ? `data-subject-popup="${escapeHtml(item.Subject || "")}"` : ""}
        style="background:${cardColor}; color:${textColor};">
-    <strong class="schedule-time" style="color:${timeColor};">${item.StartTime} - ${item.EndTime}</strong><br>
+    <strong class="schedule-time" style="color:${timeColor};">
+      <span class="schedule-time-start">${item.StartTime}</span>
+      <span class="schedule-time-separator" aria-hidden="true">–</span>
+      <span class="schedule-time-end">${item.EndTime}</span>
+    </strong><br>
     ${isCurrent ? `<div class="current-badge">▶ CURRENT PERIOD</div>` : ""}
     <span class="subject-name" style="color:${textColor};">${renderScheduleSubjectText(item, textColor)}</span><br>
     <small style="color:${detailColor}; opacity:.9;">${item.Teacher} • ${item.Room}</small>
@@ -1773,6 +1890,7 @@ function renderSchedule(items, currentSubject) {
     });
   });
 
+  setupTodayScheduleSubjectMarquees();
   syncTodayScheduleToggle();
 
   if (currentKey && currentKey !== lastScheduleAutoScrollKey) {
@@ -1781,11 +1899,10 @@ function renderSchedule(items, currentSubject) {
     return;
   }
 
-  if (!currentKey && !lastScheduleAutoScrollKey) {
-    box.scrollTop = 0;
-    return;
-  }
-
+  // When there is no active/current period, preserve the user's manual
+  // scroll position. This covers before the first class, breaks/free time,
+  // and after the last class. Auto-focus only happens when a real current
+  // period becomes active above.
   box.scrollTop = previousScrollTop;
 }
 
@@ -5101,6 +5218,63 @@ function startLiveClock() {
   }
 }
 
+function fitDesktopHeaderDate(dateEl) {
+  if (!dateEl || !window.matchMedia || !window.matchMedia("(min-width: 901px)").matches) return;
+
+  // Always show the complete weekday + date on one line. Never use an ellipsis.
+  // Start at a readable size and shrink only as much as the current card width requires.
+  const MAX_PX = 16;
+  const MIN_PX = 8.5;
+  let size = MAX_PX;
+
+  dateEl.style.setProperty("font-size", `${MAX_PX}px`, "important");
+  dateEl.style.setProperty("letter-spacing", "-0.03em", "important");
+  dateEl.style.setProperty("transform", "none", "important");
+  dateEl.style.setProperty("width", "100%", "important");
+  dateEl.style.setProperty("white-space", "nowrap", "important");
+  dateEl.style.setProperty("overflow", "hidden", "important");
+  dateEl.style.setProperty("text-overflow", "clip", "important");
+  dateEl.style.setProperty("max-width", "100%", "important");
+  dateEl.style.setProperty("min-width", "0", "important");
+
+  while (size > MIN_PX && dateEl.scrollWidth > dateEl.clientWidth + 1) {
+    size -= 0.25;
+    dateEl.style.setProperty("font-size", `${size}px`, "important");
+  }
+
+  // If an unusually long date is still wider at the minimum font size,
+  // compress it horizontally rather than hiding characters or showing dots.
+  dateEl.style.setProperty("transform", "none", "important");
+  dateEl.style.setProperty("transform-origin", "left center", "important");
+  if (dateEl.scrollWidth > dateEl.clientWidth + 1 && dateEl.scrollWidth > 0) {
+    const scale = Math.min(1, dateEl.clientWidth / dateEl.scrollWidth);
+    dateEl.style.setProperty("transform", `scaleX(${scale})`, "important");
+    dateEl.style.setProperty("width", `${100 / scale}%`, "important");
+  } else {
+    dateEl.style.setProperty("width", "100%", "important");
+  }
+}
+
+function fitDesktopHeaderTime(timeEl) {
+  if (!timeEl || !window.matchMedia || !window.matchMedia("(min-width: 901px)").matches) return;
+
+  // Start large, then shrink only when a long value such as 12:59:59 AM needs it.
+  const MAX_PX = 52;
+  const MIN_PX = 20;
+  let size = MAX_PX;
+
+  timeEl.style.setProperty("font-size", `${MAX_PX}px`, "important");
+  timeEl.style.setProperty("white-space", "nowrap", "important");
+  timeEl.style.setProperty("overflow", "hidden", "important");
+  timeEl.style.setProperty("text-overflow", "clip", "important");
+
+  // Measure after the text for this second has been written.
+  while (size > MIN_PX && timeEl.scrollWidth > timeEl.clientWidth + 1) {
+    size -= 0.5;
+    timeEl.style.setProperty("font-size", `${size}px`, "important");
+  }
+}
+
 function updateClock() {
   const now = new Date();
   const timeEl = document.getElementById("timeText");
@@ -5117,9 +5291,13 @@ function updateClock() {
   };
 
   if (!isPhoneHeader) {
-    // Desktop/tablet should keep the original one-line browser text sizing.
+    // Desktop/tablet: keep the full clock on one line and auto-fit long values.
     timeEl.textContent = new Intl.DateTimeFormat("en-US", formatterOptions).format(now);
     timeEl.classList.remove("phoneCompactTime");
+    requestAnimationFrame(() => {
+      fitDesktopHeaderTime(timeEl);
+      fitDesktopHeaderDate(document.getElementById("dateText"));
+    });
     return;
   }
 
@@ -5709,12 +5887,22 @@ loadClassBoard = async function loadClassBoardWithHeartLedger() {
       await hydrateAnnouncementHeartsV3(data.announcements);
     }
 
-    const newDataString = JSON.stringify(stripLargeAnnouncementMediaForCacheV6(data));
-    safeSetClassBoardCache(newDataString);
+    const cacheData = stripLargeAnnouncementMediaForCacheV6(data);
+    const cacheDataString = JSON.stringify(cacheData);
+    safeSetClassBoardCache(cacheDataString);
 
-    const shouldRenderDashboardV6 = newDataString !== latestDataString || hasAnnouncementDataImageV6(data);
+    // The API includes a live `time` value that changes every request. Comparing
+    // that field caused the whole dashboard (including Today's Schedule) to be
+    // rebuilt every 2 seconds, continuously restarting subject marquees.
+    // Ignore only the volatile clock value for render-change detection. Real
+    // changes such as schedule/current period/announcements still trigger render.
+    const stableCompareData = { ...cacheData };
+    delete stableCompareData.time;
+    const stableDataString = JSON.stringify(stableCompareData);
+
+    const shouldRenderDashboardV6 = stableDataString !== latestDataString || hasAnnouncementDataImageV6(data);
     if (shouldRenderDashboardV6) {
-      latestDataString = newDataString;
+      latestDataString = stableDataString;
       latestData = data;
       renderDashboard(data);
     } else {
@@ -6402,10 +6590,41 @@ function isShhhDesktopHeaderCountViewport() {
   }
 }
 
-function createShhhDesktopHeaderCountBadge() {
-  if (document.getElementById("shhhDesktopCountBadge")) return document.getElementById("shhhDesktopCountBadge");
+function ensureHeartCounterGroup() {
   const topbar = document.querySelector(".topbar");
   if (!topbar) return null;
+
+  let group = document.getElementById("heartCounterGroup");
+  if (!group) {
+    group = document.createElement("div");
+    group.id = "heartCounterGroup";
+    group.className = "heartCounterGroup";
+    group.setAttribute("aria-label", "Shhh monitor and count");
+
+    const quoteBox = topbar.querySelector(".topQuoteBox");
+    if (quoteBox) topbar.insertBefore(group, quoteBox);
+    else topbar.appendChild(group);
+  }
+
+  const heartButton = document.querySelector(".topbarHeart");
+  if (heartButton) {
+    heartButton.textContent = "💛";
+    heartButton.setAttribute("aria-label", "Open Shhh Mode");
+    if (heartButton.parentElement !== group) group.prepend(heartButton);
+  }
+
+  return group;
+}
+
+function createShhhDesktopHeaderCountBadge() {
+  const existing = document.getElementById("shhhDesktopCountBadge");
+  const group = ensureHeartCounterGroup();
+  if (!group) return existing || null;
+
+  if (existing) {
+    if (existing.parentElement !== group) group.appendChild(existing);
+    return existing;
+  }
 
   const badge = document.createElement("div");
   badge.id = "shhhDesktopCountBadge";
@@ -6414,13 +6633,7 @@ function createShhhDesktopHeaderCountBadge() {
   badge.setAttribute("aria-label", "Today's Shhh count");
   badge.title = "Today's Shhh count";
   badge.innerHTML = '<span aria-hidden="true">🤫</span><em>Shhh:</em><strong id="shhhDesktopCountValue">0</strong>';
-
-  const heartButton = document.querySelector(".topbarHeart");
-  if (heartButton?.parentElement === topbar) {
-    heartButton.insertAdjacentElement("afterend", badge);
-  } else {
-    topbar.appendChild(badge);
-  }
+  group.appendChild(badge);
   return badge;
 }
 
