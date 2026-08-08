@@ -16,7 +16,7 @@
     },
     Schedule: {
       collection: "schedule",
-      headers: ["Day", "StartTime", "EndTime", "Subject", "Teacher", "Room", "Color", "Publish"]
+      headers: ["Day", "StartTime", "EndTime", "Subject", "Teacher", "Room", "Color", "TextColor", "Publish"]
     },
     Announcements: {
       collection: "announcements",
@@ -565,12 +565,62 @@
     };
   }
 
+  function normalizeScheduleReadRow(data = {}) {
+    const background = normalizeScheduleColor(
+      data.Color ||
+      data.color ||
+      data.ColorHex ||
+      data.colorHex ||
+      data.SubjectColor ||
+      data.subjectColor ||
+      data.PeriodColor ||
+      data.periodColor ||
+      ""
+    );
+
+    const textColor = normalizeScheduleColor(
+      data.TextColor ||
+      data.textColor ||
+      data.SubjectTextColor ||
+      data.subjectTextColor ||
+      data.FontColor ||
+      data.fontColor ||
+      data.SubjectFontColor ||
+      data.subjectFontColor ||
+      data.PeriodTextColor ||
+      data.periodTextColor ||
+      ""
+    );
+
+    return {
+      ...data,
+      Color: background,
+      TextColor: textColor
+    };
+  }
+
+  function getScheduleManageEffectiveTextColor(row = {}) {
+    const assigned = normalizeScheduleColor(row.TextColor || "");
+    if (assigned) return assigned;
+
+    const background = normalizeScheduleColor(row.Color || "");
+    if (!/^#[0-9A-F]{6}$/i.test(background)) return "";
+
+    const hex = background.slice(1);
+    const r = parseInt(hex.slice(0, 2), 16);
+    const g = parseInt(hex.slice(2, 4), 16);
+    const b = parseInt(hex.slice(4, 6), 16);
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    return brightness > 150 ? "#111111" : "#FFFFFF";
+  }
+
   async function getRows(sheetName) {
     const meta = getSheetMeta(sheetName);
     const snap = await db.collection(meta.collection).get();
     const rows = [];
     snap.forEach(doc => {
-      const data = doc.data() || {};
+      const rawData = doc.data() || {};
+      const data = sheetName === "Schedule" ? normalizeScheduleReadRow(rawData) : rawData;
       rows.push({ ...data, docId: doc.id, id: data.id || doc.id });
     });
     return rows.sort(compareRows);
@@ -602,7 +652,12 @@
         sheetName,
         notedCount: readHeartCount(row),
         heartCount: readHeartCount(row),
-        cells: meta.headers.map(header => serializeCell(row[header]))
+        cells: meta.headers.map(header => {
+          if (sheetName === "Schedule" && header === "TextColor") {
+            return serializeCell(getScheduleManageEffectiveTextColor(row));
+          }
+          return serializeCell(row[header]);
+        })
       }))
     };
   }
@@ -1508,6 +1563,7 @@
       Teacher: payload.Teacher || "",
       Room: payload.Room || "",
       Color: normalizeScheduleColor(payload.Color || payload.ColorHex || payload.SubjectColor || ""),
+      TextColor: normalizeScheduleColor(payload.TextColor || payload.SubjectTextColor || payload.FontColor || ""),
       Type: inferScheduleType(payload.Subject),
       Publish: payload.Publish || "YES"
     };

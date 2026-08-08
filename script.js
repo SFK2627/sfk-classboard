@@ -1616,6 +1616,24 @@ function getSubjectTextColor(subject) {
   return getScheduleTextColor(subject, getSubjectColor(subject));
 }
 
+function getScheduleItemSubjectTextColor(item = {}, backgroundColor = "") {
+  const assigned = String(
+    item.TextColor ||
+    item.textColor ||
+    item.SubjectTextColor ||
+    item.subjectTextColor ||
+    item.FontColor ||
+    item.fontColor ||
+    item.SubjectFontColor ||
+    item.subjectFontColor ||
+    item.PeriodTextColor ||
+    item.periodTextColor ||
+    ""
+  ).trim();
+
+  return assigned || getScheduleTextColor(item.Subject, backgroundColor || item.Color || getSubjectColor(item.Subject));
+}
+
 function escapeHtml(value) {
   return String(value ?? "")
     .replace(/&/g, "&amp;")
@@ -1709,15 +1727,16 @@ function renderCurrentSubject(item) {
   if (item) {
     const subjectBg = item.Color || getSubjectColor(item.Subject);
     const autoTextColor = getScheduleTextColor(item.Subject, subjectBg);
+    const assignedSubjectTextColor = getScheduleItemSubjectTextColor(item, subjectBg);
     const cardBg = useSubjectColors ? subjectBg : getHomeCssVar("--home-current-card-bg", subjectBg);
-    const subjectTextColor = overrideText ? getHomeCssVar("--home-current-subject-color", autoTextColor) : autoTextColor;
+    const subjectTextColor = overrideText ? getHomeCssVar("--home-current-subject-color", assignedSubjectTextColor) : assignedSubjectTextColor;
     const detailsColor = overrideText ? getHomeCssVar("--home-current-details-color", autoTextColor) : autoTextColor;
 
     card.style.background = cardBg;
     card.style.color = subjectTextColor;
     subjectEl.style.color = subjectTextColor;
     detailsEl.style.color = detailsColor;
-    if (labelEl) labelEl.style.color = getHomeCssVar("--home-current-label-color", subjectTextColor);
+    if (labelEl) labelEl.style.color = getHomeCssVar("--home-current-label-color", autoTextColor);
 
     if (countdownEl) {
       countdownEl.style.setProperty("color", getHomeCssVar("--home-current-countdown-text", autoTextColor === "#111" ? "#111" : "#fff"), "important");
@@ -1757,15 +1776,16 @@ function renderNextSubject(item) {
   if (item) {
     const subjectBg = item.Color || getSubjectColor(item.Subject);
     const autoTextColor = getScheduleTextColor(item.Subject, subjectBg);
+    const assignedSubjectTextColor = getScheduleItemSubjectTextColor(item, subjectBg);
     const cardBg = useSubjectColors ? subjectBg : getHomeCssVar("--home-next-card-bg", subjectBg);
-    const subjectTextColor = overrideText ? getHomeCssVar("--home-next-subject-color", autoTextColor) : autoTextColor;
+    const subjectTextColor = overrideText ? getHomeCssVar("--home-next-subject-color", assignedSubjectTextColor) : assignedSubjectTextColor;
     const detailsColor = overrideText ? getHomeCssVar("--home-next-details-color", autoTextColor) : autoTextColor;
 
     card.style.background = cardBg;
     card.style.color = subjectTextColor;
     subjectEl.style.color = subjectTextColor;
     detailsEl.style.color = detailsColor;
-    if (labelEl) labelEl.style.color = getHomeCssVar("--home-next-label-color", subjectTextColor);
+    if (labelEl) labelEl.style.color = getHomeCssVar("--home-next-label-color", autoTextColor);
 
     if (countdownEl) {
       countdownEl.style.setProperty("color", getHomeCssVar("--home-next-countdown-text", autoTextColor === "#111" ? "#111" : "#fff"), "important");
@@ -1860,8 +1880,10 @@ function renderSchedule(items, currentSubject) {
   box.innerHTML = items.map(item => {
     const subjectColor = item.Color || getSubjectColor(item.Subject);
     const autoTextColor = getScheduleTextColor(item.Subject, subjectColor);
+    const assignedSubjectTextColor = getScheduleItemSubjectTextColor(item, subjectColor);
     const cardColor = useSubjectScheduleColors ? subjectColor : getHomeCssVar("--home-schedule-card-bg", subjectColor);
     const textColor = useSubjectScheduleColors ? autoTextColor : getHomeCssVar("--home-schedule-card-text", autoTextColor);
+    const subjectTextColor = useSubjectScheduleColors ? assignedSubjectTextColor : textColor;
     const timeColor = useSubjectScheduleColors ? autoTextColor : getHomeCssVar("--home-schedule-time-color", textColor);
     const detailColor = useSubjectScheduleColors ? autoTextColor : getHomeCssVar("--home-schedule-details-color", textColor);
     const canOpenSubjectDetails = isSubjectDetailsScheduleItem(item);
@@ -1887,7 +1909,7 @@ function renderSchedule(items, currentSubject) {
       <span class="schedule-time-end">${item.EndTime}</span>
     </strong><br>
     ${isCurrent ? `<div class="current-badge">▶ CURRENT PERIOD</div>` : ""}
-    <span class="subject-name" style="color:${textColor};">${renderScheduleSubjectText(item, textColor)}</span><br>
+    <span class="subject-name" style="color:${subjectTextColor};">${renderScheduleSubjectText(item, subjectTextColor)}</span><br>
     <small style="color:${detailColor}; opacity:.9;">${item.Teacher} • ${item.Room}</small>
   </div>
 `;
@@ -5796,7 +5818,7 @@ const dayItems = weeklyScheduleData
     <div class="weeklyList">
       ${dayItems.map(item => {
         const color = item.Color || getSubjectColor(item.Subject);
-        const textColor = getReadableTextColor(color);
+        const textColor = getScheduleItemSubjectTextColor(item, color);
 
         return `
           <div class="weeklyItem" style="border-left-color:${color};">

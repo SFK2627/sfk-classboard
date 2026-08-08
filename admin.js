@@ -7,6 +7,12 @@ let selectedAdminRows = new Set();
 let activeAdminTool = null;
 let currentAdminFilteredRows = [];
 
+let scheduleAdminDataCache = null;
+let scheduleAdminDataCacheAt = 0;
+let scheduleSubjectColorMap = new Map();
+let scheduleColorLookupTimer = null;
+const SCHEDULE_COLOR_CACHE_MS = 30000;
+
 const TEACHER_OPTIONS = [
   "Mr. John Rey Tubello",
   "Ms. Chiarah De Castro",
@@ -102,6 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
   renderHomepagePresetGallery();
   initLoadingSoundSettings();
   loadPageLockSettings();
+  initScheduleColorFamilyTools();
 
   window.SFKAuth?.onAuthStateChanged((user, role) => {
     if (user && role === "admin") showAdminPanel();
@@ -1422,8 +1429,331 @@ async function compressAdminAttachmentImage(image) {
   return bestBlob;
 }
 
+/* CLASS SCHEDULE COLOR FAMILY */
+function normalizeScheduleSubjectKey(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+}
+
+function getScheduleColumnIndex(headers, type) {
+  const normalized = (headers || []).map(header => normalizeFieldName(header));
+  let candidates = [];
+
+  if (type === "subject") {
+    candidates = ["subject", "subjectblock", "periodname", "period", "block"];
+  } else if (type === "textColor") {
+    candidates = ["textcolor", "subjecttextcolor", "fontcolor", "subjectfontcolor", "periodtextcolor"];
+  } else {
+    candidates = ["color", "colour", "subjectcolor", "periodcolor", "backgroundcolor", "bgcolor"];
+  }
+
+  for (const candidate of candidates) {
+    const index = normalized.indexOf(candidate);
+    if (index !== -1) return index;
+  }
+  return -1;
+}
+
+function invalidateScheduleAdminCache() {
+  scheduleAdminDataCache = null;
+  scheduleAdminDataCacheAt = 0;
+}
+
+async function getScheduleAdminData(force = false) {
+  if (!force && scheduleAdminDataCache && (Date.now() - scheduleAdminDataCacheAt) < SCHEDULE_COLOR_CACHE_MS) {
+    return scheduleAdminDataCache;
+  }
+
+  const response = await fetch(`${ADMIN_API_URL}?type=adminList&sheet=${encodeURIComponent("Schedule")}`, {
+    cache: "no-store"
+  });
+  const result = await response.json();
+
+  if (result.status !== "success") {
+    throw new Error(result.message || "Unable to load Class Schedule colors.");
+  }
+
+  scheduleAdminDataCache = result;
+  scheduleAdminDataCacheAt = Date.now();
+  rebuildScheduleSubjectColorMap(result);
+  return result;
+}
+
+function rebuildScheduleSubjectColorMap(result) {
+  const map = new Map();
+  const headers = result?.headers || [];
+  const subjectIndex = getScheduleColumnIndex(headers, "subject");
+  const colorIndex = getScheduleColumnIndex(headers, "color");
+  const textColorIndex = getScheduleColumnIndex(headers, "textColor");
+
+  if (subjectIndex === -1) {
+    scheduleSubjectColorMap = map;
+    return map;
+  }
+
+  const rows = [...(result?.rows || [])].sort((a, b) => Number(a.rowNumber || 0) - Number(b.rowNumber || 0));
+  rows.forEach(row => {
+    const subject = String(row?.cells?.[subjectIndex] || "").trim();
+    const background = colorIndex >= 0 ? normalizeScheduleColorInput(row?.cells?.[colorIndex] || "") : "";
+    const text = textColorIndex >= 0 ? normalizeScheduleColorInput(row?.cells?.[textColorIndex] || "") : "";
+    const key = normalizeScheduleSubjectKey(subject);
+    if (key && (background || text)) map.set(key, { background, text });
+  });
+
+  scheduleSubjectColorMap = map;
+  return map;
+}
+
+function setScheduleColorMatchStatus(message, state = "") {
+  const status = document.getElementById("scheduleColorMatchStatus");
+  if (!status) return;
+  status.textContent = message || "";
+  status.classList.toggle("isMatch", state === "match");
+  status.classList.toggle("isWorking", state === "working");
+}
+
+function syncOneScheduleColorPicker(textId, pickerId) {
+  const textInput = document.getElementById(textId);
+  const picker = document.getElementById(pickerId);
+  if (!textInput || !picker) return;
+  const normalized = normalizeScheduleColorInput(textInput.value);
+  if (/^#[0-9A-F]{6}$/i.test(normalized)) picker.value = normalized;
+}
+
+function syncScheduleColorPickersFromText() {
+  syncOneScheduleColorPicker("scheduleColor", "scheduleColorPicker");
+  syncOneScheduleColorPicker("scheduleTextColor", "scheduleTextColorPicker");
+}
+
+function getSchedulePreviewAutoTextColor(background) {
+  const hex = normalizeScheduleColorInput(background);
+  const match = /^#([0-9A-F]{6})$/i.exec(hex);
+  if (!match) return "#111111";
+  const raw = match[1];
+  const r = parseInt(raw.slice(0, 2), 16);
+  const g = parseInt(raw.slice(2, 4), 16);
+  const b = parseInt(raw.slice(4, 6), 16);
+  const luminance = (0.299 * r) + (0.587 * g) + (0.114 * b);
+  return luminance > 154 ? "#111111" : "#FFFFFF";
+}
+
+function updateScheduleThemePreview() {
+  const preview = document.getElementById("scheduleThemePreview");
+  const previewSubject = document.getElementById("scheduleThemePreviewSubject");
+  if (!preview || !previewSubject) return;
+
+  const subject = document.getElementById("scheduleSubject")?.value.trim() || "Subject / Block";
+  const background = normalizeScheduleColorInput(document.getElementById("scheduleColor")?.value || "") || "#FFD700";
+  const assignedText = normalizeScheduleColorInput(document.getElementById("scheduleTextColor")?.value || "");
+  const text = assignedText || getSchedulePreviewAutoTextColor(background);
+
+  preview.style.setProperty("--schedule-preview-bg", background);
+  preview.style.setProperty("--schedule-preview-text", text);
+  previewSubject.textContent = subject;
+}
+
+async function inheritScheduleColorForSubject({ force = false, overwrite = true } = {}) {
+  const subjectInput = document.getElementById("scheduleSubject");
+  const colorInput = document.getElementById("scheduleColor");
+  const textColorInput = document.getElementById("scheduleTextColor");
+  if (!subjectInput || !colorInput || !textColorInput) return null;
+
+  const subject = subjectInput.value.trim();
+  const key = normalizeScheduleSubjectKey(subject);
+  if (!key) {
+    setScheduleColorMatchStatus("Type or select a Subject / Block to check its saved colors.");
+    updateScheduleThemePreview();
+    return null;
+  }
+
+  try {
+    await getScheduleAdminData(force);
+    const theme = scheduleSubjectColorMap.get(key) || null;
+    if (theme) {
+      if (overwrite || !colorInput.value.trim()) {
+        colorInput.value = theme.background || "";
+        colorInput.dataset.autoInherited = "YES";
+      }
+      if (overwrite || !textColorInput.value.trim()) {
+        textColorInput.value = theme.text || "";
+        textColorInput.dataset.autoInherited = "YES";
+      }
+      syncScheduleColorPickersFromText();
+      updateScheduleThemePreview();
+      const textLabel = theme.text ? ` / text ${theme.text}` : " / automatic text";
+      setScheduleColorMatchStatus(`${subject} already uses ${theme.background || "automatic background"}${textLabel}. Future matching periods will inherit it.`, "match");
+      return theme;
+    }
+    setScheduleColorMatchStatus(`No saved color theme yet for “${subject}”. Choose it once, then apply it to all matching periods.`);
+    updateScheduleThemePreview();
+    return null;
+  } catch (error) {
+    console.error(error);
+    setScheduleColorMatchStatus("Could not check saved subject colors right now.");
+    updateScheduleThemePreview();
+    return null;
+  }
+}
+
+async function updateScheduleRowsToColors(subject, backgroundColor, textColor, { showResult = true } = {}) {
+  const cleanSubject = String(subject || "").trim();
+  const cleanBackground = normalizeScheduleColorInput(backgroundColor);
+  const cleanText = normalizeScheduleColorInput(textColor);
+  const key = normalizeScheduleSubjectKey(cleanSubject);
+
+  if (!key || (!cleanBackground && !cleanText)) {
+    if (showResult) showToast("Choose a Subject / Block and at least one color first.");
+    return { matched: 0, updated: 0 };
+  }
+
+  setScheduleColorMatchStatus(`Updating all “${cleanSubject}” periods to the same color theme...`, "working");
+
+  try {
+    const result = await getScheduleAdminData(true);
+    const headers = result.headers || [];
+    const subjectIndex = getScheduleColumnIndex(headers, "subject");
+    const colorIndex = getScheduleColumnIndex(headers, "color");
+    const textColorIndex = getScheduleColumnIndex(headers, "textColor");
+
+    if (subjectIndex === -1 || colorIndex === -1 || textColorIndex === -1) {
+      throw new Error("Schedule Subject/Color/TextColor columns were not found. Replace firebase-adapter.js with the v346 file too.");
+    }
+
+    const matchingRows = (result.rows || []).filter(row => {
+      return normalizeScheduleSubjectKey(row?.cells?.[subjectIndex]) === key;
+    });
+
+    const rowsToUpdate = matchingRows.filter(row => {
+      const oldBg = normalizeScheduleColorInput(row?.cells?.[colorIndex] || "");
+      const oldText = normalizeScheduleColorInput(row?.cells?.[textColorIndex] || "");
+      return (cleanBackground && oldBg !== cleanBackground) || oldText !== cleanText;
+    });
+
+    for (const row of rowsToUpdate) {
+      const values = [...(row.cells || [])];
+      while (values.length < headers.length) values.push("");
+      if (cleanBackground) values[colorIndex] = cleanBackground;
+      values[textColorIndex] = cleanText;
+
+      const response = await fetch(ADMIN_API_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          type: "adminUpdate",
+          payload: {
+            sheetName: "Schedule",
+            rowNumber: row.rowNumber,
+            values
+          }
+        })
+      });
+      const updateResult = await response.json();
+      if (!updateResult.success) {
+        throw new Error(updateResult.message || `Unable to update row #${row.rowNumber}.`);
+      }
+    }
+
+    invalidateScheduleAdminCache();
+    scheduleSubjectColorMap.set(key, { background: cleanBackground, text: cleanText });
+    const textLabel = cleanText || "automatic";
+    setScheduleColorMatchStatus(`${matchingRows.length} matching period(s) now use background ${cleanBackground || "unchanged"} / text ${textLabel}.`, "match");
+
+    if (showResult) {
+      showToast(rowsToUpdate.length
+        ? `${rowsToUpdate.length} matching schedule period(s) updated.`
+        : `All ${matchingRows.length} matching period(s) already use these colors.`
+      );
+    }
+
+    if (currentAdminSheet === "Schedule") refreshCurrentAdminTable();
+    return { matched: matchingRows.length, updated: rowsToUpdate.length };
+  } catch (error) {
+    console.error(error);
+    setScheduleColorMatchStatus(error.message || "Unable to apply the colors to matching periods.");
+    if (showResult) showToast(error.message || "Unable to update matching schedule colors.");
+    return { matched: 0, updated: 0, error };
+  }
+}
+
+async function applyScheduleColorToMatchingPeriods() {
+  const subject = document.getElementById("scheduleSubject")?.value.trim() || "";
+  const background = normalizeScheduleColorInput(document.getElementById("scheduleColor")?.value || "");
+  const text = normalizeScheduleColorInput(document.getElementById("scheduleTextColor")?.value || "");
+
+  if (!subject) {
+    showToast("Enter the Subject / Block name first.");
+    document.getElementById("scheduleSubject")?.focus();
+    return;
+  }
+  if (!background && !text) {
+    showToast("Choose a background or subject text color first.");
+    document.getElementById("scheduleColor")?.focus();
+    return;
+  }
+
+  await updateScheduleRowsToColors(subject, background, text, { showResult: true });
+}
+
+function initScheduleColorFamilyTools() {
+  const subjectInput = document.getElementById("scheduleSubject");
+  const colorInput = document.getElementById("scheduleColor");
+  const textColorInput = document.getElementById("scheduleTextColor");
+  const picker = document.getElementById("scheduleColorPicker");
+  const textPicker = document.getElementById("scheduleTextColorPicker");
+
+  if (subjectInput) {
+    subjectInput.addEventListener("input", () => {
+      updateScheduleThemePreview();
+      clearTimeout(scheduleColorLookupTimer);
+      scheduleColorLookupTimer = setTimeout(() => {
+        inheritScheduleColorForSubject({ overwrite: true });
+      }, 260);
+    });
+    subjectInput.addEventListener("change", () => inheritScheduleColorForSubject({ overwrite: true }));
+    subjectInput.addEventListener("blur", () => inheritScheduleColorForSubject({ overwrite: true }));
+  }
+
+  [colorInput, textColorInput].filter(Boolean).forEach(input => {
+    input.addEventListener("input", () => {
+      input.dataset.autoInherited = "NO";
+      syncScheduleColorPickersFromText();
+      updateScheduleThemePreview();
+    });
+  });
+
+  if (picker && colorInput) {
+    picker.addEventListener("input", () => {
+      colorInput.value = picker.value.toUpperCase();
+      colorInput.dataset.autoInherited = "NO";
+      updateScheduleThemePreview();
+      setScheduleColorMatchStatus("Background selected. Save the period or apply the color theme to all matching periods.");
+    });
+  }
+
+  if (textPicker && textColorInput) {
+    textPicker.addEventListener("input", () => {
+      textColorInput.value = textPicker.value.toUpperCase();
+      textColorInput.dataset.autoInherited = "NO";
+      updateScheduleThemePreview();
+      setScheduleColorMatchStatus("Subject text color selected. Save the period or apply the color theme to all matching periods.");
+    });
+  }
+
+  updateScheduleThemePreview();
+}
+
 /* CLASS SCHEDULE */
 async function saveClassSchedule() {
+  const subjectInput = document.getElementById("scheduleSubject");
+  const colorInput = document.getElementById("scheduleColor");
+  const textColorInput = document.getElementById("scheduleTextColor");
+
+  /* Exact subject names automatically inherit the established color theme. */
+  if (subjectInput?.value.trim() && !colorInput?.value.trim()) {
+    await inheritScheduleColorForSubject({ overwrite: false });
+  }
+
   const payload = {
     Day: document.getElementById("scheduleDay").value,
     StartTime: normalizeScheduleTimeInput(document.getElementById("scheduleStartTime").value),
@@ -1432,6 +1762,7 @@ async function saveClassSchedule() {
     Teacher: document.getElementById("scheduleTeacher").value.trim(),
     Room: document.getElementById("scheduleRoom").value.trim(),
     Color: normalizeScheduleColorInput(document.getElementById("scheduleColor").value),
+    TextColor: normalizeScheduleColorInput(document.getElementById("scheduleTextColor").value),
     Publish: document.getElementById("schedulePublish").value
   };
 
@@ -1445,9 +1776,22 @@ async function saveClassSchedule() {
     return;
   }
 
+  const cascadeColor = document.getElementById("scheduleColorCascade")?.checked !== false;
   const saved = await sendAdminData("schedule", payload);
 
   if (saved) {
+    invalidateScheduleAdminCache();
+
+    if (cascadeColor && (payload.Color || payload.TextColor)) {
+      await updateScheduleRowsToColors(payload.Subject, payload.Color, payload.TextColor, { showResult: false });
+      showToast(`Schedule saved. Matching “${payload.Subject}” periods now use the same background + text colors.`);
+    } else if (payload.Color || payload.TextColor) {
+      scheduleSubjectColorMap.set(normalizeScheduleSubjectKey(payload.Subject), {
+        background: payload.Color,
+        text: payload.TextColor
+      });
+    }
+
     clearFields([
       "scheduleStartTime",
       "scheduleEndTime",
@@ -1455,8 +1799,10 @@ async function saveClassSchedule() {
       "scheduleTeacher",
       "scheduleRoom",
       "scheduleColor",
+      "scheduleTextColor",
       "schedulePublish"
     ]);
+    setScheduleColorMatchStatus("Type or select a Subject / Block to check its saved colors.");
   }
 }
 
@@ -2074,6 +2420,20 @@ if (isTeacher) {
     `;
   }).join("");
 
+  if (editingRecord.sheetName === "Schedule") {
+    editFields.insertAdjacentHTML("beforeend", `
+      <div class="editField editFieldFull scheduleEditCascade">
+        <label for="editScheduleColorCascade">
+          <input id="editScheduleColorCascade" type="checkbox" checked />
+          <span>
+            <strong>Apply these colors to every matching Subject / Block</strong>
+            <small>When you save, rows with the exact same Subject / Block name will receive the same background + subject text colors.</small>
+          </span>
+        </label>
+      </div>
+    `);
+  }
+
   editModal.classList.remove("hidden");
   initRichTextEditors();
 }
@@ -2133,7 +2493,30 @@ async function saveEditedRecord() {
     }
 
     if (result.success) {
-      showToast("Record updated.");
+      const shouldCascadeScheduleColor =
+        editingRecord.sheetName === "Schedule" &&
+        document.getElementById("editScheduleColorCascade")?.checked;
+
+      if (shouldCascadeScheduleColor) {
+        const subjectIndex = getScheduleColumnIndex(editingRecord.headers, "subject");
+        const colorIndex = getScheduleColumnIndex(editingRecord.headers, "color");
+        const textColorIndex = getScheduleColumnIndex(editingRecord.headers, "textColor");
+        const subject = subjectIndex >= 0 ? String(updatedValues[subjectIndex] || "").trim() : "";
+        const color = colorIndex >= 0 ? normalizeScheduleColorInput(updatedValues[colorIndex] || "") : "";
+        const textColor = textColorIndex >= 0 ? normalizeScheduleColorInput(updatedValues[textColorIndex] || "") : "";
+
+        invalidateScheduleAdminCache();
+        if (subject && (color || textColor)) {
+          await updateScheduleRowsToColors(subject, color, textColor, { showResult: false });
+          showToast(`Record updated. Matching “${subject}” periods now use the same background + text colors.`);
+        } else {
+          showToast("Record updated.");
+        }
+      } else {
+        if (editingRecord.sheetName === "Schedule") invalidateScheduleAdminCache();
+        showToast("Record updated.");
+      }
+
       closeEditModal();
       refreshCurrentAdminTable();
       return;

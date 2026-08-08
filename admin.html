@@ -16,7 +16,7 @@
   <link rel="manifest" href="admin.webmanifest?v=portrait-reminder-v1" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
-  <link rel="stylesheet" href="admin.css?v=page-lock-v119" />
+  <link rel="stylesheet" href="admin.css?v=schedule-color-family-v345" />
   <script src="orientation-lock.js?v=appwide-v6" defer></script>
 </head>
 
@@ -671,9 +671,41 @@
           <label for="scheduleRoom">Room</label>
           <input id="scheduleRoom" type="text" placeholder="Example: ComLab / Room 404" />
 
-          <label for="scheduleColor">Color Hex</label>
-          <input id="scheduleColor" list="scheduleColorOptions" type="text" placeholder="Type or paste hex, example: #FFD700" />
-          <small class="fieldHint">Optional. Type/copy a hex color. Subject guide: English #EC407A · Math #2E7D32 · Science #FFD700 · ICT/LE #D32F2F · Filipino #8B5A2B · CLED #7B1FA2 · MAPEH #111111 · AP #1976D2</small>
+          <div class="scheduleThemeFields">
+            <div class="scheduleThemeField">
+              <label for="scheduleColor">Background Color</label>
+              <div class="scheduleColorInputRow">
+                <input id="scheduleColor" list="scheduleColorOptions" type="text" placeholder="Example: #FFD700" />
+                <input id="scheduleColorPicker" class="scheduleColorPicker" type="color" value="#FFD700" aria-label="Choose schedule background color" title="Choose background color" />
+              </div>
+            </div>
+
+            <div class="scheduleThemeField">
+              <label for="scheduleTextColor">Subject Text Color</label>
+              <div class="scheduleColorInputRow">
+                <input id="scheduleTextColor" list="scheduleColorOptions" type="text" placeholder="Example: #111111" />
+                <input id="scheduleTextColorPicker" class="scheduleColorPicker" type="color" value="#111111" aria-label="Choose subject text color" title="Choose subject text color" />
+              </div>
+            </div>
+          </div>
+          <small class="fieldHint">Set the subject background and the color of the Subject / Block name. Leave Text Color blank to use the automatic readable color.</small>
+
+          <div id="scheduleThemePreview" class="scheduleThemePreview" aria-live="polite">
+            <span>LIVE PREVIEW</span>
+            <strong id="scheduleThemePreviewSubject">Subject / Block</strong>
+          </div>
+
+          <div class="scheduleColorFamilyTool">
+            <label class="scheduleColorFamilyCheck" for="scheduleColorCascade">
+              <input id="scheduleColorCascade" type="checkbox" checked />
+              <span>
+                <strong>Use these colors for all matching Subject / Block entries</strong>
+                <small>Exact same subject/period name only. Existing matching rows will receive the same background + subject text colors.</small>
+              </span>
+            </label>
+            <button id="scheduleApplyMatchingColorBtn" class="scheduleApplyMatchingColorBtn" type="button" onclick="applyScheduleColorToMatchingPeriods()">Apply Colors to Matching Periods</button>
+            <small id="scheduleColorMatchStatus" class="scheduleColorMatchStatus">Type or select a Subject / Block to check its saved colors.</small>
+          </div>
 
           <label for="schedulePublish">Publish</label>
           <select id="schedulePublish">
@@ -855,7 +887,7 @@
   <script src="auth.js?v=admin-officer-rescue-v2"></script>
   <script src="firebase-adapter.js?v=page-lock-v119"></script>
   <script src="pwa.js?v=page-lock-v119"></script>
-  <script src="class-chat-admin.js?v=page-lock-v119"></script>
-  <script src="admin.js?v=page-lock-v119"></script>
+  <script src="class-chat-admin.js?v=schedule-color-family-v345"></script>
+  <script src="admin.js?v=schedule-color-family-v345"></script>
 </body>
 </html>
