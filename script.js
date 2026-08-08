@@ -5072,12 +5072,60 @@ function getOrdinalDay(day) {
   return `${day}th`;
 }
 
+function fitDesktopQuoteText() {
+  if (!window.matchMedia || !window.matchMedia("(min-width: 901px)").matches) return;
+
+  const box = document.querySelector(".topQuoteBox");
+  const label = box?.querySelector(".quoteLabel");
+  const quote = document.getElementById("dailyQuote");
+  if (!box || !quote) return;
+
+  // Keep the quote visibly large. Shrink only when the full text truly needs it.
+  // The author now sits in its own lower lane, above the SHSS meter.
+  const MAX_PX = 26;
+  const MIN_PX = 18;
+  const BOTTOM_LANE_RESERVE = 31; // author + safe gap + 8px SHSS meter
+  const LABEL_GAP = 5;
+
+  quote.style.setProperty("font-size", `${MAX_PX}px`, "important");
+  quote.style.setProperty("line-height", "1.01", "important");
+  quote.style.setProperty("display", "block", "important");
+  quote.style.setProperty("white-space", "normal", "important");
+  quote.style.setProperty("overflow", "visible", "important");
+  quote.style.setProperty("height", "auto", "important");
+  quote.style.setProperty("max-height", "none", "important");
+  quote.style.setProperty("transform", "none", "important");
+
+  const labelBottom = label ? (label.offsetTop + label.offsetHeight) : 0;
+  const quoteTop = Math.max(labelBottom + LABEL_GAP, 22);
+  const available = Math.max(38, box.clientHeight - quoteTop - BOTTOM_LANE_RESERVE);
+
+  let size = MAX_PX;
+  while (size > MIN_PX && quote.scrollHeight > available + 1) {
+    size -= 0.5;
+    quote.style.setProperty("font-size", `${size}px`, "important");
+  }
+}
+
+let quoteFitResizeTimer = null;
+window.addEventListener("resize", () => {
+  clearTimeout(quoteFitResizeTimer);
+  quoteFitResizeTimer = setTimeout(fitDesktopQuoteText, 100);
+});
+
 function renderQuote(item) {
+  const rawQuote = item?.Quote ? String(item.Quote).trim() : "";
+  const cleanQuote = rawQuote
+    .replace(/^[\s\"'“”‘’]+/, "")
+    .replace(/[\s\"'“”‘’]+$/, "");
+
   document.getElementById("dailyQuote").textContent =
-    item ? `“${item.Quote}”` : "Be kind today.";
+    cleanQuote || "Be kind today.";
 
   document.getElementById("quoteAuthor").textContent =
     item ? `— ${item.Author || "SFK ClassBoard"}` : "";
+
+  requestAnimationFrame(fitDesktopQuoteText);
 }
 
 function renderTicker(items) {
@@ -5091,7 +5139,7 @@ function renderTicker(items) {
 
   ticker.textContent = items
     .map(item => `📢 ${item.Message}`)
-    .join("     •     ");
+    .join("         •         ");
   ticker.dataset.marquee = ticker.textContent;
 }
 
@@ -5304,7 +5352,7 @@ function fitDesktopHeaderTime(timeEl) {
   if (!timeEl || !window.matchMedia || !window.matchMedia("(min-width: 901px)").matches) return;
 
   // Start large, then shrink only when a long value such as 12:59:59 AM needs it.
-  const MAX_PX = 52;
+  const MAX_PX = 64;
   const MIN_PX = 20;
   let size = MAX_PX;
 

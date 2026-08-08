@@ -19812,3 +19812,756 @@ body.classBoardPageLocked .app > :not(#sfkPageLockScreen) {
 .thingsCard .thing-subject.subject-homeroom {
   color: #444444 !important;
 }
+
+
+/* =========================================================
+   v244 ADVISER REMINDERS QUOTE STYLE
+   - adviser reminder content gets a yellow left accent
+   - decorative quote mark on the left area
+   - keep text readable and preserve admin-set palette linkage
+========================================================= */
+.sideCard #reminderList .reminder-item {
+  border-left: 4px solid #f2c400 !important;
+  padding: 12px 14px 12px 42px !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.sideCard #reminderList .reminder-item::before {
+  content: "“" !important;
+  position: absolute !important;
+  left: 12px !important;
+  top: 10px !important;
+  font-size: 2rem !important;
+  line-height: 1 !important;
+  font-weight: 900 !important;
+  color: #f2c400 !important;
+  opacity: 1 !important;
+  pointer-events: none !important;
+}
+
+.sideCard #reminderList .reminder-item > *:first-child {
+  margin-top: 0 !important;
+}
+
+.sideCard #reminderList .reminder-item > *:last-child {
+  margin-bottom: 0 !important;
+}
+
+.sideCard #reminderList .reminder-item p,
+.sideCard #reminderList .reminder-item ul,
+.sideCard #reminderList .reminder-item ol {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+@media (max-width: 900px) {
+  .sideCard #reminderList .reminder-item {
+    padding: 11px 12px 11px 38px !important;
+  }
+
+  .sideCard #reminderList .reminder-item::before {
+    left: 11px !important;
+    top: 9px !important;
+    font-size: 1.85rem !important;
+  }
+}
+
+
+/* =========================================================
+   v245 LARGER DESKTOP TIME
+   - larger default/max clock size
+   - JS auto-fit still shrinks only when needed for long 12-hour values
+========================================================= */
+@media (min-width: 901px) {
+  .timeBox h2,
+  #timeText {
+    font-size: 60px !important;
+    line-height: .92 !important;
+    letter-spacing: -0.075em !important;
+  }
+}
+
+
+/* =========================================================
+   v246 DESKTOP TIME CARD — USE RIGHT SPACE BETTER
+   - reduce wasted right padding so the clock text can breathe
+   - slightly shrink only the icon column to free more text width
+   - allow a larger default clock while JS still auto-fits long values
+========================================================= */
+@media (min-width: 901px) {
+  .timeBox,
+  #classBoardAccessTrigger.timeBox {
+    grid-template-columns: 42px minmax(0, 1fr) !important;
+    column-gap: 6px !important;
+    padding: 8px 12px 8px 8px !important;
+    overflow: visible !important;
+  }
+
+  .timeBox::before,
+  #classBoardAccessTrigger.timeBox::before {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 13px !important;
+    font-size: 1.8rem !important;
+  }
+
+  .timeBox h2,
+  #timeText {
+    max-width: 100% !important;
+    width: 100% !important;
+    font-size: 64px !important;
+    line-height: .9 !important;
+    letter-spacing: -0.078em !important;
+    padding-right: 0 !important;
+  }
+
+  .timeBox p,
+  #dateText {
+    width: 100% !important;
+    max-width: 100% !important;
+    font-size: 16px !important;
+    line-height: 1.02 !important;
+    letter-spacing: -0.025em !important;
+    padding-right: 0 !important;
+  }
+}
+
+
+/* =========================================================
+   v247 DAILY QUOTE CARD — QUOTE MARK + PLAIN LABEL
+   - add decorative quote mark inside the card before the label
+   - remove the black pill background from the quote label
+   - keep the clean centered layout on desktop and mobile
+========================================================= */
+.topQuoteBox {
+  position: relative !important;
+}
+
+.topQuoteBox::before {
+  content: "“" !important;
+  display: block !important;
+  width: 100% !important;
+  text-align: center !important;
+  font-size: clamp(2rem, 2.4vw, 2.5rem) !important;
+  line-height: .72 !important;
+  font-weight: 900 !important;
+  color: #f2c400 !important;
+  margin: 0 0 3px 0 !important;
+  pointer-events: none !important;
+}
+
+.quoteLabel,
+.topQuoteBox .quoteLabel {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: #111 !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  text-transform: uppercase !important;
+  letter-spacing: .08em !important;
+  font-weight: 900 !important;
+}
+
+@media (min-width: 901px) {
+  .topQuoteBox {
+    justify-content: flex-start !important;
+    align-items: center !important;
+    text-align: center !important;
+    padding-top: 8px !important;
+  }
+
+  .quoteLabel,
+  .topQuoteBox .quoteLabel {
+    margin-bottom: 4px !important;
+    font-size: .86rem !important;
+    line-height: 1.05 !important;
+  }
+
+  .topQuoteBox #dailyQuote {
+    margin-top: 0 !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .topQuoteBox::before {
+    font-size: 1.6rem !important;
+    margin-bottom: 2px !important;
+  }
+
+  .quoteLabel,
+  .topQuoteBox .quoteLabel {
+    margin-bottom: 3px !important;
+    font-size: .62rem !important;
+    line-height: 1.04 !important;
+  }
+}
+
+
+/* =========================================================
+   v248 DAILY QUOTE SPACING TUNE
+   - move quote mark and label slightly upward
+   - create clearer gap before the actual quote text
+========================================================= */
+.topQuoteBox::before {
+  margin: -3px 0 1px 0 !important;
+}
+
+.quoteLabel,
+.topQuoteBox .quoteLabel {
+  margin-top: -3px !important;
+  margin-bottom: 8px !important;
+}
+
+@media (min-width: 901px) {
+  .topQuoteBox {
+    padding-top: 6px !important;
+  }
+
+  .topQuoteBox::before {
+    margin-top: -5px !important;
+    margin-bottom: 1px !important;
+  }
+
+  .quoteLabel,
+  .topQuoteBox .quoteLabel {
+    margin-top: -2px !important;
+    margin-bottom: 10px !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .topQuoteBox::before {
+    margin-top: -3px !important;
+    margin-bottom: 1px !important;
+  }
+
+  .quoteLabel,
+  .topQuoteBox .quoteLabel {
+    margin-top: -1px !important;
+    margin-bottom: 7px !important;
+  }
+}
+
+
+/* =========================================================
+   v249 DAILY QUOTE — MARK/LABEL CLOSER + READABLE QUOTE
+   - quote mark and label sit close together with a small gap
+   - actual quote keeps a readable desktop size
+   - leave breathing room below for the SHSS meter
+========================================================= */
+@media (min-width: 901px) {
+  .topQuoteBox {
+    padding-top: 5px !important;
+    padding-bottom: 12px !important;
+  }
+
+  .topQuoteBox::before {
+    margin-top: -4px !important;
+    margin-bottom: 0 !important;
+    line-height: .68 !important;
+  }
+
+  .quoteLabel,
+  .topQuoteBox .quoteLabel {
+    margin-top: 1px !important;
+    margin-bottom: 7px !important;
+    font-size: .84rem !important;
+    line-height: 1 !important;
+  }
+
+  .topQuoteBox #dailyQuote {
+    font-size: clamp(.92rem, 1.15vw, 1.08rem) !important;
+    line-height: 1.08 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+  }
+}
+
+
+/* =========================================================
+   v250 DAILY QUOTE — CORNER QUOTES + LABEL ON TOP
+   - remove the centered quote mark above the label
+   - move the quote label to the top area
+   - add two decorative yellow quote marks: top-right and bottom-left
+   - keep the quote large/readable and author visible
+========================================================= */
+.topQuoteBox {
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+/* replace the old centered quote mark */
+.topQuoteBox::before {
+  content: "“" !important;
+  position: absolute !important;
+  top: 10px !important;
+  right: 18px !important;
+  left: auto !important;
+  width: auto !important;
+  display: block !important;
+  text-align: right !important;
+  font-size: clamp(1.7rem, 2.2vw, 2.25rem) !important;
+  line-height: .7 !important;
+  font-weight: 900 !important;
+  color: #f2c400 !important;
+  margin: 0 !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
+}
+
+.topQuoteBox::after {
+  content: "“" !important;
+  position: absolute !important;
+  bottom: 6px !important;
+  left: 16px !important;
+  width: auto !important;
+  display: block !important;
+  text-align: left !important;
+  font-size: clamp(1.55rem, 2vw, 2rem) !important;
+  line-height: .7 !important;
+  font-weight: 900 !important;
+  color: #f2c400 !important;
+  margin: 0 !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
+  opacity: .95 !important;
+}
+
+.quoteLabel,
+.topQuoteBox .quoteLabel {
+  align-self: center !important;
+  background: #111 !important;
+  color: #fff !important;
+  border: 0 !important;
+  box-shadow: 0 3px 10px rgba(0,0,0,.18) !important;
+  padding: 4px 12px !important;
+  border-radius: 999px !important;
+  text-transform: uppercase !important;
+  letter-spacing: .08em !important;
+  font-weight: 900 !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+@media (min-width: 901px) {
+  .topQuoteBox {
+    justify-content: flex-start !important;
+    align-items: center !important;
+    text-align: center !important;
+    padding: 6px 18px 12px !important;
+  }
+
+  .quoteLabel,
+  .topQuoteBox .quoteLabel {
+    margin-top: 0 !important;
+    margin-bottom: 7px !important;
+    font-size: .84rem !important;
+    line-height: 1 !important;
+  }
+
+  .topQuoteBox #dailyQuote {
+    position: relative !important;
+    z-index: 2 !important;
+    margin: 0 auto !important;
+    max-width: 95% !important;
+    font-size: clamp(1.02rem, 1.35vw, 1.28rem) !important;
+    line-height: 1.06 !important;
+    font-weight: 800 !important;
+    text-align: center !important;
+    overflow: hidden !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    text-overflow: clip !important;
+  }
+
+  .topQuoteBox #quoteAuthor {
+    position: relative !important;
+    z-index: 2 !important;
+    display: block !important;
+    margin-top: 3px !important;
+    font-size: .9rem !important;
+    line-height: 1 !important;
+    color: #b8860b !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .topQuoteBox::before {
+    top: 7px !important;
+    right: 12px !important;
+    font-size: 1.4rem !important;
+  }
+
+  .topQuoteBox::after {
+    left: 10px !important;
+    bottom: 4px !important;
+    font-size: 1.28rem !important;
+  }
+
+  .quoteLabel,
+  .topQuoteBox .quoteLabel {
+    background: #111 !important;
+    color: #fff !important;
+    padding: 3px 9px !important;
+    border-radius: 999px !important;
+    margin-top: 0 !important;
+    margin-bottom: 5px !important;
+    font-size: .58rem !important;
+    line-height: 1 !important;
+  }
+
+  .topQuoteBox #dailyQuote {
+    position: relative !important;
+    z-index: 2 !important;
+  }
+}
+
+
+/* =========================================================
+   v251 DAILY QUOTE — CORRECT CORNER QUOTES + PLAIN LABEL
+   - top-left opening quote “ facing right
+   - bottom-right closing quote ” facing left
+   - remove black background from quote label again
+========================================================= */
+.topQuoteBox::before {
+  content: "“" !important;
+  top: 10px !important;
+  left: 16px !important;
+  right: auto !important;
+  text-align: left !important;
+  width: auto !important;
+  font-size: clamp(1.7rem, 2.2vw, 2.25rem) !important;
+  line-height: .7 !important;
+  margin: 0 !important;
+}
+
+.topQuoteBox::after {
+  content: "”" !important;
+  left: auto !important;
+  right: 16px !important;
+  bottom: 6px !important;
+  text-align: right !important;
+  width: auto !important;
+  font-size: clamp(1.55rem, 2vw, 2rem) !important;
+  line-height: .7 !important;
+  margin: 0 !important;
+}
+
+.quoteLabel,
+.topQuoteBox .quoteLabel {
+  background: transparent !important;
+  color: #111 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
+
+@media (min-width: 901px) {
+  .quoteLabel,
+  .topQuoteBox .quoteLabel {
+    font-size: .84rem !important;
+    line-height: 1 !important;
+    margin-top: 0 !important;
+    margin-bottom: 7px !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .topQuoteBox::before {
+    top: 7px !important;
+    left: 10px !important;
+    right: auto !important;
+    font-size: 1.4rem !important;
+  }
+
+  .topQuoteBox::after {
+    right: 10px !important;
+    left: auto !important;
+    bottom: 4px !important;
+    font-size: 1.28rem !important;
+  }
+
+  .quoteLabel,
+  .topQuoteBox .quoteLabel {
+    background: transparent !important;
+    color: #111 !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    margin-top: 0 !important;
+    margin-bottom: 5px !important;
+    font-size: .58rem !important;
+    line-height: 1 !important;
+  }
+}
+
+
+/* =========================================================
+   v253 HEART+COUNTER GROUP — THINNER WHITE BORDER
+========================================================= */
+@media (min-width: 901px) {
+  .heartCounterGroup {
+    border: 1.5px solid rgba(255,255,255,.92) !important;
+    box-shadow:
+      inset 0 0 0 1px rgba(255,255,255,.04),
+      0 10px 22px rgba(0,0,0,.20) !important;
+  }
+}
+
+
+/* =========================================================
+   v260 QUOTE CARD TUNE ON USER'S V253 BASE
+   - larger actual quote text for readability
+   - author moved slightly lower
+   - bigger decorative corner quote marks
+   - quote label unchanged
+========================================================= */
+@media (min-width: 901px) {
+  .topQuoteBox::before {
+    font-size: clamp(2rem, 2.65vw, 2.7rem) !important;
+    top: 8px !important;
+    left: 14px !important;
+  }
+
+  .topQuoteBox::after {
+    font-size: clamp(1.9rem, 2.45vw, 2.45rem) !important;
+    right: 14px !important;
+    bottom: 4px !important;
+  }
+
+  .topQuoteBox #dailyQuote {
+    font-size: clamp(1.12rem, 1.55vw, 1.48rem) !important;
+    line-height: 1.05 !important;
+    max-width: 93% !important;
+  }
+
+  .topQuoteBox #quoteAuthor {
+    margin-top: 6px !important;
+    position: relative !important;
+    top: 2px !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .topQuoteBox::before {
+    font-size: 1.58rem !important;
+  }
+
+  .topQuoteBox::after {
+    font-size: 1.44rem !important;
+  }
+
+  .topQuoteBox #dailyQuote {
+    font-size: .88rem !important;
+    line-height: 1.08 !important;
+  }
+
+  .topQuoteBox #quoteAuthor {
+    margin-top: 4px !important;
+    position: relative !important;
+    top: 1px !important;
+  }
+}
+
+
+/* =========================================================
+   v261 QUOTE TEXT BIGGER + AUTHOR LOWER
+   - keep quote marks and quote label exactly as-is
+   - enlarge only the actual quote text
+   - move author slightly lower while keeping safe bottom space
+========================================================= */
+@media (min-width: 901px) {
+  .topQuoteBox #dailyQuote {
+    font-size: clamp(1.28rem, 1.78vw, 1.68rem) !important;
+    line-height: 1.04 !important;
+    max-width: 94% !important;
+  }
+
+  .topQuoteBox #quoteAuthor {
+    margin-top: 8px !important;
+    position: relative !important;
+    top: 4px !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .topQuoteBox #dailyQuote {
+    font-size: .96rem !important;
+    line-height: 1.07 !important;
+  }
+
+  .topQuoteBox #quoteAuthor {
+    margin-top: 5px !important;
+    position: relative !important;
+    top: 2px !important;
+  }
+}
+
+
+/* =========================================================
+   v262 QUOTE SIZE FIX — OVERRIDE JS SHRINK + LOWER AUTHOR
+   Quote marks and quote label are intentionally untouched.
+========================================================= */
+@media (min-width: 901px) {
+  .topQuoteBox #dailyQuote {
+    font-size: 26px !important;
+    line-height: 1.01 !important;
+    max-width: 94% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .topQuoteBox #quoteAuthor {
+    position: absolute !important;
+    top: auto !important;
+    bottom: 14px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    margin: 0 !important;
+    width: max-content !important;
+    max-width: 86% !important;
+    z-index: 3 !important;
+  }
+}
+
+
+/* =========================================================
+   v263 TICKER REFINEMENT
+   - larger left heart icon
+   - yellow vertical line to the right of the heart
+   - yellow vertical line to the left of #BeKind
+   - more breathing room between ticker items
+   - bullet stays light/neutral, not yellow
+========================================================= */
+@media (min-width: 901px) {
+  .ticker {
+    grid-template-columns: 78px minmax(0, 1fr) 132px !important;
+    column-gap: 12px !important;
+    padding: 7px 16px !important;
+  }
+
+  .ticker::before {
+    content: "🫶" !important;
+    align-self: stretch !important;
+    justify-self: start !important;
+    width: 62px !important;
+    height: auto !important;
+    min-height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 2.15rem !important;
+    line-height: 1 !important;
+    padding-right: 12px !important;
+    border-right: 2px solid rgba(242,196,0,.82) !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .ticker::after {
+    content: "#BeKind" !important;
+    align-self: stretch !important;
+    justify-self: end !important;
+    width: 118px !important;
+    min-height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    color: #f2c400 !important;
+    font-weight: 900 !important;
+    font-size: 1rem !important;
+    letter-spacing: .02em !important;
+    padding-left: 14px !important;
+    border-left: 2px solid rgba(242,196,0,.82) !important;
+    background: transparent !important;
+    text-align: right !important;
+  }
+
+  #tickerText {
+    width: 100% !important;
+    padding-right: 0 !important;
+  }
+
+  #tickerText::before {
+    color: #eef3ff !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .ticker::before {
+    font-size: 1.55rem !important;
+  }
+}
+
+
+/* =========================================================
+   v264 TICKER #BeKind LARGER
+========================================================= */
+@media (min-width: 901px) {
+  .ticker::after {
+    font-size: 1.18rem !important;
+    font-weight: 900 !important;
+    letter-spacing: .015em !important;
+  }
+}
+
+
+/* =========================================================
+   v265 TICKER #BeKind COLOR REVERT
+   - keep the larger font size
+   - revert #BeKind text to a light neutral color (not yellow/gold)
+========================================================= */
+@media (min-width: 901px) {
+  .ticker::after {
+    color: #f4f6ff !important;
+  }
+}
+
+
+/* =========================================================
+   v266 TICKER #BeKind + VERTICAL LINES COLOR MATCH
+   - use the same soft cream/yellow tone for #BeKind and ticker vertical lines
+========================================================= */
+@media (min-width: 901px) {
+  .ticker::before {
+    border-right: 2px solid rgba(246, 225, 144, .95) !important;
+  }
+
+  .ticker::after {
+    color: #f6e190 !important;
+    border-left: 2px solid rgba(246, 225, 144, .95) !important;
+  }
+}
+
+
+/* =========================================================
+   v267 TICKER HEART ICON BIGGER + MORE CENTERED
+========================================================= */
+@media (min-width: 901px) {
+  .ticker::before {
+    width: 66px !important;
+    font-size: 2.45rem !important;
+    padding-right: 12px !important;
+    transform: translateY(-2px) !important;
+    align-items: center !important;
+  }
+}
+
+
+/* =========================================================
+   v274 — LARGER #BeKind ONLY (BASE: v267)
+========================================================= */
+@media (min-width: 901px) {
+  .ticker::after {
+    font-size: 1.34rem !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+  }
+}
