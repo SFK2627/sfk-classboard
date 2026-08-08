@@ -8440,3 +8440,101 @@ if (document.readyState === "loading") {
     start();
   }
 })();
+
+
+/* =========================================================
+   v330 ST. FAUSTINA DIGITAL EXHIBIT MODAL
+========================================================= */
+(function initSfkFaustinaExhibit() {
+  let lastFocused = null;
+
+  function els() {
+    return {
+      trigger: document.getElementById('sfkFaustinaTrigger'),
+      modal: document.getElementById('sfkFaustinaModal'),
+      dialog: document.querySelector('#sfkFaustinaModal .sfkFaustinaExhibit'),
+      close: document.getElementById('sfkFaustinaClose')
+    };
+  }
+
+  function focusables(root) {
+    if (!root) return [];
+    return Array.from(root.querySelectorAll(
+      'button:not([disabled]), a[href], iframe, [tabindex]:not([tabindex="-1"])'
+    )).filter(el => !el.hidden && el.getClientRects().length);
+  }
+
+  function openExhibit() {
+    const { modal, dialog, close } = els();
+    if (!modal || !dialog) return;
+    lastFocused = document.activeElement;
+    modal.hidden = false;
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('sfkFaustinaOpen');
+    dialog.scrollTop = 0;
+    requestAnimationFrame(() => (close || dialog).focus({ preventScroll: true }));
+  }
+
+  function closeExhibit() {
+    const { modal } = els();
+    if (!modal || modal.hidden) return;
+    modal.hidden = true;
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('sfkFaustinaOpen');
+    if (lastFocused && typeof lastFocused.focus === 'function') {
+      requestAnimationFrame(() => lastFocused.focus({ preventScroll: true }));
+    }
+  }
+
+  function onKeydown(event) {
+    const { modal, dialog } = els();
+    if (!modal || modal.hidden) return;
+
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeExhibit();
+      return;
+    }
+
+    if (event.key !== 'Tab') return;
+    const list = focusables(dialog);
+    if (!list.length) return;
+    const first = list[0];
+    const last = list[list.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
+  function boot() {
+    const { trigger, modal, close } = els();
+    if (!trigger || !modal) return;
+
+    trigger.addEventListener('click', openExhibit);
+    trigger.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        openExhibit();
+      }
+    });
+
+    close?.addEventListener('click', closeExhibit);
+    modal.addEventListener('click', event => {
+      if (event.target?.closest?.('[data-sfk-faustina-close="true"]')) closeExhibit();
+    });
+    document.addEventListener('keydown', onKeydown, true);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot, { once: true });
+  } else {
+    boot();
+  }
+
+  window.openSfkFaustinaExhibit = openExhibit;
+  window.closeSfkFaustinaExhibit = closeExhibit;
+})();

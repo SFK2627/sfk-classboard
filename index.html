@@ -13,7 +13,7 @@
   <link rel="manifest" href="manifest.webmanifest?v=page-lock-v328" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
-  <link rel="stylesheet" href="style.css?v=page-lock-v328" />
+  <link rel="stylesheet" href="style.css?v=page-lock-v329" />
   <link rel="stylesheet" href="class-chat.css?v=gc-everyone-inline-v29" />
   <link rel="stylesheet" href="time-capsule.css?v=gc-timecapsule-buttons-v16" />
 
@@ -1109,8 +1109,8 @@
     <header class="topbar">
       <div class="brandBox">
         <div class="brandIdentity">
-          <div class="brandPortraitWrap" aria-hidden="true">
-            <img src="st-faustina-portrait.png" alt="" class="brandPortrait" loading="eager" decoding="async" />
+          <div class="brandPortraitWrap sfkFaustinaTrigger" id="sfkFaustinaTrigger" role="button" tabindex="0" aria-label="Open St. Faustina digital exhibit" title="Learn about St. Faustina Kowalska">
+            <img src="st-faustina-portrait.png" alt="St. Faustina Kowalska" class="brandPortrait" loading="eager" decoding="async" />
           </div>
           <div class="brandTextBlock">
             <h1 id="dashboardTitle">SFK ClassBoard</h1>
@@ -1311,6 +1311,7 @@
 
     <footer class="ticker">
       <div id="tickerText">Loading announcements...</div>
+      <a class="tickerBeKindLink" href="https://sfk2627.github.io/sfk-kindtrack/" target="_blank" rel="noopener noreferrer" aria-label="Open SFK KindTrack">#BeKind</a>
     </footer>
 	<div id="weeklyScheduleModal" class="weeklyScheduleModal hidden">
   <div class="weeklyScheduleBox">
@@ -2403,8 +2404,135 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js?v=phone-login-v8"></script>
+
+
+  <!-- =====================================================
+       v330 ST. FAUSTINA DIGITAL EXHIBIT
+       Editorial/museum-style modal; remote image addresses only.
+       ===================================================== -->
+  <div id="sfkFaustinaModal" class="sfkFaustinaModal" hidden aria-hidden="true">
+    <div class="sfkFaustinaBackdrop" data-sfk-faustina-close="true"></div>
+
+    <article class="sfkFaustinaExhibit" role="dialog" aria-modal="true" aria-labelledby="sfkFaustinaTitle" tabindex="-1">
+      <button class="sfkFaustinaClose" id="sfkFaustinaClose" type="button" aria-label="Close St. Faustina exhibit">×</button>
+
+      <header class="sfkFaustinaMasthead">
+        <div class="sfkFaustinaEdition">SFK · DIGITAL EXHIBIT</div>
+        <div class="sfkFaustinaMastRule" aria-hidden="true"></div>
+        <div class="sfkFaustinaEdition">APOSTLE OF DIVINE MERCY</div>
+      </header>
+
+      <section class="sfkFaustinaHero">
+        <figure class="sfkFaustinaHeroPortrait">
+          <img
+            src="https://commons.wikimedia.org/wiki/Special:FilePath/Maria%20Faustyna%20Kowalska.jpg"
+            alt="Historic portrait of St. Faustina Kowalska"
+            loading="lazy"
+            referrerpolicy="no-referrer"
+          />
+          <figcaption>Maria Faustina Kowalska · 1905–1938</figcaption>
+        </figure>
+
+        <div class="sfkFaustinaHeroCopy">
+          <p class="sfkFaustinaKicker">A life shaped by trust, mercy, and quiet service</p>
+          <h2 id="sfkFaustinaTitle"><span>St.</span> Faustina<br>Kowalska</h2>
+          <p class="sfkFaustinaLead">Born Helena Kowalska in Głogowiec, Poland, she became a Sister of Our Lady of Mercy and is remembered throughout the Church as the Apostle of Divine Mercy.</p>
+
+          <dl class="sfkFaustinaFacts" aria-label="Quick facts about St. Faustina">
+            <div><dt>Born</dt><dd>25 August 1905</dd></div>
+            <div><dt>Religious life</dt><dd>Entered in 1925</dd></div>
+            <div><dt>Died</dt><dd>5 October 1938 · age 33</dd></div>
+            <div><dt>Canonized</dt><dd>30 April 2000</dd></div>
+            <div><dt>Memorial</dt><dd>5 October</dd></div>
+            <div><dt>Known for</dt><dd>Divine Mercy message &amp; Diary</dd></div>
+          </dl>
+        </div>
+      </section>
+
+      <section class="sfkFaustinaIntroGrid">
+        <div class="sfkFaustinaSectionNumber" aria-hidden="true">01</div>
+        <div class="sfkFaustinaSectionCopy">
+          <p class="sfkFaustinaEyebrow">WHO WAS SHE?</p>
+          <h3>A humble life with a worldwide message.</h3>
+          <p>Faustina came from a large farming family and had only a few years of formal schooling. In the convent she served in ordinary roles such as cook, gardener, and porter. Her spiritual experiences and reflections were recorded in the <em>Diary: Divine Mercy in My Soul</em>.</p>
+          <p>Her mission centered on trust in God’s mercy and living mercy toward other people through action, word, and prayer.</p>
+        </div>
+        <aside class="sfkFaustinaPullQuote">
+          <span class="sfkFaustinaQuoteMark" aria-hidden="true">“</span>
+          <p>Mercy became the language of her ordinary life.</p>
+          <small>SFK exhibit note</small>
+        </aside>
+      </section>
+
+      <section class="sfkFaustinaTimelineSection">
+        <div class="sfkFaustinaSectionHeading">
+          <span>02</span>
+          <div><p>LIFE IN MOMENTS</p><h3>A short timeline</h3></div>
+        </div>
+
+        <ol class="sfkFaustinaTimeline">
+          <li><time>1905</time><div><strong>Born Helena Kowalska</strong><p>Born on 25 August in Głogowiec, Poland, the third of ten children.</p></div></li>
+          <li><time>1925</time><div><strong>Entered religious life</strong><p>Accepted by the Congregation of the Sisters of Our Lady of Mercy in Warsaw.</p></div></li>
+          <li><time>1931</time><div><strong>The Divine Mercy vision</strong><p>On 22 February in Płock, she recorded a vision of Jesus and the request for an image with the words “Jesus, I trust in You.”</p></div></li>
+          <li><time>1934</time><div><strong>The first image</strong><p>Eugeniusz Kazimirowski completed the Divine Mercy painting under her direction in Vilnius.</p></div></li>
+          <li><time>1938</time><div><strong>Her earthly life ended</strong><p>She died in Kraków on 5 October at age 33.</p></div></li>
+          <li><time>2000</time><div><strong>Canonized</strong><p>St. John Paul II canonized her on 30 April and proclaimed the Second Sunday of Easter as Divine Mercy Sunday for the universal Church.</p></div></li>
+        </ol>
+      </section>
+
+      <section class="sfkFaustinaGallerySection">
+        <div class="sfkFaustinaSectionHeading sfkFaustinaSectionHeadingLight">
+          <span>03</span>
+          <div><p>IMAGES &amp; PLACES</p><h3>Fragments of her story</h3></div>
+        </div>
+
+        <div class="sfkFaustinaGallery">
+          <figure class="sfkFaustinaGalleryA">
+            <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Saint%20Faustyna%20Kowalska%20portrait%20%281931%29.jpg" alt="St. Faustina in Płock in 1931" loading="lazy" referrerpolicy="no-referrer" />
+            <figcaption><b>1931 · Płock</b><span>A historic image of Sister Faustina.</span></figcaption>
+          </figure>
+          <figure class="sfkFaustinaGalleryB">
+            <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Kazimirowski%20Eugeniusz%2C%20Divine%20Mercy%2C%201934.jpg" alt="The 1934 Divine Mercy painting by Eugeniusz Kazimirowski" loading="lazy" referrerpolicy="no-referrer" />
+            <figcaption><b>1934 · Vilnius</b><span>The first Divine Mercy image painted under Faustina’s direction.</span></figcaption>
+          </figure>
+          <figure class="sfkFaustinaGalleryC">
+            <img src="https://www.faustyna.pl/zmbm/wp-content/uploads/2014/12/Kaplica-sw-Faustyny-Sanktuarium-w-Krakowie-Lagiewnikach.jpg" alt="St. Faustina chapel at the Divine Mercy Sanctuary in Krakow-Lagiewniki" loading="lazy" />
+            <figcaption><b>Kraków-Łagiewniki</b><span>The sanctuary connected with St. Faustina’s life and tomb.</span></figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="sfkFaustinaFilmSection">
+        <div class="sfkFaustinaFilmIntro">
+          <span class="sfkFaustinaFilmNo">04</span>
+          <p class="sfkFaustinaEyebrow">WATCH &amp; LEARN</p>
+          <h3>Who was<br>St. Faustina?</h3>
+          <p>A short video feature from <em>Living Divine Mercy</em> introducing her life and mission.</p>
+        </div>
+        <div class="sfkFaustinaVideoFrame">
+          <iframe
+            src="https://www.youtube-nocookie.com/embed/unqp5Hleos4?rel=0"
+            title="Who was St. Faustina? - Living Divine Mercy"
+            loading="lazy"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerpolicy="strict-origin-when-cross-origin"
+            allowfullscreen></iframe>
+        </div>
+      </section>
+
+      <footer class="sfkFaustinaSources">
+        <div><strong>Explore further</strong><p>Vatican News · The Divine Mercy · Sisters of Our Lady of Mercy</p></div>
+        <nav aria-label="St. Faustina sources">
+          <a href="https://www.vaticannews.va/en/saints/10/05/st--faustina-kowalska.html" target="_blank" rel="noopener noreferrer">Vatican</a>
+          <a href="https://www.thedivinemercy.org/message/stfaustina/bio" target="_blank" rel="noopener noreferrer">Biography</a>
+          <a href="https://www.faustyna.pl/zmbm/en/biography/?wide=true" target="_blank" rel="noopener noreferrer">Faustyna.pl</a>
+        </nav>
+      </footer>
+    </article>
+  </div>
+
   <script src="firebase-adapter.js?v=page-lock-v119"></script>
-  <script src="script.js?v=page-lock-v119"></script>
+  <script src="script.js?v=faustina-exhibit-v330"></script>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.16/dist/hls.min.js"></script>
   <script src="https://cdn.dashjs.org/v5.2.0/legacy/umd/dash.all.min.js"></script>
   <script src="time-capsule.js?v=gc-timecapsule-buttons-v16"></script>
