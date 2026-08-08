@@ -1,39 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script id="sfkIntroSessionGate">
-    (function () {
-      var key = "sfkClassBoardIntroSeenThisSession";
-      var shouldSkip = false;
-      try {
-        shouldSkip = sessionStorage.getItem(key) === "YES";
-        if (!shouldSkip && document.referrer) {
-          var ref = new URL(document.referrer);
-          var sameOrigin = ref.origin === location.origin;
-          var fromClassboardPanel = /\/(?:admin(?:\/|\.html|$)|officers?(?:\/|\.html|$))/i.test(ref.pathname);
-          if (sameOrigin && fromClassboardPanel) shouldSkip = true;
-        }
-        if (shouldSkip) sessionStorage.setItem(key, "YES");
-      } catch (error) {}
-      if (shouldSkip) document.documentElement.classList.add("sfk-intro-skip-session");
-    })();
-  </script>
-  <style id="sfkIntroSessionGateStyle">
-    html.sfk-intro-skip-session #sfkIntroOverlay { display: none !important; }
-  </style>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#f7c600" />
+  <meta name="theme-color" content="#111111" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
 
   <title>SFK ClassBoard</title>
 
-  <link rel="manifest" href="manifest.webmanifest?v=page-lock-v119" />
+  <link rel="manifest" href="manifest.webmanifest?v=page-lock-v327" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
-  <link rel="stylesheet" href="style.css?v=page-lock-v119" />
+  <link rel="stylesheet" href="style.css?v=page-lock-v327" />
   <link rel="stylesheet" href="class-chat.css?v=gc-everyone-inline-v29" />
   <link rel="stylesheet" href="time-capsule.css?v=gc-timecapsule-buttons-v16" />
 
@@ -2084,31 +2064,9 @@
       const intro = document.getElementById("sfkIntroOverlay");
       if (!intro) return;
 
-      // v210: show the loading experience only once per real app/tab session.
-      // Refreshes and same-tab returns from Admin/Officers skip the intro.
-      // Closing the tab/app creates a new session, so the intro can show again next launch.
-      let skipIntroThisLoad = false;
-      try {
-        skipIntroThisLoad = sessionStorage.getItem(SFK_INTRO_SESSION_KEY) === "YES";
-
-        if (!skipIntroThisLoad && document.referrer) {
-          const ref = new URL(document.referrer);
-          const sameOrigin = ref.origin === location.origin;
-          const fromClassboardPanel = /\/(?:admin(?:\/|\.html|$)|officers?(?:\/|\.html|$))/i.test(ref.pathname);
-          if (sameOrigin && fromClassboardPanel) skipIntroThisLoad = true;
-        }
-      } catch (error) {}
-
-      if (skipIntroThisLoad) {
-        try { sessionStorage.setItem(SFK_INTRO_SESSION_KEY, "YES"); } catch (error) {}
-        document.documentElement.classList.remove("sfk-intro-active");
-        document.body.classList.remove("sfk-intro-active");
-        intro.remove();
-        return;
-      }
-
-      // Mark immediately so even an F5/reload while the intro is still visible will skip next time.
-      try { sessionStorage.setItem(SFK_INTRO_SESSION_KEY, "YES"); } catch (error) {}
+      // Always show the loading screen on every real app load, refresh, F5, or PWA reopen.
+      // Do not remove it just because this browser tab already saw it once.
+      try { sessionStorage.removeItem(SFK_INTRO_SESSION_KEY); } catch (error) {}
       document.documentElement.classList.add("sfk-intro-active");
       document.body.classList.add("sfk-intro-active");
       try { sessionStorage.removeItem(SFK_INTRO_SOUND_PLAYED_KEY); } catch (error) {}

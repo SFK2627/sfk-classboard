@@ -3,12 +3,12 @@
   "name": "SFK ClassBoard",
   "short_name": "SFK Board",
   "description": "Grade 8 St. Faustina Kowalska ClassBoard",
-  "start_url": "./index.html?source=pwa-page-lock-v119",
+  "start_url": "./index.html?source=pwa-page-lock-v327",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#111111",
-  "theme_color": "#f7c600",
+  "theme_color": "#111111",
   "shortcuts": [
     {
       "name": "SFK Memories",
