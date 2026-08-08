@@ -22973,3 +22973,35 @@ body.classBoardPageLocked .app > :not(#sfkPageLockScreen) {
     top: 47% !important;
   }
 }
+
+
+/* =========================================================
+   v323 MOBILE — FINAL MICRO TWEAK
+   - mini hearts a tiny bit higher
+   - quote heart-hands a tiny bit lower
+   - yellow heart + 43 a tiny bit more right
+========================================================= */
+@media (max-width: 700px) {
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-cluster .sfkMiniHeartCluster {
+    top: 1px !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merging .sfkBigHeartGlyph,
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merged .sfkBigHeartGlyph {
+    left: calc(50% + 3px) !important;
+  }
+
+  .sfkMobileHeaderHeart .sfkHeartCount {
+    left: calc(50% + 3px) !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart::before {
+    top: 49% !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart::before {
+    top: 49% !important;
+  }
+}
