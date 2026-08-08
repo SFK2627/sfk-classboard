@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-main-pwa-v315-xiaomi-final-fine-tune";
+const CACHE_NAME = "sfk-main-pwa-v316-mobile-seamless-ticker";
 const CACHE_PREFIXES_TO_DELETE = ["sfk-main-pwa-", "sfk-sw.js-"];
 const NAVIGATION_FALLBACK_URL = "./index.html";
 const NAVIGATION_TIMEOUT_MS = 2500;

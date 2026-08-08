@@ -5207,9 +5207,74 @@ function configureTickerMarquee(ticker, track) {
   track.style.transform = "translate3d(0,0,0)";
   track.style.paddingLeft = "0";
 
-  // Measure after layout settles. The animation starts fully to the right of
-  // the visible ticker lane and ends only after the LAST message has completely
-  // passed the left edge. Extra exit padding makes the completion obvious.
+  const isPhoneTicker = !!window.matchMedia?.("(max-width: 700px)").matches;
+
+  /* v316 PHONE: convert the single message row into two identical sequences.
+     The second copy follows the first immediately, so the loop never creates
+     a long blank lane after the last message. */
+  if (isPhoneTicker) {
+    let sequences = track.querySelectorAll(":scope > .ticker-marquee-sequence");
+
+    if (!sequences.length) {
+      const sequence = document.createElement("span");
+      sequence.className = "ticker-marquee-sequence";
+
+      while (track.firstChild) sequence.appendChild(track.firstChild);
+
+      // Add one separator after the final message so the wrap from last -> first
+      // has exactly the same breathing room as every other message boundary.
+      const wrapSeparator = document.createElement("span");
+      wrapSeparator.className = "ticker-message-separator ticker-wrap-separator";
+      wrapSeparator.textContent = "•";
+      wrapSeparator.setAttribute("aria-hidden", "true");
+      sequence.appendChild(wrapSeparator);
+
+      const sequenceClone = sequence.cloneNode(true);
+      sequenceClone.setAttribute("aria-hidden", "true");
+      track.append(sequence, sequenceClone);
+      sequences = track.querySelectorAll(":scope > .ticker-marquee-sequence");
+    }
+
+    const firstSequence = sequences[0];
+    const sequenceWidth = Math.max(
+      1,
+      firstSequence?.scrollWidth || 0,
+      firstSequence?.getBoundingClientRect().width || 0
+    );
+
+    // Begin already inside the visible lane: no long wait on first load.
+    // Move exactly one sequence width; the duplicate makes the reset seamless.
+    const startX = 18;
+    const endX = startX - sequenceWidth;
+    const pixelsPerSecond = 66;
+    const durationMs = Math.max(9000, (sequenceWidth / pixelsPerSecond) * 1000);
+
+    track.style.setProperty("--ticker-start-x", `${startX}px`);
+    track.style.setProperty("--ticker-end-x", `${endX}px`);
+    track.style.setProperty("--ticker-duration", `${(durationMs / 1000).toFixed(2)}s`);
+
+    if (typeof track.animate === "function") {
+      const animation = track.animate(
+        [
+          { transform: `translate3d(${startX}px, 0, 0)` },
+          { transform: `translate3d(${endX}px, 0, 0)` }
+        ],
+        {
+          duration: durationMs,
+          easing: "linear",
+          iterations: Infinity
+        }
+      );
+      track._sfkTickerAnimation = animation;
+      return;
+    }
+
+    track.style.animation = `sfkTickerTrackV287 ${durationMs}ms linear infinite`;
+    return;
+  }
+
+  // Desktop keeps the approved full-travel behavior: start beyond the right
+  // edge and reset only after the final message has completely left the left.
   const viewportWidth = Math.max(1, ticker.getBoundingClientRect().width);
   const trackWidth = Math.max(1, track.scrollWidth, track.getBoundingClientRect().width);
   const edgePadding = 28;
@@ -5239,7 +5304,6 @@ function configureTickerMarquee(ticker, track) {
     return;
   }
 
-  // Fallback for older browsers.
   track.style.animation = `sfkTickerTrackV287 ${durationMs}ms linear infinite`;
 }
 

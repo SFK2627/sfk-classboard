@@ -22643,3 +22643,36 @@ body.classBoardPageLocked .app > :not(#sfkPageLockScreen) {
     padding-right: 61px !important;
   }
 }
+
+
+/* =========================================================
+   v316 PHONE ONLY — SEAMLESS TICKER, NO LONG BLANK GAP
+   - first message is visible almost immediately on load
+   - duplicate sequence follows the last message continuously
+   - cream-yellow wrap separator retained
+========================================================= */
+@media (max-width: 700px) {
+  #tickerText .ticker-marquee-track {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0 !important;
+  }
+
+  #tickerText .ticker-marquee-sequence {
+    display: inline-flex !important;
+    align-items: center !important;
+    flex: 0 0 auto !important;
+    width: max-content !important;
+    white-space: nowrap !important;
+  }
+
+  #tickerText .ticker-message-separator {
+    margin-left: 18px !important;
+    margin-right: 18px !important;
+  }
+
+  #tickerText .ticker-wrap-separator {
+    color: #f6e190 !important;
+    font-size: 1.2em !important;
+  }
+}
