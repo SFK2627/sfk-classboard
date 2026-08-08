@@ -1,53 +1,183 @@
 /* =========================================================
-   SFK QUOTE ARCHIVE v341
+   SFK QUOTE ARCHIVE v344
    Firebase-only DailyQuotes archive.
    Order: CURRENT -> FUTURE -> PAST.
 ========================================================= */
 (function initSfkQuoteArchive() {
   const QUOTE_AUDIO_URL = "https://audio.jukehost.co.uk/019efe86-fd8f-72dd-9b85-e599fae9da2c";
 
+  const KINDNESS_VIDEO_CATEGORIES = [
+    { id: "all", label: "ALL", note: "Every kindness film in the archive" },
+    { id: "short", label: "SHORT FILMS", note: "Narrative stories where one choice changes another person's day" },
+    { id: "campaign", label: "ADS & CAMPAIGNS", note: "Brand and nonprofit stories that use kindness as a public message" },
+    { id: "animation", label: "ANIMATION", note: "Animated stories about empathy, service, acceptance, and care" },
+    { id: "talk", label: "TALKS", note: "Speakers unpacking empathy, compassion, mindfulness, and human connection" },
+    { id: "science", label: "SCIENCE", note: "Research-informed explanations of why kindness affects people and communities" },
+    { id: "compilation", label: "COMPILATIONS", note: "Collections of real-world acts of generosity and help" },
+    { id: "reflection", label: "REFLECTION", note: "Motivational pieces that invite a deliberate choice to be kind" }
+  ];
+
   const KINDNESS_VIDEOS = [
     {
+      id: "uaWA2GbcnJU",
+      category: "campaign",
+      title: "Unsung Hero",
+      source: "Thai Life Insurance (TLI)",
+      note: "A man repeatedly chooses small, quiet acts of help without asking for recognition. It frames kindness as a daily habit whose value is found in changed lives, not applause."
+    },
+    {
+      id: "iVrQqWIs6ZE",
+      category: "campaign",
+      title: "Tear-Jerker Commercials Create Internet Challenge",
+      source: "The Wall Street Journal · featuring TrueMove H 'Giving'",
+      note: "A look at the Thai 'Giving' story, where help offered during hardship returns years later. It connects kindness with memory, dignity, and the long reach of generosity."
+    },
+    {
+      id: "nwAYpLVyeFU",
+      category: "campaign",
+      title: "Kindness Boomerang — One Day",
+      source: "Life Vest Inside",
+      note: "One helpful act moves from stranger to stranger and eventually circles back. A clear visual model of how kindness can spread through a community."
+    },
+    {
+      id: "8x_bSH1A5rA",
+      category: "compilation",
+      title: "Random Acts of Kindness That Will Restore Your Faith In Humanity",
+      source: "Akimbo",
+      note: "A compilation of spontaneous real-world help and generosity. It shows that kindness can be practical, immediate, and visible in ordinary situations."
+    },
+    {
+      id: "NXkJ9eNpWNw",
+      category: "reflection",
+      title: "BE KIND",
+      source: "Above Inspiration",
+      note: "A motivational reflection on treating people gently because we rarely know the private battles they carry. Kindness becomes a choice in how we speak, judge, and respond."
+    },
+    {
+      id: "WXudxua0IKo",
+      category: "short",
+      title: "Be Kind To Others",
+      source: "Inspire USA",
+      note: "A short story built around noticing another person's unseen struggle. It invites viewers to slow down before judging and to let empathy guide action."
+    },
+    {
+      id: "1qrAJWmjG18",
+      category: "animation",
+      title: "Animated Short: Kindness Sparks Joy",
+      source: "Holly Hatam",
+      note: "A young girl deliberately spreads joy through simple acts of care. The animation makes the ripple effect of kindness easy to see and discuss."
+    },
+    {
+      id: "07d2dXHYb94",
+      category: "animation",
+      title: "Pip",
+      source: "Dogs Inc",
+      note: "Pip's journey toward becoming a guide dog connects perseverance with service: developing one's abilities so they can ultimately help someone else live more independently."
+    },
+    {
+      id: "mdA2sByFX1I",
+      category: "campaign",
+      title: "Color Your World With Kindness",
+      source: "A Better World / BetterWorldians",
+      note: "A wordless chain of small gestures literally brings color into people's lives. It turns kindness into a simple challenge: notice, help, and pass the good forward."
+    },
+    {
+      id: "ET4B3UfWrYY",
+      category: "campaign",
+      title: "When Nobody's Watching",
+      source: "Klick",
+      note: "An animated campaign about doing good when there is no audience or reward. It focuses on character: kindness matters even when nobody is keeping score."
+    },
+    {
+      id: "3XA0bB79oGc",
+      category: "animation",
+      title: "The Present",
+      source: "Jacob Frey · Filmakademie Baden-Württemberg",
+      note: "A boy's reaction to a three-legged puppy changes as he recognizes shared experience. The story opens a conversation about acceptance, disability, empathy, and looking beyond first impressions."
+    },
+    {
+      id: "mdSfg8qO8ts",
+      category: "short",
+      title: "The Gift of Giving",
+      source: "MUIS Singapore",
+      note: "Hakim learns by watching generosity practiced around him. The film presents kindness as something modeled, learned, and carried forward through concrete acts of giving."
+    },
+    {
+      id: "FGh0iduZOJQ",
+      category: "short",
+      title: "The Other Pair",
+      source: "Sarah Rozik",
+      note: "Inspired by a story associated with Gandhi, two children respond to loss with generosity rather than possession. It is a quiet lesson in empathy and giving what will truly help another person."
+    },
+    {
       id: "O9UByLyOjBM",
+      category: "science",
       title: "The Science of Kindness",
       source: "Random Acts of Kindness Foundation",
-      note: "A concise look at how kind actions can affect well-being, connection, and the people around us."
+      note: "A concise introduction to how kind actions can influence well-being, connection, and the people around us."
     },
     {
       id: "1Evwgu369Jw",
+      category: "talk",
       title: "Brené Brown on Empathy",
       source: "RSA Short",
-      note: "A memorable animated explanation of why real empathy means connecting with another person's experience."
+      note: "A memorable explanation of empathy as connection rather than immediately fixing, judging, or minimizing another person's pain."
     },
     {
       id: "qLGNj-xrgvY",
+      category: "animation",
       title: "Mr Indifferent",
       source: "Animated Short Film",
-      note: "A visual story about what changes when a person begins to notice others and chooses to help."
+      note: "A visually driven story about an indifferent man who begins to notice other people. Kindness starts when attention turns into action."
     },
     {
       id: "QMnEP2DYfmI",
+      category: "short",
       title: "Ripple",
-      source: "Short Film · Daniel Yam",
-      note: "A short film about how one good deed can travel farther than the person who first offered it."
+      source: "Daniel Yam",
+      note: "A short film about one good deed traveling farther than the person who first offered it, emphasizing the social ripple created by generosity."
     },
     {
       id: "elW69hyPUuI",
+      category: "science",
       title: "How 40 Seconds of Compassion Could Save a Life",
       source: "TEDx · Stephen Trzeciak",
-      note: "An evidence-based talk on how even brief moments of compassion can have meaningful effects."
+      note: "An evidence-focused case for compassion, showing why even brief moments of genuine human care can matter in high-stakes settings."
     },
     {
       id: "DqAJU7z9lRE",
+      category: "talk",
       title: "Connecting Mindfulness & Kindness",
       source: "Be Fearless Be Kind",
-      note: "A youth-friendly connection between mindful attention, empathy, inclusion, and courageous kindness."
+      note: "Connects mindful attention with empathy, inclusion, and the courage to notice when another person needs support."
     },
     {
       id: "ju3ygNPFH98",
+      category: "campaign",
       title: "Changing the World With Kindness",
       source: "Random Acts of Kindness Foundation",
-      note: "A reminder that ordinary choices can create a ripple of generosity, belonging, and positive action."
+      note: "A campaign-style reminder that ordinary choices can build belonging and positive action when kindness is repeated, shared, and normalized."
+    },
+    {
+      id: "6L5SpMFtwuU",
+      category: "science",
+      title: "The Extraordinary Power of Kindness",
+      source: "BBC Ideas",
+      note: "Explores what happened when Bernadette Russell committed to a year of daily kindness and connects the experience to what kindness can do for our brains and relationships."
+    },
+    {
+      id: "1XMZPmJqFDU",
+      category: "science",
+      title: "The Scientific POWER of Kindness",
+      source: "Simon Sinek",
+      note: "Uses the role of oxytocin to explain why helping and being helped can reinforce trust, connection, and more prosocial behavior."
+    },
+    {
+      id: "ccvFBGhBKg4",
+      category: "science",
+      title: "Train Your Brain to Be Kinder",
+      source: "Greater Good Science Center · UC Berkeley",
+      note: "A brief guided practice in sending kind thoughts to people we love and even people we find difficult—turning kindness into a trainable mental habit."
     }
   ];
 
@@ -61,6 +191,7 @@
   let quoteCache = [];
   let kindnessVideoIndex = 0;
   let kindnessVideoPlaying = false;
+  let kindnessVideoCategory = "all";
 
   function escapeHtml(value) {
     return String(value ?? "")
@@ -262,19 +393,59 @@
     return `https://i.ytimg.com/vi/${encodeURIComponent(id)}/hqdefault.jpg`;
   }
 
+  function activeKindnessVideos() {
+    if (kindnessVideoCategory === "all") return KINDNESS_VIDEOS;
+    return KINDNESS_VIDEOS.filter(item => item.category === kindnessVideoCategory);
+  }
+
+  function activeKindnessCategory() {
+    return KINDNESS_VIDEO_CATEGORIES.find(item => item.id === kindnessVideoCategory) || KINDNESS_VIDEO_CATEGORIES[0];
+  }
+
+  function categoryCount(id) {
+    return id === "all"
+      ? KINDNESS_VIDEOS.length
+      : KINDNESS_VIDEOS.filter(item => item.category === id).length;
+  }
+
+  function renderKindnessCategoryRail() {
+    return KINDNESS_VIDEO_CATEGORIES.map(category => `
+      <button
+        type="button"
+        class="sfkKindnessMotionCategory${category.id === kindnessVideoCategory ? " is-active" : ""}"
+        data-sfk-kindness-category="${escapeHtml(category.id)}"
+        aria-pressed="${category.id === kindnessVideoCategory ? "true" : "false"}">
+        <span>${escapeHtml(category.label)}</span>
+        <small>${String(categoryCount(category.id)).padStart(2, "0")}</small>
+      </button>`).join("");
+  }
+
   function renderKindnessMotion() {
+    const selected = activeKindnessCategory();
+    const pool = activeKindnessVideos();
     return `
       <section class="sfkKindnessMotion" aria-labelledby="sfkKindnessMotionTitle">
         <header class="sfkKindnessMotionHead">
           <div class="sfkKindnessMotionKicker">WATCH KINDNESS · FIELD NOTES IN MOTION</div>
           <h3 id="sfkKindnessMotionTitle">Kindness becomes clearer when we can <em>see it move.</em></h3>
-          <p>Short films, animation, science, and talks that explore empathy, compassion, generosity, and the quiet choices that make people feel seen.</p>
+          <p>Choose a collection—short films, campaigns, animation, talks, science, compilations, or reflection—then explore only that kind of story.</p>
         </header>
+
+        <div class="sfkKindnessMotionCategoryFrame">
+          <div class="sfkKindnessMotionCategoryLabel">
+            <b>CHOOSE A COLLECTION</b>
+            <span id="sfkKindnessMotionCategoryNote">${escapeHtml(selected.note)}</span>
+          </div>
+          <nav class="sfkKindnessMotionCategories" aria-label="Kindness video collections">
+            ${renderKindnessCategoryRail()}
+          </nav>
+        </div>
 
         <div class="sfkKindnessMotionDesk" data-sfk-kindness-video-swipe>
           <div class="sfkKindnessMotionScreen" id="sfkKindnessMotionScreen" tabindex="0" aria-label="Kindness video viewer"></div>
           <aside class="sfkKindnessMotionNotes">
-            <div class="sfkKindnessMotionCounter" id="sfkKindnessMotionCounter">01 / ${String(KINDNESS_VIDEOS.length).padStart(2, "0")}</div>
+            <div class="sfkKindnessMotionCounter" id="sfkKindnessMotionCounter">01 / ${String(pool.length).padStart(2, "0")}</div>
+            <div class="sfkKindnessMotionType" id="sfkKindnessMotionType">${escapeHtml(selected.label)}</div>
             <h4 id="sfkKindnessMotionVideoTitle"></h4>
             <div class="sfkKindnessMotionSource" id="sfkKindnessMotionSource"></div>
             <p id="sfkKindnessMotionNote"></p>
@@ -291,13 +462,31 @@
   function stopKindnessVideo() {
     kindnessVideoPlaying = false;
     const screen = modal?.querySelector("#sfkKindnessMotionScreen");
-    if (screen && KINDNESS_VIDEOS.length) paintKindnessVideo(kindnessVideoIndex, false);
+    if (screen && activeKindnessVideos().length) paintKindnessVideo(kindnessVideoIndex, false);
+  }
+
+  function syncKindnessCategoryUi() {
+    if (!modal) return;
+    const selected = activeKindnessCategory();
+    modal.querySelectorAll("[data-sfk-kindness-category]").forEach(button => {
+      const active = button.dataset.sfkKindnessCategory === kindnessVideoCategory;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-pressed", active ? "true" : "false");
+    });
+    const note = modal.querySelector("#sfkKindnessMotionCategoryNote");
+    const type = modal.querySelector("#sfkKindnessMotionType");
+    if (note) note.textContent = selected.note;
+    if (type) type.textContent = selected.label;
   }
 
   function paintKindnessVideo(index, autoplay = false) {
-    if (!modal || !KINDNESS_VIDEOS.length) return;
-    kindnessVideoIndex = (index + KINDNESS_VIDEOS.length) % KINDNESS_VIDEOS.length;
-    const item = KINDNESS_VIDEOS[kindnessVideoIndex];
+    if (!modal) return;
+    const pool = activeKindnessVideos();
+    if (!pool.length) return;
+
+    kindnessVideoIndex = (index + pool.length) % pool.length;
+    const item = pool[kindnessVideoIndex];
+    const selected = activeKindnessCategory();
     const screen = modal.querySelector("#sfkKindnessMotionScreen");
     const counter = modal.querySelector("#sfkKindnessMotionCounter");
     const title = modal.querySelector("#sfkKindnessMotionVideoTitle");
@@ -305,7 +494,8 @@
     const note = modal.querySelector("#sfkKindnessMotionNote");
     if (!screen || !counter || !title || !source || !note) return;
 
-    counter.textContent = `${String(kindnessVideoIndex + 1).padStart(2, "0")} / ${String(KINDNESS_VIDEOS.length).padStart(2, "0")}`;
+    syncKindnessCategoryUi();
+    counter.textContent = `${String(kindnessVideoIndex + 1).padStart(2, "0")} / ${String(pool.length).padStart(2, "0")}`;
     title.textContent = item.title;
     source.textContent = item.source;
     note.textContent = item.note;
@@ -326,7 +516,7 @@
           <img src="${videoPosterUrl(item.id)}" alt="" loading="lazy" referrerpolicy="no-referrer">
           <span class="sfkKindnessMotionPosterShade" aria-hidden="true"></span>
           <span class="sfkKindnessMotionPlayMark" aria-hidden="true">▶</span>
-          <span class="sfkKindnessMotionPlayText">PLAY CURRENT FILM</span>
+          <span class="sfkKindnessMotionPlayText">PLAY · ${escapeHtml(selected.label)}</span>
         </button>`;
     }
   }
@@ -335,17 +525,32 @@
     paintKindnessVideo(kindnessVideoIndex + delta, false);
   }
 
+  function selectKindnessCategory(categoryId) {
+    if (!KINDNESS_VIDEO_CATEGORIES.some(item => item.id === categoryId)) return;
+    kindnessVideoCategory = categoryId;
+    kindnessVideoIndex = 0;
+    kindnessVideoPlaying = false;
+    paintKindnessVideo(0, false);
+  }
+
   function setupKindnessMotion() {
     const root = modal?.querySelector(".sfkKindnessMotion");
     const swipe = modal?.querySelector("[data-sfk-kindness-video-swipe]");
     if (!root || !swipe) return;
 
+    kindnessVideoIndex = 0;
     paintKindnessVideo(kindnessVideoIndex, false);
 
     if (root.dataset.bound === "true") return;
     root.dataset.bound = "true";
 
     root.addEventListener("click", event => {
+      const category = event.target.closest("[data-sfk-kindness-category]");
+      if (category) {
+        selectKindnessCategory(category.dataset.sfkKindnessCategory || "all");
+        return;
+      }
+
       const nav = event.target.closest("[data-sfk-kindness-video]");
       if (nav) {
         stepKindnessVideo(nav.dataset.sfkKindnessVideo === "next" ? 1 : -1);

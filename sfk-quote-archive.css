@@ -1205,3 +1205,202 @@ body.sfkQuoteArchiveOpen {
     position: static !important;
   }
 }
+
+
+/* =========================================================
+   v344 KINDNESS IN MOTION — GROUPED VIDEO LIBRARY
+   Sharp editorial category index; no pills/oblong controls.
+========================================================= */
+.sfkKindnessMotionCategoryFrame {
+  display: grid;
+  grid-template-columns: minmax(190px, .34fr) minmax(0, 1fr);
+  margin-top: 18px;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+  background: rgba(243,239,228,.38);
+}
+
+.sfkKindnessMotionCategoryLabel {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+  padding: 13px 15px;
+  border-right: 1px solid var(--ink);
+}
+
+.sfkKindnessMotionCategoryLabel b {
+  color: var(--accent);
+  font-size: .62rem;
+  letter-spacing: .14em;
+}
+
+.sfkKindnessMotionCategoryLabel span {
+  color: #56524b;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: .82rem;
+  line-height: 1.38;
+}
+
+.sfkKindnessMotionCategories {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  min-width: 0;
+}
+
+.sfkKindnessMotionCategory {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 10px 12px;
+  border: 0;
+  border-right: 1px solid rgba(23,32,42,.42);
+  border-bottom: 1px solid rgba(23,32,42,.42);
+  border-radius: 0 !important;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.sfkKindnessMotionCategory:nth-child(4n) {
+  border-right: 0;
+}
+
+.sfkKindnessMotionCategory:nth-last-child(-n + 4) {
+  border-bottom: 0;
+}
+
+.sfkKindnessMotionCategory::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 100%;
+  bottom: -1px;
+  height: 3px;
+  background: var(--accent);
+  transition: right .24s ease;
+}
+
+.sfkKindnessMotionCategory:hover::after,
+.sfkKindnessMotionCategory:focus-visible::after,
+.sfkKindnessMotionCategory.is-active::after {
+  right: 0;
+}
+
+.sfkKindnessMotionCategory.is-active {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.sfkKindnessMotionCategory:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.sfkKindnessMotionCategory span {
+  font-size: .64rem;
+  font-weight: 900;
+  letter-spacing: .09em;
+  line-height: 1.15;
+}
+
+.sfkKindnessMotionCategory small {
+  color: var(--accent);
+  font-family: Georgia, serif;
+  font-size: .83rem;
+  line-height: 1;
+}
+
+.sfkKindnessMotionType {
+  margin-top: 8px;
+  color: #716d64;
+  font-size: .57rem;
+  font-weight: 900;
+  letter-spacing: .13em;
+}
+
+/* The larger library needs a little more breathing room in the notes lane. */
+.sfkKindnessMotionNotes {
+  grid-template-rows: auto auto auto auto minmax(0, 1fr) auto !important;
+}
+
+@media (max-width: 980px) {
+  .sfkKindnessMotionCategoryFrame {
+    grid-template-columns: 1fr;
+  }
+
+  .sfkKindnessMotionCategoryLabel {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    border-right: 0;
+    border-bottom: 1px solid var(--ink);
+  }
+}
+
+@media (max-width: 700px) {
+  .sfkKindnessMotionCategoryFrame {
+    margin-top: 12px;
+  }
+
+  .sfkKindnessMotionCategoryLabel {
+    grid-template-columns: 1fr;
+    gap: 5px;
+    padding: 10px 12px;
+  }
+
+  .sfkKindnessMotionCategoryLabel b {
+    font-size: .56rem;
+  }
+
+  .sfkKindnessMotionCategoryLabel span {
+    font-size: .76rem;
+    line-height: 1.34;
+  }
+
+  .sfkKindnessMotionCategories {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .sfkKindnessMotionCategories::-webkit-scrollbar {
+    display: none;
+  }
+
+  .sfkKindnessMotionCategory,
+  .sfkKindnessMotionCategory:nth-child(4n),
+  .sfkKindnessMotionCategory:nth-last-child(-n + 4) {
+    flex: 0 0 auto;
+    min-width: 136px;
+    min-height: 48px;
+    padding: 9px 10px;
+    border-right: 1px solid rgba(23,32,42,.42);
+    border-bottom: 0;
+    scroll-snap-align: start;
+  }
+
+  .sfkKindnessMotionCategory:last-child {
+    border-right: 0;
+  }
+
+  .sfkKindnessMotionCategory span {
+    font-size: .59rem;
+  }
+
+  .sfkKindnessMotionCategory small {
+    font-size: .78rem;
+  }
+
+  .sfkKindnessMotionType {
+    margin-top: 6px;
+  }
+}
