@@ -22946,3 +22946,30 @@ body.classBoardPageLocked .app > :not(#sfkPageLockScreen) {
     top: 43% !important;
   }
 }
+
+
+/* =========================================================
+   v322 MOBILE — FINAL HEART POSITION MICRO TUNE
+   - 43 slightly more right inside yellow heart
+   - mini hearts slightly higher
+   - quote heart-hands slightly lower
+========================================================= */
+@media (max-width: 700px) {
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-cluster .sfkMiniHeartCluster {
+    top: 2px !important;
+  }
+
+  .sfkMobileHeaderHeart .sfkHeartCount {
+    left: calc(50% + 1px) !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart::before {
+    top: 47% !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart::before {
+    top: 47% !important;
+  }
+}
