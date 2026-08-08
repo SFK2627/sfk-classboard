@@ -20565,3 +20565,1866 @@ body.classBoardPageLocked .app > :not(#sfkPageLockScreen) {
     line-height: 1 !important;
   }
 }
+
+
+/* =========================================================
+   v276 QUOTE CARD 100% ZOOM OVERLAP FIX
+   - keep the quote large and readable at normal 100% zoom
+   - reserve a cleaner author lane at the bottom
+   - prevent overlap without changing quote label or quote marks
+========================================================= */
+@media (min-width: 901px) {
+  .topQuoteBox {
+    padding: 8px 20px 24px !important;
+    min-height: 98px !important;
+  }
+
+  .topQuoteBox #dailyQuote {
+    font-size: clamp(1.18rem, 1.58vw, 1.5rem) !important;
+    line-height: 1.02 !important;
+    max-width: 92% !important;
+    margin: 0 auto !important;
+  }
+
+  .topQuoteBox #quoteAuthor {
+    bottom: 8px !important;
+    max-width: 88% !important;
+    font-size: .94rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+}
+
+
+/* =========================================================
+   v277 QUOTE CARD — TRUE STACKED LAYOUT FOR 100% ZOOM
+   - stop using absolute author positioning on desktop
+   - stack label, quote, and author in normal flow
+   - keep quote large/readable while preventing overlap
+========================================================= */
+@media (min-width: 901px) {
+  .topQuoteBox {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    text-align: center !important;
+    padding: 6px 20px 10px !important;
+    min-height: 98px !important;
+    gap: 0 !important;
+  }
+
+  .quoteLabel,
+  .topQuoteBox .quoteLabel {
+    margin-top: 0 !important;
+    margin-bottom: 4px !important;
+  }
+
+  .topQuoteBox #dailyQuote {
+    position: relative !important;
+    z-index: 2 !important;
+    display: block !important;
+    margin: 0 auto !important;
+    max-width: 92% !important;
+    font-size: clamp(1.14rem, 1.44vw, 1.38rem) !important;
+    line-height: 1.01 !important;
+    font-weight: 800 !important;
+    text-align: center !important;
+    overflow: visible !important;
+    -webkit-line-clamp: unset !important;
+    -webkit-box-orient: initial !important;
+    text-overflow: clip !important;
+  }
+
+  .topQuoteBox #quoteAuthor {
+    position: static !important;
+    top: auto !important;
+    bottom: auto !important;
+    left: auto !important;
+    transform: none !important;
+    display: block !important;
+    width: auto !important;
+    max-width: 88% !important;
+    margin: 4px auto 0 !important;
+    font-size: .92rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    z-index: 2 !important;
+  }
+}
+
+
+/* =========================================================
+   v278 QUOTE CARD — EXTRA SAFE GAP ABOVE SHSS METER
+   - keep stacked layout
+   - reserve more bottom space so author won't overlap the SHSS meter
+========================================================= */
+@media (min-width: 901px) {
+  .topQuoteBox {
+    padding-bottom: 20px !important;
+  }
+
+  .topQuoteBox #quoteAuthor {
+    margin-top: 3px !important;
+    margin-bottom: 6px !important;
+  }
+}
+
+
+/* =========================================================
+   v279 QUOTE CARD — TRUE 100% ZOOM FIT INSIDE FIXED 100PX
+   - preserve the 100px aligned header-card height
+   - real layout lanes: label -> quote -> author
+   - reserve the bottom 11px for the SHSS meter overlay
+   - quote marks / quote label styling stay untouched
+========================================================= */
+@media (min-width: 901px) {
+  .topQuoteBox {
+    display: grid !important;
+    grid-template-rows: auto minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    justify-items: center !important;
+    align-content: stretch !important;
+    height: var(--sfk-header-card-height, 100px) !important;
+    min-height: var(--sfk-header-card-height, 100px) !important;
+    max-height: var(--sfk-header-card-height, 100px) !important;
+    padding: 4px 20px 13px !important;
+    row-gap: 1px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  .quoteLabel,
+  .topQuoteBox .quoteLabel {
+    grid-row: 1 !important;
+    align-self: start !important;
+    margin: 0 0 1px !important;
+  }
+
+  .topQuoteBox #dailyQuote {
+    grid-row: 2 !important;
+    align-self: center !important;
+    position: relative !important;
+    display: block !important;
+    width: 94% !important;
+    max-width: 94% !important;
+    margin: 0 auto !important;
+    font-size: clamp(1.16rem, 1.32vw, 1.34rem) !important;
+    line-height: .98 !important;
+    font-weight: 800 !important;
+    text-align: center !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    -webkit-line-clamp: unset !important;
+    -webkit-box-orient: initial !important;
+  }
+
+  .topQuoteBox #quoteAuthor {
+    grid-row: 3 !important;
+    align-self: end !important;
+    position: static !important;
+    inset: auto !important;
+    transform: none !important;
+    width: auto !important;
+    max-width: 88% !important;
+    margin: 1px auto 0 !important;
+    padding: 0 !important;
+    font-size: .88rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+
+  .quoteNoiseWidget {
+    bottom: 3px !important;
+    height: 8px !important;
+    z-index: 2 !important;
+  }
+}
+
+/* At common 100% desktop widths, keep the long quote readable but compact enough
+   to stay within the quote lane instead of pushing into the author/meter. */
+@media (min-width: 901px) and (max-width: 1700px) {
+  .topQuoteBox #dailyQuote {
+    font-size: 1.20rem !important;
+    line-height: .98 !important;
+    width: 95% !important;
+    max-width: 95% !important;
+  }
+
+  .topQuoteBox #quoteAuthor {
+    font-size: .84rem !important;
+  }
+}
+
+
+/* =========================================================
+   v280 QUOTE → AUTHOR GAP ONLY
+   - add a little breathing room between the quote and author
+   - keep quote size, author size, marks, label, and SHSS meter unchanged
+========================================================= */
+@media (min-width: 901px) {
+  .topQuoteBox #quoteAuthor {
+    margin-top: 5px !important;
+  }
+}
+
+
+/* =========================================================
+   v281 QUOTE LABEL SPACING + GAP BEFORE ACTUAL QUOTE
+========================================================= */
+@media (min-width: 901px) {
+  .quoteLabel,
+  .topQuoteBox .quoteLabel {
+    letter-spacing: .11em !important;
+    margin-bottom: 8px !important;
+  }
+
+  .topQuoteBox #dailyQuote {
+    margin-top: 2px !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .quoteLabel,
+  .topQuoteBox .quoteLabel {
+    letter-spacing: .09em !important;
+    margin-bottom: 6px !important;
+  }
+
+  .topQuoteBox #dailyQuote {
+    margin-top: 1px !important;
+  }
+}
+
+
+/* =========================================================
+   v282 QUOTE LABEL LIGHTER + QUOTE/AUTHOR GAP
+========================================================= */
+@media (min-width: 901px) {
+  .quoteLabel,
+  .topQuoteBox .quoteLabel {
+    font-weight: 600 !important;
+    letter-spacing: .11em !important;
+    margin-bottom: 6px !important;
+  }
+
+  .topQuoteBox #dailyQuote {
+    margin-bottom: 7px !important;
+  }
+
+  .topQuoteBox #quoteAuthor {
+    margin-top: 0 !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .quoteLabel,
+  .topQuoteBox .quoteLabel {
+    font-weight: 600 !important;
+    letter-spacing: .09em !important;
+  }
+
+  .topQuoteBox #dailyQuote {
+    margin-bottom: 5px !important;
+  }
+}
+
+
+/* =========================================================
+   v283 QUOTE AUTHOR SLIGHTLY LOWER
+========================================================= */
+@media (min-width: 901px) {
+  .topQuoteBox #quoteAuthor {
+    margin-top: 8px !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .topQuoteBox #quoteAuthor {
+    margin-top: 6px !important;
+  }
+}
+
+
+/* =========================================================
+   v284 AUTHOR MOVES DOWN VISUALLY ONLY
+   - keep quote where it is
+   - move author down without pulling the quote upward
+========================================================= */
+@media (min-width: 901px) {
+  .quoteLabel,
+  .topQuoteBox .quoteLabel {
+    margin-bottom: 7px !important;
+  }
+
+  .topQuoteBox #dailyQuote {
+    margin-top: 2px !important;
+    margin-bottom: 7px !important;
+  }
+
+  .topQuoteBox #quoteAuthor {
+    margin-top: 0 !important;
+    position: relative !important;
+    top: 4px !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .topQuoteBox #quoteAuthor {
+    margin-top: 0 !important;
+    position: relative !important;
+    top: 3px !important;
+  }
+}
+
+
+/* =========================================================
+   v285 TICKER MESSAGE SPACING + CREAM-YELLOW SEPARATOR DOT
+   - each ticker message has a clear breathing gap
+   - separator dot only uses the cream-yellow accent
+   - actual message text remains light/white
+========================================================= */
+#tickerText {
+  animation: none !important;
+  transform: none !important;
+  padding-left: 0 !important;
+  color: transparent !important;
+}
+
+#tickerText::before {
+  content: none !important;
+  display: none !important;
+  animation: none !important;
+}
+
+#tickerText .ticker-marquee-track {
+  display: inline-flex !important;
+  align-items: center !important;
+  width: max-content !important;
+  max-width: none !important;
+  padding-left: 100% !important;
+  white-space: nowrap !important;
+  animation: sfkTickerTrackV285 28s linear infinite !important;
+  will-change: transform !important;
+}
+
+#tickerText .ticker-message-item {
+  display: inline-block !important;
+  color: #eef3ff !important;
+  white-space: nowrap !important;
+}
+
+#tickerText .ticker-message-separator {
+  display: inline-block !important;
+  flex: 0 0 auto !important;
+  margin-left: 24px !important;
+  margin-right: 24px !important;
+  color: #f6e190 !important;
+  font-size: .92em !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+}
+
+@keyframes sfkTickerTrackV285 {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
+
+@media (max-width: 900px) {
+  #tickerText .ticker-message-separator {
+    margin-left: 18px !important;
+    margin-right: 18px !important;
+  }
+}
+
+
+/* =========================================================
+   v286 TICKER FULL-TRAVEL FIX + SLIGHTLY LARGER DOT
+   - measured JS start/end positions guarantee the last message fully exits
+   - no premature reset
+   - separator dot is a little larger, still cream-yellow only
+========================================================= */
+#tickerText .ticker-marquee-track {
+  padding-left: 0 !important;
+  animation: sfkTickerTrackV286 var(--ticker-duration, 28s) linear infinite !important;
+}
+
+#tickerText .ticker-message-separator {
+  font-size: 1.08em !important;
+  color: #f6e190 !important;
+}
+
+@keyframes sfkTickerTrackV286 {
+  0% { transform: translateX(var(--ticker-start-x, 100vw)); }
+  100% { transform: translateX(var(--ticker-end-x, -100%)); }
+}
+
+
+/* =========================================================
+   v287 TICKER MARQUEE — TRUE FULL TRAVEL
+   - JS/Web Animations API owns the movement
+   - same messages no longer restart on unrelated dashboard refreshes
+   - last message must fully leave the left edge before the next cycle
+   - slightly larger cream-yellow separator dot
+========================================================= */
+#tickerText .ticker-marquee-track {
+  animation: none !important;
+  transform: translate3d(0,0,0);
+  padding-left: 0 !important;
+  flex: 0 0 auto !important;
+  width: max-content !important;
+  min-width: max-content !important;
+  max-width: none !important;
+  white-space: nowrap !important;
+  will-change: transform !important;
+}
+
+#tickerText .ticker-message-separator {
+  font-size: 1.2em !important;
+  color: #f6e190 !important;
+  margin-left: 26px !important;
+  margin-right: 26px !important;
+  line-height: 1 !important;
+}
+
+@keyframes sfkTickerTrackV287 {
+  from { transform: translate3d(var(--ticker-start-x, 100vw), 0, 0); }
+  to   { transform: translate3d(var(--ticker-end-x, -100%), 0, 0); }
+}
+
+
+/* =========================================================
+   v288 ACTUAL QUOTE FONT SLIGHTLY SMALLER
+   - actual quote only
+   - keep label, author, quote marks, SHSS meter, and ticker untouched
+========================================================= */
+@media (min-width: 901px) {
+  .topQuoteBox #dailyQuote {
+    font-size: clamp(1.10rem, 1.25vw, 1.28rem) !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .topQuoteBox #dailyQuote {
+    font-size: .92rem !important;
+  }
+}
+
+
+/* =========================================================
+   v289 ACTUAL QUOTE FONT SMALLER AGAIN
+========================================================= */
+@media (min-width: 901px) {
+  .topQuoteBox #dailyQuote {
+    font-size: clamp(1.02rem, 1.14vw, 1.18rem) !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .topQuoteBox #dailyQuote {
+    font-size: .88rem !important;
+  }
+}
+
+
+/* =========================================================
+   v290 QUOTE SIZE — JS AUTO-FIT ALIGNED
+   - desktop quote is now truly smaller; JS no longer forces 26px
+========================================================= */
+@media (min-width: 901px) {
+  .topQuoteBox #dailyQuote {
+    font-size: 21px !important;
+  }
+}
+
+/* =========================================================
+   v293 PHONE-ONLY HEADER QUOTE FIT + NARROWER TIME +
+   ADVISER REMINDER BACKGROUND MATCH
+   - phone only; desktop/tablet desktop rules stay untouched
+========================================================= */
+@media (max-width: 700px) {
+  /* Give the quote more horizontal room by trimming only the phone clock lane. */
+  .topbar {
+    grid-template-columns: 84px 102px minmax(0, 1fr) !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 8px !important;
+    row-gap: 5px !important;
+    overflow: hidden !important;
+  }
+
+  .timeBox {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    width: 102px !important;
+    min-width: 102px !important;
+    max-width: 102px !important;
+    height: auto !important;
+    min-height: 64px !important;
+    max-height: none !important;
+    padding: 5px 4px !important;
+    align-self: stretch !important;
+    justify-self: start !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+  }
+
+  .timeBox h2,
+  .timeBox h2.phoneCompactTime {
+    font-size: 1.34rem !important;
+    line-height: .94 !important;
+    letter-spacing: -0.06em !important;
+    transform: translateY(2px) scaleX(.82) !important;
+    transform-origin: center center !important;
+    white-space: nowrap !important;
+  }
+
+  .timeBox p,
+  #dateText {
+    margin-top: 5px !important;
+    font-size: .47rem !important;
+    line-height: 1 !important;
+    letter-spacing: -0.035em !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    transform: scaleX(.82) !important;
+    transform-origin: center center !important;
+  }
+
+  /* Quote uses natural height on phones: no line clamp / ellipsis. */
+  .topQuoteBox {
+    grid-column: 3 !important;
+    grid-row: 2 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: auto !important;
+    min-height: 64px !important;
+    max-height: none !important;
+    padding: 5px 10px 6px !important;
+    box-sizing: border-box !important;
+    align-self: stretch !important;
+    justify-self: stretch !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+  }
+
+  .quoteLabel,
+  .topQuoteBox .quoteLabel {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 0 3px !important;
+    padding: 0 8px !important;
+    box-sizing: border-box !important;
+    font-size: .43rem !important;
+    line-height: 1 !important;
+    font-weight: 600 !important;
+    letter-spacing: .06em !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+  }
+
+  .topQuoteBox #dailyQuote {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 3px !important;
+    box-sizing: border-box !important;
+    font-size: clamp(.50rem, 1.95vw, .58rem) !important;
+    line-height: 1.04 !important;
+    font-weight: 800 !important;
+    text-align: center !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    -webkit-line-clamp: unset !important;
+    -webkit-box-orient: initial !important;
+  }
+
+  /* Keep the decorative marks but make them phone-scale so they don't cover text. */
+  .topQuoteBox::before {
+    top: 5px !important;
+    left: 7px !important;
+    font-size: 1rem !important;
+    opacity: .86 !important;
+  }
+
+  .topQuoteBox::after {
+    right: 7px !important;
+    bottom: 3px !important;
+    font-size: .95rem !important;
+    opacity: .86 !important;
+  }
+
+  /* Match the actual Adviser Reminder item to Things to Bring on phone. */
+  .sideCard #reminderList .reminder-item {
+    background: var(--home-things-item-bg) !important;
+    background-image: none !important;
+    color: var(--home-things-item-text) !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .topbar {
+    grid-template-columns: 74px 94px minmax(0, 1fr) !important;
+    column-gap: 7px !important;
+  }
+
+  .timeBox {
+    width: 94px !important;
+    min-width: 94px !important;
+    max-width: 94px !important;
+    min-height: 64px !important;
+    padding-left: 3px !important;
+    padding-right: 3px !important;
+  }
+
+  .timeBox h2,
+  .timeBox h2.phoneCompactTime {
+    font-size: 1.28rem !important;
+    transform: translateY(2px) scaleX(.80) !important;
+  }
+
+  .timeBox p,
+  #dateText {
+    font-size: .44rem !important;
+    transform: scaleX(.78) !important;
+  }
+
+  .topQuoteBox {
+    min-height: 64px !important;
+    padding: 5px 8px 6px !important;
+  }
+
+  .quoteLabel,
+  .topQuoteBox .quoteLabel {
+    font-size: .40rem !important;
+    letter-spacing: .05em !important;
+  }
+
+  .topQuoteBox #dailyQuote {
+    font-size: .51rem !important;
+    line-height: 1.02 !important;
+  }
+}
+
+/* =========================================================
+   v294 PHONE-ONLY ALTERNATING TIME / DAILY QUOTE HEADER
+   - same compact header height as before v293
+   - time and quote share the full right-side lane, one at a time
+   - wider card lets time stay large and quote stay fully readable
+   - desktop/tablet-desktop layout is untouched
+========================================================= */
+@media (max-width: 700px) {
+  .topbar {
+    grid-template-columns: 84px 104px minmax(0, 1fr) !important;
+    grid-template-rows: auto 52px !important;
+    column-gap: 9px !important;
+    row-gap: 5px !important;
+    min-height: 0 !important;
+    height: auto !important;
+    padding: 10px 11px !important;
+    align-items: center !important;
+    overflow: hidden !important;
+  }
+
+  /* Both cards occupy the exact same fixed-height wide lane. */
+  .timeBox,
+  .topQuoteBox {
+    grid-column: 2 / 4 !important;
+    grid-row: 2 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    height: 52px !important;
+    min-height: 52px !important;
+    max-height: 52px !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    align-self: center !important;
+    justify-self: stretch !important;
+    overflow: hidden !important;
+    transition: opacity .42s ease, transform .42s ease !important;
+  }
+
+  .topbar.mobile-header-rotator .timeBox,
+  .topbar.mobile-header-rotator .topQuoteBox {
+    will-change: opacity, transform !important;
+  }
+
+  /* Default / time phase. */
+  .topbar.mobile-header-rotator .timeBox {
+    opacity: 1 !important;
+    transform: translateX(0) !important;
+    pointer-events: auto !important;
+    z-index: 4 !important;
+  }
+
+  .topbar.mobile-header-rotator .topQuoteBox {
+    opacity: 0 !important;
+    transform: translateX(10px) !important;
+    pointer-events: none !important;
+    z-index: 3 !important;
+  }
+
+  /* Quote phase. */
+  .topbar.mobile-header-rotator.mobile-show-quote .timeBox {
+    opacity: 0 !important;
+    transform: translateX(-10px) !important;
+    pointer-events: none !important;
+    z-index: 3 !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .topQuoteBox {
+    opacity: 1 !important;
+    transform: translateX(0) !important;
+    pointer-events: auto !important;
+    z-index: 4 !important;
+  }
+
+  /* Wide time card: restore a strong readable clock without squeezing. */
+  .timeBox {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 4px 10px !important;
+    border-radius: 12px !important;
+  }
+
+  .timeBox h2,
+  .timeBox h2.phoneCompactTime {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    font-size: 1.72rem !important;
+    line-height: .88 !important;
+    letter-spacing: -0.045em !important;
+    transform: none !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    text-align: center !important;
+    font-variant-numeric: tabular-nums !important;
+  }
+
+  .timeBox h2.phoneCompactTime .timeMain {
+    font-size: 1em !important;
+  }
+
+  .timeBox h2.phoneCompactTime .timeSeconds {
+    font-size: .50em !important;
+    margin-left: .01em !important;
+    letter-spacing: -0.04em !important;
+  }
+
+  .timeBox h2.phoneCompactTime .timePeriod {
+    font-size: .61em !important;
+    margin-left: .07em !important;
+    letter-spacing: -0.035em !important;
+  }
+
+  .timeBox p,
+  #dateText {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 4px 0 0 !important;
+    font-size: .58rem !important;
+    line-height: 1 !important;
+    letter-spacing: -.02em !important;
+    transform: none !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: clip !important;
+    text-align: center !important;
+  }
+
+  /* Fixed-height quote card. JS only shrinks the actual quote when needed. */
+  .topQuoteBox {
+    display: grid !important;
+    grid-template-rows: auto minmax(0, 1fr) auto !important;
+    align-items: center !important;
+    justify-items: center !important;
+    align-content: stretch !important;
+    padding: 3px 18px 3px !important;
+    border-radius: 12px !important;
+    text-align: center !important;
+  }
+
+  .quoteLabel,
+  .topQuoteBox .quoteLabel {
+    grid-row: 1 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 0 1px !important;
+    padding: 0 6px !important;
+    box-sizing: border-box !important;
+    font-size: .39rem !important;
+    line-height: 1 !important;
+    font-weight: 600 !important;
+    letter-spacing: .07em !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: clip !important;
+  }
+
+  .topQuoteBox #dailyQuote {
+    grid-row: 2 !important;
+    align-self: center !important;
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    font-size: 11px !important;
+    line-height: .98 !important;
+    font-weight: 800 !important;
+    letter-spacing: -.012em !important;
+    text-align: center !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    -webkit-line-clamp: unset !important;
+    -webkit-box-orient: initial !important;
+    transform: none !important;
+  }
+
+  .topQuoteBox #quoteAuthor {
+    grid-row: 3 !important;
+    align-self: end !important;
+    display: block !important;
+    position: static !important;
+    inset: auto !important;
+    width: auto !important;
+    max-width: 90% !important;
+    margin: 1px auto 0 !important;
+    padding: 0 !important;
+    font-size: .39rem !important;
+    line-height: 1 !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: clip !important;
+    transform: none !important;
+    top: auto !important;
+  }
+
+  .topQuoteBox::before {
+    top: 5px !important;
+    left: 7px !important;
+    font-size: .92rem !important;
+    opacity: .88 !important;
+  }
+
+  .topQuoteBox::after {
+    right: 7px !important;
+    bottom: 4px !important;
+    font-size: .86rem !important;
+    opacity: .88 !important;
+  }
+
+  /* Keep v293's requested mobile reminder background match. */
+  .sideCard #reminderList .reminder-item {
+    background: var(--home-things-item-bg) !important;
+    background-image: none !important;
+    color: var(--home-things-item-text) !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .topbar {
+    grid-template-columns: 74px 94px minmax(0, 1fr) !important;
+    grid-template-rows: auto 52px !important;
+    column-gap: 7px !important;
+  }
+
+  .timeBox h2,
+  .timeBox h2.phoneCompactTime {
+    font-size: 1.60rem !important;
+  }
+
+  .timeBox p,
+  #dateText {
+    font-size: .54rem !important;
+  }
+
+  .topQuoteBox {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  .quoteLabel,
+  .topQuoteBox .quoteLabel {
+    font-size: .37rem !important;
+    letter-spacing: .055em !important;
+  }
+
+  .topQuoteBox #quoteAuthor {
+    font-size: .37rem !important;
+  }
+}
+
+
+/* =========================================================
+   v295 MOBILE ONLY — TIME DATE VISIBILITY + REMOVE DAILY QUOTE
+   - keep the fixed 52px shared Time/Quote lane
+   - fully show weekday/date inside the Time card
+   - remove old "DAILY QUOTE" pseudo-label; keep actual quote label
+========================================================= */
+@media (max-width: 700px) {
+  .timeBox {
+    display: grid !important;
+    grid-template-rows: 30px 12px !important;
+    align-content: center !important;
+    justify-items: center !important;
+    row-gap: 2px !important;
+    padding: 3px 10px !important;
+    height: 52px !important;
+    min-height: 52px !important;
+    max-height: 52px !important;
+    overflow: hidden !important;
+  }
+
+  .timeBox h2,
+  .timeBox h2.phoneCompactTime {
+    grid-row: 1 !important;
+    align-self: end !important;
+    position: static !important;
+    inset: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 1.64rem !important;
+    line-height: 1 !important;
+    transform: none !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-align: center !important;
+  }
+
+  .timeBox p,
+  .timeBox #dateText,
+  #dateText {
+    grid-row: 2 !important;
+    align-self: start !important;
+    position: static !important;
+    inset: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: .58rem !important;
+    line-height: 1.05 !important;
+    transform: none !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    text-align: center !important;
+  }
+
+  /* Remove the old mobile-only "DAILY QUOTE" generated label.
+     The real label text (e.g. "ANG QUOTE NATIN TODAY AY...") remains. */
+  .topQuoteBox .quoteLabel::after,
+  .quoteLabel::after {
+    content: none !important;
+    display: none !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .timeBox h2,
+  .timeBox h2.phoneCompactTime {
+    font-size: 1.56rem !important;
+  }
+
+  .timeBox p,
+  .timeBox #dateText,
+  #dateText {
+    font-size: .56rem !important;
+  }
+}
+
+
+/* =========================================================
+   v296 MOBILE ONLY — COMPACT TIME -> EXPANDING QUOTE CARD
+   - same fixed 52px header lane height
+   - time stays compact, only as wide as needed for time + full date
+   - hidden quote starts compact and expands smoothly to full lane width
+   - desktop/F11 untouched
+========================================================= */
+@media (max-width: 700px) {
+  .topbar.mobile-header-rotator .timeBox,
+  .topbar.mobile-header-rotator .topQuoteBox {
+    justify-self: center !important;
+    height: 52px !important;
+    min-height: 52px !important;
+    max-height: 52px !important;
+    transition:
+      width .48s cubic-bezier(.22,.8,.24,1),
+      opacity .34s ease,
+      transform .48s cubic-bezier(.22,.8,.24,1),
+      border-radius .48s ease !important;
+  }
+
+  /* Compact clock card — wide enough for time + full weekday/date only. */
+  .topbar.mobile-header-rotator .timeBox {
+    width: clamp(188px, 52vw, 218px) !important;
+    max-width: calc(100% - 8px) !important;
+    transform: translateX(0) scaleX(1) !important;
+  }
+
+  /* While hidden, quote begins from the same compact footprint. */
+  .topbar.mobile-header-rotator .topQuoteBox {
+    width: clamp(188px, 52vw, 218px) !important;
+    max-width: 100% !important;
+    transform: translateX(0) scaleX(.985) !important;
+  }
+
+  /* Quote phase: visually grows into the entire available right-side lane. */
+  .topbar.mobile-header-rotator.mobile-show-quote .topQuoteBox {
+    width: 100% !important;
+    max-width: 100% !important;
+    transform: translateX(0) scaleX(1) !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .timeBox {
+    width: clamp(188px, 52vw, 218px) !important;
+    transform: translateX(0) scaleX(.985) !important;
+  }
+
+  /* Keep full date readable inside the compact clock card. */
+  .topbar.mobile-header-rotator .timeBox p,
+  .topbar.mobile-header-rotator .timeBox #dateText,
+  .topbar.mobile-header-rotator #dateText {
+    font-size: .56rem !important;
+    letter-spacing: -.025em !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+  }
+}
+
+@media (max-width: 390px) {
+  .topbar.mobile-header-rotator .timeBox,
+  .topbar.mobile-header-rotator .topQuoteBox {
+    width: clamp(180px, 54vw, 198px) !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .topQuoteBox {
+    width: 100% !important;
+  }
+
+  .topbar.mobile-header-rotator .timeBox h2,
+  .topbar.mobile-header-rotator .timeBox h2.phoneCompactTime {
+    font-size: 1.48rem !important;
+  }
+
+  .topbar.mobile-header-rotator .timeBox p,
+  .topbar.mobile-header-rotator .timeBox #dateText,
+  .topbar.mobile-header-rotator #dateText {
+    font-size: .53rem !important;
+  }
+}
+
+
+/* =========================================================
+   v297 MOBILE ONLY — LEFT CLOCK + MOVING YELLOW HEART
+   Time phase: compact clock stays at the left of the shared lane,
+   heart sits on its right side.
+   Quote phase: quote expands from the left while the heart rises
+   beside the title at the top-right. Header height stays fixed.
+========================================================= */
+.sfkMobileHeaderHeart {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  .topbar.mobile-header-rotator {
+    position: relative !important;
+  }
+
+  /* Expand/shrink from the LEFT, not from the center. */
+  .topbar.mobile-header-rotator .timeBox,
+  .topbar.mobile-header-rotator .topQuoteBox {
+    justify-self: start !important;
+    transform-origin: left center !important;
+  }
+
+  .topbar.mobile-header-rotator .timeBox {
+    width: clamp(188px, 52vw, 218px) !important;
+    max-width: calc(100% - 50px) !important;
+  }
+
+  .topbar.mobile-header-rotator .topQuoteBox {
+    width: clamp(188px, 52vw, 218px) !important;
+    max-width: 100% !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .topQuoteBox {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* One mobile yellow heart. Its base position is top-right; in the
+     Time phase it is translated down beside the compact clock. */
+  .topbar.mobile-header-rotator .sfkMobileHeaderHeart {
+    display: grid !important;
+    place-items: center !important;
+    position: absolute !important;
+    top: 9px !important;
+    right: 13px !important;
+    width: 38px !important;
+    height: 38px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    font-size: 2rem !important;
+    line-height: 1 !important;
+    filter: drop-shadow(0 3px 5px rgba(0,0,0,.24)) !important;
+    z-index: 12 !important;
+    pointer-events: none !important;
+    opacity: 1 !important;
+    transform: translate3d(0, 57px, 0) scale(1) !important;
+    transition:
+      transform .52s cubic-bezier(.22,.8,.24,1),
+      filter .35s ease !important;
+    will-change: transform !important;
+  }
+
+  /* Quote phase: heart rises beside the SFK ClassBoard/title row. */
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart {
+    transform: translate3d(0, 0, 0) scale(.94) !important;
+    filter: drop-shadow(0 2px 5px rgba(255,211,42,.28)) !important;
+  }
+
+  /* Reserve just enough title-row room while the heart is upstairs,
+     preventing overlap with SFK ClassBoard / rotating student names. */
+  .topbar.mobile-header-rotator.mobile-show-quote .brandTextBlock {
+    padding-right: 42px !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Keep the lower heart visually paired with the compact time card. */
+  .topbar.mobile-header-rotator.mobile-show-time .timeBox {
+    margin-left: 0 !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .topbar.mobile-header-rotator .timeBox,
+  .topbar.mobile-header-rotator .topQuoteBox {
+    width: clamp(176px, 52vw, 198px) !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .topQuoteBox {
+    width: 100% !important;
+  }
+
+  .topbar.mobile-header-rotator .sfkMobileHeaderHeart {
+    top: 8px !important;
+    right: 10px !important;
+    width: 34px !important;
+    height: 34px !important;
+    font-size: 1.82rem !important;
+    transform: translate3d(0, 56px, 0) scale(1) !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart {
+    transform: translate3d(0, 0, 0) scale(.94) !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .brandTextBlock {
+    padding-right: 36px !important;
+  }
+}
+
+
+/* =========================================================
+   v298 MOBILE ONLY — LARGER + CENTERED MOVING HEART
+   - center heart inside the free space to the right of compact time card
+   - keep same horizontal center when it rises during Quote state
+   - slightly larger in Quote state
+========================================================= */
+@media (max-width: 700px) {
+  .topbar.mobile-header-rotator {
+    --sfk-mobile-time-width: clamp(188px, 52vw, 218px);
+    --sfk-mobile-heart-size: 50px;
+  }
+
+  .topbar.mobile-header-rotator .sfkMobileHeaderHeart {
+    right: auto !important;
+    left: calc((100% + var(--sfk-mobile-time-width)) / 2 - (var(--sfk-mobile-heart-size) / 2)) !important;
+    width: var(--sfk-mobile-heart-size) !important;
+    height: var(--sfk-mobile-heart-size) !important;
+    font-size: 2.55rem !important;
+    place-items: center !important;
+    text-align: center !important;
+    transform: translate3d(0, 51px, 0) scale(1) !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart {
+    transform: translate3d(0, 0, 0) scale(1.06) !important;
+  }
+
+  /* Reserve room for the larger heart in the upper/title lane. */
+  .topbar.mobile-header-rotator.mobile-show-quote .brandTextBlock {
+    padding-right: 96px !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .topbar.mobile-header-rotator {
+    --sfk-mobile-time-width: clamp(176px, 52vw, 198px);
+    --sfk-mobile-heart-size: 48px;
+  }
+
+  .topbar.mobile-header-rotator .sfkMobileHeaderHeart {
+    right: auto !important;
+    left: calc((100% + var(--sfk-mobile-time-width)) / 2 - (var(--sfk-mobile-heart-size) / 2)) !important;
+    width: var(--sfk-mobile-heart-size) !important;
+    height: var(--sfk-mobile-heart-size) !important;
+    font-size: 2.42rem !important;
+    transform: translate3d(0, 51px, 0) scale(1) !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart {
+    transform: translate3d(0, 0, 0) scale(1.06) !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .brandTextBlock {
+    padding-right: 90px !important;
+  }
+}
+
+
+/* =========================================================
+   v299 MOBILE ONLY — HEART SHIFT RIGHT
+   - move heart away from compact time card
+   - retain balanced right-side margin
+========================================================= */
+@media (max-width: 700px) {
+  .topbar.mobile-header-rotator .sfkMobileHeaderHeart {
+    left: calc((100% + var(--sfk-mobile-time-width)) / 2 - (var(--sfk-mobile-heart-size) / 2) + 28px) !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .topbar.mobile-header-rotator .sfkMobileHeaderHeart {
+    left: calc((100% + var(--sfk-mobile-time-width)) / 2 - (var(--sfk-mobile-heart-size) / 2) + 24px) !important;
+  }
+}
+
+
+/* =========================================================
+   v300 MOBILE ONLY — HEART FARTHER RIGHT PER STATE
+   - Time: slightly farther right than v299, no overlap with clock
+   - Quote: move even farther right while rising to free subtitle space
+   - keep safe edge margin and smooth diagonal motion
+========================================================= */
+@media (max-width: 700px) {
+  .topbar.mobile-header-rotator .sfkMobileHeaderHeart {
+    left: min(
+      calc((100% + var(--sfk-mobile-time-width)) / 2 - (var(--sfk-mobile-heart-size) / 2) + 36px),
+      calc(100% - var(--sfk-mobile-heart-size) - 24px)
+    ) !important;
+    right: auto !important;
+    transition:
+      left .52s cubic-bezier(.22,.8,.24,1),
+      transform .52s cubic-bezier(.22,.8,.24,1),
+      filter .35s ease !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart {
+    left: calc(100% - var(--sfk-mobile-heart-size) - 12px) !important;
+    right: auto !important;
+    transform: translate3d(0, 0, 0) scale(1.06) !important;
+  }
+
+  /* Subtitle gets nearly the full title width; heart occupies only the far-right lane. */
+  .topbar.mobile-header-rotator.mobile-show-quote .brandTextBlock {
+    padding-right: 58px !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .topbar.mobile-header-rotator .sfkMobileHeaderHeart {
+    left: min(
+      calc((100% + var(--sfk-mobile-time-width)) / 2 - (var(--sfk-mobile-heart-size) / 2) + 32px),
+      calc(100% - var(--sfk-mobile-heart-size) - 20px)
+    ) !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart {
+    left: calc(100% - var(--sfk-mobile-heart-size) - 10px) !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .brandTextBlock {
+    padding-right: 54px !important;
+  }
+}
+
+
+/* =========================================================
+   v301 MOBILE ONLY — HEART POSITION TUNE + SMOOTH BEAT
+   - Time: a little farther right
+   - Quote: a little left from v300
+   - Larger heart in both states
+   - Smooth heartbeat without affecting header height
+========================================================= */
+@keyframes sfkMobileHeartBeat {
+  0%, 100% { font-size: 2.84rem; filter: drop-shadow(0 3px 6px rgba(0,0,0,.24)); }
+  14% { font-size: 3.04rem; filter: drop-shadow(0 4px 8px rgba(255,211,42,.24)); }
+  28% { font-size: 2.86rem; filter: drop-shadow(0 3px 6px rgba(0,0,0,.24)); }
+  42% { font-size: 2.98rem; filter: drop-shadow(0 4px 8px rgba(255,211,42,.20)); }
+  58%, 90% { font-size: 2.84rem; filter: drop-shadow(0 3px 6px rgba(0,0,0,.24)); }
+}
+
+@media (max-width: 700px) {
+  .topbar.mobile-header-rotator {
+    --sfk-mobile-heart-size: 58px;
+  }
+
+  .topbar.mobile-header-rotator .sfkMobileHeaderHeart {
+    width: var(--sfk-mobile-heart-size) !important;
+    height: var(--sfk-mobile-heart-size) !important;
+    left: min(
+      calc((100% + var(--sfk-mobile-time-width)) / 2 - (var(--sfk-mobile-heart-size) / 2) + 46px),
+      calc(100% - var(--sfk-mobile-heart-size) - 12px)
+    ) !important;
+    animation: sfkMobileHeartBeat 2.15s cubic-bezier(.4,0,.2,1) infinite !important;
+    transition:
+      left .52s cubic-bezier(.22,.8,.24,1),
+      transform .52s cubic-bezier(.22,.8,.24,1) !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart {
+    left: calc(100% - var(--sfk-mobile-heart-size) - 24px) !important;
+    transform: translate3d(0, 0, 0) scale(1.04) !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .brandTextBlock {
+    padding-right: 58px !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .topbar.mobile-header-rotator {
+    --sfk-mobile-heart-size: 56px;
+  }
+
+  .topbar.mobile-header-rotator .sfkMobileHeaderHeart {
+    left: min(
+      calc((100% + var(--sfk-mobile-time-width)) / 2 - (var(--sfk-mobile-heart-size) / 2) + 42px),
+      calc(100% - var(--sfk-mobile-heart-size) - 10px)
+    ) !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart {
+    left: calc(100% - var(--sfk-mobile-heart-size) - 20px) !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .brandTextBlock {
+    padding-right: 54px !important;
+  }
+}
+
+
+/* =========================================================
+   v302 MOBILE ONLY — QUOTE HEART UP + LARGER TIME HEART
+   - Quote state: raise heart slightly
+   - Time state: larger heart while keeping current X position
+   - Smooth heartbeat retained
+========================================================= */
+@keyframes sfkMobileHeartBeatTimeV302 {
+  0%, 100% { font-size: 3.08rem; filter: drop-shadow(0 3px 6px rgba(0,0,0,.24)); }
+  14%      { font-size: 3.30rem; filter: drop-shadow(0 4px 8px rgba(255,211,42,.24)); }
+  28%      { font-size: 3.10rem; filter: drop-shadow(0 3px 6px rgba(0,0,0,.24)); }
+  42%      { font-size: 3.23rem; filter: drop-shadow(0 4px 8px rgba(255,211,42,.20)); }
+  58%, 90% { font-size: 3.08rem; filter: drop-shadow(0 3px 6px rgba(0,0,0,.24)); }
+}
+
+@keyframes sfkMobileHeartBeatQuoteV302 {
+  0%, 100% { font-size: 2.84rem; filter: drop-shadow(0 3px 6px rgba(0,0,0,.24)); }
+  14%      { font-size: 3.04rem; filter: drop-shadow(0 4px 8px rgba(255,211,42,.24)); }
+  28%      { font-size: 2.86rem; filter: drop-shadow(0 3px 6px rgba(0,0,0,.24)); }
+  42%      { font-size: 2.98rem; filter: drop-shadow(0 4px 8px rgba(255,211,42,.20)); }
+  58%, 90% { font-size: 2.84rem; filter: drop-shadow(0 3px 6px rgba(0,0,0,.24)); }
+}
+
+@media (max-width: 700px) {
+  .topbar.mobile-header-rotator .sfkMobileHeaderHeart {
+    animation: sfkMobileHeartBeatTimeV302 2.15s cubic-bezier(.4,0,.2,1) infinite !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart {
+    transform: translate3d(0, -5px, 0) scale(1.04) !important;
+    animation: sfkMobileHeartBeatQuoteV302 2.15s cubic-bezier(.4,0,.2,1) infinite !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .topbar.mobile-header-rotator .sfkMobileHeaderHeart {
+    animation: sfkMobileHeartBeatTimeV302 2.15s cubic-bezier(.4,0,.2,1) infinite !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart {
+    transform: translate3d(0, -4px, 0) scale(1.04) !important;
+    animation: sfkMobileHeartBeatQuoteV302 2.15s cubic-bezier(.4,0,.2,1) infinite !important;
+  }
+}
+
+
+/* =========================================================
+   v303 MOBILE ONLY — HEARTBEAT ON QUOTE STATE ONLY
+   - Time state: large but completely steady
+   - Quote state: smooth heartbeat only
+========================================================= */
+@media (max-width: 700px) {
+  .topbar.mobile-header-rotator .sfkMobileHeaderHeart {
+    animation: none !important;
+    font-size: 3.08rem !important;
+    filter: drop-shadow(0 3px 6px rgba(0,0,0,.24)) !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart {
+    animation: sfkMobileHeartBeatQuoteV302 2.15s cubic-bezier(.4,0,.2,1) infinite !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .topbar.mobile-header-rotator .sfkMobileHeaderHeart {
+    animation: none !important;
+    font-size: 3.08rem !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart {
+    animation: sfkMobileHeartBeatQuoteV302 2.15s cubic-bezier(.4,0,.2,1) infinite !important;
+  }
+}
+
+
+/* =========================================================
+   v304 MOBILE ONLY — 43 MINI HEARTS -> BIG HEART 43
+   Time phase is longer so the sequence can be appreciated.
+   Header height remains fixed; desktop/F11 are untouched.
+========================================================= */
+@keyframes sfkQuoteHeartBeatV304 {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  14% { transform: translate(-50%, -50%) scale(1.10); }
+  28% { transform: translate(-50%, -50%) scale(1.01); }
+  42% { transform: translate(-50%, -50%) scale(1.07); }
+  58%, 90% { transform: translate(-50%, -50%) scale(1); }
+}
+
+@media (max-width: 700px) {
+  .topbar.mobile-header-rotator {
+    --sfk-mobile-heart-stage-width: 86px;
+    --sfk-mobile-heart-stage-height: 60px;
+  }
+
+  /* The outer stage moves between the lower Time lane and upper Quote/title lane. */
+  .topbar.mobile-header-rotator .sfkMobileHeaderHeart {
+    display: block !important;
+    position: absolute !important;
+    top: 8px !important;
+    right: auto !important;
+    left: min(
+      calc((100% + var(--sfk-mobile-time-width)) / 2 - (var(--sfk-mobile-heart-stage-width) / 2) + 64px),
+      calc(100% - var(--sfk-mobile-heart-stage-width) - 10px)
+    ) !important;
+    width: var(--sfk-mobile-heart-stage-width) !important;
+    height: var(--sfk-mobile-heart-stage-height) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 0 !important;
+    line-height: 1 !important;
+    background: transparent !important;
+    border: 0 !important;
+    overflow: visible !important;
+    pointer-events: none !important;
+    z-index: 12 !important;
+    opacity: 1 !important;
+    animation: none !important;
+    filter: none !important;
+    transform: translate3d(0, 51px, 0) !important;
+    transition:
+      left .58s cubic-bezier(.22,.8,.24,1),
+      transform .58s cubic-bezier(.22,.8,.24,1) !important;
+    will-change: left, transform !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart {
+    left: calc(100% - var(--sfk-mobile-heart-stage-width) - 10px) !important;
+    transform: translate3d(0, -8px, 0) !important;
+    animation: none !important;
+    filter: none !important;
+  }
+
+  .sfkMobileHeaderHeart .sfkMiniHeartCluster,
+  .sfkMobileHeaderHeart .sfkBigHeartGlyph,
+  .sfkMobileHeaderHeart .sfkHeartCount {
+    position: absolute !important;
+    display: block !important;
+    pointer-events: none !important;
+  }
+
+  /* Exact 43-heart shaped cluster. */
+  .sfkMobileHeaderHeart .sfkMiniHeartCluster {
+    inset: 0 !important;
+    opacity: 0 !important;
+    transform: scale(.96) !important;
+    transform-origin: 50% 50% !important;
+    transition: opacity .30s ease, transform .40s ease !important;
+  }
+
+  .sfkMobileHeaderHeart .sfkMiniHeart {
+    position: absolute !important;
+    width: 8px !important;
+    height: 8px !important;
+    display: grid !important;
+    place-items: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    color: #f6e190 !important;
+    font-style: normal !important;
+    font-family: Arial, sans-serif !important;
+    font-size: 8px !important;
+    line-height: 8px !important;
+    text-shadow: 0 1px 2px rgba(0,0,0,.20) !important;
+    opacity: 1 !important;
+    transform: translate(0,0) scale(1) !important;
+    transition:
+      transform 1.18s cubic-bezier(.2,.75,.2,1) var(--sfk-heart-delay),
+      opacity .88s ease var(--sfk-heart-delay) !important;
+    will-change: transform, opacity !important;
+  }
+
+  /* Large heart waits invisibly behind the 43-heart cluster. */
+  .sfkMobileHeaderHeart .sfkBigHeartGlyph {
+    left: 50% !important;
+    top: 50% !important;
+    width: 58px !important;
+    height: 58px !important;
+    display: grid !important;
+    place-items: center !important;
+    font-size: 3.28rem !important;
+    line-height: 1 !important;
+    opacity: 0 !important;
+    transform: translate(-50%, -50%) scale(.38) !important;
+    filter: drop-shadow(0 3px 6px rgba(0,0,0,.24)) !important;
+    transition:
+      opacity .52s ease,
+      transform .88s cubic-bezier(.18,.82,.26,1),
+      filter .35s ease !important;
+    will-change: transform, opacity !important;
+  }
+
+  .sfkMobileHeaderHeart .sfkHeartCount {
+    left: 50% !important;
+    top: 50% !important;
+    z-index: 3 !important;
+    color: #151515 !important;
+    font-family: Arial, sans-serif !important;
+    font-size: .72rem !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
+    letter-spacing: -.04em !important;
+    opacity: 0 !important;
+    transform: translate(-50%, -42%) scale(.55) !important;
+    text-shadow: 0 1px 1px rgba(255,255,255,.35) !important;
+    transition: opacity .38s ease .22s, transform .48s cubic-bezier(.2,.8,.2,1) .18s !important;
+  }
+
+  /* TIME: first show all 43 small hearts. */
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-cluster .sfkMiniHeartCluster {
+    opacity: 1 !important;
+    transform: scale(1) !important;
+  }
+
+  /* TIME: all 43 hearts converge toward the same center point. */
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merging .sfkMiniHeartCluster {
+    opacity: 1 !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merging .sfkMiniHeart {
+    opacity: 0 !important;
+    transform: translate(var(--sfk-heart-merge-x), var(--sfk-heart-merge-y)) scale(.12) !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merging .sfkBigHeartGlyph {
+    opacity: 1 !important;
+    transform: translate(-50%, -50%) scale(1) !important;
+  }
+
+  /* TIME: merged heart remains steady; 43 appears in its center. */
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merged .sfkMiniHeartCluster {
+    opacity: 0 !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merged .sfkBigHeartGlyph {
+    opacity: 1 !important;
+    transform: translate(-50%, -50%) scale(1) !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merged .sfkHeartCount {
+    opacity: 1 !important;
+    transform: translate(-50%, -42%) scale(1) !important;
+  }
+
+  /* QUOTE: keep one clean heart, remove 43, and heartbeat only here. */
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMiniHeartCluster,
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkHeartCount {
+    opacity: 0 !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkBigHeartGlyph {
+    opacity: 1 !important;
+    font-size: 3.18rem !important;
+    animation: sfkQuoteHeartBeatV304 2.15s cubic-bezier(.4,0,.2,1) infinite !important;
+    filter: drop-shadow(0 3px 7px rgba(255,211,42,.22)) !important;
+  }
+
+  /* Heart upstairs only occupies its visual lane, preserving subtitle width. */
+  .topbar.mobile-header-rotator.mobile-show-quote .brandTextBlock {
+    padding-right: 58px !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .topbar.mobile-header-rotator {
+    --sfk-mobile-heart-stage-width: 82px;
+    --sfk-mobile-heart-stage-height: 58px;
+  }
+
+  .topbar.mobile-header-rotator .sfkMobileHeaderHeart {
+    left: min(
+      calc((100% + var(--sfk-mobile-time-width)) / 2 - (var(--sfk-mobile-heart-stage-width) / 2) + 54px),
+      calc(100% - var(--sfk-mobile-heart-stage-width) - 7px)
+    ) !important;
+    transform: translate3d(0, 51px, 0) !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart {
+    left: calc(100% - var(--sfk-mobile-heart-stage-width) - 7px) !important;
+    transform: translate3d(0, -7px, 0) !important;
+  }
+
+  .sfkMobileHeaderHeart .sfkBigHeartGlyph {
+    font-size: 3.12rem !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkBigHeartGlyph {
+    font-size: 3.04rem !important;
+  }
+
+  .sfkMobileHeaderHeart .sfkHeartCount {
+    font-size: .68rem !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) and (max-width: 700px) {
+  .topbar.mobile-header-rotator .sfkMobileHeaderHeart,
+  .sfkMobileHeaderHeart .sfkMiniHeart,
+  .sfkMobileHeaderHeart .sfkBigHeartGlyph,
+  .sfkMobileHeaderHeart .sfkHeartCount {
+    transition-duration: .01ms !important;
+    animation: none !important;
+  }
+}
+
+
+/* =========================================================
+   v305 MOBILE ONLY — HEART STAGE POSITION + TRUE COUNT CENTER
+   - move 43-heart Time stage left for better right breathing room
+   - keep merged heart + 43 in the same shifted Time position
+   - center 43 exactly in the heart box
+   - restore a larger Quote-state heart independently
+========================================================= */
+@media (max-width: 700px) {
+  /* TIME state only: give the 43-heart area more breathing room from right edge. */
+  .topbar.mobile-header-rotator:not(.mobile-show-quote) .sfkMobileHeaderHeart {
+    left: min(
+      calc((100% + var(--sfk-mobile-time-width)) / 2 - (var(--sfk-mobile-heart-stage-width) / 2) + 44px),
+      calc(100% - var(--sfk-mobile-heart-stage-width) - 30px)
+    ) !important;
+  }
+
+  /* Literal geometric center for the number over the merged heart. */
+  .sfkMobileHeaderHeart .sfkHeartCount {
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) scale(.55) !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merged .sfkHeartCount {
+    transform: translate(-50%, -50%) scale(1) !important;
+  }
+
+  /* QUOTE state gets its own larger heart size; do not inherit the merged-Time look. */
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkBigHeartGlyph {
+    width: 64px !important;
+    height: 64px !important;
+    font-size: 3.52rem !important;
+    animation: sfkQuoteHeartBeatV304 2.15s cubic-bezier(.4,0,.2,1) infinite !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .topbar.mobile-header-rotator:not(.mobile-show-quote) .sfkMobileHeaderHeart {
+    left: min(
+      calc((100% + var(--sfk-mobile-time-width)) / 2 - (var(--sfk-mobile-heart-stage-width) / 2) + 38px),
+      calc(100% - var(--sfk-mobile-heart-stage-width) - 23px)
+    ) !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkBigHeartGlyph {
+    width: 62px !important;
+    height: 62px !important;
+    font-size: 3.42rem !important;
+  }
+}
+
+
+/* =========================================================
+   v306 MOBILE ONLY — HEART COUNT VISUAL CENTER + BETTER FONT
+========================================================= */
+@media (max-width: 700px) {
+  .sfkMobileHeaderHeart .sfkHeartCount {
+    left: 53% !important;
+    top: 50% !important;
+    font-family: "Arial Rounded MT Bold", "Trebuchet MS", "Segoe UI", sans-serif !important;
+    font-size: .78rem !important;
+    font-weight: 900 !important;
+    letter-spacing: -.03em !important;
+    transform: translate(-50%, -50%) scale(.55) !important;
+    text-shadow: 0 1px 1px rgba(255,255,255,.38) !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merged .sfkHeartCount {
+    transform: translate(-50%, -50%) scale(1) !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .sfkMobileHeaderHeart .sfkHeartCount {
+    left: 53.5% !important;
+    font-size: .76rem !important;
+  }
+}
+
+
+/* =========================================================
+   v307 MOBILE ONLY — HEART 43 FURTHER RIGHT, LARGER, HEART GLOW
+========================================================= */
+@media (max-width: 700px) {
+  .sfkMobileHeaderHeart .sfkHeartCount {
+    left: 55.2% !important;
+    top: 50% !important;
+    font-size: .90rem !important;
+    font-family: "Arial Rounded MT Bold", "Trebuchet MS", "Segoe UI", sans-serif !important;
+    font-weight: 900 !important;
+    letter-spacing: -.03em !important;
+    text-shadow: 0 1px 1px rgba(255,255,255,.42) !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merging .sfkBigHeartGlyph,
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merged .sfkBigHeartGlyph {
+    filter: drop-shadow(0 0 7px rgba(255, 214, 64, .34)) drop-shadow(0 0 14px rgba(255, 190, 64, .22)) !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .sfkMobileHeaderHeart .sfkHeartCount {
+    left: 55.8% !important;
+    font-size: .88rem !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merging .sfkBigHeartGlyph,
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merged .sfkBigHeartGlyph {
+    filter: drop-shadow(0 0 6px rgba(255, 214, 64, .32)) drop-shadow(0 0 12px rgba(255, 190, 64, .20)) !important;
+  }
+}
+
+
+/* =========================================================
+   v308 MOBILE ONLY — HEART COUNT FURTHER RIGHT + LARGER QUOTE HEART
+========================================================= */
+@media (max-width: 700px) {
+  .sfkMobileHeaderHeart .sfkHeartCount {
+    left: 56.2% !important;
+    font-size: .92rem !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart {
+    font-size: 2.95rem !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .sfkMobileHeaderHeart .sfkHeartCount {
+    left: 56.8% !important;
+    font-size: .90rem !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart {
+    font-size: 2.82rem !important;
+  }
+}
+
+
+/* =========================================================
+   v309 MOBILE ONLY — QUOTE STATE USE HEART-HANDS EMOJI + 43 RIGHT
+========================================================= */
+@media (max-width: 700px) {
+  .sfkMobileHeaderHeart .sfkHeartCount {
+    left: 57.2% !important;
+    font-size: .94rem !important;
+  }
+
+  /* Quote state: replace the regular heart glyph with heart-hands emoji. */
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkBigHeartGlyph {
+    opacity: 0 !important;
+    animation: none !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart::before {
+    content: "🫶" !important;
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    display: block !important;
+    font-size: 3.22rem !important;
+    line-height: 1 !important;
+    filter: drop-shadow(0 3px 7px rgba(255,211,42,.22)) !important;
+    animation: sfkQuoteHeartBeatV304 2.15s cubic-bezier(.4,0,.2,1) infinite !important;
+    pointer-events: none !important;
+    z-index: 2 !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .sfkMobileHeaderHeart .sfkHeartCount {
+    left: 57.8% !important;
+    font-size: .92rem !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart::before {
+    font-size: 3.08rem !important;
+  }
+}

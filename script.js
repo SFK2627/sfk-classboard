@@ -176,7 +176,7 @@ function initClassBoard() {
   }
   setInterval(loadMemoriesUnreadBadge, 60000);
   setInterval(rotateBirthdays, BIRTHDAY_ROTATE_MS);
-  window.addEventListener("resize", fitAnnouncementTextToCard);
+  window.addEventListener("resize", scheduleAnnouncementViewportRefit);
   setInterval(renderCleanersToday, 60000);
 
   setTimeout(() => {
@@ -2474,6 +2474,29 @@ function renderAnnouncements(items) {
 
 
 
+let announcementViewportRefitTimer = null;
+
+function scheduleAnnouncementViewportRefit() {
+  // Browser F11 / maximize / restore can fire resize before the layout has
+  // finished settling. Refit now, then again after the viewport stabilizes
+  // so the announcement keeps the same readable size instead of getting
+  // stuck at a temporary smaller measurement.
+  requestAnimationFrame(() => fitAnnouncementTextToCard());
+
+  if (announcementViewportRefitTimer) {
+    clearTimeout(announcementViewportRefitTimer);
+  }
+
+  announcementViewportRefitTimer = setTimeout(() => {
+    requestAnimationFrame(() => fitAnnouncementTextToCard());
+  }, 120);
+
+  setTimeout(() => {
+    requestAnimationFrame(() => fitAnnouncementTextToCard());
+  }, 320);
+}
+
+
 function fitAnnouncementTextToCard() {
   const card = document.querySelector(".announcement-item.rotating-announcement");
   const text = card ? card.querySelector(".announcement-main-text") : null;
@@ -2684,41 +2707,34 @@ function getAnnouncementMaximumFontSize(charCount, viewportWidth, viewportHeight
 function getAnnouncementMinimumFontSize(charCount, viewportWidth, viewportHeight, visualUnits = 1, hasRichText = false) {
   const phone = viewportWidth <= 900;
   const veryShortHeight = viewportHeight <= 720;
-  const compactDesktopWindow = viewportWidth >= 1201 && viewportHeight <= 860;
 
   if (hasRichText) {
     if (phone) return 12;
 
-    // v10: In a browser window that is not full screen, the old fitter could
-    // shrink rich/editor posts too much just to preserve every slot. Keep a
-    // readable floor instead, then let the text area scroll if the post is
-    // truly too long. This prevents overlap without making announcements tiny.
-    if (compactDesktopWindow) {
-      if (charCount <= 140 && visualUnits <= 4) return veryShortHeight ? 24 : 28;
-      if (charCount <= 260 && visualUnits <= 6) return veryShortHeight ? 21 : 24;
-      if (charCount <= 420 && visualUnits <= 9) return veryShortHeight ? 18 : 20;
-      if (charCount <= 620 && visualUnits <= 12) return veryShortHeight ? 15 : 17;
-      return veryShortHeight ? 12.5 : 14;
-    }
-
-    if (charCount > 700 || visualUnits > 14 || veryShortHeight) return 12;
-    if (charCount <= 160) return 18;
-    if (charCount <= 320) return 16;
-    return 13.5;
+    // v292: Keep the SAME readable desktop floor in normal-window and F11 modes.
+    // Previously this floor only applied when viewportHeight <= 860, so entering
+    // fullscreen removed the protection and the auto-fitter could shrink a short
+    // announcement much more than it did in the normal desktop view.
+    if (charCount <= 140 && visualUnits <= 4) return veryShortHeight ? 24 : 28;
+    if (charCount <= 260 && visualUnits <= 6) return veryShortHeight ? 21 : 24;
+    if (charCount <= 420 && visualUnits <= 9) return veryShortHeight ? 18 : 20;
+    if (charCount <= 620 && visualUnits <= 12) return veryShortHeight ? 15 : 17;
+    if (charCount > 700 || visualUnits > 14) return veryShortHeight ? 12 : 13.5;
+    return veryShortHeight ? 12.5 : 14;
   }
 
-  if (compactDesktopWindow) {
-    if (charCount <= 120) return veryShortHeight ? 26 : 30;
-    if (charCount <= 260) return veryShortHeight ? 20 : 24;
-    if (charCount <= 460) return veryShortHeight ? 15 : 18;
-    return veryShortHeight ? 12 : 14;
+  if (phone) {
+    if (charCount <= 120) return 16;
+    if (charCount <= 260) return 13;
+    if (charCount <= 460) return 11;
+    return veryShortHeight ? 10.5 : 11.5;
   }
 
-  if (charCount <= 120) return phone ? 16 : 20;
-  if (charCount <= 260) return phone ? 13 : 16;
-  if (charCount <= 460) return phone ? 11 : 13;
-
-  return veryShortHeight ? 10.5 : 11.5;
+  // Same desktop floor whether the browser is windowed, maximized, or F11.
+  if (charCount <= 120) return veryShortHeight ? 26 : 30;
+  if (charCount <= 260) return veryShortHeight ? 20 : 24;
+  if (charCount <= 460) return veryShortHeight ? 15 : 18;
+  return veryShortHeight ? 12 : 14;
 }
 
 function getAnnouncementLineHeight(charCount, visualUnits = 1, hasRichText = false) {
@@ -5082,8 +5098,8 @@ function fitDesktopQuoteText() {
 
   // Keep the quote visibly large. Shrink only when the full text truly needs it.
   // The author now sits in its own lower lane, above the SHSS meter.
-  const MAX_PX = 26;
-  const MIN_PX = 18;
+  const MAX_PX = 21;
+  const MIN_PX = 15.5;
   const BOTTOM_LANE_RESERVE = 31; // author + safe gap + 8px SHSS meter
   const LABEL_GAP = 5;
 
@@ -5130,17 +5146,114 @@ function renderQuote(item) {
 
 function renderTicker(items) {
   const ticker = document.getElementById("tickerText");
+  if (!ticker) return;
 
-  if (!items || items.length === 0) {
-    ticker.textContent = "📢 Welcome to SFK ClassBoard";
-    ticker.dataset.marquee = ticker.textContent;
+  const messages = (!items || items.length === 0)
+    ? ["Welcome to SFK ClassBoard"]
+    : items.map(item => String(item?.Message || "").trim()).filter(Boolean);
+
+  const signature = JSON.stringify(messages);
+  const existingTrack = ticker.querySelector(".ticker-marquee-track");
+
+  // Do not rebuild/restart the marquee when the ticker messages themselves
+  // have not changed. Other dashboard refreshes must not reset ticker travel.
+  if (ticker.dataset.tickerSignature === signature && existingTrack) {
+    if (!existingTrack._sfkTickerAnimation) {
+      requestAnimationFrame(() => configureTickerMarquee(ticker, existingTrack));
+    }
     return;
   }
 
-  ticker.textContent = items
-    .map(item => `📢 ${item.Message}`)
-    .join("         •         ");
-  ticker.dataset.marquee = ticker.textContent;
+  if (existingTrack?._sfkTickerAnimation) {
+    try { existingTrack._sfkTickerAnimation.cancel(); } catch (_) {}
+  }
+
+  ticker.replaceChildren();
+  ticker.dataset.tickerSignature = signature;
+
+  const track = document.createElement("span");
+  track.className = "ticker-marquee-track";
+
+  messages.forEach((message, index) => {
+    if (index > 0) {
+      const separator = document.createElement("span");
+      separator.className = "ticker-message-separator";
+      separator.textContent = "•";
+      separator.setAttribute("aria-hidden", "true");
+      track.appendChild(separator);
+    }
+
+    const messageSpan = document.createElement("span");
+    messageSpan.className = "ticker-message-item";
+    messageSpan.textContent = `📢 ${message}`;
+    track.appendChild(messageSpan);
+  });
+
+  ticker.appendChild(track);
+  ticker.dataset.marquee = messages.map(message => `📢 ${message}`).join(" • ");
+
+  requestAnimationFrame(() => configureTickerMarquee(ticker, track));
+}
+
+function configureTickerMarquee(ticker, track) {
+  if (!ticker || !track || !track.isConnected) return;
+
+  if (track._sfkTickerAnimation) {
+    try { track._sfkTickerAnimation.cancel(); } catch (_) {}
+    track._sfkTickerAnimation = null;
+  }
+
+  track.style.animation = "none";
+  track.style.transform = "translate3d(0,0,0)";
+  track.style.paddingLeft = "0";
+
+  // Measure after layout settles. The animation starts fully to the right of
+  // the visible ticker lane and ends only after the LAST message has completely
+  // passed the left edge. Extra exit padding makes the completion obvious.
+  const viewportWidth = Math.max(1, ticker.getBoundingClientRect().width);
+  const trackWidth = Math.max(1, track.scrollWidth, track.getBoundingClientRect().width);
+  const edgePadding = 28;
+  const startX = viewportWidth + edgePadding;
+  const endX = -(trackWidth + edgePadding);
+  const totalDistance = startX - endX;
+  const pixelsPerSecond = 58;
+  const durationMs = Math.max(22000, (totalDistance / pixelsPerSecond) * 1000);
+
+  track.style.setProperty("--ticker-start-x", `${startX}px`);
+  track.style.setProperty("--ticker-end-x", `${endX}px`);
+  track.style.setProperty("--ticker-duration", `${(durationMs / 1000).toFixed(2)}s`);
+
+  if (typeof track.animate === "function") {
+    const animation = track.animate(
+      [
+        { transform: `translate3d(${startX}px, 0, 0)` },
+        { transform: `translate3d(${endX}px, 0, 0)` }
+      ],
+      {
+        duration: durationMs,
+        easing: "linear",
+        iterations: Infinity
+      }
+    );
+    track._sfkTickerAnimation = animation;
+    return;
+  }
+
+  // Fallback for older browsers.
+  track.style.animation = `sfkTickerTrackV287 ${durationMs}ms linear infinite`;
+}
+
+if (!window.__sfkTickerResizeBound) {
+  window.__sfkTickerResizeBound = true;
+  let tickerResizeTimer = null;
+  window.addEventListener("resize", () => {
+    clearTimeout(tickerResizeTimer);
+    tickerResizeTimer = setTimeout(() => {
+      const ticker = document.getElementById("tickerText");
+      const track = ticker?.querySelector(".ticker-marquee-track");
+      if (ticker && track) requestAnimationFrame(() => configureTickerMarquee(ticker, track));
+    }, 180);
+  }, { passive: true });
 }
 
 function updateCountdownAndBell() {
@@ -7851,3 +7964,322 @@ if (document.readyState === "loading") {
 } else {
   startSfkHeadingRotation();
 }
+
+/* =========================================================
+   v294 PHONE-ONLY HEADER ROTATOR: TIME <-> DAILY QUOTE
+   - fixed header row height; both cards share the same wide slot
+   - time shows first, then quote, with a soft cross-slide transition
+   - quote auto-fits inside the fixed card instead of increasing header height
+========================================================= */
+(function initSfkMobileHeaderRotator() {
+  const PHONE_QUERY = "(max-width: 700px)";
+  const TIME_VISIBLE_MS = 14500;
+  const QUOTE_VISIBLE_MS = 9000;
+  const mq = window.matchMedia ? window.matchMedia(PHONE_QUERY) : null;
+
+  let timer = null;
+  let showingQuote = false;
+  let resizeTimer = null;
+  let transitionFitTimer = null;
+  let heartMergeTimer = null;
+  let heartMergedTimer = null;
+  let quoteObserver = null;
+
+  function getEls() {
+    return {
+      topbar: document.querySelector(".topbar"),
+      timeBox: document.querySelector(".timeBox"),
+      quoteBox: document.querySelector(".topQuoteBox"),
+      quote: document.getElementById("dailyQuote"),
+      label: document.querySelector(".topQuoteBox .quoteLabel"),
+      author: document.getElementById("quoteAuthor")
+    };
+  }
+
+  function fitMobileHeaderQuote() {
+    if (!mq?.matches) return;
+
+    const { quoteBox, quote, label, author } = getEls();
+    if (!quoteBox || !quote) return;
+
+    const boxStyle = window.getComputedStyle(quoteBox);
+    const padTop = parseFloat(boxStyle.paddingTop) || 0;
+    const padBottom = parseFloat(boxStyle.paddingBottom) || 0;
+    const labelHeight = label ? label.getBoundingClientRect().height : 0;
+    const authorHeight = author && author.textContent.trim()
+      ? author.getBoundingClientRect().height
+      : 0;
+
+    // Reserve the label + author lanes and fit only the quote in the middle.
+    const available = Math.max(
+      16,
+      quoteBox.clientHeight - padTop - padBottom - labelHeight - authorHeight - 3
+    );
+
+    const MAX_PX = window.innerWidth <= 430 ? 10.5 : 11.5;
+    const MIN_PX = 7.5;
+    let size = MAX_PX;
+
+    quote.style.setProperty("display", "block", "important");
+    quote.style.setProperty("white-space", "normal", "important");
+    quote.style.setProperty("overflow", "visible", "important");
+    quote.style.setProperty("height", "auto", "important");
+    quote.style.setProperty("max-height", "none", "important");
+    quote.style.setProperty("line-height", ".98", "important");
+    quote.style.setProperty("transform", "none", "important");
+    quote.style.setProperty("font-size", `${size}px`, "important");
+
+    while (size > MIN_PX && quote.scrollHeight > available + 0.5) {
+      size -= 0.25;
+      quote.style.setProperty("font-size", `${size}px`, "important");
+    }
+  }
+
+  function clearHeartSequenceTimers() {
+    clearTimeout(heartMergeTimer);
+    clearTimeout(heartMergedTimer);
+    heartMergeTimer = null;
+    heartMergedTimer = null;
+  }
+
+  function setHeartSequenceForPhase(topbar) {
+    if (!topbar) return;
+
+    clearHeartSequenceTimers();
+    topbar.classList.remove(
+      "mobile-heart-cluster",
+      "mobile-heart-merging",
+      "mobile-heart-merged"
+    );
+
+    // During Time mode, give the 43-heart formation enough time to be seen.
+    if (!showingQuote) {
+      topbar.classList.add("mobile-heart-cluster");
+
+      // 43 small hearts stay visible first, then converge into one heart.
+      heartMergeTimer = window.setTimeout(() => {
+        if (!mq?.matches || showingQuote) return;
+        topbar.classList.remove("mobile-heart-cluster");
+        topbar.classList.add("mobile-heart-merging");
+      }, 7000);
+
+      // Finish the merge and reveal 43 in the center of the big heart.
+      heartMergedTimer = window.setTimeout(() => {
+        if (!mq?.matches || showingQuote) return;
+        topbar.classList.remove("mobile-heart-merging");
+        topbar.classList.add("mobile-heart-merged");
+      }, 8900);
+    }
+  }
+
+  function applyPhase() {
+    const { topbar, timeBox, quoteBox } = getEls();
+    if (!topbar || !timeBox || !quoteBox) return;
+
+    topbar.classList.add("mobile-header-rotator");
+    topbar.classList.toggle("mobile-show-quote", showingQuote);
+    topbar.classList.toggle("mobile-show-time", !showingQuote);
+
+    timeBox.setAttribute("aria-hidden", showingQuote ? "true" : "false");
+    quoteBox.setAttribute("aria-hidden", showingQuote ? "false" : "true");
+
+    clearTimeout(transitionFitTimer);
+    if (showingQuote) {
+      // First pass keeps the text stable as the card starts opening.
+      requestAnimationFrame(() => requestAnimationFrame(fitMobileHeaderQuote));
+      // Final pass runs after the width expansion has finished, so the quote
+      // uses the entire wide card instead of staying fitted to the compact width.
+      transitionFitTimer = window.setTimeout(fitMobileHeaderQuote, 540);
+    }
+
+    setHeartSequenceForPhase(topbar);
+  }
+
+  function scheduleNext() {
+    clearTimeout(timer);
+    if (!mq?.matches) return;
+
+    timer = window.setTimeout(() => {
+      showingQuote = !showingQuote;
+      applyPhase();
+      scheduleNext();
+    }, showingQuote ? QUOTE_VISIBLE_MS : TIME_VISIBLE_MS);
+  }
+
+  function stopPhoneMode() {
+    clearTimeout(timer);
+    clearTimeout(transitionFitTimer);
+    clearHeartSequenceTimers();
+    timer = null;
+    transitionFitTimer = null;
+    showingQuote = false;
+
+    const { topbar, timeBox, quoteBox, quote } = getEls();
+    topbar?.classList.remove(
+      "mobile-header-rotator",
+      "mobile-show-time",
+      "mobile-show-quote",
+      "mobile-heart-cluster",
+      "mobile-heart-merging",
+      "mobile-heart-merged"
+    );
+    timeBox?.removeAttribute("aria-hidden");
+    quoteBox?.removeAttribute("aria-hidden");
+
+    // Do not leave mobile inline fitting behind when returning to desktop.
+    if (quote) {
+      quote.style.removeProperty("font-size");
+      quote.style.removeProperty("line-height");
+      quote.style.removeProperty("display");
+      quote.style.removeProperty("white-space");
+      quote.style.removeProperty("overflow");
+      quote.style.removeProperty("height");
+      quote.style.removeProperty("max-height");
+      quote.style.removeProperty("transform");
+    }
+
+    if (typeof fitDesktopQuoteText === "function") {
+      requestAnimationFrame(fitDesktopQuoteText);
+    }
+  }
+
+  function startPhoneMode() {
+    if (!mq?.matches) {
+      stopPhoneMode();
+      return;
+    }
+
+    showingQuote = false;
+    applyPhase();
+    requestAnimationFrame(fitMobileHeaderQuote);
+    scheduleNext();
+  }
+
+  function setupObserver() {
+    const { quote, author } = getEls();
+    if (!quote || quoteObserver) return;
+
+    quoteObserver = new MutationObserver(() => {
+      if (mq?.matches) requestAnimationFrame(fitMobileHeaderQuote);
+    });
+
+    quoteObserver.observe(quote, { childList: true, characterData: true, subtree: true });
+    if (author) {
+      quoteObserver.observe(author, { childList: true, characterData: true, subtree: true });
+    }
+  }
+
+  function boot() {
+    setupObserver();
+    startPhoneMode();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot, { once: true });
+  } else {
+    boot();
+  }
+
+  if (mq) {
+    if (typeof mq.addEventListener === "function") {
+      mq.addEventListener("change", startPhoneMode);
+    } else if (typeof mq.addListener === "function") {
+      mq.addListener(startPhoneMode);
+    }
+  }
+
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = window.setTimeout(() => {
+      if (mq?.matches) {
+        fitMobileHeaderQuote();
+      }
+    }, 120);
+  });
+})();
+
+
+/* =========================================================
+   v304 PHONE-ONLY 43 HEARTS -> ONE HEART -> QUOTE HEART
+   - exact 43 mini hearts form a heart-shaped cluster in Time mode
+   - cluster smoothly converges into one large heart with "43" inside
+   - Quote mode keeps the single heart and moves it to the title lane
+========================================================= */
+(function ensureSfkMobileHeaderHeart() {
+  const HEART_POSITIONS = [
+    [2,0],[3,0],[6,0],[7,0],
+    [1,1],[2,1],[3,1],[4,1],[5,1],[6,1],[7,1],[8,1],
+    [0,2],[1,2],[2,2],[3,2],[4,2],[5,2],[6,2],[7,2],[8,2],
+    [0,3],[1,3],[2,3],[3,3],[4,3],[5,3],[6,3],[7,3],[8,3],
+    [1,4],[2,4],[3,4],[4,4],[5,4],[6,4],[7,4],
+    [2,5],[3,5],[4,5],[5,5],[6,5],
+    [4,6]
+  ];
+
+  function buildHeartContents(heart) {
+    heart.replaceChildren();
+
+    const cluster = document.createElement('span');
+    cluster.className = 'sfkMiniHeartCluster';
+    cluster.setAttribute('aria-hidden', 'true');
+
+    const CELL = 8;
+    const BASE_LEFT = 7;
+    const BASE_TOP = 2;
+    const CENTER_X = 43;
+    const CENTER_Y = 30;
+
+    HEART_POSITIONS.forEach(([col, row], index) => {
+      const mini = document.createElement('i');
+      mini.className = 'sfkMiniHeart';
+      mini.textContent = '♥';
+
+      const left = BASE_LEFT + (col * CELL);
+      const top = BASE_TOP + (row * CELL);
+      const tx = CENTER_X - (left + 4);
+      const ty = CENTER_Y - (top + 4);
+
+      mini.style.left = `${left}px`;
+      mini.style.top = `${top}px`;
+      mini.style.setProperty('--sfk-heart-merge-x', `${tx}px`);
+      mini.style.setProperty('--sfk-heart-merge-y', `${ty}px`);
+      mini.style.setProperty('--sfk-heart-delay', `${(index % 9) * 16}ms`);
+      cluster.appendChild(mini);
+    });
+
+    const bigHeart = document.createElement('span');
+    bigHeart.className = 'sfkBigHeartGlyph';
+    bigHeart.textContent = '💛';
+    bigHeart.setAttribute('aria-hidden', 'true');
+
+    const count = document.createElement('span');
+    count.className = 'sfkHeartCount';
+    count.textContent = '43';
+    count.setAttribute('aria-hidden', 'true');
+
+    heart.append(cluster, bigHeart, count);
+  }
+
+  function ensureHeart() {
+    const topbar = document.querySelector('.topbar');
+    if (!topbar) return;
+
+    let heart = topbar.querySelector('.sfkMobileHeaderHeart');
+    if (!heart) {
+      heart = document.createElement('span');
+      heart.className = 'sfkMobileHeaderHeart';
+      heart.setAttribute('aria-hidden', 'true');
+      topbar.appendChild(heart);
+    }
+
+    if (!heart.querySelector('.sfkMiniHeartCluster')) {
+      buildHeartContents(heart);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', ensureHeart, { once: true });
+  } else {
+    ensureHeart();
+  }
+})();
