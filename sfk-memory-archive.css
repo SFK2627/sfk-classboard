@@ -1,0 +1,1208 @@
+/* =========================================================
+   SFK MEMORY ARCHIVE — v332
+   Distinct visual language: editorial photo contact-sheet / darkroom archive.
+   No pills, no dashboard cards, no rounded gallery tiles.
+========================================================= */
+
+body.sfkMemoryArchiveOpen {
+  overflow: hidden !important;
+}
+
+.sfkMemoryArchiveTickerTrigger {
+  display: none;
+}
+
+/* Desktop: replace only the decorative ticker heart with a real button.
+   Its visual geometry intentionally mirrors the approved ticker heart. */
+@media (min-width: 901px) {
+  .ticker::before {
+    content: none !important;
+    display: none !important;
+  }
+
+  .ticker .sfkMemoryArchiveTickerTrigger {
+    grid-column: 1 !important;
+    align-self: stretch !important;
+    justify-self: start !important;
+    width: 66px !important;
+    min-height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    padding: 0 12px 0 0 !important;
+    border: 0 !important;
+    border-right: 2px solid rgba(246, 225, 144, .95) !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: inherit !important;
+    box-shadow: none !important;
+    font: inherit !important;
+    font-size: 2.45rem !important;
+    line-height: 1 !important;
+    transform: translateY(-2px) !important;
+    cursor: pointer !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+  }
+
+  .ticker .sfkMemoryArchiveTickerTrigger:hover,
+  .ticker .sfkMemoryArchiveTickerTrigger:active {
+    background: transparent !important;
+    transform: translateY(-2px) !important;
+  }
+
+  .ticker .sfkMemoryArchiveTickerTrigger:focus-visible {
+    outline: 2px solid rgba(246, 225, 144, .9) !important;
+    outline-offset: 3px !important;
+  }
+}
+
+/* Phone: the quote-state heart in the header is the trigger.
+   Time-state mini hearts / merged yellow heart remain non-clickable. */
+@media (max-width: 700px) {
+  .topbar.mobile-header-rotator.mobile-show-time .sfkMobileHeaderHeart {
+    pointer-events: none !important;
+    cursor: default !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    touch-action: manipulation !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart:focus-visible {
+    outline: 1px solid rgba(246, 225, 144, .85) !important;
+    outline-offset: 1px !important;
+  }
+}
+
+.sfkMemoryArchiveModal[hidden],
+.sfkMemoryViewer[hidden] {
+  display: none !important;
+}
+
+.sfkMemoryArchiveModal {
+  --archive-bg: #0b0c0e;
+  --archive-paper: #f0eadc;
+  --archive-muted: #a7a397;
+  --archive-rule: rgba(240, 234, 220, .24);
+  --archive-accent: #d5bd72;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 1000010 !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 18px !important;
+  color: var(--archive-paper) !important;
+}
+
+.sfkMemoryArchiveBackdrop {
+  position: absolute !important;
+  inset: 0 !important;
+  background:
+    radial-gradient(circle at 18% 8%, rgba(213, 189, 114, .08), transparent 30%),
+    rgba(1, 2, 3, .91) !important;
+  backdrop-filter: blur(14px) saturate(.7) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(.7) !important;
+}
+
+.sfkMemoryArchiveShell {
+  position: relative !important;
+  width: min(1320px, calc(100vw - 36px)) !important;
+  height: min(900px, calc(100dvh - 36px)) !important;
+  display: grid !important;
+  grid-template-rows: auto 1fr auto !important;
+  overflow: hidden !important;
+  background: var(--archive-bg) !important;
+  color: var(--archive-paper) !important;
+  border: 1px solid rgba(240, 234, 220, .38) !important;
+  border-radius: 0 !important;
+  box-shadow: 0 36px 120px rgba(0, 0, 0, .58) !important;
+}
+
+.sfkMemoryArchiveHeader {
+  position: relative !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 30px !important;
+  padding: 24px 30px 22px !important;
+  border-bottom: 1px solid var(--archive-rule) !important;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,.02), transparent 34%),
+    var(--archive-bg) !important;
+}
+
+.sfkMemoryArchiveEdition {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  margin-bottom: 18px !important;
+  color: var(--archive-muted) !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-size: .69rem !important;
+  font-weight: 700 !important;
+  letter-spacing: .16em !important;
+  text-transform: uppercase !important;
+}
+
+.sfkMemoryArchiveEdition::before {
+  content: "" !important;
+  width: 34px !important;
+  height: 1px !important;
+  background: var(--archive-accent) !important;
+}
+
+.sfkMemoryArchiveTitle {
+  margin: 0 !important;
+  max-width: 760px !important;
+  font-family: Georgia, "Times New Roman", serif !important;
+  font-size: clamp(3.1rem, 6.2vw, 6.8rem) !important;
+  font-weight: 400 !important;
+  line-height: .78 !important;
+  letter-spacing: -.065em !important;
+  text-transform: uppercase !important;
+}
+
+.sfkMemoryArchiveTitle em {
+  display: inline-block !important;
+  color: var(--archive-accent) !important;
+  font-weight: 400 !important;
+}
+
+.sfkMemoryArchiveDeck {
+  max-width: 690px !important;
+  margin: 15px 0 0 !important;
+  color: #c9c4b8 !important;
+  font-size: .88rem !important;
+  line-height: 1.55 !important;
+  letter-spacing: .015em !important;
+}
+
+.sfkMemoryArchiveIndexBlock {
+  align-self: end !important;
+  min-width: 168px !important;
+  padding-left: 20px !important;
+  border-left: 1px solid var(--archive-rule) !important;
+  text-align: right !important;
+}
+
+.sfkMemoryArchiveCount {
+  display: block !important;
+  color: var(--archive-paper) !important;
+  font-family: Georgia, "Times New Roman", serif !important;
+  font-size: 4.35rem !important;
+  font-weight: 400 !important;
+  line-height: .82 !important;
+  letter-spacing: -.08em !important;
+}
+
+.sfkMemoryArchiveCountLabel {
+  display: block !important;
+  margin-top: 10px !important;
+  color: var(--archive-muted) !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-size: .63rem !important;
+  line-height: 1.4 !important;
+  letter-spacing: .12em !important;
+  text-transform: uppercase !important;
+}
+
+.sfkMemoryArchiveClose {
+  position: absolute !important;
+  top: 18px !important;
+  right: 20px !important;
+  width: 38px !important;
+  height: 38px !important;
+  display: grid !important;
+  place-items: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 1px solid rgba(240,234,220,.42) !important;
+  border-radius: 0 !important;
+  background: #0b0c0e !important;
+  color: var(--archive-paper) !important;
+  font-size: 1.55rem !important;
+  font-weight: 300 !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  z-index: 6 !important;
+}
+
+.sfkMemoryArchiveClose:hover,
+.sfkMemoryArchiveClose:focus-visible {
+  background: var(--archive-paper) !important;
+  color: #0b0c0e !important;
+  outline: none !important;
+}
+
+.sfkMemoryArchiveScroll {
+  min-height: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(213,189,114,.62) transparent !important;
+  background:
+    repeating-linear-gradient(90deg, transparent 0, transparent calc(8.333% - 1px), rgba(255,255,255,.025) calc(8.333% - 1px), rgba(255,255,255,.025) 8.333%),
+    #0b0c0e !important;
+}
+
+.sfkMemoryArchiveStatus {
+  min-height: 260px !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 46px !important;
+  color: var(--archive-muted) !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-size: .72rem !important;
+  letter-spacing: .12em !important;
+  text-transform: uppercase !important;
+  text-align: center !important;
+}
+
+.sfkMemoryArchiveGrid {
+  display: grid !important;
+  grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+  grid-auto-rows: 72px !important;
+  grid-auto-flow: dense !important;
+  gap: 8px !important;
+  padding: 8px !important;
+}
+
+.sfkMemoryTile {
+  position: relative !important;
+  grid-column: span 3 !important;
+  grid-row: span 4 !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: #18191b !important;
+  color: inherit !important;
+  cursor: zoom-in !important;
+  isolation: isolate !important;
+}
+
+.sfkMemoryTile.is-featured {
+  grid-column: span 6 !important;
+  grid-row: span 6 !important;
+}
+.sfkMemoryTile.is-wide {
+  grid-column: span 6 !important;
+  grid-row: span 4 !important;
+}
+.sfkMemoryTile.is-tall {
+  grid-column: span 3 !important;
+  grid-row: span 6 !important;
+}
+
+.sfkMemoryTile::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 2 !important;
+  pointer-events: none !important;
+  background: linear-gradient(180deg, transparent 48%, rgba(0,0,0,.78) 100%) !important;
+  opacity: .68 !important;
+  transition: opacity .28s ease !important;
+}
+
+.sfkMemoryTile:hover::after {
+  opacity: .9 !important;
+}
+
+.sfkMemoryTileImage,
+.sfkMemoryTilePlaceholder {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+}
+
+.sfkMemoryTileImage {
+  object-fit: cover !important;
+  filter: saturate(.86) contrast(1.03) !important;
+  transform: scale(1.002) !important;
+  transition: transform .55s cubic-bezier(.2,.7,.2,1), filter .45s ease !important;
+}
+
+.sfkMemoryTile:hover .sfkMemoryTileImage {
+  transform: scale(1.045) !important;
+  filter: saturate(1) contrast(1.02) !important;
+}
+
+.sfkMemoryTilePlaceholder {
+  background:
+    linear-gradient(115deg, transparent 30%, rgba(255,255,255,.06) 48%, transparent 66%),
+    #17181a !important;
+  background-size: 220% 100% !important;
+  animation: sfkMemoryArchiveScan 1.7s linear infinite !important;
+}
+
+@keyframes sfkMemoryArchiveScan {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
+.sfkMemoryTileNo {
+  position: absolute !important;
+  top: 10px !important;
+  left: 11px !important;
+  z-index: 4 !important;
+  color: rgba(255,255,255,.88) !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-size: .62rem !important;
+  font-weight: 800 !important;
+  letter-spacing: .08em !important;
+  text-shadow: 0 2px 10px rgba(0,0,0,.6) !important;
+}
+
+.sfkMemoryTileMeta {
+  position: absolute !important;
+  left: 12px !important;
+  right: 12px !important;
+  bottom: 11px !important;
+  z-index: 4 !important;
+  display: grid !important;
+  grid-template-columns: minmax(0,1fr) auto !important;
+  gap: 10px !important;
+  align-items: end !important;
+  text-align: left !important;
+}
+
+.sfkMemoryTileTitle {
+  overflow: hidden !important;
+  color: #fffdf8 !important;
+  font-family: Georgia, "Times New Roman", serif !important;
+  font-size: .92rem !important;
+  font-weight: 600 !important;
+  line-height: 1.04 !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+}
+
+.sfkMemoryTileDate {
+  color: rgba(255,255,255,.72) !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-size: .55rem !important;
+  letter-spacing: .05em !important;
+  white-space: nowrap !important;
+}
+
+.sfkMemoryArchiveFooter {
+  display: grid !important;
+  grid-template-columns: 1fr auto !important;
+  gap: 20px !important;
+  align-items: center !important;
+  padding: 12px 20px !important;
+  border-top: 1px solid var(--archive-rule) !important;
+  background: #0b0c0e !important;
+  color: var(--archive-muted) !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-size: .61rem !important;
+  letter-spacing: .08em !important;
+  text-transform: uppercase !important;
+}
+
+.sfkMemoryArchiveFooter a,
+.sfkMemoryArchiveFooter a:visited {
+  color: var(--archive-paper) !important;
+  text-decoration: none !important;
+  border-bottom: 1px solid var(--archive-accent) !important;
+  padding-bottom: 2px !important;
+}
+
+/* Full-screen cinematic viewer */
+.sfkMemoryViewer {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 20 !important;
+  display: grid !important;
+  grid-template-rows: auto minmax(0,1fr) auto !important;
+  background: #050607 !important;
+  color: #f3eee2 !important;
+}
+
+.sfkMemoryViewerTop {
+  display: grid !important;
+  grid-template-columns: 1fr auto !important;
+  align-items: center !important;
+  min-height: 58px !important;
+  padding: 10px 16px !important;
+  border-bottom: 1px solid rgba(255,255,255,.15) !important;
+}
+
+.sfkMemoryViewerIndex {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-size: .68rem !important;
+  letter-spacing: .12em !important;
+  color: #c7c1b4 !important;
+}
+
+.sfkMemoryViewerClose {
+  width: 38px !important;
+  height: 38px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-left: 1px solid rgba(255,255,255,.25) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: #fff !important;
+  font-size: 1.65rem !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+}
+
+.sfkMemoryViewerStage {
+  position: relative !important;
+  min-height: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 18px 74px !important;
+  overflow: hidden !important;
+}
+
+.sfkMemoryViewerImage {
+  display: block !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain !important;
+  user-select: none !important;
+  -webkit-user-drag: none !important;
+}
+
+.sfkMemoryViewerLoading {
+  position: absolute !important;
+  inset: 0 !important;
+  display: grid !important;
+  place-items: center !important;
+  color: #999488 !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-size: .68rem !important;
+  letter-spacing: .12em !important;
+  text-transform: uppercase !important;
+}
+
+.sfkMemoryViewerNav {
+  position: absolute !important;
+  top: 50% !important;
+  width: 48px !important;
+  height: 64px !important;
+  transform: translateY(-50%) !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 0 !important;
+  border: 1px solid rgba(255,255,255,.22) !important;
+  border-radius: 0 !important;
+  background: rgba(5,6,7,.72) !important;
+  color: #fff !important;
+  font-family: Georgia, serif !important;
+  font-size: 2rem !important;
+  font-weight: 300 !important;
+  cursor: pointer !important;
+}
+
+.sfkMemoryViewerPrev { left: 14px !important; }
+.sfkMemoryViewerNext { right: 14px !important; }
+.sfkMemoryViewerNav:disabled { opacity: .22 !important; cursor: default !important; }
+
+.sfkMemoryViewerCaption {
+  display: grid !important;
+  grid-template-columns: minmax(0,1fr) auto !important;
+  gap: 24px !important;
+  align-items: start !important;
+  padding: 14px 18px 16px !important;
+  border-top: 1px solid rgba(255,255,255,.15) !important;
+}
+
+.sfkMemoryViewerCaption h3 {
+  margin: 0 0 4px !important;
+  font-family: Georgia, "Times New Roman", serif !important;
+  font-size: 1.18rem !important;
+  font-weight: 500 !important;
+}
+.sfkMemoryViewerCaption p {
+  max-width: 760px !important;
+  margin: 0 !important;
+  color: #aaa59b !important;
+  font-size: .76rem !important;
+  line-height: 1.45 !important;
+}
+.sfkMemoryViewerCaption time {
+  color: #aaa59b !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-size: .61rem !important;
+  letter-spacing: .08em !important;
+  white-space: nowrap !important;
+}
+
+/* Phone becomes a true photo-journal instead of a shrunken desktop modal. */
+@media (max-width: 700px) {
+  .sfkMemoryArchiveModal {
+    padding: 0 !important;
+  }
+
+  .sfkMemoryArchiveShell {
+    width: 100vw !important;
+    height: 100dvh !important;
+    max-width: none !important;
+    max-height: none !important;
+    border: 0 !important;
+  }
+
+  .sfkMemoryArchiveHeader {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+    padding:
+      max(18px, env(safe-area-inset-top))
+      18px
+      19px !important;
+  }
+
+  .sfkMemoryArchiveEdition {
+    margin: 0 50px 15px 0 !important;
+    font-size: .58rem !important;
+  }
+
+  .sfkMemoryArchiveTitle {
+    max-width: 94% !important;
+    font-size: clamp(2.65rem, 14.2vw, 4.25rem) !important;
+    line-height: .81 !important;
+  }
+
+  .sfkMemoryArchiveDeck {
+    max-width: 92% !important;
+    margin-top: 13px !important;
+    font-size: .76rem !important;
+    line-height: 1.47 !important;
+  }
+
+  .sfkMemoryArchiveIndexBlock {
+    min-width: 0 !important;
+    display: flex !important;
+    align-items: baseline !important;
+    gap: 10px !important;
+    padding: 10px 0 0 !important;
+    border-left: 0 !important;
+    border-top: 1px solid var(--archive-rule) !important;
+    text-align: left !important;
+  }
+
+  .sfkMemoryArchiveCount {
+    font-size: 2.55rem !important;
+  }
+
+  .sfkMemoryArchiveCountLabel {
+    margin: 0 !important;
+    font-size: .52rem !important;
+  }
+
+  .sfkMemoryArchiveClose {
+    top: max(12px, env(safe-area-inset-top)) !important;
+    right: 13px !important;
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  .sfkMemoryArchiveScroll {
+    background: #0b0c0e !important;
+  }
+
+  .sfkMemoryArchiveGrid {
+    grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+    grid-auto-rows: 92px !important;
+    gap: 5px !important;
+    padding: 5px !important;
+  }
+
+  .sfkMemoryTile,
+  .sfkMemoryTile.is-tall {
+    grid-column: span 1 !important;
+    grid-row: span 2 !important;
+  }
+
+  .sfkMemoryTile.is-featured {
+    grid-column: span 2 !important;
+    grid-row: span 3 !important;
+  }
+
+  .sfkMemoryTile.is-wide {
+    grid-column: span 2 !important;
+    grid-row: span 2 !important;
+  }
+
+  .sfkMemoryTile:nth-child(8n + 6) {
+    grid-column: span 2 !important;
+    grid-row: span 3 !important;
+  }
+
+  .sfkMemoryTileMeta {
+    left: 9px !important;
+    right: 9px !important;
+    bottom: 8px !important;
+    grid-template-columns: 1fr !important;
+    gap: 2px !important;
+  }
+
+  .sfkMemoryTileTitle {
+    font-size: .76rem !important;
+  }
+
+  .sfkMemoryTileDate {
+    font-size: .49rem !important;
+  }
+
+  .sfkMemoryTileNo {
+    top: 8px !important;
+    left: 8px !important;
+    font-size: .53rem !important;
+  }
+
+  .sfkMemoryArchiveFooter {
+    grid-template-columns: 1fr auto !important;
+    gap: 10px !important;
+    padding: 10px 12px max(10px, env(safe-area-inset-bottom)) !important;
+    font-size: .49rem !important;
+  }
+
+  .sfkMemoryViewerTop {
+    padding: max(8px, env(safe-area-inset-top)) 10px 8px !important;
+  }
+
+  .sfkMemoryViewerStage {
+    padding: 12px 10px 70px !important;
+  }
+
+  .sfkMemoryViewerNav {
+    top: auto !important;
+    bottom: 12px !important;
+    width: 48px !important;
+    height: 44px !important;
+    transform: none !important;
+    background: rgba(5,6,7,.88) !important;
+  }
+
+  .sfkMemoryViewerPrev { left: 12px !important; }
+  .sfkMemoryViewerNext { right: 12px !important; }
+
+  .sfkMemoryViewerCaption {
+    grid-template-columns: 1fr !important;
+    gap: 5px !important;
+    padding: 11px 13px max(13px, env(safe-area-inset-bottom)) !important;
+  }
+
+  .sfkMemoryViewerCaption h3 {
+    font-size: 1rem !important;
+  }
+  .sfkMemoryViewerCaption p {
+    font-size: .69rem !important;
+  }
+  .sfkMemoryViewerCaption time {
+    font-size: .54rem !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sfkMemoryTileImage,
+  .sfkMemoryTilePlaceholder {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+
+/* =========================================================
+   v333 SFK MEMORY ARCHIVE — PHOTO-FIRST REFINEMENT
+   - compact editorial header to give more room to the gallery
+   - lightbox always shows the complete portrait/landscape photo
+   - no visible loading text over the photograph
+========================================================= */
+
+/* Compact desktop opening area. */
+.sfkMemoryArchiveHeader {
+  gap: 20px !important;
+  padding: 17px 26px 16px !important;
+}
+
+.sfkMemoryArchiveEdition {
+  margin-bottom: 10px !important;
+  font-size: .62rem !important;
+}
+
+.sfkMemoryArchiveTitle {
+  max-width: 680px !important;
+  font-size: clamp(2.15rem, 4vw, 4.45rem) !important;
+  line-height: .84 !important;
+  letter-spacing: -.055em !important;
+}
+
+.sfkMemoryArchiveDeck {
+  max-width: 650px !important;
+  margin-top: 10px !important;
+  font-size: .80rem !important;
+  line-height: 1.42 !important;
+}
+
+.sfkMemoryArchiveIndexBlock {
+  min-width: 142px !important;
+  padding-left: 16px !important;
+}
+
+.sfkMemoryArchiveCount {
+  font-size: 3.15rem !important;
+}
+
+.sfkMemoryArchiveCountLabel {
+  margin-top: 7px !important;
+  font-size: .57rem !important;
+}
+
+/* Viewer: always show the complete image, whether portrait or landscape. */
+.sfkMemoryViewerStage {
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+
+.sfkMemoryViewerImage {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+  transform: none !important;
+}
+
+/* Never place loading copy on top of the photograph. */
+.sfkMemoryViewerLoading {
+  display: none !important;
+}
+
+/* Phone: photo-first compact header. */
+@media (max-width: 700px) {
+  .sfkMemoryArchiveHeader {
+    gap: 8px !important;
+    padding:
+      max(12px, env(safe-area-inset-top))
+      14px
+      11px !important;
+  }
+
+  .sfkMemoryArchiveEdition {
+    margin: 0 48px 7px 0 !important;
+    font-size: .52rem !important;
+    letter-spacing: .13em !important;
+  }
+
+  .sfkMemoryArchiveEdition::before {
+    width: 24px !important;
+  }
+
+  .sfkMemoryArchiveTitle {
+    max-width: calc(100% - 42px) !important;
+    font-size: clamp(1.82rem, 9.4vw, 2.7rem) !important;
+    line-height: .86 !important;
+    letter-spacing: -.05em !important;
+  }
+
+  .sfkMemoryArchiveDeck {
+    max-width: 96% !important;
+    margin-top: 6px !important;
+    font-size: .68rem !important;
+    line-height: 1.37 !important;
+  }
+
+  .sfkMemoryArchiveIndexBlock {
+    gap: 8px !important;
+    padding-top: 7px !important;
+  }
+
+  .sfkMemoryArchiveCount {
+    font-size: 1.9rem !important;
+  }
+
+  .sfkMemoryArchiveCountLabel {
+    font-size: .47rem !important;
+  }
+
+  .sfkMemoryArchiveClose {
+    top: max(9px, env(safe-area-inset-top)) !important;
+    right: 10px !important;
+    width: 33px !important;
+    height: 33px !important;
+  }
+
+  .sfkMemoryViewerStage {
+    padding: 8px 8px 62px !important;
+  }
+
+  .sfkMemoryViewerImage {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+    object-position: center center !important;
+  }
+}
+
+
+/* =========================================================
+   v334 SFK MEMORY VIEWER — TRUE FULL PHOTO + BLURRED FILL
+   Fullscreen means the viewer fills the screen; the PHOTO itself is never
+   cropped. Any leftover area is filled by a blurred copy of the same image.
+========================================================= */
+.sfkMemoryViewerStage {
+  isolation: isolate !important;
+  background: #050607 !important;
+}
+
+.sfkMemoryViewerStage::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 1 !important;
+  pointer-events: none !important;
+  background: rgba(2, 3, 4, .34) !important;
+}
+
+.sfkMemoryViewerBackdrop {
+  position: absolute !important;
+  inset: -38px !important;
+  z-index: 0 !important;
+  width: calc(100% + 76px) !important;
+  height: calc(100% + 76px) !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: cover !important;
+  object-position: center center !important;
+  filter: blur(28px) saturate(.90) brightness(.58) !important;
+  transform: scale(1.06) !important;
+  opacity: .88 !important;
+  pointer-events: none !important;
+  user-select: none !important;
+}
+
+.sfkMemoryViewerImage {
+  position: relative !important;
+  z-index: 2 !important;
+  display: block !important;
+  width: auto !important;
+  height: auto !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+  transform: none !important;
+  box-shadow: 0 18px 48px rgba(0,0,0,.34) !important;
+}
+
+.sfkMemoryViewerNav {
+  z-index: 4 !important;
+}
+
+@media (max-width: 700px) {
+  .sfkMemoryViewerStage {
+    padding: 8px 52px 12px !important;
+  }
+
+  .sfkMemoryViewerBackdrop {
+    inset: -30px !important;
+    width: calc(100% + 60px) !important;
+    height: calc(100% + 60px) !important;
+    filter: blur(24px) saturate(.92) brightness(.56) !important;
+  }
+
+  .sfkMemoryViewerImage {
+    width: auto !important;
+    height: auto !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+  }
+
+  .sfkMemoryViewerPrev { left: 5px !important; }
+  .sfkMemoryViewerNext { right: 5px !important; }
+}
+
+
+/* =========================================================
+   v335 SFK MEMORY VIEWER — GUARANTEED FULL PHOTO FIT
+   The foreground image element fills an explicit safe viewer box; the image
+   pixels inside it always use object-fit: contain. No aspect ratio can escape
+   or be cropped by width-driven intrinsic sizing.
+========================================================= */
+.sfkMemoryViewerStage {
+  position: relative !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+
+/* Blurred copy fills whatever space the contained photo cannot occupy. */
+.sfkMemoryViewerBackdrop {
+  position: absolute !important;
+  inset: -42px !important;
+  width: calc(100% + 84px) !important;
+  height: calc(100% + 84px) !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: cover !important;
+  object-position: center center !important;
+  filter: blur(32px) saturate(.92) brightness(.52) !important;
+  transform: scale(1.08) !important;
+  opacity: .95 !important;
+  z-index: 0 !important;
+}
+
+/* IMPORTANT: the IMG BOX itself has a definite width AND height. */
+.sfkMemoryViewerImage {
+  position: absolute !important;
+  left: 76px !important;
+  right: 76px !important;
+  top: 14px !important;
+  bottom: 14px !important;
+  width: calc(100% - 152px) !important;
+  height: calc(100% - 28px) !important;
+  max-width: none !important;
+  max-height: none !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+  display: block !important;
+  z-index: 2 !important;
+  transform: none !important;
+  box-shadow: none !important;
+  user-select: none !important;
+  -webkit-user-drag: none !important;
+}
+
+.sfkMemoryViewerStage::after {
+  z-index: 1 !important;
+  background: rgba(2,3,4,.25) !important;
+}
+
+.sfkMemoryViewerNav {
+  z-index: 5 !important;
+}
+
+@media (max-width: 700px) {
+  .sfkMemoryViewerImage {
+    left: 46px !important;
+    right: 46px !important;
+    top: 8px !important;
+    bottom: 8px !important;
+    width: calc(100% - 92px) !important;
+    height: calc(100% - 16px) !important;
+  }
+
+  .sfkMemoryViewerBackdrop {
+    inset: -34px !important;
+    width: calc(100% + 68px) !important;
+    height: calc(100% + 68px) !important;
+    filter: blur(28px) saturate(.92) brightness(.50) !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .sfkMemoryViewerImage {
+    left: 38px !important;
+    right: 38px !important;
+    width: calc(100% - 76px) !important;
+  }
+}
+
+
+/* =========================================================
+   v336 MEMORY VIEWER — TRUE ZOOM + PAN
+   Desktop: +/- buttons, keyboard +/- , mouse-wheel zoom, mouse drag pan.
+   Phone: native-feeling pinch zoom + one-finger pan while zoomed.
+========================================================= */
+.sfkMemoryViewerTop {
+  grid-template-columns: minmax(0,1fr) auto !important;
+}
+
+.sfkMemoryViewerTopActions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.sfkMemoryViewerZoomControls {
+  display: grid !important;
+  grid-template-columns: 36px 54px 36px !important;
+  align-items: center !important;
+  height: 36px !important;
+  border: 1px solid rgba(255,255,255,.24) !important;
+  border-radius: 0 !important;
+  background: rgba(4,5,6,.58) !important;
+}
+
+.sfkMemoryViewerZoomButton {
+  width: 36px !important;
+  height: 34px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: #f3eee2 !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-size: 1.22rem !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+}
+
+.sfkMemoryViewerZoomButton:first-child {
+  border-right: 1px solid rgba(255,255,255,.18) !important;
+}
+
+.sfkMemoryViewerZoomButton:last-child {
+  border-left: 1px solid rgba(255,255,255,.18) !important;
+}
+
+.sfkMemoryViewerZoomButton:hover:not(:disabled),
+.sfkMemoryViewerZoomButton:focus-visible:not(:disabled) {
+  background: #f3eee2 !important;
+  color: #08090a !important;
+  outline: none !important;
+}
+
+.sfkMemoryViewerZoomButton:disabled {
+  opacity: .30 !important;
+  cursor: default !important;
+}
+
+.sfkMemoryViewerZoomValue {
+  display: block !important;
+  text-align: center !important;
+  color: #c7c1b4 !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  font-size: .56rem !important;
+  font-weight: 700 !important;
+  letter-spacing: .04em !important;
+  user-select: none !important;
+}
+
+/* Explicit safe viewport. The photo is fitted into this box at 100%. */
+.sfkMemoryViewerZoomViewport {
+  position: absolute !important;
+  left: 76px !important;
+  right: 76px !important;
+  top: 14px !important;
+  bottom: 14px !important;
+  z-index: 3 !important;
+  display: grid !important;
+  place-items: center !important;
+  overflow: hidden !important;
+  touch-action: none !important;
+  cursor: zoom-in !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+.sfkMemoryViewerPanLayer {
+  position: relative !important;
+  width: 1px;
+  height: 1px;
+  display: block !important;
+  transform: translate3d(0,0,0);
+  will-change: transform !important;
+}
+
+/* Neutralize old v335 absolute image-box rules: JS now computes exact contain size. */
+.sfkMemoryViewerImage {
+  position: absolute !important;
+  inset: 0 !important;
+  left: 0 !important;
+  right: auto !important;
+  top: 0 !important;
+  bottom: auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+  transform: scale(1);
+  transform-origin: center center !important;
+  will-change: transform !important;
+  pointer-events: none !important;
+}
+
+.sfkMemoryViewer.is-zoomed .sfkMemoryViewerZoomViewport {
+  cursor: grab !important;
+}
+
+.sfkMemoryViewer.is-dragging .sfkMemoryViewerZoomViewport {
+  cursor: grabbing !important;
+}
+
+/* Prev/next stay above the zoom surface. */
+.sfkMemoryViewerNav {
+  z-index: 8 !important;
+}
+
+@media (max-width: 700px) {
+  /* Phone uses gestures; keep chrome minimal. */
+  .sfkMemoryViewerZoomControls {
+    display: none !important;
+  }
+
+  .sfkMemoryViewerTopActions {
+    gap: 0 !important;
+  }
+
+  .sfkMemoryViewerZoomViewport {
+    left: 46px !important;
+    right: 46px !important;
+    top: 8px !important;
+    bottom: 8px !important;
+    cursor: default !important;
+  }
+
+  .sfkMemoryViewer.is-zoomed .sfkMemoryViewerZoomViewport,
+  .sfkMemoryViewer.is-dragging .sfkMemoryViewerZoomViewport {
+    cursor: default !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .sfkMemoryViewerZoomViewport {
+    left: 38px !important;
+    right: 38px !important;
+  }
+}
+
+
+/* =========================================================
+   v337 MEMORY ARCHIVE — REMOVE PHANTOM GAP + UNBLOCK TRUE ZOOM
+========================================================= */
+
+/* The loader/status must occupy ZERO space once hidden. */
+.sfkMemoryArchiveStatus[hidden] {
+  display: none !important;
+  min-height: 0 !important;
+  height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Gallery begins immediately below the archive header once photos are ready. */
+.sfkMemoryArchiveGrid {
+  align-content: start !important;
+  margin-top: 0 !important;
+}
+
+/* Initial image remains at fit scale; JS applies an inline !important scale when zooming. */
+.sfkMemoryViewerImage {
+  transform-origin: center center !important;
+}

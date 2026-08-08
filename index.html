@@ -3,6 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script id="sfkIntroEarlySessionGuard">
+    (function () {
+      try {
+        if (sessionStorage.getItem("sfkClassBoardIntroSeenThisSession") === "YES") {
+          document.documentElement.classList.add("sfk-intro-skip-session");
+        }
+      } catch (error) {}
+    })();
+  </script>
+  <style id="sfkIntroEarlySessionGuardStyle">
+    html.sfk-intro-skip-session #sfkIntroOverlay {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+  </style>
   <meta name="theme-color" content="#f7c600" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -10,10 +27,11 @@
 
   <title>SFK ClassBoard</title>
 
-  <link rel="manifest" href="manifest.webmanifest?v=page-lock-v328" />
+  <link rel="manifest" href="manifest.webmanifest?v=page-lock-v331" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
-  <link rel="stylesheet" href="style.css?v=page-lock-v329" />
+  <link rel="stylesheet" href="style.css?v=page-lock-v331" />
+  <link rel="stylesheet" href="sfk-memory-archive.css?v=v337" />
   <link rel="stylesheet" href="class-chat.css?v=gc-everyone-inline-v29" />
   <link rel="stylesheet" href="time-capsule.css?v=gc-timecapsule-buttons-v16" />
 
@@ -1310,6 +1328,7 @@
     </section>
 
     <footer class="ticker">
+      <button id="sfkMemoryArchiveTickerTrigger" class="sfkMemoryArchiveTickerTrigger" type="button" aria-label="Open SFK Memory Archive" title="Open SFK Memory Archive">🫶</button>
       <div id="tickerText">Loading announcements...</div>
       <a class="tickerBeKindLink" href="https://sfk2627.github.io/sfk-kindtrack/" target="_blank" rel="noopener noreferrer" aria-label="Open SFK KindTrack">#BeKind</a>
     </footer>
@@ -2065,9 +2084,26 @@
       const intro = document.getElementById("sfkIntroOverlay");
       if (!intro) return;
 
-      // Always show the loading screen on every real app load, refresh, F5, or PWA reopen.
-      // Do not remove it just because this browser tab already saw it once.
-      try { sessionStorage.removeItem(SFK_INTRO_SESSION_KEY); } catch (error) {}
+      // Show the loading screen only ONCE per browsing session/tab.
+      // Refresh/F5 and returning from another SFK section must skip it.
+      let introAlreadySeen = false;
+      try {
+        introAlreadySeen = sessionStorage.getItem(SFK_INTRO_SESSION_KEY) === "YES";
+      } catch (error) {}
+
+      if (introAlreadySeen) {
+        document.documentElement.classList.remove("sfk-intro-active");
+        document.body.classList.remove("sfk-intro-active");
+        intro.classList.add("is-hidden");
+        intro.hidden = true;
+        intro.style.display = "none";
+        if (intro.parentNode) intro.remove();
+        return;
+      }
+
+      // Mark it immediately so any reload/navigation in this same tab skips the intro.
+      try { sessionStorage.setItem(SFK_INTRO_SESSION_KEY, "YES"); } catch (error) {}
+      document.documentElement.classList.remove("sfk-intro-skip-session");
       document.documentElement.classList.add("sfk-intro-active");
       document.body.classList.add("sfk-intro-active");
       try { sessionStorage.removeItem(SFK_INTRO_SOUND_PLAYED_KEY); } catch (error) {}
@@ -2384,6 +2420,8 @@
       const intro = document.getElementById("sfkIntroOverlay");
       if (!intro) return;
 
+      try { sessionStorage.setItem(SFK_INTRO_SESSION_KEY, "YES"); } catch (error) {}
+
       window.clearTimeout(window.sfkIntroSkipTimer);
       sfkIntroAutoplayRetryTimers.forEach((timer) => window.clearTimeout(timer));
       sfkIntroAutoplayRetryTimers = [];
@@ -2531,8 +2569,76 @@
     </article>
   </div>
 
+  <!-- =====================================================
+       v332 SFK MEMORY ARCHIVE
+       Published images are loaded dynamically from the existing Memories data.
+       ===================================================== -->
+  <div id="sfkMemoryArchiveModal" class="sfkMemoryArchiveModal" hidden aria-hidden="true">
+    <div class="sfkMemoryArchiveBackdrop" data-sfk-memory-archive-close="true"></div>
+
+    <section class="sfkMemoryArchiveShell" role="dialog" aria-modal="true" aria-labelledby="sfkMemoryArchiveTitle">
+      <button id="sfkMemoryArchiveClose" class="sfkMemoryArchiveClose" type="button" aria-label="Close SFK Memory Archive">×</button>
+
+      <header class="sfkMemoryArchiveHeader">
+        <div>
+          <div class="sfkMemoryArchiveEdition">SFK 26—27 · VISUAL JOURNAL</div>
+          <h2 class="sfkMemoryArchiveTitle" id="sfkMemoryArchiveTitle">The days<br><em>we keep.</em></h2>
+          <p class="sfkMemoryArchiveDeck">A living contact sheet of St. Faustina Kowalska memories — the photographs already shared in our class Memories space, gathered into one visual archive.</p>
+        </div>
+        <aside class="sfkMemoryArchiveIndexBlock" aria-label="Archive photo count">
+          <strong class="sfkMemoryArchiveCount" id="sfkMemoryArchiveCount">00</strong>
+          <span class="sfkMemoryArchiveCountLabel">published<br>photographs</span>
+        </aside>
+      </header>
+
+      <div class="sfkMemoryArchiveScroll" id="sfkMemoryArchiveScroll">
+        <div class="sfkMemoryArchiveStatus" id="sfkMemoryArchiveStatus">Loading the archive…</div>
+        <div class="sfkMemoryArchiveGrid" id="sfkMemoryArchiveGrid" aria-live="polite"></div>
+      </div>
+
+      <footer class="sfkMemoryArchiveFooter">
+        <span>SFK MEMORY ARCHIVE · SY 2026–2027</span>
+        <a href="memories.html">Open Memories Page ↗</a>
+      </footer>
+
+      <div id="sfkMemoryViewer" class="sfkMemoryViewer" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-label="Memory photo viewer">
+        <div class="sfkMemoryViewerTop">
+          <span class="sfkMemoryViewerIndex" id="sfkMemoryViewerIndex">01 / 01</span>
+          <div class="sfkMemoryViewerTopActions">
+            <div class="sfkMemoryViewerZoomControls" aria-label="Photo zoom controls">
+              <button id="sfkMemoryViewerZoomOut" class="sfkMemoryViewerZoomButton" type="button" aria-label="Zoom out">−</button>
+              <span id="sfkMemoryViewerZoomValue" class="sfkMemoryViewerZoomValue" aria-live="polite">100%</span>
+              <button id="sfkMemoryViewerZoomIn" class="sfkMemoryViewerZoomButton" type="button" aria-label="Zoom in">+</button>
+            </div>
+            <button class="sfkMemoryViewerClose" id="sfkMemoryViewerClose" type="button" aria-label="Close photo viewer">×</button>
+          </div>
+        </div>
+
+        <div class="sfkMemoryViewerStage">
+          <button class="sfkMemoryViewerNav sfkMemoryViewerPrev" id="sfkMemoryViewerPrev" type="button" aria-label="Previous photo">‹</button>
+          <img class="sfkMemoryViewerBackdrop" id="sfkMemoryViewerBackdrop" alt="" aria-hidden="true" decoding="async" />
+          <div class="sfkMemoryViewerZoomViewport" id="sfkMemoryViewerZoomViewport" aria-label="Photo viewer">
+            <div class="sfkMemoryViewerPanLayer" id="sfkMemoryViewerPanLayer">
+              <img class="sfkMemoryViewerImage" id="sfkMemoryViewerImage" alt="" decoding="async" />
+            </div>
+          </div>
+          <button class="sfkMemoryViewerNav sfkMemoryViewerNext" id="sfkMemoryViewerNext" type="button" aria-label="Next photo">›</button>
+        </div>
+
+        <div class="sfkMemoryViewerCaption">
+          <div>
+            <h3 id="sfkMemoryViewerTitle">SFK Memory</h3>
+            <p id="sfkMemoryViewerCaptionText"></p>
+          </div>
+          <time id="sfkMemoryViewerDate">SFK 2026–2027</time>
+        </div>
+      </div>
+    </section>
+  </div>
+
   <script src="firebase-adapter.js?v=page-lock-v119"></script>
   <script src="script.js?v=faustina-exhibit-v330"></script>
+  <script src="sfk-memory-archive.js?v=v337"></script>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.16/dist/hls.min.js"></script>
   <script src="https://cdn.dashjs.org/v5.2.0/legacy/umd/dash.all.min.js"></script>
   <script src="time-capsule.js?v=gc-timecapsule-buttons-v16"></script>
