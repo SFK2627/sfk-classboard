@@ -22869,3 +22869,45 @@ body.classBoardPageLocked .app > :not(#sfkPageLockScreen) {
     max-width: 100% !important;
   }
 }
+
+
+/* =========================================================
+   v320 MOBILE — HEART LANE FINE TUNE FROM LIVE SCREENSHOTS
+   - quote heart-hands higher to avoid subtitle overlap
+   - mini hearts slightly right + down
+   - yellow heart slightly right + down to align with time card
+   - 43 slightly right inside the yellow heart
+========================================================= */
+@media (max-width: 700px) {
+  /* Mini hearts: less left, slightly lower, visually aligned with time card height */
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-cluster .sfkMiniHeartCluster {
+    left: -2px !important;
+    top: 1px !important;
+    width: 80px !important;
+    height: 58px !important;
+  }
+
+  /* Yellow heart: a little right and lower */
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merging .sfkBigHeartGlyph,
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merged .sfkBigHeartGlyph {
+    left: calc(50% - 3px) !important;
+    top: calc(50% - 1px) !important;
+  }
+
+  /* 43: nudge right a bit for better centering inside yellow heart */
+  .sfkMobileHeaderHeart .sfkHeartCount {
+    left: calc(50% - 7px) !important;
+    top: calc(50% - 2px) !important;
+  }
+
+  /* Quote heart-hands stage: raised up so it clears the subtitle */
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart {
+    top: var(--sfk-measured-quote-heart-top, -8px) !important;
+  }
+
+  /* Slightly raise the icon inside its quote stage as well */
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart::before {
+    left: 50% !important;
+    top: 44% !important;
+  }
+}

@@ -8125,14 +8125,14 @@ if (document.readyState === "loading") {
         if (!mq?.matches || showingQuote) return;
         topbar.classList.remove("mobile-heart-cluster");
         topbar.classList.add("mobile-heart-merging");
-      }, 2600);
+      }, 4600);
 
       // Finish the merge and reveal 43 in the center of the big heart.
       heartMergedTimer = window.setTimeout(() => {
         if (!mq?.matches || showingQuote) return;
         topbar.classList.remove("mobile-heart-merging");
         topbar.classList.add("mobile-heart-merged");
-      }, 3600);
+      }, 5600);
     }
   }
 
@@ -8388,8 +8388,8 @@ if (document.readyState === "loading") {
     timeLeft = Math.min(bar.width - stageWidth - 12, timeLeft);
 
     /* Align vertically to the actual Time card, then nudge UP. */
-    let timeTop = (time.top - bar.top) + ((time.height - 56) / 2) - 7;
-    timeTop = Math.max(34, timeTop);
+    let timeTop = (time.top - bar.top) + ((time.height - 56) / 2) + 1;
+    timeTop = Math.max(38, timeTop);
 
     /* Quote heart moves farther left as the available header gets wider. */
     const quoteStageWidth = 60;
@@ -8398,7 +8398,7 @@ if (document.readyState === "loading") {
       timeRight + 4,
       bar.width - quoteStageWidth - quoteRightGap
     );
-    const quoteTop = 0;
+    const quoteTop = -8;
 
     const signature = [bar.width, timeRight, time.height, timeLeft, timeTop, quoteLeft].map(v => Math.round(v)).join('|');
     if (signature === lastSignature) return;
