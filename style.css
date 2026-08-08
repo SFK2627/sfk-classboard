@@ -22601,3 +22601,45 @@ body.classBoardPageLocked .app > :not(#sfkPageLockScreen) {
     transform: translate3d(0, -8px, 0) !important;
   }
 }
+
+
+/* =========================================================
+   v315 MOBILE ONLY — XIAOMI-LIKE FINAL FINE TUNE
+   - mini hearts: more left + higher
+   - big heart + 43: higher
+   - 43: more left-centered
+   - quote heart-hands: more left from right edge
+========================================================= */
+@media (min-width: 381px) and (max-width: 430px) {
+  /* Whole Time heart lane a touch more left and higher */
+  .topbar.mobile-header-rotator:not(.mobile-show-quote) .sfkMobileHeaderHeart {
+    right: 20px !important;
+    transform: translate3d(0, 43px, 0) !important;
+  }
+
+  /* Mini-heart cluster itself: left and up inside the lane */
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-cluster .sfkMiniHeartCluster {
+    transform: translate(-4px, -6px) scale(1) !important;
+  }
+
+  /* Merge and merged yellow heart: keep slightly higher and a bit left */
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merging .sfkBigHeartGlyph,
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merged .sfkBigHeartGlyph {
+    transform: translate(calc(-50% - 3px), calc(-50% - 5px)) scale(1) !important;
+  }
+
+  /* 43: move left so it sits closer to the visual center of the heart */
+  .sfkMobileHeaderHeart .sfkHeartCount {
+    left: 53.7% !important;
+    top: 54.2% !important;
+  }
+
+  /* Quote-state heart-hands: move left so it is not too close to the right edge */
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart {
+    right: 16px !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .brandTextBlock {
+    padding-right: 61px !important;
+  }
+}
