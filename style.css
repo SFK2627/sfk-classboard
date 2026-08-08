@@ -23025,3 +23025,63 @@ body.classBoardPageLocked .app > :not(#sfkPageLockScreen) {
     top: 52% !important;
   }
 }
+
+
+/* =========================================================
+   v325 MOBILE — QUOTE STATE SUBTITLE WITHOUT SY + HEART ENLARGED
+   - Time state keeps full subtitle with SY 2026-2027
+   - Quote state shows only "Grade 8 - St. Faustina Kowalska"
+   - Quote heart-hands slightly larger, using the freed SY space
+   - Mini hearts and yellow heart+43 nudged slightly upward
+========================================================= */
+@media (max-width: 700px) {
+  /* Time-state mini hearts: slightly higher. */
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-cluster .sfkMiniHeartCluster {
+    top: -1px !important;
+  }
+
+  /* Time-state merged yellow heart: slightly higher. */
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merging .sfkBigHeartGlyph,
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merged .sfkBigHeartGlyph {
+    top: calc(50% - 3px) !important;
+  }
+
+  /* Keep 43 visually centered after the slight upward heart nudge. */
+  .topbar.mobile-header-rotator.mobile-show-time .sfkHeartCount {
+    top: calc(50% - 4px) !important;
+  }
+
+  /* Quote state subtitle: temporarily hide original full text and show no-SY version only. */
+  .topbar.mobile-header-rotator.mobile-show-quote #sectionText {
+    color: transparent !important;
+    position: relative !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote #sectionText::after {
+    content: "Grade 8 - St. Faustina Kowalska" !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    color: var(--home-brand-subtitle-color) !important;
+    font: inherit !important;
+    line-height: inherit !important;
+    letter-spacing: inherit !important;
+    white-space: nowrap !important;
+    pointer-events: none !important;
+  }
+
+  /* Quote heart-hands: slightly larger now that it can use the SY space. */
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart::before {
+    font-size: 2.86rem !important;
+    top: 52% !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart::before {
+    font-size: 2.78rem !important;
+    top: 52% !important;
+  }
+}
