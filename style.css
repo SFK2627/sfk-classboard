@@ -23116,35 +23116,19 @@ body.classBoardPageLocked .app > :not(#sfkPageLockScreen) {
 
 
 /* =========================================================
-   v327 MOBILE — MATCH TOP APP AREA TO DARK BACKGROUND
-   - make browser/PWA top area blend with the app
-   - lower quote heart-hands a bit more
+   v328 MOBILE — RESTORE PREVIOUS BACKGROUND LOOK
+   + Quote-state heart-hands lower and slightly larger
 ========================================================= */
-html, body {
-  background: #111111 !important;
-  background-color: #111111 !important;
-}
-
 @media (max-width: 700px) {
-  html, body {
-    background: #111111 !important;
-    background-color: #111111 !important;
-    overscroll-behavior-y: none;
-  }
-
-  body.homeRoute,
-  body.homeRoute #homePage,
-  body.homeRoute .page.homePage {
-    background-color: #111111 !important;
-  }
-
   .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart::before {
-    top: 62% !important;
+    font-size: 2.92rem !important;
+    top: 66% !important;
   }
 }
 
 @media (max-width: 430px) {
   .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart::before {
-    top: 62% !important;
+    font-size: 2.84rem !important;
+    top: 66% !important;
   }
 }
