@@ -22428,3 +22428,140 @@ body.classBoardPageLocked .app > :not(#sfkPageLockScreen) {
     font-size: 3.08rem !important;
   }
 }
+
+
+/* =========================================================
+   v310 MOBILE ONLY — SHOW 43 SOONER + COUNT SLIGHTLY LOWER
+========================================================= */
+@media (max-width: 700px) {
+  .sfkMobileHeaderHeart .sfkHeartCount {
+    top: 54% !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .sfkMobileHeaderHeart .sfkHeartCount {
+    top: 54.5% !important;
+  }
+}
+
+
+/* =========================================================
+   v313 MOBILE ONLY — DEDICATED HEART LANE
+   - Time card and 43-heart animation no longer share/overlap space
+   - Heart lane is reserved at the right on narrow/tall Android phones
+   - Quote heart gets separate top-right geometry
+   - fixed header height retained; desktop/F11 untouched
+========================================================= */
+@media (max-width: 700px) {
+  .topbar.mobile-header-rotator {
+    --sfk-heart-lane-width: clamp(78px, 20vw, 92px);
+    --sfk-heart-lane-gap: 8px;
+    --sfk-heart-lane-edge: 12px;
+  }
+
+  /* TIME lane: reserve a real right-side zone for the heart animation. */
+  .topbar.mobile-header-rotator .timeBox {
+    justify-self: start !important;
+    width: calc(100% - var(--sfk-heart-lane-width) - var(--sfk-heart-lane-gap)) !important;
+    min-width: 0 !important;
+    max-width: calc(100% - var(--sfk-heart-lane-width) - var(--sfk-heart-lane-gap)) !important;
+  }
+
+  /* Hidden quote begins from the Time-card footprint, then grows full width. */
+  .topbar.mobile-header-rotator:not(.mobile-show-quote) .topQuoteBox {
+    justify-self: start !important;
+    width: calc(100% - var(--sfk-heart-lane-width) - var(--sfk-heart-lane-gap)) !important;
+    max-width: calc(100% - var(--sfk-heart-lane-width) - var(--sfk-heart-lane-gap)) !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .topQuoteBox {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* TIME heart lane: anchor to the right instead of calculating from clock width. */
+  .topbar.mobile-header-rotator:not(.mobile-show-quote) .sfkMobileHeaderHeart {
+    left: auto !important;
+    right: var(--sfk-heart-lane-edge) !important;
+    width: var(--sfk-heart-lane-width) !important;
+    height: 58px !important;
+    transform: translate3d(0, 51px, 0) !important;
+  }
+
+  /* Keep all three Time-heart phases centered inside the reserved lane. */
+  .topbar.mobile-header-rotator:not(.mobile-show-quote) .sfkMiniHeartCluster,
+  .topbar.mobile-header-rotator:not(.mobile-show-quote) .sfkBigHeartGlyph {
+    transform-origin: 50% 50% !important;
+  }
+
+  /* QUOTE heart uses its own independent top-right position. */
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart {
+    left: auto !important;
+    right: 7px !important;
+    width: 62px !important;
+    height: 54px !important;
+    transform: translate3d(0, -8px, 0) !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .brandTextBlock {
+    padding-right: 60px !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .topbar.mobile-header-rotator {
+    --sfk-heart-lane-width: clamp(74px, 20.5vw, 84px);
+    --sfk-heart-lane-gap: 7px;
+    --sfk-heart-lane-edge: 10px;
+  }
+
+  .topbar.mobile-header-rotator:not(.mobile-show-quote) .sfkMobileHeaderHeart {
+    right: var(--sfk-heart-lane-edge) !important;
+    width: var(--sfk-heart-lane-width) !important;
+    height: 56px !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart {
+    right: 5px !important;
+    width: 58px !important;
+    height: 52px !important;
+    transform: translate3d(0, -8px, 0) !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .brandTextBlock {
+    padding-right: 56px !important;
+  }
+}
+
+/* Extra-narrow Android widths: gently scale the Time-heart art,
+   never the lane itself, so the clock remains protected from overlap. */
+@media (max-width: 380px) {
+  .topbar.mobile-header-rotator {
+    --sfk-heart-lane-width: 72px;
+    --sfk-heart-lane-gap: 6px;
+    --sfk-heart-lane-edge: 8px;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-cluster .sfkMiniHeartCluster {
+    transform: scale(.88) !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merging .sfkBigHeartGlyph,
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merged .sfkBigHeartGlyph {
+    font-size: 2.92rem !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart {
+    right: 4px !important;
+    width: 54px !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart::before {
+    font-size: 2.82rem !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .brandTextBlock {
+    padding-right: 52px !important;
+  }
+}

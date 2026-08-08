@@ -7973,7 +7973,7 @@ if (document.readyState === "loading") {
 ========================================================= */
 (function initSfkMobileHeaderRotator() {
   const PHONE_QUERY = "(max-width: 700px)";
-  const TIME_VISIBLE_MS = 14500;
+  const TIME_VISIBLE_MS = 9000;
   const QUOTE_VISIBLE_MS = 9000;
   const mq = window.matchMedia ? window.matchMedia(PHONE_QUERY) : null;
 
@@ -8061,14 +8061,14 @@ if (document.readyState === "loading") {
         if (!mq?.matches || showingQuote) return;
         topbar.classList.remove("mobile-heart-cluster");
         topbar.classList.add("mobile-heart-merging");
-      }, 7000);
+      }, 2600);
 
       // Finish the merge and reveal 43 in the center of the big heart.
       heartMergedTimer = window.setTimeout(() => {
         if (!mq?.matches || showingQuote) return;
         topbar.classList.remove("mobile-heart-merging");
         topbar.classList.add("mobile-heart-merged");
-      }, 8900);
+      }, 3600);
     }
   }
 
