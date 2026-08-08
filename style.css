@@ -23085,3 +23085,31 @@ body.classBoardPageLocked .app > :not(#sfkPageLockScreen) {
     top: 52% !important;
   }
 }
+
+
+/* =========================================================
+   v326 MOBILE — QUOTE HEART-HANDS LOWER/CENTERED + BETTER 43 FONT
+   - lower the quote-state heart-hands more noticeably
+   - keep safe gap from the quote card/subtitle
+   - give 43 a sweeter rounded font stack for the heart theme
+========================================================= */
+@media (max-width: 700px) {
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart::before {
+    font-size: 2.76rem !important;
+    top: 58% !important;
+  }
+
+  .sfkMobileHeaderHeart .sfkHeartCount {
+    font-family: "Arial Rounded MT Bold", "Segoe UI Rounded", "Trebuchet MS", "Segoe UI", sans-serif !important;
+    font-weight: 900 !important;
+    letter-spacing: -.015em !important;
+    text-shadow: 0 1px 1px rgba(255,255,255,.42), 0 0 4px rgba(255,236,170,.18) !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart::before {
+    font-size: 2.68rem !important;
+    top: 58% !important;
+  }
+}
