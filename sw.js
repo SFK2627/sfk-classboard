@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-main-pwa-v337-memory-gap-zoom-real-fix";
+const CACHE_NAME = "sfk-main-pwa-v338-memory-authoritative-media-hydration";
 const CACHE_PREFIXES_TO_DELETE = ["sfk-main-pwa-", "sfk-sw.js-"];
 const NAVIGATION_FALLBACK_URL = "./index.html";
 const NAVIGATION_TIMEOUT_MS = 2500;

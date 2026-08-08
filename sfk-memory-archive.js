@@ -339,21 +339,46 @@
       const img = document.createElement("img");
       img.className = "sfkMemoryTileImage";
       img.alt = photo.title;
-      img.loading = "lazy";
+      img.loading = index < 12 ? "eager" : "lazy";
       img.decoding = "async";
-      if (photo.src) {
-        img.src = photo.src;
-      } else if (photo.ref) {
+
+      /*
+        v338 DEPLOYED-GALLERY RULE:
+        If a stored sfk-media reference exists, do NOT trust the external
+        preview URL as the permanent grid source. GitHub Pages can receive
+        blocked/expired preview URLs even when the original stored photo is
+        available. Keep the preview only as an internal fallback and hydrate
+        the exact same stored image source used by Memories/fullscreen.
+      */
+      if (photo.ref) {
         img.dataset.archiveMediaRef = photo.ref;
+      } else if (photo.src) {
+        img.src = photo.src;
       }
+
       img.addEventListener("load", () => {
         placeholder.remove();
+        img.dataset.archiveImageLoaded = "true";
         const ratio = img.naturalHeight ? img.naturalWidth / img.naturalHeight : 0;
         if (ratio > 1.6 && !button.classList.contains("is-featured")) button.classList.add("is-wide");
         if (ratio && ratio < .74 && !button.classList.contains("is-featured")) button.classList.add("is-tall");
-      }, { once: true });
+      });
+
       img.addEventListener("error", () => {
+        img.dataset.archiveImageLoaded = "false";
         placeholder.style.animation = "none";
+
+        /* Broken web preview? Remove it and retry the authoritative sfk-media source. */
+        if (photo.ref) {
+          img.removeAttribute("src");
+          img.dataset.archiveResolved = "false";
+          img.dataset.archiveResolving = "false";
+          const retries = Number(img.dataset.archiveRetryCount || 0);
+          if (retries < 4) {
+            img.dataset.archiveRetryCount = String(retries + 1);
+            window.setTimeout(() => hydrateTileImage(img, { force: true }), 450 + retries * 700);
+          }
+        }
       });
       button.appendChild(img);
 
@@ -379,66 +404,88 @@
     setupLazyRefHydration();
   }
 
+  async function resolveStoredPhotoRef(photo, attempts, context) {
+    if (!photo?.ref) return "";
+    if (photo.resolvedStoredSrc) return photo.resolvedStoredSrc;
+
+    try {
+      if (typeof window.resolveClassBoardMediaDataUrlWithRetryV7 === "function") {
+        const dataUrl = await window.resolveClassBoardMediaDataUrlWithRetryV7(photo.ref, attempts);
+        if (dataUrl) {
+          const resolved = typeof window.classBoardMediaDisplayUrl === "function"
+            ? window.classBoardMediaDisplayUrl(dataUrl, `${context}:${photo.ref}`)
+            : dataUrl;
+          photo.resolvedStoredSrc = resolved;
+          photo.tileResolvedSrc = resolved;
+          photo.viewerResolvedSrc = resolved;
+          return resolved;
+        }
+      }
+    } catch (error) {
+      console.warn("Memory Archive stored photo could not be resolved:", photo.ref, error);
+    }
+    return "";
+  }
+
   async function resolvePhotoSource(photo, purpose = "tile") {
     if (!photo) return "";
 
     /*
-      FULLSCREEN RULE:
-      If this memory has an sfk-media reference, resolve that original stored
-      image FIRST. A preview URL may already be cropped and cannot be repaired
-      by CSS after the fact.
+      v338: sfk-media is authoritative in BOTH the grid and fullscreen viewer.
+      External preview URLs are only fallbacks. This makes GitHub deployment
+      behave like the Memories page instead of depending on browser/local cache.
     */
-    if (purpose === "viewer" && photo.ref) {
-      try {
-        if (typeof window.resolveClassBoardMediaDataUrlWithRetryV7 === "function") {
-          const dataUrl = await window.resolveClassBoardMediaDataUrlWithRetryV7(photo.ref, 7);
-          if (dataUrl) {
-            const resolved = typeof window.classBoardMediaDisplayUrl === "function"
-              ? window.classBoardMediaDisplayUrl(dataUrl, `archive-viewer:${photo.ref}`)
-              : dataUrl;
-            photo.viewerResolvedSrc = resolved;
-            return resolved;
-          }
-        }
-      } catch (error) {
-        console.warn("Memory Archive original viewer photo could not be resolved; using URL fallback.", error);
-      }
+    if (photo.ref) {
+      const attempts = purpose === "viewer" ? 8 : 6;
+      const stored = await resolveStoredPhotoRef(
+        photo,
+        attempts,
+        purpose === "viewer" ? "archive-viewer" : "archive-grid"
+      );
+      if (stored) return stored;
     }
 
     if (purpose === "viewer") {
       return photo.viewerResolvedSrc || photo.fullSrc || photo.src || "";
     }
 
-    if (photo.src) return photo.src;
-    if (photo.fullSrc) return photo.fullSrc;
-    if (!photo.ref) return "";
-
-    try {
-      if (typeof window.resolveClassBoardMediaDataUrlWithRetryV7 === "function") {
-        const dataUrl = await window.resolveClassBoardMediaDataUrlWithRetryV7(photo.ref, 5);
-        if (dataUrl) {
-          const resolved = typeof window.classBoardMediaDisplayUrl === "function"
-            ? window.classBoardMediaDisplayUrl(dataUrl, `archive:${photo.ref}`)
-            : dataUrl;
-          photo.src = resolved;
-          if (!photo.fullSrc) photo.fullSrc = resolved;
-        }
-      }
-    } catch (error) {
-      console.warn("Memory Archive photo could not be resolved:", error);
-    }
-
-    return photo.src || photo.fullSrc || "";
+    return photo.tileResolvedSrc || photo.src || photo.fullSrc || "";
   }
 
-  async function hydrateTileImage(img) {
-    if (!img || img.dataset.archiveResolved === "true") return;
-    img.dataset.archiveResolved = "true";
+  async function hydrateTileImage(img, options = {}) {
+    if (!img || !img.isConnected) return;
+    const force = Boolean(options.force);
+    if (!force && img.dataset.archiveResolved === "true") return;
+    if (!force && img.dataset.archiveResolving === "true") return;
+
     const tile = img.closest("[data-archive-index]");
     const index = Number(tile?.dataset.archiveIndex);
     const photo = state.photos[index];
-    const src = await resolvePhotoSource(photo);
-    if (src && img.isConnected) img.src = src;
+    if (!photo) return;
+
+    img.dataset.archiveResolving = "true";
+    const src = await resolvePhotoSource(photo, "tile");
+    img.dataset.archiveResolving = "false";
+    if (!img.isConnected) return;
+
+    if (src) {
+      /* Only the resolved stored source counts as fully hydrated. */
+      const authoritative = Boolean(photo.ref && photo.resolvedStoredSrc && src === photo.resolvedStoredSrc);
+      img.dataset.archiveResolved = authoritative || !photo.ref ? "true" : "false";
+      if (authoritative) img.removeAttribute("data-archive-media-ref");
+      if (img.src !== src) img.src = src;
+      return;
+    }
+
+    /* Keep a clean placeholder instead of a broken-image icon, then retry. */
+    if (photo.ref) {
+      img.removeAttribute("src");
+      const retries = Number(img.dataset.archiveRetryCount || 0);
+      if (retries < 4) {
+        img.dataset.archiveRetryCount = String(retries + 1);
+        window.setTimeout(() => hydrateTileImage(img, { force: true }), 650 + retries * 850);
+      }
+    }
   }
 
   function setupLazyRefHydration() {
@@ -448,8 +495,15 @@
     const images = Array.from(grid.querySelectorAll("img[data-archive-media-ref]"));
     if (!images.length) return;
 
+    /* Hydrate the first screen(s) immediately so deployed GitHub never shows broken previews. */
+    const immediateCount = isPhone() ? 8 : 12;
+    images.slice(0, immediateCount).forEach(img => hydrateTileImage(img));
+
+    const remaining = images.slice(immediateCount);
+    if (!remaining.length) return;
+
     if (!("IntersectionObserver" in window)) {
-      images.forEach(img => hydrateTileImage(img));
+      remaining.forEach(img => hydrateTileImage(img));
       return;
     }
 
@@ -459,9 +513,9 @@
         state.observer.unobserve(entry.target);
         hydrateTileImage(entry.target);
       });
-    }, { root: scroll || null, rootMargin: "500px 0px", threshold: .01 });
+    }, { root: scroll || null, rootMargin: "900px 0px", threshold: .01 });
 
-    images.forEach(img => state.observer.observe(img));
+    remaining.forEach(img => state.observer.observe(img));
   }
 
   async function refreshPhotos() {
