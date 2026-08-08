@@ -23005,3 +23005,23 @@ body.classBoardPageLocked .app > :not(#sfkPageLockScreen) {
     top: 49% !important;
   }
 }
+
+
+/* =========================================================
+   v324 MOBILE — QUOTE HEART-HANDS SMALLER AND LOWER
+   - reduce quote heart-hands slightly
+   - move it lower to avoid subtitle overlap
+========================================================= */
+@media (max-width: 700px) {
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart::before {
+    font-size: 2.72rem !important;
+    top: 52% !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart::before {
+    font-size: 2.64rem !important;
+    top: 52% !important;
+  }
+}
