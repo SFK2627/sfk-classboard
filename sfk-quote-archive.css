@@ -1,0 +1,1207 @@
+/* =========================================================
+   SFK QUOTE ARCHIVE v341
+   Paper / ledger / literary index aesthetic.
+   Deliberately unlike ClassBoard cards, exhibits, and photo galleries.
+========================================================= */
+
+body.sfkQuoteArchiveOpen {
+  overflow: hidden !important;
+}
+
+/* Existing quote card keeps its exact visual styling. */
+.topQuoteBox.sfkQuoteArchiveTrigger {
+  cursor: pointer;
+}
+
+.topQuoteBox.sfkQuoteArchiveTrigger:focus-visible {
+  outline: 1px solid currentColor;
+  outline-offset: 2px;
+}
+
+.sfkQuoteArchiveModal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000005;
+  display: none;
+  color: #17202a;
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+}
+
+.sfkQuoteArchiveModal.is-open {
+  display: block;
+}
+
+.sfkQuoteArchiveBackdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 12, 15, .76);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.sfkQuoteArchivePaper {
+  --paper: #f3efe4;
+  --ink: #17202a;
+  --muted: #777469;
+  --rule: rgba(23, 32, 42, .22);
+  --accent: #aa3f31;
+  position: absolute;
+  inset: 2.5vh 2.4vw;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(23,32,42,.025) 1px, transparent 1px),
+    linear-gradient(rgba(23,32,42,.018) 1px, transparent 1px),
+    var(--paper);
+  background-size: 38px 100%, 100% 32px, auto;
+  box-shadow: 0 30px 100px rgba(0,0,0,.45);
+  border: 1px solid rgba(255,255,255,.25);
+}
+
+.sfkQuoteArchiveClose {
+  position: absolute;
+  z-index: 12;
+  top: 12px;
+  right: 14px;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 0;
+  border-left: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  border-radius: 0;
+  background: rgba(243,239,228,.9);
+  color: var(--ink);
+  font-family: Georgia, serif;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.sfkQuoteArchiveClose:hover,
+.sfkQuoteArchiveClose:focus-visible {
+  color: var(--accent);
+  outline: none;
+}
+
+/* ---------- KINDNESS INDEX ---------- */
+.sfkKindnessIndexHead {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  min-height: 0;
+  border-bottom: 2px solid var(--ink);
+}
+
+.sfkKindnessIndexRail {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  align-items: center;
+  justify-items: center;
+  padding: 16px 0;
+  border-right: 1px solid var(--ink);
+  background: #1a2730;
+  color: #f3efe4;
+  overflow: hidden;
+}
+
+.sfkKindnessIndexRail span {
+  font-size: .54rem;
+  font-weight: 800;
+  letter-spacing: .18em;
+  writing-mode: vertical-rl;
+}
+
+.sfkKindnessIndexRail b {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.35rem;
+  font-weight: 400;
+  letter-spacing: .18em;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+.sfkKindnessIndexMain {
+  min-width: 0;
+  padding: 17px 68px 15px 22px;
+}
+
+.sfkKindnessIndexEyebrow {
+  margin-bottom: 8px;
+  color: var(--accent);
+  font-size: .57rem;
+  font-weight: 900;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+}
+
+.sfkKindnessIndexLead {
+  display: grid;
+  grid-template-columns: minmax(270px, .82fr) minmax(360px, 1.5fr);
+  gap: 28px;
+  align-items: end;
+}
+
+.sfkKindnessIndexLead h2 {
+  margin: 0;
+  color: var(--ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2.4rem, 4.4vw, 5.3rem);
+  font-weight: 400;
+  line-height: .83;
+  letter-spacing: -.055em;
+}
+
+.sfkKindnessIndexLead h2 em {
+  color: var(--accent);
+  font-weight: 400;
+}
+
+.sfkKindnessIndexLead > p {
+  max-width: 910px;
+  margin: 0;
+  padding: 0 0 4px 18px;
+  border-left: 3px solid var(--accent);
+  color: #31383c;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(.83rem, 1.15vw, 1.06rem);
+  line-height: 1.48;
+}
+
+.sfkKindnessIndexNotes {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 14px;
+  border-top: 1px solid var(--ink);
+}
+
+.sfkKindnessIndexNotes > div {
+  position: relative;
+  min-width: 0;
+  padding: 9px 13px 0 0;
+}
+
+.sfkKindnessIndexNotes > div + div {
+  padding-left: 13px;
+  border-left: 1px solid var(--rule);
+}
+
+.sfkKindnessIndexNotes sup {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--accent);
+  font-family: Georgia, serif;
+  font-size: .55rem;
+  font-weight: 700;
+}
+
+.sfkKindnessIndexNotes strong {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--ink);
+  font-size: .55rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.sfkKindnessIndexNotes p {
+  margin: 0;
+  color: #67665f;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: .66rem;
+  line-height: 1.35;
+}
+
+/* ---------- QUOTE LEDGER ---------- */
+.sfkQuoteArchiveBody {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: rgba(255,255,255,.16);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(23,32,42,.4) transparent;
+}
+
+.sfkQuoteIndexBar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr) auto;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 22px;
+  background: rgba(243,239,228,.94);
+  border-bottom: 1px solid var(--ink);
+  backdrop-filter: blur(10px);
+}
+
+.sfkQuoteIndexBar span,
+.sfkQuoteIndexBar strong {
+  font-size: .55rem;
+  font-weight: 900;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.sfkQuoteIndexBar strong {
+  color: var(--accent);
+  text-align: center;
+}
+
+.sfkQuoteIndexBar span:last-child {
+  color: var(--muted);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.sfkQuoteArchiveStatus {
+  min-height: 130px;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  color: var(--muted);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: .84rem;
+  text-align: center;
+}
+
+.sfkQuoteArchiveStatus[hidden] {
+  display: none !important;
+}
+
+.sfkQuoteArchiveSections {
+  padding: 0 22px 30px;
+}
+
+.sfkQuoteLedgerEra {
+  border-top: 2px solid var(--ink);
+}
+
+.sfkQuoteLedgerEra:first-child {
+  border-top: 0;
+}
+
+.sfkQuoteLedgerEraHead {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) 72px;
+  align-items: end;
+  gap: 14px;
+  min-height: 74px;
+  padding: 13px 0 10px;
+  border-bottom: 1px solid var(--ink);
+}
+
+.sfkQuoteLedgerEraSeq {
+  color: var(--accent);
+  font-family: Georgia, serif;
+  font-size: 2rem;
+  line-height: .85;
+}
+
+.sfkQuoteLedgerEraHead h3 {
+  margin: 0;
+  color: var(--ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.7rem;
+  font-weight: 400;
+  line-height: .95;
+  letter-spacing: -.03em;
+}
+
+.sfkQuoteLedgerEraHead p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: .52rem;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.sfkQuoteLedgerEraCount {
+  align-self: center;
+  color: var(--muted);
+  font-family: Georgia, serif;
+  font-size: 1.15rem;
+  text-align: right;
+}
+
+.sfkQuoteLedgerRow {
+  display: grid;
+  grid-template-columns: 48px 116px minmax(0, 1fr) minmax(120px, 190px);
+  gap: 16px;
+  align-items: start;
+  padding: 15px 0 16px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.sfkQuoteLedgerNo {
+  color: #a49f93;
+  font-family: Georgia, serif;
+  font-size: .68rem;
+}
+
+.sfkQuoteLedgerDate {
+  color: #6d6b63;
+  font-size: .56rem;
+  font-weight: 800;
+  letter-spacing: .07em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.sfkQuoteLedgerText {
+  margin: 0;
+  color: var(--ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(.91rem, 1.15vw, 1.13rem);
+  line-height: 1.44;
+  quotes: none;
+}
+
+.sfkQuoteLedgerText::before {
+  content: "“";
+  margin-right: .04em;
+  color: var(--accent);
+}
+
+.sfkQuoteLedgerText::after {
+  content: "”";
+  margin-left: .02em;
+  color: var(--accent);
+}
+
+.sfkQuoteLedgerAuthor {
+  align-self: end;
+  color: #6b6860;
+  font-size: .63rem;
+  line-height: 1.35;
+  text-align: right;
+}
+
+/* Current is a full-width editorial band, not a rounded card. */
+.sfkQuoteLedgerEra--current .sfkQuoteLedgerRow {
+  margin: 0 -22px;
+  padding: 20px 22px 21px;
+  background: #1a2730;
+  border-bottom-color: #1a2730;
+}
+
+.sfkQuoteLedgerEra--current .sfkQuoteLedgerNo,
+.sfkQuoteLedgerEra--current .sfkQuoteLedgerDate,
+.sfkQuoteLedgerEra--current .sfkQuoteLedgerAuthor {
+  color: #c7c2b8;
+}
+
+.sfkQuoteLedgerEra--current .sfkQuoteLedgerText {
+  color: #f6f1e7;
+  font-size: clamp(1.08rem, 1.55vw, 1.42rem);
+}
+
+.sfkQuoteLedgerEra--current .sfkQuoteLedgerText::before,
+.sfkQuoteLedgerEra--current .sfkQuoteLedgerText::after {
+  color: #e6a69d;
+}
+
+.sfkQuoteLedgerEmpty {
+  padding: 18px 0 21px 64px;
+  color: var(--muted);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: .76rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+@media (max-width: 980px) {
+  .sfkQuoteArchivePaper {
+    inset: 1.5vh 1.5vw;
+  }
+
+  .sfkKindnessIndexHead {
+    grid-template-columns: 86px minmax(0, 1fr);
+  }
+
+  .sfkKindnessIndexLead {
+    grid-template-columns: minmax(220px, .75fr) minmax(0, 1.45fr);
+    gap: 18px;
+  }
+
+  .sfkKindnessIndexNotes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sfkKindnessIndexNotes > div:nth-child(3) {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .sfkKindnessIndexNotes > div:nth-child(n+3) {
+    padding-top: 7px;
+    border-top: 1px solid var(--rule);
+  }
+
+  .sfkQuoteLedgerRow {
+    grid-template-columns: 40px 96px minmax(0, 1fr) 130px;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 700px) {
+  .sfkQuoteArchivePaper {
+    inset: 0;
+    height: 100dvh;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .sfkQuoteArchiveClose {
+    position: fixed;
+    top: max(8px, env(safe-area-inset-top));
+    right: 8px;
+    width: 38px;
+    height: 38px;
+    background: rgba(243,239,228,.96);
+  }
+
+  .sfkKindnessIndexHead {
+    display: block;
+    border-bottom-width: 2px;
+  }
+
+  .sfkKindnessIndexRail {
+    display: none;
+  }
+
+  .sfkKindnessIndexMain {
+    padding:
+      max(12px, env(safe-area-inset-top))
+      52px
+      11px
+      14px;
+  }
+
+  .sfkKindnessIndexEyebrow {
+    max-width: calc(100vw - 70px);
+    margin-bottom: 6px;
+    font-size: .47rem;
+    letter-spacing: .15em;
+  }
+
+  .sfkKindnessIndexLead {
+    display: block;
+  }
+
+  .sfkKindnessIndexLead h2 {
+    font-size: clamp(2.15rem, 11.4vw, 3.25rem);
+    line-height: .84;
+  }
+
+  .sfkKindnessIndexLead > p {
+    margin-top: 8px;
+    padding-left: 10px;
+    border-left-width: 2px;
+    font-size: .69rem;
+    line-height: 1.38;
+  }
+
+  .sfkKindnessIndexNotes {
+    grid-template-columns: 1fr 1fr;
+    margin-top: 9px;
+  }
+
+  .sfkKindnessIndexNotes > div {
+    padding: 6px 6px 4px 0;
+  }
+
+  .sfkKindnessIndexNotes > div + div {
+    padding-left: 7px;
+  }
+
+  .sfkKindnessIndexNotes > div:nth-child(3) {
+    padding-left: 0;
+  }
+
+  .sfkKindnessIndexNotes sup {
+    margin-bottom: 2px;
+    font-size: .44rem;
+  }
+
+  .sfkKindnessIndexNotes strong {
+    margin-bottom: 2px;
+    font-size: .45rem;
+  }
+
+  .sfkKindnessIndexNotes p {
+    font-size: .55rem;
+    line-height: 1.28;
+  }
+
+  .sfkQuoteIndexBar {
+    grid-template-columns: auto 1fr;
+    min-height: 39px;
+    padding: 0 14px;
+  }
+
+  .sfkQuoteIndexBar > span:first-child {
+    font-size: .48rem;
+  }
+
+  .sfkQuoteIndexBar strong {
+    display: none;
+  }
+
+  .sfkQuoteIndexBar > span:last-child {
+    min-width: 0;
+    overflow: hidden;
+    font-size: .45rem;
+    letter-spacing: .04em;
+    text-overflow: ellipsis;
+  }
+
+  .sfkQuoteArchiveSections {
+    padding: 0 14px calc(28px + env(safe-area-inset-bottom));
+  }
+
+  .sfkQuoteLedgerEraHead {
+    grid-template-columns: 42px minmax(0, 1fr) 40px;
+    gap: 8px;
+    min-height: 61px;
+    padding: 10px 0 8px;
+  }
+
+  .sfkQuoteLedgerEraSeq {
+    font-size: 1.35rem;
+  }
+
+  .sfkQuoteLedgerEraHead h3 {
+    font-size: 1.23rem;
+  }
+
+  .sfkQuoteLedgerEraHead p {
+    margin-top: 3px;
+    font-size: .43rem;
+  }
+
+  .sfkQuoteLedgerEraCount {
+    font-size: .85rem;
+  }
+
+  .sfkQuoteLedgerRow,
+  .sfkQuoteLedgerEra--current .sfkQuoteLedgerRow {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 0 8px;
+    margin: 0;
+    padding: 12px 0 13px;
+  }
+
+  .sfkQuoteLedgerEra--current .sfkQuoteLedgerRow {
+    margin: 0 -14px;
+    padding: 15px 14px 16px;
+  }
+
+  .sfkQuoteLedgerNo {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    font-size: .58rem;
+  }
+
+  .sfkQuoteLedgerDate {
+    grid-column: 2;
+    margin-bottom: 5px;
+    font-size: .47rem;
+  }
+
+  .sfkQuoteLedgerText {
+    grid-column: 2;
+    font-size: .84rem;
+    line-height: 1.4;
+  }
+
+  .sfkQuoteLedgerEra--current .sfkQuoteLedgerText {
+    font-size: .99rem;
+  }
+
+  .sfkQuoteLedgerAuthor {
+    grid-column: 2;
+    margin-top: 6px;
+    font-size: .54rem;
+    text-align: left;
+  }
+
+  .sfkQuoteLedgerEmpty {
+    padding: 13px 0 16px 42px;
+    font-size: .65rem;
+  }
+}
+
+@media (max-width: 390px) {
+  .sfkKindnessIndexLead h2 {
+    font-size: 2.05rem;
+  }
+
+  .sfkKindnessIndexLead > p {
+    font-size: .64rem;
+  }
+
+  .sfkKindnessIndexNotes p {
+    font-size: .51rem;
+  }
+}
+
+
+/* =========================================================
+   v342 QUOTE ARCHIVE — BIGGER TYPE + KINDNESS IN MOTION
+   Typography is intentionally more readable on both desktop and phone.
+   Video section uses a flat editorial screening-desk layout: no pills/cards.
+========================================================= */
+
+/* -------- Larger editorial typography -------- */
+.sfkKindnessIndexEyebrow {
+  font-size: .68rem !important;
+}
+
+.sfkKindnessIndexLead h2 {
+  font-size: clamp(3rem, 5.1vw, 6.15rem) !important;
+}
+
+.sfkKindnessIndexLead > p {
+  font-size: clamp(1rem, 1.34vw, 1.24rem) !important;
+  line-height: 1.52 !important;
+}
+
+.sfkKindnessIndexNotes sup {
+  font-size: .66rem !important;
+}
+
+.sfkKindnessIndexNotes strong {
+  font-size: .68rem !important;
+}
+
+.sfkKindnessIndexNotes p {
+  font-size: .82rem !important;
+  line-height: 1.43 !important;
+}
+
+.sfkQuoteIndexBar span,
+.sfkQuoteIndexBar strong {
+  font-size: .66rem !important;
+}
+
+.sfkQuoteArchiveStatus {
+  font-size: 1rem !important;
+}
+
+.sfkQuoteLedgerEraSeq {
+  font-size: 2.35rem !important;
+}
+
+.sfkQuoteLedgerEraHead h3 {
+  font-size: 2.1rem !important;
+}
+
+.sfkQuoteLedgerEraHead p {
+  font-size: .65rem !important;
+}
+
+.sfkQuoteLedgerEraCount {
+  font-size: 1.36rem !important;
+}
+
+.sfkQuoteLedgerNo {
+  font-size: .8rem !important;
+}
+
+.sfkQuoteLedgerDate {
+  font-size: .69rem !important;
+}
+
+.sfkQuoteLedgerText {
+  font-size: clamp(1.08rem, 1.36vw, 1.36rem) !important;
+  line-height: 1.5 !important;
+}
+
+.sfkQuoteLedgerAuthor {
+  font-size: .78rem !important;
+}
+
+.sfkQuoteLedgerEra--current .sfkQuoteLedgerText {
+  font-size: clamp(1.32rem, 1.85vw, 1.72rem) !important;
+  line-height: 1.45 !important;
+}
+
+.sfkQuoteLedgerEmpty {
+  font-size: .9rem !important;
+}
+
+/* -------- KINDNESS IN MOTION -------- */
+.sfkKindnessMotion {
+  margin: 0 -22px;
+  padding: 28px 22px 30px;
+  border-top: 2px solid var(--ink);
+  border-bottom: 2px solid var(--ink);
+  background:
+    repeating-linear-gradient(90deg, rgba(23,32,42,.035) 0 1px, transparent 1px 58px),
+    #ded6c7;
+}
+
+.sfkKindnessMotionHead {
+  display: grid;
+  grid-template-columns: minmax(260px, .9fr) minmax(360px, 1.4fr);
+  gap: 26px;
+  align-items: end;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--ink);
+}
+
+.sfkKindnessMotionKicker {
+  grid-column: 1 / -1;
+  color: var(--accent);
+  font-size: .7rem;
+  font-weight: 900;
+  letter-spacing: .16em;
+}
+
+.sfkKindnessMotionHead h3 {
+  margin: 0;
+  color: var(--ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2rem, 3.2vw, 3.85rem);
+  font-weight: 400;
+  line-height: .98;
+  letter-spacing: -.045em;
+}
+
+.sfkKindnessMotionHead h3 em {
+  color: var(--accent);
+  font-weight: 400;
+}
+
+.sfkKindnessMotionHead > p {
+  margin: 0;
+  max-width: 780px;
+  color: #4c4a44;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.sfkKindnessMotionDesk {
+  display: grid;
+  grid-template-columns: minmax(0, 1.62fr) minmax(270px, .72fr);
+  min-height: 0;
+  margin-top: 18px;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+}
+
+.sfkKindnessMotionScreen {
+  position: relative;
+  min-width: 0;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #111;
+  border-right: 1px solid var(--ink);
+}
+
+.sfkKindnessMotionScreen iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.sfkKindnessMotionPoster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
+  background: #111;
+  color: #fff;
+  cursor: pointer;
+}
+
+.sfkKindnessMotionPoster img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(.8) contrast(1.03);
+}
+
+.sfkKindnessMotionPosterShade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,.08), rgba(0,0,0,.58));
+}
+
+.sfkKindnessMotionPlayMark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 68px;
+  height: 68px;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(255,255,255,.82);
+  color: #fff;
+  font-size: 1.35rem;
+  text-indent: .12em;
+  background: rgba(0,0,0,.18);
+}
+
+.sfkKindnessMotionPlayText {
+  position: absolute;
+  left: 18px;
+  bottom: 15px;
+  font-size: .68rem;
+  font-weight: 900;
+  letter-spacing: .13em;
+}
+
+.sfkKindnessMotionNotes {
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+  min-width: 0;
+  padding: 18px 18px 14px;
+  background: rgba(243,239,228,.62);
+}
+
+.sfkKindnessMotionCounter {
+  color: var(--accent);
+  font-family: Georgia, serif;
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
+.sfkKindnessMotionNotes h4 {
+  margin: 13px 0 0;
+  color: var(--ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.35rem, 1.8vw, 2rem);
+  font-weight: 400;
+  line-height: 1.04;
+  letter-spacing: -.025em;
+}
+
+.sfkKindnessMotionSource {
+  margin-top: 7px;
+  color: var(--accent);
+  font-size: .66rem;
+  font-weight: 900;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.sfkKindnessMotionNotes > p {
+  margin: 13px 0 18px;
+  color: #5d5a53;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: .9rem;
+  line-height: 1.48;
+}
+
+.sfkKindnessMotionNav {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) 48px;
+  align-items: center;
+  border-top: 1px solid var(--ink);
+}
+
+.sfkKindnessMotionNav button {
+  width: 48px;
+  height: 46px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 1.35rem;
+  cursor: pointer;
+}
+
+.sfkKindnessMotionNav button:first-child {
+  border-right: 1px solid var(--ink);
+}
+
+.sfkKindnessMotionNav button:last-child {
+  border-left: 1px solid var(--ink);
+}
+
+.sfkKindnessMotionNav button:hover,
+.sfkKindnessMotionNav button:focus-visible {
+  background: var(--ink);
+  color: var(--paper);
+  outline: none;
+}
+
+.sfkKindnessMotionNav span {
+  color: var(--muted);
+  font-size: .58rem;
+  font-weight: 900;
+  letter-spacing: .12em;
+  text-align: center;
+}
+
+@media (max-width: 980px) {
+  .sfkKindnessMotionHead {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .sfkKindnessMotionHead h3,
+  .sfkKindnessMotionHead > p {
+    grid-column: 1;
+  }
+
+  .sfkKindnessMotionDesk {
+    grid-template-columns: minmax(0, 1.4fr) minmax(230px, .75fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .sfkKindnessIndexEyebrow {
+    font-size: .58rem !important;
+  }
+
+  .sfkKindnessIndexLead h2 {
+    font-size: clamp(2.65rem, 12vw, 3.8rem) !important;
+  }
+
+  .sfkKindnessIndexLead > p {
+    font-size: .84rem !important;
+    line-height: 1.48 !important;
+  }
+
+  .sfkKindnessIndexNotes sup {
+    font-size: .53rem !important;
+  }
+
+  .sfkKindnessIndexNotes strong {
+    font-size: .57rem !important;
+  }
+
+  .sfkKindnessIndexNotes p {
+    font-size: .65rem !important;
+    line-height: 1.36 !important;
+  }
+
+  .sfkQuoteIndexBar > span:first-child,
+  .sfkQuoteIndexBar > span:last-child {
+    font-size: .55rem !important;
+  }
+
+  .sfkQuoteLedgerEraSeq {
+    font-size: 1.62rem !important;
+  }
+
+  .sfkQuoteLedgerEraHead h3 {
+    font-size: 1.52rem !important;
+  }
+
+  .sfkQuoteLedgerEraHead p {
+    font-size: .53rem !important;
+  }
+
+  .sfkQuoteLedgerEraCount {
+    font-size: 1rem !important;
+  }
+
+  .sfkQuoteLedgerNo {
+    font-size: .68rem !important;
+  }
+
+  .sfkQuoteLedgerDate {
+    font-size: .58rem !important;
+  }
+
+  .sfkQuoteLedgerText {
+    font-size: .99rem !important;
+    line-height: 1.46 !important;
+  }
+
+  .sfkQuoteLedgerEra--current .sfkQuoteLedgerText {
+    font-size: 1.18rem !important;
+    line-height: 1.45 !important;
+  }
+
+  .sfkQuoteLedgerAuthor {
+    font-size: .66rem !important;
+  }
+
+  .sfkQuoteLedgerEmpty {
+    font-size: .75rem !important;
+  }
+
+  .sfkKindnessMotion {
+    margin: 0 -14px;
+    padding: 22px 14px 24px;
+  }
+
+  .sfkKindnessMotionHead {
+    display: block;
+    padding-bottom: 13px;
+  }
+
+  .sfkKindnessMotionKicker {
+    margin-bottom: 8px;
+    font-size: .57rem;
+    line-height: 1.4;
+  }
+
+  .sfkKindnessMotionHead h3 {
+    font-size: clamp(1.85rem, 8.6vw, 2.65rem);
+    line-height: 1;
+  }
+
+  .sfkKindnessMotionHead > p {
+    margin-top: 9px;
+    font-size: .76rem;
+    line-height: 1.47;
+  }
+
+  .sfkKindnessMotionDesk {
+    display: block;
+    margin-top: 12px;
+  }
+
+  .sfkKindnessMotionScreen {
+    width: 100%;
+    border-right: 0;
+    border-bottom: 1px solid var(--ink);
+  }
+
+  .sfkKindnessMotionPlayMark {
+    width: 56px;
+    height: 56px;
+    font-size: 1.1rem;
+  }
+
+  .sfkKindnessMotionPlayText {
+    left: 12px;
+    bottom: 10px;
+    font-size: .56rem;
+  }
+
+  .sfkKindnessMotionNotes {
+    padding: 13px 0 0;
+    background: transparent;
+  }
+
+  .sfkKindnessMotionCounter {
+    font-size: 1.18rem;
+  }
+
+  .sfkKindnessMotionNotes h4 {
+    margin-top: 8px;
+    font-size: 1.42rem;
+  }
+
+  .sfkKindnessMotionSource {
+    font-size: .58rem;
+  }
+
+  .sfkKindnessMotionNotes > p {
+    margin: 9px 0 13px;
+    font-size: .76rem;
+    line-height: 1.45;
+  }
+
+  .sfkKindnessMotionNav {
+    grid-template-columns: 46px minmax(0, 1fr) 46px;
+  }
+
+  .sfkKindnessMotionNav button {
+    width: 46px;
+    height: 42px;
+  }
+
+  .sfkKindnessMotionNav span {
+    font-size: .52rem;
+  }
+}
+
+@media (max-width: 390px) {
+  .sfkKindnessIndexLead > p {
+    font-size: .8rem !important;
+  }
+
+  .sfkKindnessIndexNotes p {
+    font-size: .62rem !important;
+  }
+
+  .sfkQuoteLedgerText {
+    font-size: .95rem !important;
+  }
+
+  .sfkQuoteLedgerEra--current .sfkQuoteLedgerText {
+    font-size: 1.12rem !important;
+  }
+}
+
+
+/* =========================================================
+   v343 QUOTE ARCHIVE — NON-STICKY OPENING / FULL SCROLL
+   The KINDNESS opening page and index bar scroll away naturally so
+   Current, Kindness in Motion, Future, and Past can use the full viewport.
+========================================================= */
+.sfkQuoteArchivePaper {
+  display: block !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: contain !important;
+  scrollbar-width: thin;
+}
+
+.sfkQuoteArchiveBody {
+  min-height: auto !important;
+  overflow: visible !important;
+  overscroll-behavior: auto !important;
+}
+
+/* No sticky ledger/header bar — it leaves the viewport with the intro. */
+.sfkQuoteIndexBar {
+  position: static !important;
+  top: auto !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Keep only Close reachable while the archive itself scrolls. */
+.sfkQuoteArchiveClose {
+  position: fixed !important;
+  top: calc(2.5vh + 12px) !important;
+  right: calc(2.4vw + 14px) !important;
+}
+
+@media (max-width: 980px) {
+  .sfkQuoteArchiveClose {
+    top: calc(1.5vh + 12px) !important;
+    right: calc(1.5vw + 14px) !important;
+  }
+}
+
+@media (max-width: 700px) {
+  .sfkQuoteArchivePaper {
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .sfkQuoteArchiveClose {
+    top: max(8px, env(safe-area-inset-top)) !important;
+    right: 8px !important;
+  }
+
+  .sfkQuoteIndexBar {
+    position: static !important;
+  }
+}

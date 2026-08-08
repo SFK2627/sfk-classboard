@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-main-pwa-v339-faustina-expanded-exhibit";
+const CACHE_NAME = "sfk-main-pwa-v343-quote-archive-nonsticky";
 const CACHE_PREFIXES_TO_DELETE = ["sfk-main-pwa-", "sfk-sw.js-"];
 const NAVIGATION_FALLBACK_URL = "./index.html";
 const NAVIGATION_TIMEOUT_MS = 2500;
@@ -11,6 +11,8 @@ const APP_SHELL = [
   "./script.js",
   "./sfk-memory-archive.css",
   "./sfk-memory-archive.js",
+  "./sfk-quote-archive.css",
+  "./sfk-quote-archive.js",
   "./class-chat.css",
   "./class-chat.js",
   "./time-capsule.css",
