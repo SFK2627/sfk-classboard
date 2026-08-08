@@ -8538,3 +8538,118 @@ if (document.readyState === "loading") {
   window.openSfkFaustinaExhibit = openExhibit;
   window.closeSfkFaustinaExhibit = closeExhibit;
 })();
+
+
+/* =========================================================
+   v339 ST. FAUSTINA EXHIBIT — PHOTO / VIDEO SLIDERS
+========================================================= */
+(function initSfkFaustinaExhibitSliders() {
+  const sliderStates = new WeakMap();
+  const pad = value => String(value).padStart(2, '0');
+
+  function activateVideo(slider, index) {
+    if (slider?.dataset?.sfkFaustinaSlider !== 'videos') return;
+    const slides = Array.from(slider.querySelectorAll('[data-sfk-slide]'));
+    slides.forEach((slide, i) => {
+      const frame = slide.querySelector('iframe[data-src]');
+      if (!frame) return;
+      if (i === index) {
+        if (!frame.getAttribute('src')) frame.setAttribute('src', frame.dataset.src);
+      } else if (frame.getAttribute('src')) {
+        frame.removeAttribute('src');
+      }
+    });
+  }
+
+  function currentIndex(track, slides) {
+    if (!slides.length) return 0;
+    const viewportCenter = track.scrollLeft + (track.clientWidth / 2);
+    let best = 0;
+    let bestDistance = Infinity;
+    slides.forEach((slide, index) => {
+      const center = slide.offsetLeft + (slide.offsetWidth / 2);
+      const distance = Math.abs(center - viewportCenter);
+      if (distance < bestDistance) { bestDistance = distance; best = index; }
+    });
+    return best;
+  }
+
+  function updateState(slider) {
+    const state = sliderStates.get(slider);
+    if (!state) return;
+    const index = currentIndex(state.track, state.slides);
+    if (index === state.index) return;
+    state.index = index;
+    if (state.count) state.count.textContent = `${pad(index + 1)} / ${pad(state.slides.length)}`;
+    activateVideo(slider, index);
+  }
+
+  function goTo(slider, nextIndex, behavior = 'smooth') {
+    const state = sliderStates.get(slider);
+    if (!state || !state.slides.length) return;
+    const total = state.slides.length;
+    const index = ((nextIndex % total) + total) % total;
+    const slide = state.slides[index];
+    state.track.scrollTo({ left: slide.offsetLeft - state.track.offsetLeft, behavior });
+    state.index = index;
+    if (state.count) state.count.textContent = `${pad(index + 1)} / ${pad(total)}`;
+    activateVideo(slider, index);
+  }
+
+  function setup(slider) {
+    if (!slider || slider.dataset.sfkSliderReady === 'true') return;
+    const track = slider.querySelector('[data-sfk-slider-track]');
+    const slides = Array.from(slider.querySelectorAll('[data-sfk-slide]'));
+    const prev = slider.querySelector('[data-sfk-slider-prev]');
+    const next = slider.querySelector('[data-sfk-slider-next]');
+    const count = slider.querySelector('[data-sfk-slider-count]');
+    if (!track || !slides.length) return;
+
+    slider.dataset.sfkSliderReady = 'true';
+    const state = { track, slides, prev, next, count, index: 0, scrollTimer: 0 };
+    sliderStates.set(slider, state);
+    if (count) count.textContent = `${pad(1)} / ${pad(slides.length)}`;
+
+    prev?.addEventListener('click', () => goTo(slider, state.index - 1));
+    next?.addEventListener('click', () => goTo(slider, state.index + 1));
+    track.addEventListener('scroll', () => {
+      window.clearTimeout(state.scrollTimer);
+      state.scrollTimer = window.setTimeout(() => updateState(slider), 80);
+    }, { passive: true });
+    slider.addEventListener('keydown', event => {
+      if (event.key === 'ArrowLeft') { event.preventDefault(); goTo(slider, state.index - 1); }
+      if (event.key === 'ArrowRight') { event.preventDefault(); goTo(slider, state.index + 1); }
+    });
+    /* Keep video embeds unloaded until the exhibit is actually opened. */
+  }
+
+  function stopAllVideos() {
+    document.querySelectorAll('#sfkFaustinaModal iframe[data-src]').forEach(frame => frame.removeAttribute('src'));
+  }
+
+  function resetAll() {
+    document.querySelectorAll('[data-sfk-faustina-slider]').forEach(slider => {
+      const state = sliderStates.get(slider);
+      if (state) goTo(slider, 0, 'auto');
+    });
+  }
+
+  function boot() {
+    document.querySelectorAll('[data-sfk-faustina-slider]').forEach(setup);
+    const modal = document.getElementById('sfkFaustinaModal');
+    if (!modal) return;
+    new MutationObserver(() => {
+      if (modal.hidden) {
+        stopAllVideos();
+      } else {
+        requestAnimationFrame(() => {
+          resetAll();
+          document.querySelectorAll('[data-sfk-faustina-slider="videos"]').forEach(slider => activateVideo(slider, 0));
+        });
+      }
+    }).observe(modal, { attributes:true, attributeFilter:['hidden'] });
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once:true });
+  else boot();
+})();

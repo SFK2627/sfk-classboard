@@ -23655,3 +23655,88 @@ body.sfkFaustinaOpen {
   .sfkFaustinaExhibit { animation:none !important; }
   .sfkFaustinaGallery img { transition:none !important; }
 }
+
+
+/* =========================================================
+   v339 ST. FAUSTINA EXHIBIT — EXPANDED STORY / SLIDING ARCHIVES
+========================================================= */
+.sfkFaustinaTimelineExpanded { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
+.sfkFaustinaTimelineExpanded li { min-height:224px !important; grid-template-columns:82px 1fr !important; padding:28px 24px !important; background:transparent !important; }
+.sfkFaustinaTimelineExpanded time { font-size:.76rem !important; line-height:1.35 !important; }
+.sfkFaustinaTimelineExpanded strong { font-size:1.04rem !important; line-height:1.24 !important; }
+.sfkFaustinaTimelineExpanded p { font-size:.90rem !important; line-height:1.58 !important; }
+
+.sfkFaustinaStorySection { overflow:hidden !important; padding-bottom:72px !important; }
+.sfkFaustinaSlider { position:relative !important; width:100% !important; min-width:0 !important; }
+.sfkFaustinaSliderViewport { overflow:hidden !important; width:100% !important; }
+.sfkFaustinaSliderTrack { display:flex !important; align-items:stretch !important; gap:18px !important; width:100% !important; overflow-x:auto !important; overflow-y:hidden !important; scroll-snap-type:x mandatory !important; scroll-behavior:smooth !important; scrollbar-width:none !important; overscroll-behavior-x:contain !important; -webkit-overflow-scrolling:touch !important; }
+.sfkFaustinaSliderTrack::-webkit-scrollbar { display:none !important; }
+.sfkFaustinaSlide { flex:0 0 100% !important; min-width:100% !important; scroll-snap-align:start !important; scroll-snap-stop:always !important; }
+.sfkFaustinaSliderArrow { position:absolute !important; top:42% !important; z-index:8 !important; width:54px !important; height:66px !important; display:grid !important; place-items:center !important; padding:0 !important; border:1px solid rgba(236,213,154,.6) !important; border-radius:0 !important; background:rgba(11,12,13,.78) !important; color:#f4e6bd !important; font:300 1.55rem/1 Georgia,serif !important; cursor:pointer !important; backdrop-filter:blur(8px) !important; -webkit-backdrop-filter:blur(8px) !important; transition:background .2s ease,color .2s ease,transform .2s ease !important; }
+.sfkFaustinaSliderArrow:hover { background:#e5c979 !important; color:#111 !important; }
+.sfkFaustinaSliderArrow:active { transform:scale(.96) !important; }
+.sfkFaustinaSliderPrev { left:14px !important; }
+.sfkFaustinaSliderNext { right:14px !important; }
+.sfkFaustinaSliderFooter { display:flex !important; justify-content:space-between !important; align-items:center !important; gap:14px !important; margin-top:14px !important; padding-top:10px !important; border-top:1px solid rgba(221,200,145,.32) !important; color:#bbaa7a !important; font:700 .59rem/1.2 "Segoe UI",sans-serif !important; letter-spacing:.12em !important; text-transform:uppercase !important; }
+
+.sfkFaustinaStorySlide { position:relative !important; display:grid !important; grid-template-columns:minmax(0,1.55fr) minmax(260px,.62fr) !important; min-height:520px !important; margin:0 !important; border:1px solid rgba(223,201,146,.26) !important; background:#0d0e0f !important; overflow:hidden !important; }
+.sfkFaustinaStoryImage { min-width:0 !important; min-height:520px !important; display:grid !important; place-items:center !important; background:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px),#101113 !important; background-size:38px 38px !important; overflow:hidden !important; }
+.sfkFaustinaStoryImage img { width:100% !important; height:100% !important; max-height:620px !important; object-fit:contain !important; object-position:center !important; background:#0e0f10 !important; }
+.sfkFaustinaStorySlide figcaption { position:relative !important; display:flex !important; flex-direction:column !important; justify-content:flex-end !important; padding:34px 28px 30px !important; color:#efe7d6 !important; border-left:1px solid rgba(223,201,146,.30) !important; background:#18191b !important; }
+.sfkFaustinaStoryIndex { margin-bottom:auto !important; padding-bottom:28px !important; color:#caae69 !important; font:800 .58rem/1.2 "Segoe UI",sans-serif !important; letter-spacing:.16em !important; }
+.sfkFaustinaStorySlide h4 { margin:0 0 14px !important; color:#f5eddb !important; font:500 clamp(1.75rem,2.6vw,3rem)/.98 Georgia,serif !important; }
+.sfkFaustinaStorySlide p { margin:0 !important; color:#c8c0b1 !important; font:500 .90rem/1.55 Georgia,serif !important; }
+
+.sfkFaustinaFilmCollectionSection { grid-template-columns:minmax(240px,.52fr) minmax(0,1.48fr) !important; align-items:start !important; }
+.sfkFaustinaFilmCollectionSection .sfkFaustinaFilmIntro { position:sticky !important; top:20px !important; }
+.sfkFaustinaFilmCollectionSection .sfkFaustinaFilmIntro h3 { max-width:360px !important; font-size:clamp(2.35rem,4vw,4.2rem) !important; }
+.sfkFaustinaVideoSlider { min-width:0 !important; }
+.sfkFaustinaVideoSlider .sfkFaustinaSliderArrow { top:calc(50% - 74px) !important; }
+.sfkFaustinaVideoSlide { margin:0 !important; padding:0 2px 10px !important; }
+.sfkFaustinaVideoFrame { box-shadow:12px 12px 0 #d5c8ad !important; }
+.sfkFaustinaVideoMeta { display:grid !important; grid-template-columns:56px 1fr !important; gap:18px !important; align-items:start !important; margin-top:24px !important; padding-top:18px !important; border-top:1px solid rgba(68,61,49,.36) !important; }
+.sfkFaustinaVideoMeta>span { color:#9b7c37 !important; font:500 1.85rem/1 Georgia,serif !important; }
+.sfkFaustinaVideoMeta h4 { margin:0 0 7px !important; color:#26231e !important; font:700 1.08rem/1.24 "Segoe UI",sans-serif !important; }
+.sfkFaustinaVideoMeta p { margin:0 !important; color:#5a5245 !important; font:500 .82rem/1.48 Georgia,serif !important; }
+.sfkFaustinaSliderFooterDark { color:#7b6e55 !important; border-top-color:rgba(68,61,49,.22) !important; }
+
+@media (max-width:700px) {
+  .sfkFaustinaTimelineExpanded { display:block !important; }
+  .sfkFaustinaTimelineExpanded li { min-height:0 !important; grid-template-columns:72px 1fr !important; padding:20px 14px !important; }
+  .sfkFaustinaTimelineExpanded time { font-size:.66rem !important; }
+  .sfkFaustinaTimelineExpanded strong { font-size:.92rem !important; }
+  .sfkFaustinaTimelineExpanded p { font-size:.82rem !important; line-height:1.55 !important; }
+  .sfkFaustinaStorySection { padding:42px 0 48px !important; }
+  .sfkFaustinaStorySection>.sfkFaustinaSectionHeading { margin-left:18px !important; margin-right:18px !important; }
+  .sfkFaustinaStorySlider { padding:0 !important; }
+  .sfkFaustinaSliderViewport { overflow:visible !important; }
+  .sfkFaustinaSliderTrack { gap:10px !important; padding:0 18px !important; scroll-padding-left:18px !important; }
+  .sfkFaustinaSlide { flex-basis:calc(100vw - 44px) !important; min-width:calc(100vw - 44px) !important; }
+  .sfkFaustinaStorySlide { display:block !important; min-height:0 !important; }
+  .sfkFaustinaStoryImage { min-height:0 !important; height:min(54vh,440px) !important; }
+  .sfkFaustinaStoryImage img { max-height:none !important; }
+  .sfkFaustinaStorySlide figcaption { min-height:190px !important; padding:20px 17px 22px !important; border-left:0 !important; border-top:1px solid rgba(223,201,146,.30) !important; }
+  .sfkFaustinaStoryIndex { margin-bottom:22px !important; padding-bottom:0 !important; font-size:.50rem !important; }
+  .sfkFaustinaStorySlide h4 { font-size:1.7rem !important; }
+  .sfkFaustinaStorySlide p { font-size:.78rem !important; line-height:1.52 !important; }
+  .sfkFaustinaSliderArrow { top:34% !important; width:40px !important; height:50px !important; font-size:1.25rem !important; }
+  .sfkFaustinaSliderPrev { left:7px !important; }
+  .sfkFaustinaSliderNext { right:7px !important; }
+  .sfkFaustinaSliderFooter { margin:12px 18px 0 !important; font-size:.48rem !important; }
+  .sfkFaustinaFilmCollectionSection { display:block !important; padding:44px 0 54px !important; }
+  .sfkFaustinaFilmCollectionSection .sfkFaustinaFilmIntro { position:static !important; padding:0 18px !important; }
+  .sfkFaustinaFilmCollectionSection .sfkFaustinaFilmIntro>p:last-child { margin-bottom:26px !important; }
+  .sfkFaustinaVideoSlider .sfkFaustinaSliderTrack { padding-bottom:10px !important; }
+  .sfkFaustinaVideoSlider .sfkFaustinaSliderArrow { top:27% !important; }
+  .sfkFaustinaVideoFrame { box-shadow:7px 7px 0 #d5c8ad !important; }
+  .sfkFaustinaVideoMeta { grid-template-columns:40px 1fr !important; gap:10px !important; margin-top:18px !important; padding-top:14px !important; }
+  .sfkFaustinaVideoMeta>span { font-size:1.35rem !important; }
+  .sfkFaustinaVideoMeta h4 { font-size:.92rem !important; }
+  .sfkFaustinaVideoMeta p { font-size:.72rem !important; line-height:1.45 !important; }
+}
+@media (max-width:390px) {
+  .sfkFaustinaStoryImage { height:46vh !important; }
+  .sfkFaustinaSlide { flex-basis:calc(100vw - 34px) !important; min-width:calc(100vw - 34px) !important; }
+  .sfkFaustinaSliderTrack { padding-left:13px !important; padding-right:13px !important; scroll-padding-left:13px !important; }
+}
+@media (prefers-reduced-motion:reduce) { .sfkFaustinaSliderTrack { scroll-behavior:auto !important; } }
