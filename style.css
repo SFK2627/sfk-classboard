@@ -22565,3 +22565,39 @@ body.classBoardPageLocked .app > :not(#sfkPageLockScreen) {
     padding-right: 52px !important;
   }
 }
+
+
+/* =========================================================
+   v314 MOBILE ONLY — XIAOMI-LIKE WIDTH TUNING
+   - mini hearts: slightly left and higher
+   - big yellow heart: slightly left and higher
+   - 43: more left-centered inside the heart
+   - quote heart-hands: slightly left from the right edge
+========================================================= */
+@media (min-width: 381px) and (max-width: 430px) {
+  /* Time-state lane itself: nudge left and up a bit for Xiaomi-like widths */
+  .topbar.mobile-header-rotator:not(.mobile-show-quote) .sfkMobileHeaderHeart {
+    right: 16px !important;
+    transform: translate3d(0, 46px, 0) !important;
+  }
+
+  /* Keep the internal heart art slightly higher inside the lane */
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-cluster .sfkMiniHeartCluster,
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merging .sfkBigHeartGlyph,
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merged .sfkBigHeartGlyph {
+    transform: translateY(-3px) scale(1) !important;
+    transform-origin: 50% 50% !important;
+  }
+
+  /* 43: move left a bit to visually center in the heart */
+  .sfkMobileHeaderHeart .sfkHeartCount {
+    left: 54.9% !important;
+    top: 54.5% !important;
+  }
+
+  /* Quote-state heart-hands: move a bit left so it is not too flush right */
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart {
+    right: 11px !important;
+    transform: translate3d(0, -8px, 0) !important;
+  }
+}
