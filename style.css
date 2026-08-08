@@ -22911,3 +22911,38 @@ body.classBoardPageLocked .app > :not(#sfkPageLockScreen) {
     top: 44% !important;
   }
 }
+
+
+/* =========================================================
+   v321 MOBILE — FINAL MICRO TUNING
+   - mini hearts slightly lower
+   - quote heart-hands slightly smaller
+   - yellow heart slightly more right
+   - 43 slightly more right
+========================================================= */
+@media (max-width: 700px) {
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-cluster .sfkMiniHeartCluster {
+    top: 4px !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merging .sfkBigHeartGlyph,
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merged .sfkBigHeartGlyph {
+    left: calc(50% + 1px) !important;
+  }
+
+  .sfkMobileHeaderHeart .sfkHeartCount {
+    left: calc(50% - 3px) !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart::before {
+    font-size: 2.92rem !important;
+    top: 43% !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart::before {
+    font-size: 2.82rem !important;
+    top: 43% !important;
+  }
+}
