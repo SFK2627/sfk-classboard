@@ -22729,3 +22729,57 @@ body.classBoardPageLocked .app > :not(#sfkPageLockScreen) {
     padding-right: 66px !important;
   }
 }
+
+
+/* =========================================================
+   v318 MOBILE PORTRAIT — XIAOMI / 432px-CLASS TRUE TARGET
+   - widened target because many Xiaomi/HyperOS phones report ~432 CSS px
+   - visibly move mini hearts and merged heart LEFT + UP
+   - re-center 43 further LEFT inside yellow heart
+   - move quote heart-hands further LEFT
+========================================================= */
+@media (min-width: 381px) and (max-width: 520px) and (orientation: portrait) {
+  /* TIME heart lane: clear left/up shift for 432px-class phones */
+  .topbar.mobile-header-rotator:not(.mobile-show-quote) .sfkMobileHeaderHeart {
+    left: auto !important;
+    right: 36px !important;
+    width: 80px !important;
+    height: 56px !important;
+    transform: translate3d(0, 30px, 0) !important;
+  }
+
+  /* 43 mini-heart formation: additionally shift inside its lane */
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-cluster .sfkMiniHeartCluster {
+    transform: translate(-10px, -11px) scale(1) !important;
+  }
+
+  /* During merge/merged state, move the actual yellow heart left + up */
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merging .sfkBigHeartGlyph,
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merged .sfkBigHeartGlyph {
+    transform: translate(calc(-50% - 9px), calc(-50% - 12px)) scale(1) !important;
+  }
+
+  /* 43: intentionally farther left to match the visual center of the emoji heart */
+  .sfkMobileHeaderHeart .sfkHeartCount {
+    left: 47.5% !important;
+    top: 50.8% !important;
+    transform: translate(-50%, -50%) scale(.55) !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merged .sfkHeartCount {
+    transform: translate(-50%, -50%) scale(1) !important;
+  }
+
+  /* QUOTE state: move heart-hands visibly away from the right border */
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart {
+    left: auto !important;
+    right: 34px !important;
+    width: 60px !important;
+    height: 52px !important;
+    transform: translate3d(0, -8px, 0) !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .brandTextBlock {
+    padding-right: 78px !important;
+  }
+}

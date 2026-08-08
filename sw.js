@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-main-pwa-v317-xiaomi-heart-true-fix";
+const CACHE_NAME = "sfk-main-pwa-v318-xiaomi-432px-heart-fix";
 const CACHE_PREFIXES_TO_DELETE = ["sfk-main-pwa-", "sfk-sw.js-"];
 const NAVIGATION_FALLBACK_URL = "./index.html";
 const NAVIGATION_TIMEOUT_MS = 2500;
