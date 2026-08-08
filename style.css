@@ -22783,3 +22783,89 @@ body.classBoardPageLocked .app > :not(#sfkPageLockScreen) {
     padding-right: 78px !important;
   }
 }
+
+
+/* =========================================================
+   v319 MOBILE — MEASURED HEART GEOMETRY (NO DEVICE BREAKPOINT GUESSING)
+   JS measures the real Time-card/header geometry and supplies exact positions.
+   Inner heart layers are then aligned to the SAME visual center.
+========================================================= */
+@media (max-width: 700px) {
+  .topbar.mobile-header-rotator .sfkMobileHeaderHeart {
+    transition:
+      left .54s cubic-bezier(.22,.8,.24,1),
+      top .54s cubic-bezier(.22,.8,.24,1),
+      width .42s ease !important;
+  }
+
+  /* TIME: use the measured free lane, not a hard-coded right offset. */
+  .topbar.mobile-header-rotator:not(.mobile-show-quote) .sfkMobileHeaderHeart {
+    left: var(--sfk-measured-time-heart-left, calc(100% - 102px)) !important;
+    right: auto !important;
+    top: var(--sfk-measured-time-heart-top, 48px) !important;
+    width: var(--sfk-measured-time-heart-width, 80px) !important;
+    height: 56px !important;
+    transform: none !important;
+  }
+
+  /* Mini hearts: a deliberate small LEFT + UP optical correction. */
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-cluster .sfkMiniHeartCluster {
+    inset: auto !important;
+    left: -7px !important;
+    top: -6px !important;
+    width: 80px !important;
+    height: 58px !important;
+    transform: scale(1) !important;
+    transform-origin: 50% 50% !important;
+  }
+
+  /* The yellow heart has ONE explicit visual center. */
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merging .sfkBigHeartGlyph,
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merged .sfkBigHeartGlyph {
+    left: calc(50% - 7px) !important;
+    top: calc(50% - 8px) !important;
+    transform: translate(-50%, -50%) scale(1) !important;
+  }
+
+  /* 43 is aligned to that yellow-heart center, then nudged LEFT optically. */
+  .sfkMobileHeaderHeart .sfkHeartCount {
+    left: calc(50% - 11px) !important;
+    top: calc(50% - 5px) !important;
+    transform: translate(-50%, -50%) scale(.55) !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merged .sfkHeartCount {
+    transform: translate(-50%, -50%) scale(1) !important;
+  }
+
+  /* QUOTE: independent measured top-right position, visibly away from edge. */
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart {
+    left: var(--sfk-measured-quote-heart-left, calc(100% - 96px)) !important;
+    right: auto !important;
+    top: var(--sfk-measured-quote-heart-top, 0px) !important;
+    width: 60px !important;
+    height: 52px !important;
+    transform: none !important;
+  }
+
+  /* Heart-hands remains centered inside its moved stage. */
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart::before {
+    left: 50% !important;
+    top: 50% !important;
+  }
+
+  /* Reserve space only on the TITLE line. Let subtitle use the full row. */
+  .topbar.mobile-header-rotator.mobile-show-quote .brandTextBlock {
+    padding-right: 0 !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote #dashboardTitle {
+    box-sizing: border-box !important;
+    padding-right: 72px !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote #sectionText {
+    padding-right: 0 !important;
+    max-width: 100% !important;
+  }
+}

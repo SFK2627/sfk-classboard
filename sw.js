@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-main-pwa-v318-xiaomi-432px-heart-fix";
+const CACHE_NAME = "sfk-main-pwa-v319-measured-mobile-heart";
 const CACHE_PREFIXES_TO_DELETE = ["sfk-main-pwa-", "sfk-sw.js-"];
 const NAVIGATION_FALLBACK_URL = "./index.html";
 const NAVIGATION_TIMEOUT_MS = 2500;
@@ -170,6 +170,20 @@ async function handleNavigation(request, event) {
   }
 }
 
+
+async function networkFirstFreshAsset(request) {
+  const cache = await caches.open(CACHE_NAME);
+  try {
+    const response = await fetch(request, { cache: "no-store", credentials: "same-origin" });
+    if (shouldCache(response)) {
+      await cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    return (await cache.match(request, { ignoreSearch: true })) || Response.error();
+  }
+}
+
 async function cacheFirstWithRefresh(request, event) {
   const cached = await cacheMatch(request);
   const cache = await caches.open(CACHE_NAME);
@@ -231,6 +245,11 @@ self.addEventListener("fetch", (event) => {
 
   if (request.mode === "navigate" || request.destination === "document") {
     event.respondWith(handleNavigation(request, event));
+    return;
+  }
+
+  if (request.destination === "style" || request.destination === "script") {
+    event.respondWith(networkFirstFreshAsset(request));
     return;
   }
 

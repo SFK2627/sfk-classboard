@@ -8347,3 +8347,96 @@ if (document.readyState === "loading") {
     ensureHeart();
   }
 })();
+
+
+/* =========================================================
+   v319 MOBILE HEART GEOMETRY — REAL ELEMENT MEASUREMENT
+   Avoids device-name / CSS-width guessing. The heart lane is positioned from
+   the actual Time card and topbar rectangles on the current phone.
+========================================================= */
+(function initMeasuredMobileHeartGeometry() {
+  const PHONE_MAX = 700;
+  let rafId = 0;
+  let lastSignature = '';
+
+  function px(value) {
+    return `${Math.round(value * 10) / 10}px`;
+  }
+
+  function update() {
+    rafId = 0;
+
+    const topbar = document.querySelector('.topbar.mobile-header-rotator');
+    const timeBox = document.querySelector('.timeBox');
+    const heart = topbar?.querySelector('.sfkMobileHeaderHeart');
+
+    if (!topbar || !timeBox || !heart || window.innerWidth > PHONE_MAX) return;
+
+    const bar = topbar.getBoundingClientRect();
+    const time = timeBox.getBoundingClientRect();
+    if (bar.width < 1 || time.width < 1) return;
+
+    const timeRight = time.right - bar.left;
+    const laneStart = timeRight + 6;
+    const laneEnd = bar.width - 12;
+    const freeLane = Math.max(68, laneEnd - laneStart);
+    const stageWidth = Math.max(72, Math.min(82, freeLane));
+
+    /* Center in the remaining lane, then bias a few px LEFT. */
+    let timeLeft = laneStart + Math.max(0, (freeLane - stageWidth) / 2) - 8;
+    timeLeft = Math.max(timeRight + 1, timeLeft);
+    timeLeft = Math.min(bar.width - stageWidth - 12, timeLeft);
+
+    /* Align vertically to the actual Time card, then nudge UP. */
+    let timeTop = (time.top - bar.top) + ((time.height - 56) / 2) - 7;
+    timeTop = Math.max(34, timeTop);
+
+    /* Quote heart moves farther left as the available header gets wider. */
+    const quoteStageWidth = 60;
+    const quoteRightGap = Math.max(30, Math.min(48, bar.width * 0.085));
+    const quoteLeft = Math.max(
+      timeRight + 4,
+      bar.width - quoteStageWidth - quoteRightGap
+    );
+    const quoteTop = 0;
+
+    const signature = [bar.width, timeRight, time.height, timeLeft, timeTop, quoteLeft].map(v => Math.round(v)).join('|');
+    if (signature === lastSignature) return;
+    lastSignature = signature;
+
+    topbar.style.setProperty('--sfk-measured-time-heart-left', px(timeLeft));
+    topbar.style.setProperty('--sfk-measured-time-heart-top', px(timeTop));
+    topbar.style.setProperty('--sfk-measured-time-heart-width', px(stageWidth));
+    topbar.style.setProperty('--sfk-measured-quote-heart-left', px(quoteLeft));
+    topbar.style.setProperty('--sfk-measured-quote-heart-top', px(quoteTop));
+  }
+
+  function schedule() {
+    cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(() => requestAnimationFrame(update));
+  }
+
+  function start() {
+    schedule();
+    window.addEventListener('resize', schedule, { passive: true });
+    window.addEventListener('orientationchange', schedule, { passive: true });
+    window.visualViewport?.addEventListener('resize', schedule, { passive: true });
+
+    /* Header classes/width change when Time <-> Quote transitions. */
+    const topbar = document.querySelector('.topbar');
+    if (topbar && 'MutationObserver' in window) {
+      new MutationObserver(schedule).observe(topbar, {
+        attributes: true,
+        attributeFilter: ['class']
+      });
+    }
+
+    [80, 260, 700, 1400].forEach(delay => window.setTimeout(schedule, delay));
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start, { once: true });
+  } else {
+    start();
+  }
+})();
