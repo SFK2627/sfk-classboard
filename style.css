@@ -22676,3 +22676,56 @@ body.classBoardPageLocked .app > :not(#sfkPageLockScreen) {
     font-size: 1.2em !important;
   }
 }
+
+
+/* =========================================================
+   v317 MOBILE ONLY — XIAOMI-LIKE HEART POSITION TRUE FIX
+   Reason: previous tuning was still not enough on Xiaomi-like widths.
+   This block explicitly shifts the whole heart lane left/up and re-centers
+   the 43 inside the yellow heart.
+========================================================= */
+@media (min-width: 381px) and (max-width: 430px) {
+  /* TIME state: move the reserved heart lane more LEFT and UP. */
+  .topbar.mobile-header-rotator:not(.mobile-show-quote) .sfkMobileHeaderHeart {
+    left: auto !important;
+    right: 18px !important;
+    width: 80px !important;
+    height: 56px !important;
+    transform: translate3d(0, 38px, 0) !important;
+  }
+
+  /* Mini hearts: also nudge a little more LEFT and UP inside the lane. */
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-cluster .sfkMiniHeartCluster {
+    transform: translate(-6px, -8px) scale(1) !important;
+  }
+
+  /* Yellow heart + 43 state: move the heart UP and slightly LEFT. */
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merging .sfkBigHeartGlyph,
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merged .sfkBigHeartGlyph {
+    transform: translate(calc(-50% - 4px), calc(-50% - 8px)) scale(1) !important;
+  }
+
+  /* Re-center the 43 visually by moving it LEFT from the previous too-right look. */
+  .sfkMobileHeaderHeart .sfkHeartCount {
+    left: 51.9% !important;
+    top: 53.2% !important;
+    transform: translate(-50%, -50%) scale(.55) !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-time.mobile-heart-merged .sfkHeartCount {
+    transform: translate(-50%, -50%) scale(1) !important;
+  }
+
+  /* QUOTE state: move the heart-hands icon more LEFT so it is not flush right. */
+  .topbar.mobile-header-rotator.mobile-show-quote .sfkMobileHeaderHeart {
+    left: auto !important;
+    right: 18px !important;
+    width: 58px !important;
+    height: 52px !important;
+    transform: translate3d(0, -8px, 0) !important;
+  }
+
+  .topbar.mobile-header-rotator.mobile-show-quote .brandTextBlock {
+    padding-right: 66px !important;
+  }
+}
