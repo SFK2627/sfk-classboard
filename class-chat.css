@@ -5049,3 +5049,420 @@ button.timeCapsuleOpen:hover {
 .classChatMessage.is-own .classChatMention.is-everyone {
   color: inherit !important;
 }
+
+
+/* =========================================================
+   v374 ADVISER REMINDERS — REAL COMPACT HEADER FIX
+   This file loads after style.css, so these rules are the
+   authoritative desktop/tablet overrides.
+========================================================= */
+@media (min-width: 701px) {
+  .adviserReminderHeader {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-direction: row !important;
+    gap: 4px !important;
+    min-height: 20px !important;
+    height: 20px !important;
+    margin: 0 0 2px !important;
+    padding: 0 !important;
+  }
+
+  .adviserReminderHeader h2 {
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+  }
+
+  .adviserHeaderActions {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    flex: 0 0 33px !important;
+    width: 33px !important;
+    min-width: 33px !important;
+    min-height: 15px !important;
+    height: 15px !important;
+    gap: 3px !important;
+    overflow: visible !important;
+  }
+
+  .adviserHeaderActions #timeCapsuleOpen,
+  .adviserHeaderActions #classChatOpen,
+  button.timeCapsuleOpen,
+  button.classChatOpen,
+  .timeCapsuleOpen,
+  .classChatOpen {
+    box-sizing: border-box !important;
+    width: 15px !important;
+    height: 15px !important;
+    min-width: 15px !important;
+    min-height: 15px !important;
+    max-width: 15px !important;
+    max-height: 15px !important;
+    flex: 0 0 15px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-width: 1px !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  .adviserHeaderActions #timeCapsuleOpen,
+  button.timeCapsuleOpen,
+  .timeCapsuleOpen {
+    font-size: 8px !important;
+    line-height: 1 !important;
+  }
+
+  .adviserHeaderActions #timeCapsuleOpen > span,
+  button.timeCapsuleOpen > span,
+  .timeCapsuleOpen > span {
+    font-size: 8px !important;
+    line-height: 1 !important;
+    -webkit-text-stroke: .45px #111 !important;
+    filter: none !important;
+    transform: none !important;
+  }
+
+  .adviserHeaderActions #timeCapsuleOpen > i,
+  button.timeCapsuleOpen > i,
+  .timeCapsuleOpen > i {
+    right: -1px !important;
+    bottom: -1px !important;
+    width: 4px !important;
+    height: 3px !important;
+    border-width: .7px !important;
+    border-radius: 1px !important;
+  }
+
+  .adviserHeaderActions #timeCapsuleOpen > i::before,
+  button.timeCapsuleOpen > i::before,
+  .timeCapsuleOpen > i::before {
+    width: 2px !important;
+    height: 2px !important;
+    border-width: .7px !important;
+    border-bottom-width: 0 !important;
+  }
+
+  .adviserHeaderActions #classChatOpen,
+  button.classChatOpen,
+  .classChatOpen {
+    border-width: 1px !important;
+  }
+
+  .adviserHeaderActions #classChatOpen .classChatGlyph,
+  button.classChatOpen .classChatGlyph,
+  .classChatOpen .classChatGlyph {
+    width: 7px !important;
+    height: 5px !important;
+    border-width: .8px !important;
+    border-radius: 3px !important;
+  }
+
+  .adviserHeaderActions #classChatOpen .classChatGlyph::before,
+  button.classChatOpen .classChatGlyph::before,
+  .classChatOpen .classChatGlyph::before {
+    left: 1px !important;
+    bottom: -2px !important;
+    width: 2px !important;
+    height: 2px !important;
+    border-left-width: .8px !important;
+  }
+
+  .adviserHeaderActions #classChatOpen .classChatGlyph::after,
+  button.classChatOpen .classChatGlyph::after,
+  .classChatOpen .classChatGlyph::after {
+    top: 1px !important;
+    left: 2px !important;
+    width: 3px !important;
+    height: 2px !important;
+    border-bottom-width: .8px !important;
+  }
+}
+
+/* =========================================================
+   v375 ADVISER REMINDERS — HEADER LIFT
+   Move the Adviser Reminder label and both quick-action
+   buttons upward without changing their size/functionality.
+========================================================= */
+@media (min-width: 701px) {
+  .adviserReminderHeader {
+    margin-top: -5px !important;
+  }
+}
+
+/* =========================================================
+   v377 ADVISER REMINDERS — BIGGER QUICK-ACTION BUTTONS
+   Final desktop/tablet override: visibly increase both
+   Adviser Reminder quick-action buttons while keeping the
+   compact 20px header and v375 upward position.
+========================================================= */
+@media (min-width: 701px) {
+  .adviserHeaderActions {
+    flex: 0 0 41px !important;
+    width: 41px !important;
+    min-width: 41px !important;
+    min-height: 19px !important;
+    height: 19px !important;
+    gap: 3px !important;
+  }
+
+  .adviserHeaderActions #timeCapsuleOpen,
+  .adviserHeaderActions #classChatOpen,
+  button.timeCapsuleOpen,
+  button.classChatOpen,
+  .timeCapsuleOpen,
+  .classChatOpen {
+    width: 19px !important;
+    height: 19px !important;
+    min-width: 19px !important;
+    min-height: 19px !important;
+    max-width: 19px !important;
+    max-height: 19px !important;
+    flex: 0 0 19px !important;
+  }
+
+  .adviserHeaderActions #timeCapsuleOpen,
+  button.timeCapsuleOpen,
+  .timeCapsuleOpen,
+  .adviserHeaderActions #timeCapsuleOpen > span,
+  button.timeCapsuleOpen > span,
+  .timeCapsuleOpen > span {
+    font-size: 10px !important;
+  }
+
+  .adviserHeaderActions #timeCapsuleOpen > i,
+  button.timeCapsuleOpen > i,
+  .timeCapsuleOpen > i {
+    width: 5px !important;
+    height: 4px !important;
+    border-width: .8px !important;
+  }
+
+  .adviserHeaderActions #timeCapsuleOpen > i::before,
+  button.timeCapsuleOpen > i::before,
+  .timeCapsuleOpen > i::before {
+    width: 3px !important;
+    height: 2px !important;
+    border-width: .8px !important;
+    border-bottom-width: 0 !important;
+  }
+
+  .adviserHeaderActions #classChatOpen .classChatGlyph,
+  button.classChatOpen .classChatGlyph,
+  .classChatOpen .classChatGlyph {
+    width: 9px !important;
+    height: 7px !important;
+    border-width: 1px !important;
+  }
+}
+
+/* =========================================================
+   v378 ADVISER REMINDERS — EXACT 20x20 QUICK-ACTION BUTTONS
+   Final desktop/tablet override. Both Adviser Reminder
+   quick-action buttons are exactly 20px x 20px.
+========================================================= */
+@media (min-width: 701px) {
+  .adviserHeaderActions {
+    flex: 0 0 43px !important;
+    width: 43px !important;
+    min-width: 43px !important;
+    min-height: 20px !important;
+    height: 20px !important;
+    gap: 3px !important;
+  }
+
+  .adviserHeaderActions #timeCapsuleOpen,
+  .adviserHeaderActions #classChatOpen,
+  button.timeCapsuleOpen,
+  button.classChatOpen,
+  .timeCapsuleOpen,
+  .classChatOpen {
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px !important;
+    min-height: 20px !important;
+    max-width: 20px !important;
+    max-height: 20px !important;
+    flex: 0 0 20px !important;
+  }
+
+  .adviserHeaderActions #timeCapsuleOpen,
+  button.timeCapsuleOpen,
+  .timeCapsuleOpen,
+  .adviserHeaderActions #timeCapsuleOpen > span,
+  button.timeCapsuleOpen > span,
+  .timeCapsuleOpen > span {
+    font-size: 11px !important;
+  }
+
+  .adviserHeaderActions #timeCapsuleOpen > i,
+  button.timeCapsuleOpen > i,
+  .timeCapsuleOpen > i {
+    width: 6px !important;
+    height: 4px !important;
+    border-width: .8px !important;
+  }
+
+  .adviserHeaderActions #classChatOpen .classChatGlyph,
+  button.classChatOpen .classChatGlyph,
+  .classChatOpen .classChatGlyph {
+    width: 10px !important;
+    height: 8px !important;
+    border-width: 1px !important;
+  }
+}
+
+/* =========================================================
+   v379 ADVISER REMINDERS — AUTHORITATIVE 20x20 BUTTON FIX
+   Keep the visible Time Capsule and Messenger button faces
+   exactly 20px x 20px on desktop/tablet regardless of older
+   Adviser Reminder sizing blocks above.
+========================================================= */
+@media (min-width: 701px) {
+  .sideCard .adviserReminderHeader .adviserHeaderActions {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    flex: 0 0 43px !important;
+    inline-size: 43px !important;
+    width: 43px !important;
+    min-width: 43px !important;
+    block-size: 20px !important;
+    height: 20px !important;
+    min-height: 20px !important;
+    gap: 3px !important;
+    overflow: visible !important;
+  }
+
+  .sideCard .adviserReminderHeader .adviserHeaderActions > #timeCapsuleOpen,
+  .sideCard .adviserReminderHeader .adviserHeaderActions > #classChatOpen,
+  .sideCard .adviserReminderHeader .adviserHeaderActions > button.timeCapsuleOpen,
+  .sideCard .adviserReminderHeader .adviserHeaderActions > button.classChatOpen {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    box-sizing: border-box !important;
+    inline-size: 20px !important;
+    block-size: 20px !important;
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px !important;
+    min-height: 20px !important;
+    max-width: 20px !important;
+    max-height: 20px !important;
+    flex: 0 0 20px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-width: 1px !important;
+    border-radius: 50% !important;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  .sideCard .adviserReminderHeader .adviserHeaderActions > #timeCapsuleOpen,
+  .sideCard .adviserReminderHeader .adviserHeaderActions > button.timeCapsuleOpen {
+    display: grid !important;
+    place-items: center !important;
+    background: linear-gradient(180deg, #ffd900 0%, #f7c600 100%) !important;
+    color: #111 !important;
+    font-size: 12px !important;
+    line-height: 1 !important;
+  }
+
+  .sideCard .adviserReminderHeader .adviserHeaderActions > #timeCapsuleOpen > span,
+  .sideCard .adviserReminderHeader .adviserHeaderActions > button.timeCapsuleOpen > span {
+    display: block !important;
+    font-size: 12px !important;
+    line-height: 1 !important;
+    -webkit-text-stroke: .5px #111 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+
+  .sideCard .adviserReminderHeader .adviserHeaderActions > #timeCapsuleOpen > i,
+  .sideCard .adviserReminderHeader .adviserHeaderActions > button.timeCapsuleOpen > i {
+    right: -1px !important;
+    bottom: -1px !important;
+    width: 6px !important;
+    height: 5px !important;
+    border-width: 1px !important;
+  }
+
+  .sideCard .adviserReminderHeader .adviserHeaderActions > #classChatOpen,
+  .sideCard .adviserReminderHeader .adviserHeaderActions > button.classChatOpen {
+    display: grid !important;
+    place-items: center !important;
+    background: #111 !important;
+    color: #f7c600 !important;
+  }
+
+  .sideCard .adviserReminderHeader .adviserHeaderActions > #classChatOpen .classChatGlyph,
+  .sideCard .adviserReminderHeader .adviserHeaderActions > button.classChatOpen .classChatGlyph {
+    width: 10px !important;
+    height: 8px !important;
+    border-width: 1px !important;
+    border-radius: 4px !important;
+  }
+}
+
+/* =========================================================
+   v380 ADVISER REMINDERS — AUTHORITATIVE 24x24 BUTTONS
+========================================================= */
+@media (min-width: 701px) {
+  .sideCard .adviserReminderHeader {
+    min-height: 24px !important;
+    height: 24px !important;
+  }
+
+  .sideCard .adviserReminderHeader .adviserHeaderActions {
+    flex: 0 0 51px !important;
+    inline-size: 51px !important;
+    width: 51px !important;
+    min-width: 51px !important;
+    block-size: 24px !important;
+    height: 24px !important;
+    min-height: 24px !important;
+    gap: 3px !important;
+  }
+
+  .sideCard .adviserReminderHeader .adviserHeaderActions > #timeCapsuleOpen,
+  .sideCard .adviserReminderHeader .adviserHeaderActions > #classChatOpen,
+  .sideCard .adviserReminderHeader .adviserHeaderActions > button.timeCapsuleOpen,
+  .sideCard .adviserReminderHeader .adviserHeaderActions > button.classChatOpen {
+    inline-size: 24px !important;
+    block-size: 24px !important;
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
+    max-width: 24px !important;
+    max-height: 24px !important;
+    flex: 0 0 24px !important;
+  }
+
+  .sideCard .adviserReminderHeader .adviserHeaderActions > #timeCapsuleOpen,
+  .sideCard .adviserReminderHeader .adviserHeaderActions > button.timeCapsuleOpen,
+  .sideCard .adviserReminderHeader .adviserHeaderActions > #timeCapsuleOpen > span,
+  .sideCard .adviserReminderHeader .adviserHeaderActions > button.timeCapsuleOpen > span {
+    font-size: 14px !important;
+  }
+
+  .sideCard .adviserReminderHeader .adviserHeaderActions > #timeCapsuleOpen > i,
+  .sideCard .adviserReminderHeader .adviserHeaderActions > button.timeCapsuleOpen > i {
+    width: 7px !important;
+    height: 6px !important;
+    right: -1px !important;
+    bottom: -1px !important;
+  }
+
+  .sideCard .adviserReminderHeader .adviserHeaderActions > #classChatOpen .classChatGlyph,
+  .sideCard .adviserReminderHeader .adviserHeaderActions > button.classChatOpen .classChatGlyph {
+    width: 12px !important;
+    height: 9px !important;
+    border-width: 1.2px !important;
+    border-radius: 5px !important;
+  }
+}

@@ -1067,7 +1067,103 @@ function autoFitSingleLine(element) {
 }
 
 function autoFitPeriodSubject(element) {
-  setupSingleLineMarquee(element, { pixelsPerSecond: 16 });
+  if (!element) return;
+
+  // Phone keeps its existing wrapped/compact behavior.
+  if (window.innerWidth <= 700) {
+    element.style.removeProperty("font-size");
+    return;
+  }
+
+  // Always begin at the normal CSS font size. Only shrink when the title
+  // truly does not fit the available middle lane.
+  element.style.removeProperty("font-size");
+  element.classList.remove("sfk-marquee-active");
+  element.style.removeProperty("--sfk-marquee-distance");
+  element.style.removeProperty("--sfk-marquee-duration");
+
+  const fit = () => {
+    if (!element.isConnected || window.innerWidth <= 700) return;
+
+    element.style.removeProperty("font-size");
+    const normalSize = parseFloat(window.getComputedStyle(element).fontSize) || 24;
+    const available = element.clientWidth;
+    if (!available) return;
+
+    // If the normal subject size already fits, leave it completely untouched.
+    if (element.scrollWidth <= available + 1) return;
+
+    const minimumSize = Math.max(13, normalSize * 0.58);
+    let low = minimumSize;
+    let high = normalSize;
+    let best = minimumSize;
+
+    // Find the largest font size that still fits on one line.
+    for (let i = 0; i < 12; i += 1) {
+      const mid = (low + high) / 2;
+      element.style.setProperty("font-size", `${mid}px`, "important");
+      if (element.scrollWidth <= available + 1) {
+        best = mid;
+        low = mid;
+      } else {
+        high = mid;
+      }
+    }
+
+    element.style.setProperty("font-size", `${Math.floor(best * 10) / 10}px`, "important");
+  };
+
+  requestAnimationFrame(() => requestAnimationFrame(fit));
+  window.setTimeout(fit, 120);
+  if (document.fonts?.ready) {
+    document.fonts.ready.then(fit).catch(() => {});
+  }
+}
+
+
+function autoFitPeriodMetaLine(element) {
+  if (!element) return;
+
+  // Phone keeps the established compact layout.
+  if (window.innerWidth <= 700) {
+    element.style.removeProperty("font-size");
+    return;
+  }
+
+  const fit = () => {
+    if (!element.isConnected || window.innerWidth <= 700) return;
+
+    // Start at the normal CSS size every time. If it fits, do not shrink it.
+    element.style.removeProperty("font-size");
+    const normalSize = parseFloat(window.getComputedStyle(element).fontSize) || 16;
+    const available = element.clientWidth;
+    if (!available) return;
+
+    if (element.scrollWidth <= available + 1) return;
+
+    // Keep one line at all costs, but only shrink as much as actually needed.
+    const minimumSize = Math.max(10, normalSize * 0.60);
+    let low = minimumSize;
+    let high = normalSize;
+    let best = minimumSize;
+
+    for (let i = 0; i < 14; i += 1) {
+      const mid = (low + high) / 2;
+      element.style.setProperty("font-size", `${mid}px`, "important");
+      if (element.scrollWidth <= available + 1) {
+        best = mid;
+        low = mid;
+      } else {
+        high = mid;
+      }
+    }
+
+    element.style.setProperty("font-size", `${Math.floor(best * 10) / 10}px`, "important");
+  };
+
+  requestAnimationFrame(() => requestAnimationFrame(fit));
+  window.setTimeout(fit, 120);
+  if (document.fonts?.ready) document.fonts.ready.then(fit).catch(() => {});
 }
 
 let sfkMarqueeResizeTimer = 0;
@@ -1082,9 +1178,14 @@ function setupTodayScheduleSubjectMarquees() {
 
 function refreshSingleLineMarquees() {
   const currentSubject = document.getElementById("currentSubject");
-  if (currentSubject) {
-    setupSingleLineMarquee(currentSubject, { pixelsPerSecond: 16 });
-  }
+  const nextSubject = document.getElementById("nextSubject");
+  if (currentSubject) autoFitPeriodSubject(currentSubject);
+  if (nextSubject) autoFitPeriodSubject(nextSubject);
+
+  const currentMeta = document.querySelector(".heroGrid .current .period-meta");
+  const nextMeta = document.querySelector(".heroGrid .next .period-meta");
+  if (currentMeta) autoFitPeriodMetaLine(currentMeta);
+  if (nextMeta) autoFitPeriodMetaLine(nextMeta);
 
   setupTodayScheduleSubjectMarquees();
 }
@@ -1634,6 +1735,54 @@ function getScheduleItemSubjectTextColor(item = {}, backgroundColor = "") {
   return assigned || getScheduleTextColor(item.Subject, backgroundColor || item.Color || getSubjectColor(item.Subject));
 }
 
+/* v348: Resolve the configured schedule color pair for other subject UI
+   (such as the Subject Announcement pill). This keeps the schedule as
+   the source of truth instead of falling back to the old hard-coded palette. */
+function getSubjectThemeMatchKey(subject) {
+  const raw = String(subject || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  if (!raw) return "";
+
+  if (/\bmapeh\b/.test(raw)) return "mapeh";
+  if (/\bcled?\b/.test(raw) || raw.includes("christian living")) return "cled";
+  if (/\bmath(?:ematics)?\b/.test(raw)) return "math";
+  if (/\bscience\b/.test(raw)) return "science";
+  if (/\benglish\b/.test(raw)) return "english";
+  if (/\bfilipino\b/.test(raw) || /\bfilipno\b/.test(raw)) return "filipino";
+  if (raw.includes("araling panlipunan") || /(^| )ap( |$)/.test(raw)) return "ap";
+  if (/\bict\b/.test(raw)) return "ict";
+  if (/\btle\b/.test(raw) || raw.includes("technology and livelihood") || raw.includes("technology livelihood")) return "tle";
+
+  return raw
+    .replace(/\bgrade\s*\d+\b/g, "")
+    .replace(/\b\d+\b/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function getConfiguredSubjectTheme(subject) {
+  const key = getSubjectThemeMatchKey(subject);
+  const pools = [
+    Array.isArray(latestData?.schedule) ? latestData.schedule : [],
+    Array.isArray(weeklyScheduleData) ? weeklyScheduleData : []
+  ];
+
+  let matched = null;
+  for (const pool of pools) {
+    matched = pool.find((entry) => getSubjectThemeMatchKey(entry?.Subject || entry?.subject) === key);
+    if (matched) break;
+  }
+
+  const background = String(
+    matched?.Color || matched?.color || matched?.BackgroundColor || matched?.backgroundColor || ""
+  ).trim() || getSubjectColor(subject);
+
+  const text = matched
+    ? getScheduleItemSubjectTextColor(matched, background)
+    : getScheduleTextColor(subject, background);
+
+  return { background, text, item: matched };
+}
+
 function escapeHtml(value) {
   return String(value ?? "")
     .replace(/&/g, "&amp;")
@@ -1651,13 +1800,25 @@ function renderPeriodDetails(element, item) {
   if (!element || !item) return;
 
   const time = `${item.StartTime || ""} - ${item.EndTime || ""}`;
-  const location = [item.Teacher, item.Room].filter(Boolean).join(" • ");
+  const teacher = String(item.Teacher || "").trim();
+  const room = String(item.Room || "").trim();
+
+  const teacherMarkup = teacher
+    ? `<span class="period-teacher"><span class="period-meta-icon" aria-hidden="true">👤</span><span>${escapeHtml(teacher)}</span></span>`
+    : "";
+  const roomMarkup = room
+    ? `<span class="period-room"><span class="period-meta-icon" aria-hidden="true">📍</span><span>${escapeHtml(room)}</span></span>`
+    : "";
 
   element.innerHTML = `
-    <span class="period-time">${escapeHtml(time)}</span>
-    <span class="period-location">${escapeHtml(location)}</span>
+    <span class="period-time">
+      <span class="period-time-icon" aria-hidden="true">◷</span>
+      <span class="period-time-value">${escapeHtml(time)}</span>
+    </span>
+    <span class="period-meta">${teacherMarkup}${roomMarkup}</span>
   `;
 }
+
 
 const DEFAULT_ASSEMBLY_CANVA_LINK = "https://canva.link/gqit03d2of2blzy";
 const HOLY_MASS_LINK = "https://www.facebook.com/CCFO56/";
@@ -1715,6 +1876,57 @@ function renderScheduleSubjectText(item = {}, textColor = "inherit") {
   `;
 }
 
+
+function renderHeroPeriodSubjectText(item = {}, textColor = "inherit") {
+  const subject = item.Subject || item.subject || "";
+  const icon = iconFor(subject);
+  const itemLink = getScheduleItemLink(item);
+  const subjectMarkup = `
+    <span class="hero-subject-inline-icon" aria-hidden="true">${escapeHtml(icon)}</span>
+    <span class="hero-subject-name">${escapeHtml(subject)}</span>
+  `;
+
+  if (!isSafeExternalLink(itemLink)) {
+    return subjectMarkup;
+  }
+
+  return `
+    <a class="schedule-text-link hero-period-subject-link"
+       href="${escapeHtml(itemLink)}"
+       target="_blank"
+       rel="noopener noreferrer"
+       style="color:${textColor};">
+      ${subjectMarkup}
+    </a>
+  `;
+}
+
+function setHeroPeriodIcon(card, item, fallbackIcon = "◷") {
+  if (!card) return;
+
+  let iconEl = card.querySelector(".periodHeroIcon");
+  if (!iconEl) {
+    iconEl = document.createElement("span");
+    iconEl.className = "periodHeroIcon";
+    iconEl.setAttribute("aria-hidden", "true");
+    card.insertBefore(iconEl, card.firstChild);
+  }
+
+  iconEl.textContent = item ? iconFor(item.Subject || item.subject || "") : fallbackIcon;
+}
+
+function applyHeroStatusLaneTheme(labelEl, laneBackground, laneTextColor) {
+  if (!labelEl) return;
+  const bg = String(laneBackground || "").trim();
+  const fg = String(laneTextColor || "").trim();
+
+  if (bg) labelEl.style.setProperty("--sfk-period-status-lane-bg", bg);
+  else labelEl.style.removeProperty("--sfk-period-status-lane-bg");
+
+  if (fg) labelEl.style.setProperty("--sfk-period-status-lane-fg", fg);
+  else labelEl.style.removeProperty("--sfk-period-status-lane-fg");
+}
+
 function renderCurrentSubject(item) {
   const card = document.querySelector(".current");
   const subjectEl = document.getElementById("currentSubject");
@@ -1730,13 +1942,17 @@ function renderCurrentSubject(item) {
     const assignedSubjectTextColor = getScheduleItemSubjectTextColor(item, subjectBg);
     const cardBg = useSubjectColors ? subjectBg : getHomeCssVar("--home-current-card-bg", subjectBg);
     const subjectTextColor = overrideText ? getHomeCssVar("--home-current-subject-color", assignedSubjectTextColor) : assignedSubjectTextColor;
-    const detailsColor = overrideText ? getHomeCssVar("--home-current-details-color", autoTextColor) : autoTextColor;
+    const detailsColor = overrideText ? getHomeCssVar("--home-current-details-color", assignedSubjectTextColor) : assignedSubjectTextColor;
 
     card.style.background = cardBg;
     card.style.color = subjectTextColor;
     subjectEl.style.color = subjectTextColor;
-    detailsEl.style.color = detailsColor;
-    if (labelEl) labelEl.style.color = getHomeCssVar("--home-current-label-color", autoTextColor);
+    detailsEl.style.setProperty("color", detailsColor, "important");
+    if (labelEl) {
+      labelEl.style.color = getHomeCssVar("--home-current-label-color", autoTextColor);
+      /* v355: inverse the subject card colors inside the fixed NOW lane. */
+      applyHeroStatusLaneTheme(labelEl, subjectTextColor, cardBg);
+    }
 
     if (countdownEl) {
       countdownEl.style.setProperty("color", getHomeCssVar("--home-current-countdown-text", autoTextColor === "#111" ? "#111" : "#fff"), "important");
@@ -1744,20 +1960,28 @@ function renderCurrentSubject(item) {
       countdownEl.style.borderColor = "rgba(0,0,0,.25)";
     }
 
-    subjectEl.innerHTML = renderScheduleSubjectText(item, subjectTextColor);
+    setHeroPeriodIcon(card, item, "◷");
+    subjectEl.innerHTML = renderHeroPeriodSubjectText(item, subjectTextColor);
     renderPeriodDetails(detailsEl, item);
     autoFitPeriodSubject(subjectEl);
+    autoFitPeriodMetaLine(detailsEl.querySelector(".period-meta"));
   } else {
     card.style.background = getHomeCssVar("--home-current-card-bg", "#111");
     card.style.color = getHomeCssVar("--home-current-subject-color", "#fff");
     subjectEl.style.color = getHomeCssVar("--home-current-subject-color", "#fff");
     detailsEl.style.color = getHomeCssVar("--home-current-details-color", "#fff");
-    if (labelEl) labelEl.style.color = getHomeCssVar("--home-current-label-color", "#ffd700");
+    if (labelEl) {
+      const fallbackCurrentBg = getHomeCssVar("--home-current-card-bg", "#111");
+      const fallbackCurrentText = getHomeCssVar("--home-current-subject-color", "#fff");
+      labelEl.style.color = getHomeCssVar("--home-current-label-color", "#ffd700");
+      applyHeroStatusLaneTheme(labelEl, fallbackCurrentText, fallbackCurrentBg);
+    }
     if (countdownEl) {
       countdownEl.style.setProperty("color", getHomeCssVar("--home-current-countdown-text", "#111"), "important");
       countdownEl.style.setProperty("background", getHomeCssVar("--home-current-countdown-bg", "rgba(255, 215, 0, .95)"), "important");
       countdownEl.style.borderColor = "rgba(0,0,0,.35)";
     }
+    setHeroPeriodIcon(card, null, "◷");
     subjectEl.textContent = "No current period";
     detailsEl.textContent = "Free time / no scheduled period";
     autoFitPeriodSubject(subjectEl);
@@ -1779,35 +2003,49 @@ function renderNextSubject(item) {
     const assignedSubjectTextColor = getScheduleItemSubjectTextColor(item, subjectBg);
     const cardBg = useSubjectColors ? subjectBg : getHomeCssVar("--home-next-card-bg", subjectBg);
     const subjectTextColor = overrideText ? getHomeCssVar("--home-next-subject-color", assignedSubjectTextColor) : assignedSubjectTextColor;
-    const detailsColor = overrideText ? getHomeCssVar("--home-next-details-color", autoTextColor) : autoTextColor;
+    const detailsColor = overrideText ? getHomeCssVar("--home-next-details-color", assignedSubjectTextColor) : assignedSubjectTextColor;
 
     card.style.background = cardBg;
     card.style.color = subjectTextColor;
     subjectEl.style.color = subjectTextColor;
-    detailsEl.style.color = detailsColor;
-    if (labelEl) labelEl.style.color = getHomeCssVar("--home-next-label-color", autoTextColor);
+    detailsEl.style.setProperty("color", detailsColor, "important");
+    if (labelEl) {
+      labelEl.style.color = getHomeCssVar("--home-next-label-color", autoTextColor);
+      /* v355: inverse the subject card colors inside the fixed NEXT lane. */
+      applyHeroStatusLaneTheme(labelEl, subjectTextColor, cardBg);
+    }
 
     if (countdownEl) {
       countdownEl.style.setProperty("color", getHomeCssVar("--home-next-countdown-text", autoTextColor === "#111" ? "#111" : "#fff"), "important");
       countdownEl.style.setProperty("background", getHomeCssVar("--home-next-countdown-bg", autoTextColor === "#111" ? "rgba(255,255,255,.65)" : "rgba(0,0,0,.45)"), "important");
     }
 
-    subjectEl.innerHTML = renderScheduleSubjectText(item, subjectTextColor);
+    setHeroPeriodIcon(card, item, "»");
+    subjectEl.innerHTML = renderHeroPeriodSubjectText(item, subjectTextColor);
     renderPeriodDetails(detailsEl, item);
+    autoFitPeriodSubject(subjectEl);
+    autoFitPeriodMetaLine(detailsEl.querySelector(".period-meta"));
 
   } else {
     card.style.background = getHomeCssVar("--home-next-card-bg", "#fff7c7");
     card.style.color = getHomeCssVar("--home-next-subject-color", "#111");
     subjectEl.style.color = getHomeCssVar("--home-next-subject-color", "#111");
     detailsEl.style.color = getHomeCssVar("--home-next-details-color", "#111");
-    if (labelEl) labelEl.style.color = getHomeCssVar("--home-next-label-color", "#111");
+    if (labelEl) {
+      const fallbackNextBg = getHomeCssVar("--home-next-card-bg", "#fff7c7");
+      const fallbackNextText = getHomeCssVar("--home-next-subject-color", "#111");
+      labelEl.style.color = getHomeCssVar("--home-next-label-color", "#111");
+      applyHeroStatusLaneTheme(labelEl, fallbackNextText, fallbackNextBg);
+    }
     if (countdownEl) {
       countdownEl.style.setProperty("color", getHomeCssVar("--home-next-countdown-text", "#fff"), "important");
       countdownEl.style.setProperty("background", getHomeCssVar("--home-next-countdown-bg", "rgba(0, 0, 0, .44)"), "important");
     }
+    setHeroPeriodIcon(card, null, "»");
     subjectEl.textContent = "No next period";
     detailsEl.textContent = "End of schedule";
     countdownEl.textContent = "No upcoming period";
+    autoFitPeriodSubject(subjectEl);
 
   }
 }
@@ -1882,10 +2120,10 @@ function renderSchedule(items, currentSubject) {
     const autoTextColor = getScheduleTextColor(item.Subject, subjectColor);
     const assignedSubjectTextColor = getScheduleItemSubjectTextColor(item, subjectColor);
     const cardColor = useSubjectScheduleColors ? subjectColor : getHomeCssVar("--home-schedule-card-bg", subjectColor);
-    const textColor = useSubjectScheduleColors ? autoTextColor : getHomeCssVar("--home-schedule-card-text", autoTextColor);
+    const textColor = useSubjectScheduleColors ? assignedSubjectTextColor : getHomeCssVar("--home-schedule-card-text", autoTextColor);
     const subjectTextColor = useSubjectScheduleColors ? assignedSubjectTextColor : textColor;
-    const timeColor = useSubjectScheduleColors ? autoTextColor : getHomeCssVar("--home-schedule-time-color", textColor);
-    const detailColor = useSubjectScheduleColors ? autoTextColor : getHomeCssVar("--home-schedule-details-color", textColor);
+    const timeColor = useSubjectScheduleColors ? assignedSubjectTextColor : getHomeCssVar("--home-schedule-time-color", textColor);
+    const detailColor = useSubjectScheduleColors ? assignedSubjectTextColor : getHomeCssVar("--home-schedule-details-color", textColor);
     const canOpenSubjectDetails = isSubjectDetailsScheduleItem(item);
 
     const isCurrent =
@@ -2431,8 +2669,9 @@ function renderAnnouncements(items) {
   const currentNumber = announcementIndex + 1;
   const item = items[announcementIndex];
 
-  const subjectColor = getSubjectColor(item.Subject);
-  const subjectTextColor = getSubjectTextColor(item.Subject);
+  const configuredSubjectTheme = getConfiguredSubjectTheme(item.Subject);
+  const subjectColor = configuredSubjectTheme.background;
+  const subjectTextColor = configuredSubjectTheme.text;
   const announcementText = item.Announcement || "";
   const formattedAnnouncement = formatBoardText(announcementText, "center");
   const announcementSizeClass = getAnnouncementTextSizeClass(announcementText);
