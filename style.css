@@ -28391,14 +28391,15 @@ html.sfkHomepageBlackSymbioteActive body > *:not(script):not(style):not(#homepag
   z-index: 4;
   display: none;
   top: auto !important;
-  bottom: -3vh !important;
-  height: 38vh;
+  bottom: -4vh !important;
+  height: 14vh;
   overflow: visible;
   pointer-events: none;
   background:
-    linear-gradient(180deg, rgba(150,222,255,.10) 0%, rgba(78,159,201,.28) 10%, rgba(18,74,111,.80) 38%, rgba(7,43,71,.94) 100%);
-  box-shadow: 0 -16px 40px rgba(76,177,225,.26), inset 0 14px 24px rgba(255,255,255,.10), inset 0 -12px 24px rgba(0,0,0,.22);
-  animation: sfkFloodLevel 7.2s ease-in-out infinite alternate;
+    linear-gradient(180deg, rgba(174,230,255,.12) 0%, rgba(73,157,199,.34) 9%, rgba(17,75,112,.84) 36%, rgba(5,37,63,.96) 100%);
+  box-shadow: 0 -18px 46px rgba(76,177,225,.30), inset 0 15px 25px rgba(255,255,255,.11), inset 0 -16px 32px rgba(0,0,0,.26);
+  animation: sfkFloodLevel 34s cubic-bezier(.42,0,.34,1) infinite;
+  will-change: height, transform, filter;
 }
 
 .homepageEffectLayer.is-flood-rain .homepageEffectFlood { display: block; }
@@ -28408,13 +28409,16 @@ html.sfkHomepageBlackSymbioteActive body > *:not(script):not(style):not(#homepag
     radial-gradient(circle at 24% 8%, rgba(255,255,255,.05), transparent 16%),
     radial-gradient(circle at 78% 10%, rgba(255,255,255,.04), transparent 18%),
     linear-gradient(180deg, rgba(5,10,18,.76) 0%, rgba(14,21,31,.60) 34%, rgba(18,27,38,.48) 100%);
-  backdrop-filter: saturate(.6) brightness(.54) blur(1px);
+  backdrop-filter: saturate(.56) brightness(.50) blur(1.15px);
+  animation: sfkFloodStormDarkness 34s ease-in-out infinite;
 }
 .homepageEffectLayer.is-flood-rain .homepageEffectRain { opacity: 1; }
 .homepageEffectLayer.is-flood-rain .homepageEffectRain i {
-  width: 1.8px;
-  background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(234,245,255,1));
-  box-shadow: 0 0 4px rgba(214,236,255,.55);
+  width: 2.05px;
+  min-height: 48px;
+  background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(238,248,255,1));
+  box-shadow: 0 0 5px rgba(214,236,255,.64);
+  filter: brightness(1.12);
 }
 .homepageEffectLayer.is-flood-rain .homepageEffectMist { opacity: 1; }
 
@@ -28442,14 +28446,26 @@ html.sfkHomepageBlackSymbioteActive body > *:not(script):not(style):not(#homepag
   opacity:.88;
   animation: sfkFloodShimmer 4.3s ease-in-out infinite alternate;
 }
-@keyframes sfkFloodLevel { from { height:24vh; transform:translateY(3vh); } to { height:42vh; transform:translateY(0); } }
+@keyframes sfkFloodLevel {
+  0%, 7% { height: 12vh; transform: translateY(3vh); filter: brightness(.96); }
+  22% { height: 28vh; transform: translateY(2vh); filter: brightness(.94); }
+  42% { height: 58vh; transform: translateY(1vh); filter: brightness(.90); }
+  62% { height: 88vh; transform: translateY(0); filter: brightness(.86); }
+  72%, 79% { height: 112vh; transform: translateY(0); filter: brightness(.80); }
+  90% { height: 52vh; transform: translateY(1vh); filter: brightness(.90); }
+  100% { height: 12vh; transform: translateY(3vh); filter: brightness(.96); }
+}
+@keyframes sfkFloodStormDarkness {
+  0%,100% { filter: brightness(.98); opacity:.94; }
+  48% { filter: brightness(.86); opacity:1; }
+  72%,79% { filter: brightness(.70); opacity:1; }
+}
 @keyframes sfkFloodWaveBack { from { transform:translateX(-54px) scaleY(.92); } to { transform:translateX(54px) scaleY(1.08); } }
 @keyframes sfkFloodWaveFront { from { transform:translateX(-46px) scaleY(.82); } to { transform:translateX(46px) scaleY(1); } }
 @keyframes sfkFloodShimmer { from { transform:translateX(-4%); opacity:.52; } to { transform:translateX(4%); opacity:.96; } }
 
 @media (max-width:700px) {
-  .homepageEffectFlood { height:34vh; }
-  @keyframes sfkFloodLevel { from { height:22vh; transform:translateY(2vh); } to { height:38vh; transform:translateY(0); } }
+  .homepageEffectFlood { animation-duration: 36s; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -28462,7 +28478,8 @@ html.sfkHomepageBlackSymbioteActive body > *:not(script):not(style):not(#homepag
   .homepageBlackSpider,
   .homepageSpiderWeb,
   .homepageSpiderThread,
-  .homepageEffectFlood, .homepageFloodWave, .homepageFloodShine { animation-duration: 14s !important; }
+  .homepageEffectFlood { animation-duration: 40s !important; }
+  .homepageFloodWave, .homepageFloodShine { animation-duration: 14s !important; }
 }
 
 
@@ -28475,17 +28492,26 @@ html.sfkHomepageBlackSymbioteActive body > *:not(script):not(style):not(#homepag
 .homepageEffectLayer.is-spongebob .homepageSpongeScene,
 .homepageEffectLayer.is-naruto .homepageNarutoScene,
 .homepageEffectLayer.is-akatsuki .homepageAkatsukiScene,
-.homepageEffectLayer.is-ninja-night .homepageNinjaNightScene{display:block}
+.homepageEffectLayer.is-ninja-night .homepageNinjaNightScene,
+.homepageEffectLayer.is-solar-system .homepageSolarSystemScene,
+.homepageEffectLayer.is-pet-dog .homepagePetDogScene,
+.homepageEffectLayer.is-pet-koala .homepagePetKoalaScene{display:block}
 .homepageEffectLayer.is-minions .homepageEffectParticles::before,
 .homepageEffectLayer.is-spongebob .homepageEffectParticles::before,
 .homepageEffectLayer.is-naruto .homepageEffectParticles::before,
 .homepageEffectLayer.is-akatsuki .homepageEffectParticles::before,
-.homepageEffectLayer.is-ninja-night .homepageEffectParticles::before{content:none!important;display:none!important}
+.homepageEffectLayer.is-ninja-night .homepageEffectParticles::before,
+.homepageEffectLayer.is-solar-system .homepageEffectParticles::before,
+.homepageEffectLayer.is-pet-dog .homepageEffectParticles::before,
+.homepageEffectLayer.is-pet-koala .homepageEffectParticles::before{content:none!important;display:none!important}
 .homepageEffectLayer.is-minions::before,.homepageEffectLayer.is-minions::after,
 .homepageEffectLayer.is-spongebob::before,.homepageEffectLayer.is-spongebob::after,
 .homepageEffectLayer.is-naruto::before,.homepageEffectLayer.is-naruto::after,
 .homepageEffectLayer.is-akatsuki::before,.homepageEffectLayer.is-akatsuki::after,
-.homepageEffectLayer.is-ninja-night::before,.homepageEffectLayer.is-ninja-night::after{content:none!important;display:none!important}
+.homepageEffectLayer.is-ninja-night::before,.homepageEffectLayer.is-ninja-night::after,
+.homepageEffectLayer.is-solar-system::before,.homepageEffectLayer.is-solar-system::after,
+.homepageEffectLayer.is-pet-dog::before,.homepageEffectLayer.is-pet-dog::after,
+.homepageEffectLayer.is-pet-koala::before,.homepageEffectLayer.is-pet-koala::after{content:none!important;display:none!important}
 
 /* MINIONS: underground lab/workshop */
 .homepageEffectLayer.is-minions .homepageEffectBackdrop{background:linear-gradient(180deg,rgba(28,44,61,.72),rgba(16,27,38,.78));backdrop-filter:brightness(.72) saturate(.9)}
@@ -28545,4 +28571,1004 @@ html.sfkHomepageBlackSymbioteActive body > *:not(script):not(style):not(#homepag
  .leafMountain{bottom:30vh}.leafVillage.back{height:32vh}.leafVillage.front{height:24vh}.narutoRunner{scale:.72}.chakraOrb{right:4%;bottom:14vh}
  .akatsukiCloak{scale:.68;transform-origin:bottom}.cloak-a{left:2%}.cloak-b{right:2%}.akatsukiMoon{right:3%}
  .ninjaMoon{right:4%;top:10%;scale:.8}.ninjaLeap{scale:.72}.roof-b{left:28%}
+}
+
+
+/* SOLAR SYSTEM: all planets, orbiting, interactive parallax */
+.homepageEffectLayer.is-solar-system{--solar-pointer-x:0px;--solar-pointer-y:0px}
+.homepageEffectLayer.is-solar-system .homepageEffectBackdrop{background:radial-gradient(circle at 28% 45%,rgba(78,115,185,.12),transparent 28%),radial-gradient(circle at 82% 22%,rgba(116,52,165,.13),transparent 24%),linear-gradient(180deg,rgba(1,5,20,.84),rgba(2,8,28,.92));backdrop-filter:brightness(.54) saturate(.98)}
+.homepageSolarSystemScene{background:radial-gradient(circle at 50% 50%,rgba(70,106,188,.05),transparent 44%);pointer-events:auto}
+.homepageSolarSystemScene .solarSceneGlow{position:absolute;inset:auto;width:34vw;height:34vw;max-width:520px;max-height:520px;border-radius:50%;filter:blur(42px);opacity:.24;animation:solarGlowPulse 12s ease-in-out infinite alternate}
+.homepageSolarSystemScene .glow-a{left:-8%;top:2%;background:radial-gradient(circle,#4fb9ff 0,rgba(79,185,255,.22) 38%,transparent 72%)}
+.homepageSolarSystemScene .glow-b{right:-10%;bottom:-6%;background:radial-gradient(circle,#8843ff 0,rgba(136,67,255,.18) 34%,transparent 72%);animation-delay:-5.4s}
+.homepageSolarSystemScene .solarSystemStage{position:absolute;left:50%;top:52%;width:min(96vw,1700px);height:min(90vh,980px);translate:-50% -50%;transform:translate(calc(var(--solar-pointer-x)*.36),calc(var(--solar-pointer-y)*.36));transform-style:preserve-3d;transition:transform .22s ease-out}
+.homepageSolarSystemScene .solarSun{position:absolute;left:20%;top:50%;translate:-50% -50%;width:clamp(98px,9vw,168px);aspect-ratio:1;border-radius:50%;z-index:5;filter:drop-shadow(0 0 38px rgba(255,168,44,.46))}
+.homepageSolarSystemScene .solarSunAura,.homepageSolarSystemScene .solarSunCore{position:absolute;inset:0;border-radius:50%}
+.homepageSolarSystemScene .solarSunAura{inset:-30%;background:radial-gradient(circle,rgba(255,223,109,.58),rgba(255,154,23,.22) 38%,rgba(255,120,0,.04) 64%,transparent 72%);animation:solarSunPulse 7.4s ease-in-out infinite alternate}
+.homepageSolarSystemScene .solarSunCore{background:radial-gradient(circle at 34% 34%,#fff8d1 0 11%,#ffd667 20%,#ffba35 46%,#ff8914 72%,#d45600 100%);box-shadow:0 0 22px rgba(255,204,97,.9),0 0 65px rgba(255,132,22,.6),inset -16px -10px 20px rgba(146,49,0,.34)}
+.homepageSolarSystemScene .solarSun::after{content:"Sun";position:absolute;left:50%;top:calc(100% + 10px);translate:-50% 0;padding:4px 10px;border-radius:999px;background:rgba(8,12,22,.72);border:1px solid rgba(255,226,134,.26);color:#ffe8a1;font:700 12px/1 Arial,sans-serif;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
+.homepageSolarSystemScene .solarOrbit{position:absolute;left:20%;top:50%;translate:-50% -50%;width:var(--orbit);height:calc(var(--orbit)*.64);border:1px solid rgba(175,203,255,.16);border-radius:50%;animation:solarOrbitSpin var(--duration) linear infinite;animation-delay:var(--delay);transform-origin:center center}
+.homepageSolarSystemScene .orbit-mercury{--orbit:min(16vw,250px);--duration:9s;--delay:-1.8s}
+.homepageSolarSystemScene .orbit-venus{--orbit:min(23vw,360px);--duration:13s;--delay:-4s}
+.homepageSolarSystemScene .orbit-earth{--orbit:min(31vw,500px);--duration:18s;--delay:-6.4s}
+.homepageSolarSystemScene .orbit-mars{--orbit:min(40vw,650px);--duration:24s;--delay:-11s}
+.homepageSolarSystemScene .orbit-jupiter{--orbit:min(52vw,850px);--duration:34s;--delay:-17s}
+.homepageSolarSystemScene .orbit-saturn{--orbit:min(66vw,1080px);--duration:45s;--delay:-22s}
+.homepageSolarSystemScene .orbit-uranus{--orbit:min(79vw,1280px);--duration:57s;--delay:-31s}
+.homepageSolarSystemScene .orbit-neptune{--orbit:min(92vw,1490px);--duration:71s;--delay:-44s}
+.homepageSolarSystemScene .solarPlanetAnchor{position:absolute;left:100%;top:50%;translate:-50% -50%;display:grid;place-items:center;width:max(30px,var(--size,30px));height:max(30px,var(--size,30px));pointer-events:auto}
+.homepageSolarSystemScene .solarPlanet{position:relative;display:block;width:var(--size);height:var(--size);border-radius:50%;box-shadow:0 0 16px rgba(255,255,255,.18), inset -6px -5px 10px rgba(0,0,0,.28);cursor:pointer;transition:transform .2s ease,filter .2s ease}
+.homepageSolarSystemScene .solarPlanet::after{content:attr(data-name);position:absolute;left:50%;top:calc(100% + 9px);translate:-50% 0;padding:3px 8px;border-radius:999px;background:rgba(4,10,22,.82);border:1px solid rgba(183,207,255,.20);color:#edf5ff;font:700 11px/1 Arial,sans-serif;letter-spacing:.04em;white-space:nowrap;opacity:0;transform:translateY(6px);transition:opacity .18s ease,transform .18s ease;pointer-events:none}
+.homepageSolarSystemScene .solarPlanet:hover,.homepageSolarSystemScene .solarPlanet:focus-visible{transform:scale(1.2);filter:brightness(1.12) saturate(1.1)}
+.homepageSolarSystemScene .solarPlanet:hover::after,.homepageSolarSystemScene .solarPlanet:focus-visible::after{opacity:1;transform:translateY(0)}
+.homepageSolarSystemScene .orbit-earth .solarPlanet,.homepageSolarSystemScene .orbit-mars .solarPlanet,.homepageSolarSystemScene .orbit-jupiter .solarPlanet,.homepageSolarSystemScene .orbit-saturn .solarPlanet,.homepageSolarSystemScene .orbit-uranus .solarPlanet,.homepageSolarSystemScene .orbit-neptune .solarPlanet{z-index:2}
+.homepageSolarSystemScene .mercury{--size:clamp(10px,1vw,16px);background:radial-gradient(circle at 34% 30%,#f2eee7 0 18%,#b4a89f 36%,#6d6764 100%)}
+.homepageSolarSystemScene .venus{--size:clamp(14px,1.25vw,22px);background:radial-gradient(circle at 34% 28%,#fff1bd 0 16%,#d8a960 44%,#9b6b3e 100%)}
+.homepageSolarSystemScene .earth{--size:clamp(15px,1.35vw,24px);background:radial-gradient(circle at 34% 28%,#99d9ff 0 24%,#1673c2 54%,#0f4f8a 100%)}
+.homepageSolarSystemScene .earth::before{content:"";position:absolute;left:16%;top:28%;width:26%;height:18%;background:#66bf76;border-radius:44% 56% 52% 48% / 43% 41% 59% 57%;box-shadow:18px 13px 0 4px #6fcb7d,8px 27px 0 1px #6fcb7d}
+.homepageSolarSystemScene .earth::after{content:attr(data-name)}
+.homepageSolarSystemScene .mars{--size:clamp(12px,1.15vw,19px);background:radial-gradient(circle at 34% 28%,#f5b495 0 16%,#c65d3f 45%,#85341f 100%)}
+.homepageSolarSystemScene .jupiter{--size:clamp(26px,2.1vw,40px);background:linear-gradient(180deg,#f3deb6 0 18%,#c68e63 19% 28%,#f0c389 29% 43%,#c68b56 44% 54%,#edd6b1 55% 69%,#bb7b4f 70% 80%,#e7c6a1 81% 100%)}
+.homepageSolarSystemScene .jupiter::before{content:"";position:absolute;right:18%;top:55%;width:24%;height:16%;border-radius:50%;background:rgba(175,79,45,.62);box-shadow:0 0 9px rgba(204,127,72,.18)}
+.homepageSolarSystemScene .saturn{--size:clamp(22px,1.95vw,35px);background:radial-gradient(circle at 34% 28%,#f5e7bd 0 16%,#d3b57c 46%,#9d7c48 100%)}
+.homepageSolarSystemScene .saturn::before{content:"";position:absolute;left:50%;top:50%;width:175%;height:48%;translate:-50% -50%;border-radius:50%;border:3px solid rgba(224,204,153,.82);border-left-color:rgba(255,255,255,.26);border-right-color:rgba(135,100,49,.85);transform:rotate(-18deg);box-shadow:0 0 8px rgba(214,191,142,.18)}
+.homepageSolarSystemScene .uranus{--size:clamp(18px,1.55vw,28px);background:radial-gradient(circle at 34% 28%,#d7fbff 0 18%,#83e0eb 46%,#4eb8c4 100%)}
+.homepageSolarSystemScene .uranus::before{content:"";position:absolute;left:50%;top:50%;width:150%;height:28%;translate:-50% -50%;border-radius:50%;border:2px solid rgba(182,250,255,.48);transform:rotate(80deg)}
+.homepageSolarSystemScene .neptune{--size:clamp(18px,1.55vw,28px);background:radial-gradient(circle at 34% 28%,#b4d7ff 0 18%,#4d82f0 46%,#2453be 100%)}
+.homepageSolarSystemScene .solarPlanetLegend{position:absolute;left:50%;bottom:4.2vh;translate:-50% 0;display:flex;flex-wrap:wrap;justify-content:center;gap:8px 10px;width:min(90vw,980px);padding:10px 14px;border-radius:18px;background:rgba(4,10,22,.46);border:1px solid rgba(164,194,255,.16);backdrop-filter:blur(8px);box-shadow:0 10px 24px rgba(0,0,0,.22)}
+.homepageSolarSystemScene .legendItem{display:inline-flex;align-items:center;gap:8px;padding:5px 10px;border-radius:999px;color:#f2f6ff;font:700 12px/1 Arial,sans-serif;letter-spacing:.03em;background:rgba(255,255,255,.05)}
+.homepageSolarSystemScene .legendItem::before{content:"";width:10px;height:10px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor}
+.homepageSolarSystemScene .legendItem.sun{color:#ffca52}.homepageSolarSystemScene .legendItem.mercury{color:#bdb1a8}.homepageSolarSystemScene .legendItem.venus{color:#ddb36b}.homepageSolarSystemScene .legendItem.earth{color:#4ea8ff}.homepageSolarSystemScene .legendItem.mars{color:#db6f50}.homepageSolarSystemScene .legendItem.jupiter{color:#d7a173}.homepageSolarSystemScene .legendItem.saturn{color:#d6bf80}.homepageSolarSystemScene .legendItem.uranus{color:#82dfe7}.homepageSolarSystemScene .legendItem.neptune{color:#4f85f4}
+.homepageSolarSystemScene .solarHint{position:absolute;left:50%;top:4.4vh;translate:-50% 0;padding:8px 14px;border-radius:999px;background:rgba(5,10,24,.58);border:1px solid rgba(162,189,255,.18);color:#dfe9ff;font:700 12px/1 Arial,sans-serif;letter-spacing:.05em;text-transform:uppercase;backdrop-filter:blur(8px)}
+.homepageAmbientParticle.is-solar-system{color:#fff;font-size:clamp(5px,var(--fx-size),18px);text-shadow:0 0 6px rgba(255,255,255,.95),0 0 16px rgba(86,156,255,.42);animation:sfkStarTwinkle var(--fx-duration) ease-in-out var(--fx-delay) infinite}
+@keyframes solarOrbitSpin{from{transform:translateZ(0) rotate(0deg)}to{transform:translateZ(0) rotate(360deg)}}
+@keyframes solarSunPulse{from{transform:scale(.96);opacity:.74}to{transform:scale(1.08);opacity:1}}
+@keyframes solarGlowPulse{from{transform:scale(.96);opacity:.18}to{transform:scale(1.08);opacity:.3}}
+@media(max-width:900px){.homepageSolarSystemScene .solarSystemStage{left:52%;top:49%;width:min(128vw,1200px);height:min(76vh,760px)}.homepageSolarSystemScene .solarSun{left:17%}.homepageSolarSystemScene .solarPlanetLegend{width:min(94vw,720px);gap:6px 8px;padding:8px 10px}.homepageSolarSystemScene .legendItem{font-size:10px;padding:4px 8px}.homepageSolarSystemScene .solarHint{display:none}}
+@media(max-width:700px){.homepageSolarSystemScene .solarSystemStage{left:56%;top:47%;width:min(152vw,1100px);height:min(68vh,660px)}.homepageSolarSystemScene .solarSun{left:15%;width:clamp(82px,13vw,118px)}.homepageSolarSystemScene .solarOrbit{opacity:.88}.homepageSolarSystemScene .solarPlanet::after{display:none}.homepageSolarSystemScene .solarPlanetLegend{bottom:3vh;max-height:22vh;overflow:auto}.homepageSolarSystemScene .orbit-neptune{--orbit:min(110vw,980px)}.homepageSolarSystemScene .orbit-uranus{--orbit:min(96vw,860px)}.homepageSolarSystemScene .orbit-saturn{--orbit:min(82vw,740px)}}
+
+
+/* =========================================================
+   v422 PETS / CUTE INTERACTIVE DOG
+   Full-screen cozy room + puppy reacting to mouse/touch.
+========================================================= */
+.homepageEffectLayer.is-pet-dog{
+  --pet-eye-x:0px;--pet-eye-y:0px;--pet-head-x:0px;--pet-head-y:0px;--pet-head-r:0deg;--pet-body-x:0px;
+}
+.homepageEffectLayer.is-pet-dog .homepageEffectBackdrop{
+  background:linear-gradient(180deg,rgba(255,245,224,.10),rgba(45,35,30,.10));
+  backdrop-filter:brightness(.90) saturate(.94) blur(.35px);
+}
+.homepagePetDogScene{
+  pointer-events:auto;
+  background:
+    linear-gradient(180deg,rgba(246,225,192,.95) 0 66%,rgba(184,132,86,.96) 66.3% 100%);
+  cursor:default;
+}
+.petRoomWall{position:absolute;inset:0 0 34% 0;background:
+  repeating-linear-gradient(90deg,rgba(150,102,69,.08) 0 2px,transparent 2px 9vw),
+  linear-gradient(180deg,#f7e8cf,#ead0ae);box-shadow:inset 0 -14px 24px rgba(92,58,39,.10)}
+.petWindow{position:absolute;left:7%;top:8%;width:min(28vw,390px);height:min(34vh,310px);border:14px solid #f1dfc8;border-radius:20px;background:linear-gradient(#8fd2f2 0 66%,#b9df9d 66.5% 100%);box-shadow:0 12px 28px rgba(91,57,31,.18),inset 0 0 0 4px rgba(110,77,53,.15);overflow:hidden}
+.petWindow::before,.petWindow::after{content:"";position:absolute;background:#f1dfc8;z-index:3}.petWindow::before{left:50%;top:0;bottom:0;width:8px;translate:-50% 0}.petWindow::after{left:0;right:0;top:52%;height:8px}
+.petSunGlow{position:absolute;right:10%;top:10%;width:58px;aspect-ratio:1;border-radius:50%;background:#ffe58e;box-shadow:0 0 26px rgba(255,221,102,.65)}
+.petCloud{position:absolute;width:76px;height:26px;border-radius:999px;background:rgba(255,255,255,.78);filter:drop-shadow(18px -9px 0 rgba(255,255,255,.72));animation:petCloudDrift 16s linear infinite}.petCloud.c1{left:-30%;top:20%}.petCloud.c2{left:-45%;top:43%;scale:.72;animation-delay:-7s}
+.petFrame{position:absolute;right:13%;top:17%;width:110px;height:86px;border:8px solid #9c6c4a;border-radius:8px;background:linear-gradient(135deg,#fff4d2,#f5c985);box-shadow:0 7px 16px rgba(83,51,33,.14)}.petFrame.f2{right:25%;top:11%;width:78px;height:102px;background:linear-gradient(135deg,#e7f2d0,#a9d5ac)}
+.petShelf{position:absolute;right:8%;top:46%;width:min(28vw,390px);height:18px;border-radius:6px;background:#9d6d4b;box-shadow:0 8px 0 rgba(103,64,41,.18)}.petShelf i{position:absolute;bottom:18px;width:30px;height:52px;border-radius:5px 5px 2px 2px;background:#cf7b68}.petShelf i:nth-child(1){left:14%;height:46px;background:#6ca6bd}.petShelf i:nth-child(2){left:28%;height:58px;background:#d6a84c}.petShelf i:nth-child(3){left:43%;height:40px;background:#7aae7a}
+.petPlant{position:absolute;right:6%;bottom:26%;width:130px;height:180px}.petPot{position:absolute;left:27%;bottom:0;width:70px;height:72px;background:linear-gradient(#c97743,#a8562f);clip-path:polygon(8% 0,92% 0,80% 100%,20% 100%)}.petPlant .leaf{position:absolute;left:50%;bottom:58px;width:32px;height:90px;border-radius:90% 10% 90% 10%;background:#4d9d65;transform-origin:bottom}.petPlant .l1{rotate:-36deg}.petPlant .l2{rotate:8deg;height:112px}.petPlant .l3{rotate:46deg;background:#66ad69}
+.petRug{position:absolute;left:50%;bottom:4%;translate:-50% 0;width:min(64vw,860px);height:22vh;border-radius:50%;background:radial-gradient(ellipse,#d9a879 0 38%,#b67854 39% 62%,#81543f 63% 66%,transparent 67%);opacity:.72;filter:drop-shadow(0 10px 8px rgba(71,43,31,.14))}
+.petToyBall{position:absolute;left:24%;bottom:15%;width:clamp(34px,4vw,56px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 28%,#ff8181,#e24049 62%,#9f2430);box-shadow:0 8px 9px rgba(85,45,39,.22);animation:petBallIdle 5s ease-in-out infinite alternate}
+.petDog{position:absolute;left:50%;bottom:7%;width:clamp(250px,29vw,430px);height:clamp(330px,42vw,570px);translate:-50% 0;transform:translateX(var(--pet-body-x));transition:transform .14s ease-out;filter:drop-shadow(0 20px 22px rgba(82,50,31,.22));z-index:5;transform-origin:50% 100%}
+.petDogBody{position:absolute;left:50%;bottom:0;translate:-50% 0;width:58%;height:54%;border-radius:48% 48% 35% 35%/32% 32% 22% 22%;background:linear-gradient(90deg,#bd7e42,#d79a55 42%,#c18446);box-shadow:inset 14px 0 20px rgba(255,226,183,.14),inset -14px -10px 24px rgba(82,43,21,.10)}
+.petChest{position:absolute;left:50%;top:20%;translate:-50% 0;width:52%;height:68%;border-radius:50%;background:linear-gradient(#f3d8ad,#e4bd86);opacity:.86}
+.petPaw{position:absolute;bottom:-4%;width:32%;height:22%;border-radius:48% 48% 38% 38%;background:#d59a58;box-shadow:inset 0 -6px rgba(120,70,34,.08)}.petPaw.p1{left:5%}.petPaw.p2{right:5%}
+.petDogTail{position:absolute;right:7%;bottom:19%;width:34%;height:17%;border:24px solid #c48648;border-left:0;border-bottom-color:transparent;border-radius:0 80% 20% 0;transform-origin:8% 70%;rotate:-26deg;animation:petTailWag .56s ease-in-out infinite alternate;z-index:-1}
+.petDogHead{position:absolute;left:50%;top:3%;translate:-50% 0;width:72%;height:57%;transform:translate(var(--pet-head-x),var(--pet-head-y)) rotate(var(--pet-head-r));transition:transform .13s ease-out;transform-origin:50% 66%;z-index:3}
+.petDogFace{position:absolute;left:50%;top:14%;translate:-50% 0;width:82%;height:78%;border-radius:48% 48% 46% 46%/44% 44% 52% 52%;background:radial-gradient(circle at 35% 28%,rgba(255,235,202,.24),transparent 24%),linear-gradient(90deg,#bd7c42,#daa05a 45%,#c28246);box-shadow:inset 12px 4px 18px rgba(255,230,191,.14),inset -12px -10px 18px rgba(96,48,25,.10)}
+.petDogEar{position:absolute;top:18%;width:31%;height:62%;background:linear-gradient(#a86a39,#81502f);border-radius:70% 30% 65% 35%/32% 42% 58% 68%;z-index:0;transform-origin:50% 12%;animation:petEarIdle 5.4s ease-in-out infinite}.petDogEar.left{left:-2%;rotate:17deg}.petDogEar.right{right:-2%;scale:-1 1;rotate:17deg;animation-delay:-2.7s}
+.petDogEye{position:absolute;top:31%;width:16%;height:19%;border-radius:50%;background:#fff8eb;box-shadow:inset 0 -3px 5px rgba(90,58,39,.12)}.petDogEye.left{left:28%}.petDogEye.right{right:28%}.petDogEye b{position:absolute;left:50%;top:50%;translate:-50% -50%;width:52%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 34% 30%,#fff 0 8%,#2b221c 10% 100%);transform:translate(var(--pet-eye-x),var(--pet-eye-y));transition:transform .09s ease-out}
+.petDogBrow{position:absolute;top:25%;width:18%;height:8%;border-top:5px solid rgba(91,55,32,.38);border-radius:50%}.petDogBrow.left{left:27%;rotate:-6deg}.petDogBrow.right{right:27%;rotate:6deg}
+.petDogMuzzle{position:absolute;left:50%;top:50%;translate:-50% 0;width:55%;height:36%;border-radius:50%;background:#efd1a5;box-shadow:inset 0 -7px rgba(153,99,57,.08)}
+.petDogNose{position:absolute;left:50%;top:3%;translate:-50% 0;width:30%;height:29%;border-radius:48% 48% 55% 55%;background:radial-gradient(circle at 34% 26%,#5f514a 0 8%,#2d2826 30% 100%);box-shadow:0 3px 5px rgba(65,38,25,.18)}
+.petDogSmile{position:absolute;top:31%;width:27%;height:30%;border-bottom:4px solid #6b4230;border-radius:0 0 50% 50%}.petDogSmile.left{left:25%;rotate:8deg}.petDogSmile.right{right:25%;rotate:-8deg}
+.petDogTongue{position:absolute;left:50%;top:55%;translate:-50% 0;width:23%;height:28%;border-radius:0 0 50% 50%;background:linear-gradient(#ef8e91,#d86d76);opacity:0;transform:scaleY(.35);transform-origin:top;transition:.18s ease}
+.petLoveBurst{position:absolute;left:50%;top:31%;translate:-50% -50%;width:330px;height:240px;pointer-events:none;z-index:8}.petLoveBurst span{position:absolute;left:50%;top:55%;color:#ef6f8e;font-size:32px;opacity:0;text-shadow:0 3px 8px rgba(117,54,67,.20)}.petLoveBurst span:nth-child(1){--hx:-110px;--hy:-120px}.petLoveBurst span:nth-child(2){--hx:-55px;--hy:-160px}.petLoveBurst span:nth-child(3){--hx:0px;--hy:-140px}.petLoveBurst span:nth-child(4){--hx:65px;--hy:-155px}.petLoveBurst span:nth-child(5){--hx:115px;--hy:-110px}
+.petInteractionHint{position:absolute;left:50%;top:5%;translate:-50% 0;padding:8px 14px;border-radius:999px;background:rgba(74,48,34,.62);border:1px solid rgba(255,255,255,.32);color:#fff9ed;font:700 12px/1 Arial,sans-serif;letter-spacing:.04em;box-shadow:0 8px 20px rgba(84,50,29,.16);backdrop-filter:blur(6px);z-index:7}
+.homepageEffectLayer.is-pet-excited .petDog{animation:petHappyHop .72s cubic-bezier(.25,.8,.25,1) both}
+.homepageEffectLayer.is-pet-excited .petDogHead{animation:petHappyTilt .72s ease both}
+.homepageEffectLayer.is-pet-excited .petDogTail{animation-duration:.16s}
+.homepageEffectLayer.is-pet-excited .petDogTongue{opacity:1;transform:scaleY(1)}
+.homepageEffectLayer.is-pet-excited .petLoveBurst span{animation:petHeartPop .95s ease-out both}.homepageEffectLayer.is-pet-excited .petLoveBurst span:nth-child(2){animation-delay:.05s}.homepageEffectLayer.is-pet-excited .petLoveBurst span:nth-child(3){animation-delay:.10s}.homepageEffectLayer.is-pet-excited .petLoveBurst span:nth-child(4){animation-delay:.15s}.homepageEffectLayer.is-pet-excited .petLoveBurst span:nth-child(5){animation-delay:.20s}
+@keyframes petTailWag{from{transform:rotate(-14deg)}to{transform:rotate(22deg)}}
+@keyframes petEarIdle{0%,86%,100%{transform:rotate(0)}92%{transform:rotate(-5deg)}}
+@keyframes petHappyHop{0%,100%{translate:-50% 0}42%{translate:-50% -26px}68%{translate:-50% -8px}}
+@keyframes petHappyTilt{0%,100%{transform:translate(var(--pet-head-x),var(--pet-head-y)) rotate(var(--pet-head-r))}40%{transform:translate(var(--pet-head-x),calc(var(--pet-head-y) - 5px)) rotate(12deg)}70%{transform:translate(var(--pet-head-x),var(--pet-head-y)) rotate(-7deg)}}
+@keyframes petHeartPop{0%{opacity:0;transform:translate(0,0) scale(.35) rotate(-8deg)}18%{opacity:1}100%{opacity:0;transform:translate(var(--hx),var(--hy)) scale(1.2) rotate(10deg)}}
+@keyframes petCloudDrift{to{transform:translateX(600px)}}
+@keyframes petBallIdle{from{transform:translateX(-8px) rotate(-6deg)}to{transform:translateX(10px) rotate(7deg)}}
+@media(max-width:700px){.petWindow{left:3%;top:8%;width:38vw;height:24vh;border-width:9px}.petFrame,.petShelf,.petPlant{opacity:.65}.petFrame.f2{display:none}.petDog{width:clamp(245px,72vw,360px);height:clamp(330px,96vw,500px);bottom:4%}.petRug{width:88vw}.petToyBall{left:8%;bottom:12%}.petInteractionHint{top:3%;font-size:10px;max-width:72vw;text-align:center;white-space:normal;line-height:1.25}}
+
+
+/* =========================================================
+   v423 PETS / INTERACTIVE KOALA FOREST
+========================================================= */
+.homepageEffectLayer.is-pet-koala{
+  --koala-eye-x:0px;--koala-eye-y:0px;--koala-head-x:0px;--koala-head-y:0px;--koala-head-r:0deg;--koala-body-x:0px;--koala-forest-x:0px;--koala-forest-y:0px;
+}
+.homepageEffectLayer.is-pet-koala .homepageEffectBackdrop{
+  background:linear-gradient(180deg,rgba(15,45,31,.18),rgba(9,29,20,.28));
+  backdrop-filter:brightness(.72) saturate(1.02) blur(.35px);
+}
+.homepagePetKoalaScene{
+  pointer-events:auto;
+  cursor:default;
+  background:
+    radial-gradient(circle at 70% 10%,rgba(255,236,166,.30),transparent 21%),
+    linear-gradient(180deg,#7fb790 0%,#5e9672 36%,#365f46 70%,#1f3f2e 100%);
+  overflow:hidden;
+}
+.koalaForestSky{position:absolute;inset:0;overflow:hidden;transform:translate(var(--koala-forest-x),var(--koala-forest-y));transition:transform .18s ease-out}
+.koalaForestSun{position:absolute;right:12%;top:6%;width:clamp(90px,11vw,165px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#fff8cf 0 28%,#ffe89a 44%,rgba(255,224,130,.18) 67%,transparent 70%);filter:blur(.2px);box-shadow:0 0 50px rgba(255,231,150,.32)}
+.koalaForestRay{position:absolute;right:18%;top:-12%;width:8vw;height:90vh;background:linear-gradient(180deg,rgba(255,250,211,.30),transparent 76%);filter:blur(10px);transform-origin:top;opacity:.5}.koalaForestRay.r1{rotate:17deg}.koalaForestRay.r2{right:28%;rotate:10deg;opacity:.28}.koalaForestRay.r3{right:5%;rotate:24deg;opacity:.22}
+.koalaForestCanopy{position:absolute;left:-5%;right:-5%;height:31vh;pointer-events:none;transform:translate(var(--koala-forest-x),var(--koala-forest-y));transition:transform .18s ease-out}.koalaForestCanopy.back{top:-9%;opacity:.72;filter:blur(1px)}.koalaForestCanopy.front{top:-13%;z-index:4;opacity:.94}
+.koalaForestCanopy i{position:absolute;width:clamp(180px,25vw,420px);height:clamp(100px,16vw,250px);border-radius:52% 48% 55% 45%;background:radial-gradient(ellipse at 42% 50%,#5a9a68 0 31%,#3f7a51 52%,#2d6040 75%,transparent 77%);filter:drop-shadow(0 8px 10px rgba(19,48,31,.16));animation:koalaCanopyBreathe 8s ease-in-out infinite alternate}
+.koalaForestCanopy i:nth-child(1){left:-7%;top:0}.koalaForestCanopy i:nth-child(2){left:14%;top:4%;scale:1.18}.koalaForestCanopy i:nth-child(3){left:38%;top:-2%;scale:1.08}.koalaForestCanopy i:nth-child(4){left:60%;top:3%;scale:1.22}.koalaForestCanopy i:nth-child(5){right:-8%;top:-4%;scale:1.15}.koalaForestCanopy i:nth-child(6){left:48%;top:13%;scale:.78}
+.koalaForestTrunk{position:absolute;bottom:-7%;width:clamp(105px,10vw,170px);height:112vh;border-radius:48% 52% 12% 12%;background:linear-gradient(90deg,#6d6a59 0 18%,#918c73 38%,#696856 67%,#4f5547 100%);box-shadow:inset 12px 0 18px rgba(255,255,226,.08),inset -15px 0 24px rgba(29,40,29,.20);opacity:.82;transform:translate(var(--koala-forest-x),var(--koala-forest-y));transition:transform .18s ease-out}.koalaForestTrunk::before{content:"";position:absolute;inset:5% 25% 4% 22%;border-left:5px solid rgba(56,65,51,.20);border-right:3px solid rgba(255,255,235,.08);border-radius:50%}.koalaForestTrunk.trunk-left{left:4%;rotate:-4deg}.koalaForestTrunk.trunk-right{right:7%;rotate:5deg;scale:.86}
+.koalaForestFloor{position:absolute;left:-5%;right:-5%;bottom:-3%;height:29vh;background:linear-gradient(180deg,rgba(34,70,44,.22),#254a33 42%,#1b3928 100%);z-index:1}.koalaForestFloor::before{content:"";position:absolute;left:0;right:0;top:-12%;height:24%;background:radial-gradient(ellipse at 10% 90%,#4c8458 0 18%,transparent 19%),radial-gradient(ellipse at 32% 90%,#3f754d 0 19%,transparent 20%),radial-gradient(ellipse at 55% 90%,#568e5c 0 20%,transparent 21%),radial-gradient(ellipse at 78% 90%,#477d52 0 19%,transparent 20%),radial-gradient(ellipse at 96% 90%,#5d9363 0 20%,transparent 21%)}
+.koalaForestFloor .fern{position:absolute;bottom:14%;width:90px;height:120px;background:repeating-linear-gradient(75deg,transparent 0 12px,#4c8a5a 13px 17px,transparent 18px 31px);clip-path:polygon(48% 0,59% 40%,100% 20%,68% 52%,100% 70%,60% 62%,52% 100%,42% 62%,2% 74%,34% 52%,0 23%,42% 40%);opacity:.7}.fern.f1{left:10%;rotate:-10deg}.fern.f2{left:27%;scale:.72;bottom:7%}.fern.f3{right:21%;scale:.85}.fern.f4{right:5%;rotate:12deg;scale:1.12}
+.koalaMainTree{position:absolute;left:50%;bottom:-2%;translate:-50% 0;width:min(58vw,840px);height:92vh;z-index:2;transform:translate(var(--koala-forest-x),var(--koala-forest-y));transition:transform .18s ease-out}
+.koalaMainTrunk{position:absolute;left:50%;bottom:0;translate:-50% 0;width:clamp(118px,12vw,190px);height:84%;border-radius:44% 54% 12% 10%;background:linear-gradient(90deg,#696858,#9b9378 34%,#767260 64%,#53594b);box-shadow:inset 18px 0 24px rgba(237,238,210,.08),inset -20px 0 28px rgba(34,42,32,.18),0 14px 24px rgba(17,38,25,.20)}
+.koalaMainTrunk::after{content:"";position:absolute;left:24%;top:7%;width:18%;height:80%;border-radius:50%;border-left:7px solid rgba(51,57,46,.22);border-right:3px solid rgba(238,235,203,.08)}
+.koalaBranch{position:absolute;left:50%;top:43%;height:clamp(54px,6vw,84px);border-radius:999px;background:linear-gradient(180deg,#89836b,#656657);box-shadow:inset 0 -9px 14px rgba(45,51,42,.18),0 10px 14px rgba(23,44,30,.15);transform-origin:left center}.koalaBranch.main{width:min(44vw,630px);rotate:-5deg}.koalaBranch.side{width:min(28vw,380px);top:27%;rotate:-38deg;scale:.78}
+.petKoala{position:absolute;left:50%;top:20%;translate:-50% 0;width:clamp(245px,28vw,410px);height:clamp(350px,44vw,590px);z-index:6;transform:translateX(var(--koala-body-x));transition:transform .14s ease-out;filter:drop-shadow(0 20px 20px rgba(15,35,24,.28));transform-origin:50% 75%}
+.petKoalaBody{position:absolute;animation:koalaBreathing 4.8s ease-in-out infinite alternate;left:50%;bottom:4%;translate:-50% 0;width:58%;height:53%;border-radius:50% 50% 42% 42%/38% 38% 34% 34%;background:linear-gradient(90deg,#8d9190,#a7aaa8 45%,#858a89);box-shadow:inset 12px 4px 18px rgba(255,255,255,.12),inset -14px -10px 20px rgba(65,70,68,.13)}
+.petKoalaBelly{position:absolute;left:50%;top:20%;translate:-50% 0;width:57%;height:68%;border-radius:50%;background:linear-gradient(#c8c9c5,#b8bbb7);opacity:.86}
+.petKoalaFoot{position:absolute;bottom:-3%;width:30%;height:18%;border-radius:50%;background:#818685;box-shadow:inset 0 -5px rgba(60,66,64,.08)}.petKoalaFoot.left{left:8%;rotate:10deg}.petKoalaFoot.right{right:8%;rotate:-10deg}
+.petKoalaArm{position:absolute;top:55%;width:19%;height:39%;border-radius:999px;background:linear-gradient(90deg,#888d8b,#a1a4a2);transform-origin:50% 12%;z-index:4}.petKoalaArm.hug{left:23%;rotate:33deg}.petKoalaArm.wave{right:18%;rotate:-42deg;animation:koalaArmIdle 6.2s ease-in-out infinite}
+.petKoalaHead{position:absolute;left:50%;top:1%;translate:-50% 0;width:77%;height:58%;transform:translate(var(--koala-head-x),var(--koala-head-y)) rotate(var(--koala-head-r));transition:transform .13s ease-out;transform-origin:50% 64%;z-index:5}
+.petKoalaFace{position:absolute;left:50%;top:13%;translate:-50% 0;width:76%;height:75%;border-radius:50% 50% 47% 47%/46% 46% 54% 54%;background:radial-gradient(circle at 34% 26%,rgba(255,255,255,.15),transparent 25%),linear-gradient(90deg,#959a98,#adb0ae 47%,#8f9492);box-shadow:inset 12px 2px 18px rgba(255,255,255,.10),inset -12px -8px 18px rgba(57,63,61,.10)}
+.petKoalaEar{position:absolute;top:14%;width:37%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#c3c4c0 0 28%,#a4a7a4 29% 58%,#858a88 60% 100%);box-shadow:0 4px 7px rgba(45,55,49,.10);transform-origin:center;animation:koalaEarWiggle 6.8s ease-in-out infinite}.petKoalaEar.left{left:-3%}.petKoalaEar.right{right:-3%;animation-delay:-3.4s}.petKoalaEar b{position:absolute;inset:23%;border-radius:50%;background:#d6cfc6;opacity:.78}
+.petKoalaEye{position:absolute;top:34%;animation:koalaBlink 5.7s ease-in-out infinite;transform-origin:center;width:17%;height:17%;border-radius:50%;background:#f6f5f0;box-shadow:inset 0 -3px 5px rgba(71,76,73,.12)}.petKoalaEye.left{left:27%}.petKoalaEye.right{right:27%}.petKoalaEye b{position:absolute;left:50%;top:50%;translate:-50% -50%;width:56%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 34% 30%,#fff 0 9%,#242927 11% 100%);transform:translate(var(--koala-eye-x),var(--koala-eye-y));transition:transform .09s ease-out}
+.petKoalaNose{position:absolute;left:50%;top:46%;translate:-50% 0;width:30%;height:27%;border-radius:48% 48% 58% 58%;background:radial-gradient(ellipse at 36% 28%,#5b6461 0 7%,#242a28 36% 100%);box-shadow:0 4px 5px rgba(35,43,39,.16)}
+.petKoalaSmile{position:absolute;left:50%;top:68%;translate:-50% 0;width:27%;height:11%;border-bottom:4px solid #5f6663;border-radius:0 0 50% 50%}
+.petKoalaBlush{position:absolute;top:58%;width:15%;height:7%;border-radius:50%;background:rgba(223,146,154,.22)}.petKoalaBlush.left{left:20%}.petKoalaBlush.right{right:20%}
+.petKoalaLeafSnack{position:absolute;right:9%;top:47%;width:88px;height:110px;transform-origin:bottom;animation:koalaLeafSnackIdle 4.6s ease-in-out infinite alternate}.petKoalaLeafSnack::before{content:"";position:absolute;left:50%;bottom:0;width:5px;height:95px;background:#547a50;border-radius:999px;rotate:-16deg}.petKoalaLeafSnack i{position:absolute;width:38px;height:22px;border-radius:80% 20% 80% 20%;background:linear-gradient(135deg,#82b277,#4e8958);box-shadow:inset 5px 2px rgba(255,255,255,.08)}.petKoalaLeafSnack i:nth-child(1){left:8%;top:24%;rotate:-35deg}.petKoalaLeafSnack i:nth-child(2){right:5%;top:44%;scale:-1 1;rotate:-28deg}.petKoalaLeafSnack i:nth-child(3){left:20%;top:65%;rotate:-18deg}
+.koalaForestLeaf{position:absolute;top:-10vh;width:34px;height:17px;border-radius:90% 10% 90% 10%;background:linear-gradient(135deg,#8dbb7d,#4f8656);filter:drop-shadow(0 4px 4px rgba(24,55,34,.12));animation:koalaLeafFall 8s linear infinite;z-index:5}.koalaForestLeaf.leaf-a{left:8%;animation-delay:-1s}.koalaForestLeaf.leaf-b{left:27%;scale:.8;animation-delay:-3.3s}.koalaForestLeaf.leaf-c{left:56%;scale:1.1;animation-delay:-5.4s}.koalaForestLeaf.leaf-d{left:77%;scale:.72;animation-delay:-2.1s}.koalaForestLeaf.leaf-e{left:91%;animation-delay:-6.5s}
+.koalaReactionBurst{position:absolute;left:50%;top:31%;translate:-50% -50%;width:360px;height:250px;z-index:9;pointer-events:none}.koalaReactionBurst span{position:absolute;left:50%;top:58%;opacity:0;font-size:30px;filter:drop-shadow(0 4px 5px rgba(40,60,44,.18))}.koalaReactionBurst span:nth-child(1){--kx:-120px;--ky:-120px;color:#f0a0ad}.koalaReactionBurst span:nth-child(2){--kx:-70px;--ky:-165px}.koalaReactionBurst span:nth-child(3){--kx:0px;--ky:-145px;color:#f0a0ad}.koalaReactionBurst span:nth-child(4){--kx:72px;--ky:-165px}.koalaReactionBurst span:nth-child(5){--kx:125px;--ky:-115px;color:#f0a0ad}
+.koalaInteractionHint{position:absolute;left:50%;top:4.5%;translate:-50% 0;padding:8px 15px;border-radius:999px;background:rgba(19,58,37,.58);border:1px solid rgba(226,246,222,.24);color:#f3f8ec;font:700 12px/1 Arial,sans-serif;letter-spacing:.04em;box-shadow:0 8px 22px rgba(20,47,31,.16);backdrop-filter:blur(7px);z-index:8;white-space:nowrap}
+.homepageEffectLayer.is-koala-excited .petKoala{animation:koalaHappyBounce .78s cubic-bezier(.24,.82,.27,1) both}
+.homepageEffectLayer.is-koala-excited .petKoalaHead{animation:koalaHappyTilt .78s ease both}
+.homepageEffectLayer.is-koala-excited .petKoalaArm.wave{animation:koalaHappyWave .24s ease-in-out 4 alternate}
+.homepageEffectLayer.is-koala-excited .petKoalaEar{animation-duration:.32s}
+.homepageEffectLayer.is-koala-excited .petKoalaLeafSnack{animation:koalaLeafNibble .7s ease both}
+.homepageEffectLayer.is-koala-excited .koalaReactionBurst span{animation:koalaBurstPop 1s ease-out both}.homepageEffectLayer.is-koala-excited .koalaReactionBurst span:nth-child(2){animation-delay:.04s}.homepageEffectLayer.is-koala-excited .koalaReactionBurst span:nth-child(3){animation-delay:.08s}.homepageEffectLayer.is-koala-excited .koalaReactionBurst span:nth-child(4){animation-delay:.12s}.homepageEffectLayer.is-koala-excited .koalaReactionBurst span:nth-child(5){animation-delay:.16s}
+@keyframes koalaBreathing{from{transform:scaleY(.985)}to{transform:scaleY(1.015)}}
+@keyframes koalaBlink{0%,45%,48%,100%{transform:scaleY(1)}46%,47%{transform:scaleY(.08)}}
+@keyframes koalaCanopyBreathe{from{transform:translateY(0) rotate(-1deg)}to{transform:translateY(5px) rotate(1deg)}}
+@keyframes koalaArmIdle{0%,82%,100%{transform:rotate(0)}89%{transform:rotate(-8deg)}94%{transform:rotate(4deg)}}
+@keyframes koalaEarWiggle{0%,86%,100%{transform:rotate(0)}91%{transform:rotate(-5deg)}95%{transform:rotate(4deg)}}
+@keyframes koalaLeafSnackIdle{from{transform:rotate(-4deg)}to{transform:rotate(4deg)}}
+@keyframes koalaLeafFall{0%{transform:translate3d(0,-12vh,0) rotate(0deg);opacity:0}10%{opacity:.9}100%{transform:translate3d(12vw,118vh,0) rotate(720deg);opacity:.25}}
+@keyframes koalaHappyBounce{0%,100%{translate:-50% 0}38%{translate:-50% -22px}66%{translate:-50% -7px}}
+@keyframes koalaHappyTilt{0%,100%{transform:translate(var(--koala-head-x),var(--koala-head-y)) rotate(var(--koala-head-r))}38%{transform:translate(var(--koala-head-x),calc(var(--koala-head-y) - 4px)) rotate(-12deg)}68%{transform:translate(var(--koala-head-x),var(--koala-head-y)) rotate(9deg)}}
+@keyframes koalaHappyWave{from{rotate:-42deg}to{rotate:-77deg}}
+@keyframes koalaLeafNibble{0%,100%{transform:rotate(0) scale(1)}45%{transform:rotate(-10deg) scale(.94)}70%{transform:rotate(7deg) scale(1.03)}}
+@keyframes koalaBurstPop{0%{opacity:0;transform:translate(0,0) scale(.35) rotate(-8deg)}18%{opacity:1}100%{opacity:0;transform:translate(var(--kx),var(--ky)) scale(1.18) rotate(12deg)}}
+@media(max-width:700px){.koalaForestTrunk.trunk-right{right:-3%;opacity:.62}.koalaForestTrunk.trunk-left{left:-5%;opacity:.62}.koalaMainTree{width:88vw;height:86vh}.koalaMainTrunk{width:26vw}.koalaBranch.main{width:76vw;top:46%}.petKoala{width:clamp(250px,76vw,365px);height:clamp(355px,104vw,510px);top:18%}.koalaInteractionHint{top:3%;font-size:10px;max-width:82vw;text-align:center;white-space:normal;line-height:1.25}.koalaForestCanopy.front{top:-8%}.koalaForestFloor{height:24vh}}
+
+
+/* =========================================================
+   v424 SOLAR SYSTEM RE-CENTER + TRUE INTERACTION
+   The sun and all eight planets now share one centered system.
+========================================================= */
+.homepageEffectLayer.is-solar-system{
+  --solar-pointer-x:0px;
+  --solar-pointer-y:0px;
+  --solar-tilt-x:0deg;
+  --solar-tilt-y:0deg;
+}
+.homepageEffectLayer.is-solar-system .homepageEffectBackdrop{
+  background:
+    radial-gradient(circle at 50% 48%,rgba(39,72,139,.18),transparent 35%),
+    radial-gradient(circle at 18% 24%,rgba(71,119,201,.08),transparent 24%),
+    radial-gradient(circle at 82% 72%,rgba(103,61,168,.10),transparent 26%),
+    linear-gradient(180deg,rgba(1,4,15,.90),rgba(2,7,23,.96));
+  backdrop-filter:brightness(.48) saturate(.90);
+}
+.homepageSolarSystemScene{
+  pointer-events:auto;
+  touch-action:none;
+  perspective:1200px;
+  background:
+    radial-gradient(circle at 50% 50%,rgba(67,103,182,.07),transparent 42%),
+    radial-gradient(circle at 50% 50%,transparent 0 62%,rgba(0,0,0,.18) 100%);
+}
+.homepageSolarSystemScene .solarSystemStage{
+  left:50% !important;
+  top:50% !important;
+  width:min(98vw,94vh,1220px) !important;
+  height:auto !important;
+  aspect-ratio:1;
+  translate:-50% -50% !important;
+  transform:
+    translate3d(var(--solar-pointer-x),var(--solar-pointer-y),0)
+    rotateX(var(--solar-tilt-x))
+    rotateY(var(--solar-tilt-y)) !important;
+  transform-style:preserve-3d;
+  transition:transform .14s ease-out !important;
+  pointer-events:none;
+}
+.homepageSolarSystemScene .solarSun{
+  appearance:none;
+  border:0;
+  padding:0;
+  margin:0;
+  left:50% !important;
+  top:50% !important;
+  width:clamp(92px,9.8vw,164px) !important;
+  translate:-50% -50% !important;
+  cursor:pointer;
+  pointer-events:auto;
+  background:transparent;
+  z-index:12;
+  transition:filter .2s ease,scale .2s ease;
+}
+.homepageSolarSystemScene .solarSun:hover,
+.homepageSolarSystemScene .solarSun:focus-visible,
+.homepageSolarSystemScene .solarSun.is-solar-selected{
+  scale:1.10;
+  filter:drop-shadow(0 0 54px rgba(255,174,55,.72)) brightness(1.08);
+  outline:none;
+}
+.homepageSolarSystemScene .solarSun::after{
+  opacity:0;
+  transform:translateY(5px);
+  transition:opacity .18s ease,transform .18s ease;
+}
+.homepageSolarSystemScene .solarSun:hover::after,
+.homepageSolarSystemScene .solarSun:focus-visible::after,
+.homepageSolarSystemScene .solarSun.is-solar-selected::after{
+  opacity:1;
+  transform:translateY(0);
+}
+.homepageSolarSystemScene .solarOrbit{
+  left:50% !important;
+  top:50% !important;
+  translate:-50% -50% !important;
+  width:var(--orbit-size) !important;
+  height:auto !important;
+  aspect-ratio:1.58 / 1;
+  border:1px solid rgba(171,198,247,.18) !important;
+  box-shadow:inset 0 0 20px rgba(72,111,177,.025);
+  animation:solarOrbitSpin var(--duration) linear infinite !important;
+  animation-delay:var(--delay) !important;
+  transform-origin:50% 50%;
+  pointer-events:none;
+}
+.homepageSolarSystemScene .orbit-mercury{--orbit-size:19%;--duration:10s;--delay:-2.2s}
+.homepageSolarSystemScene .orbit-venus{--orbit-size:30%;--duration:14s;--delay:-5.1s}
+.homepageSolarSystemScene .orbit-earth{--orbit-size:42%;--duration:19s;--delay:-8.4s}
+.homepageSolarSystemScene .orbit-mars{--orbit-size:54%;--duration:25s;--delay:-12.8s}
+.homepageSolarSystemScene .orbit-jupiter{--orbit-size:68%;--duration:34s;--delay:-18.6s}
+.homepageSolarSystemScene .orbit-saturn{--orbit-size:80%;--duration:44s;--delay:-27s}
+.homepageSolarSystemScene .orbit-uranus{--orbit-size:90%;--duration:56s;--delay:-34s}
+.homepageSolarSystemScene .orbit-neptune{--orbit-size:100%;--duration:69s;--delay:-48s}
+.homepageSolarSystemScene .solarPlanetAnchor{
+  left:100% !important;
+  top:50% !important;
+  translate:-50% -50% !important;
+  width:58px !important;
+  height:58px !important;
+  pointer-events:auto !important;
+  animation:solarOrbitCounter var(--duration) linear infinite;
+  animation-delay:var(--delay);
+}
+.homepageSolarSystemScene .solarPlanet{
+  appearance:none;
+  border:0;
+  padding:0;
+  margin:0;
+  flex:0 0 auto;
+  cursor:pointer;
+  pointer-events:auto;
+  outline:none;
+  transform:scale(1);
+  transition:transform .18s ease,filter .18s ease,box-shadow .18s ease !important;
+}
+.homepageSolarSystemScene .solarPlanet:hover,
+.homepageSolarSystemScene .solarPlanet:focus-visible{
+  transform:scale(1.32) !important;
+  filter:brightness(1.16) saturate(1.12);
+  box-shadow:0 0 0 3px rgba(255,255,255,.14),0 0 24px rgba(132,186,255,.54),inset -6px -5px 10px rgba(0,0,0,.26);
+}
+.homepageSolarSystemScene .solarPlanet.is-solar-selected{
+  transform:scale(1.58) !important;
+  filter:brightness(1.2) saturate(1.15);
+  box-shadow:0 0 0 4px rgba(255,255,255,.20),0 0 34px rgba(130,190,255,.74),inset -6px -5px 10px rgba(0,0,0,.22);
+  z-index:30;
+}
+.homepageSolarSystemScene .solarPlanet::after{
+  opacity:0 !important;
+  transform:translateY(7px) !important;
+  z-index:40;
+}
+.homepageSolarSystemScene .solarPlanet:hover::after,
+.homepageSolarSystemScene .solarPlanet:focus-visible::after,
+.homepageSolarSystemScene .solarPlanet.is-solar-selected::after{
+  opacity:1 !important;
+  transform:translateY(0) !important;
+}
+.homepageSolarSystemScene.has-planet-focus .solarOrbit,
+.homepageSolarSystemScene.has-planet-focus .solarPlanetAnchor,
+.homepageSolarSystemScene .solarOrbit:has(.solarPlanet:hover),
+.homepageSolarSystemScene .solarOrbit:has(.solarPlanet:hover) .solarPlanetAnchor,
+.homepageSolarSystemScene .solarOrbit:has(.solarPlanet:focus-visible),
+.homepageSolarSystemScene .solarOrbit:has(.solarPlanet:focus-visible) .solarPlanetAnchor{
+  animation-play-state:paused !important;
+}
+.homepageSolarSystemScene.has-planet-focus .solarOrbit:not(:has(.is-solar-selected)){
+  border-color:rgba(171,198,247,.09) !important;
+}
+.homepageSolarSystemScene .solarPlanetLegend{display:none !important}
+.homepageSolarSystemScene .solarHint{display:none !important}
+.homepageSolarSystemScene .solarInteractionHint{
+  position:absolute;
+  left:max(18px,env(safe-area-inset-left));
+  bottom:max(18px,env(safe-area-inset-bottom));
+  z-index:12;
+  padding:8px 12px;
+  border-radius:999px;
+  color:rgba(229,239,255,.82);
+  background:rgba(4,9,21,.48);
+  border:1px solid rgba(160,192,247,.15);
+  backdrop-filter:blur(8px);
+  font:600 11px/1.2 Arial,sans-serif;
+  letter-spacing:.02em;
+  pointer-events:none;
+}
+.homepageSolarSystemScene .solarInteractionHint span{color:#fff;font-weight:800}
+.homepageSolarSystemScene .solarInfoCard{
+  position:absolute;
+  z-index:16;
+  right:max(20px,env(safe-area-inset-right));
+  bottom:max(20px,env(safe-area-inset-bottom));
+  width:min(300px,calc(100vw - 40px));
+  padding:18px 44px 16px 18px;
+  border-radius:18px;
+  color:#f5f8ff;
+  background:linear-gradient(145deg,rgba(8,15,35,.91),rgba(8,20,43,.78));
+  border:1px solid rgba(166,198,255,.24);
+  box-shadow:0 18px 46px rgba(0,0,0,.34),inset 0 1px rgba(255,255,255,.06);
+  backdrop-filter:blur(14px);
+  pointer-events:auto;
+  animation:solarCardIn .22s ease-out both;
+}
+.homepageSolarSystemScene .solarInfoCard[hidden]{display:none !important}
+.homepageSolarSystemScene .solarInfoEyebrow{display:block;color:#8bbcff;font:800 10px/1 Arial,sans-serif;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px}
+.homepageSolarSystemScene .solarInfoName{display:block;font:900 clamp(22px,2.4vw,32px)/1 Arial,sans-serif;letter-spacing:.01em}
+.homepageSolarSystemScene .solarInfoType{display:block;margin-top:5px;color:#c8d7ed;font:700 12px/1.2 Arial,sans-serif}
+.homepageSolarSystemScene .solarInfoFact{margin:10px 0 8px;color:#eaf1fb;font:500 13px/1.45 Arial,sans-serif}
+.homepageSolarSystemScene .solarInfoCard small{color:#96a8c3;font:600 9px/1.2 Arial,sans-serif;text-transform:uppercase;letter-spacing:.06em}
+.homepageSolarSystemScene .solarInfoClose{position:absolute;right:10px;top:9px;width:28px;height:28px;border:0;border-radius:50%;background:rgba(255,255,255,.08);color:#fff;font:700 19px/1 Arial,sans-serif;cursor:pointer}
+.homepageSolarSystemScene .solarInfoClose:hover{background:rgba(255,255,255,.16)}
+.homepageSolarSystemScene .mercury{--size:clamp(12px,1.15vw,18px)}
+.homepageSolarSystemScene .venus{--size:clamp(17px,1.6vw,25px)}
+.homepageSolarSystemScene .earth{--size:clamp(18px,1.7vw,26px)}
+.homepageSolarSystemScene .mars{--size:clamp(14px,1.3vw,21px)}
+.homepageSolarSystemScene .jupiter{--size:clamp(36px,3.2vw,52px)}
+.homepageSolarSystemScene .saturn{--size:clamp(31px,2.9vw,46px)}
+.homepageSolarSystemScene .uranus{--size:clamp(24px,2.2vw,34px)}
+.homepageSolarSystemScene .neptune{--size:clamp(24px,2.2vw,34px)}
+@keyframes solarOrbitCounter{from{transform:rotate(0deg)}to{transform:rotate(-360deg)}}
+@keyframes solarCardIn{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(max-width:800px){
+  .homepageSolarSystemScene .solarSystemStage{width:min(100vw,82vh,900px) !important;top:46% !important}
+  .homepageSolarSystemScene .solarInteractionHint{display:none}
+  .homepageSolarSystemScene .solarInfoCard{left:50%;right:auto;bottom:max(14px,env(safe-area-inset-bottom));translate:-50% 0;width:min(88vw,330px);padding-top:14px;padding-bottom:13px}
+  .homepageSolarSystemScene .solarSun{width:clamp(78px,16vw,118px) !important}
+  .homepageSolarSystemScene .solarPlanetAnchor{width:48px !important;height:48px !important}
+}
+
+/* =========================================================
+   v424 FLOOD FULL-SCREEN LIFE SCENE
+   Slow rise -> full underwater hold -> smooth reset.
+========================================================= */
+.homepageEffectLayer.is-flood-rain .homepageEffectFlood{
+  animation:sfkFloodLevelV424 46s cubic-bezier(.38,0,.28,1) infinite !important;
+  overflow:visible;
+}
+.homepageEffectLayer.is-flood-rain .homepageEffectBackdrop{
+  animation:sfkFloodStormDarknessV424 46s ease-in-out infinite !important;
+}
+.homepageEffectLayer.is-flood-rain .homepageFloodShine{
+  opacity:.76;
+}
+.floodUnderwaterLife{
+  position:absolute;
+  inset:0;
+  z-index:7;
+  overflow:hidden;
+  opacity:0;
+  pointer-events:none;
+  animation:sfkFloodLifeWindow 46s linear infinite;
+  background:
+    radial-gradient(circle at 22% 24%,rgba(150,224,255,.08),transparent 14%),
+    radial-gradient(circle at 74% 42%,rgba(126,206,245,.07),transparent 16%);
+}
+.floodUnderwaterLife::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:repeating-linear-gradient(112deg,transparent 0 11vw,rgba(217,246,255,.07) 11.5vw 12.7vw,transparent 13.2vw 24vw);
+  animation:sfkFloodUnderwaterLight 5.2s ease-in-out infinite alternate;
+}
+.floodFish{
+  position:absolute;
+  width:clamp(34px,4.1vw,72px);
+  height:clamp(17px,2.05vw,36px);
+  border-radius:55% 48% 48% 55%;
+  background:linear-gradient(90deg,#ffd45c,#f2a33e);
+  filter:drop-shadow(0 7px 7px rgba(0,27,52,.26));
+  animation:sfkFishSwim 9s linear infinite;
+}
+.floodFish::before{
+  content:"";
+  position:absolute;
+  right:13%;
+  top:27%;
+  width:10%;
+  aspect-ratio:1;
+  border-radius:50%;
+  background:#172b38;
+  box-shadow:0 0 0 2px rgba(255,255,255,.58);
+}
+.floodFish::after{
+  content:"";
+  position:absolute;
+  left:-29%;
+  top:15%;
+  width:34%;
+  height:70%;
+  background:inherit;
+  clip-path:polygon(100% 50%,0 0,14% 50%,0 100%);
+}
+.floodFish.fish-a{left:-12%;top:19%;animation-duration:8.3s}
+.floodFish.fish-b{left:-18%;top:38%;scale:.72;animation-duration:11.6s;animation-delay:-5s;background:linear-gradient(90deg,#77e2d0,#36a7bf)}
+.floodFish.fish-c{left:-15%;top:68%;scale:.9;animation-duration:13.2s;animation-delay:-8s;background:linear-gradient(90deg,#ff9e80,#d45d68)}
+.floodFish.fish-d{right:-15%;left:auto;top:28%;scale:.62;animation-name:sfkFishSwimReverse;animation-duration:10.5s;animation-delay:-3s;background:linear-gradient(90deg,#caabff,#6c76d8)}
+.floodFish.fish-e{right:-18%;left:auto;top:56%;scale:.82;animation-name:sfkFishSwimReverse;animation-duration:14s;animation-delay:-7s;background:linear-gradient(90deg,#ffe985,#d1ac32)}
+.floodFish.fish-f{right:-12%;left:auto;top:77%;scale:.55;animation-name:sfkFishSwimReverse;animation-duration:9.6s;animation-delay:-1s;background:linear-gradient(90deg,#91dbff,#3c8dcb)}
+.floodSwimmer{
+  position:absolute;
+  left:8%;
+  top:43%;
+  width:clamp(145px,17vw,260px);
+  height:clamp(78px,9vw,135px);
+  z-index:9;
+  filter:drop-shadow(0 10px 10px rgba(0,24,44,.30));
+  animation:sfkFloodSwimmerGlide 10.8s ease-in-out infinite alternate;
+}
+.swimmerHead{
+  position:absolute;
+  left:68%;
+  top:8%;
+  width:23%;
+  aspect-ratio:1;
+  border-radius:50%;
+  background:#d89b73;
+  z-index:4;
+  box-shadow:inset -5px -5px 8px rgba(100,49,32,.14);
+}
+.swimmerHair{
+  position:absolute;
+  left:-2%;
+  top:-5%;
+  width:92%;
+  height:48%;
+  border-radius:60% 60% 42% 25%;
+  background:#211a19;
+  transform:rotate(-8deg);
+}
+.swimmerBody{
+  position:absolute;
+  left:27%;
+  top:27%;
+  width:49%;
+  height:35%;
+  border-radius:55% 40% 44% 55%;
+  background:linear-gradient(90deg,#f4c837,#f39a28);
+  transform:rotate(-7deg);
+}
+.swimmerArm,.swimmerLeg{
+  position:absolute;
+  height:10%;
+  border-radius:999px;
+  transform-origin:left center;
+}
+.swimmerArm{left:53%;top:41%;width:40%;background:#d89b73}
+.swimmerArm.arm-front{transform:rotate(-36deg);animation:sfkSwimArmFront 1.05s ease-in-out infinite alternate}
+.swimmerArm.arm-back{top:50%;left:43%;opacity:.72;transform:rotate(28deg);animation:sfkSwimArmBack 1.05s ease-in-out infinite alternate}
+.swimmerLeg{left:4%;top:47%;width:35%;background:#30465b}
+.swimmerLeg.leg-front{transform:rotate(14deg);animation:sfkSwimKickA .82s ease-in-out infinite alternate}
+.swimmerLeg.leg-back{top:57%;opacity:.78;transform:rotate(-18deg);animation:sfkSwimKickB .82s ease-in-out infinite alternate}
+.floodSafetyBubble{
+  position:absolute;
+  left:64%;
+  bottom:93%;
+  min-width:max-content;
+  padding:10px 14px;
+  border-radius:16px 16px 16px 4px;
+  background:rgba(255,255,255,.94);
+  color:#153047;
+  box-shadow:0 8px 22px rgba(0,30,56,.24);
+  font:900 clamp(14px,1.5vw,22px)/1.05 Arial,sans-serif;
+  letter-spacing:.01em;
+  white-space:nowrap;
+  animation:sfkSafetyBubbleBob 1.8s ease-in-out infinite alternate;
+}
+.floodSafetyBubble::after{
+  content:"";
+  position:absolute;
+  left:12px;
+  bottom:-9px;
+  border:9px solid transparent;
+  border-top-color:rgba(255,255,255,.94);
+  border-left:0;
+}
+.swimBubble{
+  position:absolute;
+  right:4%;
+  top:20%;
+  width:10px;
+  height:10px;
+  border:2px solid rgba(230,250,255,.76);
+  border-radius:50%;
+  animation:sfkSwimBubbleRise 2.4s ease-out infinite;
+}
+.swimBubble.bubble-b{right:-4%;top:34%;width:7px;height:7px;animation-delay:-.9s}
+.swimBubble.bubble-c{right:6%;top:47%;width:5px;height:5px;animation-delay:-1.7s}
+@keyframes sfkFloodLevelV424{
+  0%,7%{height:12vh;transform:translateY(3vh);filter:brightness(.98)}
+  22%{height:25vh;transform:translateY(2.5vh);filter:brightness(.96)}
+  40%{height:48vh;transform:translateY(1.8vh);filter:brightness(.93)}
+  57%{height:73vh;transform:translateY(1vh);filter:brightness(.90)}
+  69%{height:96vh;transform:translateY(.3vh);filter:brightness(.86)}
+  74%,84%{height:116vh;transform:translateY(0);filter:brightness(.78)}
+  90%{height:76vh;transform:translateY(.8vh);filter:brightness(.88)}
+  96%{height:34vh;transform:translateY(2vh);filter:brightness(.94)}
+  100%{height:12vh;transform:translateY(3vh);filter:brightness(.98)}
+}
+@keyframes sfkFloodStormDarknessV424{
+  0%,100%{filter:brightness(.98);opacity:.94}
+  54%{filter:brightness(.84);opacity:1}
+  72%,85%{filter:brightness(.65) saturate(.82);opacity:1}
+  94%{filter:brightness(.91);opacity:.97}
+}
+@keyframes sfkFloodLifeWindow{
+  0%,69%{opacity:0;visibility:hidden}
+  73%{opacity:.15;visibility:visible}
+  76%,84%{opacity:1;visibility:visible}
+  88%{opacity:0;visibility:visible}
+  89%,100%{opacity:0;visibility:hidden}
+}
+@keyframes sfkFloodUnderwaterLight{from{transform:translateX(-3%);opacity:.52}to{transform:translateX(3%);opacity:.94}}
+@keyframes sfkFishSwim{from{transform:translateX(-6vw) translateY(0) rotate(1deg)}50%{transform:translateX(55vw) translateY(-3vh) rotate(-2deg)}to{transform:translateX(124vw) translateY(2vh) rotate(1deg)}}
+@keyframes sfkFishSwimReverse{from{transform:scaleX(-1) translateX(-5vw) translateY(0)}50%{transform:scaleX(-1) translateX(58vw) translateY(3vh)}to{transform:scaleX(-1) translateX(124vw) translateY(-2vh)}}
+@keyframes sfkFloodSwimmerGlide{from{transform:translate3d(0,2vh,0) rotate(-2deg)}to{transform:translate3d(50vw,-5vh,0) rotate(3deg)}}
+@keyframes sfkSwimArmFront{from{rotate:-18deg}to{rotate:38deg}}
+@keyframes sfkSwimArmBack{from{rotate:22deg}to{rotate:-32deg}}
+@keyframes sfkSwimKickA{from{rotate:8deg}to{rotate:28deg}}
+@keyframes sfkSwimKickB{from{rotate:-10deg}to{rotate:-30deg}}
+@keyframes sfkSafetyBubbleBob{from{transform:translateY(0)}to{transform:translateY(-5px)}}
+@keyframes sfkSwimBubbleRise{0%{opacity:0;transform:translate(0,8px) scale(.7)}20%{opacity:.9}100%{opacity:0;transform:translate(14px,-60px) scale(1.25)}}
+@media(max-width:700px){
+  .homepageEffectLayer.is-flood-rain .homepageEffectFlood{animation-duration:46s !important}
+  .homepageEffectLayer.is-flood-rain .homepageEffectBackdrop{animation-duration:46s !important}
+  .floodUnderwaterLife{animation-duration:46s !important}
+  .floodSwimmer{top:46%;width:clamp(125px,34vw,190px)}
+  .floodSafetyBubble{font-size:13px;padding:8px 10px}
+}
+
+
+/* =========================================================
+   v426 FLOOD LIFE POLISH
+   Clean 5-second underwater character moment.
+========================================================= */
+.homepageEffectLayer.is-flood-rain .homepageEffectWeatherMessage{
+  animation:sfkFloodAdminTextWindowV426 46s linear infinite !important;
+}
+.floodUnderwaterLife{
+  animation:sfkFloodLifeWindowV426 46s linear infinite !important;
+  background:
+    radial-gradient(ellipse at 18% 18%,rgba(194,239,255,.13),transparent 22%),
+    radial-gradient(ellipse at 78% 38%,rgba(118,209,245,.10),transparent 20%),
+    linear-gradient(180deg,rgba(14,97,145,.04),rgba(0,45,82,.14));
+}
+.floodUnderwaterLife::before{
+  background:
+    repeating-linear-gradient(112deg,transparent 0 12vw,rgba(224,249,255,.08) 12.4vw 13.2vw,transparent 13.6vw 26vw),
+    linear-gradient(180deg,rgba(255,255,255,.04),transparent 45%);
+  filter:blur(.2px);
+}
+
+/* Fish: softer organic body, tail, eye, fin and subtle swimming pitch. */
+.floodFish{
+  width:clamp(44px,4.8vw,82px) !important;
+  height:clamp(22px,2.4vw,41px) !important;
+  border-radius:58% 46% 46% 58% / 52% 50% 50% 52% !important;
+  background:linear-gradient(135deg,#ffd866 0%,#f4ad43 54%,#d87d2f 100%);
+  box-shadow:inset -8px -5px 10px rgba(91,45,9,.15),inset 6px 4px 9px rgba(255,255,255,.18);
+  filter:drop-shadow(0 8px 8px rgba(0,31,58,.22));
+}
+.floodFish::before{
+  right:14% !important;
+  top:31% !important;
+  width:10% !important;
+  background:#112d3f !important;
+  box-shadow:0 0 0 2px rgba(255,255,255,.72),-2px -2px 0 rgba(255,255,255,.38) !important;
+}
+.floodFish::after{
+  left:-34% !important;
+  top:8% !important;
+  width:39% !important;
+  height:84% !important;
+  border-radius:20% !important;
+  background:linear-gradient(135deg,#eeaa42,#cd6e29) !important;
+  clip-path:polygon(100% 50%,0 0,18% 50%,0 100%) !important;
+  transform-origin:right center;
+  animation:sfkFishTailWag .48s ease-in-out infinite alternate;
+}
+.floodFish .fishFin{
+  position:absolute;
+  left:43%;
+  top:48%;
+  width:28%;
+  height:32%;
+  border-radius:60% 10% 70% 10%;
+  background:rgba(255,241,183,.56);
+  transform:rotate(20deg);
+  box-shadow:0 1px 0 rgba(90,61,25,.10);
+}
+.floodFish.fish-b{background:linear-gradient(135deg,#8ae6db,#42b5c2 58%,#268596) !important}.floodFish.fish-b::after{background:linear-gradient(135deg,#62d4cb,#3295a7) !important}
+.floodFish.fish-c{background:linear-gradient(135deg,#ffae91,#dc6b74 58%,#ab4555) !important}.floodFish.fish-c::after{background:linear-gradient(135deg,#ed8779,#be4e60) !important}
+.floodFish.fish-d{background:linear-gradient(135deg,#d6c0ff,#8b8ee2 58%,#5a5eae) !important}.floodFish.fish-d::after{background:linear-gradient(135deg,#b29ee8,#6f73c5) !important}
+.floodFish.fish-e{background:linear-gradient(135deg,#fff1a0,#e5c147 58%,#b99425) !important}.floodFish.fish-e::after{background:linear-gradient(135deg,#ebd26c,#bf9b2a) !important}
+.floodFish.fish-f{background:linear-gradient(135deg,#a8e4ff,#5ca8dc 58%,#347bb1) !important}.floodFish.fish-f::after{background:linear-gradient(135deg,#78c6e9,#428fc3) !important}
+
+/* Swimmer: cleaner side-profile body with goggles, shirt/shorts and jointed limbs. */
+.floodSwimmer{
+  left:7% !important;
+  top:44% !important;
+  width:clamp(190px,20vw,310px) !important;
+  height:clamp(108px,11.5vw,175px) !important;
+  filter:drop-shadow(0 13px 13px rgba(0,24,44,.28)) !important;
+  animation:sfkFloodSwimmerGlideV426 5s cubic-bezier(.25,.52,.32,.98) both !important;
+}
+.swimmerHead{
+  left:69% !important;
+  top:6% !important;
+  width:22% !important;
+  background:linear-gradient(145deg,#e4aa81,#c98560) !important;
+  box-shadow:inset -7px -5px 9px rgba(87,41,28,.15),0 0 0 1px rgba(72,35,25,.06) !important;
+}
+.swimmerHair{
+  left:-8% !important;
+  top:-8% !important;
+  width:96% !important;
+  height:50% !important;
+  background:linear-gradient(160deg,#1b1718,#302323) !important;
+  border-radius:72% 56% 42% 30% !important;
+  transform:rotate(-10deg) !important;
+}
+.swimmerGoggles{
+  position:absolute;
+  left:48%;
+  top:34%;
+  width:42%;
+  height:16%;
+  border-radius:999px;
+  background:#284c65;
+  border:2px solid rgba(210,243,255,.78);
+  box-shadow:-14px 0 0 -3px #284c65,-14px 0 0 -1px rgba(210,243,255,.70);
+  transform:rotate(2deg);
+}
+.swimmerGoggles::after{
+  content:"";
+  position:absolute;
+  right:-14%;
+  top:40%;
+  width:22%;
+  height:2px;
+  background:#203c50;
+}
+.swimmerFace{
+  position:absolute;
+  right:-9%;
+  top:52%;
+  width:16%;
+  height:7%;
+  border-bottom:2px solid rgba(98,48,33,.55);
+  border-radius:50%;
+}
+.swimmerNeck{
+  position:absolute;
+  left:67%;
+  top:33%;
+  width:10%;
+  height:15%;
+  border-radius:999px;
+  background:#cf8e68;
+  transform:rotate(18deg);
+  z-index:2;
+}
+.swimmerBody{
+  left:29% !important;
+  top:31% !important;
+  width:47% !important;
+  height:33% !important;
+  border-radius:58% 42% 44% 56% !important;
+  background:linear-gradient(135deg,#ffd34d 0%,#f2ad2e 58%,#dd821f 100%) !important;
+  transform:rotate(-7deg) !important;
+  box-shadow:inset 7px 4px 9px rgba(255,255,255,.16),inset -8px -5px 9px rgba(113,60,9,.13);
+  z-index:3;
+}
+.swimmerShirtStripe{
+  position:absolute;
+  left:12%;
+  top:0;
+  width:12%;
+  height:100%;
+  border-radius:999px;
+  background:rgba(255,255,255,.23);
+  transform:skewX(-12deg);
+}
+.swimmerShorts{
+  position:absolute;
+  left:20%;
+  top:41%;
+  width:23%;
+  height:29%;
+  border-radius:18px 9px 14px 18px;
+  background:linear-gradient(135deg,#264a68,#17344f);
+  transform:rotate(-4deg);
+  z-index:2;
+}
+.swimmerArm,.swimmerLeg{
+  height:9% !important;
+  border-radius:999px !important;
+  transform-origin:left center !important;
+  z-index:2;
+}
+.swimmerArm{
+  left:57% !important;
+  top:42% !important;
+  width:31% !important;
+  background:#d79a72 !important;
+}
+.swimmerArm i,.swimmerLeg i{
+  position:absolute;
+  left:82%;
+  top:0;
+  width:42%;
+  height:100%;
+  border-radius:999px;
+  background:inherit;
+  transform-origin:left center;
+}
+.swimmerArm.arm-front{transform:rotate(-28deg) !important;animation:sfkSwimArmFrontV426 .95s ease-in-out infinite alternate !important}
+.swimmerArm.arm-front i{transform:rotate(-38deg)}
+.swimmerArm.arm-back{left:48% !important;top:50% !important;opacity:.68 !important;transform:rotate(30deg) !important;animation:sfkSwimArmBackV426 .95s ease-in-out infinite alternate !important}
+.swimmerArm.arm-back i{transform:rotate(26deg)}
+.swimmerLeg{
+  left:4% !important;
+  top:48% !important;
+  width:28% !important;
+  background:#1d3b57 !important;
+}
+.swimmerLeg i{left:78%;background:#d19670}
+.swimmerLeg.leg-front{transform:rotate(11deg) !important;animation:sfkSwimKickAV426 .8s ease-in-out infinite alternate !important}
+.swimmerLeg.leg-front i{transform:rotate(12deg)}
+.swimmerLeg.leg-back{top:59% !important;opacity:.76 !important;transform:rotate(-15deg) !important;animation:sfkSwimKickBV426 .8s ease-in-out infinite alternate !important}
+.swimmerLeg.leg-back i{transform:rotate(-13deg)}
+
+.floodSafetyBubble{
+  left:60% !important;
+  bottom:91% !important;
+  padding:10px 15px !important;
+  border-radius:18px 18px 18px 6px !important;
+  background:rgba(248,252,255,.96) !important;
+  color:#11334b !important;
+  border:1px solid rgba(25,83,118,.12);
+  box-shadow:0 10px 26px rgba(0,30,56,.25),inset 0 1px rgba(255,255,255,.9) !important;
+  font:900 clamp(13px,1.25vw,19px)/1.1 Arial,sans-serif !important;
+  letter-spacing:.005em !important;
+  text-shadow:none !important;
+  animation:sfkSafetyBubbleBobV426 1.5s ease-in-out infinite alternate !important;
+}
+.floodSafetyBubble::after{
+  left:16px !important;
+  bottom:-8px !important;
+  border-width:8px !important;
+  border-top-color:rgba(248,252,255,.96) !important;
+}
+.swimBubble{border-color:rgba(226,249,255,.84) !important;box-shadow:0 0 7px rgba(170,231,255,.18)}
+
+@keyframes sfkFloodLifeWindowV426{
+  0%,73.4%{opacity:0;visibility:hidden}
+  74%{opacity:1;visibility:visible}
+  84.8%{opacity:1;visibility:visible}
+  85%{opacity:0;visibility:hidden}
+  100%{opacity:0;visibility:hidden}
+}
+@keyframes sfkFloodAdminTextWindowV426{
+  0%,72.8%{opacity:1;visibility:visible}
+  73.5%,85.4%{opacity:0;visibility:hidden}
+  86.2%,100%{opacity:1;visibility:visible}
+}
+@keyframes sfkFishTailWag{from{transform:rotate(-9deg)}to{transform:rotate(9deg)}}
+@keyframes sfkFloodSwimmerGlideV426{
+  0%{transform:translate3d(-4vw,2vh,0) rotate(-3deg)}
+  48%{transform:translate3d(35vw,-3vh,0) rotate(1deg)}
+  100%{transform:translate3d(72vw,-1vh,0) rotate(2deg)}
+}
+@keyframes sfkSwimArmFrontV426{from{rotate:-14deg}to{rotate:30deg}}
+@keyframes sfkSwimArmBackV426{from{rotate:22deg}to{rotate:-27deg}}
+@keyframes sfkSwimKickAV426{from{rotate:7deg}to{rotate:24deg}}
+@keyframes sfkSwimKickBV426{from{rotate:-8deg}to{rotate:-26deg}}
+@keyframes sfkSafetyBubbleBobV426{from{transform:translateY(0) rotate(-1deg)}to{transform:translateY(-4px) rotate(1deg)}}
+
+@media(max-width:700px){
+  .floodSwimmer{left:3% !important;top:47% !important;width:clamp(165px,42vw,220px) !important}
+  .floodSafetyBubble{left:54% !important;bottom:89% !important;font-size:12px !important;padding:8px 10px !important}
+  .floodFish{width:clamp(38px,10vw,60px) !important;height:clamp(19px,5vw,30px) !important}
+}
+
+
+/* =========================================================
+   v427 FLOOD SWIMMER SYNC + PERFORMANCE
+   Keep swimmer/bubble readable and on-screen for the full
+   ~5-second underwater window. Fish also sync to flood cycle.
+========================================================= */
+.homepageEffectLayer.is-flood-rain .floodUnderwaterLife{
+  contain:layout paint style;
+  isolation:isolate;
+}
+.homepageEffectLayer.is-flood-rain .floodUnderwaterLife::before{
+  animation-duration:7s !important;
+  will-change:transform,opacity;
+}
+
+/* Four fish are enough visually; remove two extra animated layers. */
+.homepageEffectLayer.is-flood-rain .floodFish.fish-e,
+.homepageEffectLayer.is-flood-rain .floodFish.fish-f{
+  display:none !important;
+}
+.homepageEffectLayer.is-flood-rain .floodFish{
+  will-change:transform;
+  backface-visibility:hidden;
+}
+.homepageEffectLayer.is-flood-rain .floodFish.fish-a{
+  animation:sfkFishPassRightAV427 46s linear infinite !important;
+}
+.homepageEffectLayer.is-flood-rain .floodFish.fish-b{
+  animation:sfkFishPassRightBV427 46s linear infinite !important;
+}
+.homepageEffectLayer.is-flood-rain .floodFish.fish-c{
+  animation:sfkFishPassRightCV427 46s linear infinite !important;
+}
+.homepageEffectLayer.is-flood-rain .floodFish.fish-d{
+  animation:sfkFishPassLeftDV427 46s linear infinite !important;
+}
+
+/* Swimmer remains comfortably inside the viewport instead of exiting right. */
+.homepageEffectLayer.is-flood-rain .floodSwimmer{
+  left:6% !important;
+  top:43% !important;
+  width:clamp(190px,19vw,300px) !important;
+  height:clamp(108px,11vw,170px) !important;
+  animation:sfkFloodSwimmerWindowV427 46s linear infinite !important;
+  will-change:transform,opacity;
+  backface-visibility:hidden;
+}
+
+/* Speech bubble stays attached above the swimmer and never hangs off-screen. */
+.homepageEffectLayer.is-flood-rain .floodSafetyBubble{
+  left:auto !important;
+  right:1% !important;
+  bottom:91% !important;
+  min-width:0 !important;
+  width:max-content !important;
+  max-width:min(175px,42vw) !important;
+  padding:10px 14px !important;
+  white-space:nowrap !important;
+  overflow:visible !important;
+  text-align:center !important;
+  line-height:1.15 !important;
+  font-size:clamp(13px,1.2vw,18px) !important;
+  box-shadow:0 8px 20px rgba(0,28,50,.28),0 0 0 1px rgba(21,61,87,.10) !important;
+  animation:sfkSafetyBubbleWindowV427 46s linear infinite !important;
+  will-change:transform,opacity;
+}
+.homepageEffectLayer.is-flood-rain .floodSafetyBubble::after{
+  left:auto !important;
+  right:22px !important;
+}
+
+/* Keep limb motion light; animate only while the parent is painted. */
+.homepageEffectLayer.is-flood-rain .swimmerArm,
+.homepageEffectLayer.is-flood-rain .swimmerLeg,
+.homepageEffectLayer.is-flood-rain .floodFish::after{
+  will-change:transform;
+  backface-visibility:hidden;
+}
+
+@keyframes sfkFloodSwimmerWindowV427{
+  0%,73.8%{transform:translate3d(0,2vh,0) rotate(-3deg);opacity:.01}
+  74.2%{transform:translate3d(0,2vh,0) rotate(-3deg);opacity:1}
+  77%{transform:translate3d(9vw,-1vh,0) rotate(-1deg);opacity:1}
+  80.5%{transform:translate3d(21vw,-3vh,0) rotate(1deg);opacity:1}
+  83.8%{transform:translate3d(34vw,-1.5vh,0) rotate(1.5deg);opacity:1}
+  84.8%{transform:translate3d(38vw,-1vh,0) rotate(1deg);opacity:1}
+  85%,100%{transform:translate3d(38vw,-1vh,0) rotate(1deg);opacity:.01}
+}
+@keyframes sfkSafetyBubbleWindowV427{
+  0%,73.8%{opacity:0;transform:translateY(4px) scale(.97)}
+  74.4%{opacity:1;transform:translateY(0) scale(1)}
+  78%{opacity:1;transform:translateY(-3px) scale(1)}
+  82%{opacity:1;transform:translateY(0) scale(1)}
+  84.6%{opacity:1;transform:translateY(-2px) scale(1)}
+  85%,100%{opacity:0;transform:translateY(2px) scale(.98)}
+}
+
+@keyframes sfkFishPassRightAV427{
+  0%,73.6%{transform:translate3d(-18vw,0,0) rotate(1deg)}
+  74%{transform:translate3d(-7vw,0,0) rotate(1deg)}
+  79%{transform:translate3d(42vw,-3vh,0) rotate(-2deg)}
+  84.8%{transform:translate3d(112vw,2vh,0) rotate(1deg)}
+  85%,100%{transform:translate3d(112vw,2vh,0) rotate(1deg)}
+}
+@keyframes sfkFishPassRightBV427{
+  0%,73.6%{transform:translate3d(-30vw,0,0) rotate(-1deg)}
+  74%{transform:translate3d(-12vw,0,0) rotate(-1deg)}
+  79.5%{transform:translate3d(50vw,3vh,0) rotate(2deg)}
+  84.8%{transform:translate3d(120vw,-2vh,0) rotate(-1deg)}
+  85%,100%{transform:translate3d(120vw,-2vh,0) rotate(-1deg)}
+}
+@keyframes sfkFishPassRightCV427{
+  0%,73.6%{transform:translate3d(-24vw,0,0) rotate(1deg)}
+  74%{transform:translate3d(-10vw,0,0) rotate(1deg)}
+  78.5%{transform:translate3d(36vw,-2vh,0) rotate(-2deg)}
+  84.8%{transform:translate3d(116vw,1vh,0) rotate(1deg)}
+  85%,100%{transform:translate3d(116vw,1vh,0) rotate(1deg)}
+}
+@keyframes sfkFishPassLeftDV427{
+  0%,73.6%{transform:scaleX(-1) translate3d(-20vw,0,0)}
+  74%{transform:scaleX(-1) translate3d(-8vw,0,0)}
+  79%{transform:scaleX(-1) translate3d(48vw,2vh,0)}
+  84.8%{transform:scaleX(-1) translate3d(116vw,-2vh,0)}
+  85%,100%{transform:scaleX(-1) translate3d(116vw,-2vh,0)}
+}
+
+@media(max-width:700px){
+  .homepageEffectLayer.is-flood-rain .floodSwimmer{
+    left:4% !important;
+    top:45% !important;
+    width:clamp(160px,38vw,205px) !important;
+    height:clamp(92px,21vw,122px) !important;
+  }
+  .homepageEffectLayer.is-flood-rain .floodSafetyBubble{
+    right:0 !important;
+    bottom:92% !important;
+    max-width:140px !important;
+    padding:8px 10px !important;
+    font-size:12px !important;
+  }
+  @keyframes sfkFloodSwimmerWindowV427{
+    0%,73.8%{transform:translate3d(0,2vh,0) rotate(-3deg);opacity:.01}
+    74.2%{transform:translate3d(0,2vh,0) rotate(-3deg);opacity:1}
+    77%{transform:translate3d(6vw,0,0) rotate(-1deg);opacity:1}
+    80.5%{transform:translate3d(14vw,-2vh,0) rotate(1deg);opacity:1}
+    83.8%{transform:translate3d(24vw,-1vh,0) rotate(1.5deg);opacity:1}
+    84.8%{transform:translate3d(29vw,-.5vh,0) rotate(1deg);opacity:1}
+    85%,100%{transform:translate3d(29vw,-.5vh,0) rotate(1deg);opacity:.01}
+  }
 }

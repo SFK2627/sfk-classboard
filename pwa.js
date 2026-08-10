@@ -2,9 +2,9 @@
   let deferredInstallPrompt = null;
 
   const installButton = document.getElementById("installAppBtn");
-  const SW_URL = "./sw.js?v=cinematic-text-v420";
-  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV420RickrollStreamable";
-  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV420RickrollStreamable";
+  const SW_URL = "./sw.js?v=flood-life-v427";
+  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV427FloodSwimmerSync";
+  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV427FloodSwimmerSync";
 
   function isStandaloneApp() {
     return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;

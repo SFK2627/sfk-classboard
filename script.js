@@ -1825,8 +1825,8 @@ function normalizeHomepageEffectConfig(settings = {}) {
   const allowedModes = new Set([
     "normal", "drizzle", "heavy-rain", "thunderstorm", "flood-rain", "multiverse", "picture", "youtube", "rickroll", "alert",
     "spider-glitch", "comic-web", "black-symbiote", "portal-rift",
-    "fog", "snow", "confetti", "hearts", "koala-family", "stars", "matrix", "bubbles", "fireflies", "minions", "spongebob", "neon-pulse",
-    "aurora", "galaxy", "meteors", "laser-grid", "crt", "pixel-storm", "prism", "petals", "gold-sparkle"
+    "fog", "snow", "confetti", "hearts", "koala-family", "stars", "matrix", "bubbles", "fireflies", "minions", "spongebob", "naruto", "akatsuki", "ninja-night", "neon-pulse",
+    "aurora", "galaxy", "solar-system", "pet-dog", "pet-koala", "meteors", "laser-grid", "crt", "pixel-storm", "prism", "petals", "gold-sparkle"
   ]);
   const rawMode = String(settings.HomepageEffectMode || "normal").trim().toLowerCase();
   const mode = allowedModes.has(rawMode) ? rawMode : "normal";
@@ -2308,7 +2308,27 @@ function ensureHomepageEffectLayer() {
   layer.innerHTML = `
     <div class="homepageEffectBackdrop" aria-hidden="true"></div>
     <div class="homepageEffectRain" aria-hidden="true"></div>
-    <div class="homepageEffectFlood" aria-hidden="true"><span class="homepageFloodWave is-back"></span><span class="homepageFloodWave is-front"></span><span class="homepageFloodShine"></span></div>
+    <div class="homepageEffectFlood" aria-hidden="true">
+      <span class="homepageFloodWave is-back"></span><span class="homepageFloodWave is-front"></span><span class="homepageFloodShine"></span>
+      <div class="floodUnderwaterLife">
+        <span class="floodFish fish-a"><i class="fishFin"></i></span>
+        <span class="floodFish fish-b"><i class="fishFin"></i></span>
+        <span class="floodFish fish-c"><i class="fishFin"></i></span>
+        <span class="floodFish fish-d"><i class="fishFin"></i></span>
+        <span class="floodFish fish-e"><i class="fishFin"></i></span>
+        <span class="floodFish fish-f"><i class="fishFin"></i></span>
+        <div class="floodSwimmer">
+          <span class="swimmerHead"><i class="swimmerHair"></i><i class="swimmerGoggles"></i><i class="swimmerFace"></i></span>
+          <span class="swimmerNeck"></span>
+          <span class="swimmerBody"><i class="swimmerShirtStripe"></i></span>
+          <span class="swimmerShorts"></span>
+          <span class="swimmerArm arm-front"><i></i></span><span class="swimmerArm arm-back"><i></i></span>
+          <span class="swimmerLeg leg-front"><i></i></span><span class="swimmerLeg leg-back"><i></i></span>
+          <span class="swimBubble bubble-a"></span><span class="swimBubble bubble-b"></span><span class="swimBubble bubble-c"></span>
+          <span class="floodSafetyBubble">Stay safe, SFK!</span>
+        </div>
+      </div>
+    </div>
     <div class="homepageEffectMist" aria-hidden="true"></div>
     <div class="homepageEffectLightning" aria-hidden="true"></div>
     <div class="homepageEffectMultiverse" aria-hidden="true">
@@ -2347,6 +2367,78 @@ function ensureHomepageEffectLayer() {
       </span>
     </div>
     <div class="homepageEffectParticles" aria-hidden="true"></div>
+
+    <div class="homepageThemeScene homepageMinionsScene" aria-hidden="true">
+      <div class="minionLabWall"><i></i><i></i><i></i><i></i></div>
+      <div class="minionLabPipe pipe-a"></div><div class="minionLabPipe pipe-b"></div>
+      <div class="minionLabConsole"><span></span><span></span><span></span></div>
+      <div class="minionCharacter minion-one"><span class="minionGoggle"><b></b></span><span class="minionMouth"></span><span class="minionOverall"></span><i class="minionArm left"></i><i class="minionArm right"></i><i class="minionBoot left"></i><i class="minionBoot right"></i></div>
+      <div class="minionCharacter minion-two one-eye"><span class="minionGoggle"><b></b></span><span class="minionMouth"></span><span class="minionOverall"></span><i class="minionArm left"></i><i class="minionArm right"></i><i class="minionBoot left"></i><i class="minionBoot right"></i></div>
+      <div class="minionCharacter minion-three"><span class="minionGoggle"><b></b></span><span class="minionMouth"></span><span class="minionOverall"></span><i class="minionArm left"></i><i class="minionArm right"></i><i class="minionBoot left"></i><i class="minionBoot right"></i></div>
+      <div class="minionBanana banana-a">🍌</div><div class="minionBanana banana-b">🍌</div><div class="minionBanana banana-c">🍌</div>
+      <div class="minionWarningStripe"></div>
+    </div>
+
+    <div class="homepageThemeScene homepageSpongeScene" aria-hidden="true">
+      <div class="spongeWaterLight"></div>
+      <div class="spongeFlower flower-a"></div><div class="spongeFlower flower-b"></div><div class="spongeFlower flower-c"></div>
+      <div class="bikiniHouse pineapple"><span class="pineappleLeaves"></span><span class="houseDoor"></span><span class="houseWindow w1"></span><span class="houseWindow w2"></span></div>
+      <div class="bikiniHouse rock"><span class="rockDoor"></span></div>
+      <div class="bikiniHouse tiki"><span class="tikiEye e1"></span><span class="tikiEye e2"></span><span class="tikiDoor"></span></div>
+      <div class="spongeCharacter"><span class="spongeEye left"><b></b></span><span class="spongeEye right"><b></b></span><span class="spongeNose"></span><span class="spongeSmile"></span><span class="spongeShirt"></span><span class="spongeTie"></span><span class="spongePants"></span><i class="spongeArm left"></i><i class="spongeArm right"></i><i class="spongeLeg left"></i><i class="spongeLeg right"></i></div>
+      <div class="jellyfish jelly-a"><i></i><i></i><i></i></div><div class="jellyfish jelly-b"><i></i><i></i><i></i></div><div class="jellyfish jelly-c"><i></i><i></i><i></i></div>
+      <div class="spongeSand"></div>
+    </div>
+
+    <div class="homepageThemeScene homepageNarutoScene" aria-hidden="true">
+      <div class="leafSun"></div><div class="leafMountain"><i></i><i></i><i></i><i></i></div>
+      <div class="leafVillage back"></div><div class="leafVillage front"></div>
+      <div class="leafGate"><span></span></div>
+      <div class="narutoRunner"><span class="ninjaHead"></span><span class="ninjaBody"></span><span class="ninjaArm a1"></span><span class="ninjaArm a2"></span><span class="ninjaLeg l1"></span><span class="ninjaLeg l2"></span><span class="ninjaBand"></span></div>
+      <div class="chakraOrb"><i></i><i></i><i></i></div>
+      <div class="leafWind leaf-a">🍃</div><div class="leafWind leaf-b">🍃</div><div class="leafWind leaf-c">🍃</div>
+    </div>
+
+    <div class="homepageThemeScene homepageAkatsukiScene" aria-hidden="true">
+      <div class="akatsukiMoon"></div>
+      <div class="redCloud cloud-a"><i></i><i></i><i></i></div><div class="redCloud cloud-b"><i></i><i></i><i></i></div><div class="redCloud cloud-c"><i></i><i></i><i></i></div>
+      <div class="akatsukiCloak cloak-a"><span class="cloakHead"></span><span class="cloudMark m1"></span><span class="cloudMark m2"></span></div>
+      <div class="akatsukiCloak cloak-b"><span class="cloakHead"></span><span class="cloudMark m1"></span><span class="cloudMark m2"></span></div>
+      <div class="akatsukiRain"></div>
+      <div class="crow crow-a">◆</div><div class="crow crow-b">◆</div><div class="crow crow-c">◆</div>
+    </div>
+
+    <div class="homepageThemeScene homepageNinjaNightScene" aria-hidden="true">
+      <div class="ninjaMoon"></div><div class="nightCloud nc-a"></div><div class="nightCloud nc-b"></div>
+      <div class="ninjaRoof roof-a"></div><div class="ninjaRoof roof-b"></div><div class="ninjaRoof roof-c"></div>
+      <div class="ninjaLeap leap-a"><span></span><i class="arm a1"></i><i class="arm a2"></i><i class="leg l1"></i><i class="leg l2"></i></div>
+      <div class="ninjaLeap leap-b"><span></span><i class="arm a1"></i><i class="arm a2"></i><i class="leg l1"></i><i class="leg l2"></i></div>
+      <div class="shurikenTrail st-a"><b>✦</b></div><div class="shurikenTrail st-b"><b>✦</b></div>
+      <div class="nightFog"></div>
+    </div>
+    <div class="homepageThemeScene homepageSolarSystemScene" aria-hidden="true">
+      <div class="solarSceneGlow glow-a"></div><div class="solarSceneGlow glow-b"></div>
+      <div class="solarSystemStage" aria-label="Interactive Solar System">
+        <button class="solarSun" type="button" data-name="Sun" data-order="Center star" data-type="G-type star" data-fact="The Sun is the star at the center of our Solar System."><span class="solarSunAura"></span><span class="solarSunCore"></span></button>
+        <div class="solarOrbit orbit-mercury"><span class="solarPlanetAnchor"><button class="solarPlanet mercury" type="button" data-name="Mercury" data-order="1st planet" data-type="Rocky planet" data-fact="Mercury is the closest planet to the Sun and the smallest major planet."></button></span></div>
+        <div class="solarOrbit orbit-venus"><span class="solarPlanetAnchor"><button class="solarPlanet venus" type="button" data-name="Venus" data-order="2nd planet" data-type="Rocky planet" data-fact="Venus is the hottest planet because of its thick carbon-dioxide atmosphere."></button></span></div>
+        <div class="solarOrbit orbit-earth"><span class="solarPlanetAnchor"><button class="solarPlanet earth" type="button" data-name="Earth" data-order="3rd planet" data-type="Rocky planet" data-fact="Earth has abundant liquid surface water and is our home planet."></button></span></div>
+        <div class="solarOrbit orbit-mars"><span class="solarPlanetAnchor"><button class="solarPlanet mars" type="button" data-name="Mars" data-order="4th planet" data-type="Rocky planet" data-fact="Mars is known as the Red Planet because iron minerals in its surface oxidize."></button></span></div>
+        <div class="solarOrbit orbit-jupiter"><span class="solarPlanetAnchor"><button class="solarPlanet jupiter" type="button" data-name="Jupiter" data-order="5th planet" data-type="Gas giant" data-fact="Jupiter is the largest planet in the Solar System."></button></span></div>
+        <div class="solarOrbit orbit-saturn"><span class="solarPlanetAnchor"><button class="solarPlanet saturn" type="button" data-name="Saturn" data-order="6th planet" data-type="Gas giant" data-fact="Saturn is famous for its broad, bright ring system."></button></span></div>
+        <div class="solarOrbit orbit-uranus"><span class="solarPlanetAnchor"><button class="solarPlanet uranus" type="button" data-name="Uranus" data-order="7th planet" data-type="Ice giant" data-fact="Uranus rotates on its side compared with most other planets."></button></span></div>
+        <div class="solarOrbit orbit-neptune"><span class="solarPlanetAnchor"><button class="solarPlanet neptune" type="button" data-name="Neptune" data-order="8th planet" data-type="Ice giant" data-fact="Neptune is the farthest major planet from the Sun."></button></span></div>
+      </div>
+      <div class="solarInteractionHint" aria-hidden="true"><span>Move</span> to tilt • <span>Hover</span> to identify • <span>Tap</span> a planet to inspect</div>
+      <div class="solarInfoCard" aria-live="polite" hidden>
+        <button class="solarInfoClose" type="button" aria-label="Close planet details">×</button>
+        <span class="solarInfoEyebrow" id="solarInfoOrder">Planet</span>
+        <strong class="solarInfoName" id="solarInfoName">Earth</strong>
+        <span class="solarInfoType" id="solarInfoType">Rocky planet</span>
+        <p class="solarInfoFact" id="solarInfoFact"></p>
+        <small>Illustrative orbit layout • not to scale</small>
+      </div>
+    </div>
     <div class="homepageEffectKoalaFamily" aria-hidden="true">
       <div class="koalaFamilySoftGlow"></div>
       <div class="koalaFamilyStage">
@@ -2466,6 +2558,140 @@ function ensureHomepageEffectLayer() {
       moveHomepageEffectGallery(1);
     }
   });
+  const solarScene = layer.querySelector(".homepageSolarSystemScene");
+  const solarInfoCard = layer.querySelector(".solarInfoCard");
+  const solarInfoName = layer.querySelector("#solarInfoName");
+  const solarInfoOrder = layer.querySelector("#solarInfoOrder");
+  const solarInfoType = layer.querySelector("#solarInfoType");
+  const solarInfoFact = layer.querySelector("#solarInfoFact");
+  const resetSolarSystemPointer = () => {
+    layer.style.setProperty("--solar-pointer-x", "0px");
+    layer.style.setProperty("--solar-pointer-y", "0px");
+    layer.style.setProperty("--solar-tilt-x", "0deg");
+    layer.style.setProperty("--solar-tilt-y", "0deg");
+  };
+  const updateSolarSystemPointer = (event) => {
+    if (!layer.classList.contains("is-solar-system")) return;
+    const rect = layer.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const nx = Math.max(-1, Math.min(1, ((event.clientX - rect.left) / rect.width - .5) * 2));
+    const ny = Math.max(-1, Math.min(1, ((event.clientY - rect.top) / rect.height - .5) * 2));
+    layer.style.setProperty("--solar-pointer-x", `${(nx * 14).toFixed(2)}px`);
+    layer.style.setProperty("--solar-pointer-y", `${(ny * 10).toFixed(2)}px`);
+    layer.style.setProperty("--solar-tilt-x", `${(ny * -4.2).toFixed(2)}deg`);
+    layer.style.setProperty("--solar-tilt-y", `${(nx * 5.2).toFixed(2)}deg`);
+  };
+  const clearSolarPlanetFocus = () => {
+    solarScene?.classList.remove("has-planet-focus");
+    layer.querySelectorAll(".solarPlanet.is-solar-selected,.solarSun.is-solar-selected").forEach((item) => item.classList.remove("is-solar-selected"));
+    if (solarInfoCard) solarInfoCard.hidden = true;
+  };
+  const focusSolarObject = (target) => {
+    if (!target || !layer.classList.contains("is-solar-system")) return;
+    const alreadySelected = target.classList.contains("is-solar-selected");
+    clearSolarPlanetFocus();
+    if (alreadySelected) return;
+    target.classList.add("is-solar-selected");
+    solarScene?.classList.add("has-planet-focus");
+    if (solarInfoName) solarInfoName.textContent = target.dataset.name || "Solar System";
+    if (solarInfoOrder) solarInfoOrder.textContent = target.dataset.order || "Solar System";
+    if (solarInfoType) solarInfoType.textContent = target.dataset.type || "";
+    if (solarInfoFact) solarInfoFact.textContent = target.dataset.fact || "";
+    if (solarInfoCard) solarInfoCard.hidden = false;
+  };
+  solarScene?.addEventListener("pointermove", updateSolarSystemPointer, { passive: true });
+  solarScene?.addEventListener("pointerleave", resetSolarSystemPointer, { passive: true });
+  solarScene?.addEventListener("click", (event) => {
+    const target = event.target.closest?.(".solarPlanet,.solarSun");
+    if (!target) return;
+    event.preventDefault();
+    focusSolarObject(target);
+  });
+  layer.querySelector(".solarInfoClose")?.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    clearSolarPlanetFocus();
+  });
+  let petExcitedTimer = 0;
+  const resetPetDogLook = () => {
+    layer.style.setProperty("--pet-eye-x", "0px");
+    layer.style.setProperty("--pet-eye-y", "0px");
+    layer.style.setProperty("--pet-head-x", "0px");
+    layer.style.setProperty("--pet-head-y", "0px");
+    layer.style.setProperty("--pet-head-r", "0deg");
+    layer.style.setProperty("--pet-body-x", "0px");
+  };
+  const updatePetDogLook = (event) => {
+    if (!layer.classList.contains("is-pet-dog")) return;
+    const rect = layer.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const nx = Math.max(-1, Math.min(1, ((event.clientX - rect.left) / rect.width - .5) * 2));
+    const ny = Math.max(-1, Math.min(1, ((event.clientY - rect.top) / rect.height - .5) * 2));
+    layer.style.setProperty("--pet-eye-x", `${(nx * 5.2).toFixed(2)}px`);
+    layer.style.setProperty("--pet-eye-y", `${(ny * 3.7).toFixed(2)}px`);
+    layer.style.setProperty("--pet-head-x", `${(nx * 9).toFixed(2)}px`);
+    layer.style.setProperty("--pet-head-y", `${(ny * 4.5).toFixed(2)}px`);
+    layer.style.setProperty("--pet-head-r", `${(nx * 5.5).toFixed(2)}deg`);
+    layer.style.setProperty("--pet-body-x", `${(nx * 2.8).toFixed(2)}px`);
+  };
+  const excitePetDog = (event) => {
+    if (!layer.classList.contains("is-pet-dog")) return;
+    if (event?.clientX != null) updatePetDogLook(event);
+    layer.classList.remove("is-pet-excited");
+    void layer.offsetWidth;
+    layer.classList.add("is-pet-excited");
+    if (petExcitedTimer) window.clearTimeout(petExcitedTimer);
+    petExcitedTimer = window.setTimeout(() => {
+      layer.classList.remove("is-pet-excited");
+      petExcitedTimer = 0;
+    }, 1150);
+  };
+  const petScene = layer.querySelector(".homepagePetDogScene");
+  petScene?.addEventListener("pointermove", updatePetDogLook, { passive: true });
+  petScene?.addEventListener("pointerdown", excitePetDog, { passive: true });
+  petScene?.addEventListener("pointerleave", resetPetDogLook, { passive: true });
+  let koalaExcitedTimer = 0;
+  const resetPetKoalaLook = () => {
+    layer.style.setProperty("--koala-eye-x", "0px");
+    layer.style.setProperty("--koala-eye-y", "0px");
+    layer.style.setProperty("--koala-head-x", "0px");
+    layer.style.setProperty("--koala-head-y", "0px");
+    layer.style.setProperty("--koala-head-r", "0deg");
+    layer.style.setProperty("--koala-body-x", "0px");
+    layer.style.setProperty("--koala-forest-x", "0px");
+    layer.style.setProperty("--koala-forest-y", "0px");
+  };
+  const updatePetKoalaLook = (event) => {
+    if (!layer.classList.contains("is-pet-koala")) return;
+    const rect = layer.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const nx = Math.max(-1, Math.min(1, ((event.clientX - rect.left) / rect.width - .5) * 2));
+    const ny = Math.max(-1, Math.min(1, ((event.clientY - rect.top) / rect.height - .5) * 2));
+    layer.style.setProperty("--koala-eye-x", `${(nx * 5.4).toFixed(2)}px`);
+    layer.style.setProperty("--koala-eye-y", `${(ny * 3.7).toFixed(2)}px`);
+    layer.style.setProperty("--koala-head-x", `${(nx * 8.5).toFixed(2)}px`);
+    layer.style.setProperty("--koala-head-y", `${(ny * 4.2).toFixed(2)}px`);
+    layer.style.setProperty("--koala-head-r", `${(nx * 6.2).toFixed(2)}deg`);
+    layer.style.setProperty("--koala-body-x", `${(nx * 2.2).toFixed(2)}px`);
+    layer.style.setProperty("--koala-forest-x", `${(nx * -6).toFixed(2)}px`);
+    layer.style.setProperty("--koala-forest-y", `${(ny * -3).toFixed(2)}px`);
+  };
+  const excitePetKoala = (event) => {
+    if (!layer.classList.contains("is-pet-koala")) return;
+    if (event?.clientX != null) updatePetKoalaLook(event);
+    layer.classList.remove("is-koala-excited");
+    void layer.offsetWidth;
+    layer.classList.add("is-koala-excited");
+    if (koalaExcitedTimer) window.clearTimeout(koalaExcitedTimer);
+    koalaExcitedTimer = window.setTimeout(() => {
+      layer.classList.remove("is-koala-excited");
+      koalaExcitedTimer = 0;
+    }, 1250);
+  };
+  const koalaScene = layer.querySelector(".homepagePetKoalaScene");
+  koalaScene?.addEventListener("pointermove", updatePetKoalaLook, { passive: true });
+  koalaScene?.addEventListener("pointerdown", excitePetKoala, { passive: true });
+  koalaScene?.addEventListener("pointerleave", resetPetKoalaLook, { passive: true });
   document.addEventListener("keydown", (event) => {
     if (layer.hidden) return;
     if (event.key === "Escape") {
@@ -2502,6 +2728,15 @@ function hideHomepageEffectLayer() {
   if (galleryTrack) galleryTrack.innerHTML = "";
   const ambient = layer.querySelector(".homepageEffectParticles");
   if (ambient) ambient.innerHTML = "";
+  const solarScene = layer.querySelector(".homepageSolarSystemScene");
+  solarScene?.classList.remove("has-planet-focus");
+  layer.querySelectorAll(".solarPlanet.is-solar-selected,.solarSun.is-solar-selected").forEach((item) => item.classList.remove("is-solar-selected"));
+  const solarInfoCard = layer.querySelector(".solarInfoCard");
+  if (solarInfoCard) solarInfoCard.hidden = true;
+  layer.style.setProperty("--solar-pointer-x", "0px");
+  layer.style.setProperty("--solar-pointer-y", "0px");
+  layer.style.setProperty("--solar-tilt-x", "0deg");
+  layer.style.setProperty("--solar-tilt-y", "0deg");
   stopHomepageAlertSound();
   stopHomepageEffectMusic();
   clearHomepageEffectYouTube();
@@ -2609,7 +2844,7 @@ function buildHomepageRain(mode) {
   homepageEffectParticleMode = mode;
   rain.innerHTML = "";
 
-  const count = mode === "drizzle" ? 52 : (mode === "heavy-rain" ? 132 : 164);
+  const count = mode === "drizzle" ? 52 : (mode === "flood-rain" ? 96 : (mode === "heavy-rain" ? 132 : 164));
   const fragment = document.createDocumentFragment();
   for (let index = 0; index < count; index += 1) {
     const drop = document.createElement("i");
@@ -2650,8 +2885,11 @@ function buildHomepageAmbientParticles(mode) {
     matrix: { count: 54, kind: "matrix" },
     bubbles: { count: 44, kind: "bubbles" },
     fireflies: { count: 118, kind: "fireflies" },
-    minions: { count: 28, kind: "minions" },
-    spongebob: { count: 42, kind: "spongebob" },
+    minions: { count: 10, kind: "minions" },
+    spongebob: { count: 24, kind: "spongebob" },
+    naruto: { count: 18, kind: "naruto" },
+    akatsuki: { count: 12, kind: "akatsuki" },
+    "ninja-night": { count: 14, kind: "ninja-night" },
     "neon-pulse": { count: 18, kind: "neon" },
     "spider-glitch": { count: 58, kind: "spider-glitch" },
     "comic-web": { count: 38, kind: "comic-web" },
@@ -2659,6 +2897,7 @@ function buildHomepageAmbientParticles(mode) {
     "portal-rift": { count: 42, kind: "portal-rift" },
     aurora: { count: 12, kind: "aurora" },
     galaxy: { count: 150, kind: "galaxy" },
+    "solar-system": { count: 138, kind: "solar-system" },
     meteors: { count: 30, kind: "meteors" },
     "laser-grid": { count: 28, kind: "laser-grid" },
     crt: { count: 45, kind: "crt" },
@@ -2695,10 +2934,13 @@ function buildHomepageAmbientParticles(mode) {
       for (let i = 0; i < length; i += 1) text += matrixChars[Math.floor(Math.random() * matrixChars.length)] + "\n";
       particle.textContent = text.trim();
     }
-    if (config.kind === "stars" || config.kind === "galaxy") particle.textContent = Math.random() > .76 ? "✦" : "•";
+    if (config.kind === "stars" || config.kind === "galaxy" || config.kind === "solar-system") particle.textContent = Math.random() > .76 ? "✦" : "•";
     if (config.kind === "fireflies" || config.kind === "gold-sparkle") particle.textContent = Math.random() > .65 ? "✦" : "•";
     if (config.kind === "minions") particle.textContent = ["🍌", "◎", "✦"][Math.floor(Math.random() * 3)];
     if (config.kind === "spongebob") particle.textContent = ["🫧", "✿", "★", "⬜"][Math.floor(Math.random() * 4)];
+    if (config.kind === "naruto") particle.textContent = ["🌀", "🍃", "✦", "•"][Math.floor(Math.random() * 4)];
+    if (config.kind === "akatsuki") particle.textContent = ["☁", "✦", "●"][Math.floor(Math.random() * 3)];
+    if (config.kind === "ninja-night") particle.textContent = ["✥", "✦", "•"][Math.floor(Math.random() * 3)];
     if (config.kind === "comic-web") particle.textContent = Math.random() > .72 ? "✦" : "";
     if (config.kind === "spider-glitch") particle.textContent = Math.random() > .86 ? "◆" : "";
     if (config.kind === "black-symbiote") particle.textContent = "";
@@ -2823,8 +3065,8 @@ async function applyHomepageEffectSettings(settings = {}) {
   }
 
   const ambientModes = new Set([
-    "fog", "snow", "confetti", "hearts", "stars", "matrix", "bubbles", "fireflies", "minions", "spongebob", "neon-pulse",
-    "spider-glitch", "comic-web", "black-symbiote", "portal-rift", "aurora", "galaxy", "meteors", "laser-grid", "crt",
+    "fog", "snow", "confetti", "hearts", "stars", "matrix", "bubbles", "fireflies", "minions", "spongebob", "naruto", "akatsuki", "ninja-night", "neon-pulse",
+    "spider-glitch", "comic-web", "black-symbiote", "portal-rift", "aurora", "galaxy", "solar-system", "meteors", "laser-grid", "crt",
     "pixel-storm", "prism", "petals", "gold-sparkle"
   ]);
   if (ambientModes.has(config.mode)) {
