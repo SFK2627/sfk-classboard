@@ -25325,18 +25325,47 @@ body[data-use-subject-period-colors="yes"] .next #nextDetails * {
   pointer-events: none;
 }
 
+/* Cinematic centered Title + Message for homepage effects. */
 .homepageEffectWeatherMessage {
-  align-self: end;
-  max-width: min(760px, calc(100vw - 36px));
-  margin-bottom: 24px;
-  padding: 11px 16px;
-  border: 1px solid rgba(255,255,255,.42);
-  border-radius: 16px;
-  background: rgba(8,16,27,.72);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(88vw, 1040px);
+  max-width: min(88vw, 1040px);
+  margin: 0;
+  padding: clamp(22px, 3.4vw, 48px) clamp(18px, 4vw, 58px);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   color: #fff;
-  box-shadow: 0 12px 34px rgba(0,0,0,.25);
-  backdrop-filter: blur(8px);
+  box-shadow: none;
+  backdrop-filter: none;
+  transform: translate(-50%, -50%);
   text-align: center;
+  text-wrap: balance;
+  isolation: isolate;
+  animation: sfkEffectCinematicTextIn .95s cubic-bezier(.18,.78,.22,1) both;
+}
+
+.homepageEffectWeatherMessage::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  top: 50%;
+  width: min(112%, 1120px);
+  height: 175%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at center,
+      rgba(0,0,0,.34) 0%,
+      rgba(0,0,0,.22) 38%,
+      rgba(0,0,0,.10) 62%,
+      transparent 78%);
+  filter: blur(12px);
+  opacity: .9;
 }
 
 .homepageEffectWeatherMessage[hidden] {
@@ -25346,17 +25375,70 @@ body[data-use-subject-period-colors="yes"] .next #nextDetails * {
 .homepageEffectWeatherMessage strong,
 .homepageEffectWeatherMessage span {
   display: block;
+  color: #fff;
+  text-shadow:
+    0 2px 2px rgba(0,0,0,.92),
+    0 5px 12px rgba(0,0,0,.78),
+    0 0 24px rgba(0,0,0,.48);
+}
+
+.homepageEffectWeatherMessage strong:empty,
+.homepageEffectWeatherMessage span:empty {
+  display: none;
 }
 
 .homepageEffectWeatherMessage strong {
-  font-size: clamp(.95rem, 2vw, 1.25rem);
-  font-weight: 950;
+  margin: 0;
+  font-size: clamp(1.35rem, 3.2vw, 3.15rem);
+  line-height: 1.03;
+  font-weight: 800;
+  letter-spacing: clamp(.12em, .8vw, .28em);
+  text-transform: uppercase;
 }
 
 .homepageEffectWeatherMessage span {
-  margin-top: 3px;
-  font-size: clamp(.76rem, 1.5vw, .95rem);
+  margin-top: clamp(7px, 1vw, 13px);
+  font-size: clamp(.72rem, 1.35vw, 1.15rem);
   line-height: 1.35;
+  font-weight: 650;
+  letter-spacing: clamp(.08em, .45vw, .18em);
+}
+
+@keyframes sfkEffectCinematicTextIn {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% + 14px)) scale(.985);
+    filter: blur(5px);
+  }
+  55% {
+    opacity: 1;
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    filter: blur(0);
+  }
+}
+
+@media (max-width: 700px) {
+  .homepageEffectWeatherMessage {
+    width: min(90vw, 680px);
+    max-width: min(90vw, 680px);
+    padding: 20px 12px;
+  }
+
+  .homepageEffectWeatherMessage strong {
+    font-size: clamp(1.12rem, 6vw, 2rem);
+    letter-spacing: clamp(.10em, 1.2vw, .20em);
+  }
+
+  .homepageEffectWeatherMessage span {
+    margin-top: 7px;
+    font-size: clamp(.68rem, 3.2vw, .92rem);
+    letter-spacing: clamp(.05em, .7vw, .11em);
+    line-height: 1.3;
+  }
 }
 
 .homepageEffectPicturePanel,
@@ -25666,6 +25748,9 @@ body[data-use-subject-period-colors="yes"] .next #nextDetails * {
 .homepageEffectLayer.is-fireflies .homepageEffectParticles,
 .homepageEffectLayer.is-minions .homepageEffectParticles,
 .homepageEffectLayer.is-spongebob .homepageEffectParticles,
+.homepageEffectLayer.is-naruto .homepageEffectParticles,
+.homepageEffectLayer.is-akatsuki .homepageEffectParticles,
+.homepageEffectLayer.is-ninja-night .homepageEffectParticles,
 .homepageEffectLayer.is-neon-pulse .homepageEffectParticles {
   display: block;
 }
@@ -26155,6 +26240,248 @@ html.sfkHomepageMultiverseActive body > *:not(script):not(style):not(#homepageEf
   24% { opacity: .84; }
   55% { transform: translate3d(var(--fx-drift-mid), -14px, 0) rotate(6deg) scale(1.02); opacity:.82; }
   100% { transform: translate3d(var(--fx-drift), 28px, 0) rotate(-10deg) scale(.84); opacity:.56; }
+}
+
+
+/* ---------- Naruto / Hidden Leaf Ninja ---------- */
+.homepageEffectLayer.is-naruto .homepageEffectBackdrop {
+  background:
+    radial-gradient(circle at 76% 13%, rgba(255,249,205,.34) 0 8%, transparent 8.4%),
+    linear-gradient(180deg, rgba(255,160,72,.56) 0%, rgba(244,105,53,.46) 43%, rgba(91,69,82,.42) 64%, rgba(31,48,52,.48) 100%);
+  backdrop-filter: saturate(1.16) brightness(.88);
+}
+.homepageEffectLayer.is-naruto .homepageEffectBackdrop::before {
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:2;
+  pointer-events:none;
+  background:
+    linear-gradient(155deg, transparent 0 58%, rgba(34,48,50,.48) 58.4% 61%, transparent 61.4%) 0 66% / 23% 28% repeat-x,
+    linear-gradient(25deg, transparent 0 55%, rgba(43,54,52,.56) 55.4% 60%, transparent 60.4%) 0 69% / 20% 25% repeat-x,
+    repeating-linear-gradient(90deg, transparent 0 7%, rgba(34,46,48,.34) 7.4% 8.4%, transparent 8.8% 14%) 0 76% / 100% 24% no-repeat,
+    linear-gradient(180deg, transparent 0 74%, rgba(33,45,46,.52) 74.5% 100%);
+}
+.homepageEffectLayer.is-naruto .homepageEffectBackdrop::after {
+  content:"";
+  position:absolute;
+  right:4vw;
+  top:15vh;
+  width:min(27vw,420px);
+  height:min(22vw,320px);
+  z-index:2;
+  pointer-events:none;
+  border-radius:48% 48% 38% 38%;
+  background:
+    radial-gradient(circle at 22% 34%, rgba(239,221,188,.34) 0 14%, transparent 14.6%),
+    radial-gradient(circle at 43% 30%, rgba(239,221,188,.34) 0 14%, transparent 14.6%),
+    radial-gradient(circle at 64% 32%, rgba(239,221,188,.34) 0 14%, transparent 14.6%),
+    radial-gradient(circle at 82% 38%, rgba(239,221,188,.34) 0 13%, transparent 13.6%);
+  filter:drop-shadow(0 8px 12px rgba(0,0,0,.12));
+  opacity:.74;
+}
+.homepageEffectLayer.is-naruto::before {
+  content:"";
+  position:absolute;
+  left:max(2vw,8px);
+  bottom:max(5vh,14px);
+  width:min(22vw,250px);
+  height:min(45vh,410px);
+  z-index:4;
+  pointer-events:none;
+  border-radius:46% 46% 30% 30% / 22% 22% 20% 20%;
+  background:
+    linear-gradient(180deg, transparent 0 9%, #2d3339 9.5% 13%, transparent 13.5%),
+    radial-gradient(circle at 50% 18%, #e2b38e 0 12%, transparent 12.4%),
+    radial-gradient(ellipse at 50% 29%, #df9f2d 0 7%, transparent 7.4%),
+    linear-gradient(180deg, transparent 0 36%, #ef7e20 36.5% 69%, #1e2329 69.5% 100%),
+    linear-gradient(90deg, transparent 0 44%, #2c343d 44.5% 55.5%, transparent 56%);
+  box-shadow:0 18px 36px rgba(0,0,0,.18);
+  opacity:.96;
+}
+.homepageEffectLayer.is-naruto::after {
+  content:"🌀";
+  position:absolute;
+  left:min(18vw,210px);
+  bottom:max(11vh,58px);
+  z-index:5;
+  font-size:clamp(46px,7vw,100px);
+  filter:drop-shadow(0 0 14px rgba(81,187,255,.86));
+  animation:sfkNarutoRasengan 2.6s linear infinite;
+}
+.homepageEffectLayer.is-naruto .homepageEffectParticles::before {
+  content:"HIDDEN LEAF • NINJA MODE";
+  position:absolute;
+  top:4%; left:50%; transform:translateX(-50%);
+  z-index:5;
+  color:rgba(255,236,204,.95);
+  font:900 clamp(18px,2vw,32px)/1 Arial,sans-serif;
+  letter-spacing:.12em;
+  text-shadow:0 3px 0 rgba(111,42,24,.48),0 8px 22px rgba(0,0,0,.24);
+  white-space:nowrap;
+}
+.homepageAmbientParticle.is-naruto {
+  font-size:clamp(13px,var(--fx-size),26px);
+  color:#ffb348;
+  text-shadow:0 0 8px rgba(255,157,59,.75),0 0 16px rgba(91,184,255,.28);
+  animation:sfkNarutoLeaf var(--fx-duration) ease-in-out var(--fx-delay) infinite alternate;
+}
+@keyframes sfkNarutoLeaf {
+  from { transform:translate3d(-20px,18px,0) rotate(-20deg) scale(.72); opacity:.16; }
+  42% { opacity:.92; }
+  to { transform:translate3d(var(--fx-drift),-34px,0) rotate(210deg) scale(1.05); opacity:.58; }
+}
+@keyframes sfkNarutoRasengan {
+  to { transform:rotate(360deg); }
+}
+
+/* ---------- Akatsuki / Red Cloud ---------- */
+.homepageEffectLayer.is-akatsuki .homepageEffectBackdrop {
+  background:
+    radial-gradient(circle at 74% 16%, rgba(159,18,32,.34) 0 9%, transparent 9.6%),
+    linear-gradient(180deg, rgba(8,9,13,.76), rgba(22,7,12,.72) 58%, rgba(4,5,8,.82));
+  backdrop-filter:brightness(.58) saturate(.82) contrast(1.08);
+}
+.homepageEffectLayer.is-akatsuki .homepageEffectBackdrop::before {
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:2;
+  pointer-events:none;
+  background:
+    radial-gradient(ellipse at 14% 22%, transparent 0 4.5%, rgba(223,31,49,.78) 4.8% 5.7%, transparent 6%),
+    radial-gradient(ellipse at 18% 22%, rgba(223,31,49,.46) 0 3.8%, transparent 4.1%),
+    radial-gradient(ellipse at 72% 36%, transparent 0 5.5%, rgba(223,31,49,.72) 5.8% 6.8%, transparent 7.1%),
+    radial-gradient(ellipse at 77% 36%, rgba(223,31,49,.42) 0 4.5%, transparent 4.8%),
+    radial-gradient(ellipse at 44% 74%, transparent 0 6%, rgba(223,31,49,.72) 6.3% 7.3%, transparent 7.6%),
+    radial-gradient(ellipse at 50% 74%, rgba(223,31,49,.40) 0 5%, transparent 5.3%),
+    repeating-linear-gradient(103deg, transparent 0 8vw, rgba(255,255,255,.035) 8.1vw 8.3vw, transparent 8.4vw 17vw);
+  opacity:.92;
+}
+.homepageEffectLayer.is-akatsuki::before,
+.homepageEffectLayer.is-akatsuki::after {
+  content:"";
+  position:absolute;
+  bottom:max(4vh,8px);
+  z-index:4;
+  pointer-events:none;
+  width:min(22vw,250px);
+  height:min(52vh,470px);
+  border-radius:42% 42% 12% 12% / 18% 18% 8% 8%;
+  background:
+    radial-gradient(circle at 50% 16%, #191a1e 0 11%, transparent 11.4%),
+    linear-gradient(180deg, transparent 0 25%, #090a0d 25.5% 100%),
+    radial-gradient(ellipse at 36% 52%, transparent 0 8%, #d52337 8.5% 10%, transparent 10.5%),
+    radial-gradient(ellipse at 66% 70%, transparent 0 9%, #d52337 9.5% 11%, transparent 11.5%);
+  box-shadow:0 24px 42px rgba(0,0,0,.34);
+  opacity:.96;
+}
+.homepageEffectLayer.is-akatsuki::before { left:max(4vw,16px); transform:rotate(-3deg); }
+.homepageEffectLayer.is-akatsuki::after { right:max(4vw,16px); width:min(19vw,220px); height:min(47vh,420px); transform:rotate(3deg); }
+.homepageEffectLayer.is-akatsuki .homepageEffectParticles::before {
+  content:"AKATSUKI • RED CLOUD";
+  position:absolute;
+  top:4%; left:50%; transform:translateX(-50%);
+  z-index:5;
+  color:#f44758;
+  font:900 clamp(18px,2vw,32px)/1 Arial,sans-serif;
+  letter-spacing:.14em;
+  text-shadow:0 0 16px rgba(229,30,51,.56),0 4px 20px rgba(0,0,0,.68);
+  white-space:nowrap;
+}
+.homepageAmbientParticle.is-akatsuki {
+  color:#e32d42;
+  font-size:clamp(14px,var(--fx-size),30px);
+  text-shadow:0 0 8px rgba(229,34,53,.64),0 0 18px rgba(229,34,53,.24);
+  animation:sfkAkatsukiDrift var(--fx-duration) ease-in-out var(--fx-delay) infinite alternate;
+}
+@keyframes sfkAkatsukiDrift {
+  from { transform:translate3d(-22px,14px,0) scale(.66); opacity:.1; }
+  40% { opacity:.9; }
+  to { transform:translate3d(var(--fx-drift),-24px,0) scale(1.1); opacity:.5; }
+}
+
+/* ---------- Ninja Night / Moonlit Shinobi ---------- */
+.homepageEffectLayer.is-ninja-night .homepageEffectBackdrop {
+  background:
+    radial-gradient(circle at 76% 18%, rgba(236,242,255,.76) 0 9%, rgba(167,184,214,.38) 9.5% 12%, transparent 12.6%),
+    linear-gradient(180deg, rgba(7,15,34,.78), rgba(10,24,49,.70) 54%, rgba(3,10,19,.82));
+  backdrop-filter:brightness(.56) saturate(.72);
+}
+.homepageEffectLayer.is-ninja-night .homepageEffectBackdrop::before {
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:2;
+  pointer-events:none;
+  background:
+    linear-gradient(145deg, transparent 0 57%, rgba(5,8,13,.78) 57.5% 63%, transparent 63.5%) 0 72% / 29% 28% repeat-x,
+    linear-gradient(35deg, transparent 0 57%, rgba(5,8,13,.78) 57.5% 63%, transparent 63.5%) 0 72% / 29% 28% repeat-x,
+    repeating-linear-gradient(90deg, transparent 0 10%, rgba(4,8,14,.54) 10.4% 11.2%, transparent 11.6% 19%) 0 82% / 100% 18% no-repeat;
+}
+.homepageEffectLayer.is-ninja-night::before {
+  content:"";
+  position:absolute;
+  right:17vw;
+  bottom:18vh;
+  width:min(18vw,190px);
+  height:min(34vh,320px);
+  z-index:4;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 50% 18%, #05070b 0 12%, transparent 12.4%),
+    linear-gradient(160deg, transparent 0 23%, #05070b 23.5% 31%, transparent 31.5%),
+    linear-gradient(200deg, transparent 0 23%, #05070b 23.5% 31%, transparent 31.5%),
+    linear-gradient(180deg, transparent 0 27%, #05070b 27.5% 72%, transparent 72.5%),
+    linear-gradient(155deg, transparent 0 62%, #05070b 62.5% 68%, transparent 68.5%),
+    linear-gradient(205deg, transparent 0 62%, #05070b 62.5% 68%, transparent 68.5%);
+  filter:drop-shadow(0 14px 24px rgba(0,0,0,.52));
+}
+.homepageEffectLayer.is-ninja-night::after {
+  content:"✥";
+  position:absolute;
+  left:13vw;
+  top:22vh;
+  z-index:5;
+  color:rgba(225,235,255,.82);
+  font-size:clamp(54px,8vw,120px);
+  text-shadow:0 0 12px rgba(180,210,255,.48);
+  animation:sfkNinjaShuriken 4.8s linear infinite;
+}
+.homepageEffectLayer.is-ninja-night .homepageEffectParticles::before {
+  content:"MOONLIT SHINOBI";
+  position:absolute;
+  top:4%; left:50%; transform:translateX(-50%);
+  z-index:5;
+  color:rgba(225,235,255,.92);
+  font:900 clamp(18px,2vw,31px)/1 Arial,sans-serif;
+  letter-spacing:.15em;
+  text-shadow:0 4px 20px rgba(0,0,0,.7);
+  white-space:nowrap;
+}
+.homepageAmbientParticle.is-ninja-night {
+  color:#dbe8ff;
+  font-size:clamp(10px,var(--fx-size),24px);
+  text-shadow:0 0 8px rgba(170,203,255,.56);
+  animation:sfkNinjaNight var(--fx-duration) linear var(--fx-delay) infinite;
+}
+@keyframes sfkNinjaShuriken { to { transform:rotate(360deg); } }
+@keyframes sfkNinjaNight {
+  from { transform:translate3d(-14px,-12px,0) rotate(0deg) scale(.65); opacity:.08; }
+  30% { opacity:.82; }
+  to { transform:translate3d(var(--fx-drift),48px,0) rotate(540deg) scale(1.05); opacity:.34; }
+}
+
+@media (max-width:700px) {
+  .homepageEffectLayer.is-naruto::before { width:36vw; height:40vh; }
+  .homepageEffectLayer.is-naruto::after { left:26vw; bottom:13vh; font-size:54px; }
+  .homepageEffectLayer.is-akatsuki::before { width:31vw; height:42vh; }
+  .homepageEffectLayer.is-akatsuki::after { width:27vw; height:39vh; }
+  .homepageEffectLayer.is-ninja-night::before { width:26vw; height:28vh; right:14vw; bottom:20vh; }
+  .homepageEffectLayer.is-ninja-night::after { left:8vw; top:26vh; font-size:52px; }
+  .homepageEffectLayer.is-naruto .homepageEffectParticles::before,
+  .homepageEffectLayer.is-akatsuki .homepageEffectParticles::before,
+  .homepageEffectLayer.is-ninja-night .homepageEffectParticles::before { top:6%; font-size:14px; letter-spacing:.08em; }
 }
 
 /* ---------- Neon Pulse / Cyber Glow ---------- */
@@ -28134,4 +28461,86 @@ html.sfkHomepageBlackSymbioteActive body > *:not(script):not(style):not(#homepag
   .homepageSpiderWeb,
   .homepageSpiderThread,
   .homepageEffectFlood, .homepageFloodWave, .homepageFloodShine { animation-duration: 14s !important; }
+}
+
+
+/* =========================================================
+   v418 DISTINCT THEME SCENES
+   Each character/theme mode uses a unique world composition.
+========================================================= */
+.homepageThemeScene{position:absolute;inset:0;display:none;overflow:hidden;pointer-events:none;z-index:3}
+.homepageEffectLayer.is-minions .homepageMinionsScene,
+.homepageEffectLayer.is-spongebob .homepageSpongeScene,
+.homepageEffectLayer.is-naruto .homepageNarutoScene,
+.homepageEffectLayer.is-akatsuki .homepageAkatsukiScene,
+.homepageEffectLayer.is-ninja-night .homepageNinjaNightScene{display:block}
+.homepageEffectLayer.is-minions .homepageEffectParticles::before,
+.homepageEffectLayer.is-spongebob .homepageEffectParticles::before,
+.homepageEffectLayer.is-naruto .homepageEffectParticles::before,
+.homepageEffectLayer.is-akatsuki .homepageEffectParticles::before,
+.homepageEffectLayer.is-ninja-night .homepageEffectParticles::before{content:none!important;display:none!important}
+.homepageEffectLayer.is-minions::before,.homepageEffectLayer.is-minions::after,
+.homepageEffectLayer.is-spongebob::before,.homepageEffectLayer.is-spongebob::after,
+.homepageEffectLayer.is-naruto::before,.homepageEffectLayer.is-naruto::after,
+.homepageEffectLayer.is-akatsuki::before,.homepageEffectLayer.is-akatsuki::after,
+.homepageEffectLayer.is-ninja-night::before,.homepageEffectLayer.is-ninja-night::after{content:none!important;display:none!important}
+
+/* MINIONS: underground lab/workshop */
+.homepageEffectLayer.is-minions .homepageEffectBackdrop{background:linear-gradient(180deg,rgba(28,44,61,.72),rgba(16,27,38,.78));backdrop-filter:brightness(.72) saturate(.9)}
+.homepageMinionsScene{background:linear-gradient(180deg,rgba(74,96,110,.20),rgba(22,35,45,.14))}
+.minionLabWall{position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(175,191,198,.12) 0 2px,transparent 2px 11vw),repeating-linear-gradient(0deg,rgba(175,191,198,.08) 0 2px,transparent 2px 12vh),linear-gradient(180deg,rgba(70,88,98,.42),rgba(36,47,55,.55))}
+.minionLabWall i{position:absolute;width:8px;height:8px;border-radius:50%;background:#18252d;box-shadow:0 0 0 2px rgba(182,199,208,.25)}
+.minionLabWall i:nth-child(1){left:8%;top:18%}.minionLabWall i:nth-child(2){right:9%;top:24%}.minionLabWall i:nth-child(3){left:14%;bottom:18%}.minionLabWall i:nth-child(4){right:16%;bottom:16%}
+.minionLabPipe{position:absolute;width:13vw;height:58vh;top:-6vh;border:18px solid #7c8a90;border-bottom:0;border-radius:70px 70px 0 0;opacity:.52;box-shadow:inset 0 0 0 4px rgba(255,255,255,.1)}
+.minionLabPipe.pipe-a{left:5%;transform:rotate(-5deg)}.minionLabPipe.pipe-b{right:7%;transform:rotate(4deg)}
+.minionLabConsole{position:absolute;left:50%;bottom:2vh;translate:-50% 0;width:min(48vw,650px);height:12vh;border-radius:20px 20px 0 0;background:linear-gradient(#586870,#2d3c44);border:2px solid rgba(214,230,235,.32);box-shadow:0 -12px 26px rgba(0,0,0,.22)}
+.minionLabConsole span{position:absolute;top:30%;width:18px;height:18px;border-radius:50%;background:#ed3d3d;box-shadow:0 0 12px currentColor}.minionLabConsole span:nth-child(1){left:34%;color:#ed3d3d}.minionLabConsole span:nth-child(2){left:48%;background:#ffd84d;color:#ffd84d}.minionLabConsole span:nth-child(3){left:62%;background:#59d66f;color:#59d66f}
+.minionWarningStripe{position:absolute;left:0;right:0;bottom:0;height:22px;background:repeating-linear-gradient(135deg,#f7c928 0 24px,#202a31 24px 48px);opacity:.88}
+.minionCharacter{position:absolute;width:clamp(92px,10vw,150px);height:clamp(150px,19vw,260px);bottom:7vh;border-radius:48% 48% 38% 38%/32% 32% 28% 28%;background:linear-gradient(90deg,#f3cb35,#ffdf53 43%,#f2c930);box-shadow:0 18px 28px rgba(0,0,0,.28),inset 12px 0 18px rgba(255,255,255,.10);animation:minionBounce 2.8s ease-in-out infinite alternate}
+.minion-one{left:15%}.minion-two{left:50%;translate:-50% 0;bottom:4vh;width:clamp(112px,12vw,175px);height:clamp(180px,22vw,290px);animation-delay:-1.1s}.minion-three{right:14%;animation-delay:-1.9s}
+.minionGoggle{position:absolute;left:50%;top:22%;translate:-50% -50%;width:72%;height:30%;border:8px solid #5f6870;border-radius:50%;background:#eaf7ff;box-shadow:0 0 0 6px #2e353b,inset 0 0 0 7px #fff}.minionGoggle b{position:absolute;width:28%;aspect-ratio:1;border-radius:50%;background:#5d4024;left:50%;top:50%;translate:-50% -50%;box-shadow:inset 0 0 0 5px #111,0 0 0 3px #8d6a43}.minion-one .minionGoggle,.minion-three .minionGoggle{width:88%;background:radial-gradient(circle at 28% 50%,#eaf7ff 0 25%,#5f6870 26% 31%,transparent 32%),radial-gradient(circle at 72% 50%,#eaf7ff 0 25%,#5f6870 26% 31%,transparent 32%);border:0;box-shadow:none}.minion-one .minionGoggle b,.minion-three .minionGoggle b{width:11%;background:#382716;box-shadow:0 0 0 4px #111;left:28%}.minion-one .minionGoggle b::after,.minion-three .minionGoggle b::after{content:"";position:absolute;width:100%;height:100%;border-radius:50%;background:#382716;left:400%}
+.minionMouth{position:absolute;left:50%;top:42%;translate:-50% 0;width:36%;height:12%;border-bottom:4px solid #5d341d;border-radius:0 0 50% 50%}.minionOverall{position:absolute;left:14%;right:14%;bottom:0;height:42%;background:#285ca7;border-radius:12% 12% 30% 30%;box-shadow:inset 0 8px 0 rgba(255,255,255,.08)}.minionOverall::before{content:"";position:absolute;left:50%;top:22%;translate:-50% 0;width:24%;aspect-ratio:1;border-radius:50%;background:#ffd94a;border:3px solid #163e78}
+.minionArm{position:absolute;top:56%;width:18%;height:44%;background:#f6cf3d;border-radius:50%;transform-origin:top}.minionArm.left{left:-10%;rotate:24deg}.minionArm.right{right:-10%;rotate:-24deg}.minionBoot{position:absolute;bottom:-5%;width:30%;height:10%;background:#202328;border-radius:50% 50% 35% 35%}.minionBoot.left{left:18%}.minionBoot.right{right:18%}
+.minionBanana{position:absolute;font-size:clamp(28px,4vw,58px);filter:drop-shadow(0 6px 6px rgba(0,0,0,.25));animation:bananaDrop 5.4s linear infinite}.banana-a{left:29%;top:-12%;animation-delay:-1s}.banana-b{left:63%;top:-18%;animation-delay:-3.1s}.banana-c{left:79%;top:-10%;animation-delay:-4.4s}
+@keyframes minionBounce{to{transform:translateY(-12px) rotate(2deg)}}@keyframes bananaDrop{0%{translate:0 -18vh;rotate:0deg}100%{translate:10vw 120vh;rotate:720deg}}
+
+/* SPONGEBOB: Bikini Bottom landscape */
+.homepageEffectLayer.is-spongebob .homepageEffectBackdrop{background:linear-gradient(180deg,rgba(31,149,205,.56),rgba(30,117,178,.58));backdrop-filter:brightness(.82) saturate(1.12)}
+.homepageSpongeScene{background:linear-gradient(180deg,rgba(87,211,244,.34),rgba(41,142,199,.20) 68%,rgba(229,203,119,.35) 68.5%,rgba(222,190,97,.42))}
+.spongeWaterLight{position:absolute;inset:-20%;background:repeating-linear-gradient(115deg,transparent 0 11vw,rgba(255,255,255,.08) 12vw 13vw,transparent 14vw 25vw);animation:waterCaustic 12s linear infinite}
+.spongeFlower{position:absolute;width:100px;height:100px;opacity:.36}.spongeFlower::before,.spongeFlower::after{content:"";position:absolute;inset:38% 0;background:rgba(255,182,215,.72);border-radius:50%}.spongeFlower::after{rotate:60deg}.flower-a{left:10%;top:10%;scale:1.3}.flower-b{right:14%;top:18%;scale:.8}.flower-c{left:54%;top:8%;scale:.6}
+.bikiniHouse{position:absolute;bottom:12vh;z-index:2}.pineapple{left:8%;width:clamp(90px,11vw,150px);height:clamp(160px,20vw,260px);border-radius:48% 48% 38% 38%;background:repeating-linear-gradient(45deg,rgba(107,76,20,.22) 0 4px,transparent 4px 24px),repeating-linear-gradient(-45deg,rgba(107,76,20,.20) 0 4px,transparent 4px 24px),linear-gradient(#f7a936,#dc7f23);box-shadow:inset 0 0 24px rgba(255,223,121,.35)}.pineappleLeaves{position:absolute;left:50%;top:-38%;translate:-50% 0;width:110%;height:45%;background:conic-gradient(from 200deg at 50% 100%,transparent 0 8deg,#47a04d 9deg 20deg,transparent 21deg 36deg,#399145 37deg 50deg,transparent 51deg 67deg,#50aa53 68deg 83deg,transparent 84deg);filter:drop-shadow(0 5px 4px rgba(0,0,0,.12))}.houseDoor,.rockDoor,.tikiDoor{position:absolute;left:50%;bottom:8%;translate:-50% 0;width:32%;height:30%;border-radius:50% 50% 8px 8px;background:#547c91;border:5px solid #415968}.houseWindow{position:absolute;width:24%;aspect-ratio:1;border-radius:50%;background:#8de3f5;border:5px solid #5d7782}.houseWindow.w1{left:12%;top:36%}.houseWindow.w2{right:12%;top:28%}.rock{left:32%;width:clamp(75px,9vw,130px);height:clamp(100px,12vw,170px);border-radius:52% 52% 20% 20%;background:linear-gradient(#a78773,#80685c);transform:skewX(-4deg)}.tiki{right:7%;width:clamp(80px,10vw,140px);height:clamp(180px,21vw,280px);background:linear-gradient(#83a799,#658b82);clip-path:polygon(23% 0,77% 0,90% 14%,84% 100%,16% 100%,10% 14%)}.tikiEye{position:absolute;top:28%;width:16%;height:6%;background:#273e43}.tikiEye.e1{left:25%}.tikiEye.e2{right:25%}
+.spongeCharacter{position:absolute;left:52%;bottom:8vh;translate:-50% 0;width:clamp(135px,15vw,220px);height:clamp(180px,22vw,300px);background:radial-gradient(circle at 16% 20%,rgba(170,128,25,.18) 0 4%,transparent 4.4%),radial-gradient(circle at 73% 19%,rgba(170,128,25,.18) 0 3.5%,transparent 3.9%),radial-gradient(circle at 25% 63%,rgba(170,128,25,.17) 0 4%,transparent 4.4%),#f3df46;border-radius:8%;box-shadow:0 16px 30px rgba(0,0,0,.18),inset 8px 0 rgba(255,255,255,.12);z-index:4;animation:spongeBobBob 3.6s ease-in-out infinite alternate}.spongeEye{position:absolute;top:20%;width:34%;height:29%;border-radius:50%;background:white;border:3px solid #d6d6d6}.spongeEye.left{left:17%}.spongeEye.right{right:17%}.spongeEye b{position:absolute;width:38%;aspect-ratio:1;border-radius:50%;background:#52a7d5;left:50%;top:50%;translate:-50% -50%;box-shadow:inset 0 0 0 5px #1b2025}.spongeNose{position:absolute;left:50%;top:39%;translate:-50% 0;width:11%;height:18%;border-radius:50%;background:#f1d94a;box-shadow:2px 0 0 #b89e29}.spongeSmile{position:absolute;left:50%;top:54%;translate:-50% 0;width:44%;height:16%;border-bottom:5px solid #6e2e1d;border-radius:0 0 50% 50%}.spongeShirt{position:absolute;left:0;right:0;bottom:24%;height:15%;background:#fff}.spongeTie{position:absolute;left:50%;bottom:17%;translate:-50% 0;width:13%;height:19%;background:#d8242b;clip-path:polygon(50% 0,100% 26%,72% 42%,93% 100%,7% 100%,28% 42%,0 26%)}.spongePants{position:absolute;left:0;right:0;bottom:0;height:25%;background:#7b4a26}.spongeArm,.spongeLeg{position:absolute;background:#f3df46}.spongeArm{top:55%;width:11%;height:34%;border-radius:50%;transform-origin:top}.spongeArm.left{left:-9%;rotate:28deg}.spongeArm.right{right:-9%;rotate:-28deg}.spongeLeg{bottom:-18%;width:8%;height:22%;background:#f2d94a}.spongeLeg.left{left:29%}.spongeLeg.right{right:29%}
+.jellyfish{position:absolute;width:clamp(44px,5vw,74px);height:clamp(34px,4vw,58px);border-radius:50% 50% 42% 42%;background:rgba(247,137,205,.82);box-shadow:inset 0 0 0 5px rgba(255,255,255,.22),0 0 18px rgba(255,170,227,.35);animation:jellyDrift 8s ease-in-out infinite alternate}.jellyfish i{position:absolute;top:82%;width:3px;height:45%;background:rgba(247,137,205,.72);border-radius:50%}.jellyfish i:nth-child(1){left:24%}.jellyfish i:nth-child(2){left:50%}.jellyfish i:nth-child(3){right:24%}.jelly-a{left:20%;top:12%}.jelly-b{right:25%;top:25%;animation-delay:-2.6s}.jelly-c{left:62%;top:9%;scale:.7;animation-delay:-5s}.spongeSand{position:absolute;left:0;right:0;bottom:0;height:12vh;background:radial-gradient(circle at 22% 30%,#996d2d 0 2px,transparent 3px),radial-gradient(circle at 68% 62%,#996d2d 0 2px,transparent 3px),linear-gradient(#e5c56f,#cfae5e)}
+@keyframes waterCaustic{to{transform:translateX(18vw)}}@keyframes spongeBobBob{to{transform:translateY(-9px) rotate(-1deg)}}@keyframes jellyDrift{to{transform:translate(8vw,9vh) rotate(10deg)}}
+
+/* NARUTO: village sunset + runner + chakra */
+.homepageEffectLayer.is-naruto .homepageEffectBackdrop{background:linear-gradient(180deg,rgba(242,126,50,.52),rgba(117,55,91,.45));backdrop-filter:brightness(.78) saturate(1.18)}
+.homepageNarutoScene{background:linear-gradient(#f39b51 0 35%,#d8664d 57%,#553a59 100%)}
+.leafSun{position:absolute;right:12%;top:7%;width:clamp(120px,16vw,240px);aspect-ratio:1;border-radius:50%;background:#ffda74;box-shadow:0 0 80px rgba(255,187,71,.55)}
+.leafMountain{position:absolute;left:0;right:0;bottom:34vh;height:35vh;background:linear-gradient(#9b6b5f,#554553);clip-path:polygon(0 100%,0 45%,10% 38%,18% 24%,29% 33%,39% 16%,53% 34%,64% 20%,78% 40%,89% 25%,100% 42%,100% 100%)}.leafMountain i{position:absolute;bottom:10%;width:8%;height:42%;border-radius:45% 45% 30% 30%;background:rgba(57,48,54,.42);box-shadow:inset -8px 0 rgba(255,255,255,.05)}.leafMountain i:nth-child(1){left:32%}.leafMountain i:nth-child(2){left:42%}.leafMountain i:nth-child(3){left:52%}.leafMountain i:nth-child(4){left:62%}
+.leafVillage{position:absolute;left:-4%;right:-4%;bottom:0;background:repeating-linear-gradient(90deg,#533f45 0 6vw,#6f4d45 6vw 9vw,#3e3944 9vw 12vw);clip-path:polygon(0 38%,6% 32%,9% 40%,14% 24%,18% 40%,24% 35%,29% 20%,34% 39%,41% 31%,47% 15%,51% 35%,59% 29%,63% 39%,70% 23%,75% 38%,81% 31%,86% 16%,91% 35%,96% 26%,100% 39%,100% 100%,0 100%)}.leafVillage.back{height:38vh;opacity:.6}.leafVillage.front{height:29vh;filter:brightness(.72);transform:translateY(4vh)}
+.leafGate{position:absolute;left:10%;bottom:8vh;width:clamp(90px,12vw,180px);height:18vh;border:12px solid #5c3027;border-bottom:0;box-shadow:0 0 0 5px rgba(44,23,24,.3)}.leafGate::before{content:"";position:absolute;left:-30%;right:-30%;top:-22px;height:18px;background:#73392d;border-radius:6px}.leafGate span{position:absolute;left:50%;top:15%;translate:-50% 0;width:52%;aspect-ratio:1;border:5px solid #a0432b;border-radius:50%}.leafGate span::before{content:"";position:absolute;inset:18%;border:4px solid #a0432b;border-left-color:transparent;border-radius:50%;rotate:-25deg}
+.narutoRunner{position:absolute;left:-22vw;bottom:23vh;width:110px;height:150px;z-index:4;animation:narutoRun 8.5s linear infinite;filter:drop-shadow(0 9px 8px rgba(0,0,0,.28))}.ninjaHead{position:absolute;left:36px;top:0;width:48px;height:48px;border-radius:50%;background:#252834;box-shadow:inset 0 -8px #e59f50}.ninjaBand{position:absolute;left:27px;top:16px;width:68px;height:10px;background:#343b49;transform:skewX(-18deg)}.ninjaBand::after{content:"";position:absolute;right:-45px;top:0;width:46px;height:8px;background:#343b49;transform:rotate(-16deg);transform-origin:left}.ninjaBody{position:absolute;left:26px;top:45px;width:58px;height:68px;background:linear-gradient(90deg,#ef7a27 0 58%,#222832 59%);border-radius:22px 22px 12px 12px;transform:skewX(-16deg)}.ninjaArm,.ninjaLeg{position:absolute;width:16px;background:#252a34;border-radius:10px;transform-origin:top}.ninjaArm{height:68px;top:50px}.ninjaArm.a1{left:25px;rotate:64deg}.ninjaArm.a2{left:70px;rotate:-86deg}.ninjaLeg{height:72px;top:105px}.ninjaLeg.l1{left:42px;rotate:58deg}.ninjaLeg.l2{left:66px;rotate:-55deg}.chakraOrb{position:absolute;right:9%;bottom:18vh;width:clamp(90px,10vw,150px);aspect-ratio:1;border-radius:50%;border:5px solid rgba(115,211,255,.85);box-shadow:0 0 18px #68cfff,0 0 46px rgba(61,183,255,.62),inset 0 0 30px rgba(69,192,255,.5);animation:chakraSpin 1.5s linear infinite}.chakraOrb i{position:absolute;inset:14%;border:3px solid rgba(174,235,255,.85);border-left-color:transparent;border-radius:50%}.chakraOrb i:nth-child(2){inset:30%;animation:chakraSpin .9s linear infinite reverse}.chakraOrb i:nth-child(3){inset:45%;background:#c5f0ff;border:0}.leafWind{position:absolute;font-size:32px;animation:leafBlow 6.5s linear infinite}.leaf-a{left:-8%;top:18%}.leaf-b{left:-12%;top:46%;animation-delay:-2s}.leaf-c{left:-6%;top:68%;animation-delay:-4.1s}
+@keyframes narutoRun{0%{left:-18vw;transform:translateY(0) rotate(-10deg)}45%{transform:translateY(-8px) rotate(-10deg)}100%{left:110vw;transform:translateY(0) rotate(-10deg)}}@keyframes chakraSpin{to{rotate:360deg}}@keyframes leafBlow{to{left:110%;transform:translateY(16vh) rotate(720deg)}}
+
+/* AKATSUKI: red moon, drifting clouds, cloaks, rain/crows */
+.homepageEffectLayer.is-akatsuki .homepageEffectBackdrop{background:rgba(14,9,13,.78);backdrop-filter:brightness(.52) saturate(.78)}
+.homepageAkatsukiScene{background:radial-gradient(circle at 72% 20%,rgba(138,16,28,.22),transparent 24%),linear-gradient(#190f16,#08070b)}
+.akatsukiMoon{position:absolute;right:12%;top:8%;width:clamp(130px,18vw,260px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.16) 0 3%,transparent 4%),#ad2430;box-shadow:0 0 60px rgba(190,30,45,.35)}
+.redCloud{position:absolute;width:clamp(150px,22vw,330px);height:90px;opacity:.85;animation:redCloudDrift 16s linear infinite}.redCloud i{position:absolute;bottom:0;border:5px solid #e13b43;background:#151116;border-radius:50%}.redCloud i:nth-child(1){left:0;width:50%;height:60%}.redCloud i:nth-child(2){left:25%;width:50%;height:95%}.redCloud i:nth-child(3){right:0;width:46%;height:68%}.cloud-a{left:-12%;top:18%}.cloud-b{left:24%;top:44%;scale:.72;animation-delay:-7s}.cloud-c{right:-8%;top:65%;scale:.88;animation-delay:-11s}
+.akatsukiCloak{position:absolute;bottom:4vh;width:clamp(120px,13vw,200px);height:clamp(250px,31vw,420px);background:linear-gradient(90deg,#050506,#181419 48%,#050506);clip-path:polygon(35% 0,65% 0,78% 10%,85% 35%,76% 100%,24% 100%,15% 35%,22% 10%);filter:drop-shadow(0 20px 20px rgba(0,0,0,.5));z-index:4}.cloak-a{left:12%}.cloak-b{right:14%;scale:.88}.cloakHead{position:absolute;left:50%;top:-7%;translate:-50% 0;width:48%;aspect-ratio:1;border-radius:50%;background:#101015;box-shadow:inset 0 -10px rgba(145,22,34,.12)}.cloudMark{position:absolute;width:50%;height:12%;border:4px solid #d83a43;border-radius:50%;background:#121014}.cloudMark::after{content:"";position:absolute;right:-18%;bottom:-50%;width:32%;height:60%;border:4px solid #d83a43;border-top:0;border-left:0;border-radius:0 0 50% 0}.cloudMark.m1{left:9%;top:34%;rotate:-12deg}.cloudMark.m2{right:8%;top:61%;rotate:16deg}.akatsukiRain{position:absolute;inset:-20%;background:repeating-linear-gradient(104deg,transparent 0 26px,rgba(207,219,228,.22) 27px 29px,transparent 30px 52px);animation:akRain .65s linear infinite;opacity:.48}.crow{position:absolute;color:#050507;font-size:34px;text-shadow:0 0 6px rgba(0,0,0,.8);animation:crowFly 9s linear infinite}.crow-a{left:-5%;top:20%}.crow-b{left:-8%;top:34%;animation-delay:-3s;scale:.7}.crow-c{left:-6%;top:12%;animation-delay:-6s;scale:.5}
+@keyframes redCloudDrift{to{transform:translateX(125vw)}}@keyframes akRain{to{transform:translate(12vw,24vh)}}@keyframes crowFly{to{left:105%;transform:translateY(-8vh) rotate(20deg)}}
+
+/* NINJA NIGHT: rooftops, moon, jumping silhouettes, shuriken */
+.homepageEffectLayer.is-ninja-night .homepageEffectBackdrop{background:rgba(4,10,22,.72);backdrop-filter:brightness(.48) saturate(.75)}
+.homepageNinjaNightScene{background:linear-gradient(#071426,#0d2034 58%,#091018)}.ninjaMoon{position:absolute;right:12%;top:8%;width:clamp(150px,19vw,280px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 35% 32%,rgba(106,120,138,.25) 0 7%,transparent 8%),radial-gradient(circle at 68% 56%,rgba(106,120,138,.18) 0 10%,transparent 11%),#dce5e7;box-shadow:0 0 70px rgba(207,231,242,.28)}.nightCloud{position:absolute;width:38vw;height:12vh;border-radius:50%;background:rgba(72,91,109,.22);filter:blur(14px);animation:nightCloudMove 18s linear infinite}.nc-a{left:-40%;top:18%}.nc-b{left:-46%;top:38%;animation-delay:-9s;scale:.7}.ninjaRoof{position:absolute;bottom:0;background:#070b10;clip-path:polygon(0 32%,40% 32%,50% 0,60% 32%,100% 32%,100% 100%,0 100%)}.roof-a{left:-8%;width:42%;height:30vh}.roof-b{left:31%;width:42%;height:24vh}.roof-c{right:-8%;width:43%;height:32vh}.ninjaLeap{position:absolute;width:80px;height:120px;z-index:4;filter:drop-shadow(0 7px 5px rgba(0,0,0,.6));animation:ninjaLeapAcross 8s cubic-bezier(.3,.1,.55,.95) infinite}.leap-a{left:-10%;bottom:24vh}.leap-b{left:-20%;bottom:42vh;scale:.72;animation-delay:-4s}.ninjaLeap span{position:absolute;left:27px;top:0;width:34px;height:34px;border-radius:50%;background:#020305}.ninjaLeap::before{content:"";position:absolute;left:21px;top:28px;width:42px;height:50px;background:#020305;clip-path:polygon(20% 0,80% 0,100% 100%,0 100%)}.ninjaLeap .arm,.ninjaLeap .leg{position:absolute;width:10px;background:#020305;border-radius:8px;transform-origin:top}.ninjaLeap .arm{height:50px;top:34px}.ninjaLeap .a1{left:24px;rotate:70deg}.ninjaLeap .a2{left:58px;rotate:-70deg}.ninjaLeap .leg{height:55px;top:72px}.ninjaLeap .l1{left:34px;rotate:48deg}.ninjaLeap .l2{left:51px;rotate:-55deg}.shurikenTrail{position:absolute;left:-10%;width:120vw;height:3px;background:linear-gradient(90deg,transparent,rgba(190,221,242,.42),transparent);animation:shurikenSweep 5s linear infinite}.shurikenTrail b{position:absolute;right:10%;top:-18px;color:#c9d6df;font-size:38px;text-shadow:0 0 12px #bce6ff;animation:shurikenSpin .7s linear infinite}.st-a{top:34%;rotate:-8deg}.st-b{top:58%;rotate:7deg;animation-delay:-2.6s}.nightFog{position:absolute;left:-10%;right:-10%;bottom:14vh;height:20vh;background:rgba(107,130,147,.08);filter:blur(25px);animation:fogSlide 9s ease-in-out infinite alternate}
+@keyframes nightCloudMove{to{transform:translateX(150vw)}}@keyframes ninjaLeapAcross{0%{left:-10%;transform:translateY(0) rotate(-14deg)}45%{transform:translateY(-22vh) rotate(8deg)}100%{left:110%;transform:translateY(4vh) rotate(18deg)}}@keyframes shurikenSweep{to{transform:translateX(15vw)}}@keyframes shurikenSpin{to{rotate:720deg}}@keyframes fogSlide{to{transform:translateX(8vw)}}
+
+@media(max-width:700px){
+ .minionCharacter{scale:.78;transform-origin:bottom}.minion-one{left:3%}.minion-three{right:3%}.minion-two{scale:.9}
+ .bikiniHouse.rock{display:none}.spongeCharacter{left:54%;scale:.78;transform-origin:bottom}.pineapple{left:2%}.tiki{right:1%;scale:.78;transform-origin:bottom}
+ .leafMountain{bottom:30vh}.leafVillage.back{height:32vh}.leafVillage.front{height:24vh}.narutoRunner{scale:.72}.chakraOrb{right:4%;bottom:14vh}
+ .akatsukiCloak{scale:.68;transform-origin:bottom}.cloak-a{left:2%}.cloak-b{right:2%}.akatsukiMoon{right:3%}
+ .ninjaMoon{right:4%;top:10%;scale:.8}.ninjaLeap{scale:.72}.roof-b{left:28%}
 }
