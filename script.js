@@ -2439,6 +2439,52 @@ function ensureHomepageEffectLayer() {
         <small>Illustrative orbit layout • not to scale</small>
       </div>
     </div>
+    <div class="homepageThemeScene homepagePetDogScene" aria-hidden="true">
+      <div class="petWindow"><span class="petCloud c1"></span><span class="petCloud c2"></span><span class="petSunGlow"></span></div>
+      <div class="petRoomWall"><span class="petFrame f1"></span><span class="petFrame f2"></span><span class="petShelf"><i></i><i></i><i></i></span></div>
+      <div class="petPlant"><span class="petPot"></span><i class="leaf l1"></i><i class="leaf l2"></i><i class="leaf l3"></i></div>
+      <div class="petRug"></div>
+      <div class="petToyBall"></div>
+      <div class="petDog" aria-hidden="true">
+        <span class="petDogTail"></span>
+        <span class="petDogBody"><i class="petChest"></i><i class="petPaw p1"></i><i class="petPaw p2"></i></span>
+        <span class="petDogHead">
+          <i class="petDogEar left"></i><i class="petDogEar right"></i>
+          <span class="petDogFace">
+            <i class="petDogEye left"><b></b></i><i class="petDogEye right"><b></b></i>
+            <i class="petDogBrow left"></i><i class="petDogBrow right"></i>
+            <i class="petDogMuzzle"><b class="petDogNose"></b><em class="petDogSmile left"></em><em class="petDogSmile right"></em><strong class="petDogTongue"></strong></i>
+          </span>
+        </span>
+      </div>
+      <div class="petLoveBurst"><span>♥</span><span>♥</span><span>♥</span><span>♥</span><span>♥</span></div>
+      <div class="petInteractionHint">Move, tap or click — your puppy is watching you</div>
+    </div>
+    <div class="homepageThemeScene homepagePetKoalaScene" aria-hidden="true">
+      <div class="koalaForestSky"><span class="koalaForestSun"></span><span class="koalaForestRay r1"></span><span class="koalaForestRay r2"></span><span class="koalaForestRay r3"></span></div>
+      <div class="koalaForestCanopy back"><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="koalaForestTrunk trunk-left"><span></span></div>
+      <div class="koalaForestTrunk trunk-right"><span></span></div>
+      <div class="koalaForestCanopy front"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="koalaForestFloor"><i class="fern f1"></i><i class="fern f2"></i><i class="fern f3"></i><i class="fern f4"></i></div>
+      <div class="koalaMainTree"><span class="koalaMainTrunk"></span><span class="koalaBranch main"></span><span class="koalaBranch side"></span></div>
+      <div class="petKoala" aria-hidden="true">
+        <span class="petKoalaBody"><i class="petKoalaBelly"></i><i class="petKoalaFoot left"></i><i class="petKoalaFoot right"></i></span>
+        <span class="petKoalaArm hug"></span><span class="petKoalaArm wave"></span>
+        <span class="petKoalaHead">
+          <i class="petKoalaEar left"><b></b></i><i class="petKoalaEar right"><b></b></i>
+          <span class="petKoalaFace">
+            <i class="petKoalaEye left"><b></b></i><i class="petKoalaEye right"><b></b></i>
+            <i class="petKoalaBlush left"></i><i class="petKoalaBlush right"></i>
+            <i class="petKoalaNose"></i><i class="petKoalaSmile"></i>
+          </span>
+        </span>
+        <span class="petKoalaLeafSnack"><i></i><i></i><i></i></span>
+      </div>
+      <div class="koalaForestLeaf leaf-a"></div><div class="koalaForestLeaf leaf-b"></div><div class="koalaForestLeaf leaf-c"></div><div class="koalaForestLeaf leaf-d"></div><div class="koalaForestLeaf leaf-e"></div>
+      <div class="koalaReactionBurst"><span>♥</span><span>🍃</span><span>♥</span><span>🍃</span><span>♥</span></div>
+      <div class="koalaInteractionHint">Move, tap or click — your koala is watching from the eucalyptus forest</div>
+    </div>
     <div class="homepageEffectKoalaFamily" aria-hidden="true">
       <div class="koalaFamilySoftGlow"></div>
       <div class="koalaFamilyStage">

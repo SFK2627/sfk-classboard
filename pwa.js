@@ -2,7 +2,7 @@
   let deferredInstallPrompt = null;
 
   const installButton = document.getElementById("installAppBtn");
-  const SW_URL = "./sw.js?v=flood-life-v428";
+  const SW_URL = "./sw.js?v=pet-restore-v429";
   const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV427FloodSwimmerSync";
   const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV427FloodSwimmerSync";
 
