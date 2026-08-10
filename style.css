@@ -28414,11 +28414,12 @@ html.sfkHomepageBlackSymbioteActive body > *:not(script):not(style):not(#homepag
 }
 .homepageEffectLayer.is-flood-rain .homepageEffectRain { opacity: 1; }
 .homepageEffectLayer.is-flood-rain .homepageEffectRain i {
-  width: 2.05px;
-  min-height: 48px;
-  background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(238,248,255,1));
-  box-shadow: 0 0 5px rgba(214,236,255,.64);
-  filter: brightness(1.12);
+  width: 2.35px;
+  min-height: 62px;
+  background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(246,252,255,1));
+  box-shadow: 0 0 7px rgba(214,236,255,.78);
+  filter: brightness(1.22);
+  opacity: .96;
 }
 .homepageEffectLayer.is-flood-rain .homepageEffectMist { opacity: 1; }
 
@@ -29437,10 +29438,10 @@ html.sfkHomepageBlackSymbioteActive body > *:not(script):not(style):not(#homepag
   will-change:transform,opacity;
 }
 
-/* Four fish are enough visually; remove two extra animated layers. */
+/* Show all six fish for a fuller underwater scene. */
 .homepageEffectLayer.is-flood-rain .floodFish.fish-e,
 .homepageEffectLayer.is-flood-rain .floodFish.fish-f{
-  display:none !important;
+  display:block !important;
 }
 .homepageEffectLayer.is-flood-rain .floodFish{
   will-change:transform;
@@ -29458,14 +29459,20 @@ html.sfkHomepageBlackSymbioteActive body > *:not(script):not(style):not(#homepag
 .homepageEffectLayer.is-flood-rain .floodFish.fish-d{
   animation:sfkFishPassLeftDV427 46s linear infinite !important;
 }
+.homepageEffectLayer.is-flood-rain .floodFish.fish-e{
+  animation:sfkFishPassRightEV428 46s linear infinite !important;
+}
+.homepageEffectLayer.is-flood-rain .floodFish.fish-f{
+  animation:sfkFishPassLeftFV428 46s linear infinite !important;
+}
 
 /* Swimmer remains comfortably inside the viewport instead of exiting right. */
 .homepageEffectLayer.is-flood-rain .floodSwimmer{
-  left:6% !important;
+  left:7% !important;
   top:43% !important;
-  width:clamp(190px,19vw,300px) !important;
-  height:clamp(108px,11vw,170px) !important;
-  animation:sfkFloodSwimmerWindowV427 46s linear infinite !important;
+  width:clamp(200px,20vw,310px) !important;
+  height:clamp(112px,11.6vw,176px) !important;
+  animation:sfkFloodSwimmerWindowV428 46s linear infinite !important;
   will-change:transform,opacity;
   backface-visibility:hidden;
 }
@@ -29473,25 +29480,51 @@ html.sfkHomepageBlackSymbioteActive body > *:not(script):not(style):not(#homepag
 /* Speech bubble stays attached above the swimmer and never hangs off-screen. */
 .homepageEffectLayer.is-flood-rain .floodSafetyBubble{
   left:auto !important;
-  right:1% !important;
-  bottom:91% !important;
+  right:-2% !important;
+  bottom:92% !important;
   min-width:0 !important;
   width:max-content !important;
-  max-width:min(175px,42vw) !important;
-  padding:10px 14px !important;
+  max-width:min(210px,48vw) !important;
+  padding:11px 15px !important;
   white-space:nowrap !important;
   overflow:visible !important;
   text-align:center !important;
   line-height:1.15 !important;
-  font-size:clamp(13px,1.2vw,18px) !important;
+  font-size:clamp(14px,1.28vw,19px) !important;
   box-shadow:0 8px 20px rgba(0,28,50,.28),0 0 0 1px rgba(21,61,87,.10) !important;
-  animation:sfkSafetyBubbleWindowV427 46s linear infinite !important;
+  animation:sfkSafetyBubbleWindowV428 46s linear infinite !important;
   will-change:transform,opacity;
 }
 .homepageEffectLayer.is-flood-rain .floodSafetyBubble::after{
   left:auto !important;
   right:22px !important;
 }
+
+/* Fix leg direction so both legs trail naturally behind the swimmer. */
+.homepageEffectLayer.is-flood-rain .swimmerLeg{
+  left:14% !important;
+  top:50% !important;
+  width:23% !important;
+  height:8.5% !important;
+  transform-origin:right center !important;
+}
+.homepageEffectLayer.is-flood-rain .swimmerLeg i{
+  left:-34% !important;
+  width:46% !important;
+  transform-origin:right center !important;
+}
+.homepageEffectLayer.is-flood-rain .swimmerLeg.leg-front{
+  transform:rotate(24deg) !important;
+  animation:sfkSwimKickAV428 .8s ease-in-out infinite alternate !important;
+}
+.homepageEffectLayer.is-flood-rain .swimmerLeg.leg-front i{transform:rotate(-18deg) !important}
+.homepageEffectLayer.is-flood-rain .swimmerLeg.leg-back{
+  top:58% !important;
+  opacity:.78 !important;
+  transform:rotate(-8deg) !important;
+  animation:sfkSwimKickBV428 .8s ease-in-out infinite alternate !important;
+}
+.homepageEffectLayer.is-flood-rain .swimmerLeg.leg-back i{transform:rotate(14deg) !important}
 
 /* Keep limb motion light; animate only while the parent is painted. */
 .homepageEffectLayer.is-flood-rain .swimmerArm,
@@ -29501,16 +29534,16 @@ html.sfkHomepageBlackSymbioteActive body > *:not(script):not(style):not(#homepag
   backface-visibility:hidden;
 }
 
-@keyframes sfkFloodSwimmerWindowV427{
-  0%,73.8%{transform:translate3d(0,2vh,0) rotate(-3deg);opacity:.01}
-  74.2%{transform:translate3d(0,2vh,0) rotate(-3deg);opacity:1}
-  77%{transform:translate3d(9vw,-1vh,0) rotate(-1deg);opacity:1}
-  80.5%{transform:translate3d(21vw,-3vh,0) rotate(1deg);opacity:1}
-  83.8%{transform:translate3d(34vw,-1.5vh,0) rotate(1.5deg);opacity:1}
-  84.8%{transform:translate3d(38vw,-1vh,0) rotate(1deg);opacity:1}
-  85%,100%{transform:translate3d(38vw,-1vh,0) rotate(1deg);opacity:.01}
+@keyframes sfkFloodSwimmerWindowV428{
+  0%,73.8%{transform:translate3d(0,2vh,0) rotate(-2deg);opacity:.01}
+  74.2%{transform:translate3d(0,2vh,0) rotate(-2deg);opacity:1}
+  77%{transform:translate3d(7vw,-1vh,0) rotate(-1deg);opacity:1}
+  80.5%{transform:translate3d(17vw,-2.6vh,0) rotate(.5deg);opacity:1}
+  83.8%{transform:translate3d(28vw,-1.3vh,0) rotate(1deg);opacity:1}
+  84.8%{transform:translate3d(31vw,-1vh,0) rotate(.8deg);opacity:1}
+  85%,100%{transform:translate3d(31vw,-1vh,0) rotate(.8deg);opacity:.01}
 }
-@keyframes sfkSafetyBubbleWindowV427{
+@keyframes sfkSafetyBubbleWindowV428{
   0%,73.8%{opacity:0;transform:translateY(4px) scale(.97)}
   74.4%{opacity:1;transform:translateY(0) scale(1)}
   78%{opacity:1;transform:translateY(-3px) scale(1)}
@@ -29518,6 +29551,22 @@ html.sfkHomepageBlackSymbioteActive body > *:not(script):not(style):not(#homepag
   84.6%{opacity:1;transform:translateY(-2px) scale(1)}
   85%,100%{opacity:0;transform:translateY(2px) scale(.98)}
 }
+@keyframes sfkFishPassRightEV428{
+  0%,73.6%{transform:translate3d(-22vw,0,0) rotate(-1deg)}
+  74%{transform:translate3d(-10vw,0,0) rotate(-1deg)}
+  79.5%{transform:translate3d(46vw,-2vh,0) rotate(2deg)}
+  84.8%{transform:translate3d(116vw,3vh,0) rotate(0deg)}
+  85%,100%{transform:translate3d(116vw,3vh,0) rotate(0deg)}
+}
+@keyframes sfkFishPassLeftFV428{
+  0%,73.6%{transform:scaleX(-1) translate3d(-18vw,0,0)}
+  74%{transform:scaleX(-1) translate3d(-6vw,0,0)}
+  78.8%{transform:scaleX(-1) translate3d(40vw,-1vh,0)}
+  84.8%{transform:scaleX(-1) translate3d(114vw,2vh,0)}
+  85%,100%{transform:scaleX(-1) translate3d(114vw,2vh,0)}
+}
+@keyframes sfkSwimKickAV428{from{rotate:18deg}to{rotate:34deg}}
+@keyframes sfkSwimKickBV428{from{rotate:-4deg}to{rotate:-17deg}}
 
 @keyframes sfkFishPassRightAV427{
   0%,73.6%{transform:translate3d(-18vw,0,0) rotate(1deg)}
@@ -29550,25 +29599,26 @@ html.sfkHomepageBlackSymbioteActive body > *:not(script):not(style):not(#homepag
 
 @media(max-width:700px){
   .homepageEffectLayer.is-flood-rain .floodSwimmer{
-    left:4% !important;
+    left:3% !important;
     top:45% !important;
-    width:clamp(160px,38vw,205px) !important;
-    height:clamp(92px,21vw,122px) !important;
+    width:clamp(165px,39vw,215px) !important;
+    height:clamp(96px,21vw,126px) !important;
   }
   .homepageEffectLayer.is-flood-rain .floodSafetyBubble{
-    right:0 !important;
-    bottom:92% !important;
-    max-width:140px !important;
+    right:-2% !important;
+    bottom:93% !important;
+    max-width:146px !important;
     padding:8px 10px !important;
     font-size:12px !important;
   }
-  @keyframes sfkFloodSwimmerWindowV427{
-    0%,73.8%{transform:translate3d(0,2vh,0) rotate(-3deg);opacity:.01}
-    74.2%{transform:translate3d(0,2vh,0) rotate(-3deg);opacity:1}
-    77%{transform:translate3d(6vw,0,0) rotate(-1deg);opacity:1}
-    80.5%{transform:translate3d(14vw,-2vh,0) rotate(1deg);opacity:1}
-    83.8%{transform:translate3d(24vw,-1vh,0) rotate(1.5deg);opacity:1}
-    84.8%{transform:translate3d(29vw,-.5vh,0) rotate(1deg);opacity:1}
-    85%,100%{transform:translate3d(29vw,-.5vh,0) rotate(1deg);opacity:.01}
+  .homepageEffectLayer.is-flood-rain .swimmerLeg{left:15% !important;width:22% !important}
+  @keyframes sfkFloodSwimmerWindowV428{
+    0%,73.8%{transform:translate3d(0,2vh,0) rotate(-2deg);opacity:.01}
+    74.2%{transform:translate3d(0,2vh,0) rotate(-2deg);opacity:1}
+    77%{transform:translate3d(5vw,0,0) rotate(-1deg);opacity:1}
+    80.5%{transform:translate3d(12vw,-1.7vh,0) rotate(.5deg);opacity:1}
+    83.8%{transform:translate3d(20vw,-.8vh,0) rotate(1deg);opacity:1}
+    84.8%{transform:translate3d(24vw,-.4vh,0) rotate(.8deg);opacity:1}
+    85%,100%{transform:translate3d(24vw,-.4vh,0) rotate(.8deg);opacity:.01}
   }
 }

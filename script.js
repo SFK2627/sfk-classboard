@@ -2844,7 +2844,7 @@ function buildHomepageRain(mode) {
   homepageEffectParticleMode = mode;
   rain.innerHTML = "";
 
-  const count = mode === "drizzle" ? 52 : (mode === "flood-rain" ? 96 : (mode === "heavy-rain" ? 132 : 164));
+  const count = mode === "drizzle" ? 52 : (mode === "flood-rain" ? 148 : (mode === "heavy-rain" ? 132 : 164));
   const fragment = document.createDocumentFragment();
   for (let index = 0; index < count; index += 1) {
     const drop = document.createElement("i");
