@@ -4814,3 +4814,52 @@ body.toolModalOpen {
   .homepageEffectSavedMediaPlaceholder { height: 64px; }
   .homepageEffectImagePreviewFooter { align-items: stretch; flex-direction: column; }
 }
+
+
+/* =========================================================
+   v392 GENERIC HOMEPAGE EFFECT SOUND / MUSIC
+========================================================= */
+.homepageEffectAudioFields {
+  margin-top: 12px;
+  padding: 12px;
+  border: 2px dashed rgba(17,17,17,.35);
+  border-radius: 14px;
+  background: rgba(17,17,17,.035);
+}
+
+.homepageEffectAudioFields[hidden] {
+  display: none !important;
+}
+
+.homepageEffectAudioFields > label[for="homepageEffectAudioUrl"] {
+  margin-top: 2px;
+}
+
+.homepageEffectAudioFields input[type="url"] {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.homepageEffectAudioFields .homepageEffectToggleRow {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.homepageEffectAudioFields .homepageEffectLoopRow {
+  margin-bottom: 0;
+}
+
+
+/* =========================================================
+   v399 YOUTUBE HOMEPAGE EFFECT — ADMIN FIELDS
+========================================================= */
+.homepageEffectYouTubeFields {
+  margin-top: 12px;
+  padding: 12px;
+  border: 2px dashed rgba(17,17,17,.35);
+  border-radius: 14px;
+  background: rgba(255,0,0,.045);
+}
+.homepageEffectYouTubeFields[hidden] { display: none !important; }
+.homepageEffectYouTubeFields input[type="url"] { width: 100%; box-sizing: border-box; }
+.homepageEffectYouTubeFields .homepageEffectToggleRow { margin: 11px 0 0; background: #fff4f4; }

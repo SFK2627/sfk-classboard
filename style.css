@@ -27106,3 +27106,238 @@ html.sfkHomepageSpiderGlitchActive body > *:not(script):not(style):not(#homepage
   opacity: 0 !important;
   pointer-events: none !important;
 }
+
+
+/* =========================================================
+   v398 KOALA CLASS FAMILY — 44 TOTAL
+   43 student koalas + 1 taller/larger adviser koala.
+   Centered forest class-photo formation with animated entrance.
+========================================================= */
+.homepageEffectLayer.is-koala-family .koalaFamilyStage {
+  perspective: 1200px;
+}
+
+.koalaForestTitle {
+  position: absolute;
+  left: 50%;
+  top: clamp(18px, 4vh, 42px);
+  z-index: 9;
+  transform: translateX(-50%);
+  padding: .42em .9em;
+  border-radius: 999px;
+  background: rgba(8, 48, 31, .72);
+  border: 1px solid rgba(255,255,255,.34);
+  color: #fff8cf;
+  font: 900 clamp(13px, 1.55vw, 23px)/1.05 system-ui, sans-serif;
+  letter-spacing: .16em;
+  text-shadow: 0 2px 8px rgba(0,0,0,.35);
+  box-shadow: 0 8px 28px rgba(0,0,0,.18);
+  opacity: 0;
+  animation: sfkKoalaClassTitle 14s ease-in-out infinite;
+}
+
+.homepageEffectLayer.is-koala-family .koalaFamilyWalker {
+  --pose-x: 0vw;
+  --pose-y: 0vh;
+  --start-x: -60vw;
+  --delay: 0s;
+  --depth: 1;
+  left: 50%;
+  bottom: 16vh;
+  width: var(--koala-size);
+  height: calc(var(--koala-size) * 1.36);
+  z-index: calc(10 + var(--depth));
+  translate: -50% 0;
+  animation: sfkKoalaClassGather 14s cubic-bezier(.34,.02,.23,1) var(--delay) infinite;
+}
+
+.homepageEffectLayer.is-koala-family .koalaFamilyWalker.is-student {
+  --koala-size: clamp(38px, 4.6vw, 70px);
+}
+
+.homepageEffectLayer.is-koala-family .koalaFamilyWalker.is-adviser {
+  --koala-size: clamp(92px, 9.2vw, 146px);
+  z-index: 22;
+  filter: drop-shadow(0 14px 20px rgba(0,0,0,.16));
+}
+
+.homepageEffectLayer.is-koala-family .koalaFamilyWalker.is-adviser .koalaFamilyHead {
+  background: radial-gradient(circle at 35% 28%, rgba(255,255,255,.72), transparent 24%), linear-gradient(180deg, #e4e6ec 0%, #ced2dc 62%, #bbc1cd 100%);
+}
+
+.homepageEffectLayer.is-koala-family .koalaFamilyWalker.is-adviser .koalaFamilyBodyCore {
+  background: linear-gradient(180deg, #d9dce4 0%, #c6cad4 65%, #b4bac7 100%);
+}
+
+.koalaAdviserBadge {
+  position: absolute;
+  left: 50%;
+  bottom: -9%;
+  z-index: 8;
+  transform: translateX(-50%);
+  padding: .28em .65em;
+  border-radius: 999px;
+  background: #f7c600;
+  color: #172036;
+  border: 2px solid rgba(23,32,54,.92);
+  font: 1000 clamp(7px, .8vw, 11px)/1 system-ui, sans-serif;
+  letter-spacing: .08em;
+  box-shadow: 0 4px 10px rgba(0,0,0,.16);
+}
+
+.homepageEffectLayer.is-koala-family .koalaFamilyWalker.is-student .koalaFamilyHeldHeart {
+  font-size: clamp(9px, 1vw, 16px);
+  top: 58%;
+}
+.homepageEffectLayer.is-koala-family .koalaFamilyWalker.is-adviser .koalaFamilyHeldHeart {
+  font-size: clamp(26px, 3vw, 42px);
+}
+
+.homepageEffectLayer.is-koala-family .koalaFamilyHeartPose {
+  bottom: 49vh;
+  z-index: 25;
+}
+.homepageEffectLayer.is-koala-family .koalaFamilyHeartPose span {
+  font-size: clamp(80px, 10vw, 150px);
+}
+
+.homepageEffectLayer.is-koala-family .koalaFamilyLoveBurst i {
+  font-size: clamp(18px, 2.1vw, 34px);
+}
+.homepageEffectLayer.is-koala-family .koalaFamilyLoveBurst i:nth-child(1) { --heart-x: 25%; --heart-y: 60%; }
+.homepageEffectLayer.is-koala-family .koalaFamilyLoveBurst i:nth-child(2) { --heart-x: 32%; --heart-y: 55%; }
+.homepageEffectLayer.is-koala-family .koalaFamilyLoveBurst i:nth-child(3) { --heart-x: 39%; --heart-y: 62%; }
+.homepageEffectLayer.is-koala-family .koalaFamilyLoveBurst i:nth-child(4) { --heart-x: 45%; --heart-y: 52%; }
+.homepageEffectLayer.is-koala-family .koalaFamilyLoveBurst i:nth-child(5) { --heart-x: 50%; --heart-y: 58%; }
+.homepageEffectLayer.is-koala-family .koalaFamilyLoveBurst i:nth-child(6) { --heart-x: 55%; --heart-y: 52%; }
+.homepageEffectLayer.is-koala-family .koalaFamilyLoveBurst i:nth-child(7) { --heart-x: 61%; --heart-y: 62%; }
+.homepageEffectLayer.is-koala-family .koalaFamilyLoveBurst i:nth-child(8) { --heart-x: 68%; --heart-y: 55%; }
+.homepageEffectLayer.is-koala-family .koalaFamilyLoveBurst i:nth-child(9) { --heart-x: 75%; --heart-y: 60%; }
+.homepageEffectLayer.is-koala-family .koalaFamilyLoveBurst i:nth-child(10) { --heart-x: 36%; --heart-y: 47%; }
+.homepageEffectLayer.is-koala-family .koalaFamilyLoveBurst i:nth-child(11) { --heart-x: 64%; --heart-y: 47%; }
+.homepageEffectLayer.is-koala-family .koalaFamilyLoveBurst i:nth-child(12) { --heart-x: 50%; --heart-y: 44%; }
+
+@keyframes sfkKoalaClassGather {
+  0%, 3% {
+    opacity: 0;
+    transform: translate3d(var(--start-x), 13vh, 0) scale(.72) rotate(-4deg);
+  }
+  10% { opacity: 1; }
+  22% {
+    opacity: 1;
+    transform: translate3d(calc(var(--pose-x) * .62), calc(var(--pose-y) + 4vh), 0) scale(.86) rotate(2deg);
+  }
+  39% {
+    opacity: 1;
+    transform: translate3d(var(--pose-x), var(--pose-y), 0) scale(1) rotate(0deg);
+  }
+  48%, 80% {
+    opacity: 1;
+    transform: translate3d(var(--pose-x), var(--pose-y), 0) scale(1) rotate(0deg);
+  }
+  67% {
+    opacity: 1;
+    transform: translate3d(var(--pose-x), calc(var(--pose-y) - .7vh), 0) scale(1.025) rotate(0deg);
+  }
+  88% {
+    opacity: 1;
+    transform: translate3d(var(--pose-x), var(--pose-y), 0) scale(.98) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(calc(var(--pose-x) * .72), calc(var(--pose-y) + 13vh), 0) scale(.74) rotate(3deg);
+  }
+}
+
+@keyframes sfkKoalaClassTitle {
+  0%, 34%, 90%, 100% { opacity: 0; transform: translateX(-50%) translateY(-8px) scale(.92); }
+  42%, 82% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+
+/* Keep individual walk bob subtle with 44 figures to avoid visual chaos. */
+.homepageEffectLayer.is-koala-family .koalaFamilyFigure {
+  animation: sfkKoalaClassBob .9s ease-in-out infinite alternate;
+}
+@keyframes sfkKoalaClassBob {
+  from { transform: translateY(0); }
+  to { transform: translateY(-2px); }
+}
+
+@media (max-width: 700px) {
+  .homepageEffectLayer.is-koala-family .koalaFamilyWalker {
+    bottom: 14vh;
+  }
+  .homepageEffectLayer.is-koala-family .koalaFamilyWalker.is-student {
+    --koala-size: clamp(25px, 7.2vw, 34px);
+  }
+  .homepageEffectLayer.is-koala-family .koalaFamilyWalker.is-adviser {
+    --koala-size: clamp(64px, 18vw, 86px);
+  }
+  .homepageEffectLayer.is-koala-family .koalaFamilyWalker.row-1 { --pose-y: -5vh !important; }
+  .homepageEffectLayer.is-koala-family .koalaFamilyWalker.row-2 { --pose-y: 1vh !important; }
+  .homepageEffectLayer.is-koala-family .koalaFamilyWalker.row-3 { --pose-y: 7vh !important; }
+  .homepageEffectLayer.is-koala-family .koalaFamilyWalker.row-4 { --pose-y: 13vh !important; }
+  .homepageEffectLayer.is-koala-family .koalaFamilyWalker.is-adviser { --pose-y: -15vh !important; }
+  .homepageEffectLayer.is-koala-family .koalaFamilyHeartPose { bottom: 54vh; }
+  .homepageEffectLayer.is-koala-family .koalaFamilyHeartPose span { font-size: clamp(56px, 18vw, 86px); }
+  .koalaAdviserBadge { font-size: 6px; border-width: 1px; }
+  .koalaForestTitle { top: 2.5vh; font-size: 10px; }
+}
+
+
+/* =========================================================
+   v399 YOUTUBE VIDEO HOMEPAGE EFFECT
+========================================================= */
+.homepageEffectYouTubePanel { display: none; }
+.homepageEffectLayer.is-youtube { pointer-events: auto; }
+.homepageEffectLayer.is-youtube .homepageEffectBackdrop {
+  background: rgba(2,5,10,.88);
+  backdrop-filter: blur(16px) brightness(.52) saturate(.78);
+}
+.homepageEffectLayer.is-youtube .homepageEffectContent {
+  place-items: center;
+  align-content: center;
+  justify-content: center;
+  padding: max(26px, env(safe-area-inset-top)) max(26px, env(safe-area-inset-right)) max(26px, env(safe-area-inset-bottom)) max(26px, env(safe-area-inset-left));
+}
+.homepageEffectLayer.is-youtube .homepageEffectYouTubePanel {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.homepageEffectYouTubePlayer {
+  position: relative;
+  width: min(92vw, 1500px);
+  max-height: 84vh;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #000;
+  box-shadow: 0 30px 100px rgba(0,0,0,.72);
+  pointer-events: auto;
+}
+.homepageEffectYouTubePlayer iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #000;
+}
+.homepageEffectYouTubePlayer iframe[hidden] { display: none !important; }
+.homepageEffectYouTubeEmpty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  color: #fff;
+  font-weight: 900;
+  text-align: center;
+}
+.homepageEffectYouTubeEmpty[hidden] { display: none !important; }
+@media (max-width: 700px) {
+  .homepageEffectYouTubePlayer { width: 96vw; border-radius: 14px; }
+  .homepageEffectLayer.is-youtube .homepageEffectContent { padding: 16px 8px; }
+}

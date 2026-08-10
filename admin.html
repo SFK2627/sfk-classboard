@@ -16,7 +16,7 @@
   <link rel="manifest" href="admin.webmanifest?v=portrait-reminder-v1" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
-  <link rel="stylesheet" href="admin.css?v=koala-family-v395" />
+  <link rel="stylesheet" href="admin.css?v=youtube-effect-v399" />
   <script src="orientation-lock.js?v=appwide-v6" defer></script>
 </head>
 
@@ -151,6 +151,7 @@
             <option value="petals">Falling Petals</option>
             <option value="gold-sparkle">Golden Sparkles</option>
             <option value="picture">Fullscreen Picture Gallery</option>
+            <option value="youtube">YouTube Video / Autoplay</option>
             <option value="alert">Alert / Warning</option>
           </select>
 
@@ -177,6 +178,17 @@
                 <button id="homepageEffectRemoveImage" type="button">Clear All Pictures</button>
               </div>
             </div>
+          </div>
+
+          <div id="homepageEffectYouTubeFields" class="homepageEffectYouTubeFields" hidden>
+            <label for="homepageEffectYouTubeUrl">YouTube Video Link</label>
+            <input id="homepageEffectYouTubeUrl" type="url" maxlength="1200" inputmode="url" placeholder="https://www.youtube.com/watch?v=..." />
+            <small class="fieldHint">Supports normal YouTube links, youtu.be links, Shorts, Live, and embed links. The video is shown centered in a full-screen ClassBoard overlay.</small>
+
+            <label class="homepageEffectToggleRow homepageEffectYouTubeMuteRow">
+              <input id="homepageEffectYouTubeMuted" type="checkbox" checked />
+              <span><strong>Start muted for reliable autoplay</strong><small>Recommended. Browsers commonly block autoplay with sound. Viewers can unmute using the YouTube player controls.</small></span>
+            </label>
           </div>
 
           <label class="homepageEffectToggleRow homepageEffectDismissRow">
@@ -986,9 +998,9 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js?v=2-secure-auth"></script>
   <script src="auth.js?v=admin-officer-rescue-v2"></script>
-  <script src="firebase-adapter.js?v=koala-family-v395"></script>
+  <script src="firebase-adapter.js?v=youtube-effect-v399"></script>
   <script src="pwa.js?v=page-lock-v119"></script>
-  <script src="class-chat-admin.js?v=koala-family-v395"></script>
-  <script src="admin.js?v=koala-family-v395"></script>
+  <script src="class-chat-admin.js?v=youtube-effect-v399"></script>
+  <script src="admin.js?v=youtube-effect-v399"></script>
 </body>
 </html>

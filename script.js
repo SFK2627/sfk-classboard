@@ -1813,7 +1813,7 @@ function normalizeHomepageEffectImageList(value, fallback = "") {
 
 function normalizeHomepageEffectConfig(settings = {}) {
   const allowedModes = new Set([
-    "normal", "drizzle", "heavy-rain", "thunderstorm", "multiverse", "picture", "alert",
+    "normal", "drizzle", "heavy-rain", "thunderstorm", "multiverse", "picture", "youtube", "alert",
     "spider-glitch", "comic-web", "portal-rift",
     "fog", "snow", "confetti", "hearts", "koala-family", "stars", "matrix", "bubbles", "fireflies", "neon-pulse",
     "aurora", "galaxy", "meteors", "laser-grid", "crt", "pixel-storm", "prism", "petals", "gold-sparkle"
@@ -1838,9 +1838,70 @@ function normalizeHomepageEffectConfig(settings = {}) {
     : (legacySpiderMode && spiderSound);
   const audioUrl = savedAudioUrl || ((legacySpiderMode && audioEnabled) ? defaultAudioUrl : "");
   const audioLoop = String(settings.HomepageEffectAudioLoop || "YES").trim().toUpperCase() !== "NO";
+  const youtubeUrl = normalizeHomepageEffectYouTubeUrl(settings.HomepageEffectYouTubeUrl);
+  const youtubeMuted = String(settings.HomepageEffectYouTubeMuted || "YES").trim().toUpperCase() !== "NO";
   const updatedAt = String(settings.HomepageEffectUpdatedAt || "").trim();
-  const signature = updatedAt || [enabled ? "1" : "0", mode, title, message, images.join("~"), dismissible ? "1" : "0", alertSound ? "1" : "0", audioEnabled ? "1" : "0", audioUrl, audioLoop ? "1" : "0"].join("|");
-  return { enabled, mode, title, message, image: images[0] || "", images, dismissible, alertSound, spiderSound, audioEnabled, audioUrl, audioLoop, updatedAt, signature };
+  const signature = updatedAt || [enabled ? "1" : "0", mode, title, message, images.join("~"), dismissible ? "1" : "0", alertSound ? "1" : "0", audioEnabled ? "1" : "0", audioUrl, audioLoop ? "1" : "0", youtubeUrl, youtubeMuted ? "1" : "0"].join("|");
+  return { enabled, mode, title, message, image: images[0] || "", images, dismissible, alertSound, spiderSound, audioEnabled, audioUrl, audioLoop, youtubeUrl, youtubeMuted, updatedAt, signature };
+}
+
+function normalizeHomepageEffectYouTubeUrl(value) {
+  const raw = String(value || "").trim();
+  if (!raw || !/^https:\/\//i.test(raw)) return "";
+  try {
+    const url = new URL(raw);
+    const host = url.hostname.toLowerCase().replace(/^www\./, "");
+    let id = "";
+    if (host === "youtu.be") id = url.pathname.split("/").filter(Boolean)[0] || "";
+    else if (host === "youtube.com" || host === "m.youtube.com" || host === "music.youtube.com") {
+      if (url.pathname === "/watch") id = url.searchParams.get("v") || "";
+      else {
+        const parts = url.pathname.split("/").filter(Boolean);
+        if (["shorts", "embed", "live"].includes(parts[0])) id = parts[1] || "";
+      }
+    }
+    id = String(id || "").trim();
+    if (!/^[A-Za-z0-9_-]{6,20}$/.test(id)) return "";
+    return `https://www.youtube.com/watch?v=${id}`;
+  } catch (error) { return ""; }
+}
+
+function getHomepageEffectYouTubeVideoId(value) {
+  const normalized = normalizeHomepageEffectYouTubeUrl(value);
+  if (!normalized) return "";
+  try { return new URL(normalized).searchParams.get("v") || ""; } catch (error) { return ""; }
+}
+
+function renderHomepageEffectYouTube(config) {
+  const layer = ensureHomepageEffectLayer();
+  const iframe = layer.querySelector("#homepageEffectYouTubeFrame");
+  const empty = layer.querySelector("#homepageEffectYouTubeEmpty");
+  if (!iframe) return;
+  const videoId = getHomepageEffectYouTubeVideoId(config.youtubeUrl);
+  if (!videoId) {
+    iframe.removeAttribute("src");
+    iframe.hidden = true;
+    if (empty) empty.hidden = false;
+    return;
+  }
+  const muted = config.youtubeMuted !== false;
+  const params = new URLSearchParams({
+    autoplay: "1",
+    mute: muted ? "1" : "0",
+    controls: "1",
+    rel: "0",
+    playsinline: "1",
+    modestbranding: "1"
+  });
+  iframe.src = `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?${params.toString()}`;
+  iframe.hidden = false;
+  if (empty) empty.hidden = true;
+}
+
+function clearHomepageEffectYouTube() {
+  const layer = document.getElementById("homepageEffectLayer");
+  const iframe = layer?.querySelector("#homepageEffectYouTubeFrame");
+  if (iframe) { iframe.removeAttribute("src"); iframe.hidden = true; }
 }
 
 function getHomepageAlertAudioContext() {
@@ -2073,90 +2134,53 @@ function ensureHomepageEffectLayer() {
     <div class="homepageEffectKoalaFamily" aria-hidden="true">
       <div class="koalaFamilySoftGlow"></div>
       <div class="koalaFamilyStage">
-        <span class="koalaFamilyWalker is-parent-left">
-          <span class="koalaFamilyFigure">
-            <span class="koalaFamilyEar is-left"></span>
-            <span class="koalaFamilyEar is-right"></span>
-            <span class="koalaFamilyHead">
-              <span class="koalaFamilyEye is-left"></span>
-              <span class="koalaFamilyEye is-right"></span>
-              <span class="koalaFamilyNose"></span>
-              <span class="koalaFamilyBlush is-left"></span>
-              <span class="koalaFamilyBlush is-right"></span>
-            </span>
-            <span class="koalaFamilyBodyCore"></span>
-            <span class="koalaFamilyBelly"></span>
-            <span class="koalaFamilyArm is-left"></span>
-            <span class="koalaFamilyArm is-right"></span>
-            <span class="koalaFamilyFoot is-left"></span>
-            <span class="koalaFamilyFoot is-right"></span>
-          </span>
-          <i class="koalaFamilyHeldHeart">♥</i>
-        </span>
-        <span class="koalaFamilyWalker is-child-left">
-          <span class="koalaFamilyFigure">
-            <span class="koalaFamilyEar is-left"></span>
-            <span class="koalaFamilyEar is-right"></span>
-            <span class="koalaFamilyHead">
-              <span class="koalaFamilyEye is-left"></span>
-              <span class="koalaFamilyEye is-right"></span>
-              <span class="koalaFamilyNose"></span>
-              <span class="koalaFamilyBlush is-left"></span>
-              <span class="koalaFamilyBlush is-right"></span>
-            </span>
-            <span class="koalaFamilyBodyCore"></span>
-            <span class="koalaFamilyBelly"></span>
-            <span class="koalaFamilyArm is-left"></span>
-            <span class="koalaFamilyArm is-right"></span>
-            <span class="koalaFamilyFoot is-left"></span>
-            <span class="koalaFamilyFoot is-right"></span>
-          </span>
-          <i class="koalaFamilyHeldHeart">♥</i>
-        </span>
-        <span class="koalaFamilyWalker is-child-right">
-          <span class="koalaFamilyFigure">
-            <span class="koalaFamilyEar is-left"></span>
-            <span class="koalaFamilyEar is-right"></span>
-            <span class="koalaFamilyHead">
-              <span class="koalaFamilyEye is-left"></span>
-              <span class="koalaFamilyEye is-right"></span>
-              <span class="koalaFamilyNose"></span>
-              <span class="koalaFamilyBlush is-left"></span>
-              <span class="koalaFamilyBlush is-right"></span>
-            </span>
-            <span class="koalaFamilyBodyCore"></span>
-            <span class="koalaFamilyBelly"></span>
-            <span class="koalaFamilyArm is-left"></span>
-            <span class="koalaFamilyArm is-right"></span>
-            <span class="koalaFamilyFoot is-left"></span>
-            <span class="koalaFamilyFoot is-right"></span>
-          </span>
-          <i class="koalaFamilyHeldHeart">♥</i>
-        </span>
-        <span class="koalaFamilyWalker is-parent-right">
-          <span class="koalaFamilyFigure">
-            <span class="koalaFamilyEar is-left"></span>
-            <span class="koalaFamilyEar is-right"></span>
-            <span class="koalaFamilyHead">
-              <span class="koalaFamilyEye is-left"></span>
-              <span class="koalaFamilyEye is-right"></span>
-              <span class="koalaFamilyNose"></span>
-              <span class="koalaFamilyBlush is-left"></span>
-              <span class="koalaFamilyBlush is-right"></span>
-            </span>
-            <span class="koalaFamilyBodyCore"></span>
-            <span class="koalaFamilyBelly"></span>
-            <span class="koalaFamilyArm is-left"></span>
-            <span class="koalaFamilyArm is-right"></span>
-            <span class="koalaFamilyFoot is-left"></span>
-            <span class="koalaFamilyFoot is-right"></span>
-          </span>
-          <i class="koalaFamilyHeldHeart">♥</i>
-        </span>
+        <div class="koalaForestTitle">SFK KOALA FAMILY</div>
+        <span class="koalaFamilyWalker is-adviser" style="--pose-x:0vw;--pose-y:-17vh;--start-x:-62vw;--delay:-0.15s;--depth:5"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i><b class="koalaAdviserBadge">ADVISER</b></span>
+        <span class="koalaFamilyWalker is-student row-1" style="--pose-x:-32.40vw;--pose-y:-8vh;--start-x:-61vw;--delay:-0.07s;--depth:1"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-1" style="--pose-x:-25.20vw;--pose-y:-8vh;--start-x:64vw;--delay:-0.14s;--depth:1"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-1" style="--pose-x:-18.00vw;--pose-y:-8vh;--start-x:-67vw;--delay:-0.21s;--depth:1"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-1" style="--pose-x:-10.80vw;--pose-y:-8vh;--start-x:70vw;--delay:-0.28s;--depth:1"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-1" style="--pose-x:-3.60vw;--pose-y:-8vh;--start-x:-73vw;--delay:-0.35s;--depth:1"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-1" style="--pose-x:3.60vw;--pose-y:-8vh;--start-x:76vw;--delay:-0.42s;--depth:1"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-1" style="--pose-x:10.80vw;--pose-y:-8vh;--start-x:-58vw;--delay:-0.49s;--depth:1"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-1" style="--pose-x:18.00vw;--pose-y:-8vh;--start-x:61vw;--delay:-0.56s;--depth:1"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-1" style="--pose-x:25.20vw;--pose-y:-8vh;--start-x:-64vw;--delay:0.00s;--depth:1"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-1" style="--pose-x:32.40vw;--pose-y:-8vh;--start-x:67vw;--delay:-0.07s;--depth:1"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-2" style="--pose-x:-33.50vw;--pose-y:-1vh;--start-x:-70vw;--delay:-0.14s;--depth:2"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-2" style="--pose-x:-26.80vw;--pose-y:-1vh;--start-x:73vw;--delay:-0.21s;--depth:2"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-2" style="--pose-x:-20.10vw;--pose-y:-1vh;--start-x:-76vw;--delay:-0.28s;--depth:2"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-2" style="--pose-x:-13.40vw;--pose-y:-1vh;--start-x:58vw;--delay:-0.35s;--depth:2"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-2" style="--pose-x:-6.70vw;--pose-y:-1vh;--start-x:-61vw;--delay:-0.42s;--depth:2"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-2" style="--pose-x:0.00vw;--pose-y:-1vh;--start-x:64vw;--delay:-0.49s;--depth:2"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-2" style="--pose-x:6.70vw;--pose-y:-1vh;--start-x:-67vw;--delay:-0.56s;--depth:2"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-2" style="--pose-x:13.40vw;--pose-y:-1vh;--start-x:70vw;--delay:0.00s;--depth:2"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-2" style="--pose-x:20.10vw;--pose-y:-1vh;--start-x:-73vw;--delay:-0.07s;--depth:2"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-2" style="--pose-x:26.80vw;--pose-y:-1vh;--start-x:76vw;--delay:-0.14s;--depth:2"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-2" style="--pose-x:33.50vw;--pose-y:-1vh;--start-x:-58vw;--delay:-0.21s;--depth:2"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-3" style="--pose-x:-33.50vw;--pose-y:6vh;--start-x:61vw;--delay:-0.28s;--depth:3"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-3" style="--pose-x:-26.80vw;--pose-y:6vh;--start-x:-64vw;--delay:-0.35s;--depth:3"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-3" style="--pose-x:-20.10vw;--pose-y:6vh;--start-x:67vw;--delay:-0.42s;--depth:3"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-3" style="--pose-x:-13.40vw;--pose-y:6vh;--start-x:-70vw;--delay:-0.49s;--depth:3"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-3" style="--pose-x:-6.70vw;--pose-y:6vh;--start-x:73vw;--delay:-0.56s;--depth:3"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-3" style="--pose-x:0.00vw;--pose-y:6vh;--start-x:-76vw;--delay:0.00s;--depth:3"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-3" style="--pose-x:6.70vw;--pose-y:6vh;--start-x:58vw;--delay:-0.07s;--depth:3"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-3" style="--pose-x:13.40vw;--pose-y:6vh;--start-x:-61vw;--delay:-0.14s;--depth:3"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-3" style="--pose-x:20.10vw;--pose-y:6vh;--start-x:64vw;--delay:-0.21s;--depth:3"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-3" style="--pose-x:26.80vw;--pose-y:6vh;--start-x:-67vw;--delay:-0.28s;--depth:3"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-3" style="--pose-x:33.50vw;--pose-y:6vh;--start-x:70vw;--delay:-0.35s;--depth:3"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-4" style="--pose-x:-33.50vw;--pose-y:13vh;--start-x:-73vw;--delay:-0.42s;--depth:4"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-4" style="--pose-x:-26.80vw;--pose-y:13vh;--start-x:76vw;--delay:-0.49s;--depth:4"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-4" style="--pose-x:-20.10vw;--pose-y:13vh;--start-x:-58vw;--delay:-0.56s;--depth:4"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-4" style="--pose-x:-13.40vw;--pose-y:13vh;--start-x:61vw;--delay:0.00s;--depth:4"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-4" style="--pose-x:-6.70vw;--pose-y:13vh;--start-x:-64vw;--delay:-0.07s;--depth:4"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-4" style="--pose-x:0.00vw;--pose-y:13vh;--start-x:67vw;--delay:-0.14s;--depth:4"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-4" style="--pose-x:6.70vw;--pose-y:13vh;--start-x:-70vw;--delay:-0.21s;--depth:4"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-4" style="--pose-x:13.40vw;--pose-y:13vh;--start-x:73vw;--delay:-0.28s;--depth:4"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-4" style="--pose-x:20.10vw;--pose-y:13vh;--start-x:-76vw;--delay:-0.35s;--depth:4"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-4" style="--pose-x:26.80vw;--pose-y:13vh;--start-x:58vw;--delay:-0.42s;--depth:4"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
+        <span class="koalaFamilyWalker is-student row-4" style="--pose-x:33.50vw;--pose-y:13vh;--start-x:-61vw;--delay:-0.49s;--depth:4"><span class="koalaFamilyFigure"><span class="koalaFamilyEar is-left"></span><span class="koalaFamilyEar is-right"></span><span class="koalaFamilyHead"><span class="koalaFamilyEye is-left"></span><span class="koalaFamilyEye is-right"></span><span class="koalaFamilyNose"></span><span class="koalaFamilyBlush is-left"></span><span class="koalaFamilyBlush is-right"></span></span><span class="koalaFamilyBodyCore"></span><span class="koalaFamilyBelly"></span><span class="koalaFamilyArm is-left"></span><span class="koalaFamilyArm is-right"></span><span class="koalaFamilyFoot is-left"></span><span class="koalaFamilyFoot is-right"></span></span><i class="koalaFamilyHeldHeart">♥</i></span>
         <div class="koalaFamilyHeartPose"><span>♥</span></div>
-        <div class="koalaFamilyLoveBurst">
-          <i>♥</i><i>♡</i><i>♥</i><i>♡</i><i>♥</i><i>♥</i><i>♡</i><i>♥</i>
-        </div>
+        <div class="koalaFamilyLoveBurst"><i>♥</i><i>♡</i><i>♥</i><i>♡</i><i>♥</i><i>♥</i><i>♡</i><i>♥</i><i>♡</i><i>♥</i><i>♡</i><i>♥</i></div>
       </div>
     </div>
     <div class="homepageEffectContent" role="status" aria-live="polite">
@@ -2173,6 +2197,12 @@ function ensureHomepageEffectLayer() {
         <div id="homepageEffectGalleryCount" class="homepageEffectGalleryCount" aria-live="polite"></div>
         <figcaption id="homepageEffectPictureCaption"></figcaption>
       </figure>
+      <section class="homepageEffectYouTubePanel" aria-label="ClassBoard YouTube video">
+        <div class="homepageEffectYouTubePlayer">
+          <iframe id="homepageEffectYouTubeFrame" title="ClassBoard YouTube video" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" hidden></iframe>
+          <div id="homepageEffectYouTubeEmpty" class="homepageEffectYouTubeEmpty" hidden>Unable to load the YouTube video.</div>
+        </div>
+      </section>
       <section class="homepageEffectAlertPanel" role="alert">
         <div class="homepageEffectAlertIcon">⚠</div>
         <p class="homepageEffectAlertEyebrow">SFK CLASSBOARD ALERT</p>
@@ -2239,6 +2269,7 @@ function hideHomepageEffectLayer() {
   if (ambient) ambient.innerHTML = "";
   stopHomepageAlertSound();
   stopHomepageEffectMusic();
+  clearHomepageEffectYouTube();
 }
 
 function updateHomepageEffectGalleryControls() {
@@ -2448,7 +2479,7 @@ function renderHomepageEffectText(config) {
 
   if (weatherTitle) weatherTitle.textContent = config.title;
   if (weatherMessage) weatherMessage.textContent = config.message;
-  if (weatherBox) weatherBox.hidden = config.mode === "alert" || config.mode === "picture" || !(config.title || config.message);
+  if (weatherBox) weatherBox.hidden = config.mode === "alert" || config.mode === "picture" || config.mode === "youtube" || !(config.title || config.message);
   if (pictureCaption) {
     pictureCaption.textContent = [config.title, config.message].filter(Boolean).join(" — ");
     pictureCaption.hidden = !(config.title || config.message);
@@ -2526,7 +2557,7 @@ async function applyHomepageEffectSettings(settings = {}) {
   layer.dataset.dismissible = homepageEffectDismissAllowed ? "true" : "false";
   renderHomepageEffectText(config);
 
-  const hasCustomEffectAudio = Boolean(config.audioEnabled && config.audioUrl);
+  const hasCustomEffectAudio = Boolean(config.mode !== "youtube" && config.audioEnabled && config.audioUrl);
   if (config.mode === "alert" && config.alertSound && !hasCustomEffectAudio) {
     startHomepageAlertSound(config.signature);
   } else {
@@ -2569,6 +2600,9 @@ async function applyHomepageEffectSettings(settings = {}) {
     if (galleryTrack) galleryTrack.innerHTML = "";
     updateHomepageEffectGalleryControls();
   }
+
+  if (config.mode === "youtube") renderHomepageEffectYouTube(config);
+  else clearHomepageEffectYouTube();
 }
 
 function renderDashboard(data) {

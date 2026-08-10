@@ -299,6 +299,7 @@
       "petals",
       "gold-sparkle",
       "picture",
+      "youtube",
       "alert"
     ]);
 
@@ -337,6 +338,28 @@
     const rawAudioUrl = String(payload?.HomepageEffectAudioUrl || "").trim();
     const safeAudioUrl = /^https:\/\//i.test(rawAudioUrl) ? rawAudioUrl.slice(0, 1200) : "";
 
+    const sanitizeYouTubeUrl = (value) => {
+      const raw = String(value || "").trim();
+      if (!/^https:\/\//i.test(raw)) return "";
+      try {
+        const url = new URL(raw);
+        const host = url.hostname.toLowerCase().replace(/^www\./, "");
+        let id = "";
+        if (host === "youtu.be") id = url.pathname.split("/").filter(Boolean)[0] || "";
+        else if (host === "youtube.com" || host === "m.youtube.com" || host === "music.youtube.com") {
+          if (url.pathname === "/watch") id = url.searchParams.get("v") || "";
+          else {
+            const parts = url.pathname.split("/").filter(Boolean);
+            if (["shorts", "embed", "live"].includes(parts[0])) id = parts[1] || "";
+          }
+        }
+        id = String(id || "").trim();
+        if (!/^[A-Za-z0-9_-]{6,20}$/.test(id)) return "";
+        return `https://www.youtube.com/watch?v=${id}`;
+      } catch (error) { return ""; }
+    };
+    const safeYouTubeUrl = sanitizeYouTubeUrl(payload?.HomepageEffectYouTubeUrl);
+
     const values = {
       HomepageEffectEnabled: String(payload?.HomepageEffectEnabled || "").trim().toUpperCase() === "YES" ? "YES" : "NO",
       HomepageEffectMode: mode,
@@ -350,6 +373,8 @@
       HomepageEffectAudioEnabled: (String(payload?.HomepageEffectAudioEnabled || "").trim().toUpperCase() === "YES" && safeAudioUrl) ? "YES" : "NO",
       HomepageEffectAudioUrl: safeAudioUrl,
       HomepageEffectAudioLoop: String(payload?.HomepageEffectAudioLoop || "").trim().toUpperCase() === "NO" ? "NO" : "YES",
+      HomepageEffectYouTubeUrl: safeYouTubeUrl,
+      HomepageEffectYouTubeMuted: String(payload?.HomepageEffectYouTubeMuted || "").trim().toUpperCase() === "NO" ? "NO" : "YES",
       HomepageEffectUpdatedAt: String(Date.now())
     };
 

@@ -2867,6 +2867,8 @@ const HOMEPAGE_EFFECT_DEFAULTS = {
   HomepageEffectAudioEnabled: "NO",
   HomepageEffectAudioUrl: "",
   HomepageEffectAudioLoop: "YES",
+  HomepageEffectYouTubeUrl: "",
+  HomepageEffectYouTubeMuted: "YES",
   HomepageEffectUpdatedAt: ""
 };
 
@@ -2885,6 +2887,30 @@ function normalizeHomepageEffectAdminAudioUrl(value) {
   const raw = String(value || "").trim();
   if (!raw || !/^https:\/\//i.test(raw)) return "";
   return raw.slice(0, 1200);
+}
+
+function normalizeHomepageEffectAdminYouTubeUrl(value) {
+  const raw = String(value || "").trim();
+  if (!raw || !/^https:\/\//i.test(raw)) return "";
+  try {
+    const url = new URL(raw);
+    const host = url.hostname.toLowerCase().replace(/^www\./, "");
+    let id = "";
+    if (host === "youtu.be") {
+      id = url.pathname.split("/").filter(Boolean)[0] || "";
+    } else if (host === "youtube.com" || host === "m.youtube.com" || host === "music.youtube.com") {
+      if (url.pathname === "/watch") id = url.searchParams.get("v") || "";
+      else {
+        const parts = url.pathname.split("/").filter(Boolean);
+        if (["shorts", "embed", "live"].includes(parts[0])) id = parts[1] || "";
+      }
+    }
+    id = String(id || "").trim();
+    if (!/^[A-Za-z0-9_-]{6,20}$/.test(id)) return "";
+    return `https://www.youtube.com/watch?v=${id}`;
+  } catch (error) {
+    return "";
+  }
 }
 
 const HOMEPAGE_EFFECT_MODE_NAMES = {
@@ -2915,6 +2941,7 @@ const HOMEPAGE_EFFECT_MODE_NAMES = {
   petals: "Falling Petals",
   "gold-sparkle": "Golden Sparkles",
   picture: "Fullscreen Picture Gallery",
+  youtube: "YouTube Video / Autoplay",
   alert: "Alert / Warning"
 };
 
@@ -3024,8 +3051,10 @@ function syncHomepageEffectAdminFields() {
   const enabled = Boolean(document.getElementById("homepageEffectEnabled")?.checked);
   const pictureFields = document.getElementById("homepageEffectPictureFields");
   if (pictureFields) pictureFields.hidden = mode !== "picture";
+  const youtubeFields = document.getElementById("homepageEffectYouTubeFields");
+  if (youtubeFields) youtubeFields.hidden = mode !== "youtube";
   const audioFields = document.getElementById("homepageEffectAudioFields");
-  if (audioFields) audioFields.hidden = mode === "normal";
+  if (audioFields) audioFields.hidden = mode === "normal" || mode === "youtube";
   const alertSoundRow = document.getElementById("homepageEffectAlertSoundRow");
   if (alertSoundRow) alertSoundRow.hidden = mode !== "alert";
 
@@ -3062,6 +3091,8 @@ function fillHomepageEffectSettings(settings = {}) {
   const audioEnabled = document.getElementById("homepageEffectAudioEnabled");
   const audioUrl = document.getElementById("homepageEffectAudioUrl");
   const audioLoop = document.getElementById("homepageEffectAudioLoop");
+  const youtubeUrl = document.getElementById("homepageEffectYouTubeUrl");
+  const youtubeMuted = document.getElementById("homepageEffectYouTubeMuted");
   const urls = document.getElementById("homepageEffectImageUrls");
   if (enabled) enabled.checked = String(merged.HomepageEffectEnabled || "").toUpperCase() === "YES";
   if (mode) mode.value = merged.HomepageEffectMode || "normal";
@@ -3083,6 +3114,8 @@ function fillHomepageEffectSettings(settings = {}) {
   }
   if (audioUrl) audioUrl.value = savedAudioUrl || fallbackAudioUrl;
   if (audioLoop) audioLoop.checked = String(merged.HomepageEffectAudioLoop || "YES").toUpperCase() !== "NO";
+  if (youtubeUrl) youtubeUrl.value = normalizeHomepageEffectAdminYouTubeUrl(merged.HomepageEffectYouTubeUrl);
+  if (youtubeMuted) youtubeMuted.checked = String(merged.HomepageEffectYouTubeMuted || "YES").toUpperCase() !== "NO";
   homepageEffectAdminLastMode = selectedMode;
 
   homepageEffectSavedImages = parseHomepageEffectImageList(merged.HomepageEffectImages, merged.HomepageEffectImage);
@@ -3103,6 +3136,7 @@ function describeHomepageEffectAdminState(settings = {}) {
     const images = parseHomepageEffectImageList(settings.HomepageEffectImages, settings.HomepageEffectImage);
     return `Published state: Fullscreen Picture Gallery (${images.length || 0} picture${images.length === 1 ? "" : "s"}).`;
   }
+  if (mode === "youtube") return "Published state: YouTube Video / Autoplay.";
   return `Published state: ${HOMEPAGE_EFFECT_MODE_NAMES[mode] || mode}.`;
 }
 
@@ -3230,12 +3264,18 @@ async function saveHomepageEffectSettings() {
       throw new Error("Picture Gallery needs at least one uploaded picture or https image address.");
     }
 
+    const effectYouTubeUrl = normalizeHomepageEffectAdminYouTubeUrl(document.getElementById("homepageEffectYouTubeUrl")?.value);
+    const effectYouTubeMuted = document.getElementById("homepageEffectYouTubeMuted")?.checked !== false;
+    if (mode === "youtube" && enabledEl?.checked && !effectYouTubeUrl) {
+      throw new Error("YouTube Video mode needs a valid YouTube video link.");
+    }
+
     const requestedAudioEnabled = Boolean(document.getElementById("homepageEffectAudioEnabled")?.checked);
     const effectAudioUrl = normalizeHomepageEffectAdminAudioUrl(document.getElementById("homepageEffectAudioUrl")?.value);
     if (requestedAudioEnabled && mode !== "normal" && !effectAudioUrl) {
       throw new Error("Sound/music is enabled. Paste a direct public HTTPS audio link, or turn the sound option off.");
     }
-    const effectAudioEnabled = requestedAudioEnabled && mode !== "normal" && Boolean(effectAudioUrl);
+    const effectAudioEnabled = requestedAudioEnabled && mode !== "normal" && mode !== "youtube" && Boolean(effectAudioUrl);
     const effectAudioLoop = document.getElementById("homepageEffectAudioLoop")?.checked !== false;
 
     const payload = {
@@ -3250,6 +3290,8 @@ async function saveHomepageEffectSettings() {
       HomepageEffectAudioEnabled: effectAudioEnabled ? "YES" : "NO",
       HomepageEffectAudioUrl: effectAudioUrl,
       HomepageEffectAudioLoop: effectAudioLoop ? "YES" : "NO",
+      HomepageEffectYouTubeUrl: effectYouTubeUrl,
+      HomepageEffectYouTubeMuted: effectYouTubeMuted ? "YES" : "NO",
       // Legacy compatibility for older ClassBoard clients that only know the Spider sound switch.
       HomepageEffectSpiderSound: (["spider-glitch", "comic-web"].includes(mode) && effectAudioEnabled) ? "YES" : "NO"
     };
