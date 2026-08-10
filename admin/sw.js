@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-admin-pwa-v399-youtube-effect";
+const CACHE_NAME = "sfk-admin-pwa-v400-youtube-audio-fix";
 const CACHE_PREFIXES_TO_DELETE = ["sfk-admin-pwa-"];
 const NAVIGATION_FALLBACK_URL = "./index.html";
 const NAVIGATION_TIMEOUT_MS = 2500;
@@ -8,12 +8,12 @@ const APP_SHELL = [
   "./index.html",
   "./manifest.webmanifest",
   "./sw.js",
-  "../admin.html?embedded=1&v=youtube-effect-v399",
-  "../admin.css?v=youtube-effect-v399",
-  "../admin.js?v=youtube-effect-v399",
+  "../admin.html?embedded=1&v=youtube-effect-v400",
+  "../admin.css?v=youtube-effect-v400",
+  "../admin.js?v=youtube-effect-v400",
   "../class-chat-admin.js",
   "../firebase-config.js",
-  "../firebase-adapter.js?v=youtube-effect-v399",
+  "../firebase-adapter.js?v=youtube-effect-v400",
   "../auth.js",
   "../orientation-lock.js",
   "../icons/icon-192.png",

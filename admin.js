@@ -3031,6 +3031,12 @@ function handleHomepageEffectModeChange() {
   const nextDefault = getHomepageEffectDefaultAudioUrl(nextMode);
   const currentUrl = String(audioUrlEl?.value || "").trim();
 
+  // YouTube supplies its own audio through the player, so generic effect audio must not
+  // remain silently enabled from a previously selected mode.
+  if (nextMode === "youtube" && audioEnabledEl) {
+    audioEnabledEl.checked = false;
+  }
+
   // Spider-inspired modes have their requested default track. Other modes keep custom links,
   // but clear the previous automatic Spider default when leaving a Spider mode.
   if (audioUrlEl) {
@@ -3054,7 +3060,14 @@ function syncHomepageEffectAdminFields() {
   const youtubeFields = document.getElementById("homepageEffectYouTubeFields");
   if (youtubeFields) youtubeFields.hidden = mode !== "youtube";
   const audioFields = document.getElementById("homepageEffectAudioFields");
-  if (audioFields) audioFields.hidden = mode === "normal" || mode === "youtube";
+  const genericAudioUnavailable = mode === "normal" || mode === "youtube";
+  if (audioFields) audioFields.hidden = genericAudioUnavailable;
+  const audioEnabledEl = document.getElementById("homepageEffectAudioEnabled");
+  const audioUrlEl = document.getElementById("homepageEffectAudioUrl");
+  const audioLoopEl = document.getElementById("homepageEffectAudioLoop");
+  if (audioEnabledEl) audioEnabledEl.disabled = genericAudioUnavailable;
+  if (audioUrlEl) audioUrlEl.disabled = genericAudioUnavailable;
+  if (audioLoopEl) audioLoopEl.disabled = genericAudioUnavailable;
   const alertSoundRow = document.getElementById("homepageEffectAlertSoundRow");
   if (alertSoundRow) alertSoundRow.hidden = mode !== "alert";
 
@@ -3272,10 +3285,11 @@ async function saveHomepageEffectSettings() {
 
     const requestedAudioEnabled = Boolean(document.getElementById("homepageEffectAudioEnabled")?.checked);
     const effectAudioUrl = normalizeHomepageEffectAdminAudioUrl(document.getElementById("homepageEffectAudioUrl")?.value);
-    if (requestedAudioEnabled && mode !== "normal" && !effectAudioUrl) {
+    const usesGenericEffectAudio = mode !== "normal" && mode !== "youtube";
+    if (requestedAudioEnabled && usesGenericEffectAudio && !effectAudioUrl) {
       throw new Error("Sound/music is enabled. Paste a direct public HTTPS audio link, or turn the sound option off.");
     }
-    const effectAudioEnabled = requestedAudioEnabled && mode !== "normal" && mode !== "youtube" && Boolean(effectAudioUrl);
+    const effectAudioEnabled = requestedAudioEnabled && usesGenericEffectAudio && Boolean(effectAudioUrl);
     const effectAudioLoop = document.getElementById("homepageEffectAudioLoop")?.checked !== false;
 
     const payload = {
