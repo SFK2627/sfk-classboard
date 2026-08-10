@@ -2,9 +2,9 @@
   let deferredInstallPrompt = null;
 
   const installButton = document.getElementById("installAppBtn");
-  const SW_URL = "./sw.js?v=effect-music-v392";
-  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV392EffectMusic";
-  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV392EffectMusic";
+  const SW_URL = "./sw.js?v=effect-startup-lock-v394";
+  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV394EffectStartupLock";
+  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV394EffectStartupLock";
 
   function isStandaloneApp() {
     return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
@@ -23,7 +23,7 @@
   function askWorkerToActivate(worker) {
     if (!worker) return;
     try {
-      worker.postMessage({ type: "SFK_SKIP_WAITING_EFFECT_MUSIC_V392" });
+      worker.postMessage({ type: "SFK_SKIP_WAITING_EFFECT_STARTUP_LOCK_V394" });
     } catch (error) {}
   }
 

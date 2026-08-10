@@ -1684,6 +1684,7 @@ let homepageEffectUnsubscribe = null;
 let homepageEffectListenAttempts = 0;
 let homepageEffectCurrentSignature = "";
 let homepageEffectDismissedSignature = "";
+let homepageEffectDismissAllowed = true;
 let homepageEffectRenderToken = 0;
 let homepageEffectParticleMode = "";
 let homepageEffectAmbientMode = "";
@@ -1707,6 +1708,34 @@ let homepageEffectMusicSignature = "";
 let homepageEffectMusicUrl = "";
 let homepageEffectMusicLoop = true;
 let homepageEffectMusicPrimed = false;
+let homepageEffectPendingSettings = null;
+let homepageEffectStartupWaitTimer = 0;
+
+function isHomepageEffectStartupBlocked() {
+  const intro = document.getElementById("sfkIntroOverlay");
+  if (!intro || intro.hidden) return false;
+  try {
+    const style = window.getComputedStyle(intro);
+    if (style.display === "none" || style.visibility === "hidden") return false;
+  } catch (error) {}
+  // Keep effects completely hidden until the loading overlay has actually
+  // left the DOM, including its short fade-out after Skip/auto-finish.
+  return Boolean(intro.isConnected);
+}
+
+function scheduleHomepageEffectStartupFlush() {
+  if (homepageEffectStartupWaitTimer) return;
+  homepageEffectStartupWaitTimer = window.setTimeout(() => {
+    homepageEffectStartupWaitTimer = 0;
+    if (isHomepageEffectStartupBlocked()) {
+      scheduleHomepageEffectStartupFlush();
+      return;
+    }
+    const pending = homepageEffectPendingSettings;
+    homepageEffectPendingSettings = null;
+    if (pending) applyHomepageEffectSettings(pending);
+  }, 120);
+}
 
 function initHomepageEffectSystem() {
   ensureHomepageEffectLayer();
@@ -2062,7 +2091,7 @@ function ensureHomepageEffectLayer() {
         <p id="homepageEffectAlertMessage"></p>
       </section>
     </div>
-    <button id="homepageEffectClose" class="homepageEffectClose" type="button" aria-label="Dismiss display effect">×</button>
+    <button id="homepageEffectClose" class="homepageEffectClose" type="button" aria-label="Dismiss display effect" hidden aria-hidden="true" tabindex="-1" disabled>×</button>
   `;
   document.body.appendChild(layer);
 
@@ -2086,8 +2115,7 @@ function ensureHomepageEffectLayer() {
   document.addEventListener("keydown", (event) => {
     if (layer.hidden) return;
     if (event.key === "Escape") {
-      const close = layer.querySelector("#homepageEffectClose");
-      if (!close || close.hidden) return;
+      if (!homepageEffectDismissAllowed) return;
       dismissHomepageEffectForView();
       return;
     }
@@ -2098,7 +2126,9 @@ function ensureHomepageEffectLayer() {
 }
 
 function dismissHomepageEffectForView() {
-  if (!homepageEffectCurrentSignature) return;
+  // Student-side dismissal is allowed only when the Admin explicitly enables it.
+  // This guard protects every dismissal path, including keyboard/programmatic triggers.
+  if (!homepageEffectDismissAllowed || !homepageEffectCurrentSignature) return;
   homepageEffectDismissedSignature = homepageEffectCurrentSignature;
   hideHomepageEffectLayer();
 }
@@ -2349,12 +2379,28 @@ async function resolveHomepageEffectImageSource(value) {
 }
 
 async function applyHomepageEffectSettings(settings = {}) {
+  // Fresh page load: do not reveal or play any Admin effect on top of the
+  // ClassBoard loading screen. Keep only the newest settings and render them
+  // after the loading overlay has fully disappeared.
+  if (isHomepageEffectStartupBlocked()) {
+    homepageEffectPendingSettings = { ...(settings || {}) };
+    hideHomepageEffectLayer();
+    scheduleHomepageEffectStartupFlush();
+    return;
+  }
+  homepageEffectPendingSettings = null;
+
   const config = normalizeHomepageEffectConfig(settings);
   const incomingUpdatedAt = Number(config.updatedAt || 0);
   if (incomingUpdatedAt && homepageEffectLatestUpdatedAt && incomingUpdatedAt < homepageEffectLatestUpdatedAt) return;
   if (incomingUpdatedAt > homepageEffectLatestUpdatedAt) homepageEffectLatestUpdatedAt = incomingUpdatedAt;
   homepageEffectCurrentSignature = config.signature;
+  homepageEffectDismissAllowed = Boolean(config.dismissible);
   const layer = ensureHomepageEffectLayer();
+
+  // If Admin disables Allow Dismiss, a previously dismissed copy of this same
+  // effect must immediately become visible again and stay locked on-screen.
+  if (!homepageEffectDismissAllowed) homepageEffectDismissedSignature = "";
 
   if (!config.enabled) {
     homepageEffectDismissedSignature = "";
@@ -2378,7 +2424,17 @@ async function applyHomepageEffectSettings(settings = {}) {
   document.documentElement.classList.toggle("sfkHomepageSpiderGlitchActive", config.mode === "spider-glitch");
 
   const close = layer.querySelector("#homepageEffectClose");
-  if (close) close.hidden = !config.dismissible;
+  if (close) {
+    const canDismiss = homepageEffectDismissAllowed === true;
+    close.hidden = !canDismiss;
+    close.disabled = !canDismiss;
+    close.setAttribute("aria-hidden", canDismiss ? "false" : "true");
+    close.tabIndex = canDismiss ? 0 : -1;
+    close.style.setProperty("display", canDismiss ? "grid" : "none", "important");
+    close.style.setProperty("pointer-events", canDismiss ? "auto" : "none", "important");
+    if (!canDismiss && document.activeElement === close) close.blur();
+  }
+  layer.dataset.dismissible = homepageEffectDismissAllowed ? "true" : "false";
   renderHomepageEffectText(config);
 
   const hasCustomEffectAudio = Boolean(config.audioEnabled && config.audioUrl);

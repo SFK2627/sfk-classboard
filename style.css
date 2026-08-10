@@ -26636,3 +26636,17 @@ html.sfkHomepageSpiderGlitchActive body > *:not(script):not(style):not(#homepage
     font-weight: 950 !important;
   }
 }
+
+
+/* =========================================================
+   v394 HOMEPAGE EFFECT — STRICT NO-DISMISS VISUAL LOCK
+   hidden must beat the button's normal display:grid rule on
+   desktop/mobile. No X is rendered when Admin disallows it.
+========================================================= */
+.homepageEffectClose[hidden],
+.homepageEffectLayer[data-dismissible="false"] .homepageEffectClose {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
