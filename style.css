@@ -26660,10 +26660,10 @@ html.sfkHomepageSpiderGlitchActive body > *:not(script):not(style):not(#homepage
 
 .homepageEffectLayer.is-koala-family .homepageEffectBackdrop {
   background:
-    radial-gradient(circle at 18% 24%, rgba(255,255,255,.22) 0 1.2%, transparent 1.5%),
-    radial-gradient(circle at 82% 18%, rgba(255,255,255,.16) 0 1%, transparent 1.4%),
-    linear-gradient(180deg, rgba(13, 59, 48, .34) 0%, rgba(33, 94, 62, .28) 43%, rgba(19, 72, 48, .42) 100%);
-  backdrop-filter: blur(1px) saturate(1.12) brightness(.82);
+    radial-gradient(circle at 18% 24%, rgba(255,255,255,.18) 0 1.2%, transparent 1.5%),
+    radial-gradient(circle at 82% 18%, rgba(255,255,255,.12) 0 1%, transparent 1.4%),
+    linear-gradient(180deg, rgba(10, 48, 39, .44) 0%, rgba(19, 82, 55, .42) 43%, rgba(13, 64, 40, .54) 100%);
+  backdrop-filter: blur(2px) saturate(1.1) brightness(.62);
 }
 
 .homepageEffectLayer.is-koala-family .homepageEffectKoalaFamily::before,
@@ -26674,42 +26674,50 @@ html.sfkHomepageSpiderGlitchActive body > *:not(script):not(style):not(#homepage
   pointer-events: none;
 }
 
-/* Soft illustrated forest canopy and distant tree trunks. */
+/* Stronger forest scene: visible tree canopy, trunks, bushes, and depth. */
 .homepageEffectLayer.is-koala-family .homepageEffectKoalaFamily::before {
   z-index: 0;
   background:
-    radial-gradient(ellipse at 4% 4%, rgba(28, 93, 58, .92) 0 11%, transparent 11.5%),
-    radial-gradient(ellipse at 16% 0%, rgba(47, 120, 72, .90) 0 13%, transparent 13.5%),
-    radial-gradient(ellipse at 31% 2%, rgba(28, 99, 59, .88) 0 12%, transparent 12.6%),
-    radial-gradient(ellipse at 48% -1%, rgba(56, 130, 76, .86) 0 15%, transparent 15.6%),
-    radial-gradient(ellipse at 66% 0%, rgba(25, 93, 57, .90) 0 13%, transparent 13.5%),
-    radial-gradient(ellipse at 83% 1%, rgba(51, 121, 73, .90) 0 14%, transparent 14.6%),
-    radial-gradient(ellipse at 98% 3%, rgba(28, 91, 55, .92) 0 12%, transparent 12.5%),
+    radial-gradient(ellipse at 6% 3%, rgba(29, 102, 59, .98) 0 13%, transparent 13.5%),
+    radial-gradient(ellipse at 18% 1%, rgba(54, 135, 80, .98) 0 15%, transparent 15.5%),
+    radial-gradient(ellipse at 35% 2%, rgba(36, 116, 66, .96) 0 14%, transparent 14.5%),
+    radial-gradient(ellipse at 52% -2%, rgba(61, 144, 84, .96) 0 18%, transparent 18.5%),
+    radial-gradient(ellipse at 71% 1%, rgba(30, 107, 61, .97) 0 15%, transparent 15.5%),
+    radial-gradient(ellipse at 88% 2%, rgba(54, 135, 80, .98) 0 16%, transparent 16.5%),
+    radial-gradient(ellipse at 99% 5%, rgba(28, 97, 56, .98) 0 12%, transparent 12.5%),
+    radial-gradient(ellipse at 15% 66%, rgba(84, 148, 83, .28) 0 10%, transparent 11%),
+    radial-gradient(ellipse at 82% 62%, rgba(90, 161, 95, .22) 0 12%, transparent 13%),
     linear-gradient(90deg,
-      transparent 0 5%, rgba(74,52,37,.30) 5.5% 7.5%, transparent 8% 17%,
-      rgba(74,52,37,.22) 17.5% 19%, transparent 19.5% 35%,
-      rgba(74,52,37,.24) 35.5% 37%, transparent 37.5% 61%,
-      rgba(74,52,37,.20) 61.5% 63%, transparent 63.5% 78%,
-      rgba(74,52,37,.26) 78.5% 80%, transparent 80.5% 94%,
-      rgba(74,52,37,.28) 94.5% 96%, transparent 96.5%),
-    linear-gradient(180deg, rgba(124, 187, 128, .16), rgba(19, 74, 47, .20));
-  opacity: .96;
+      transparent 0 4.5%, rgba(81, 55, 35, .56) 5% 7.6%, rgba(113, 78, 50, .36) 7.7% 8.1%, transparent 8.2% 18%,
+      rgba(72, 47, 31, .42) 18.5% 20.2%, rgba(113, 78, 50, .28) 20.3% 20.8%, transparent 20.9% 33%,
+      rgba(81, 55, 35, .48) 33.5% 35.6%, rgba(113, 78, 50, .30) 35.7% 36.2%, transparent 36.3% 57%,
+      rgba(72, 47, 31, .40) 57.3% 59.1%, rgba(113, 78, 50, .26) 59.2% 59.7%, transparent 59.8% 77%,
+      rgba(86, 59, 38, .50) 77.3% 79.6%, rgba(118, 84, 56, .30) 79.7% 80.1%, transparent 80.2% 92%,
+      rgba(74, 50, 33, .52) 92.5% 95%, rgba(117, 82, 52, .28) 95.1% 95.6%, transparent 95.7%),
+    linear-gradient(180deg, rgba(142, 206, 145, .18) 0%, rgba(55, 126, 75, .15) 42%, rgba(12, 52, 35, .18) 100%);
+  opacity: 1;
 }
 
-/* Foreground grass / leafy floor to ground the walking koalas. */
+/* Strong visible grass and leafy ground. */
 .homepageEffectLayer.is-koala-family .homepageEffectKoalaFamily::after {
   z-index: 1;
   top: auto;
   bottom: 0;
-  height: 27%;
+  height: 31%;
   background:
-    radial-gradient(ellipse at 8% 100%, rgba(34, 105, 58, .98) 0 18%, transparent 18.5%),
-    radial-gradient(ellipse at 25% 105%, rgba(48, 126, 68, .98) 0 22%, transparent 22.5%),
-    radial-gradient(ellipse at 47% 100%, rgba(31, 111, 58, .98) 0 21%, transparent 21.5%),
-    radial-gradient(ellipse at 70% 105%, rgba(46, 128, 67, .98) 0 23%, transparent 23.5%),
-    radial-gradient(ellipse at 93% 100%, rgba(30, 101, 56, .98) 0 20%, transparent 20.5%),
-    linear-gradient(180deg, transparent 0 35%, rgba(20, 78, 44, .90) 36% 100%);
-  filter: saturate(1.08);
+    repeating-linear-gradient(100deg,
+      rgba(57, 145, 73, .0) 0 8px,
+      rgba(83, 189, 94, .55) 8px 11px,
+      rgba(35, 110, 54, .0) 11px 18px),
+    radial-gradient(ellipse at 10% 102%, rgba(36, 120, 61, 1) 0 20%, transparent 20.5%),
+    radial-gradient(ellipse at 26% 108%, rgba(52, 146, 77, .99) 0 23%, transparent 23.5%),
+    radial-gradient(ellipse at 44% 101%, rgba(42, 126, 67, .99) 0 22%, transparent 22.5%),
+    radial-gradient(ellipse at 63% 107%, rgba(58, 152, 79, .99) 0 24%, transparent 24.5%),
+    radial-gradient(ellipse at 81% 103%, rgba(41, 127, 66, 1) 0 22%, transparent 22.5%),
+    radial-gradient(ellipse at 95% 106%, rgba(31, 116, 60, 1) 0 19%, transparent 19.5%),
+    linear-gradient(180deg, rgba(91, 181, 98, .18) 0 10%, rgba(29, 104, 53, .96) 11% 100%);
+  box-shadow: inset 0 10px 24px rgba(255,255,255,.06), 0 -12px 26px rgba(8,47,29,.22);
+  filter: saturate(1.1);
 }
 
 .koalaFamilyStage,

@@ -2,9 +2,9 @@
   let deferredInstallPrompt = null;
 
   const installButton = document.getElementById("installAppBtn");
-  const SW_URL = "./sw.js?v=koala-forest-v396";
-  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV395KoalaForest";
-  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV395KoalaForest";
+  const SW_URL = "./sw.js?v=koala-forest-v397";
+  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV397KoalaForest";
+  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV397KoalaForest";
 
   function isStandaloneApp() {
     return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
@@ -23,7 +23,7 @@
   function askWorkerToActivate(worker) {
     if (!worker) return;
     try {
-      worker.postMessage({ type: "SFK_SKIP_WAITING_KOALA_FOREST_V396" });
+      worker.postMessage({ type: "SFK_SKIP_WAITING_KOALA_FOREST_V397" });
     } catch (error) {}
   }
 
