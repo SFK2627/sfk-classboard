@@ -2869,6 +2869,7 @@ const HOMEPAGE_EFFECT_DEFAULTS = {
   HomepageEffectAudioLoop: "YES",
   HomepageEffectYouTubeUrl: "",
   HomepageEffectYouTubeMuted: "YES",
+  HomepageEffectRickrollUrl: "https://streamable.com/33rhw4",
   HomepageEffectUpdatedAt: ""
 };
 
@@ -2914,6 +2915,25 @@ function normalizeHomepageEffectAdminYouTubeUrl(value) {
   }
 }
 
+function normalizeHomepageEffectAdminRickrollUrl(value) {
+  const raw = String(value || "").trim();
+  if (!raw || !/^https:\/\//i.test(raw)) return "";
+  try {
+    const url = new URL(raw);
+    const host = url.hostname.toLowerCase().replace(/^www\./, "");
+    if (host === "streamable.com") {
+      const parts = url.pathname.split("/").filter(Boolean);
+      const id = (["e", "s"].includes(parts[0]) ? parts[1] : parts[0]) || "";
+      if (!/^[A-Za-z0-9_-]{4,20}$/.test(id)) return "";
+      return `https://streamable.com/${id}`;
+    }
+    if (/\.(mp4|webm)(?:$|[?#])/i.test(raw)) return raw.slice(0, 1200);
+    return "";
+  } catch (error) {
+    return "";
+  }
+}
+
 const HOMEPAGE_EFFECT_MODE_NAMES = {
   drizzle: "Ambon / Light Rain",
   "heavy-rain": "Heavy Rain",
@@ -2933,6 +2953,8 @@ const HOMEPAGE_EFFECT_MODE_NAMES = {
   matrix: "Digital Matrix Rain",
   bubbles: "Floating Bubbles",
   fireflies: "Fireflies / Warm Glow",
+  minions: "Minions / Banana Chaos",
+  spongebob: "SpongeBob / Bikini Bottom Vibes",
   "neon-pulse": "Neon Pulse / Cyber Glow",
   aurora: "Aurora / Northern Lights",
   galaxy: "Galaxy / Deep Space",
@@ -3063,6 +3085,8 @@ function syncHomepageEffectAdminFields() {
   if (pictureFields) pictureFields.hidden = mode !== "picture";
   const youtubeFields = document.getElementById("homepageEffectYouTubeFields");
   if (youtubeFields) youtubeFields.hidden = mode !== "youtube";
+  const rickrollFields = document.getElementById("homepageEffectRickrollFields");
+  if (rickrollFields) rickrollFields.hidden = mode !== "rickroll";
   const audioFields = document.getElementById("homepageEffectAudioFields");
   const genericAudioUnavailable = mode === "normal" || mode === "youtube" || mode === "rickroll";
   if (audioFields) audioFields.hidden = genericAudioUnavailable;
@@ -3110,6 +3134,7 @@ function fillHomepageEffectSettings(settings = {}) {
   const audioLoop = document.getElementById("homepageEffectAudioLoop");
   const youtubeUrl = document.getElementById("homepageEffectYouTubeUrl");
   const youtubeMuted = document.getElementById("homepageEffectYouTubeMuted");
+  const rickrollUrl = document.getElementById("homepageEffectRickrollUrl");
   const urls = document.getElementById("homepageEffectImageUrls");
   if (enabled) enabled.checked = String(merged.HomepageEffectEnabled || "").toUpperCase() === "YES";
   if (mode) mode.value = merged.HomepageEffectMode || "normal";
@@ -3133,6 +3158,7 @@ function fillHomepageEffectSettings(settings = {}) {
   if (audioLoop) audioLoop.checked = String(merged.HomepageEffectAudioLoop || "YES").toUpperCase() !== "NO";
   if (youtubeUrl) youtubeUrl.value = normalizeHomepageEffectAdminYouTubeUrl(merged.HomepageEffectYouTubeUrl);
   if (youtubeMuted) youtubeMuted.checked = String(merged.HomepageEffectYouTubeMuted || "YES").toUpperCase() !== "NO";
+  if (rickrollUrl) rickrollUrl.value = normalizeHomepageEffectAdminRickrollUrl(merged.HomepageEffectRickrollUrl) || "https://streamable.com/33rhw4";
   homepageEffectAdminLastMode = selectedMode;
 
   homepageEffectSavedImages = parseHomepageEffectImageList(merged.HomepageEffectImages, merged.HomepageEffectImage);
@@ -3288,6 +3314,11 @@ async function saveHomepageEffectSettings() {
       throw new Error("YouTube Video mode needs a valid YouTube video link.");
     }
 
+    const effectRickrollUrl = normalizeHomepageEffectAdminRickrollUrl(document.getElementById("homepageEffectRickrollUrl")?.value) || "https://streamable.com/33rhw4";
+    if (mode === "rickroll" && enabledEl?.checked && !effectRickrollUrl) {
+      throw new Error("Rickroll prank needs a valid Streamable link or direct MP4/WebM URL.");
+    }
+
     const requestedAudioEnabled = Boolean(document.getElementById("homepageEffectAudioEnabled")?.checked);
     const effectAudioUrl = normalizeHomepageEffectAdminAudioUrl(document.getElementById("homepageEffectAudioUrl")?.value);
     const usesGenericEffectAudio = mode !== "normal" && mode !== "youtube" && mode !== "rickroll";
@@ -3311,6 +3342,7 @@ async function saveHomepageEffectSettings() {
       HomepageEffectAudioLoop: effectAudioLoop ? "YES" : "NO",
       HomepageEffectYouTubeUrl: effectYouTubeUrl,
       HomepageEffectYouTubeMuted: effectYouTubeMuted ? "YES" : "NO",
+      HomepageEffectRickrollUrl: effectRickrollUrl,
       // Legacy compatibility for older ClassBoard clients that only know the Spider sound switch.
       HomepageEffectSpiderSound: (["spider-glitch", "comic-web", "black-symbiote"].includes(mode) && effectAudioEnabled) ? "YES" : "NO"
     };

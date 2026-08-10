@@ -2,9 +2,9 @@
   let deferredInstallPrompt = null;
 
   const installButton = document.getElementById("installAppBtn");
-  const SW_URL = "./sw.js?v=real-spider-v410";
-  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV410Rickroll";
-  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV410Rickroll";
+  const SW_URL = "./sw.js?v=real-spider-v416";
+  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV416RickrollStreamable";
+  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV416RickrollStreamable";
 
   function isStandaloneApp() {
     return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;

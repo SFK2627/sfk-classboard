@@ -290,6 +290,8 @@
       "matrix",
       "bubbles",
       "fireflies",
+      "minions",
+      "spongebob",
       "neon-pulse",
       "aurora",
       "galaxy",
@@ -363,6 +365,24 @@
     };
     const safeYouTubeUrl = sanitizeYouTubeUrl(payload?.HomepageEffectYouTubeUrl);
 
+    const sanitizeRickrollUrl = (value) => {
+      const raw = String(value || "").trim();
+      if (!/^https:\/\//i.test(raw)) return "";
+      try {
+        const url = new URL(raw);
+        const host = url.hostname.toLowerCase().replace(/^www\./, "");
+        if (host === "streamable.com") {
+          const parts = url.pathname.split("/").filter(Boolean);
+          const id = (["e", "s"].includes(parts[0]) ? parts[1] : parts[0]) || "";
+          if (!/^[A-Za-z0-9_-]{4,20}$/.test(id)) return "";
+          return `https://streamable.com/${id}`;
+        }
+        if (/\.(mp4|webm)(?:$|[?#])/i.test(raw)) return raw.slice(0, 1200);
+        return "";
+      } catch (error) { return ""; }
+    };
+    const safeRickrollUrl = sanitizeRickrollUrl(payload?.HomepageEffectRickrollUrl) || "https://streamable.com/33rhw4";
+
     const values = {
       HomepageEffectEnabled: String(payload?.HomepageEffectEnabled || "").trim().toUpperCase() === "YES" ? "YES" : "NO",
       HomepageEffectMode: mode,
@@ -378,6 +398,7 @@
       HomepageEffectAudioLoop: String(payload?.HomepageEffectAudioLoop || "").trim().toUpperCase() === "NO" ? "NO" : "YES",
       HomepageEffectYouTubeUrl: safeYouTubeUrl,
       HomepageEffectYouTubeMuted: String(payload?.HomepageEffectYouTubeMuted || "").trim().toUpperCase() === "NO" ? "NO" : "YES",
+      HomepageEffectRickrollUrl: safeRickrollUrl,
       HomepageEffectUpdatedAt: String(Date.now())
     };
 

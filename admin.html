@@ -16,7 +16,7 @@
   <link rel="manifest" href="admin.webmanifest?v=portrait-reminder-v1" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
-  <link rel="stylesheet" href="admin.css?v=rickroll-v409" />
+  <link rel="stylesheet" href="admin.css?v=youtube-effect-v400" />
   <script src="orientation-lock.js?v=appwide-v6" defer></script>
 </head>
 
@@ -142,6 +142,8 @@
             <option value="matrix">Digital Matrix Rain</option>
             <option value="bubbles">Floating Bubbles</option>
             <option value="fireflies">Fireflies / Warm Glow</option>
+            <option value="minions">Minions / Banana Chaos</option>
+            <option value="spongebob">SpongeBob / Bikini Bottom Vibes</option>
             <option value="neon-pulse">Neon Pulse / Cyber Glow</option>
             <option value="aurora">Aurora / Northern Lights</option>
             <option value="galaxy">Galaxy / Deep Space</option>
@@ -192,6 +194,12 @@
               <input id="homepageEffectYouTubeMuted" type="checkbox" checked />
               <span><strong>Start muted for reliable autoplay</strong><small>Recommended. Browsers commonly block autoplay with sound. Viewers can unmute using the YouTube player controls.</small></span>
             </label>
+          </div>
+
+          <div id="homepageEffectRickrollFields" class="homepageEffectYouTubeFields" hidden>
+            <label for="homepageEffectRickrollUrl">Rickroll Video URL</label>
+            <input id="homepageEffectRickrollUrl" type="url" maxlength="1200" inputmode="url" value="https://streamable.com/33rhw4" placeholder="https://streamable.com/... or https://.../video.mp4" />
+            <small class="fieldHint">Supports a public Streamable link or a direct HTTPS MP4/WebM video URL. The video only starts after the fake Exit button is clicked, so playback with sound is more reliable and there is no YouTube ad loop.</small>
           </div>
 
           <label class="homepageEffectToggleRow homepageEffectDismissRow">
@@ -1001,9 +1009,9 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js?v=2-secure-auth"></script>
   <script src="auth.js?v=admin-officer-rescue-v2"></script>
-  <script src="firebase-adapter.js?v=rickroll-v409"></script>
+  <script src="firebase-adapter.js?v=effects-v414"></script>
   <script src="pwa.js?v=page-lock-v119"></script>
-  <script src="class-chat-admin.js?v=rickroll-v409"></script>
-  <script src="admin.js?v=rickroll-v409"></script>
+  <script src="class-chat-admin.js?v=effects-v414"></script>
+  <script src="admin.js?v=effects-v414"></script>
 </body>
 </html>

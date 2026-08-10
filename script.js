@@ -1679,6 +1679,7 @@ const HOMEPAGE_EFFECT_KEYS = new Set([
   "HomepageEffectAudioLoop",
   "HomepageEffectYouTubeUrl",
   "HomepageEffectYouTubeMuted",
+  "HomepageEffectRickrollUrl",
   "HomepageEffectUpdatedAt"
 ]);
 
@@ -1717,7 +1718,8 @@ let homepageEffectYouTubePlayerKey = "";
 let homepageRickrollSignature = "";
 let homepageRickrollRevealed = false;
 let homepageRickrollPlayerKey = "";
-const HOMEPAGE_RICKROLL_VIDEO_ID = "dQw4w9WgXcQ";
+let homepageRickrollUrl = "https://streamable.com/33rhw4";
+const HOMEPAGE_RICKROLL_DEFAULT_URL = "https://streamable.com/33rhw4";
 
 function isHomepageEffectStartupBlocked() {
   const intro = document.getElementById("sfkIntroOverlay");
@@ -1823,7 +1825,7 @@ function normalizeHomepageEffectConfig(settings = {}) {
   const allowedModes = new Set([
     "normal", "drizzle", "heavy-rain", "thunderstorm", "flood-rain", "multiverse", "picture", "youtube", "rickroll", "alert",
     "spider-glitch", "comic-web", "black-symbiote", "portal-rift",
-    "fog", "snow", "confetti", "hearts", "koala-family", "stars", "matrix", "bubbles", "fireflies", "neon-pulse",
+    "fog", "snow", "confetti", "hearts", "koala-family", "stars", "matrix", "bubbles", "fireflies", "minions", "spongebob", "neon-pulse",
     "aurora", "galaxy", "meteors", "laser-grid", "crt", "pixel-storm", "prism", "petals", "gold-sparkle"
   ]);
   const rawMode = String(settings.HomepageEffectMode || "normal").trim().toLowerCase();
@@ -1848,9 +1850,10 @@ function normalizeHomepageEffectConfig(settings = {}) {
   const audioLoop = String(settings.HomepageEffectAudioLoop || "YES").trim().toUpperCase() !== "NO";
   const youtubeUrl = normalizeHomepageEffectYouTubeUrl(settings.HomepageEffectYouTubeUrl);
   const youtubeMuted = String(settings.HomepageEffectYouTubeMuted || "YES").trim().toUpperCase() !== "NO";
+  const rickrollUrl = normalizeHomepageEffectRickrollUrl(settings.HomepageEffectRickrollUrl) || HOMEPAGE_RICKROLL_DEFAULT_URL;
   const updatedAt = String(settings.HomepageEffectUpdatedAt || "").trim();
-  const signature = updatedAt || [enabled ? "1" : "0", mode, title, message, images.join("~"), dismissible ? "1" : "0", alertSound ? "1" : "0", audioEnabled ? "1" : "0", audioUrl, audioLoop ? "1" : "0", youtubeUrl, youtubeMuted ? "1" : "0"].join("|");
-  return { enabled, mode, title, message, image: images[0] || "", images, dismissible, alertSound, spiderSound, audioEnabled, audioUrl, audioLoop, youtubeUrl, youtubeMuted, updatedAt, signature };
+  const signature = updatedAt || [enabled ? "1" : "0", mode, title, message, images.join("~"), dismissible ? "1" : "0", alertSound ? "1" : "0", audioEnabled ? "1" : "0", audioUrl, audioLoop ? "1" : "0", youtubeUrl, youtubeMuted ? "1" : "0", rickrollUrl].join("|");
+  return { enabled, mode, title, message, image: images[0] || "", images, dismissible, alertSound, spiderSound, audioEnabled, audioUrl, audioLoop, youtubeUrl, youtubeMuted, rickrollUrl, updatedAt, signature };
 }
 
 function normalizeHomepageEffectYouTubeUrl(value) {
@@ -1937,6 +1940,41 @@ function clearHomepageEffectYouTube() {
   homepageEffectYouTubePlayerKey = "";
 }
 
+function normalizeHomepageEffectRickrollUrl(value) {
+  const raw = String(value || "").trim();
+  if (!raw || !/^https:\/\//i.test(raw)) return "";
+  try {
+    const url = new URL(raw);
+    const host = url.hostname.toLowerCase().replace(/^www\./, "");
+    if (host === "streamable.com") {
+      const parts = url.pathname.split("/").filter(Boolean);
+      const id = (["e", "s"].includes(parts[0]) ? parts[1] : parts[0]) || "";
+      if (!/^[A-Za-z0-9_-]{4,20}$/.test(id)) return "";
+      return `https://streamable.com/${id}`;
+    }
+    if (/\.(mp4|webm)(?:$|[?#])/i.test(raw)) return raw.slice(0, 1200);
+    return "";
+  } catch (error) {
+    return "";
+  }
+}
+
+function getHomepageRickrollSource(value) {
+  const safe = normalizeHomepageEffectRickrollUrl(value) || HOMEPAGE_RICKROLL_DEFAULT_URL;
+  try {
+    const url = new URL(safe);
+    const host = url.hostname.toLowerCase().replace(/^www\./, "");
+    if (host === "streamable.com") {
+      const parts = url.pathname.split("/").filter(Boolean);
+      const id = (["e", "s"].includes(parts[0]) ? parts[1] : parts[0]) || "";
+      return { type: "streamable", key: `streamable:${id}`, src: `https://streamable.com/e/${id}?autoplay=1` };
+    }
+    return { type: "direct", key: `direct:${safe}`, src: safe };
+  } catch (error) {
+    return { type: "streamable", key: "streamable:33rhw4", src: "https://streamable.com/e/33rhw4?autoplay=1" };
+  }
+}
+
 function setHomepageEffectRealCloseVisible(visible) {
   const layer = document.getElementById("homepageEffectLayer");
   const close = layer?.querySelector("#homepageEffectClose");
@@ -1953,9 +1991,17 @@ function setHomepageEffectRealCloseVisible(visible) {
 function clearHomepageRickroll() {
   const layer = document.getElementById("homepageEffectLayer");
   const frame = layer?.querySelector("#homepageRickrollFrame");
+  const video = layer?.querySelector("#homepageRickrollVideo");
   const player = layer?.querySelector("#homepageRickrollPlayer");
   const bait = layer?.querySelector("#homepageRickrollBait");
   if (frame && frame.getAttribute("src")) frame.removeAttribute("src");
+  if (frame) frame.hidden = true;
+  if (video) {
+    try { video.pause(); } catch (error) {}
+    video.removeAttribute("src");
+    try { video.load(); } catch (error) {}
+    video.hidden = true;
+  }
   if (player) player.hidden = true;
   if (bait) bait.hidden = false;
   layer?.classList.remove("is-rickroll-revealed");
@@ -1969,10 +2015,17 @@ function renderHomepageRickroll(config) {
   const bait = layer.querySelector("#homepageRickrollBait");
   const player = layer.querySelector("#homepageRickrollPlayer");
   const frame = layer.querySelector("#homepageRickrollFrame");
-  if (!bait || !player || !frame) return;
+  const video = layer.querySelector("#homepageRickrollVideo");
+  if (!bait || !player || !frame || !video) return;
+  homepageRickrollUrl = config.rickrollUrl || HOMEPAGE_RICKROLL_DEFAULT_URL;
 
   if (homepageRickrollSignature !== config.signature) {
     if (frame.getAttribute("src")) frame.removeAttribute("src");
+    frame.hidden = true;
+    try { video.pause(); } catch (error) {}
+    video.removeAttribute("src");
+    try { video.load(); } catch (error) {}
+    video.hidden = true;
     homepageRickrollPlayerKey = "";
     homepageRickrollSignature = config.signature;
     homepageRickrollRevealed = false;
@@ -1999,24 +2052,37 @@ function revealHomepageRickroll() {
   const bait = layer.querySelector("#homepageRickrollBait");
   const player = layer.querySelector("#homepageRickrollPlayer");
   const frame = layer.querySelector("#homepageRickrollFrame");
-  if (!player || !frame) return;
+  const video = layer.querySelector("#homepageRickrollVideo");
+  if (!player || !frame || !video) return;
 
   homepageRickrollRevealed = true;
   if (bait) bait.hidden = true;
   player.hidden = false;
   layer.classList.add("is-rickroll-revealed");
-  const playerKey = `${HOMEPAGE_RICKROLL_VIDEO_ID}|sound`;
-  if (homepageRickrollPlayerKey !== playerKey || !frame.getAttribute("src")) {
-    const params = new URLSearchParams({
-      autoplay: "1",
-      mute: "0",
-      controls: "1",
-      rel: "0",
-      playsinline: "1",
-      modestbranding: "1"
-    });
-    frame.src = `https://www.youtube.com/embed/${HOMEPAGE_RICKROLL_VIDEO_ID}?${params.toString()}`;
-    homepageRickrollPlayerKey = playerKey;
+
+  const source = getHomepageRickrollSource(homepageRickrollUrl);
+  if (homepageRickrollPlayerKey !== source.key) {
+    if (frame.getAttribute("src")) frame.removeAttribute("src");
+    frame.hidden = true;
+    try { video.pause(); } catch (error) {}
+    video.removeAttribute("src");
+    try { video.load(); } catch (error) {}
+    video.hidden = true;
+
+    if (source.type === "direct") {
+      video.hidden = false;
+      video.src = source.src;
+      video.currentTime = 0;
+      const playPromise = video.play();
+      if (playPromise && typeof playPromise.catch === "function") playPromise.catch(() => {});
+    } else {
+      frame.hidden = false;
+      frame.src = source.src;
+    }
+    homepageRickrollPlayerKey = source.key;
+  } else if (source.type === "direct" && video.paused) {
+    const playPromise = video.play();
+    if (playPromise && typeof playPromise.catch === "function") playPromise.catch(() => {});
   }
   setHomepageEffectRealCloseVisible(homepageEffectDismissAllowed);
 }
@@ -2366,7 +2432,9 @@ function ensureHomepageEffectLayer() {
           </div>
         </div>
         <div id="homepageRickrollPlayer" class="homepageRickrollPlayer" hidden>
-          <iframe id="homepageRickrollFrame" title="ClassBoard prank video" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+          <div class="homepageRickrollGotcha" aria-hidden="true">YOU GOT RICKROLLED! <span>😂</span></div>
+          <iframe id="homepageRickrollFrame" title="ClassBoard prank video" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" hidden></iframe>
+          <video id="homepageRickrollVideo" title="ClassBoard prank video" controls playsinline preload="metadata" hidden></video>
         </div>
       </section>
       <section class="homepageEffectAlertPanel" role="alert">
@@ -2581,7 +2649,9 @@ function buildHomepageAmbientParticles(mode) {
     stars: { count: 110, kind: "stars" },
     matrix: { count: 54, kind: "matrix" },
     bubbles: { count: 44, kind: "bubbles" },
-    fireflies: { count: 62, kind: "fireflies" },
+    fireflies: { count: 118, kind: "fireflies" },
+    minions: { count: 28, kind: "minions" },
+    spongebob: { count: 42, kind: "spongebob" },
     "neon-pulse": { count: 18, kind: "neon" },
     "spider-glitch": { count: 58, kind: "spider-glitch" },
     "comic-web": { count: 38, kind: "comic-web" },
@@ -2626,7 +2696,9 @@ function buildHomepageAmbientParticles(mode) {
       particle.textContent = text.trim();
     }
     if (config.kind === "stars" || config.kind === "galaxy") particle.textContent = Math.random() > .76 ? "✦" : "•";
-    if (config.kind === "fireflies" || config.kind === "gold-sparkle") particle.textContent = Math.random() > .72 ? "✦" : "•";
+    if (config.kind === "fireflies" || config.kind === "gold-sparkle") particle.textContent = Math.random() > .65 ? "✦" : "•";
+    if (config.kind === "minions") particle.textContent = ["🍌", "◎", "✦"][Math.floor(Math.random() * 3)];
+    if (config.kind === "spongebob") particle.textContent = ["🫧", "✿", "★", "⬜"][Math.floor(Math.random() * 4)];
     if (config.kind === "comic-web") particle.textContent = Math.random() > .72 ? "✦" : "";
     if (config.kind === "spider-glitch") particle.textContent = Math.random() > .86 ? "◆" : "";
     if (config.kind === "black-symbiote") particle.textContent = "";
@@ -2751,7 +2823,7 @@ async function applyHomepageEffectSettings(settings = {}) {
   }
 
   const ambientModes = new Set([
-    "fog", "snow", "confetti", "hearts", "stars", "matrix", "bubbles", "fireflies", "neon-pulse",
+    "fog", "snow", "confetti", "hearts", "stars", "matrix", "bubbles", "fireflies", "minions", "spongebob", "neon-pulse",
     "spider-glitch", "comic-web", "black-symbiote", "portal-rift", "aurora", "galaxy", "meteors", "laser-grid", "crt",
     "pixel-storm", "prism", "petals", "gold-sparkle"
   ]);
