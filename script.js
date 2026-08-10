@@ -1702,7 +1702,8 @@ let homepageAlertAudioPrimed = false;
 const homepageAlertOscillators = new Set();
 const HOMEPAGE_EFFECT_DEFAULT_AUDIO_URLS = {
   "spider-glitch": "https://audio.jukehost.co.uk/019fe9f5-214f-72a6-b974-320080180160",
-  "comic-web": "https://audio.jukehost.co.uk/019fea02-24bd-729b-8e0c-b0bf7be7a9e0"
+  "comic-web": "https://audio.jukehost.co.uk/019fea02-24bd-729b-8e0c-b0bf7be7a9e0",
+  "black-symbiote": "https://audio.jukehost.co.uk/019fea3c-43ce-7225-90f3-8405d456eea1"
 };
 let homepageEffectMusicAudio = null;
 let homepageEffectMusicWanted = false;
@@ -1713,6 +1714,10 @@ let homepageEffectMusicPrimed = false;
 let homepageEffectPendingSettings = null;
 let homepageEffectStartupWaitTimer = 0;
 let homepageEffectYouTubePlayerKey = "";
+let homepageRickrollSignature = "";
+let homepageRickrollRevealed = false;
+let homepageRickrollPlayerKey = "";
+const HOMEPAGE_RICKROLL_VIDEO_ID = "dQw4w9WgXcQ";
 
 function isHomepageEffectStartupBlocked() {
   const intro = document.getElementById("sfkIntroOverlay");
@@ -1816,8 +1821,8 @@ function normalizeHomepageEffectImageList(value, fallback = "") {
 
 function normalizeHomepageEffectConfig(settings = {}) {
   const allowedModes = new Set([
-    "normal", "drizzle", "heavy-rain", "thunderstorm", "multiverse", "picture", "youtube", "alert",
-    "spider-glitch", "comic-web", "portal-rift",
+    "normal", "drizzle", "heavy-rain", "thunderstorm", "flood-rain", "multiverse", "picture", "youtube", "rickroll", "alert",
+    "spider-glitch", "comic-web", "black-symbiote", "portal-rift",
     "fog", "snow", "confetti", "hearts", "koala-family", "stars", "matrix", "bubbles", "fireflies", "neon-pulse",
     "aurora", "galaxy", "meteors", "laser-grid", "crt", "pixel-storm", "prism", "petals", "gold-sparkle"
   ]);
@@ -1835,7 +1840,7 @@ function normalizeHomepageEffectConfig(settings = {}) {
   const defaultAudioUrl = HOMEPAGE_EFFECT_DEFAULT_AUDIO_URLS[mode] || "";
   const rawAudioUrl = String(settings.HomepageEffectAudioUrl || "").trim();
   const savedAudioUrl = /^https:\/\//i.test(rawAudioUrl) ? rawAudioUrl.slice(0, 1200) : "";
-  const legacySpiderMode = ["spider-glitch", "comic-web"].includes(mode);
+  const legacySpiderMode = ["spider-glitch", "comic-web", "black-symbiote"].includes(mode);
   const audioEnabled = hasNewAudioEnabled
     ? String(settings.HomepageEffectAudioEnabled || "NO").trim().toUpperCase() === "YES"
     : (legacySpiderMode && spiderSound);
@@ -1930,6 +1935,90 @@ function clearHomepageEffectYouTube() {
     iframe.hidden = true;
   }
   homepageEffectYouTubePlayerKey = "";
+}
+
+function setHomepageEffectRealCloseVisible(visible) {
+  const layer = document.getElementById("homepageEffectLayer");
+  const close = layer?.querySelector("#homepageEffectClose");
+  if (!close) return;
+  const show = Boolean(visible && homepageEffectDismissAllowed);
+  close.hidden = !show;
+  close.disabled = !show;
+  close.setAttribute("aria-hidden", show ? "false" : "true");
+  close.tabIndex = show ? 0 : -1;
+  close.style.setProperty("display", show ? "grid" : "none", "important");
+  close.style.setProperty("pointer-events", show ? "auto" : "none", "important");
+}
+
+function clearHomepageRickroll() {
+  const layer = document.getElementById("homepageEffectLayer");
+  const frame = layer?.querySelector("#homepageRickrollFrame");
+  const player = layer?.querySelector("#homepageRickrollPlayer");
+  const bait = layer?.querySelector("#homepageRickrollBait");
+  if (frame && frame.getAttribute("src")) frame.removeAttribute("src");
+  if (player) player.hidden = true;
+  if (bait) bait.hidden = false;
+  layer?.classList.remove("is-rickroll-revealed");
+  homepageRickrollPlayerKey = "";
+  homepageRickrollSignature = "";
+  homepageRickrollRevealed = false;
+}
+
+function renderHomepageRickroll(config) {
+  const layer = ensureHomepageEffectLayer();
+  const bait = layer.querySelector("#homepageRickrollBait");
+  const player = layer.querySelector("#homepageRickrollPlayer");
+  const frame = layer.querySelector("#homepageRickrollFrame");
+  if (!bait || !player || !frame) return;
+
+  if (homepageRickrollSignature !== config.signature) {
+    if (frame.getAttribute("src")) frame.removeAttribute("src");
+    homepageRickrollPlayerKey = "";
+    homepageRickrollSignature = config.signature;
+    homepageRickrollRevealed = false;
+  }
+
+  if (!homepageRickrollRevealed) {
+    bait.hidden = false;
+    player.hidden = true;
+    layer.classList.remove("is-rickroll-revealed");
+    // Keep the genuine close control hidden until the prank is triggered.
+    setHomepageEffectRealCloseVisible(false);
+    return;
+  }
+
+  bait.hidden = true;
+  player.hidden = false;
+  layer.classList.add("is-rickroll-revealed");
+  setHomepageEffectRealCloseVisible(homepageEffectDismissAllowed);
+}
+
+function revealHomepageRickroll() {
+  const layer = document.getElementById("homepageEffectLayer");
+  if (!layer || !layer.classList.contains("is-rickroll")) return;
+  const bait = layer.querySelector("#homepageRickrollBait");
+  const player = layer.querySelector("#homepageRickrollPlayer");
+  const frame = layer.querySelector("#homepageRickrollFrame");
+  if (!player || !frame) return;
+
+  homepageRickrollRevealed = true;
+  if (bait) bait.hidden = true;
+  player.hidden = false;
+  layer.classList.add("is-rickroll-revealed");
+  const playerKey = `${HOMEPAGE_RICKROLL_VIDEO_ID}|sound`;
+  if (homepageRickrollPlayerKey !== playerKey || !frame.getAttribute("src")) {
+    const params = new URLSearchParams({
+      autoplay: "1",
+      mute: "0",
+      controls: "1",
+      rel: "0",
+      playsinline: "1",
+      modestbranding: "1"
+    });
+    frame.src = `https://www.youtube.com/embed/${HOMEPAGE_RICKROLL_VIDEO_ID}?${params.toString()}`;
+    homepageRickrollPlayerKey = playerKey;
+  }
+  setHomepageEffectRealCloseVisible(homepageEffectDismissAllowed);
 }
 
 function getHomepageAlertAudioContext() {
@@ -2153,10 +2242,43 @@ function ensureHomepageEffectLayer() {
   layer.innerHTML = `
     <div class="homepageEffectBackdrop" aria-hidden="true"></div>
     <div class="homepageEffectRain" aria-hidden="true"></div>
+    <div class="homepageEffectFlood" aria-hidden="true"><span class="homepageFloodWave is-back"></span><span class="homepageFloodWave is-front"></span><span class="homepageFloodShine"></span></div>
     <div class="homepageEffectMist" aria-hidden="true"></div>
     <div class="homepageEffectLightning" aria-hidden="true"></div>
     <div class="homepageEffectMultiverse" aria-hidden="true">
       <span></span><span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div class="homepageBlackSpiderScene" aria-hidden="true">
+      <span class="homepageSpiderWeb is-top-left"></span>
+      <span class="homepageSpiderWeb is-top-right"></span>
+      <span class="homepageSpiderWeb is-bottom-left"></span>
+      <span class="homepageSpiderWeb is-bottom-right"></span>
+      <span class="homepageSpiderThread is-one"></span>
+      <span class="homepageSpiderThread is-two"></span>
+      <span class="homepageSpiderThread is-three"></span>
+      <span class="homepageBlackSpider">
+        <svg class="homepageBlackSpiderSvg" viewBox="0 0 360 310" role="presentation" aria-hidden="true">
+          <g class="spiderVectorLegs" fill="none" stroke="currentColor" stroke-width="11" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M156 101 C126 79 104 58 79 34 C61 17 44 13 25 20 C43 26 54 38 65 53" />
+            <path d="M148 119 C111 111 83 99 51 87 C31 80 16 82 7 94 C28 92 44 99 59 111" />
+            <path d="M146 144 C108 149 80 160 49 177 C28 189 17 203 15 220 C31 205 47 198 66 196" />
+            <path d="M154 169 C123 186 104 205 85 232 C71 252 65 271 69 289 C80 270 94 257 113 247" />
+            <path d="M204 101 C234 79 256 58 281 34 C299 17 316 13 335 20 C317 26 306 38 295 53" />
+            <path d="M212 119 C249 111 277 99 309 87 C329 80 344 82 353 94 C332 92 316 99 301 111" />
+            <path d="M214 144 C252 149 280 160 311 177 C332 189 343 203 345 220 C329 205 313 198 294 196" />
+            <path d="M206 169 C237 186 256 205 275 232 C289 252 295 271 291 289 C280 270 266 257 247 247" />
+          </g>
+          <ellipse class="spiderVectorAbdomen" cx="180" cy="190" rx="54" ry="78" />
+          <ellipse class="spiderVectorThorax" cx="180" cy="112" rx="36" ry="34" />
+          <path class="spiderVectorNeck" d="M162 136 C169 146 191 146 198 136 C194 151 166 151 162 136 Z" />
+          <path class="spiderVectorPedipalp is-left" d="M165 89 C149 76 141 67 143 56 C154 65 160 73 170 84 Z" />
+          <path class="spiderVectorPedipalp is-right" d="M195 89 C211 76 219 67 217 56 C206 65 200 73 190 84 Z" />
+          <circle class="spiderVectorEye" cx="169" cy="103" r="2.6" />
+          <circle class="spiderVectorEye" cx="178" cy="99" r="2.2" />
+          <circle class="spiderVectorEye" cx="182" cy="99" r="2.2" />
+          <circle class="spiderVectorEye" cx="191" cy="103" r="2.6" />
+        </svg>
+      </span>
     </div>
     <div class="homepageEffectParticles" aria-hidden="true"></div>
     <div class="homepageEffectKoalaFamily" aria-hidden="true">
@@ -2231,6 +2353,22 @@ function ensureHomepageEffectLayer() {
           <div id="homepageEffectYouTubeEmpty" class="homepageEffectYouTubeEmpty" hidden>Unable to load the YouTube video.</div>
         </div>
       </section>
+      <section class="homepageEffectRickrollPanel" aria-label="ClassBoard prank display">
+        <div id="homepageRickrollBait" class="homepageRickrollBait">
+          <div class="homepageRickrollFakeWindow">
+            <div class="homepageRickrollFakeBar"><span>ClassBoard Display</span><span>•••</span></div>
+            <div class="homepageRickrollFakeBody">
+              <div class="homepageRickrollFakeIcon">×</div>
+              <strong>Exit display?</strong>
+              <p>Tap the button below to close this screen.</p>
+              <button id="homepageRickrollFakeExit" class="homepageRickrollFakeExit" type="button"><span>×</span> Exit</button>
+            </div>
+          </div>
+        </div>
+        <div id="homepageRickrollPlayer" class="homepageRickrollPlayer" hidden>
+          <iframe id="homepageRickrollFrame" title="ClassBoard prank video" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+        </div>
+      </section>
       <section class="homepageEffectAlertPanel" role="alert">
         <div class="homepageEffectAlertIcon">⚠</div>
         <p class="homepageEffectAlertEyebrow">SFK CLASSBOARD ALERT</p>
@@ -2243,6 +2381,7 @@ function ensureHomepageEffectLayer() {
   document.body.appendChild(layer);
 
   layer.querySelector("#homepageEffectClose")?.addEventListener("click", dismissHomepageEffectForView);
+  layer.querySelector("#homepageRickrollFakeExit")?.addEventListener("click", revealHomepageRickroll);
   layer.querySelector("#homepageEffectGalleryPrev")?.addEventListener("click", () => moveHomepageEffectGallery(-1));
   layer.querySelector("#homepageEffectGalleryNext")?.addEventListener("click", () => moveHomepageEffectGallery(1));
   const galleryViewport = layer.querySelector("#homepageEffectGalleryViewport");
@@ -2287,7 +2426,7 @@ function hideHomepageEffectLayer() {
   layer.hidden = true;
   layer.setAttribute("aria-hidden", "true");
   layer.className = "homepageEffectLayer";
-  document.documentElement.classList.remove("sfkHomepageEffectActive", "sfkHomepageMultiverseActive", "sfkHomepageSpiderGlitchActive");
+  document.documentElement.classList.remove("sfkHomepageEffectActive", "sfkHomepageMultiverseActive", "sfkHomepageSpiderGlitchActive", "sfkHomepageBlackSymbioteActive");
   homepageEffectAmbientMode = "";
   homepageEffectGalleryIndex = 0;
   homepageEffectGallerySources = [];
@@ -2298,6 +2437,7 @@ function hideHomepageEffectLayer() {
   stopHomepageAlertSound();
   stopHomepageEffectMusic();
   clearHomepageEffectYouTube();
+  clearHomepageRickroll();
 }
 
 function updateHomepageEffectGalleryControls() {
@@ -2445,6 +2585,7 @@ function buildHomepageAmbientParticles(mode) {
     "neon-pulse": { count: 18, kind: "neon" },
     "spider-glitch": { count: 58, kind: "spider-glitch" },
     "comic-web": { count: 38, kind: "comic-web" },
+    "black-symbiote": { count: 72, kind: "black-symbiote" },
     "portal-rift": { count: 42, kind: "portal-rift" },
     aurora: { count: 12, kind: "aurora" },
     galaxy: { count: 150, kind: "galaxy" },
@@ -2488,6 +2629,7 @@ function buildHomepageAmbientParticles(mode) {
     if (config.kind === "fireflies" || config.kind === "gold-sparkle") particle.textContent = Math.random() > .72 ? "✦" : "•";
     if (config.kind === "comic-web") particle.textContent = Math.random() > .72 ? "✦" : "";
     if (config.kind === "spider-glitch") particle.textContent = Math.random() > .86 ? "◆" : "";
+    if (config.kind === "black-symbiote") particle.textContent = "";
     if (config.kind === "petals") particle.textContent = "❀";
     if (config.kind === "pixel-storm") particle.textContent = "■";
     if (config.kind === "crt") particle.textContent = Math.random() > .5 ? "▮" : "·";
@@ -2507,7 +2649,7 @@ function renderHomepageEffectText(config) {
 
   if (weatherTitle) weatherTitle.textContent = config.title;
   if (weatherMessage) weatherMessage.textContent = config.message;
-  if (weatherBox) weatherBox.hidden = config.mode === "alert" || config.mode === "picture" || config.mode === "youtube" || !(config.title || config.message);
+  if (weatherBox) weatherBox.hidden = config.mode === "alert" || config.mode === "picture" || config.mode === "youtube" || config.mode === "rickroll" || !(config.title || config.message);
   if (pictureCaption) {
     pictureCaption.textContent = [config.title, config.message].filter(Boolean).join(" — ");
     pictureCaption.hidden = !(config.title || config.message);
@@ -2570,22 +2712,24 @@ async function applyHomepageEffectSettings(settings = {}) {
   document.documentElement.classList.add("sfkHomepageEffectActive");
   document.documentElement.classList.toggle("sfkHomepageMultiverseActive", config.mode === "multiverse");
   document.documentElement.classList.toggle("sfkHomepageSpiderGlitchActive", config.mode === "spider-glitch");
+  document.documentElement.classList.toggle("sfkHomepageBlackSymbioteActive", config.mode === "black-symbiote");
 
   const close = layer.querySelector("#homepageEffectClose");
   if (close) {
     const canDismiss = homepageEffectDismissAllowed === true;
-    close.hidden = !canDismiss;
-    close.disabled = !canDismiss;
-    close.setAttribute("aria-hidden", canDismiss ? "false" : "true");
-    close.tabIndex = canDismiss ? 0 : -1;
-    close.style.setProperty("display", canDismiss ? "grid" : "none", "important");
-    close.style.setProperty("pointer-events", canDismiss ? "auto" : "none", "important");
-    if (!canDismiss && document.activeElement === close) close.blur();
+    const showNow = canDismiss && (config.mode !== "rickroll" || homepageRickrollRevealed);
+    close.hidden = !showNow;
+    close.disabled = !showNow;
+    close.setAttribute("aria-hidden", showNow ? "false" : "true");
+    close.tabIndex = showNow ? 0 : -1;
+    close.style.setProperty("display", showNow ? "grid" : "none", "important");
+    close.style.setProperty("pointer-events", showNow ? "auto" : "none", "important");
+    if (!showNow && document.activeElement === close) close.blur();
   }
   layer.dataset.dismissible = homepageEffectDismissAllowed ? "true" : "false";
   renderHomepageEffectText(config);
 
-  const hasCustomEffectAudio = Boolean(config.mode !== "youtube" && config.audioEnabled && config.audioUrl);
+  const hasCustomEffectAudio = Boolean(!["youtube", "rickroll"].includes(config.mode) && config.audioEnabled && config.audioUrl);
   if (config.mode === "alert" && config.alertSound && !hasCustomEffectAudio) {
     startHomepageAlertSound(config.signature);
   } else {
@@ -2598,7 +2742,7 @@ async function applyHomepageEffectSettings(settings = {}) {
     stopHomepageEffectMusic();
   }
 
-  if (["drizzle", "heavy-rain", "thunderstorm"].includes(config.mode)) {
+  if (["drizzle", "heavy-rain", "thunderstorm", "flood-rain"].includes(config.mode)) {
     buildHomepageRain(config.mode);
   } else {
     const rain = layer.querySelector(".homepageEffectRain");
@@ -2608,7 +2752,7 @@ async function applyHomepageEffectSettings(settings = {}) {
 
   const ambientModes = new Set([
     "fog", "snow", "confetti", "hearts", "stars", "matrix", "bubbles", "fireflies", "neon-pulse",
-    "spider-glitch", "comic-web", "portal-rift", "aurora", "galaxy", "meteors", "laser-grid", "crt",
+    "spider-glitch", "comic-web", "black-symbiote", "portal-rift", "aurora", "galaxy", "meteors", "laser-grid", "crt",
     "pixel-storm", "prism", "petals", "gold-sparkle"
   ]);
   if (ambientModes.has(config.mode)) {
@@ -2631,6 +2775,9 @@ async function applyHomepageEffectSettings(settings = {}) {
 
   if (config.mode === "youtube") renderHomepageEffectYouTube(config);
   else clearHomepageEffectYouTube();
+
+  if (config.mode === "rickroll") renderHomepageRickroll(config);
+  else clearHomepageRickroll();
 }
 
 function renderDashboard(data) {

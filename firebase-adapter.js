@@ -275,9 +275,11 @@
       "drizzle",
       "heavy-rain",
       "thunderstorm",
+      "flood-rain",
       "multiverse",
       "spider-glitch",
       "comic-web",
+      "black-symbiote",
       "portal-rift",
       "fog",
       "snow",
@@ -300,6 +302,7 @@
       "gold-sparkle",
       "picture",
       "youtube",
+      "rickroll",
       "alert"
     ]);
 

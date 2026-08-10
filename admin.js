@@ -2875,7 +2875,8 @@ const HOMEPAGE_EFFECT_DEFAULTS = {
 const HOMEPAGE_EFFECT_MAX_IMAGES = 12;
 const HOMEPAGE_EFFECT_DEFAULT_AUDIO_URLS = {
   "spider-glitch": "https://audio.jukehost.co.uk/019fe9f5-214f-72a6-b974-320080180160",
-  "comic-web": "https://audio.jukehost.co.uk/019fea02-24bd-729b-8e0c-b0bf7be7a9e0"
+  "comic-web": "https://audio.jukehost.co.uk/019fea02-24bd-729b-8e0c-b0bf7be7a9e0",
+  "black-symbiote": "https://audio.jukehost.co.uk/019fea3c-43ce-7225-90f3-8405d456eea1"
 };
 let homepageEffectAdminLastMode = "normal";
 
@@ -2917,9 +2918,11 @@ const HOMEPAGE_EFFECT_MODE_NAMES = {
   drizzle: "Ambon / Light Rain",
   "heavy-rain": "Heavy Rain",
   thunderstorm: "Thunderstorm",
+  "flood-rain": "Rain + Rising Flood Water",
   multiverse: "Multiverse / Strong Dimensional Glitch",
   "spider-glitch": "Spider-Verse Inspired / RGB Spider Glitch",
   "comic-web": "Spider Comic Theme / Red-Blue Halftone",
+  "black-symbiote": "Black Spider Inspired / Symbiote Transformation",
   "portal-rift": "Dimensional Portal / Neon Rift",
   fog: "Fog / Mist",
   snow: "Snowfall",
@@ -2942,6 +2945,7 @@ const HOMEPAGE_EFFECT_MODE_NAMES = {
   "gold-sparkle": "Golden Sparkles",
   picture: "Fullscreen Picture Gallery",
   youtube: "YouTube Video / Autoplay",
+  rickroll: "Exit Button Prank / Rickroll",
   alert: "Alert / Warning"
 };
 
@@ -3033,7 +3037,7 @@ function handleHomepageEffectModeChange() {
 
   // YouTube supplies its own audio through the player, so generic effect audio must not
   // remain silently enabled from a previously selected mode.
-  if (nextMode === "youtube" && audioEnabledEl) {
+  if (["youtube", "rickroll"].includes(nextMode) && audioEnabledEl) {
     audioEnabledEl.checked = false;
   }
 
@@ -3060,7 +3064,7 @@ function syncHomepageEffectAdminFields() {
   const youtubeFields = document.getElementById("homepageEffectYouTubeFields");
   if (youtubeFields) youtubeFields.hidden = mode !== "youtube";
   const audioFields = document.getElementById("homepageEffectAudioFields");
-  const genericAudioUnavailable = mode === "normal" || mode === "youtube";
+  const genericAudioUnavailable = mode === "normal" || mode === "youtube" || mode === "rickroll";
   if (audioFields) audioFields.hidden = genericAudioUnavailable;
   const audioEnabledEl = document.getElementById("homepageEffectAudioEnabled");
   const audioUrlEl = document.getElementById("homepageEffectAudioUrl");
@@ -3116,7 +3120,7 @@ function fillHomepageEffectSettings(settings = {}) {
 
   const selectedMode = String(merged.HomepageEffectMode || "normal");
   const savedAudioUrl = normalizeHomepageEffectAdminAudioUrl(merged.HomepageEffectAudioUrl);
-  const legacySpiderMode = ["spider-glitch", "comic-web"].includes(selectedMode);
+  const legacySpiderMode = ["spider-glitch", "comic-web", "black-symbiote"].includes(selectedMode);
   const legacySpiderSoundOn = String(merged.HomepageEffectSpiderSound || "YES").toUpperCase() !== "NO";
   const hasNewAudioEnabled = Object.prototype.hasOwnProperty.call(settings || {}, "HomepageEffectAudioEnabled");
   const fallbackAudioUrl = legacySpiderMode ? getHomepageEffectDefaultAudioUrl(selectedMode) : "";
@@ -3150,6 +3154,7 @@ function describeHomepageEffectAdminState(settings = {}) {
     return `Published state: Fullscreen Picture Gallery (${images.length || 0} picture${images.length === 1 ? "" : "s"}).`;
   }
   if (mode === "youtube") return "Published state: YouTube Video / Autoplay.";
+  if (mode === "rickroll") return "Published state: Exit Button Prank / Rickroll.";
   return `Published state: ${HOMEPAGE_EFFECT_MODE_NAMES[mode] || mode}.`;
 }
 
@@ -3285,7 +3290,7 @@ async function saveHomepageEffectSettings() {
 
     const requestedAudioEnabled = Boolean(document.getElementById("homepageEffectAudioEnabled")?.checked);
     const effectAudioUrl = normalizeHomepageEffectAdminAudioUrl(document.getElementById("homepageEffectAudioUrl")?.value);
-    const usesGenericEffectAudio = mode !== "normal" && mode !== "youtube";
+    const usesGenericEffectAudio = mode !== "normal" && mode !== "youtube" && mode !== "rickroll";
     if (requestedAudioEnabled && usesGenericEffectAudio && !effectAudioUrl) {
       throw new Error("Sound/music is enabled. Paste a direct public HTTPS audio link, or turn the sound option off.");
     }
@@ -3307,7 +3312,7 @@ async function saveHomepageEffectSettings() {
       HomepageEffectYouTubeUrl: effectYouTubeUrl,
       HomepageEffectYouTubeMuted: effectYouTubeMuted ? "YES" : "NO",
       // Legacy compatibility for older ClassBoard clients that only know the Spider sound switch.
-      HomepageEffectSpiderSound: (["spider-glitch", "comic-web"].includes(mode) && effectAudioEnabled) ? "YES" : "NO"
+      HomepageEffectSpiderSound: (["spider-glitch", "comic-web", "black-symbiote"].includes(mode) && effectAudioEnabled) ? "YES" : "NO"
     };
 
     const saved = await sendAdminData("homepageEffectSettings", payload);
