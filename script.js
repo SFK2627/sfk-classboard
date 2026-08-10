@@ -2659,6 +2659,9 @@ function ensureHomepageEffectLayer() {
     clearSolarPlanetFocus();
   });
   let petExcitedTimer = 0;
+  const dogReactionClasses = ["is-pet-excited", "is-pet-boop", "is-pet-paw", "is-pet-ball", "is-pet-roll"];
+  const dogReactionDurations = { "is-pet-excited": 1150, "is-pet-boop": 820, "is-pet-paw": 940, "is-pet-ball": 1020, "is-pet-roll": 980 };
+  const clearPetDogReactions = () => dogReactionClasses.forEach((className) => layer.classList.remove(className));
   const resetPetDogLook = () => {
     layer.style.setProperty("--pet-eye-x", "0px");
     layer.style.setProperty("--pet-eye-y", "0px");
@@ -2680,17 +2683,37 @@ function ensureHomepageEffectLayer() {
     layer.style.setProperty("--pet-head-r", `${(nx * 5.5).toFixed(2)}deg`);
     layer.style.setProperty("--pet-body-x", `${(nx * 2.8).toFixed(2)}px`);
   };
+  const choosePetDogReaction = (event) => {
+    const scene = event?.currentTarget;
+    const rect = scene?.getBoundingClientRect?.();
+    const rx = rect?.width ? (event.clientX - rect.left) / rect.width : .5;
+    const ry = rect?.height ? (event.clientY - rect.top) / rect.height : .5;
+    const target = event?.target;
+    const hitFace = !!target?.closest?.(".petDogHead,.petDogFace,.petDogEye,.petDogEar,.petDogMuzzle,.petDogNose");
+    const hitBall = !!target?.closest?.(".petToyBall");
+    const hitPaw = !!target?.closest?.(".petPaw");
+    let pool = [];
+    if (hitFace || ry < .42) pool = ["is-pet-boop", "is-pet-excited", "is-pet-roll"];
+    else if (hitBall || (rx < .30 && ry > .52)) pool = ["is-pet-ball", "is-pet-paw"];
+    else if (hitPaw || ry > .72) pool = ["is-pet-paw", "is-pet-roll", "is-pet-excited"];
+    else if (rx > .68) pool = ["is-pet-roll", "is-pet-excited"];
+    else pool = ["is-pet-excited", "is-pet-boop", "is-pet-paw", "is-pet-ball", "is-pet-roll"];
+    return pool[Math.floor(Math.random() * pool.length)];
+  };
+  const triggerPetDogReaction = (reactionClass) => {
+    clearPetDogReactions();
+    void layer.offsetWidth;
+    layer.classList.add(reactionClass);
+    if (petExcitedTimer) window.clearTimeout(petExcitedTimer);
+    petExcitedTimer = window.setTimeout(() => {
+      clearPetDogReactions();
+      petExcitedTimer = 0;
+    }, dogReactionDurations[reactionClass] || 1000);
+  };
   const excitePetDog = (event) => {
     if (!layer.classList.contains("is-pet-dog")) return;
     if (event?.clientX != null) updatePetDogLook(event);
-    layer.classList.remove("is-pet-excited");
-    void layer.offsetWidth;
-    layer.classList.add("is-pet-excited");
-    if (petExcitedTimer) window.clearTimeout(petExcitedTimer);
-    petExcitedTimer = window.setTimeout(() => {
-      layer.classList.remove("is-pet-excited");
-      petExcitedTimer = 0;
-    }, 1150);
+    triggerPetDogReaction(choosePetDogReaction(event));
   };
   const petScene = layer.querySelector(".homepagePetDogScene");
   petScene?.addEventListener("pointermove", updatePetDogLook, { passive: true });
@@ -2722,17 +2745,40 @@ function ensureHomepageEffectLayer() {
     layer.style.setProperty("--koala-forest-x", `${(nx * -6).toFixed(2)}px`);
     layer.style.setProperty("--koala-forest-y", `${(ny * -3).toFixed(2)}px`);
   };
+  const koalaReactionClasses = ["is-koala-excited", "is-koala-nuzzle", "is-koala-hug-react", "is-koala-wave-react", "is-koala-leaf-react", "is-koala-heart-react"];
+  const koalaReactionDurations = { "is-koala-excited": 1250, "is-koala-nuzzle": 880, "is-koala-hug-react": 1120, "is-koala-wave-react": 1080, "is-koala-leaf-react": 1160, "is-koala-heart-react": 980 };
+  const clearPetKoalaReactions = () => koalaReactionClasses.forEach((className) => layer.classList.remove(className));
+  const choosePetKoalaReaction = (event) => {
+    const scene = event?.currentTarget;
+    const rect = scene?.getBoundingClientRect?.();
+    const rx = rect?.width ? (event.clientX - rect.left) / rect.width : .5;
+    const ry = rect?.height ? (event.clientY - rect.top) / rect.height : .5;
+    const target = event?.target;
+    const hitFace = !!target?.closest?.(".petKoalaHead,.petKoalaFace,.petKoalaEye,.petKoalaEar,.petKoalaNose");
+    const hitLeaf = !!target?.closest?.(".petKoalaLeafSnack");
+    const hitBody = !!target?.closest?.(".petKoalaBody,.petKoalaBelly,.petKoalaArm");
+    let pool = [];
+    if (hitFace || ry < .38) pool = ["is-koala-nuzzle", "is-koala-heart-react", "is-koala-excited"];
+    else if (hitLeaf || rx > .64) pool = ["is-koala-leaf-react", "is-koala-wave-react"];
+    else if (hitBody || (rx > .36 && rx < .64 && ry > .42)) pool = ["is-koala-hug-react", "is-koala-heart-react", "is-koala-excited"];
+    else if (rx < .34) pool = ["is-koala-wave-react", "is-koala-excited"];
+    else pool = ["is-koala-excited", "is-koala-nuzzle", "is-koala-hug-react", "is-koala-wave-react", "is-koala-leaf-react", "is-koala-heart-react"];
+    return pool[Math.floor(Math.random() * pool.length)];
+  };
+  const triggerPetKoalaReaction = (reactionClass) => {
+    clearPetKoalaReactions();
+    void layer.offsetWidth;
+    layer.classList.add(reactionClass);
+    if (koalaExcitedTimer) window.clearTimeout(koalaExcitedTimer);
+    koalaExcitedTimer = window.setTimeout(() => {
+      clearPetKoalaReactions();
+      koalaExcitedTimer = 0;
+    }, koalaReactionDurations[reactionClass] || 1100);
+  };
   const excitePetKoala = (event) => {
     if (!layer.classList.contains("is-pet-koala")) return;
     if (event?.clientX != null) updatePetKoalaLook(event);
-    layer.classList.remove("is-koala-excited");
-    void layer.offsetWidth;
-    layer.classList.add("is-koala-excited");
-    if (koalaExcitedTimer) window.clearTimeout(koalaExcitedTimer);
-    koalaExcitedTimer = window.setTimeout(() => {
-      layer.classList.remove("is-koala-excited");
-      koalaExcitedTimer = 0;
-    }, 1250);
+    triggerPetKoalaReaction(choosePetKoalaReaction(event));
   };
   const koalaScene = layer.querySelector(".homepagePetKoalaScene");
   koalaScene?.addEventListener("pointermove", updatePetKoalaLook, { passive: true });
