@@ -2864,10 +2864,29 @@ const HOMEPAGE_EFFECT_DEFAULTS = {
   HomepageEffectDismissible: "YES",
   HomepageEffectAlertSound: "YES",
   HomepageEffectSpiderSound: "YES",
+  HomepageEffectAudioEnabled: "NO",
+  HomepageEffectAudioUrl: "",
+  HomepageEffectAudioLoop: "YES",
   HomepageEffectUpdatedAt: ""
 };
 
 const HOMEPAGE_EFFECT_MAX_IMAGES = 12;
+const HOMEPAGE_EFFECT_DEFAULT_AUDIO_URLS = {
+  "spider-glitch": "https://audio.jukehost.co.uk/019fe9f5-214f-72a6-b974-320080180160",
+  "comic-web": "https://audio.jukehost.co.uk/019fea02-24bd-729b-8e0c-b0bf7be7a9e0"
+};
+let homepageEffectAdminLastMode = "normal";
+
+function getHomepageEffectDefaultAudioUrl(mode) {
+  return HOMEPAGE_EFFECT_DEFAULT_AUDIO_URLS[String(mode || "").trim().toLowerCase()] || "";
+}
+
+function normalizeHomepageEffectAdminAudioUrl(value) {
+  const raw = String(value || "").trim();
+  if (!raw || !/^https:\/\//i.test(raw)) return "";
+  return raw.slice(0, 1200);
+}
+
 const HOMEPAGE_EFFECT_MODE_NAMES = {
   drizzle: "Ambon / Light Rain",
   "heavy-rain": "Heavy Rain",
@@ -2956,7 +2975,8 @@ function initHomepageEffectAdmin() {
   if (!mode) return;
   homepageEffectAdminReady = true;
 
-  mode.addEventListener("change", syncHomepageEffectAdminFields);
+  homepageEffectAdminLastMode = String(mode.value || "normal");
+  mode.addEventListener("change", handleHomepageEffectModeChange);
   document.getElementById("homepageEffectEnabled")?.addEventListener("change", syncHomepageEffectAdminFields);
   document.getElementById("homepageEffectImageFile")?.addEventListener("change", handleHomepageEffectImageFileChange);
   document.getElementById("homepageEffectImageUrls")?.addEventListener("input", renderHomepageEffectAdminImagePreview);
@@ -2974,15 +2994,39 @@ function initHomepageEffectAdmin() {
   syncHomepageEffectAdminFields();
 }
 
+function handleHomepageEffectModeChange() {
+  const modeEl = document.getElementById("homepageEffectMode");
+  const nextMode = String(modeEl?.value || "normal");
+  const audioUrlEl = document.getElementById("homepageEffectAudioUrl");
+  const audioEnabledEl = document.getElementById("homepageEffectAudioEnabled");
+  const previousDefault = getHomepageEffectDefaultAudioUrl(homepageEffectAdminLastMode);
+  const nextDefault = getHomepageEffectDefaultAudioUrl(nextMode);
+  const currentUrl = String(audioUrlEl?.value || "").trim();
+
+  // Spider-inspired modes have their requested default track. Other modes keep custom links,
+  // but clear the previous automatic Spider default when leaving a Spider mode.
+  if (audioUrlEl) {
+    if (nextDefault) {
+      audioUrlEl.value = nextDefault;
+      if (audioEnabledEl) audioEnabledEl.checked = true;
+    } else if (!currentUrl || currentUrl === previousDefault) {
+      audioUrlEl.value = "";
+    }
+  }
+
+  homepageEffectAdminLastMode = nextMode;
+  syncHomepageEffectAdminFields();
+}
+
 function syncHomepageEffectAdminFields() {
   const mode = String(document.getElementById("homepageEffectMode")?.value || "normal");
   const enabled = Boolean(document.getElementById("homepageEffectEnabled")?.checked);
   const pictureFields = document.getElementById("homepageEffectPictureFields");
   if (pictureFields) pictureFields.hidden = mode !== "picture";
+  const audioFields = document.getElementById("homepageEffectAudioFields");
+  if (audioFields) audioFields.hidden = mode === "normal";
   const alertSoundRow = document.getElementById("homepageEffectAlertSoundRow");
   if (alertSoundRow) alertSoundRow.hidden = mode !== "alert";
-  const spiderSoundRow = document.getElementById("homepageEffectSpiderSoundRow");
-  if (spiderSoundRow) spiderSoundRow.hidden = !["spider-glitch", "comic-web"].includes(mode);
 
   const status = document.getElementById("homepageEffectStatus");
   if (!status) return;
@@ -3014,7 +3058,9 @@ function fillHomepageEffectSettings(settings = {}) {
   const message = document.getElementById("homepageEffectMessage");
   const dismissible = document.getElementById("homepageEffectDismissible");
   const alertSound = document.getElementById("homepageEffectAlertSound");
-  const spiderSound = document.getElementById("homepageEffectSpiderSound");
+  const audioEnabled = document.getElementById("homepageEffectAudioEnabled");
+  const audioUrl = document.getElementById("homepageEffectAudioUrl");
+  const audioLoop = document.getElementById("homepageEffectAudioLoop");
   const urls = document.getElementById("homepageEffectImageUrls");
   if (enabled) enabled.checked = String(merged.HomepageEffectEnabled || "").toUpperCase() === "YES";
   if (mode) mode.value = merged.HomepageEffectMode || "normal";
@@ -3022,7 +3068,21 @@ function fillHomepageEffectSettings(settings = {}) {
   if (message) message.value = merged.HomepageEffectMessage || "";
   if (dismissible) dismissible.checked = String(merged.HomepageEffectDismissible || "YES").toUpperCase() !== "NO";
   if (alertSound) alertSound.checked = String(merged.HomepageEffectAlertSound || "YES").toUpperCase() !== "NO";
-  if (spiderSound) spiderSound.checked = String(merged.HomepageEffectSpiderSound || "YES").toUpperCase() !== "NO";
+
+  const selectedMode = String(merged.HomepageEffectMode || "normal");
+  const savedAudioUrl = normalizeHomepageEffectAdminAudioUrl(merged.HomepageEffectAudioUrl);
+  const legacySpiderMode = ["spider-glitch", "comic-web"].includes(selectedMode);
+  const legacySpiderSoundOn = String(merged.HomepageEffectSpiderSound || "YES").toUpperCase() !== "NO";
+  const hasNewAudioEnabled = Object.prototype.hasOwnProperty.call(settings || {}, "HomepageEffectAudioEnabled");
+  const fallbackAudioUrl = legacySpiderMode ? getHomepageEffectDefaultAudioUrl(selectedMode) : "";
+  if (audioEnabled) {
+    audioEnabled.checked = hasNewAudioEnabled
+      ? String(merged.HomepageEffectAudioEnabled || "NO").toUpperCase() === "YES"
+      : (legacySpiderMode && legacySpiderSoundOn);
+  }
+  if (audioUrl) audioUrl.value = savedAudioUrl || fallbackAudioUrl;
+  if (audioLoop) audioLoop.checked = String(merged.HomepageEffectAudioLoop || "YES").toUpperCase() !== "NO";
+  homepageEffectAdminLastMode = selectedMode;
 
   homepageEffectSavedImages = parseHomepageEffectImageList(merged.HomepageEffectImages, merged.HomepageEffectImage);
   homepageEffectPendingFiles = [];
@@ -3169,6 +3229,14 @@ async function saveHomepageEffectSettings() {
       throw new Error("Picture Gallery needs at least one uploaded picture or https image address.");
     }
 
+    const requestedAudioEnabled = Boolean(document.getElementById("homepageEffectAudioEnabled")?.checked);
+    const effectAudioUrl = normalizeHomepageEffectAdminAudioUrl(document.getElementById("homepageEffectAudioUrl")?.value);
+    if (requestedAudioEnabled && mode !== "normal" && !effectAudioUrl) {
+      throw new Error("Sound/music is enabled. Paste a direct public HTTPS audio link, or turn the sound option off.");
+    }
+    const effectAudioEnabled = requestedAudioEnabled && mode !== "normal" && Boolean(effectAudioUrl);
+    const effectAudioLoop = document.getElementById("homepageEffectAudioLoop")?.checked !== false;
+
     const payload = {
       HomepageEffectEnabled: enabledEl?.checked ? "YES" : "NO",
       HomepageEffectMode: mode,
@@ -3178,7 +3246,11 @@ async function saveHomepageEffectSettings() {
       HomepageEffectImages: JSON.stringify(imageValues),
       HomepageEffectDismissible: document.getElementById("homepageEffectDismissible")?.checked ? "YES" : "NO",
       HomepageEffectAlertSound: document.getElementById("homepageEffectAlertSound")?.checked ? "YES" : "NO",
-      HomepageEffectSpiderSound: document.getElementById("homepageEffectSpiderSound")?.checked ? "YES" : "NO"
+      HomepageEffectAudioEnabled: effectAudioEnabled ? "YES" : "NO",
+      HomepageEffectAudioUrl: effectAudioUrl,
+      HomepageEffectAudioLoop: effectAudioLoop ? "YES" : "NO",
+      // Legacy compatibility for older ClassBoard clients that only know the Spider sound switch.
+      HomepageEffectSpiderSound: (["spider-glitch", "comic-web"].includes(mode) && effectAudioEnabled) ? "YES" : "NO"
     };
 
     const saved = await sendAdminData("homepageEffectSettings", payload);

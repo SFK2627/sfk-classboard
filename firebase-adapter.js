@@ -333,6 +333,9 @@
       safeImages.push(safe);
     });
 
+    const rawAudioUrl = String(payload?.HomepageEffectAudioUrl || "").trim();
+    const safeAudioUrl = /^https:\/\//i.test(rawAudioUrl) ? rawAudioUrl.slice(0, 1200) : "";
+
     const values = {
       HomepageEffectEnabled: String(payload?.HomepageEffectEnabled || "").trim().toUpperCase() === "YES" ? "YES" : "NO",
       HomepageEffectMode: mode,
@@ -343,6 +346,9 @@
       HomepageEffectDismissible: String(payload?.HomepageEffectDismissible || "").trim().toUpperCase() === "NO" ? "NO" : "YES",
       HomepageEffectAlertSound: String(payload?.HomepageEffectAlertSound || "").trim().toUpperCase() === "NO" ? "NO" : "YES",
       HomepageEffectSpiderSound: String(payload?.HomepageEffectSpiderSound || "").trim().toUpperCase() === "NO" ? "NO" : "YES",
+      HomepageEffectAudioEnabled: (String(payload?.HomepageEffectAudioEnabled || "").trim().toUpperCase() === "YES" && safeAudioUrl) ? "YES" : "NO",
+      HomepageEffectAudioUrl: safeAudioUrl,
+      HomepageEffectAudioLoop: String(payload?.HomepageEffectAudioLoop || "").trim().toUpperCase() === "NO" ? "NO" : "YES",
       HomepageEffectUpdatedAt: String(Date.now())
     };
 

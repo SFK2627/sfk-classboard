@@ -1674,6 +1674,9 @@ const HOMEPAGE_EFFECT_KEYS = new Set([
   "HomepageEffectDismissible",
   "HomepageEffectAlertSound",
   "HomepageEffectSpiderSound",
+  "HomepageEffectAudioEnabled",
+  "HomepageEffectAudioUrl",
+  "HomepageEffectAudioLoop",
   "HomepageEffectUpdatedAt"
 ]);
 
@@ -1694,16 +1697,21 @@ let homepageAlertSoundActive = false;
 let homepageAlertSoundSignature = "";
 let homepageAlertAudioPrimed = false;
 const homepageAlertOscillators = new Set();
-const HOMEPAGE_SPIDER_SOUND_URL = "https://audio.jukehost.co.uk/019fe9f5-214f-72a6-b974-320080180160";
-let homepageSpiderSoundAudio = null;
-let homepageSpiderSoundWanted = false;
-let homepageSpiderSoundSignature = "";
-let homepageSpiderSoundPrimed = false;
+const HOMEPAGE_EFFECT_DEFAULT_AUDIO_URLS = {
+  "spider-glitch": "https://audio.jukehost.co.uk/019fe9f5-214f-72a6-b974-320080180160",
+  "comic-web": "https://audio.jukehost.co.uk/019fea02-24bd-729b-8e0c-b0bf7be7a9e0"
+};
+let homepageEffectMusicAudio = null;
+let homepageEffectMusicWanted = false;
+let homepageEffectMusicSignature = "";
+let homepageEffectMusicUrl = "";
+let homepageEffectMusicLoop = true;
+let homepageEffectMusicPrimed = false;
 
 function initHomepageEffectSystem() {
   ensureHomepageEffectLayer();
   primeHomepageAlertAudioOnInteraction();
-  primeHomepageSpiderSoundOnInteraction();
+  primeHomepageEffectMusicOnInteraction();
   startHomepageEffectRealtimeListener();
   window.addEventListener("beforeunload", () => {
     try { homepageEffectUnsubscribe?.(); } catch (error) {}
@@ -1791,9 +1799,19 @@ function normalizeHomepageEffectConfig(settings = {}) {
   const dismissible = String(settings.HomepageEffectDismissible || "YES").trim().toUpperCase() !== "NO";
   const alertSound = String(settings.HomepageEffectAlertSound || "YES").trim().toUpperCase() !== "NO";
   const spiderSound = String(settings.HomepageEffectSpiderSound || "YES").trim().toUpperCase() !== "NO";
+  const hasNewAudioEnabled = Object.prototype.hasOwnProperty.call(settings || {}, "HomepageEffectAudioEnabled");
+  const defaultAudioUrl = HOMEPAGE_EFFECT_DEFAULT_AUDIO_URLS[mode] || "";
+  const rawAudioUrl = String(settings.HomepageEffectAudioUrl || "").trim();
+  const savedAudioUrl = /^https:\/\//i.test(rawAudioUrl) ? rawAudioUrl.slice(0, 1200) : "";
+  const legacySpiderMode = ["spider-glitch", "comic-web"].includes(mode);
+  const audioEnabled = hasNewAudioEnabled
+    ? String(settings.HomepageEffectAudioEnabled || "NO").trim().toUpperCase() === "YES"
+    : (legacySpiderMode && spiderSound);
+  const audioUrl = savedAudioUrl || ((legacySpiderMode && audioEnabled) ? defaultAudioUrl : "");
+  const audioLoop = String(settings.HomepageEffectAudioLoop || "YES").trim().toUpperCase() !== "NO";
   const updatedAt = String(settings.HomepageEffectUpdatedAt || "").trim();
-  const signature = updatedAt || [enabled ? "1" : "0", mode, title, message, images.join("~"), dismissible ? "1" : "0", alertSound ? "1" : "0", spiderSound ? "1" : "0"].join("|");
-  return { enabled, mode, title, message, image: images[0] || "", images, dismissible, alertSound, spiderSound, updatedAt, signature };
+  const signature = updatedAt || [enabled ? "1" : "0", mode, title, message, images.join("~"), dismissible ? "1" : "0", alertSound ? "1" : "0", audioEnabled ? "1" : "0", audioUrl, audioLoop ? "1" : "0"].join("|");
+  return { enabled, mode, title, message, image: images[0] || "", images, dismissible, alertSound, spiderSound, audioEnabled, audioUrl, audioLoop, updatedAt, signature };
 }
 
 function getHomepageAlertAudioContext() {
@@ -1911,24 +1929,42 @@ function startHomepageAlertSound(signature) {
   playHomepageAlertSirenCycle();
 }
 
-function getHomepageSpiderSoundAudio() {
-  if (homepageSpiderSoundAudio) return homepageSpiderSoundAudio;
-  try {
-    const audio = new Audio(HOMEPAGE_SPIDER_SOUND_URL);
-    audio.loop = true;
-    audio.preload = "auto";
-    audio.volume = .58;
-    audio.playsInline = true;
-    homepageSpiderSoundAudio = audio;
-  } catch (error) {
-    homepageSpiderSoundAudio = null;
+function getHomepageEffectMusicAudio(url, loop = true) {
+  const safeUrl = String(url || "").trim();
+  if (!/^https:\/\//i.test(safeUrl)) return null;
+
+  if (homepageEffectMusicAudio && homepageEffectMusicUrl === safeUrl) {
+    homepageEffectMusicAudio.loop = Boolean(loop);
+    return homepageEffectMusicAudio;
   }
-  return homepageSpiderSoundAudio;
+
+  if (homepageEffectMusicAudio) {
+    try {
+      homepageEffectMusicAudio.pause();
+      homepageEffectMusicAudio.currentTime = 0;
+      homepageEffectMusicAudio.removeAttribute("src");
+      homepageEffectMusicAudio.load?.();
+    } catch (error) {}
+    homepageEffectMusicAudio = null;
+  }
+  try {
+    const audio = new Audio(safeUrl);
+    audio.loop = Boolean(loop);
+    audio.preload = "auto";
+    audio.volume = .62;
+    audio.playsInline = true;
+    homepageEffectMusicAudio = audio;
+    homepageEffectMusicUrl = safeUrl;
+  } catch (error) {
+    homepageEffectMusicAudio = null;
+    homepageEffectMusicUrl = "";
+  }
+  return homepageEffectMusicAudio;
 }
 
-async function tryPlayHomepageSpiderSound() {
-  if (!homepageSpiderSoundWanted) return;
-  const audio = getHomepageSpiderSoundAudio();
+async function tryPlayHomepageEffectMusic() {
+  if (!homepageEffectMusicWanted || !homepageEffectMusicUrl) return;
+  const audio = getHomepageEffectMusicAudio(homepageEffectMusicUrl, homepageEffectMusicLoop);
   if (!audio) return;
   try {
     if (audio.paused) await audio.play();
@@ -1937,31 +1973,54 @@ async function tryPlayHomepageSpiderSound() {
   }
 }
 
-function primeHomepageSpiderSoundOnInteraction() {
-  if (homepageSpiderSoundPrimed) return;
-  homepageSpiderSoundPrimed = true;
+function primeHomepageEffectMusicOnInteraction() {
+  if (homepageEffectMusicPrimed) return;
+  homepageEffectMusicPrimed = true;
   const resume = () => {
-    if (homepageSpiderSoundWanted) tryPlayHomepageSpiderSound();
+    if (homepageEffectMusicWanted) tryPlayHomepageEffectMusic();
   };
   document.addEventListener("pointerdown", resume, { capture: true, passive: true });
   document.addEventListener("keydown", resume, { capture: true });
 }
 
-function startHomepageSpiderSound(signature) {
-  homepageSpiderSoundWanted = true;
-  homepageSpiderSoundSignature = String(signature || "spider");
-  tryPlayHomepageSpiderSound();
+function startHomepageEffectMusic(url, loop, signature) {
+  const safeUrl = String(url || "").trim();
+  if (!/^https:\/\//i.test(safeUrl)) {
+    stopHomepageEffectMusic();
+    return;
+  }
+
+  const nextSignature = String(signature || safeUrl);
+  const sameTrack = homepageEffectMusicWanted
+    && homepageEffectMusicSignature === nextSignature
+    && homepageEffectMusicUrl === safeUrl
+    && homepageEffectMusicLoop === Boolean(loop);
+  if (sameTrack) return;
+
+  stopHomepageEffectMusic();
+  homepageEffectMusicWanted = true;
+  homepageEffectMusicSignature = nextSignature;
+  homepageEffectMusicUrl = safeUrl;
+  homepageEffectMusicLoop = Boolean(loop);
+  getHomepageEffectMusicAudio(safeUrl, homepageEffectMusicLoop);
+  tryPlayHomepageEffectMusic();
 }
 
-function stopHomepageSpiderSound() {
-  homepageSpiderSoundWanted = false;
-  homepageSpiderSoundSignature = "";
-  const audio = homepageSpiderSoundAudio;
-  if (!audio) return;
-  try {
-    audio.pause();
-    audio.currentTime = 0;
-  } catch (error) {}
+function stopHomepageEffectMusic() {
+  homepageEffectMusicWanted = false;
+  homepageEffectMusicSignature = "";
+  const audio = homepageEffectMusicAudio;
+  if (audio) {
+    try {
+      audio.pause();
+      audio.currentTime = 0;
+      audio.removeAttribute("src");
+      audio.load?.();
+    } catch (error) {}
+  }
+  homepageEffectMusicAudio = null;
+  homepageEffectMusicUrl = "";
+  homepageEffectMusicLoop = true;
 }
 
 function ensureHomepageEffectLayer() {
@@ -2060,7 +2119,7 @@ function hideHomepageEffectLayer() {
   const ambient = layer.querySelector(".homepageEffectParticles");
   if (ambient) ambient.innerHTML = "";
   stopHomepageAlertSound();
-  stopHomepageSpiderSound();
+  stopHomepageEffectMusic();
 }
 
 function updateHomepageEffectGalleryControls() {
@@ -2322,16 +2381,17 @@ async function applyHomepageEffectSettings(settings = {}) {
   if (close) close.hidden = !config.dismissible;
   renderHomepageEffectText(config);
 
-  if (config.mode === "alert" && config.alertSound) {
+  const hasCustomEffectAudio = Boolean(config.audioEnabled && config.audioUrl);
+  if (config.mode === "alert" && config.alertSound && !hasCustomEffectAudio) {
     startHomepageAlertSound(config.signature);
   } else {
     stopHomepageAlertSound();
   }
 
-  if (["spider-glitch", "comic-web"].includes(config.mode) && config.spiderSound) {
-    startHomepageSpiderSound(config.signature);
+  if (hasCustomEffectAudio) {
+    startHomepageEffectMusic(config.audioUrl, config.audioLoop, config.signature);
   } else {
-    stopHomepageSpiderSound();
+    stopHomepageEffectMusic();
   }
 
   if (["drizzle", "heavy-rain", "thunderstorm"].includes(config.mode)) {

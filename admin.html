@@ -16,7 +16,7 @@
   <link rel="manifest" href="admin.webmanifest?v=portrait-reminder-v1" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
-  <link rel="stylesheet" href="admin.css?v=spider-sound-v390" />
+  <link rel="stylesheet" href="admin.css?v=effect-music-v392" />
   <script src="orientation-lock.js?v=appwide-v6" defer></script>
 </head>
 
@@ -183,14 +183,25 @@
             <span><strong>Allow X / dismiss</strong><small>Dismissal lasts only for the current page view. Reloading shows the active effect again.</small></span>
           </label>
 
+          <div id="homepageEffectAudioFields" class="homepageEffectAudioFields" hidden>
+            <label class="homepageEffectToggleRow homepageEffectSoundRow">
+              <input id="homepageEffectAudioEnabled" type="checkbox" />
+              <span><strong>Play sound / music with this effect</strong><small>Works with any Homepage Effect. Turn this on, then paste a direct public HTTPS audio link below.</small></span>
+            </label>
+
+            <label for="homepageEffectAudioUrl">Music / Audio URL <span class="homepageEffectOptional">optional</span></label>
+            <input id="homepageEffectAudioUrl" type="url" maxlength="1200" inputmode="url" placeholder="https://audio.example.com/effect.mp3" />
+            <small class="fieldHint">Use a direct public HTTPS audio file/link (for example MP3, M4A, OGG, or a direct Jukehost audio link). Browsers may require one tap/click before autoplay audio can start.</small>
+
+            <label class="homepageEffectToggleRow homepageEffectSoundRow homepageEffectLoopRow">
+              <input id="homepageEffectAudioLoop" type="checkbox" checked />
+              <span><strong>Loop sound while the effect is active</strong><small>Turn this off if the audio should play only once.</small></span>
+            </label>
+          </div>
+
           <label id="homepageEffectAlertSoundRow" class="homepageEffectToggleRow homepageEffectSoundRow" hidden>
             <input id="homepageEffectAlertSound" type="checkbox" checked />
-            <span><strong>Play warning sound in Alert mode</strong><small>Uses a darker cinematic civil-defense style siren with long rising/falling wails. Browsers may require one tap/click on the page before audio can start.</small></span>
-          </label>
-
-          <label id="homepageEffectSpiderSoundRow" class="homepageEffectToggleRow homepageEffectSoundRow" hidden>
-            <input id="homepageEffectSpiderSound" type="checkbox" checked />
-            <span><strong>Play sound in Spider-inspired modes</strong><small>Turn this off for visuals only. The supplied Spider glitch audio plays for Spider Glitch and Spider Comic modes. Some browsers may require one tap/click before audio starts.</small></span>
+            <span><strong>Use built-in warning siren when no custom audio is set</strong><small>If Alert mode has custom sound/music enabled above, that custom audio takes priority. Otherwise this built-in emergency-style siren is used.</small></span>
           </label>
 
           <div class="homepageEffectActions">
@@ -974,9 +985,9 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js?v=2-secure-auth"></script>
   <script src="auth.js?v=admin-officer-rescue-v2"></script>
-  <script src="firebase-adapter.js?v=spider-sound-v390"></script>
+  <script src="firebase-adapter.js?v=effect-music-v392"></script>
   <script src="pwa.js?v=page-lock-v119"></script>
-  <script src="class-chat-admin.js?v=spider-sound-v390"></script>
-  <script src="admin.js?v=spider-sound-v390"></script>
+  <script src="class-chat-admin.js?v=effect-music-v392"></script>
+  <script src="admin.js?v=effect-music-v392"></script>
 </body>
 </html>

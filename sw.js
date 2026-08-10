@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-main-pwa-v391-schedule-font-restore";
+const CACHE_NAME = "sfk-main-pwa-v392-effect-music";
 const CACHE_PREFIXES_TO_DELETE = ["sfk-main-pwa-", "sfk-sw.js-"];
 const NAVIGATION_FALLBACK_URL = "./index.html";
 const NAVIGATION_TIMEOUT_MS = 2500;
