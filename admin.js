@@ -2899,6 +2899,7 @@ const HOMEPAGE_EFFECT_MODE_NAMES = {
   snow: "Snowfall",
   confetti: "Celebration Confetti",
   hearts: "Kindness Hearts",
+  "koala-family": "Koala Family Walk + Heart Pose",
   stars: "Starry Night",
   matrix: "Digital Matrix Rain",
   bubbles: "Floating Bubbles",

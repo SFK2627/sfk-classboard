@@ -1815,7 +1815,7 @@ function normalizeHomepageEffectConfig(settings = {}) {
   const allowedModes = new Set([
     "normal", "drizzle", "heavy-rain", "thunderstorm", "multiverse", "picture", "alert",
     "spider-glitch", "comic-web", "portal-rift",
-    "fog", "snow", "confetti", "hearts", "stars", "matrix", "bubbles", "fireflies", "neon-pulse",
+    "fog", "snow", "confetti", "hearts", "koala-family", "stars", "matrix", "bubbles", "fireflies", "neon-pulse",
     "aurora", "galaxy", "meteors", "laser-grid", "crt", "pixel-storm", "prism", "petals", "gold-sparkle"
   ]);
   const rawMode = String(settings.HomepageEffectMode || "normal").trim().toLowerCase();
@@ -2070,6 +2070,95 @@ function ensureHomepageEffectLayer() {
       <span></span><span></span><span></span><span></span><span></span><span></span>
     </div>
     <div class="homepageEffectParticles" aria-hidden="true"></div>
+    <div class="homepageEffectKoalaFamily" aria-hidden="true">
+      <div class="koalaFamilySoftGlow"></div>
+      <div class="koalaFamilyStage">
+        <span class="koalaFamilyWalker is-parent-left">
+          <span class="koalaFamilyFigure">
+            <span class="koalaFamilyEar is-left"></span>
+            <span class="koalaFamilyEar is-right"></span>
+            <span class="koalaFamilyHead">
+              <span class="koalaFamilyEye is-left"></span>
+              <span class="koalaFamilyEye is-right"></span>
+              <span class="koalaFamilyNose"></span>
+              <span class="koalaFamilyBlush is-left"></span>
+              <span class="koalaFamilyBlush is-right"></span>
+            </span>
+            <span class="koalaFamilyBodyCore"></span>
+            <span class="koalaFamilyBelly"></span>
+            <span class="koalaFamilyArm is-left"></span>
+            <span class="koalaFamilyArm is-right"></span>
+            <span class="koalaFamilyFoot is-left"></span>
+            <span class="koalaFamilyFoot is-right"></span>
+          </span>
+          <i class="koalaFamilyHeldHeart">♥</i>
+        </span>
+        <span class="koalaFamilyWalker is-child-left">
+          <span class="koalaFamilyFigure">
+            <span class="koalaFamilyEar is-left"></span>
+            <span class="koalaFamilyEar is-right"></span>
+            <span class="koalaFamilyHead">
+              <span class="koalaFamilyEye is-left"></span>
+              <span class="koalaFamilyEye is-right"></span>
+              <span class="koalaFamilyNose"></span>
+              <span class="koalaFamilyBlush is-left"></span>
+              <span class="koalaFamilyBlush is-right"></span>
+            </span>
+            <span class="koalaFamilyBodyCore"></span>
+            <span class="koalaFamilyBelly"></span>
+            <span class="koalaFamilyArm is-left"></span>
+            <span class="koalaFamilyArm is-right"></span>
+            <span class="koalaFamilyFoot is-left"></span>
+            <span class="koalaFamilyFoot is-right"></span>
+          </span>
+          <i class="koalaFamilyHeldHeart">♥</i>
+        </span>
+        <span class="koalaFamilyWalker is-child-right">
+          <span class="koalaFamilyFigure">
+            <span class="koalaFamilyEar is-left"></span>
+            <span class="koalaFamilyEar is-right"></span>
+            <span class="koalaFamilyHead">
+              <span class="koalaFamilyEye is-left"></span>
+              <span class="koalaFamilyEye is-right"></span>
+              <span class="koalaFamilyNose"></span>
+              <span class="koalaFamilyBlush is-left"></span>
+              <span class="koalaFamilyBlush is-right"></span>
+            </span>
+            <span class="koalaFamilyBodyCore"></span>
+            <span class="koalaFamilyBelly"></span>
+            <span class="koalaFamilyArm is-left"></span>
+            <span class="koalaFamilyArm is-right"></span>
+            <span class="koalaFamilyFoot is-left"></span>
+            <span class="koalaFamilyFoot is-right"></span>
+          </span>
+          <i class="koalaFamilyHeldHeart">♥</i>
+        </span>
+        <span class="koalaFamilyWalker is-parent-right">
+          <span class="koalaFamilyFigure">
+            <span class="koalaFamilyEar is-left"></span>
+            <span class="koalaFamilyEar is-right"></span>
+            <span class="koalaFamilyHead">
+              <span class="koalaFamilyEye is-left"></span>
+              <span class="koalaFamilyEye is-right"></span>
+              <span class="koalaFamilyNose"></span>
+              <span class="koalaFamilyBlush is-left"></span>
+              <span class="koalaFamilyBlush is-right"></span>
+            </span>
+            <span class="koalaFamilyBodyCore"></span>
+            <span class="koalaFamilyBelly"></span>
+            <span class="koalaFamilyArm is-left"></span>
+            <span class="koalaFamilyArm is-right"></span>
+            <span class="koalaFamilyFoot is-left"></span>
+            <span class="koalaFamilyFoot is-right"></span>
+          </span>
+          <i class="koalaFamilyHeldHeart">♥</i>
+        </span>
+        <div class="koalaFamilyHeartPose"><span>♥</span></div>
+        <div class="koalaFamilyLoveBurst">
+          <i>♥</i><i>♡</i><i>♥</i><i>♡</i><i>♥</i><i>♥</i><i>♡</i><i>♥</i>
+        </div>
+      </div>
+    </div>
     <div class="homepageEffectContent" role="status" aria-live="polite">
       <div class="homepageEffectWeatherMessage">
         <strong id="homepageEffectWeatherTitle"></strong>

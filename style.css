@@ -26638,6 +26638,402 @@ html.sfkHomepageSpiderGlitchActive body > *:not(script):not(style):not(#homepage
 }
 
 
+
+
+/* =========================================================
+   v396 KOALA FAMILY WALK + HEART POSE — BIGGER / CENTERED
+   Larger koalas with full body and feet so the family reads
+   clearly on screen while staying responsive on phone.
+========================================================= */
+.homepageEffectKoalaFamily {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  display: none;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.homepageEffectLayer.is-koala-family .homepageEffectKoalaFamily {
+  display: block;
+}
+
+.homepageEffectLayer.is-koala-family .homepageEffectBackdrop {
+  background:
+    radial-gradient(circle at 50% 72%, rgba(255, 224, 122, .26), transparent 28%),
+    linear-gradient(180deg, rgba(242, 250, 246, .14), rgba(255, 234, 244, .16));
+  backdrop-filter: saturate(1.05) brightness(.98);
+}
+
+.koalaFamilySoftGlow {
+  position: absolute;
+  left: 50%;
+  bottom: 7vh;
+  width: min(1100px, 96vw);
+  height: min(420px, 44vh);
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(255, 227, 123, .28), rgba(255, 190, 213, .10) 48%, transparent 72%);
+  filter: blur(28px);
+  opacity: 0;
+  animation: sfkKoalaGlow 14s ease-in-out infinite;
+}
+
+.koalaFamilyStage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.koalaFamilyWalker {
+  --koala-pose-x: 0px;
+  --koala-start-x: -72vw;
+  --koala-mid-x: -42vw;
+  --koala-near-x: -20vw;
+  --koala-arrive-x: -20px;
+  --koala-leave-x: -20px;
+  --koala-exit-x: 72vw;
+  --koala-size: clamp(118px, 15vw, 200px);
+  position: absolute;
+  left: 50%;
+  bottom: clamp(48px, 7.5vh, 96px);
+  z-index: 3;
+  width: var(--koala-size);
+  height: calc(var(--koala-size) * 1.36);
+  translate: -50% 0;
+  opacity: 0;
+  transform-origin: 50% 92%;
+  animation: sfkKoalaFamilyWalk 14s cubic-bezier(.36,.03,.24,1) infinite;
+  will-change: transform, opacity;
+}
+
+.koalaFamilyWalker.is-parent-left {
+  --koala-pose-x: clamp(-260px, -18vw, -150px);
+  --koala-start-x: -76vw;
+  --koala-mid-x: -46vw;
+  --koala-near-x: -26vw;
+  --koala-arrive-x: -274px;
+  --koala-leave-x: -286px;
+  --koala-exit-x: -78vw;
+  --koala-size: clamp(160px, 18vw, 238px);
+}
+
+.koalaFamilyWalker.is-child-left {
+  --koala-pose-x: clamp(-102px, -8vw, -56px);
+  --koala-start-x: -82vw;
+  --koala-mid-x: -48vw;
+  --koala-near-x: -24vw;
+  --koala-arrive-x: -114px;
+  --koala-leave-x: -120px;
+  --koala-exit-x: -74vw;
+  --koala-size: clamp(112px, 12vw, 162px);
+  bottom: clamp(42px, 6.8vh, 86px);
+  animation-delay: -.35s;
+}
+
+.koalaFamilyWalker.is-child-right {
+  --koala-pose-x: clamp(56px, 8vw, 102px);
+  --koala-start-x: 82vw;
+  --koala-mid-x: 48vw;
+  --koala-near-x: 24vw;
+  --koala-arrive-x: 114px;
+  --koala-leave-x: 120px;
+  --koala-exit-x: 74vw;
+  --koala-size: clamp(112px, 12vw, 162px);
+  bottom: clamp(42px, 6.8vh, 86px);
+  animation-delay: -.18s;
+}
+
+.koalaFamilyWalker.is-parent-right {
+  --koala-pose-x: clamp(150px, 18vw, 260px);
+  --koala-start-x: 76vw;
+  --koala-mid-x: 46vw;
+  --koala-near-x: 26vw;
+  --koala-arrive-x: 274px;
+  --koala-leave-x: 286px;
+  --koala-exit-x: 78vw;
+  --koala-size: clamp(160px, 18vw, 238px);
+  animation-delay: -.55s;
+}
+
+.koalaFamilyFigure {
+  position: absolute;
+  inset: 0;
+  filter: drop-shadow(0 18px 20px rgba(0,0,0,.17));
+}
+
+.koalaFamilyHead,
+.koalaFamilyBodyCore,
+.koalaFamilyBelly,
+.koalaFamilyEar,
+.koalaFamilyArm,
+.koalaFamilyFoot,
+.koalaFamilyNose,
+.koalaFamilyEye,
+.koalaFamilyBlush {
+  position: absolute;
+  display: block;
+}
+
+.koalaFamilyEar {
+  top: 7%;
+  width: 30%;
+  height: 30%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, #f6d5e5 0 35%, #b9bbc7 36% 62%, #8f939f 63% 100%);
+  box-shadow: inset 0 -4px 10px rgba(0,0,0,.12);
+}
+
+.koalaFamilyEar.is-left { left: 8%; }
+.koalaFamilyEar.is-right { right: 8%; }
+
+.koalaFamilyHead {
+  left: 50%;
+  top: 14%;
+  width: 66%;
+  height: 46%;
+  transform: translateX(-50%);
+  border-radius: 48% 48% 44% 44%;
+  background: radial-gradient(circle at 35% 28%, rgba(255,255,255,.58), transparent 24%), linear-gradient(180deg, #d8dae2 0%, #c4c7d2 62%, #b4b8c4 100%);
+  box-shadow: inset 0 -8px 14px rgba(139, 143, 155, .22);
+}
+
+.koalaFamilyEye {
+  top: 42%;
+  width: 5.5%;
+  height: 9.5%;
+  border-radius: 999px;
+  background: #3b3440;
+  box-shadow: 0 0 0 2px rgba(255,255,255,.16);
+}
+
+.koalaFamilyEye.is-left { left: 32%; }
+.koalaFamilyEye.is-right { right: 32%; }
+
+.koalaFamilyBlush {
+  top: 50%;
+  width: 10%;
+  height: 7%;
+  border-radius: 50%;
+  background: rgba(255, 157, 186, .38);
+  filter: blur(1px);
+}
+
+.koalaFamilyBlush.is-left { left: 18%; }
+.koalaFamilyBlush.is-right { right: 18%; }
+
+.koalaFamilyNose {
+  left: 50%;
+  top: 42%;
+  width: 18%;
+  height: 24%;
+  transform: translateX(-50%);
+  border-radius: 48% 48% 52% 52%;
+  background: linear-gradient(180deg, #64506c 0%, #4f3b58 60%, #3f2c47 100%);
+  box-shadow: inset 0 3px 4px rgba(255,255,255,.2);
+}
+
+.koalaFamilyBodyCore {
+  left: 50%;
+  bottom: 15%;
+  width: 58%;
+  height: 40%;
+  transform: translateX(-50%);
+  border-radius: 48% 48% 42% 42%;
+  background: linear-gradient(180deg, #cfd2db 0%, #bcc0cc 65%, #afb4c1 100%);
+  box-shadow: inset 0 -8px 14px rgba(132,137,150,.18);
+}
+
+.koalaFamilyBelly {
+  left: 50%;
+  bottom: 20%;
+  width: 34%;
+  height: 23%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 35%, rgba(255,255,255,.92), rgba(249,248,252,.86) 50%, rgba(235,237,243,.92) 100%);
+}
+
+.koalaFamilyArm {
+  top: 54%;
+  width: 18%;
+  height: 20%;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #c9ccd6, #b7bbc8);
+  transform-origin: top center;
+  box-shadow: inset 0 -4px 10px rgba(0,0,0,.09);
+}
+
+.koalaFamilyArm.is-left {
+  left: 14%;
+  transform: rotate(24deg);
+}
+
+.koalaFamilyArm.is-right {
+  right: 14%;
+  transform: rotate(-24deg);
+}
+
+.koalaFamilyFoot {
+  bottom: 8%;
+  width: 18%;
+  height: 12%;
+  border-radius: 48% 48% 60% 60%;
+  background: linear-gradient(180deg, #bcc0cc, #a8aebc);
+  box-shadow: inset 0 -3px 8px rgba(0,0,0,.10);
+}
+
+.koalaFamilyFoot.is-left { left: 26%; }
+.koalaFamilyFoot.is-right { right: 26%; }
+
+.koalaFamilyHeldHeart {
+  position: absolute;
+  left: 50%;
+  top: 58%;
+  z-index: 4;
+  color: #f43f5e;
+  font: 900 clamp(26px, 3.1vw, 44px)/1 Arial, sans-serif;
+  font-style: normal;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(.3);
+  text-shadow: 0 2px 0 #fff, 0 7px 18px rgba(244,63,94,.32);
+  animation: sfkKoalaHeldHeart 14s ease-in-out infinite;
+}
+
+.koalaFamilyHeartPose {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(180px, 28vh, 300px);
+  z-index: 5;
+  opacity: 0;
+  transform: translateX(-50%) scale(.2) rotate(-8deg);
+  animation: sfkKoalaFamilyHeartPose 14s cubic-bezier(.34,1.5,.5,1) infinite;
+}
+
+.koalaFamilyHeartPose span {
+  display: block;
+  color: #ef476f;
+  font: 900 clamp(112px, 16vw, 220px)/.8 Arial, sans-serif;
+  filter: drop-shadow(0 7px 0 rgba(255,255,255,.72)) drop-shadow(0 18px 28px rgba(239,71,111,.24));
+}
+
+.koalaFamilyLoveBurst {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+}
+
+.koalaFamilyLoveBurst i {
+  --heart-x: 50%;
+  --heart-y: 72%;
+  --heart-drift: 0px;
+  position: absolute;
+  left: var(--heart-x);
+  top: var(--heart-y);
+  color: #f43f5e;
+  font: 900 clamp(28px, 3vw, 44px)/1 Arial, sans-serif;
+  font-style: normal;
+  opacity: 0;
+  text-shadow: 0 2px 0 rgba(255,255,255,.86);
+  animation: sfkKoalaLoveFloat 14s ease-out infinite;
+}
+
+.koalaFamilyLoveBurst i:nth-child(1) { --heart-x: 35%; --heart-y: 68%; --heart-drift: -44px; animation-delay: 0s; }
+.koalaFamilyLoveBurst i:nth-child(2) { --heart-x: 41%; --heart-y: 66%; --heart-drift: -18px; animation-delay: .22s; }
+.koalaFamilyLoveBurst i:nth-child(3) { --heart-x: 47%; --heart-y: 70%; --heart-drift: -8px; animation-delay: .46s; }
+.koalaFamilyLoveBurst i:nth-child(4) { --heart-x: 53%; --heart-y: 67%; --heart-drift: 10px; animation-delay: .16s; }
+.koalaFamilyLoveBurst i:nth-child(5) { --heart-x: 59%; --heart-y: 69%; --heart-drift: 24px; animation-delay: .55s; }
+.koalaFamilyLoveBurst i:nth-child(6) { --heart-x: 65%; --heart-y: 65%; --heart-drift: 42px; animation-delay: .34s; }
+.koalaFamilyLoveBurst i:nth-child(7) { --heart-x: 45%; --heart-y: 63%; --heart-drift: -26px; animation-delay: .72s; }
+.koalaFamilyLoveBurst i:nth-child(8) { --heart-x: 56%; --heart-y: 62%; --heart-drift: 22px; animation-delay: .82s; }
+
+@keyframes sfkKoalaFamilyWalk {
+  0%, 4% {
+    opacity: 0;
+    transform: translate3d(var(--koala-start-x), 0, 0) rotate(-4deg) scale(.92);
+  }
+  8% { opacity: 1; }
+  18% { transform: translate3d(var(--koala-mid-x), -6px, 0) rotate(3deg) scale(.96); }
+  30% { transform: translate3d(var(--koala-near-x), 0, 0) rotate(-2deg) scale(1); }
+  42% { transform: translate3d(var(--koala-arrive-x), -6px, 0) rotate(2deg) scale(1); }
+  49%, 78% {
+    opacity: 1;
+    transform: translate3d(var(--koala-pose-x), 0, 0) rotate(0deg) scale(1.03);
+  }
+  82% { transform: translate3d(var(--koala-pose-x), -10px, 0) rotate(0deg) scale(1.06); }
+  88% { opacity: 1; transform: translate3d(var(--koala-leave-x), 0, 0) scale(1); }
+  100% { opacity: 0; transform: translate3d(var(--koala-exit-x), 0, 0) rotate(3deg) scale(.94); }
+}
+
+@keyframes sfkKoalaStepBob {
+  from { transform: translateY(0) rotate(-2deg); }
+  to { transform: translateY(-8px) rotate(2deg); }
+}
+
+@keyframes sfkKoalaHeldHeart {
+  0%, 43%, 88%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(.3); }
+  50%, 79% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  61% { opacity: 1; transform: translate(-50%, -50%) scale(1.18); }
+}
+
+@keyframes sfkKoalaFamilyHeartPose {
+  0%, 43%, 90%, 100% { opacity: 0; transform: translateX(-50%) scale(.2) rotate(-8deg); }
+  49% { opacity: .92; transform: translateX(-50%) scale(.9) rotate(3deg); }
+  56%, 76% { opacity: 1; transform: translateX(-50%) scale(1) rotate(0deg); }
+  66% { opacity: 1; transform: translateX(-50%) scale(1.12) rotate(0deg); }
+  84% { opacity: .9; transform: translateX(-50%) scale(.88) rotate(2deg); }
+}
+
+@keyframes sfkKoalaLoveFloat {
+  0%, 47% { opacity: 0; transform: translate3d(0, 0, 0) scale(.4) rotate(0deg); }
+  52% { opacity: .95; transform: translate3d(0, -10px, 0) scale(1) rotate(-5deg); }
+  68% { opacity: .9; transform: translate3d(var(--heart-drift), -145px, 0) scale(.88) rotate(8deg); }
+  82% { opacity: 0; transform: translate3d(var(--heart-drift), -235px, 0) scale(.55) rotate(-8deg); }
+  100% { opacity: 0; }
+}
+
+@keyframes sfkKoalaGlow {
+  0%, 40%, 92%, 100% { opacity: 0; transform: translateX(-50%) scale(.75); }
+  50%, 80% { opacity: 1; transform: translateX(-50%) scale(1); }
+}
+
+.homepageEffectLayer.is-koala-family .koalaFamilyFigure {
+  animation: sfkKoalaStepBob .46s ease-in-out infinite alternate;
+}
+
+@media (max-width: 1000px) {
+  .koalaFamilyWalker.is-parent-left { --koala-pose-x: -190px; }
+  .koalaFamilyWalker.is-child-left { --koala-pose-x: -74px; }
+  .koalaFamilyWalker.is-child-right { --koala-pose-x: 74px; }
+  .koalaFamilyWalker.is-parent-right { --koala-pose-x: 190px; }
+}
+
+@media (max-width: 700px) {
+  .koalaFamilyWalker {
+    bottom: 8vh;
+    --koala-size: clamp(94px, 24vw, 142px);
+  }
+  .koalaFamilyWalker.is-child-left,
+  .koalaFamilyWalker.is-child-right { bottom: 7.2vh; }
+  .koalaFamilyHeartPose { bottom: 24vh; }
+  .koalaFamilyWalker.is-parent-left { --koala-pose-x: -118px; --koala-size: clamp(118px, 28vw, 166px); }
+  .koalaFamilyWalker.is-child-left { --koala-pose-x: -42px; }
+  .koalaFamilyWalker.is-child-right { --koala-pose-x: 42px; }
+  .koalaFamilyWalker.is-parent-right { --koala-pose-x: 118px; --koala-size: clamp(118px, 28vw, 166px); }
+  .koalaFamilyLoveBurst i:nth-child(n) { top: 64%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .homepageEffectLayer.is-koala-family .koalaFamilyWalker,
+  .homepageEffectLayer.is-koala-family .koalaFamilyHeldHeart,
+  .homepageEffectLayer.is-koala-family .koalaFamilyHeartPose,
+  .homepageEffectLayer.is-koala-family .koalaFamilyLoveBurst i,
+  .homepageEffectLayer.is-koala-family .koalaFamilySoftGlow,
+  .homepageEffectLayer.is-koala-family .koalaFamilyFigure {
+    animation-duration: 24s !important;
+  }
+}
+
 /* =========================================================
    v394 HOMEPAGE EFFECT — STRICT NO-DISMISS VISUAL LOCK
    hidden must beat the button's normal display:grid rule on

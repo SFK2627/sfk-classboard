@@ -283,6 +283,7 @@
       "snow",
       "confetti",
       "hearts",
+      "koala-family",
       "stars",
       "matrix",
       "bubbles",
