@@ -1205,15 +1205,35 @@ function fitTodayScheduleSubject(element) {
     // at the intended large size; shrinking happens only when genuinely needed.
     element.style.removeProperty("font-size");
     const normalSize = parseFloat(window.getComputedStyle(element).fontSize) || 18;
-    const available = Math.max(0, Math.floor(element.clientWidth) - 5); // glyph safety room
+    const available = Math.max(0, Math.floor(element.clientWidth) - 3); // tiny glyph safety room
     if (!available) return;
 
-    const naturalWidth = Math.ceil(element.scrollWidth || 0);
-    if (naturalWidth <= available) return;
+    // v391: Do NOT use element.scrollWidth here. A block-level subject-name has
+    // scrollWidth >= clientWidth even when a short title fits perfectly, so the
+    // old check falsely treated every subject as overflowing and shrank it.
+    // Measure the actual rendered title/anchor content instead.
+    const measureNaturalWidth = () => {
+      const link = element.querySelector(".schedule-text-link");
+      if (link) return Math.ceil(link.getBoundingClientRect().width || 0);
+
+      try {
+        const range = document.createRange();
+        range.selectNodeContents(element);
+        const width = range.getBoundingClientRect().width || 0;
+        range.detach?.();
+        return Math.ceil(width);
+      } catch (_) {
+        return Math.ceil(element.getBoundingClientRect().width || 0);
+      }
+    };
+
+    const naturalWidth = measureNaturalWidth();
+    // Short/normal names keep the ORIGINAL large CSS font untouched.
+    if (!naturalWidth || naturalWidth <= available) return;
 
     // Find the largest font size that keeps the COMPLETE subject on one line.
-    // A low floor is allowed only for exceptionally long configured names.
-    const minimumSize = Math.max(8.5, normalSize * 0.48);
+    // Only genuinely long names are reduced.
+    const minimumSize = Math.max(9, normalSize * 0.50);
     let low = minimumSize;
     let high = normalSize;
     let best = minimumSize;
@@ -1221,7 +1241,7 @@ function fitTodayScheduleSubject(element) {
     for (let i = 0; i < 16; i += 1) {
       const mid = (low + high) / 2;
       element.style.setProperty("font-size", `${mid}px`, "important");
-      const width = Math.ceil(element.scrollWidth || 0);
+      const width = measureNaturalWidth();
       if (width <= available) {
         best = mid;
         low = mid;
@@ -1232,13 +1252,13 @@ function fitTodayScheduleSubject(element) {
 
     element.style.setProperty("font-size", `${Math.floor(best * 10) / 10}px`, "important");
 
-    // Extreme edge-case fallback: keep stepping down slightly until the final
-    // glyph has breathing room instead of clipping at the right edge.
+    // Extreme edge-case fallback: step down only while the actual title content
+    // remains wider than the available title lane.
     let guard = 0;
-    while (element.scrollWidth > available && guard < 12) {
+    while (measureNaturalWidth() > available && guard < 12) {
       const current = parseFloat(window.getComputedStyle(element).fontSize) || best;
-      if (current <= 7.5) break;
-      element.style.setProperty("font-size", `${Math.max(7.5, current - 0.4).toFixed(1)}px`, "important");
+      if (current <= 8) break;
+      element.style.setProperty("font-size", `${Math.max(8, current - 0.4).toFixed(1)}px`, "important");
       guard += 1;
     }
   };

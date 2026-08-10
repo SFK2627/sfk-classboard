@@ -26620,3 +26620,19 @@ html.sfkHomepageSpiderGlitchActive body > *:not(script):not(style):not(#homepage
     -webkit-backdrop-filter: blur(10px) brightness(.46) saturate(.68) !important;
   }
 }
+
+
+/* =========================================================
+   v391 TODAY'S SCHEDULE — RESTORE LARGE SUBJECT FONT
+   Desktop only. Keep the established large subject typography.
+   JS now measures the actual rendered title content correctly,
+   so this size is reduced ONLY when a long subject truly overflows.
+========================================================= */
+@media (min-width: 901px) {
+  .scheduleCard .schedule-item .subject-name,
+  #scheduleList .schedule-item .subject-name {
+    font-size: clamp(1.10rem, 1.18vw, 1.30rem) !important;
+    line-height: 1.02 !important;
+    font-weight: 950 !important;
+  }
+}
