@@ -118,6 +118,7 @@ function initClassBoard() {
   initBirthdayYearModal();
   initDesktopShhhMode();
   initDesktopFloatClock();
+  initHomepageEffectSystem();
 
   const audioOverlay = document.getElementById("audioStartOverlay");
   if (audioOverlay) {
@@ -162,6 +163,7 @@ function initClassBoard() {
   window.addEventListener("storage", (event) => {
     if (event.key === "sfkClassBoardAnnouncementUpdatedAt") startAnnouncementFastRefreshBurst("admin-saved");
     if (event.key === "sfkClassBoardPageLockUpdatedAt") startAnnouncementFastRefreshBurst("page-lock-updated");
+    if (event.key === "sfkClassBoardHomepageEffectUpdatedAt") loadClassBoard();
   });
   try {
     if (typeof BroadcastChannel !== "undefined") {
@@ -169,6 +171,7 @@ function initClassBoard() {
       channel.addEventListener("message", (event) => {
         if (event.data?.type === "announcement-updated") startAnnouncementFastRefreshBurst("announcement-broadcast");
         if (event.data?.type === "page-lock-updated") startAnnouncementFastRefreshBurst("page-lock-broadcast");
+        if (event.data?.type === "homepage-effect-updated") loadClassBoard();
       });
     }
   } catch (error) {
@@ -1168,11 +1171,89 @@ function autoFitPeriodMetaLine(element) {
 
 let sfkMarqueeResizeTimer = 0;
 
+function fitTodayScheduleSubject(element) {
+  if (!element) return;
+
+  // Keep the established phone layout untouched. This fix targets the
+  // desktop/tablet Today's Schedule cards where the title lane is one line.
+  if (!window.matchMedia("(min-width: 901px)").matches) {
+    element.style.removeProperty("font-size");
+    return;
+  }
+
+  // A schedule row is rebuilt on every render, but clean up any old marquee
+  // state as a safeguard when live updates or resizes reuse the same node.
+  element.classList.remove("sfk-marquee-active");
+  element.style.removeProperty("--sfk-marquee-distance");
+  element.style.removeProperty("--sfk-marquee-duration");
+
+  const oldTrack = Array.from(element.children || []).find((child) =>
+    child.classList?.contains("sfk-marquee-track")
+  );
+  if (oldTrack) {
+    oldTrack.getAnimations?.().forEach((animation) => {
+      try { animation.cancel(); } catch (_) {}
+    });
+    while (oldTrack.firstChild) element.insertBefore(oldTrack.firstChild, oldTrack);
+    oldTrack.remove();
+  }
+
+  const fit = () => {
+    if (!element.isConnected || !window.matchMedia("(min-width: 901px)").matches) return;
+
+    // Always start from the normal CSS size. Short names such as Filipino stay
+    // at the intended large size; shrinking happens only when genuinely needed.
+    element.style.removeProperty("font-size");
+    const normalSize = parseFloat(window.getComputedStyle(element).fontSize) || 18;
+    const available = Math.max(0, Math.floor(element.clientWidth) - 5); // glyph safety room
+    if (!available) return;
+
+    const naturalWidth = Math.ceil(element.scrollWidth || 0);
+    if (naturalWidth <= available) return;
+
+    // Find the largest font size that keeps the COMPLETE subject on one line.
+    // A low floor is allowed only for exceptionally long configured names.
+    const minimumSize = Math.max(8.5, normalSize * 0.48);
+    let low = minimumSize;
+    let high = normalSize;
+    let best = minimumSize;
+
+    for (let i = 0; i < 16; i += 1) {
+      const mid = (low + high) / 2;
+      element.style.setProperty("font-size", `${mid}px`, "important");
+      const width = Math.ceil(element.scrollWidth || 0);
+      if (width <= available) {
+        best = mid;
+        low = mid;
+      } else {
+        high = mid;
+      }
+    }
+
+    element.style.setProperty("font-size", `${Math.floor(best * 10) / 10}px`, "important");
+
+    // Extreme edge-case fallback: keep stepping down slightly until the final
+    // glyph has breathing room instead of clipping at the right edge.
+    let guard = 0;
+    while (element.scrollWidth > available && guard < 12) {
+      const current = parseFloat(window.getComputedStyle(element).fontSize) || best;
+      if (current <= 7.5) break;
+      element.style.setProperty("font-size", `${Math.max(7.5, current - 0.4).toFixed(1)}px`, "important");
+      guard += 1;
+    }
+  };
+
+  window.requestAnimationFrame(() => window.requestAnimationFrame(fit));
+  window.setTimeout(fit, 120);
+  window.setTimeout(fit, 360);
+  document.fonts?.ready?.then(fit).catch(() => {});
+}
+
 function setupTodayScheduleSubjectMarquees() {
   if (!window.matchMedia("(min-width: 901px)").matches) return;
 
   document.querySelectorAll("#scheduleList .subject-name").forEach((element) => {
-    setupSingleLineMarquee(element, { pixelsPerSecond: 10 });
+    fitTodayScheduleSubject(element);
   });
 }
 
@@ -1558,6 +1639,713 @@ function startSfkHeadingRotation() {
   window.addEventListener("resize", fitSfkDashboardHeading, { passive: true });
 }
 
+/* =========================================================
+   v381 HOMEPAGE LIVE DISPLAY / EFFECTS
+   Admin-controlled, full-screen, dismissible per page view,
+   with Firestore real-time sync and normal 2-second fallback.
+========================================================= */
+const HOMEPAGE_EFFECT_KEYS = new Set([
+  "HomepageEffectEnabled",
+  "HomepageEffectMode",
+  "HomepageEffectTitle",
+  "HomepageEffectMessage",
+  "HomepageEffectImage",
+  "HomepageEffectImages",
+  "HomepageEffectDismissible",
+  "HomepageEffectAlertSound",
+  "HomepageEffectSpiderSound",
+  "HomepageEffectUpdatedAt"
+]);
+
+let homepageEffectUnsubscribe = null;
+let homepageEffectListenAttempts = 0;
+let homepageEffectCurrentSignature = "";
+let homepageEffectDismissedSignature = "";
+let homepageEffectRenderToken = 0;
+let homepageEffectParticleMode = "";
+let homepageEffectAmbientMode = "";
+let homepageEffectLatestUpdatedAt = 0;
+let homepageEffectGalleryIndex = 0;
+let homepageEffectGallerySources = [];
+let homepageEffectGalleryScrollTimer = 0;
+let homepageAlertAudioContext = null;
+let homepageAlertSoundTimer = 0;
+let homepageAlertSoundActive = false;
+let homepageAlertSoundSignature = "";
+let homepageAlertAudioPrimed = false;
+const homepageAlertOscillators = new Set();
+const HOMEPAGE_SPIDER_SOUND_URL = "https://audio.jukehost.co.uk/019fe9f5-214f-72a6-b974-320080180160";
+let homepageSpiderSoundAudio = null;
+let homepageSpiderSoundWanted = false;
+let homepageSpiderSoundSignature = "";
+let homepageSpiderSoundPrimed = false;
+
+function initHomepageEffectSystem() {
+  ensureHomepageEffectLayer();
+  primeHomepageAlertAudioOnInteraction();
+  primeHomepageSpiderSoundOnInteraction();
+  startHomepageEffectRealtimeListener();
+  window.addEventListener("beforeunload", () => {
+    try { homepageEffectUnsubscribe?.(); } catch (error) {}
+    homepageEffectUnsubscribe = null;
+  }, { once: true });
+}
+
+function startHomepageEffectRealtimeListener() {
+  if (homepageEffectUnsubscribe) return;
+  const db = window.SFK_CLASSBOARD_FIREBASE_DB;
+  if (!db) {
+    homepageEffectListenAttempts += 1;
+    if (homepageEffectListenAttempts <= 30) {
+      window.setTimeout(startHomepageEffectRealtimeListener, Math.min(2000, 120 + homepageEffectListenAttempts * 80));
+    }
+    return;
+  }
+
+  try {
+    homepageEffectUnsubscribe = db.collection("settings").onSnapshot((snapshot) => {
+      const settings = {};
+      snapshot.forEach((doc) => {
+        const data = doc.data() || {};
+        const key = String(data.Key || doc.id || "");
+        if (!HOMEPAGE_EFFECT_KEYS.has(key)) return;
+        settings[key] = data.Value ?? "";
+      });
+      applyHomepageEffectSettings(settings);
+    }, (error) => {
+      console.warn("Homepage effect real-time listener unavailable; dashboard refresh remains active.", error);
+      try { homepageEffectUnsubscribe?.(); } catch (unsubscribeError) {}
+      homepageEffectUnsubscribe = null;
+    });
+  } catch (error) {
+    console.warn("Homepage effect listener setup failed:", error);
+  }
+}
+
+function normalizeHomepageEffectImageList(value, fallback = "") {
+  const normalizeItem = (item) => {
+    const raw = String(item || "").trim();
+    if (!raw) return "";
+    if (raw.startsWith("sfk-media://")) return raw.slice(0, 360);
+    if (/^https:\/\//i.test(raw) || /^data:image\//i.test(raw) || /^blob:/i.test(raw)) return raw.slice(0, 1200);
+    return "";
+  };
+
+  let list = [];
+  const raw = String(value || "").trim();
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) list = parsed;
+    } catch (error) {
+      list = raw.split(/\r?\n/g);
+    }
+  }
+  if (fallback) list.push(fallback);
+
+  const seen = new Set();
+  const result = [];
+  list.forEach((item) => {
+    const safe = normalizeItem(item);
+    if (!safe || seen.has(safe) || result.length >= 12) return;
+    seen.add(safe);
+    result.push(safe);
+  });
+  return result;
+}
+
+function normalizeHomepageEffectConfig(settings = {}) {
+  const allowedModes = new Set([
+    "normal", "drizzle", "heavy-rain", "thunderstorm", "multiverse", "picture", "alert",
+    "spider-glitch", "comic-web", "portal-rift",
+    "fog", "snow", "confetti", "hearts", "stars", "matrix", "bubbles", "fireflies", "neon-pulse",
+    "aurora", "galaxy", "meteors", "laser-grid", "crt", "pixel-storm", "prism", "petals", "gold-sparkle"
+  ]);
+  const rawMode = String(settings.HomepageEffectMode || "normal").trim().toLowerCase();
+  const mode = allowedModes.has(rawMode) ? rawMode : "normal";
+  const enabled = String(settings.HomepageEffectEnabled || "").trim().toUpperCase() === "YES" && mode !== "normal";
+  const title = String(settings.HomepageEffectTitle || "").trim().slice(0, 100);
+  const message = String(settings.HomepageEffectMessage || "").trim().slice(0, 700);
+  const image = String(settings.HomepageEffectImage || "").trim();
+  const images = normalizeHomepageEffectImageList(settings.HomepageEffectImages, image);
+  const dismissible = String(settings.HomepageEffectDismissible || "YES").trim().toUpperCase() !== "NO";
+  const alertSound = String(settings.HomepageEffectAlertSound || "YES").trim().toUpperCase() !== "NO";
+  const spiderSound = String(settings.HomepageEffectSpiderSound || "YES").trim().toUpperCase() !== "NO";
+  const updatedAt = String(settings.HomepageEffectUpdatedAt || "").trim();
+  const signature = updatedAt || [enabled ? "1" : "0", mode, title, message, images.join("~"), dismissible ? "1" : "0", alertSound ? "1" : "0", spiderSound ? "1" : "0"].join("|");
+  return { enabled, mode, title, message, image: images[0] || "", images, dismissible, alertSound, spiderSound, updatedAt, signature };
+}
+
+function getHomepageAlertAudioContext() {
+  if (homepageAlertAudioContext) return homepageAlertAudioContext;
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return null;
+  try {
+    homepageAlertAudioContext = new AudioContextClass();
+  } catch (error) {
+    homepageAlertAudioContext = null;
+  }
+  return homepageAlertAudioContext;
+}
+
+function primeHomepageAlertAudioOnInteraction() {
+  if (homepageAlertAudioPrimed) return;
+  homepageAlertAudioPrimed = true;
+  const prime = async () => {
+    document.removeEventListener("pointerdown", prime, true);
+    document.removeEventListener("keydown", prime, true);
+    const context = getHomepageAlertAudioContext();
+    if (!context) return;
+    try {
+      if (context.state === "suspended") await context.resume();
+    } catch (error) {}
+    if (homepageAlertSoundActive && context.state === "running" && !homepageAlertSoundTimer) {
+      playHomepageAlertSirenCycle();
+    }
+  };
+  document.addEventListener("pointerdown", prime, { capture: true, passive: true });
+  document.addEventListener("keydown", prime, { capture: true });
+}
+
+function stopHomepageAlertSound() {
+  homepageAlertSoundActive = false;
+  homepageAlertSoundSignature = "";
+  if (homepageAlertSoundTimer) {
+    window.clearTimeout(homepageAlertSoundTimer);
+    homepageAlertSoundTimer = 0;
+  }
+  homepageAlertOscillators.forEach((oscillator) => {
+    try { oscillator.stop(); } catch (error) {}
+  });
+  homepageAlertOscillators.clear();
+}
+
+function createHomepageAlertTone(context, startAt, duration, startFrequency, endFrequency, gainValue = .04, type = "triangle") {
+  const gain = context.createGain();
+  const oscillator = context.createOscillator();
+  oscillator.type = type;
+  oscillator.frequency.setValueAtTime(Math.max(35, startFrequency), startAt);
+  if (endFrequency && endFrequency !== startFrequency) {
+    oscillator.frequency.exponentialRampToValueAtTime(Math.max(35, endFrequency), startAt + duration);
+  }
+
+  gain.gain.setValueAtTime(.0001, startAt);
+  gain.gain.exponentialRampToValueAtTime(Math.max(.001, gainValue), startAt + Math.min(.08, duration * .18));
+  gain.gain.setValueAtTime(Math.max(.001, gainValue * .86), startAt + Math.max(.09, duration * .72));
+  gain.gain.exponentialRampToValueAtTime(.0001, startAt + duration);
+
+  oscillator.connect(gain);
+  gain.connect(context.destination);
+  homepageAlertOscillators.add(oscillator);
+  oscillator.addEventListener("ended", () => homepageAlertOscillators.delete(oscillator), { once: true });
+  oscillator.start(startAt);
+  oscillator.stop(startAt + duration + .03);
+}
+
+function createHomepageAlertDrone(context, startAt, duration) {
+  createHomepageAlertTone(context, startAt, duration, 82.41, 78.2, .018, "sine");
+  createHomepageAlertTone(context, startAt, duration, 123.47, 116.54, .010, "triangle");
+}
+
+async function playHomepageAlertSirenCycle() {
+  if (!homepageAlertSoundActive) return;
+  const context = getHomepageAlertAudioContext();
+  if (!context) return;
+  try {
+    if (context.state === "suspended") await context.resume();
+  } catch (error) {}
+  if (!homepageAlertSoundActive || context.state !== "running") return;
+
+  // Original ClassBoard ominous civil-defense alarm: a low drone with broad, slow air-raid-style wails.
+  // The mood is intentionally cinematic, but this is not a copy of any film, agency, or broadcast recording.
+  const now = context.currentTime + .04;
+
+  // Dark low-frequency bed.
+  createHomepageAlertTone(context, now, 6.6, 55.00, 52.00, .016, "sine");
+  createHomepageAlertTone(context, now, 6.6, 82.41, 77.78, .012, "triangle");
+
+  // First long rising/falling warning wail with a lightly detuned partner for a distant mechanical feel.
+  createHomepageAlertTone(context, now + .10, 2.05, 155.56, 430.00, .043, "sawtooth");
+  createHomepageAlertTone(context, now + .10, 2.05, 161.20, 445.00, .015, "triangle");
+  createHomepageAlertTone(context, now + 2.02, 1.75, 430.00, 176.00, .044, "sawtooth");
+  createHomepageAlertTone(context, now + 2.02, 1.75, 445.00, 182.00, .014, "triangle");
+
+  // Second shorter wail, slightly higher, then a low horn-like tail.
+  createHomepageAlertTone(context, now + 3.95, 1.42, 205.00, 515.00, .038, "triangle");
+  createHomepageAlertTone(context, now + 5.22, 1.18, 515.00, 205.00, .036, "triangle");
+  createHomepageAlertTone(context, now + 5.34, .95, 103.83, 92.50, .018, "sine");
+
+  if (homepageAlertSoundTimer) window.clearTimeout(homepageAlertSoundTimer);
+  homepageAlertSoundTimer = window.setTimeout(() => {
+    homepageAlertSoundTimer = 0;
+    playHomepageAlertSirenCycle();
+  }, 8200);
+}
+
+function startHomepageAlertSound(signature) {
+  const nextSignature = String(signature || "alert");
+  if (homepageAlertSoundActive && homepageAlertSoundSignature === nextSignature) return;
+  stopHomepageAlertSound();
+  homepageAlertSoundActive = true;
+  homepageAlertSoundSignature = nextSignature;
+  playHomepageAlertSirenCycle();
+}
+
+function getHomepageSpiderSoundAudio() {
+  if (homepageSpiderSoundAudio) return homepageSpiderSoundAudio;
+  try {
+    const audio = new Audio(HOMEPAGE_SPIDER_SOUND_URL);
+    audio.loop = true;
+    audio.preload = "auto";
+    audio.volume = .58;
+    audio.playsInline = true;
+    homepageSpiderSoundAudio = audio;
+  } catch (error) {
+    homepageSpiderSoundAudio = null;
+  }
+  return homepageSpiderSoundAudio;
+}
+
+async function tryPlayHomepageSpiderSound() {
+  if (!homepageSpiderSoundWanted) return;
+  const audio = getHomepageSpiderSoundAudio();
+  if (!audio) return;
+  try {
+    if (audio.paused) await audio.play();
+  } catch (error) {
+    // Browsers may require a user gesture before remote audio can autoplay.
+  }
+}
+
+function primeHomepageSpiderSoundOnInteraction() {
+  if (homepageSpiderSoundPrimed) return;
+  homepageSpiderSoundPrimed = true;
+  const resume = () => {
+    if (homepageSpiderSoundWanted) tryPlayHomepageSpiderSound();
+  };
+  document.addEventListener("pointerdown", resume, { capture: true, passive: true });
+  document.addEventListener("keydown", resume, { capture: true });
+}
+
+function startHomepageSpiderSound(signature) {
+  homepageSpiderSoundWanted = true;
+  homepageSpiderSoundSignature = String(signature || "spider");
+  tryPlayHomepageSpiderSound();
+}
+
+function stopHomepageSpiderSound() {
+  homepageSpiderSoundWanted = false;
+  homepageSpiderSoundSignature = "";
+  const audio = homepageSpiderSoundAudio;
+  if (!audio) return;
+  try {
+    audio.pause();
+    audio.currentTime = 0;
+  } catch (error) {}
+}
+
+function ensureHomepageEffectLayer() {
+  let layer = document.getElementById("homepageEffectLayer");
+  if (layer) return layer;
+
+  layer = document.createElement("div");
+  layer.id = "homepageEffectLayer";
+  layer.className = "homepageEffectLayer";
+  layer.hidden = true;
+  layer.setAttribute("aria-hidden", "true");
+  layer.innerHTML = `
+    <div class="homepageEffectBackdrop" aria-hidden="true"></div>
+    <div class="homepageEffectRain" aria-hidden="true"></div>
+    <div class="homepageEffectMist" aria-hidden="true"></div>
+    <div class="homepageEffectLightning" aria-hidden="true"></div>
+    <div class="homepageEffectMultiverse" aria-hidden="true">
+      <span></span><span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div class="homepageEffectParticles" aria-hidden="true"></div>
+    <div class="homepageEffectContent" role="status" aria-live="polite">
+      <div class="homepageEffectWeatherMessage">
+        <strong id="homepageEffectWeatherTitle"></strong>
+        <span id="homepageEffectWeatherMessage"></span>
+      </div>
+      <figure class="homepageEffectPicturePanel">
+        <button id="homepageEffectGalleryPrev" class="homepageEffectGalleryNav is-prev" type="button" aria-label="Previous picture">‹</button>
+        <div id="homepageEffectGalleryViewport" class="homepageEffectGalleryViewport" tabindex="0" aria-label="ClassBoard picture gallery">
+          <div id="homepageEffectGalleryTrack" class="homepageEffectGalleryTrack"></div>
+        </div>
+        <button id="homepageEffectGalleryNext" class="homepageEffectGalleryNav is-next" type="button" aria-label="Next picture">›</button>
+        <div id="homepageEffectGalleryCount" class="homepageEffectGalleryCount" aria-live="polite"></div>
+        <figcaption id="homepageEffectPictureCaption"></figcaption>
+      </figure>
+      <section class="homepageEffectAlertPanel" role="alert">
+        <div class="homepageEffectAlertIcon">⚠</div>
+        <p class="homepageEffectAlertEyebrow">SFK CLASSBOARD ALERT</p>
+        <h2 id="homepageEffectAlertTitle">Important Notice</h2>
+        <p id="homepageEffectAlertMessage"></p>
+      </section>
+    </div>
+    <button id="homepageEffectClose" class="homepageEffectClose" type="button" aria-label="Dismiss display effect">×</button>
+  `;
+  document.body.appendChild(layer);
+
+  layer.querySelector("#homepageEffectClose")?.addEventListener("click", dismissHomepageEffectForView);
+  layer.querySelector("#homepageEffectGalleryPrev")?.addEventListener("click", () => moveHomepageEffectGallery(-1));
+  layer.querySelector("#homepageEffectGalleryNext")?.addEventListener("click", () => moveHomepageEffectGallery(1));
+  const galleryViewport = layer.querySelector("#homepageEffectGalleryViewport");
+  galleryViewport?.addEventListener("scroll", () => {
+    if (homepageEffectGalleryScrollTimer) window.clearTimeout(homepageEffectGalleryScrollTimer);
+    homepageEffectGalleryScrollTimer = window.setTimeout(syncHomepageEffectGalleryIndexFromScroll, 70);
+  }, { passive: true });
+  galleryViewport?.addEventListener("keydown", (event) => {
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      moveHomepageEffectGallery(-1);
+    } else if (event.key === "ArrowRight") {
+      event.preventDefault();
+      moveHomepageEffectGallery(1);
+    }
+  });
+  document.addEventListener("keydown", (event) => {
+    if (layer.hidden) return;
+    if (event.key === "Escape") {
+      const close = layer.querySelector("#homepageEffectClose");
+      if (!close || close.hidden) return;
+      dismissHomepageEffectForView();
+      return;
+    }
+    if (layer.classList.contains("is-picture") && event.key === "ArrowLeft") moveHomepageEffectGallery(-1);
+    if (layer.classList.contains("is-picture") && event.key === "ArrowRight") moveHomepageEffectGallery(1);
+  });
+  return layer;
+}
+
+function dismissHomepageEffectForView() {
+  if (!homepageEffectCurrentSignature) return;
+  homepageEffectDismissedSignature = homepageEffectCurrentSignature;
+  hideHomepageEffectLayer();
+}
+
+function hideHomepageEffectLayer() {
+  const layer = document.getElementById("homepageEffectLayer");
+  if (!layer) return;
+  homepageEffectRenderToken += 1;
+  layer.hidden = true;
+  layer.setAttribute("aria-hidden", "true");
+  layer.className = "homepageEffectLayer";
+  document.documentElement.classList.remove("sfkHomepageEffectActive", "sfkHomepageMultiverseActive", "sfkHomepageSpiderGlitchActive");
+  homepageEffectAmbientMode = "";
+  homepageEffectGalleryIndex = 0;
+  homepageEffectGallerySources = [];
+  const galleryTrack = layer.querySelector("#homepageEffectGalleryTrack");
+  if (galleryTrack) galleryTrack.innerHTML = "";
+  const ambient = layer.querySelector(".homepageEffectParticles");
+  if (ambient) ambient.innerHTML = "";
+  stopHomepageAlertSound();
+  stopHomepageSpiderSound();
+}
+
+function updateHomepageEffectGalleryControls() {
+  const layer = ensureHomepageEffectLayer();
+  const count = homepageEffectGallerySources.length;
+  const prev = layer.querySelector("#homepageEffectGalleryPrev");
+  const next = layer.querySelector("#homepageEffectGalleryNext");
+  const label = layer.querySelector("#homepageEffectGalleryCount");
+  if (prev) prev.hidden = count <= 1;
+  if (next) next.hidden = count <= 1;
+  if (label) {
+    label.hidden = count <= 1;
+    label.textContent = count ? `${homepageEffectGalleryIndex + 1} / ${count}` : "";
+  }
+  if (prev) prev.disabled = count <= 1 || homepageEffectGalleryIndex <= 0;
+  if (next) next.disabled = count <= 1 || homepageEffectGalleryIndex >= count - 1;
+}
+
+function showHomepageEffectGalleryIndex(index, smooth = true) {
+  const layer = ensureHomepageEffectLayer();
+  const viewport = layer.querySelector("#homepageEffectGalleryViewport");
+  const count = homepageEffectGallerySources.length;
+  if (!viewport || !count) return;
+  homepageEffectGalleryIndex = Math.max(0, Math.min(count - 1, Number(index) || 0));
+  const width = viewport.clientWidth || viewport.getBoundingClientRect().width || 1;
+  viewport.scrollTo({ left: width * homepageEffectGalleryIndex, behavior: smooth ? "smooth" : "auto" });
+  updateHomepageEffectGalleryControls();
+}
+
+function moveHomepageEffectGallery(direction) {
+  if (homepageEffectGallerySources.length <= 1) return;
+  showHomepageEffectGalleryIndex(homepageEffectGalleryIndex + Number(direction || 0), true);
+}
+
+function syncHomepageEffectGalleryIndexFromScroll() {
+  homepageEffectGalleryScrollTimer = 0;
+  const layer = document.getElementById("homepageEffectLayer");
+  const viewport = layer?.querySelector("#homepageEffectGalleryViewport");
+  if (!viewport || !homepageEffectGallerySources.length) return;
+  const width = viewport.clientWidth || viewport.getBoundingClientRect().width || 1;
+  homepageEffectGalleryIndex = Math.max(0, Math.min(homepageEffectGallerySources.length - 1, Math.round(viewport.scrollLeft / width)));
+  updateHomepageEffectGalleryControls();
+}
+
+async function renderHomepageEffectPictureGallery(config, token) {
+  const layer = ensureHomepageEffectLayer();
+  const track = layer.querySelector("#homepageEffectGalleryTrack");
+  const viewport = layer.querySelector("#homepageEffectGalleryViewport");
+  if (!track || !viewport) return;
+
+  homepageEffectGalleryIndex = 0;
+  homepageEffectGallerySources = [];
+  track.innerHTML = '<div class="homepageEffectGalleryLoading">Loading picture gallery…</div>';
+  updateHomepageEffectGalleryControls();
+
+  const rawImages = Array.isArray(config.images) ? config.images.slice(0, 12) : [];
+  const resolved = await Promise.all(rawImages.map(async (value) => {
+    try {
+      const source = await resolveHomepageEffectImageSource(value);
+      return source ? { raw: value, source } : null;
+    } catch (error) {
+      return null;
+    }
+  }));
+  if (token !== homepageEffectRenderToken || homepageEffectCurrentSignature !== config.signature) return;
+
+  const valid = resolved.filter(Boolean);
+  homepageEffectGallerySources = valid;
+  track.innerHTML = "";
+
+  if (!valid.length) {
+    const empty = document.createElement("div");
+    empty.className = "homepageEffectGalleryEmpty";
+    empty.textContent = "No picture is available for this display.";
+    track.appendChild(empty);
+    updateHomepageEffectGalleryControls();
+    return;
+  }
+
+  valid.forEach((item, index) => {
+    const slide = document.createElement("div");
+    slide.className = "homepageEffectGallerySlide";
+    slide.setAttribute("role", "group");
+    slide.setAttribute("aria-label", `Picture ${index + 1} of ${valid.length}`);
+    const image = document.createElement("img");
+    image.src = classBoardMediaDisplayUrl(item.source, item.raw || `${config.signature}-${index}`);
+    image.alt = config.title ? `${config.title} — picture ${index + 1}` : `ClassBoard picture ${index + 1}`;
+    image.loading = index === 0 ? "eager" : "lazy";
+    slide.appendChild(image);
+    track.appendChild(slide);
+  });
+
+  viewport.scrollLeft = 0;
+  updateHomepageEffectGalleryControls();
+}
+
+function buildHomepageRain(mode) {
+  const layer = ensureHomepageEffectLayer();
+  const rain = layer.querySelector(".homepageEffectRain");
+  if (!rain || homepageEffectParticleMode === mode) return;
+  homepageEffectParticleMode = mode;
+  rain.innerHTML = "";
+
+  const count = mode === "drizzle" ? 52 : (mode === "heavy-rain" ? 132 : 164);
+  const fragment = document.createDocumentFragment();
+  for (let index = 0; index < count; index += 1) {
+    const drop = document.createElement("i");
+    const left = Math.random() * 112 - 6;
+    const delay = -(Math.random() * 2.8);
+    const duration = mode === "drizzle"
+      ? 1.05 + Math.random() * .85
+      : .48 + Math.random() * .42;
+    const length = mode === "drizzle"
+      ? 18 + Math.random() * 20
+      : 28 + Math.random() * 40;
+    const opacity = mode === "drizzle"
+      ? .18 + Math.random() * .32
+      : .34 + Math.random() * .48;
+    drop.style.setProperty("--rain-left", `${left}%`);
+    drop.style.setProperty("--rain-delay", `${delay}s`);
+    drop.style.setProperty("--rain-duration", `${duration}s`);
+    drop.style.setProperty("--rain-length", `${length}px`);
+    drop.style.setProperty("--rain-opacity", String(opacity));
+    fragment.appendChild(drop);
+  }
+  rain.appendChild(fragment);
+}
+
+function buildHomepageAmbientParticles(mode) {
+  const layer = ensureHomepageEffectLayer();
+  const host = layer.querySelector(".homepageEffectParticles");
+  if (!host || homepageEffectAmbientMode === mode) return;
+  homepageEffectAmbientMode = mode;
+  host.innerHTML = "";
+
+  const configs = {
+    fog: { count: 9, kind: "fog" },
+    snow: { count: 92, kind: "snow" },
+    confetti: { count: 88, kind: "confetti" },
+    hearts: { count: 46, kind: "hearts" },
+    stars: { count: 110, kind: "stars" },
+    matrix: { count: 54, kind: "matrix" },
+    bubbles: { count: 44, kind: "bubbles" },
+    fireflies: { count: 62, kind: "fireflies" },
+    "neon-pulse": { count: 18, kind: "neon" },
+    "spider-glitch": { count: 58, kind: "spider-glitch" },
+    "comic-web": { count: 38, kind: "comic-web" },
+    "portal-rift": { count: 42, kind: "portal-rift" },
+    aurora: { count: 12, kind: "aurora" },
+    galaxy: { count: 150, kind: "galaxy" },
+    meteors: { count: 30, kind: "meteors" },
+    "laser-grid": { count: 28, kind: "laser-grid" },
+    crt: { count: 45, kind: "crt" },
+    "pixel-storm": { count: 84, kind: "pixel-storm" },
+    prism: { count: 34, kind: "prism" },
+    petals: { count: 58, kind: "petals" },
+    "gold-sparkle": { count: 92, kind: "gold-sparkle" }
+  };
+  const config = configs[mode];
+  if (!config) return;
+
+  const fragment = document.createDocumentFragment();
+  const matrixChars = "01SFKKINDNESS2627";
+  for (let index = 0; index < config.count; index += 1) {
+    const particle = document.createElement("span");
+    particle.className = `homepageAmbientParticle is-${config.kind}`;
+    particle.style.setProperty("--fx-x", `${Math.random() * 100}%`);
+    particle.style.setProperty("--fx-y", `${Math.random() * 100}%`);
+    particle.style.setProperty("--fx-delay", `${-(Math.random() * 9).toFixed(2)}s`);
+    particle.style.setProperty("--fx-duration", `${(3.8 + Math.random() * 8.4).toFixed(2)}s`);
+    particle.style.setProperty("--fx-size", `${(5 + Math.random() * 22).toFixed(1)}px`);
+    const drift = -80 + Math.random() * 160;
+    particle.style.setProperty("--fx-drift", `${drift.toFixed(0)}px`);
+    particle.style.setProperty("--fx-drift-mid", `${(drift * .55).toFixed(0)}px`);
+    particle.style.setProperty("--fx-drift-back", `${(drift * -.45).toFixed(0)}px`);
+    particle.style.setProperty("--fx-rotate", `${(-180 + Math.random() * 360).toFixed(0)}deg`);
+    particle.style.setProperty("--fx-hue", `${Math.floor(Math.random() * 360)}deg`);
+    particle.style.setProperty("--fx-alpha", `${(.28 + Math.random() * .62).toFixed(2)}`);
+
+    if (config.kind === "hearts") particle.textContent = Math.random() > .25 ? "♥" : "♡";
+    if (config.kind === "matrix") {
+      const length = 5 + Math.floor(Math.random() * 10);
+      let text = "";
+      for (let i = 0; i < length; i += 1) text += matrixChars[Math.floor(Math.random() * matrixChars.length)] + "\n";
+      particle.textContent = text.trim();
+    }
+    if (config.kind === "stars" || config.kind === "galaxy") particle.textContent = Math.random() > .76 ? "✦" : "•";
+    if (config.kind === "fireflies" || config.kind === "gold-sparkle") particle.textContent = Math.random() > .72 ? "✦" : "•";
+    if (config.kind === "comic-web") particle.textContent = Math.random() > .72 ? "✦" : "";
+    if (config.kind === "spider-glitch") particle.textContent = Math.random() > .86 ? "◆" : "";
+    if (config.kind === "petals") particle.textContent = "❀";
+    if (config.kind === "pixel-storm") particle.textContent = "■";
+    if (config.kind === "crt") particle.textContent = Math.random() > .5 ? "▮" : "·";
+    fragment.appendChild(particle);
+  }
+  host.appendChild(fragment);
+}
+
+function renderHomepageEffectText(config) {
+  const layer = ensureHomepageEffectLayer();
+  const weatherTitle = layer.querySelector("#homepageEffectWeatherTitle");
+  const weatherMessage = layer.querySelector("#homepageEffectWeatherMessage");
+  const weatherBox = layer.querySelector(".homepageEffectWeatherMessage");
+  const pictureCaption = layer.querySelector("#homepageEffectPictureCaption");
+  const alertTitle = layer.querySelector("#homepageEffectAlertTitle");
+  const alertMessage = layer.querySelector("#homepageEffectAlertMessage");
+
+  if (weatherTitle) weatherTitle.textContent = config.title;
+  if (weatherMessage) weatherMessage.textContent = config.message;
+  if (weatherBox) weatherBox.hidden = config.mode === "alert" || config.mode === "picture" || !(config.title || config.message);
+  if (pictureCaption) {
+    pictureCaption.textContent = [config.title, config.message].filter(Boolean).join(" — ");
+    pictureCaption.hidden = !(config.title || config.message);
+  }
+  if (alertTitle) alertTitle.textContent = config.title || "Important Notice";
+  if (alertMessage) alertMessage.textContent = config.message || "Please check the latest ClassBoard advisory.";
+}
+
+async function resolveHomepageEffectImageSource(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  if (/^https:\/\//i.test(raw) || /^data:image\//i.test(raw) || /^blob:/i.test(raw)) return raw;
+  if (typeof parseClassBoardMediaRef === "function" && parseClassBoardMediaRef(raw)) {
+    return await resolveClassBoardMediaDataUrlWithRetryV7(raw, 6) || "";
+  }
+  return "";
+}
+
+async function applyHomepageEffectSettings(settings = {}) {
+  const config = normalizeHomepageEffectConfig(settings);
+  const incomingUpdatedAt = Number(config.updatedAt || 0);
+  if (incomingUpdatedAt && homepageEffectLatestUpdatedAt && incomingUpdatedAt < homepageEffectLatestUpdatedAt) return;
+  if (incomingUpdatedAt > homepageEffectLatestUpdatedAt) homepageEffectLatestUpdatedAt = incomingUpdatedAt;
+  homepageEffectCurrentSignature = config.signature;
+  const layer = ensureHomepageEffectLayer();
+
+  if (!config.enabled) {
+    homepageEffectDismissedSignature = "";
+    homepageEffectParticleMode = "";
+    homepageEffectAmbientMode = "";
+    hideHomepageEffectLayer();
+    return;
+  }
+
+  if (homepageEffectDismissedSignature === config.signature) {
+    hideHomepageEffectLayer();
+    return;
+  }
+
+  const token = ++homepageEffectRenderToken;
+  layer.hidden = false;
+  layer.setAttribute("aria-hidden", "false");
+  layer.className = `homepageEffectLayer is-${config.mode}`;
+  document.documentElement.classList.add("sfkHomepageEffectActive");
+  document.documentElement.classList.toggle("sfkHomepageMultiverseActive", config.mode === "multiverse");
+  document.documentElement.classList.toggle("sfkHomepageSpiderGlitchActive", config.mode === "spider-glitch");
+
+  const close = layer.querySelector("#homepageEffectClose");
+  if (close) close.hidden = !config.dismissible;
+  renderHomepageEffectText(config);
+
+  if (config.mode === "alert" && config.alertSound) {
+    startHomepageAlertSound(config.signature);
+  } else {
+    stopHomepageAlertSound();
+  }
+
+  if (["spider-glitch", "comic-web"].includes(config.mode) && config.spiderSound) {
+    startHomepageSpiderSound(config.signature);
+  } else {
+    stopHomepageSpiderSound();
+  }
+
+  if (["drizzle", "heavy-rain", "thunderstorm"].includes(config.mode)) {
+    buildHomepageRain(config.mode);
+  } else {
+    const rain = layer.querySelector(".homepageEffectRain");
+    if (rain) rain.innerHTML = "";
+    homepageEffectParticleMode = "";
+  }
+
+  const ambientModes = new Set([
+    "fog", "snow", "confetti", "hearts", "stars", "matrix", "bubbles", "fireflies", "neon-pulse",
+    "spider-glitch", "comic-web", "portal-rift", "aurora", "galaxy", "meteors", "laser-grid", "crt",
+    "pixel-storm", "prism", "petals", "gold-sparkle"
+  ]);
+  if (ambientModes.has(config.mode)) {
+    buildHomepageAmbientParticles(config.mode);
+  } else {
+    const ambient = layer.querySelector(".homepageEffectParticles");
+    if (ambient) ambient.innerHTML = "";
+    homepageEffectAmbientMode = "";
+  }
+
+  if (config.mode === "picture") {
+    await renderHomepageEffectPictureGallery(config, token);
+  } else {
+    homepageEffectGalleryIndex = 0;
+    homepageEffectGallerySources = [];
+    const galleryTrack = layer.querySelector("#homepageEffectGalleryTrack");
+    if (galleryTrack) galleryTrack.innerHTML = "";
+    updateHomepageEffectGalleryControls();
+  }
+}
+
 function renderDashboard(data) {
   if (!data || !data.settings) return;
 
@@ -1576,6 +2364,7 @@ function renderDashboard(data) {
     `${data.settings.Section || ""} • S.Y. ${data.settings.SchoolYear || ""}`;
 
   applyHomepageDesignSettings(data.settings || {});
+  applyHomepageEffectSettings(data.settings || {});
 
   const headerDateEl = document.getElementById("dateText");
   if (headerDateEl) {
@@ -5581,6 +6370,55 @@ if (!window.__sfkTickerResizeBound) {
   }, { passive: true });
 }
 
+function getBellAlertTextElement(alert) {
+  return alert?.querySelector?.("#bellAlertText") || null;
+}
+
+function setBellAlertText(alert, message) {
+  if (!alert) return;
+  const textEl = getBellAlertTextElement(alert);
+  if (textEl) {
+    textEl.textContent = message;
+  }
+}
+
+function getScheduleBellAlertKey(period) {
+  if (!period) return "";
+  return [period.Day || "", period.StartTime || "", period.EndTime || "", period.Subject || ""].join("|");
+}
+
+function showBellAlertForKey(alert, message, key) {
+  if (!alert) return;
+  const cleanKey = String(key || message || "bell-alert");
+  alert.dataset.alertKey = cleanKey;
+  setBellAlertText(alert, message);
+
+  if (alert.dataset.dismissedKey === cleanKey) {
+    alert.classList.add("hidden");
+    return;
+  }
+
+  alert.classList.remove("hidden");
+}
+
+function dismissBellAlert() {
+  const alert = document.getElementById("bellAlert");
+  if (!alert) return;
+  alert.dataset.dismissedKey = alert.dataset.alertKey || "manual";
+  alert.classList.add("hidden");
+}
+
+if (!window.__sfkBellAlertCloseBound) {
+  window.__sfkBellAlertCloseBound = true;
+  document.addEventListener("click", (event) => {
+    const closeButton = event.target.closest?.("#bellAlertClose");
+    if (!closeButton) return;
+    event.preventDefault();
+    event.stopPropagation();
+    dismissBellAlert();
+  });
+}
+
 function updateCountdownAndBell() {
   const nextCountdown = document.getElementById("countdownText");
   const currentCountdown = document.getElementById("currentCountdownText");
@@ -5621,6 +6459,7 @@ function updateCountdownAndBell() {
 
     if (alert) {
       alert.classList.add("hidden");
+      alert.dataset.alertKey = "";
     }
 
     return;
@@ -5635,7 +6474,8 @@ function updateCountdownAndBell() {
     }
 
     if (alert) {
-      alert.classList.remove("hidden");
+      const alertKey = getScheduleBellAlertKey(nextPeriod);
+      showBellAlertForKey(alert, `⏰ ${nextPeriod.Subject} is starting now`, alertKey);
     }
 
     return;
@@ -5647,10 +6487,12 @@ function updateCountdownAndBell() {
 
   if (diff <= 5) {
     if (alert) {
-      alert.textContent =
-        `⏰ ${nextPeriod.Subject} starts in ${diff} minute${diff > 1 ? "s" : ""}`;
-
-      alert.classList.remove("hidden");
+      const alertKey = getScheduleBellAlertKey(nextPeriod);
+      showBellAlertForKey(
+        alert,
+        `⏰ ${nextPeriod.Subject} starts in ${diff} minute${diff > 1 ? "s" : ""}`,
+        alertKey
+      );
     }
   } else {
     if (alert) {
@@ -6241,12 +7083,14 @@ function showSoundAlert(message) {
   const alert = document.getElementById("bellAlert");
   if (!alert) return;
 
-  alert.textContent = message;
-  alert.classList.remove("hidden");
+  const alertKey = `sound:${String(message || "notice")}:${Date.now()}`;
+  showBellAlertForKey(alert, message, alertKey);
 
   clearTimeout(window.soundAlertTimer);
   window.soundAlertTimer = setTimeout(() => {
-    alert.classList.add("hidden");
+    if (alert.dataset.alertKey === alertKey) {
+      alert.classList.add("hidden");
+    }
   }, 5000);
 }
 

@@ -4561,3 +4561,256 @@ body.toolModalOpen {
     gap: 8px;
   }
 }
+
+
+/* =========================================================
+   v381 HOMEPAGE DISPLAY / EFFECTS — ADMIN CARD
+========================================================= */
+.homepageEffectAdminCard {
+  grid-column: span 2;
+  background: linear-gradient(180deg, #fffdf1 0%, #ffffff 100%);
+}
+
+.homepageEffectAdminCard h2 {
+  margin-bottom: 8px;
+}
+
+.homepageEffectToggleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 11px;
+  margin: 10px 0;
+  border: 2px solid #111;
+  border-radius: 13px;
+  background: #fff5b8;
+  text-transform: none;
+  letter-spacing: 0;
+  cursor: pointer;
+}
+
+.homepageEffectToggleRow input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  margin: 0;
+  accent-color: #111;
+}
+
+.homepageEffectToggleRow span {
+  min-width: 0;
+}
+
+.homepageEffectToggleRow strong,
+.homepageEffectToggleRow small {
+  display: block;
+}
+
+.homepageEffectToggleRow strong {
+  font-size: .9rem;
+  font-weight: 950;
+}
+
+.homepageEffectToggleRow small {
+  margin-top: 2px;
+  color: #444;
+  font-size: .75rem;
+  line-height: 1.25;
+}
+
+.homepageEffectOptional {
+  color: #666;
+  font-size: .68rem;
+  font-weight: 800;
+  text-transform: lowercase;
+}
+
+.homepageEffectPictureFields {
+  margin-top: 12px;
+  padding: 12px;
+  border: 2px dashed rgba(17,17,17,.35);
+  border-radius: 14px;
+  background: rgba(247,198,0,.08);
+}
+
+.homepageEffectPictureFields[hidden] {
+  display: none !important;
+}
+
+.homepageEffectImagePreview {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: 11px;
+  align-items: center;
+  margin-top: 10px;
+  padding: 9px;
+  border: 2px solid #111;
+  border-radius: 13px;
+  background: #fff;
+}
+
+.homepageEffectImagePreview[hidden] {
+  display: none !important;
+}
+
+.homepageEffectImagePreview img {
+  width: 112px;
+  height: 76px;
+  object-fit: cover;
+  border-radius: 9px;
+  border: 1px solid rgba(17,17,17,.25);
+  background: #eee;
+}
+
+.homepageEffectImagePreview strong {
+  display: block;
+  font-size: .84rem;
+}
+
+.formCard .homepageEffectImagePreview button {
+  width: auto;
+  margin-top: 6px;
+  padding: 7px 10px;
+  border-radius: 9px;
+  font-size: .75rem;
+  background: #fff;
+  color: #111;
+}
+
+.homepageEffectActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-top: 10px;
+}
+
+.formCard .homepageEffectActions button {
+  margin-top: 0;
+}
+
+.formCard .homepageEffectActions .homepageEffectNormalBtn {
+  background: #fff;
+  color: #111;
+}
+
+.formCard .homepageEffectActions .homepageEffectNormalBtn:hover {
+  background: #111;
+  color: #ffd700;
+}
+
+.homepageEffectStatus {
+  margin-top: 10px;
+  margin-bottom: 0;
+}
+
+@media (max-width: 1000px) {
+  .homepageEffectAdminCard {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 620px) {
+  .homepageEffectActions {
+    grid-template-columns: 1fr;
+  }
+
+  .homepageEffectImagePreview {
+    grid-template-columns: 82px minmax(0, 1fr);
+  }
+
+  .homepageEffectImagePreview img {
+    width: 82px;
+    height: 62px;
+  }
+}
+
+
+/* =========================================================
+   v383 HOMEPAGE ALERT SOUND ADMIN OPTION
+========================================================= */
+.homepageEffectSoundRow[hidden] {
+  display: none !important;
+}
+
+.homepageEffectSoundRow {
+  background: #fff0c7;
+}
+
+/* v386 Homepage Picture Gallery admin preview */
+.homepageEffectPictureFields textarea {
+  width: 100%;
+  min-height: 92px;
+  resize: vertical;
+  box-sizing: border-box;
+}
+.homepageEffectGalleryPreview.homepageEffectImagePreview {
+  display: block;
+  padding: 10px;
+}
+.homepageEffectImagePreviewGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+}
+.homepageEffectImagePreviewItem {
+  position: relative;
+  min-width: 0;
+  padding: 5px;
+  border: 1px solid rgba(17,17,17,.22);
+  border-radius: 10px;
+  background: #fafafa;
+}
+.homepageEffectImagePreviewItem img,
+.homepageEffectSavedMediaPlaceholder {
+  width: 100%;
+  height: 76px;
+  display: grid;
+  place-items: center;
+  object-fit: cover;
+  border-radius: 7px;
+  border: 1px solid rgba(17,17,17,.18);
+  background: #eee;
+  font-size: 1.5rem;
+}
+.homepageEffectImagePreviewItem small {
+  display: block;
+  margin-top: 4px;
+  overflow: hidden;
+  color: #333;
+  font-size: .66rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.homepageEffectImagePreviewNumber {
+  position: absolute;
+  z-index: 2;
+  top: 8px;
+  left: 8px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #111;
+  color: #ffd000;
+  font-size: .64rem;
+  font-weight: 950;
+}
+.homepageEffectImagePreviewFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 9px;
+}
+.formCard .homepageEffectImagePreviewFooter button {
+  margin: 0;
+}
+@media (max-width: 620px) {
+  .homepageEffectImagePreviewGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .homepageEffectImagePreviewItem img,
+  .homepageEffectSavedMediaPlaceholder { height: 64px; }
+  .homepageEffectImagePreviewFooter { align-items: stretch; flex-direction: column; }
+}

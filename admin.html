@@ -16,7 +16,7 @@
   <link rel="manifest" href="admin.webmanifest?v=portrait-reminder-v1" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
-  <link rel="stylesheet" href="admin.css?v=schedule-color-family-v345" />
+  <link rel="stylesheet" href="admin.css?v=spider-sound-v390" />
   <script src="orientation-lock.js?v=appwide-v6" defer></script>
 </head>
 
@@ -109,6 +109,95 @@
             </div>
             <button id="chatClearAll" type="button">Delete Entire Conversation</button>
           </div>
+        </div>
+
+        <!-- HOMEPAGE LIVE DISPLAY / EFFECTS -->
+        <div class="formCard homepageEffectAdminCard">
+          <h2>🌦 Homepage Display / Effects</h2>
+          <p class="fieldHint">Publish a full-screen visual mode to every ClassBoard. Choose weather, celebration, ambient, digital/glitch, picture, or warning modes. Students may dismiss it for the current view when allowed, but it appears again on reload while the Admin setting stays active.</p>
+
+          <label class="homepageEffectToggleRow">
+            <input id="homepageEffectEnabled" type="checkbox" />
+            <span><strong>Active for everyone</strong><small>Turn this off to keep the current/normal ClassBoard.</small></span>
+          </label>
+
+          <label for="homepageEffectMode">Display Mode</label>
+          <select id="homepageEffectMode">
+            <option value="normal">Normal / Current ClassBoard</option>
+            <option value="drizzle">Ambon / Light Rain</option>
+            <option value="heavy-rain">Heavy Rain</option>
+            <option value="thunderstorm">Heavy Rain + Thunder / Lightning</option>
+            <option value="multiverse">Multiverse / Strong Dimensional Glitch</option>
+            <option value="spider-glitch">Spider-Verse Inspired / RGB Spider Glitch</option>
+            <option value="comic-web">Spider Comic Theme / Red-Blue Halftone</option>
+            <option value="portal-rift">Dimensional Portal / Neon Rift</option>
+            <option value="fog">Fog / Mist</option>
+            <option value="snow">Snowfall</option>
+            <option value="confetti">Celebration Confetti</option>
+            <option value="hearts">Kindness Hearts</option>
+            <option value="stars">Starry Night</option>
+            <option value="matrix">Digital Matrix Rain</option>
+            <option value="bubbles">Floating Bubbles</option>
+            <option value="fireflies">Fireflies / Warm Glow</option>
+            <option value="neon-pulse">Neon Pulse / Cyber Glow</option>
+            <option value="aurora">Aurora / Northern Lights</option>
+            <option value="galaxy">Galaxy / Deep Space</option>
+            <option value="meteors">Meteor Shower</option>
+            <option value="laser-grid">Laser Grid / Synthwave</option>
+            <option value="crt">Retro CRT / TV Static</option>
+            <option value="pixel-storm">Pixel Storm / Arcade</option>
+            <option value="prism">Rainbow Prism / Light Beams</option>
+            <option value="petals">Falling Petals</option>
+            <option value="gold-sparkle">Golden Sparkles</option>
+            <option value="picture">Fullscreen Picture Gallery</option>
+            <option value="alert">Alert / Warning</option>
+          </select>
+
+          <div class="homepageEffectTextFields">
+            <label for="homepageEffectTitle">Title <span class="homepageEffectOptional">optional</span></label>
+            <input id="homepageEffectTitle" type="text" maxlength="100" placeholder="Example: Heavy Rain Advisory" />
+
+            <label for="homepageEffectMessage">Message <span class="homepageEffectOptional">optional</span></label>
+            <textarea id="homepageEffectMessage" maxlength="700" rows="4" placeholder="Example: Stay safe and dry. Please wait for further announcements."></textarea>
+          </div>
+
+          <div id="homepageEffectPictureFields" class="homepageEffectPictureFields" hidden>
+            <label for="homepageEffectImageUrls">Picture URL(s) <span class="homepageEffectOptional">optional if uploading</span></label>
+            <textarea id="homepageEffectImageUrls" maxlength="12000" rows="4" placeholder="Paste one https:// image address per line"></textarea>
+
+            <label for="homepageEffectImageFile">Or upload one or more pictures</label>
+            <input id="homepageEffectImageFile" type="file" accept="image/*" multiple />
+            <small class="fieldHint">Up to 12 pictures total. Uploaded images are compressed and stored using the existing no-billing ClassBoard media system. On the ClassBoard, viewers can swipe/scroll through the gallery or use Previous/Next.</small>
+
+            <div id="homepageEffectImagePreview" class="homepageEffectImagePreview homepageEffectGalleryPreview" hidden>
+              <div id="homepageEffectImagePreviewGrid" class="homepageEffectImagePreviewGrid"></div>
+              <div class="homepageEffectImagePreviewFooter">
+                <strong id="homepageEffectImagePreviewLabel">Gallery ready</strong>
+                <button id="homepageEffectRemoveImage" type="button">Clear All Pictures</button>
+              </div>
+            </div>
+          </div>
+
+          <label class="homepageEffectToggleRow homepageEffectDismissRow">
+            <input id="homepageEffectDismissible" type="checkbox" checked />
+            <span><strong>Allow X / dismiss</strong><small>Dismissal lasts only for the current page view. Reloading shows the active effect again.</small></span>
+          </label>
+
+          <label id="homepageEffectAlertSoundRow" class="homepageEffectToggleRow homepageEffectSoundRow" hidden>
+            <input id="homepageEffectAlertSound" type="checkbox" checked />
+            <span><strong>Play warning sound in Alert mode</strong><small>Uses a darker cinematic civil-defense style siren with long rising/falling wails. Browsers may require one tap/click on the page before audio can start.</small></span>
+          </label>
+
+          <label id="homepageEffectSpiderSoundRow" class="homepageEffectToggleRow homepageEffectSoundRow" hidden>
+            <input id="homepageEffectSpiderSound" type="checkbox" checked />
+            <span><strong>Play sound in Spider-inspired modes</strong><small>Turn this off for visuals only. The supplied Spider glitch audio plays for Spider Glitch and Spider Comic modes. Some browsers may require one tap/click before audio starts.</small></span>
+          </label>
+
+          <div class="homepageEffectActions">
+            <button type="button" onclick="saveHomepageEffectSettings()">📡 Publish Display</button>
+            <button type="button" class="homepageEffectNormalBtn" onclick="setHomepageEffectNormal()">☀️ Set Normal / Off</button>
+          </div>
+          <small id="homepageEffectStatus" class="fieldHint homepageEffectStatus">Loading current display setting...</small>
         </div>
 
         <!-- HOMEPAGE DESIGN SETTINGS -->
@@ -885,9 +974,9 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js?v=2-secure-auth"></script>
   <script src="auth.js?v=admin-officer-rescue-v2"></script>
-  <script src="firebase-adapter.js?v=page-lock-v119"></script>
+  <script src="firebase-adapter.js?v=spider-sound-v390"></script>
   <script src="pwa.js?v=page-lock-v119"></script>
-  <script src="class-chat-admin.js?v=schedule-color-family-v345"></script>
-  <script src="admin.js?v=schedule-color-family-v345"></script>
+  <script src="class-chat-admin.js?v=spider-sound-v390"></script>
+  <script src="admin.js?v=spider-sound-v390"></script>
 </body>
 </html>

@@ -1010,15 +1010,77 @@ ol.formattedText li {
   top: 10px;
   left: 50%;
   transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  max-width: calc(100vw - 24px);
+  box-sizing: border-box;
   background: #111;
   color: #ffd700;
   border: 3px solid white;
   border-radius: 999px;
-  padding: 9px 20px;
+  padding: 7px 7px 7px 18px;
   font-weight: 900;
   font-size: 1.05rem;
+  line-height: 1.15;
   z-index: 9999;
   box-shadow: 4px 4px 0 rgba(0,0,0,.35);
+}
+
+.bell-alert-text {
+  min-width: 0;
+  text-align: center;
+}
+
+.bell-alert-close {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: 0 0 27px;
+  width: 27px;
+  height: 27px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #ffd700;
+  border-radius: 50%;
+  padding: 0 0 2px;
+  background: #fff;
+  color: #111;
+  font: 900 18px/1 Arial, sans-serif;
+  cursor: pointer;
+  box-shadow: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bell-alert-close:hover,
+.bell-alert-close:focus-visible {
+  background: #ffd700;
+  outline: none;
+}
+
+.bell-alert-close:active {
+  transform: scale(.92);
+}
+
+@media (max-width: 700px) {
+  .bell-alert {
+    top: 8px;
+    width: max-content;
+    max-width: calc(100vw - 16px);
+    gap: 7px;
+    padding: 6px 6px 6px 13px;
+    border-width: 2px;
+    font-size: .88rem;
+    box-shadow: 3px 3px 0 rgba(0,0,0,.3);
+  }
+
+  .bell-alert-close {
+    flex-basis: 25px;
+    width: 25px;
+    height: 25px;
+    border-width: 2px;
+    font-size: 17px;
+  }
 }
 
 .hidden {
@@ -25103,5 +25165,1458 @@ body[data-use-subject-period-colors="yes"] .next #nextDetails * {
     max-width: 100% !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
+  }
+}
+
+
+/* =========================================================
+   v381 HOMEPAGE LIVE DISPLAY / EFFECTS
+   Full-screen Admin-controlled visual layer. Weather/multiverse
+   remains click-through except the X; picture/alert can act as
+   a full-screen notice until dismissed when Admin allows it.
+========================================================= */
+.homepageEffectLayer {
+  position: fixed;
+  inset: 0;
+  z-index: 2147482500;
+  overflow: hidden;
+  pointer-events: none;
+  isolation: isolate;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.homepageEffectLayer[hidden] {
+  display: none !important;
+}
+
+.homepageEffectBackdrop,
+.homepageEffectRain,
+.homepageEffectMist,
+.homepageEffectLightning,
+.homepageEffectMultiverse,
+.homepageEffectContent {
+  position: absolute;
+  inset: 0;
+}
+
+.homepageEffectBackdrop {
+  z-index: 0;
+  background: transparent;
+  transition: background .2s ease;
+}
+
+.homepageEffectClose {
+  position: absolute;
+  z-index: 20;
+  top: max(14px, env(safe-area-inset-top));
+  right: max(14px, env(safe-area-inset-right));
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 2px solid rgba(255,255,255,.9);
+  border-radius: 999px;
+  background: rgba(10,14,22,.82);
+  color: #fff;
+  box-shadow: 0 8px 30px rgba(0,0,0,.28);
+  font: 900 30px/1 Arial, sans-serif;
+  cursor: pointer;
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.homepageEffectClose:hover,
+.homepageEffectClose:focus-visible {
+  background: #111;
+  outline: 3px solid #ffd700;
+  outline-offset: 2px;
+}
+
+.homepageEffectRain {
+  z-index: 3;
+  overflow: hidden;
+  transform: skewX(-7deg);
+}
+
+.homepageEffectRain i {
+  position: absolute;
+  left: var(--rain-left);
+  top: -15vh;
+  width: 1.2px;
+  height: var(--rain-length);
+  opacity: var(--rain-opacity);
+  border-radius: 999px;
+  background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(220,239,255,.98));
+  box-shadow: 0 0 2px rgba(190,226,255,.45);
+  animation: sfkHomepageRainFall var(--rain-duration) linear var(--rain-delay) infinite;
+  will-change: transform;
+}
+
+@keyframes sfkHomepageRainFall {
+  from { transform: translate3d(0, -10vh, 0); }
+  to { transform: translate3d(-12vw, 130vh, 0); }
+}
+
+.homepageEffectLayer.is-drizzle .homepageEffectBackdrop {
+  background: linear-gradient(180deg, rgba(68,91,111,.13), rgba(44,65,85,.06));
+}
+
+.homepageEffectLayer.is-heavy-rain .homepageEffectBackdrop,
+.homepageEffectLayer.is-thunderstorm .homepageEffectBackdrop {
+  background: linear-gradient(180deg, rgba(16,31,49,.34), rgba(27,45,61,.23));
+  backdrop-filter: saturate(.8) brightness(.88);
+}
+
+.homepageEffectMist {
+  z-index: 2;
+  opacity: 0;
+  background:
+    radial-gradient(circle at 20% 15%, rgba(220,237,246,.15), transparent 35%),
+    radial-gradient(circle at 78% 40%, rgba(220,237,246,.12), transparent 40%);
+  animation: sfkHomepageMist 8s ease-in-out infinite alternate;
+}
+
+.homepageEffectLayer.is-heavy-rain .homepageEffectMist,
+.homepageEffectLayer.is-thunderstorm .homepageEffectMist {
+  opacity: 1;
+}
+
+@keyframes sfkHomepageMist {
+  from { transform: translate3d(-2%, 0, 0) scale(1.03); }
+  to { transform: translate3d(2%, 1%, 0) scale(1.08); }
+}
+
+.homepageEffectLightning {
+  z-index: 5;
+  opacity: 0;
+  background: rgba(226,239,255,.9);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.homepageEffectLayer.is-thunderstorm .homepageEffectLightning {
+  animation: sfkHomepageLightning 7.4s steps(1, end) infinite;
+}
+
+@keyframes sfkHomepageLightning {
+  0%, 72%, 75%, 78%, 100% { opacity: 0; }
+  73% { opacity: .72; }
+  74% { opacity: .08; }
+  76% { opacity: .46; }
+  77% { opacity: .12; }
+}
+
+.homepageEffectContent {
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: max(22px, env(safe-area-inset-top)) max(22px, env(safe-area-inset-right)) max(22px, env(safe-area-inset-bottom)) max(22px, env(safe-area-inset-left));
+  pointer-events: none;
+}
+
+.homepageEffectWeatherMessage {
+  align-self: end;
+  max-width: min(760px, calc(100vw - 36px));
+  margin-bottom: 24px;
+  padding: 11px 16px;
+  border: 1px solid rgba(255,255,255,.42);
+  border-radius: 16px;
+  background: rgba(8,16,27,.72);
+  color: #fff;
+  box-shadow: 0 12px 34px rgba(0,0,0,.25);
+  backdrop-filter: blur(8px);
+  text-align: center;
+}
+
+.homepageEffectWeatherMessage[hidden] {
+  display: none !important;
+}
+
+.homepageEffectWeatherMessage strong,
+.homepageEffectWeatherMessage span {
+  display: block;
+}
+
+.homepageEffectWeatherMessage strong {
+  font-size: clamp(.95rem, 2vw, 1.25rem);
+  font-weight: 950;
+}
+
+.homepageEffectWeatherMessage span {
+  margin-top: 3px;
+  font-size: clamp(.76rem, 1.5vw, .95rem);
+  line-height: 1.35;
+}
+
+.homepageEffectPicturePanel,
+.homepageEffectAlertPanel {
+  display: none;
+}
+
+.homepageEffectLayer.is-picture,
+.homepageEffectLayer.is-alert {
+  pointer-events: auto;
+}
+
+.homepageEffectLayer.is-picture .homepageEffectBackdrop {
+  background: rgba(3,6,12,.9);
+  backdrop-filter: blur(12px);
+}
+
+.homepageEffectLayer.is-picture .homepageEffectPicturePanel {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  gap: 10px;
+}
+
+.homepageEffectPicturePanel img {
+  display: block;
+  max-width: min(94vw, 1500px);
+  max-height: 84vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 18px;
+  border: 2px solid rgba(255,255,255,.82);
+  box-shadow: 0 30px 90px rgba(0,0,0,.62);
+  background: rgba(255,255,255,.06);
+}
+
+.homepageEffectPicturePanel img.is-loading:not([src]) {
+  width: min(72vw, 760px);
+  height: min(58vh, 520px);
+  border-style: dashed;
+}
+
+.homepageEffectPicturePanel figcaption {
+  max-width: min(900px, 90vw);
+  color: #fff;
+  font-size: clamp(.84rem, 1.7vw, 1.08rem);
+  line-height: 1.35;
+  font-weight: 800;
+  text-align: center;
+  text-shadow: 0 2px 8px #000;
+}
+
+.homepageEffectLayer.is-alert .homepageEffectBackdrop {
+  background:
+    repeating-linear-gradient(-45deg, rgba(255,203,0,.92) 0 24px, rgba(20,20,20,.95) 24px 48px);
+}
+
+.homepageEffectLayer.is-alert .homepageEffectContent {
+  place-items: center;
+  align-content: center;
+  justify-content: center;
+}
+
+.homepageEffectLayer.is-alert .homepageEffectAlertPanel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: min(980px, calc(100vw - 64px));
+  min-height: min(56vh, 560px);
+  padding: clamp(42px, 6vw, 76px) clamp(30px, 6vw, 72px);
+  margin: 0;
+  border: 6px solid #111;
+  border-radius: 30px;
+  background: #fff7cf;
+  color: #111;
+  box-shadow: 14px 14px 0 rgba(0,0,0,.72), 0 30px 100px rgba(0,0,0,.58);
+  text-align: center;
+}
+
+.homepageEffectAlertIcon {
+  font-size: clamp(4.2rem, 10vw, 7.4rem);
+  line-height: .9;
+  color: #d9362b;
+  text-shadow: 2px 2px 0 #111;
+}
+
+.homepageEffectAlertEyebrow {
+  margin: 16px 0 8px;
+  font-size: clamp(.8rem, 1.6vw, 1.05rem);
+  font-weight: 950;
+  letter-spacing: .14em;
+}
+
+.homepageEffectAlertPanel h2 {
+  margin: 0;
+  font-size: clamp(2.5rem, 6.4vw, 5rem);
+  line-height: 1.02;
+  font-weight: 950;
+}
+
+.homepageEffectAlertPanel > p:last-child {
+  margin: 15px auto 0;
+  max-width: 780px;
+  font-size: clamp(1.08rem, 2.25vw, 1.55rem);
+  line-height: 1.4;
+  font-weight: 800;
+  white-space: pre-line;
+}
+
+.homepageEffectMultiverse {
+  z-index: 4;
+  display: none;
+  overflow: hidden;
+  background:
+    repeating-linear-gradient(0deg, rgba(255,255,255,.05) 0 1px, transparent 1px 5px),
+    radial-gradient(circle at 20% 35%, rgba(0,229,255,.2), transparent 32%),
+    radial-gradient(circle at 80% 60%, rgba(255,0,119,.2), transparent 34%);
+  mix-blend-mode: screen;
+}
+
+.homepageEffectLayer.is-multiverse .homepageEffectMultiverse {
+  display: block;
+  animation: sfkMultiverseScreen 2.7s steps(2, end) infinite;
+}
+
+.homepageEffectLayer.is-multiverse .homepageEffectBackdrop {
+  background: rgba(17,8,31,.08);
+  box-shadow: inset 18px 0 0 rgba(0,222,255,.08), inset -18px 0 0 rgba(255,0,102,.08);
+}
+
+.homepageEffectMultiverse span {
+  position: absolute;
+  display: block;
+  width: 48vw;
+  height: 20vh;
+  border: 2px solid rgba(255,255,255,.28);
+  background: linear-gradient(90deg, rgba(0,219,255,.16), rgba(255,0,112,.13));
+  clip-path: polygon(0 18%, 88% 0, 100% 75%, 12% 100%);
+  filter: saturate(1.35);
+  animation: sfkMultiverseShard 3.6s ease-in-out infinite alternate;
+}
+
+.homepageEffectMultiverse span:nth-child(1) { left: -8%; top: 5%; animation-delay: -.2s; }
+.homepageEffectMultiverse span:nth-child(2) { right: -12%; top: 18%; animation-delay: -.8s; transform: rotate(10deg); }
+.homepageEffectMultiverse span:nth-child(3) { left: 12%; top: 44%; animation-delay: -1.4s; transform: rotate(-8deg); }
+.homepageEffectMultiverse span:nth-child(4) { right: 5%; top: 57%; animation-delay: -2.1s; transform: rotate(5deg); }
+.homepageEffectMultiverse span:nth-child(5) { left: -10%; bottom: -3%; animation-delay: -2.7s; transform: rotate(14deg); }
+.homepageEffectMultiverse span:nth-child(6) { right: -14%; bottom: 2%; animation-delay: -3.1s; transform: rotate(-11deg); }
+
+@keyframes sfkMultiverseScreen {
+  0%, 100% { transform: translateX(0); filter: hue-rotate(0deg); }
+  18% { transform: translateX(2px); }
+  20% { transform: translateX(-3px); filter: hue-rotate(18deg); }
+  22% { transform: translateX(0); }
+  65% { filter: hue-rotate(-12deg); }
+}
+
+@keyframes sfkMultiverseShard {
+  from { opacity: .2; translate: -2% -2%; scale: .98; }
+  to { opacity: .55; translate: 3% 2%; scale: 1.05; }
+}
+
+.homepageEffectLayer.is-multiverse::before,
+.homepageEffectLayer.is-multiverse::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  opacity: .18;
+}
+
+.homepageEffectLayer.is-multiverse::before {
+  background: repeating-linear-gradient(90deg, transparent 0 16vw, rgba(0,229,255,.38) 16vw 16.2vw, transparent 16.2vw 31vw);
+  transform: translateX(-5px);
+  animation: sfkMultiverseChromaticA 1.9s steps(2, end) infinite;
+}
+
+.homepageEffectLayer.is-multiverse::after {
+  background: repeating-linear-gradient(90deg, transparent 0 21vw, rgba(255,0,98,.38) 21vw 21.2vw, transparent 21.2vw 37vw);
+  transform: translateX(5px);
+  animation: sfkMultiverseChromaticB 2.3s steps(2, end) infinite reverse;
+}
+
+@keyframes sfkMultiverseChromaticA {
+  0%, 100% { clip-path: inset(0 0 82% 0); }
+  33% { clip-path: inset(36% 0 43% 0); }
+  66% { clip-path: inset(72% 0 8% 0); }
+}
+
+@keyframes sfkMultiverseChromaticB {
+  0%, 100% { clip-path: inset(12% 0 68% 0); }
+  45% { clip-path: inset(52% 0 26% 0); }
+  78% { clip-path: inset(78% 0 3% 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .homepageEffectRain i,
+  .homepageEffectMist,
+  .homepageEffectLightning,
+  .homepageEffectMultiverse,
+  .homepageEffectMultiverse span,
+  .homepageEffectLayer.is-multiverse::before,
+  .homepageEffectLayer.is-multiverse::after {
+    animation-duration: 12s !important;
+  }
+}
+
+@media (max-width: 700px) {
+  .homepageEffectClose {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    font-size: 27px;
+  }
+
+  .homepageEffectPicturePanel img {
+    max-width: 92vw;
+    max-height: 78vh;
+    border-radius: 14px;
+  }
+
+  .homepageEffectLayer.is-alert .homepageEffectAlertPanel {
+    width: calc(100vw - 22px);
+    min-height: min(66vh, 540px);
+    padding: 34px 18px;
+    border-width: 4px;
+    border-radius: 22px;
+    box-shadow: 8px 8px 0 rgba(0,0,0,.72), 0 24px 70px rgba(0,0,0,.5);
+  }
+
+  .homepageEffectLayer.is-alert .homepageEffectAlertIcon {
+    font-size: clamp(4rem, 22vw, 6rem);
+  }
+
+  .homepageEffectLayer.is-alert .homepageEffectAlertPanel h2 {
+    font-size: clamp(2.25rem, 12vw, 4.2rem);
+  }
+
+  .homepageEffectLayer.is-alert .homepageEffectAlertPanel > p:last-child {
+    font-size: clamp(1rem, 4.8vw, 1.35rem);
+  }
+}
+
+/* =========================================================
+   v381 TODAY'S SCHEDULE — CURRENT BADGE TOP RIGHT
+   Desktop only. Lift CURRENT PERIOD out of the subject flow and
+   pin it to the top-right of the active schedule card.
+========================================================= */
+@media (min-width: 901px) {
+  .scheduleCard .schedule-item.current-row,
+  #scheduleList .schedule-item.current-row {
+    position: relative !important;
+  }
+
+  .scheduleCard .current-row .current-badge,
+  #scheduleList .current-row .current-badge {
+    position: absolute !important;
+    top: 3px !important;
+    right: 6px !important;
+    left: auto !important;
+    grid-column: auto !important;
+    grid-row: auto !important;
+    justify-self: auto !important;
+    align-self: auto !important;
+    margin: 0 !important;
+    padding: 3px 7px !important;
+    font-size: .58rem !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    z-index: 8 !important;
+  }
+
+  .scheduleCard .current-row .subject-name,
+  #scheduleList .current-row .subject-name {
+    max-width: calc(100% - 94px) !important;
+  }
+}
+
+/* =========================================================
+   v385 HOMEPAGE EFFECTS PACK
+   Stronger multiverse/glitch + additional Admin modes.
+   All decorative layers remain click-through; only the X is interactive.
+========================================================= */
+.homepageEffectParticles {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: none;
+  overflow: hidden;
+  pointer-events: none;
+  contain: layout paint style;
+}
+
+.homepageEffectLayer.is-fog .homepageEffectParticles,
+.homepageEffectLayer.is-snow .homepageEffectParticles,
+.homepageEffectLayer.is-confetti .homepageEffectParticles,
+.homepageEffectLayer.is-hearts .homepageEffectParticles,
+.homepageEffectLayer.is-stars .homepageEffectParticles,
+.homepageEffectLayer.is-matrix .homepageEffectParticles,
+.homepageEffectLayer.is-bubbles .homepageEffectParticles,
+.homepageEffectLayer.is-fireflies .homepageEffectParticles,
+.homepageEffectLayer.is-neon-pulse .homepageEffectParticles {
+  display: block;
+}
+
+.homepageAmbientParticle {
+  position: absolute;
+  left: var(--fx-x);
+  top: var(--fx-y);
+  pointer-events: none;
+  opacity: var(--fx-alpha, .7);
+  will-change: transform, opacity;
+}
+
+/* ---------- Strong Multiverse / Dimensional Glitch ---------- */
+html.sfkHomepageMultiverseActive body > *:not(script):not(style):not(#homepageEffectLayer) {
+  animation: sfkUnderlyingGlitch 1.35s steps(1, end) infinite;
+  transform-origin: center center;
+  will-change: transform, filter;
+}
+
+.homepageEffectLayer.is-multiverse .homepageEffectBackdrop {
+  background:
+    linear-gradient(90deg, rgba(0,224,255,.13), transparent 22%, transparent 76%, rgba(255,0,106,.15)),
+    rgba(12, 2, 26, .18);
+  backdrop-filter: saturate(1.55) contrast(1.16) hue-rotate(8deg);
+  box-shadow:
+    inset 20px 0 0 rgba(0,225,255,.16),
+    inset -20px 0 0 rgba(255,0,102,.17),
+    inset 0 0 80px rgba(113,0,255,.16);
+  animation: sfkMultiverseBackdropHit 1.55s steps(1, end) infinite;
+}
+
+.homepageEffectLayer.is-multiverse .homepageEffectMultiverse {
+  display: block;
+  opacity: 1;
+  mix-blend-mode: screen;
+  background:
+    repeating-linear-gradient(0deg, rgba(255,255,255,.09) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(90deg, transparent 0 12vw, rgba(0,235,255,.12) 12vw 12.5vw, transparent 12.5vw 24vw),
+    radial-gradient(circle at 18% 26%, rgba(0,229,255,.42), transparent 26%),
+    radial-gradient(circle at 82% 68%, rgba(255,0,119,.4), transparent 30%),
+    radial-gradient(circle at 52% 44%, rgba(125,0,255,.24), transparent 34%);
+  animation: sfkMultiverseHardScreen 1.7s steps(2, end) infinite;
+}
+
+.homepageEffectLayer.is-multiverse .homepageEffectMultiverse span {
+  width: 58vw;
+  height: 24vh;
+  border: 3px solid rgba(255,255,255,.52);
+  background: linear-gradient(90deg, rgba(0,229,255,.30), rgba(120,0,255,.16) 48%, rgba(255,0,106,.28));
+  box-shadow: 12px 0 0 rgba(255,0,110,.15), -12px 0 0 rgba(0,226,255,.15);
+  filter: saturate(1.8) contrast(1.2);
+  opacity: .72;
+  animation-duration: 1.9s;
+}
+
+.homepageEffectLayer.is-multiverse::before,
+.homepageEffectLayer.is-multiverse::after {
+  opacity: .58;
+  mix-blend-mode: screen;
+}
+
+.homepageEffectLayer.is-multiverse::before {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 8vh, rgba(0,235,255,.62) 8vh 9.2vh, transparent 9.2vh 18vh),
+    repeating-linear-gradient(90deg, transparent 0 13vw, rgba(0,229,255,.35) 13vw 13.5vw, transparent 13.5vw 27vw);
+  animation: sfkMultiverseSliceCyan .92s steps(2, end) infinite;
+}
+
+.homepageEffectLayer.is-multiverse::after {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 10vh, rgba(255,0,106,.58) 10vh 11.1vh, transparent 11.1vh 22vh),
+    repeating-linear-gradient(90deg, transparent 0 18vw, rgba(255,0,106,.34) 18vw 18.6vw, transparent 18.6vw 33vw);
+  animation: sfkMultiverseSliceMagenta 1.08s steps(2, end) infinite reverse;
+}
+
+@keyframes sfkUnderlyingGlitch {
+  0%, 7%, 15%, 48%, 54%, 82%, 100% { transform: translate3d(0,0,0); filter: none; }
+  8% { transform: translate3d(5px,-1px,0) skewX(.35deg); filter: saturate(1.4) contrast(1.12) hue-rotate(8deg); }
+  9% { transform: translate3d(-6px,1px,0) skewX(-.5deg); filter: saturate(1.7) hue-rotate(-13deg); }
+  10% { transform: translate3d(2px,0,0); }
+  49% { transform: translate3d(-4px,2px,0); filter: contrast(1.2) saturate(1.5); }
+  50% { transform: translate3d(7px,-1px,0); filter: hue-rotate(18deg) saturate(1.8); }
+  51% { transform: translate3d(-2px,0,0); }
+  83% { transform: translate3d(4px,0,0) skewY(.25deg); filter: hue-rotate(-16deg) contrast(1.18); }
+  84% { transform: translate3d(-5px,-1px,0); }
+}
+
+@keyframes sfkMultiverseBackdropHit {
+  0%, 12%, 18%, 58%, 65%, 100% { opacity: 1; }
+  13% { opacity: .65; filter: hue-rotate(35deg); }
+  14% { opacity: 1; }
+  59% { opacity: .72; }
+  60% { opacity: 1; }
+}
+
+@keyframes sfkMultiverseHardScreen {
+  0%, 100% { transform: translate3d(0,0,0) scale(1); filter: hue-rotate(0deg); }
+  10% { transform: translate3d(7px,-2px,0) scale(1.006); filter: hue-rotate(32deg); }
+  12% { transform: translate3d(-9px,2px,0) scale(1.01); }
+  14% { transform: translate3d(0,0,0) scale(1); }
+  43% { transform: translate3d(-5px,0,0); filter: hue-rotate(-28deg); }
+  45% { transform: translate3d(8px,1px,0); }
+  47% { transform: translate3d(0,0,0); }
+  74% { transform: translate3d(4px,-1px,0); filter: hue-rotate(24deg); }
+  77% { transform: translate3d(-6px,1px,0); }
+}
+
+@keyframes sfkMultiverseSliceCyan {
+  0%,100% { clip-path: inset(0 0 78% 0); transform: translateX(-11px); }
+  25% { clip-path: inset(24% 0 57% 0); transform: translateX(9px); }
+  51% { clip-path: inset(49% 0 32% 0); transform: translateX(-7px); }
+  76% { clip-path: inset(73% 0 8% 0); transform: translateX(13px); }
+}
+
+@keyframes sfkMultiverseSliceMagenta {
+  0%,100% { clip-path: inset(12% 0 65% 0); transform: translateX(12px); }
+  30% { clip-path: inset(38% 0 39% 0); transform: translateX(-10px); }
+  60% { clip-path: inset(61% 0 17% 0); transform: translateX(8px); }
+  82% { clip-path: inset(81% 0 2% 0); transform: translateX(-13px); }
+}
+
+/* ---------- Fog / Mist ---------- */
+.homepageEffectLayer.is-fog .homepageEffectBackdrop {
+  background: rgba(185,198,205,.16);
+  backdrop-filter: saturate(.72) brightness(.94) blur(.55px);
+}
+.homepageAmbientParticle.is-fog {
+  width: clamp(180px, 35vw, 560px);
+  height: clamp(80px, 15vw, 220px);
+  margin-left: -18vw;
+  border-radius: 50%;
+  background: rgba(230,239,242,.34);
+  filter: blur(24px);
+  animation: sfkFogDrift var(--fx-duration) ease-in-out var(--fx-delay) infinite alternate;
+}
+@keyframes sfkFogDrift {
+  from { transform: translate3d(-8vw, -2vh, 0) scale(.9); opacity: .18; }
+  to { transform: translate3d(18vw, 4vh, 0) scale(1.25); opacity: .58; }
+}
+
+/* ---------- Snow ---------- */
+.homepageEffectLayer.is-snow .homepageEffectBackdrop {
+  background: linear-gradient(180deg, rgba(83,122,154,.16), rgba(213,230,241,.08));
+  backdrop-filter: saturate(.85) brightness(.98);
+}
+.homepageAmbientParticle.is-snow {
+  top: -8vh;
+  width: var(--fx-size);
+  height: var(--fx-size);
+  max-width: 15px;
+  max-height: 15px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.96);
+  box-shadow: 0 0 8px rgba(255,255,255,.55);
+  animation: sfkSnowFall var(--fx-duration) linear var(--fx-delay) infinite;
+}
+@keyframes sfkSnowFall {
+  from { transform: translate3d(0,-12vh,0) rotate(0); }
+  to { transform: translate3d(var(--fx-drift),118vh,0) rotate(360deg); }
+}
+
+/* ---------- Celebration Confetti ---------- */
+.homepageEffectLayer.is-confetti .homepageEffectBackdrop {
+  background: radial-gradient(circle at 50% 20%, rgba(255,215,0,.11), transparent 45%);
+}
+.homepageAmbientParticle.is-confetti {
+  top: -10vh;
+  width: clamp(7px, calc(var(--fx-size) * .65), 15px);
+  height: clamp(12px, var(--fx-size), 26px);
+  border-radius: 2px;
+  background: hsl(var(--fx-hue) 88% 56%);
+  box-shadow: 0 1px 2px rgba(0,0,0,.15);
+  animation: sfkConfettiFall var(--fx-duration) cubic-bezier(.2,.5,.4,1) var(--fx-delay) infinite;
+}
+@keyframes sfkConfettiFall {
+  0% { transform: translate3d(0,-15vh,0) rotate(0deg); }
+  45% { transform: translate3d(var(--fx-drift-mid),52vh,0) rotate(420deg); }
+  100% { transform: translate3d(var(--fx-drift),118vh,0) rotate(900deg); }
+}
+
+/* ---------- Kindness Hearts ---------- */
+.homepageEffectLayer.is-hearts .homepageEffectBackdrop {
+  background: radial-gradient(circle at 50% 80%, rgba(255,65,126,.11), transparent 55%);
+}
+.homepageAmbientParticle.is-hearts {
+  top: 108vh;
+  color: hsl(var(--fx-hue) 78% 58%);
+  font-size: clamp(15px, var(--fx-size), 32px);
+  line-height: 1;
+  text-shadow: 0 2px 8px rgba(255,255,255,.6), 0 4px 12px rgba(193,0,76,.18);
+  animation: sfkHeartFloat var(--fx-duration) ease-in var(--fx-delay) infinite;
+}
+@keyframes sfkHeartFloat {
+  from { transform: translate3d(0,8vh,0) rotate(-12deg) scale(.75); opacity: 0; }
+  10% { opacity: var(--fx-alpha); }
+  55% { transform: translate3d(var(--fx-drift-mid),-55vh,0) rotate(12deg) scale(1); }
+  to { transform: translate3d(var(--fx-drift),-125vh,0) rotate(-8deg) scale(1.15); opacity: 0; }
+}
+
+/* ---------- Starry Night ---------- */
+.homepageEffectLayer.is-stars .homepageEffectBackdrop {
+  background: linear-gradient(180deg, rgba(4,12,38,.48), rgba(14,4,38,.34));
+  backdrop-filter: brightness(.78) saturate(1.15);
+}
+.homepageAmbientParticle.is-stars {
+  color: #fffbd1;
+  font-size: clamp(7px, var(--fx-size), 24px);
+  text-shadow: 0 0 7px #fff, 0 0 16px rgba(119,174,255,.95);
+  animation: sfkStarTwinkle var(--fx-duration) ease-in-out var(--fx-delay) infinite;
+}
+@keyframes sfkStarTwinkle {
+  0%,100% { transform: scale(.45); opacity: .18; }
+  42% { transform: scale(1.2); opacity: .98; }
+  70% { transform: scale(.72); opacity: .48; }
+}
+
+/* ---------- Digital Matrix Rain ---------- */
+.homepageEffectLayer.is-matrix .homepageEffectBackdrop {
+  background: rgba(0,14,5,.58);
+  backdrop-filter: contrast(1.08) brightness(.7) saturate(.8);
+}
+.homepageAmbientParticle.is-matrix {
+  top: -52vh;
+  color: #7dff8d;
+  font: 800 clamp(10px, calc(var(--fx-size) * .7), 18px)/1.05 "Courier New", monospace;
+  white-space: pre;
+  text-shadow: 0 0 5px #00ff47, 0 0 12px rgba(0,255,71,.75);
+  opacity: calc(var(--fx-alpha) * .95);
+  animation: sfkMatrixDrop var(--fx-duration) linear var(--fx-delay) infinite;
+}
+@keyframes sfkMatrixDrop {
+  from { transform: translate3d(0,-20vh,0); }
+  to { transform: translate3d(0,165vh,0); }
+}
+
+/* ---------- Floating Bubbles ---------- */
+.homepageEffectLayer.is-bubbles .homepageEffectBackdrop {
+  background: linear-gradient(180deg, rgba(55,176,224,.07), rgba(54,114,202,.08));
+}
+.homepageAmbientParticle.is-bubbles {
+  top: 110vh;
+  width: clamp(14px, var(--fx-size), 40px);
+  height: clamp(14px, var(--fx-size), 40px);
+  border: 1.5px solid rgba(255,255,255,.72);
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 24%, rgba(255,255,255,.8), rgba(146,224,255,.16) 32%, rgba(255,255,255,.03) 62%);
+  box-shadow: inset 0 0 10px rgba(255,255,255,.25), 0 0 12px rgba(67,190,255,.2);
+  animation: sfkBubbleRise var(--fx-duration) ease-in var(--fx-delay) infinite;
+}
+@keyframes sfkBubbleRise {
+  from { transform: translate3d(0,8vh,0) scale(.65); opacity: .08; }
+  15% { opacity: var(--fx-alpha); }
+  to { transform: translate3d(var(--fx-drift),-128vh,0) scale(1.15); opacity: 0; }
+}
+
+/* ---------- Fireflies ---------- */
+.homepageEffectLayer.is-fireflies .homepageEffectBackdrop {
+  background: rgba(18,28,17,.24);
+  backdrop-filter: brightness(.82) saturate(1.05);
+}
+.homepageAmbientParticle.is-fireflies {
+  color: #ffe66a;
+  font-size: clamp(8px, var(--fx-size), 18px);
+  text-shadow: 0 0 6px #fff3a1, 0 0 15px #ffd92c, 0 0 28px rgba(255,205,34,.8);
+  animation: sfkFireflyWander var(--fx-duration) ease-in-out var(--fx-delay) infinite alternate;
+}
+@keyframes sfkFireflyWander {
+  0% { transform: translate3d(-18px,22px,0) scale(.55); opacity: .12; }
+  28% { opacity: .95; }
+  55% { transform: translate3d(var(--fx-drift),-38px,0) scale(1.05); opacity: .48; }
+  100% { transform: translate3d(var(--fx-drift-back),54px,0) scale(.7); opacity: .9; }
+}
+
+/* ---------- Neon Pulse / Cyber Glow ---------- */
+.homepageEffectLayer.is-neon-pulse .homepageEffectBackdrop {
+  background:
+    radial-gradient(circle at 18% 28%, rgba(0,238,255,.22), transparent 30%),
+    radial-gradient(circle at 82% 70%, rgba(255,0,138,.22), transparent 32%),
+    rgba(10,6,25,.35);
+  backdrop-filter: saturate(1.45) contrast(1.08);
+  animation: sfkNeonBackdrop 2.2s ease-in-out infinite alternate;
+}
+.homepageEffectLayer.is-neon-pulse .homepageEffectParticles::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, transparent 0 5px, rgba(255,255,255,.035) 5px 6px);
+  mix-blend-mode: screen;
+}
+.homepageAmbientParticle.is-neon {
+  width: clamp(30px, calc(var(--fx-size) * 2.5), 78px);
+  height: clamp(30px, calc(var(--fx-size) * 2.5), 78px);
+  border-radius: 50%;
+  border: 2px solid hsl(var(--fx-hue) 100% 60% / .7);
+  box-shadow: 0 0 12px hsl(var(--fx-hue) 100% 60% / .75), 0 0 36px hsl(var(--fx-hue) 100% 56% / .45);
+  animation: sfkNeonOrb var(--fx-duration) ease-in-out var(--fx-delay) infinite alternate;
+}
+@keyframes sfkNeonBackdrop {
+  from { filter: hue-rotate(-12deg) brightness(.9); }
+  to { filter: hue-rotate(16deg) brightness(1.13); }
+}
+@keyframes sfkNeonOrb {
+  from { transform: translate3d(-35px,-25px,0) scale(.7); opacity: .25; }
+  to { transform: translate3d(var(--fx-drift),58px,0) scale(1.35); opacity: .9; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.sfkHomepageMultiverseActive body > *:not(script):not(style):not(#homepageEffectLayer) {
+    animation: none !important;
+  }
+  .homepageAmbientParticle,
+  .homepageEffectLayer.is-multiverse .homepageEffectBackdrop,
+  .homepageEffectLayer.is-multiverse .homepageEffectMultiverse,
+  .homepageEffectLayer.is-multiverse::before,
+  .homepageEffectLayer.is-multiverse::after,
+  .homepageEffectLayer.is-neon-pulse .homepageEffectBackdrop {
+    animation-duration: 16s !important;
+  }
+}
+
+/* =========================================================
+   v386 HOMEPAGE EFFECT EXPANSION + PICTURE GALLERY
+   Strong RGB/comic dimensional modes, additional atmosphere
+   modes, and swipe/scroll + Previous/Next fullscreen gallery.
+========================================================= */
+.homepageEffectLayer.is-spider-glitch .homepageEffectParticles,
+.homepageEffectLayer.is-comic-web .homepageEffectParticles,
+.homepageEffectLayer.is-portal-rift .homepageEffectParticles,
+.homepageEffectLayer.is-aurora .homepageEffectParticles,
+.homepageEffectLayer.is-galaxy .homepageEffectParticles,
+.homepageEffectLayer.is-meteors .homepageEffectParticles,
+.homepageEffectLayer.is-laser-grid .homepageEffectParticles,
+.homepageEffectLayer.is-crt .homepageEffectParticles,
+.homepageEffectLayer.is-pixel-storm .homepageEffectParticles,
+.homepageEffectLayer.is-prism .homepageEffectParticles,
+.homepageEffectLayer.is-petals .homepageEffectParticles,
+.homepageEffectLayer.is-gold-sparkle .homepageEffectParticles {
+  display: block;
+}
+
+/* ---------- Fullscreen picture gallery ---------- */
+.homepageEffectLayer.is-picture .homepageEffectContent {
+  padding: max(10px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+}
+.homepageEffectLayer.is-picture .homepageEffectPicturePanel {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  align-items: center;
+  justify-items: center;
+  width: min(98vw, 1680px);
+  height: min(94vh, 980px);
+  margin: 0;
+  gap: 7px;
+  pointer-events: auto;
+}
+.homepageEffectGalleryViewport {
+  grid-row: 1;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x pan-y;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,.5) rgba(255,255,255,.08);
+  border-radius: 20px;
+  outline: none;
+}
+.homepageEffectGalleryViewport:focus-visible {
+  box-shadow: 0 0 0 3px #ffd000;
+}
+.homepageEffectGalleryTrack {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+.homepageEffectGallerySlide,
+.homepageEffectGalleryLoading,
+.homepageEffectGalleryEmpty {
+  flex: 0 0 100%;
+  min-width: 100%;
+  height: 100%;
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+  display: grid;
+  place-items: center;
+}
+.homepageEffectGalleryLoading,
+.homepageEffectGalleryEmpty {
+  color: #fff;
+  font-weight: 900;
+  font-size: clamp(1rem, 2.4vw, 1.45rem);
+  text-align: center;
+}
+.homepageEffectPicturePanel .homepageEffectGallerySlide img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: calc(100% - 26px);
+  max-height: calc(100% - 18px);
+  object-fit: contain;
+  border-radius: 18px;
+  border: 2px solid rgba(255,255,255,.82);
+  box-shadow: 0 30px 90px rgba(0,0,0,.62);
+  background: rgba(255,255,255,.06);
+}
+.homepageEffectGalleryNav {
+  position: absolute;
+  z-index: 18;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 58px;
+  height: 58px;
+  min-width: 58px;
+  min-height: 58px;
+  padding: 0 0 5px;
+  display: grid;
+  place-items: center;
+  border: 2px solid rgba(255,255,255,.88);
+  border-radius: 999px;
+  background: rgba(5,8,14,.76);
+  color: #fff;
+  box-shadow: 0 10px 34px rgba(0,0,0,.42);
+  font: 900 46px/1 Arial, sans-serif;
+  cursor: pointer;
+  pointer-events: auto;
+  backdrop-filter: blur(7px);
+}
+.homepageEffectGalleryNav.is-prev { left: 14px; }
+.homepageEffectGalleryNav.is-next { right: 14px; }
+.homepageEffectGalleryNav:hover,
+.homepageEffectGalleryNav:focus-visible {
+  background: #111;
+  border-color: #ffd000;
+  outline: none;
+  transform: translateY(-50%) scale(1.06);
+}
+.homepageEffectGalleryNav:disabled {
+  opacity: .24;
+  cursor: default;
+  transform: translateY(-50%);
+}
+.homepageEffectGalleryCount {
+  grid-row: 2;
+  min-width: 70px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(8,11,18,.76);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.32);
+  font-size: .8rem;
+  font-weight: 950;
+  text-align: center;
+  backdrop-filter: blur(7px);
+}
+.homepageEffectPicturePanel figcaption {
+  grid-row: 3;
+  margin: 0;
+  max-width: min(980px, 92vw);
+}
+
+/* ---------- Spider-Verse inspired RGB glitch (original treatment; no logos/characters) ---------- */
+html.sfkHomepageSpiderGlitchActive body > *:not(script):not(style):not(#homepageEffectLayer) {
+  animation: sfkSpiderUnderlyingGlitch .86s steps(1, end) infinite;
+  transform-origin: center;
+  will-change: transform, filter;
+}
+.homepageEffectLayer.is-spider-glitch .homepageEffectBackdrop {
+  background:
+    radial-gradient(circle at 48% 44%, rgba(255,255,255,.03), transparent 28%),
+    repeating-radial-gradient(circle at 50% 50%, transparent 0 14px, rgba(238,20,50,.08) 15px 16px, transparent 17px 30px),
+    repeating-conic-gradient(from 0deg at 50% 50%, rgba(0,196,255,.07) 0 1deg, transparent 1deg 14deg),
+    rgba(0,0,4,.62);
+  backdrop-filter: contrast(1.38) saturate(1.72) brightness(.76);
+  box-shadow: inset 24px 0 0 rgba(0,225,255,.13), inset -24px 0 0 rgba(255,20,55,.18);
+}
+.homepageEffectLayer.is-spider-glitch .homepageEffectMultiverse {
+  display: block;
+  opacity: 1;
+  background:
+    repeating-linear-gradient(0deg, rgba(255,255,255,.10) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(90deg, transparent 0 8vw, rgba(0,232,255,.13) 8vw 8.4vw, transparent 8.4vw 16vw),
+    radial-gradient(circle at 42% 48%, rgba(237,12,46,.18), transparent 32%),
+    rgba(0,0,0,.12);
+  mix-blend-mode: screen;
+  animation: sfkSpiderGlitchLayer .74s steps(2,end) infinite;
+}
+.homepageEffectLayer.is-spider-glitch .homepageEffectMultiverse span {
+  width: 72vw;
+  height: 11vh;
+  border: 0;
+  border-left: 8px solid rgba(0,232,255,.8);
+  border-right: 8px solid rgba(255,22,54,.82);
+  border-radius: 0;
+  background: linear-gradient(90deg, rgba(0,230,255,.40), rgba(255,255,255,.05) 42%, rgba(255,15,55,.44));
+  box-shadow: -14px 0 0 rgba(0,72,255,.34), 14px 0 0 rgba(255,0,121,.30);
+  clip-path: polygon(0 18%, 100% 0, 98% 75%, 2% 100%);
+  opacity: .88;
+  animation: sfkSpiderSlice .9s steps(2,end) infinite alternate;
+}
+.homepageEffectLayer.is-spider-glitch::before,
+.homepageEffectLayer.is-spider-glitch::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+.homepageEffectLayer.is-spider-glitch::before {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 7vh, rgba(0,235,255,.78) 7vh 8vh, transparent 8vh 14vh),
+    repeating-linear-gradient(90deg, transparent 0 19vw, rgba(0,105,255,.34) 19vw 19.7vw, transparent 19.7vw 34vw);
+  opacity: .62;
+  animation: sfkSpiderCyanCut .68s steps(2,end) infinite;
+}
+.homepageEffectLayer.is-spider-glitch::after {
+  background:
+    repeating-linear-gradient(0deg, transparent 0 9vh, rgba(255,18,53,.76) 9vh 10vh, transparent 10vh 18vh),
+    radial-gradient(circle at 50% 48%, transparent 0 13%, rgba(255,0,95,.12) 14% 15%, transparent 16% 26%, rgba(0,225,255,.12) 27% 28%, transparent 29%);
+  opacity: .62;
+  animation: sfkSpiderRedCut .79s steps(2,end) infinite reverse;
+}
+.homepageAmbientParticle.is-spider-glitch {
+  width: clamp(8px, var(--fx-size), 34px);
+  height: clamp(2px, calc(var(--fx-size) * .22), 7px);
+  background: hsl(var(--fx-hue) 100% 58%);
+  box-shadow: 7px 0 0 rgba(0,230,255,.7), -7px 0 0 rgba(255,16,52,.72);
+  animation: sfkSpiderBits var(--fx-duration) steps(3,end) var(--fx-delay) infinite;
+}
+@keyframes sfkSpiderUnderlyingGlitch {
+  0%,8%,18%,41%,51%,72%,100% { transform: translate3d(0,0,0); filter: none; }
+  9% { transform: translate3d(9px,-1px,0) skewX(.6deg); filter: contrast(1.25) saturate(1.8) hue-rotate(18deg); }
+  10% { transform: translate3d(-11px,1px,0) skewX(-.7deg); filter: contrast(1.35) saturate(1.9) hue-rotate(-22deg); }
+  42% { transform: translate3d(-7px,2px,0); filter: hue-rotate(-35deg) saturate(2); }
+  43% { transform: translate3d(10px,-2px,0); }
+  73% { transform: translate3d(5px,1px,0) skewY(.4deg); filter: contrast(1.3) hue-rotate(28deg); }
+  74% { transform: translate3d(-6px,-1px,0); }
+}
+@keyframes sfkSpiderGlitchLayer {
+  0%,100% { transform: translateX(0); filter: hue-rotate(0); }
+  20% { transform: translateX(10px); filter: hue-rotate(35deg); }
+  23% { transform: translateX(-12px); }
+  47% { transform: translateX(-7px); filter: hue-rotate(-42deg); }
+  51% { transform: translateX(8px); }
+}
+@keyframes sfkSpiderSlice { from { transform: translateX(-22px) scaleX(.98); } to { transform: translateX(28px) scaleX(1.03); } }
+@keyframes sfkSpiderCyanCut {
+  0%,100% { clip-path: inset(1% 0 83% 0); transform: translateX(-17px); }
+  32% { clip-path: inset(31% 0 48% 0); transform: translateX(14px); }
+  65% { clip-path: inset(62% 0 17% 0); transform: translateX(-12px); }
+}
+@keyframes sfkSpiderRedCut {
+  0%,100% { clip-path: inset(13% 0 66% 0); transform: translateX(16px); }
+  35% { clip-path: inset(44% 0 37% 0); transform: translateX(-15px); }
+  70% { clip-path: inset(76% 0 5% 0); transform: translateX(12px); }
+}
+@keyframes sfkSpiderBits {
+  0%,100% { transform: translate3d(-10px,0,0); opacity: .15; }
+  32% { transform: translate3d(30px,-3px,0); opacity: .92; }
+  60% { transform: translate3d(-20px,4px,0); opacity: .35; }
+}
+
+/* ---------- Comic Web / halftone ---------- */
+.homepageEffectLayer.is-comic-web .homepageEffectBackdrop {
+  background:
+    radial-gradient(circle, rgba(0,210,255,.34) 0 1.5px, transparent 1.8px) 0 0 / 14px 14px,
+    repeating-conic-gradient(from 8deg at 50% 50%, rgba(237,18,50,.24) 0 2deg, transparent 2deg 17deg),
+    linear-gradient(135deg, rgba(1,8,20,.72) 0 28%, rgba(7,38,104,.62) 48%, rgba(225,15,48,.50) 76%, rgba(3,5,12,.72));
+  backdrop-filter: contrast(1.32) saturate(1.65) brightness(.86);
+  animation: sfkComicPulse 2.7s steps(4,end) infinite;
+}
+.homepageEffectLayer.is-comic-web::before {
+  content: "";
+  position: absolute;
+  inset: -25%;
+  z-index: 5;
+  pointer-events: none;
+  background:
+    repeating-radial-gradient(circle at 50% 50%, transparent 0 72px, rgba(255,255,255,.17) 73px 75px, transparent 76px 145px),
+    repeating-conic-gradient(from 0deg at 50% 50%, transparent 0 14deg, rgba(255,255,255,.13) 14.3deg 14.8deg, transparent 15deg 30deg);
+  animation: sfkComicWebSpin 18s linear infinite;
+}
+.homepageAmbientParticle.is-comic-web {
+  width: clamp(12px,var(--fx-size),32px);
+  height: clamp(12px,var(--fx-size),32px);
+  border-radius: 50%;
+  background: hsl(var(--fx-hue) 92% 54% / .65);
+  border: 2px solid #101010;
+  box-shadow: 4px 0 0 rgba(0,220,255,.50), -4px 0 0 rgba(238,16,48,.52), 0 0 14px rgba(255,255,255,.16);
+  animation: sfkComicPop var(--fx-duration) steps(5,end) var(--fx-delay) infinite alternate;
+}
+@keyframes sfkComicPulse { 0%,100%{filter:hue-rotate(0)} 50%{filter:hue-rotate(8deg) contrast(1.1)} }
+@keyframes sfkComicWebSpin { to { transform: rotate(360deg) scale(1.05); } }
+@keyframes sfkComicPop { from{transform:scale(.45) rotate(-18deg);opacity:.18} to{transform:scale(1.18) rotate(22deg);opacity:.86} }
+
+/* ---------- Dimensional Portal ---------- */
+.homepageEffectLayer.is-portal-rift .homepageEffectBackdrop {
+  background:
+    radial-gradient(ellipse at center, transparent 0 18%, rgba(0,234,255,.33) 21% 23%, rgba(170,0,255,.26) 26% 29%, transparent 33% 38%, rgba(255,0,153,.22) 41% 43%, transparent 48%),
+    rgba(5,0,20,.46);
+  backdrop-filter: saturate(1.5) brightness(.78);
+  animation: sfkPortalBreathe 1.8s ease-in-out infinite alternate;
+}
+.homepageEffectLayer.is-portal-rift::before {
+  content:"";
+  position:absolute;
+  inset:8%;
+  z-index:5;
+  border-radius:50%;
+  border:3px solid rgba(0,235,255,.55);
+  box-shadow:0 0 28px #00dfff, inset 0 0 32px rgba(255,0,206,.65), 0 0 90px rgba(147,0,255,.6);
+  animation:sfkPortalSpin 6s linear infinite;
+  pointer-events:none;
+}
+.homepageAmbientParticle.is-portal-rift {
+  width:clamp(3px,calc(var(--fx-size)*.25),8px);
+  height:clamp(28px,calc(var(--fx-size)*2.2),72px);
+  border-radius:999px;
+  background:linear-gradient(#fff,#00e5ff 45%,#ff00d4);
+  box-shadow:0 0 12px #00e5ff;
+  transform-origin:50vw 50vh;
+  animation:sfkPortalSpark var(--fx-duration) linear var(--fx-delay) infinite;
+}
+@keyframes sfkPortalBreathe { from{filter:hue-rotate(-12deg) brightness(.85)} to{filter:hue-rotate(18deg) brightness(1.12)} }
+@keyframes sfkPortalSpin { to{transform:rotate(360deg) scale(1.03)} }
+@keyframes sfkPortalSpark { from{transform:translate3d(0,0,0) rotate(0);opacity:0} 25%{opacity:.9} to{transform:translate3d(var(--fx-drift),var(--fx-drift-back),0) rotate(540deg);opacity:0} }
+
+/* ---------- Aurora ---------- */
+.homepageEffectLayer.is-aurora .homepageEffectBackdrop {
+  background:linear-gradient(180deg,rgba(1,10,30,.62),rgba(2,27,36,.34));
+  backdrop-filter:brightness(.78) saturate(1.25);
+}
+.homepageAmbientParticle.is-aurora {
+  left:-10vw;
+  width:120vw;
+  height:clamp(70px,14vh,170px);
+  border-radius:50%;
+  background:linear-gradient(90deg,transparent,hsl(var(--fx-hue) 90% 60% / .38),rgba(0,255,194,.30),transparent);
+  filter:blur(22px);
+  transform:rotate(calc(var(--fx-rotate) * .08));
+  animation:sfkAuroraWave var(--fx-duration) ease-in-out var(--fx-delay) infinite alternate;
+}
+@keyframes sfkAuroraWave { from{transform:translate3d(-7vw,-12px,0) skewX(-8deg);opacity:.18} to{transform:translate3d(8vw,26px,0) skewX(9deg);opacity:.68} }
+
+/* ---------- Galaxy / Deep Space ---------- */
+.homepageEffectLayer.is-galaxy .homepageEffectBackdrop {
+  background:radial-gradient(circle at 25% 32%,rgba(100,53,255,.29),transparent 30%),radial-gradient(circle at 72% 66%,rgba(0,196,255,.19),transparent 33%),rgba(2,3,18,.64);
+  backdrop-filter:brightness(.70) saturate(1.15);
+}
+.homepageEffectLayer.is-galaxy::before {
+  content:"";position:absolute;inset:-20%;z-index:2;pointer-events:none;
+  background:radial-gradient(ellipse at center,transparent 0 15%,rgba(116,55,255,.17) 28%,transparent 48%);
+  animation:sfkGalaxyDrift 16s ease-in-out infinite alternate;
+}
+.homepageAmbientParticle.is-galaxy { color:#fff; font-size:clamp(4px,var(--fx-size),18px); text-shadow:0 0 7px #fff,0 0 20px hsl(var(--fx-hue) 95% 65%); animation:sfkStarTwinkle var(--fx-duration) ease-in-out var(--fx-delay) infinite; }
+@keyframes sfkGalaxyDrift { to{transform:translate3d(6vw,-3vh,0) rotate(8deg) scale(1.08)} }
+
+/* ---------- Meteor Shower ---------- */
+.homepageEffectLayer.is-meteors .homepageEffectBackdrop { background:linear-gradient(180deg,rgba(1,5,24,.62),rgba(14,5,33,.45)); backdrop-filter:brightness(.72); }
+.homepageAmbientParticle.is-meteors {
+  top:-20vh;width:clamp(55px,calc(var(--fx-size)*5),140px);height:2px;border-radius:999px;
+  background:linear-gradient(90deg,transparent,rgba(160,222,255,.35),#fff);
+  box-shadow:8px 0 12px rgba(112,197,255,.75);transform:rotate(32deg);
+  animation:sfkMeteorFall var(--fx-duration) linear var(--fx-delay) infinite;
+}
+@keyframes sfkMeteorFall { from{transform:translate3d(-30vw,-20vh,0) rotate(32deg);opacity:0} 12%{opacity:.95} to{transform:translate3d(125vw,120vh,0) rotate(32deg);opacity:0} }
+
+/* ---------- Laser Grid / Synthwave ---------- */
+.homepageEffectLayer.is-laser-grid .homepageEffectBackdrop {
+  background:linear-gradient(180deg,rgba(3,3,18,.36),rgba(10,0,35,.48)),repeating-linear-gradient(90deg,transparent 0 8vw,rgba(0,229,255,.18) 8vw 8.15vw),repeating-linear-gradient(0deg,transparent 0 8vh,rgba(255,0,168,.18) 8vh 8.15vh);
+  backdrop-filter:contrast(1.15) saturate(1.45);
+  animation:sfkLaserGridHue 4s linear infinite;
+}
+.homepageAmbientParticle.is-laser-grid { width:clamp(60px,calc(var(--fx-size)*6),180px);height:2px;background:hsl(var(--fx-hue) 100% 60%);box-shadow:0 0 9px currentColor;animation:sfkLaserSweep var(--fx-duration) ease-in-out var(--fx-delay) infinite alternate; }
+@keyframes sfkLaserGridHue { to{filter:hue-rotate(360deg)} }
+@keyframes sfkLaserSweep { from{transform:translateX(-20vw) rotate(var(--fx-rotate));opacity:.12} to{transform:translateX(25vw) rotate(var(--fx-rotate));opacity:.82} }
+
+/* ---------- Retro CRT ---------- */
+.homepageEffectLayer.is-crt .homepageEffectBackdrop {
+  background:rgba(3,8,6,.20);
+  backdrop-filter:contrast(1.25) saturate(.75) brightness(.88);
+  animation:sfkCrtFlicker .14s steps(2,end) infinite;
+}
+.homepageEffectLayer.is-crt::before { content:"";position:absolute;inset:0;z-index:6;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,.045) 0 1px,rgba(0,0,0,.11) 1px 3px);mix-blend-mode:overlay; }
+.homepageEffectLayer.is-crt::after { content:"";position:absolute;inset:0;z-index:6;pointer-events:none;box-shadow:inset 0 0 120px rgba(0,0,0,.62);animation:sfkCrtRoll 3.1s linear infinite;background:linear-gradient(180deg,transparent 0 45%,rgba(210,255,231,.10) 48%,transparent 51%); }
+.homepageAmbientParticle.is-crt { color:rgba(220,255,235,.75);font:700 clamp(7px,var(--fx-size),18px)/1 monospace;animation:sfkCrtNoise var(--fx-duration) steps(4,end) var(--fx-delay) infinite; }
+@keyframes sfkCrtFlicker { 0%{opacity:.92} 50%{opacity:1} 100%{opacity:.95} }
+@keyframes sfkCrtRoll { from{transform:translateY(-100%)} to{transform:translateY(100%)} }
+@keyframes sfkCrtNoise { 0%,100%{transform:translate(0);opacity:.1} 30%{transform:translate(18px,-4px);opacity:.65} 65%{transform:translate(-14px,3px);opacity:.35} }
+
+/* ---------- Pixel Storm ---------- */
+.homepageEffectLayer.is-pixel-storm .homepageEffectBackdrop { background:rgba(8,7,26,.32);backdrop-filter:saturate(1.5) contrast(1.12); }
+.homepageAmbientParticle.is-pixel-storm { top:-12vh;color:hsl(var(--fx-hue) 100% 60%);font-size:clamp(8px,var(--fx-size),30px);text-shadow:4px 0 0 rgba(0,225,255,.35),-4px 0 0 rgba(255,0,120,.35);animation:sfkPixelFall var(--fx-duration) steps(10,end) var(--fx-delay) infinite; }
+@keyframes sfkPixelFall { from{transform:translate3d(0,-10vh,0) rotate(0)} to{transform:translate3d(var(--fx-drift),125vh,0) rotate(360deg)} }
+
+/* ---------- Rainbow Prism ---------- */
+.homepageEffectLayer.is-prism .homepageEffectBackdrop { background:rgba(255,255,255,.035);backdrop-filter:saturate(1.2) brightness(1.03); }
+.homepageEffectLayer.is-prism::before { content:"";position:absolute;inset:-20%;z-index:3;pointer-events:none;background:conic-gradient(from 110deg at 50% 50%,rgba(255,0,0,.12),rgba(255,204,0,.12),rgba(0,255,150,.12),rgba(0,180,255,.12),rgba(125,0,255,.12),rgba(255,0,170,.12),rgba(255,0,0,.12));filter:blur(20px);animation:sfkPrismSpin 12s linear infinite; }
+.homepageAmbientParticle.is-prism { width:clamp(5px,calc(var(--fx-size)*.35),11px);height:clamp(90px,calc(var(--fx-size)*8),220px);background:linear-gradient(transparent,hsl(var(--fx-hue) 100% 62% / .65),transparent);filter:blur(1px);transform:rotate(var(--fx-rotate));animation:sfkPrismBeam var(--fx-duration) ease-in-out var(--fx-delay) infinite alternate; }
+@keyframes sfkPrismSpin { to{transform:rotate(360deg)} }
+@keyframes sfkPrismBeam { from{transform:translateX(-12vw) rotate(var(--fx-rotate));opacity:.12} to{transform:translateX(14vw) rotate(var(--fx-rotate));opacity:.78} }
+
+/* ---------- Falling Petals ---------- */
+.homepageEffectLayer.is-petals .homepageEffectBackdrop { background:linear-gradient(180deg,rgba(255,218,233,.08),rgba(255,244,247,.03)); }
+.homepageAmbientParticle.is-petals { top:-10vh;color:hsl(calc(335 + var(--fx-hue) * .04) 82% 76%);font-size:clamp(10px,var(--fx-size),26px);text-shadow:0 2px 4px rgba(128,30,68,.18);animation:sfkPetalFall var(--fx-duration) ease-in var(--fx-delay) infinite; }
+@keyframes sfkPetalFall { 0%{transform:translate3d(0,-10vh,0) rotate(0)} 50%{transform:translate3d(var(--fx-drift-mid),55vh,0) rotate(270deg)} 100%{transform:translate3d(var(--fx-drift),118vh,0) rotate(620deg)} }
+
+/* ---------- Golden Sparkles ---------- */
+.homepageEffectLayer.is-gold-sparkle .homepageEffectBackdrop { background:radial-gradient(circle at 50% 50%,rgba(255,205,54,.10),transparent 55%); }
+.homepageAmbientParticle.is-gold-sparkle { color:#ffe16a;font-size:clamp(7px,var(--fx-size),22px);text-shadow:0 0 7px #fff0a6,0 0 18px rgba(255,190,0,.95);animation:sfkGoldTwinkle var(--fx-duration) ease-in-out var(--fx-delay) infinite; }
+@keyframes sfkGoldTwinkle { 0%,100%{transform:scale(.3) rotate(0);opacity:.12} 45%{transform:scale(1.35) rotate(120deg);opacity:1} 70%{transform:scale(.72) rotate(210deg);opacity:.46} }
+
+@media (prefers-reduced-motion: reduce) {
+  html.sfkHomepageSpiderGlitchActive body > *:not(script):not(style):not(#homepageEffectLayer) { animation: none !important; }
+  .homepageEffectLayer.is-spider-glitch *,
+  .homepageEffectLayer.is-comic-web *,
+  .homepageEffectLayer.is-portal-rift *,
+  .homepageEffectLayer.is-aurora *,
+  .homepageEffectLayer.is-galaxy *,
+  .homepageEffectLayer.is-meteors *,
+  .homepageEffectLayer.is-laser-grid *,
+  .homepageEffectLayer.is-crt *,
+  .homepageEffectLayer.is-pixel-storm *,
+  .homepageEffectLayer.is-prism *,
+  .homepageEffectLayer.is-petals *,
+  .homepageEffectLayer.is-gold-sparkle * { animation-duration: 16s !important; }
+}
+
+@media (max-width: 700px) {
+  .homepageEffectLayer.is-picture .homepageEffectPicturePanel { width: 100%; height: 92vh; }
+  .homepageEffectGalleryViewport { border-radius: 14px; }
+  .homepageEffectPicturePanel .homepageEffectGallerySlide img { max-width: calc(100% - 10px); max-height: calc(100% - 12px); border-radius: 13px; }
+  .homepageEffectGalleryNav { width: 44px; height: 44px; min-width: 44px; min-height: 44px; font-size: 34px; background: rgba(5,8,14,.82); }
+  .homepageEffectGalleryNav.is-prev { left: 6px; }
+  .homepageEffectGalleryNav.is-next { right: 6px; }
+  .homepageEffectGalleryCount { padding: 5px 10px; font-size: .72rem; }
+  .homepageEffectPicturePanel figcaption { font-size: .78rem; max-width: 94vw; }
+}
+
+/* =========================================================
+   v387 TODAY'S SCHEDULE — FULL-WIDTH SUBJECT + AUTO-FIT
+   Desktop only. The CURRENT PERIOD badge already sits above the
+   subject, so do not reserve horizontal title space for it.
+   Subject names use the full details lane and JS shrinks only
+   when the complete title genuinely cannot fit on one line.
+========================================================= */
+@media (min-width: 901px) {
+  .scheduleCard .schedule-item .subject-name,
+  #scheduleList .schedule-item .subject-name,
+  .scheduleCard .current-row .subject-name,
+  #scheduleList .current-row .subject-name {
+    display: block !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 3px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    overflow-x: hidden !important;
+    overflow-y: hidden !important;
+    text-overflow: clip !important;
+  }
+
+  /* v381 reserved 94px for the badge. The badge is now positioned
+     on its own top-right line, so reclaim that space for the title. */
+  .scheduleCard .current-row .subject-name,
+  #scheduleList .current-row .subject-name {
+    max-width: 100% !important;
+  }
+
+  /* Today Schedule no longer needs the old overflow marquee.
+     Long titles are fitted by font size instead. */
+  .scheduleCard .subject-name.sfk-marquee-active .sfk-marquee-track,
+  #scheduleList .subject-name.sfk-marquee-active .sfk-marquee-track,
+  .scheduleCard .subject-name .sfk-marquee-track,
+  #scheduleList .subject-name .sfk-marquee-track {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+/* =========================================================
+   v388 FULLSCREEN PICTURE GALLERY — ALWAYS SHOW WHOLE IMAGE
+   Keep each poster/photo fully readable. The gallery viewport
+   may fill the screen, but the image itself uses contain and is
+   never cropped to cover the available area.
+========================================================= */
+.homepageEffectLayer.is-picture .homepageEffectPicturePanel {
+  max-height: calc(100dvh - 20px) !important;
+  overflow: visible !important;
+}
+
+.homepageEffectLayer.is-picture .homepageEffectGalleryViewport {
+  align-self: stretch !important;
+  height: auto !important;
+  min-height: 0 !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+}
+
+.homepageEffectLayer.is-picture .homepageEffectGalleryTrack,
+.homepageEffectLayer.is-picture .homepageEffectGallerySlide {
+  height: 100% !important;
+  min-height: 0 !important;
+}
+
+.homepageEffectLayer.is-picture .homepageEffectGallerySlide {
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  padding: 9px 13px !important;
+}
+
+.homepageEffectLayer.is-picture .homepageEffectGallerySlide img {
+  display: block !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+  margin: auto !important;
+}
+
+@media (max-width: 700px) {
+  .homepageEffectLayer.is-picture .homepageEffectPicturePanel {
+    height: calc(100dvh - 14px) !important;
+    max-height: calc(100dvh - 14px) !important;
+  }
+
+  .homepageEffectLayer.is-picture .homepageEffectGallerySlide {
+    padding: 6px 5px !important;
+  }
+
+  .homepageEffectLayer.is-picture .homepageEffectGallerySlide img {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+  }
+}
+
+/* =========================================================
+   v389 FULLSCREEN PICTURE GALLERY — CLEAN IMAGE-ONLY VIEW
+   No white frame/card around the picture. Keep only the image,
+   close button, and Prev/Next controls. The Classboard behind
+   the gallery stays visible with a light blur + dim treatment.
+========================================================= */
+.homepageEffectLayer.is-picture .homepageEffectBackdrop {
+  background: rgba(3, 7, 14, .48) !important;
+  backdrop-filter: blur(4px) brightness(.84) !important;
+  -webkit-backdrop-filter: blur(4px) brightness(.84) !important;
+}
+
+.homepageEffectLayer.is-picture .homepageEffectContent {
+  padding: 0 !important;
+}
+
+.homepageEffectLayer.is-picture .homepageEffectPicturePanel {
+  width: 100vw !important;
+  height: 100dvh !important;
+  max-width: none !important;
+  max-height: none !important;
+  grid-template-rows: minmax(0, 1fr) !important;
+  gap: 0 !important;
+  overflow: visible !important;
+}
+
+.homepageEffectLayer.is-picture .homepageEffectGalleryViewport {
+  width: 100% !important;
+  height: 100% !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: 0 !important;
+  scrollbar-width: none !important;
+}
+
+.homepageEffectLayer.is-picture .homepageEffectGalleryViewport::-webkit-scrollbar {
+  display: none !important;
+}
+
+.homepageEffectLayer.is-picture .homepageEffectGalleryViewport:focus-visible {
+  box-shadow: none !important;
+  outline: 0 !important;
+}
+
+.homepageEffectLayer.is-picture .homepageEffectGallerySlide {
+  padding: 14px 78px !important;
+  overflow: hidden !important;
+  background: transparent !important;
+}
+
+.homepageEffectLayer.is-picture .homepageEffectGallerySlide img,
+.homepageEffectLayer.is-picture .homepageEffectPicturePanel img {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+  margin: auto !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Image-only presentation: navigation stays over the image. */
+.homepageEffectLayer.is-picture .homepageEffectGalleryCount,
+.homepageEffectLayer.is-picture .homepageEffectPicturePanel figcaption {
+  display: none !important;
+}
+
+.homepageEffectLayer.is-picture .homepageEffectGalleryNav {
+  top: 50% !important;
+}
+
+@media (max-width: 700px) {
+  .homepageEffectLayer.is-picture .homepageEffectPicturePanel {
+    width: 100vw !important;
+    height: 100dvh !important;
+    max-height: none !important;
+  }
+
+  .homepageEffectLayer.is-picture .homepageEffectGallerySlide {
+    padding: 10px 52px !important;
+  }
+}
+
+
+/* =========================================================
+   v390 PICTURE GALLERY FOCUS — STRONGER BLUR + DARKEN
+========================================================= */
+.homepageEffectLayer.is-picture .homepageEffectBackdrop {
+  background: rgba(1, 4, 11, .74) !important;
+  backdrop-filter: blur(12px) brightness(.48) saturate(.72) !important;
+  -webkit-backdrop-filter: blur(12px) brightness(.48) saturate(.72) !important;
+}
+@media (max-width: 700px) {
+  .homepageEffectLayer.is-picture .homepageEffectBackdrop {
+    background: rgba(1, 4, 11, .78) !important;
+    backdrop-filter: blur(10px) brightness(.46) saturate(.68) !important;
+    -webkit-backdrop-filter: blur(10px) brightness(.46) saturate(.68) !important;
   }
 }

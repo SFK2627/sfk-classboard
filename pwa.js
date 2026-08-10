@@ -2,9 +2,9 @@
   let deferredInstallPrompt = null;
 
   const installButton = document.getElementById("installAppBtn");
-  const SW_URL = "./sw.js?v=page-lock-v119";
-  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV119PageLock";
-  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV119PageLock";
+  const SW_URL = "./sw.js?v=spider-sound-gallery-focus-v390";
+  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV390SpiderSoundGalleryFocus";
+  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV390SpiderSoundGalleryFocus";
 
   function isStandaloneApp() {
     return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
@@ -23,7 +23,7 @@
   function askWorkerToActivate(worker) {
     if (!worker) return;
     try {
-      worker.postMessage({ type: "SFK_SKIP_WAITING_PAGE_LOCK_V119" });
+      worker.postMessage({ type: "SFK_SKIP_WAITING_SPIDER_SOUND_V390" });
     } catch (error) {}
   }
 

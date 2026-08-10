@@ -240,6 +240,16 @@
       return saveHomepageDesignSettings(payload);
     }
 
+    if (type === "homepageEffectSettings" || type === "homepageeffectsettings") {
+      requireFirebaseRole(["admin"]);
+      return saveHomepageEffectSettings(payload);
+    }
+
+    if (type === "homepageEffectImage" || type === "homepageeffectimage") {
+      requireFirebaseRole(["admin"]);
+      return saveHomepageEffectImage(payload);
+    }
+
     if (type === "loadingSoundSettings") {
       requireFirebaseRole(["admin"]);
       return saveLoadingSoundSettings(payload);
@@ -258,6 +268,114 @@
     return { success: false, message: `Unknown Firebase request type: ${type}` };
   }
 
+
+  async function saveHomepageEffectSettings(payload) {
+    const allowedModes = new Set([
+      "normal",
+      "drizzle",
+      "heavy-rain",
+      "thunderstorm",
+      "multiverse",
+      "spider-glitch",
+      "comic-web",
+      "portal-rift",
+      "fog",
+      "snow",
+      "confetti",
+      "hearts",
+      "stars",
+      "matrix",
+      "bubbles",
+      "fireflies",
+      "neon-pulse",
+      "aurora",
+      "galaxy",
+      "meteors",
+      "laser-grid",
+      "crt",
+      "pixel-storm",
+      "prism",
+      "petals",
+      "gold-sparkle",
+      "picture",
+      "alert"
+    ]);
+
+    const rawMode = String(payload?.HomepageEffectMode || "normal").trim().toLowerCase();
+    const mode = allowedModes.has(rawMode) ? rawMode : "normal";
+
+    const sanitizeImage = (value) => {
+      const image = String(value || "").trim();
+      if (!image) return "";
+      if (image.startsWith(MEDIA_REF_PREFIX)) return image.slice(0, 360);
+      if (/^https:\/\//i.test(image)) return image.slice(0, 1200);
+      return "";
+    };
+
+    let requestedImages = [];
+    const rawImages = String(payload?.HomepageEffectImages || "").trim();
+    if (rawImages) {
+      try {
+        const parsed = JSON.parse(rawImages);
+        if (Array.isArray(parsed)) requestedImages = parsed;
+      } catch (error) {
+        requestedImages = rawImages.split(/\r?\n/g);
+      }
+    }
+    if (payload?.HomepageEffectImage) requestedImages.unshift(payload.HomepageEffectImage);
+
+    const safeImages = [];
+    const seenImages = new Set();
+    requestedImages.forEach((value) => {
+      const safe = sanitizeImage(value);
+      if (!safe || seenImages.has(safe) || safeImages.length >= 12) return;
+      seenImages.add(safe);
+      safeImages.push(safe);
+    });
+
+    const values = {
+      HomepageEffectEnabled: String(payload?.HomepageEffectEnabled || "").trim().toUpperCase() === "YES" ? "YES" : "NO",
+      HomepageEffectMode: mode,
+      HomepageEffectTitle: String(payload?.HomepageEffectTitle || "").trim().slice(0, 100),
+      HomepageEffectMessage: String(payload?.HomepageEffectMessage || "").trim().slice(0, 700),
+      HomepageEffectImage: safeImages[0] || "",
+      HomepageEffectImages: JSON.stringify(safeImages),
+      HomepageEffectDismissible: String(payload?.HomepageEffectDismissible || "").trim().toUpperCase() === "NO" ? "NO" : "YES",
+      HomepageEffectAlertSound: String(payload?.HomepageEffectAlertSound || "").trim().toUpperCase() === "NO" ? "NO" : "YES",
+      HomepageEffectSpiderSound: String(payload?.HomepageEffectSpiderSound || "").trim().toUpperCase() === "NO" ? "NO" : "YES",
+      HomepageEffectUpdatedAt: String(Date.now())
+    };
+
+    const batch = db.batch();
+    const meta = getSheetMeta("Settings");
+    Object.entries(values).forEach(([key, value]) => {
+      const ref = db.collection(meta.collection).doc(key);
+      batch.set(ref, withMeta({ Key: key, Value: value }), { merge: true });
+    });
+    await batch.commit();
+    return { success: true, message: "Homepage display/effect published.", settings: values };
+  }
+
+  async function saveHomepageEffectImage(payload) {
+    const file = payload?.file || payload?.File || null;
+    if (!file || !file.data) {
+      return { success: false, message: "Choose a picture first." };
+    }
+
+    const index = Math.max(0, Math.min(99, Number(payload?.index || 0) || 0));
+    const saved = await saveNoBillingMediaFile(ANNOUNCEMENT_MEDIA_COLLECTION, "homepageEffect", file, {
+      ownerKind: "homepageEffect",
+      index
+    });
+
+    return {
+      success: true,
+      message: "Homepage display picture uploaded.",
+      ref: saved.uri,
+      mediaRef: saved.uri,
+      previewUrl: saved.previewUrl || ""
+    };
+  }
 
   async function saveHomepageDesignSettings(payload) {
     const allowedKeys = [

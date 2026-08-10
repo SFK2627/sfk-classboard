@@ -30,7 +30,7 @@
   <link rel="manifest" href="manifest.webmanifest?v=page-lock-v331" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
-  <link rel="stylesheet" href="style.css?v=faustina-exhibit-v339" />
+  <link rel="stylesheet" href="style.css?v=spider-sound-gallery-focus-v390" />
   <link rel="stylesheet" href="sfk-memory-archive.css?v=v338" />
   <link rel="stylesheet" href="sfk-quote-archive.css?v=v344" />
   <link rel="stylesheet" href="class-chat.css?v=gc-everyone-inline-v29" />
@@ -1098,8 +1098,9 @@
     </div>
 
 
-    <div id="bellAlert" class="bell-alert hidden">
-      ⏰ CLASS CHANGE SOON
+    <div id="bellAlert" class="bell-alert hidden" role="status" aria-live="polite">
+      <span id="bellAlertText" class="bell-alert-text">⏰ CLASS CHANGE SOON</span>
+      <button id="bellAlertClose" class="bell-alert-close" type="button" aria-label="Dismiss class notification" title="Dismiss">×</button>
     </div>
 
     <div id="prayerPopup" class="prayerPopup hidden">
@@ -2706,15 +2707,15 @@
     </section>
   </div>
 
-  <script src="firebase-adapter.js?v=page-lock-v119"></script>
-  <script src="script.js?v=faustina-exhibit-v339"></script>
+  <script src="firebase-adapter.js?v=spider-sound-gallery-focus-v390"></script>
+  <script src="script.js?v=spider-sound-gallery-focus-v390"></script>
   <script src="sfk-memory-archive.js?v=v338"></script>
   <script src="sfk-quote-archive.js?v=v344"></script>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.16/dist/hls.min.js"></script>
   <script src="https://cdn.dashjs.org/v5.2.0/legacy/umd/dash.all.min.js"></script>
   <script src="time-capsule.js?v=gc-timecapsule-buttons-v16"></script>
   <script src="class-chat.js?v=gc-everyone-inline-v29"></script>
-  <script src="pwa.js?v=page-lock-v119"></script>
+  <script src="pwa.js?v=spider-sound-gallery-focus-v390"></script>
 
   <script>
     window.sfkAnnouncementCloseEmergencyGuardV3 = true;

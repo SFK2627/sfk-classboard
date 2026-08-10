@@ -107,6 +107,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initRichTextEditors();
   renderHomepagePresetGallery();
   initLoadingSoundSettings();
+  initHomepageEffectAdmin();
   loadPageLockSettings();
   initScheduleColorFamilyTools();
 
@@ -169,6 +170,8 @@ function showAdminPanel() {
   initRichTextEditors();
   setTodayForDateInputs();
   loadHomepageDesignSettings();
+  initHomepageEffectAdmin();
+  loadHomepageEffectSettings();
   initLoadingSoundSettings();
   loadLoadingSoundSettings();
   loadPageLockSettings();
@@ -2848,6 +2851,378 @@ function renderTeacherOptions(selectedValue) {
 
 
 /* HOMEPAGE DESIGN SETTINGS - v69 DESIGN STUDIO */
+/* =========================================================
+   v381 HOMEPAGE LIVE DISPLAY / EFFECTS — ADMIN CONTROL
+========================================================= */
+const HOMEPAGE_EFFECT_DEFAULTS = {
+  HomepageEffectEnabled: "NO",
+  HomepageEffectMode: "normal",
+  HomepageEffectTitle: "",
+  HomepageEffectMessage: "",
+  HomepageEffectImage: "",
+  HomepageEffectImages: "",
+  HomepageEffectDismissible: "YES",
+  HomepageEffectAlertSound: "YES",
+  HomepageEffectSpiderSound: "YES",
+  HomepageEffectUpdatedAt: ""
+};
+
+const HOMEPAGE_EFFECT_MAX_IMAGES = 12;
+const HOMEPAGE_EFFECT_MODE_NAMES = {
+  drizzle: "Ambon / Light Rain",
+  "heavy-rain": "Heavy Rain",
+  thunderstorm: "Thunderstorm",
+  multiverse: "Multiverse / Strong Dimensional Glitch",
+  "spider-glitch": "Spider-Verse Inspired / RGB Spider Glitch",
+  "comic-web": "Spider Comic Theme / Red-Blue Halftone",
+  "portal-rift": "Dimensional Portal / Neon Rift",
+  fog: "Fog / Mist",
+  snow: "Snowfall",
+  confetti: "Celebration Confetti",
+  hearts: "Kindness Hearts",
+  stars: "Starry Night",
+  matrix: "Digital Matrix Rain",
+  bubbles: "Floating Bubbles",
+  fireflies: "Fireflies / Warm Glow",
+  "neon-pulse": "Neon Pulse / Cyber Glow",
+  aurora: "Aurora / Northern Lights",
+  galaxy: "Galaxy / Deep Space",
+  meteors: "Meteor Shower",
+  "laser-grid": "Laser Grid / Synthwave",
+  crt: "Retro CRT / TV Static",
+  "pixel-storm": "Pixel Storm / Arcade",
+  prism: "Rainbow Prism / Light Beams",
+  petals: "Falling Petals",
+  "gold-sparkle": "Golden Sparkles",
+  picture: "Fullscreen Picture Gallery",
+  alert: "Alert / Warning"
+};
+
+let homepageEffectAdminReady = false;
+let homepageEffectSavedImages = [];
+let homepageEffectPendingFiles = [];
+let homepageEffectPreviewObjectUrls = [];
+
+function normalizeHomepageEffectAdminImageItem(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  if (raw.startsWith("sfk-media://")) return raw.slice(0, 360);
+  if (/^https:\/\//i.test(raw)) return raw.slice(0, 1200);
+  return "";
+}
+
+function uniqueHomepageEffectImages(values = []) {
+  const result = [];
+  const seen = new Set();
+  (values || []).forEach((value) => {
+    const safe = normalizeHomepageEffectAdminImageItem(value);
+    if (!safe || seen.has(safe) || result.length >= HOMEPAGE_EFFECT_MAX_IMAGES) return;
+    seen.add(safe);
+    result.push(safe);
+  });
+  return result;
+}
+
+function parseHomepageEffectImageList(value, fallback = "") {
+  const raw = String(value || "").trim();
+  let list = [];
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) list = parsed;
+    } catch (error) {
+      list = raw.split(/\r?\n|\s*,\s*/g);
+    }
+  }
+  if (fallback) list.push(fallback);
+  return uniqueHomepageEffectImages(list);
+}
+
+function readHomepageEffectUrlLines() {
+  const raw = String(document.getElementById("homepageEffectImageUrls")?.value || "");
+  return uniqueHomepageEffectImages(raw.split(/\r?\n/g).filter((value) => /^https:\/\//i.test(String(value || "").trim())));
+}
+
+function clearHomepageEffectPreviewUrls() {
+  homepageEffectPreviewObjectUrls.forEach((url) => {
+    try { URL.revokeObjectURL(url); } catch (error) {}
+  });
+  homepageEffectPreviewObjectUrls = [];
+}
+
+function initHomepageEffectAdmin() {
+  if (homepageEffectAdminReady) return;
+  const mode = document.getElementById("homepageEffectMode");
+  if (!mode) return;
+  homepageEffectAdminReady = true;
+
+  mode.addEventListener("change", syncHomepageEffectAdminFields);
+  document.getElementById("homepageEffectEnabled")?.addEventListener("change", syncHomepageEffectAdminFields);
+  document.getElementById("homepageEffectImageFile")?.addEventListener("change", handleHomepageEffectImageFileChange);
+  document.getElementById("homepageEffectImageUrls")?.addEventListener("input", renderHomepageEffectAdminImagePreview);
+  document.getElementById("homepageEffectRemoveImage")?.addEventListener("click", () => {
+    homepageEffectSavedImages = [];
+    homepageEffectPendingFiles = [];
+    clearHomepageEffectPreviewUrls();
+    const input = document.getElementById("homepageEffectImageFile");
+    const urls = document.getElementById("homepageEffectImageUrls");
+    if (input) input.value = "";
+    if (urls) urls.value = "";
+    renderHomepageEffectAdminImagePreview();
+  });
+
+  syncHomepageEffectAdminFields();
+}
+
+function syncHomepageEffectAdminFields() {
+  const mode = String(document.getElementById("homepageEffectMode")?.value || "normal");
+  const enabled = Boolean(document.getElementById("homepageEffectEnabled")?.checked);
+  const pictureFields = document.getElementById("homepageEffectPictureFields");
+  if (pictureFields) pictureFields.hidden = mode !== "picture";
+  const alertSoundRow = document.getElementById("homepageEffectAlertSoundRow");
+  if (alertSoundRow) alertSoundRow.hidden = mode !== "alert";
+  const spiderSoundRow = document.getElementById("homepageEffectSpiderSoundRow");
+  if (spiderSoundRow) spiderSoundRow.hidden = !["spider-glitch", "comic-web"].includes(mode);
+
+  const status = document.getElementById("homepageEffectStatus");
+  if (!status) return;
+  if (!enabled || mode === "normal") {
+    status.textContent = "Normal mode: no full-screen effect is currently intended.";
+  } else {
+    status.textContent = `${HOMEPAGE_EFFECT_MODE_NAMES[mode] || mode} is selected. Click Publish Display to send it to the ClassBoard.`;
+  }
+}
+
+async function loadHomepageEffectSettings() {
+  const status = document.getElementById("homepageEffectStatus");
+  try {
+    const response = await fetch(`${ADMIN_API_URL}?type=settings`, { cache: "no-store" });
+    const settings = await response.json();
+    fillHomepageEffectSettings(settings || {});
+    if (status) status.textContent = describeHomepageEffectAdminState(settings || {});
+  } catch (error) {
+    fillHomepageEffectSettings(HOMEPAGE_EFFECT_DEFAULTS);
+    if (status) status.textContent = "Unable to load the current homepage display setting.";
+  }
+}
+
+function fillHomepageEffectSettings(settings = {}) {
+  const merged = { ...HOMEPAGE_EFFECT_DEFAULTS, ...(settings || {}) };
+  const enabled = document.getElementById("homepageEffectEnabled");
+  const mode = document.getElementById("homepageEffectMode");
+  const title = document.getElementById("homepageEffectTitle");
+  const message = document.getElementById("homepageEffectMessage");
+  const dismissible = document.getElementById("homepageEffectDismissible");
+  const alertSound = document.getElementById("homepageEffectAlertSound");
+  const spiderSound = document.getElementById("homepageEffectSpiderSound");
+  const urls = document.getElementById("homepageEffectImageUrls");
+  if (enabled) enabled.checked = String(merged.HomepageEffectEnabled || "").toUpperCase() === "YES";
+  if (mode) mode.value = merged.HomepageEffectMode || "normal";
+  if (title) title.value = merged.HomepageEffectTitle || "";
+  if (message) message.value = merged.HomepageEffectMessage || "";
+  if (dismissible) dismissible.checked = String(merged.HomepageEffectDismissible || "YES").toUpperCase() !== "NO";
+  if (alertSound) alertSound.checked = String(merged.HomepageEffectAlertSound || "YES").toUpperCase() !== "NO";
+  if (spiderSound) spiderSound.checked = String(merged.HomepageEffectSpiderSound || "YES").toUpperCase() !== "NO";
+
+  homepageEffectSavedImages = parseHomepageEffectImageList(merged.HomepageEffectImages, merged.HomepageEffectImage);
+  homepageEffectPendingFiles = [];
+  clearHomepageEffectPreviewUrls();
+  if (urls) urls.value = homepageEffectSavedImages.filter((item) => /^https:\/\//i.test(item)).join("\n");
+  const fileInput = document.getElementById("homepageEffectImageFile");
+  if (fileInput) fileInput.value = "";
+  syncHomepageEffectAdminFields();
+  renderHomepageEffectAdminImagePreview();
+}
+
+function describeHomepageEffectAdminState(settings = {}) {
+  const enabled = String(settings.HomepageEffectEnabled || "").toUpperCase() === "YES";
+  const mode = String(settings.HomepageEffectMode || "normal");
+  if (!enabled || mode === "normal") return "Published state: Normal / Current ClassBoard.";
+  if (mode === "picture") {
+    const images = parseHomepageEffectImageList(settings.HomepageEffectImages, settings.HomepageEffectImage);
+    return `Published state: Fullscreen Picture Gallery (${images.length || 0} picture${images.length === 1 ? "" : "s"}).`;
+  }
+  return `Published state: ${HOMEPAGE_EFFECT_MODE_NAMES[mode] || mode}.`;
+}
+
+function handleHomepageEffectImageFileChange(event) {
+  const files = Array.from(event?.target?.files || []);
+  if (!files.length) {
+    homepageEffectPendingFiles = [];
+    renderHomepageEffectAdminImagePreview();
+    return;
+  }
+  const images = files.filter((file) => String(file.type || "").toLowerCase().startsWith("image/"));
+  if (images.length !== files.length) showToast("Some non-image files were ignored.");
+  const existingCount = uniqueHomepageEffectImages([
+    ...homepageEffectSavedImages.filter((item) => item.startsWith("sfk-media://")),
+    ...readHomepageEffectUrlLines()
+  ]).length;
+  const room = Math.max(0, HOMEPAGE_EFFECT_MAX_IMAGES - existingCount);
+  homepageEffectPendingFiles = images.slice(0, room);
+  if (images.length > room) showToast(`Picture Gallery supports up to ${HOMEPAGE_EFFECT_MAX_IMAGES} pictures.`);
+  renderHomepageEffectAdminImagePreview();
+}
+
+function renderHomepageEffectAdminImagePreview() {
+  const wrap = document.getElementById("homepageEffectImagePreview");
+  const grid = document.getElementById("homepageEffectImagePreviewGrid");
+  const label = document.getElementById("homepageEffectImagePreviewLabel");
+  if (!wrap || !grid || !label) return;
+
+  clearHomepageEffectPreviewUrls();
+  grid.innerHTML = "";
+
+  const savedMedia = homepageEffectSavedImages.filter((item) => item.startsWith("sfk-media://"));
+  const urlItems = readHomepageEffectUrlLines();
+  const items = [
+    ...savedMedia.map((value, index) => ({ kind: "saved", value, label: `Saved upload ${index + 1}` })),
+    ...urlItems.map((value, index) => ({ kind: "url", value, label: `Image URL ${index + 1}` })),
+    ...homepageEffectPendingFiles.map((file, index) => ({ kind: "file", file, label: file.name || `New upload ${index + 1}` }))
+  ].slice(0, HOMEPAGE_EFFECT_MAX_IMAGES);
+
+  items.forEach((item, index) => {
+    const card = document.createElement("div");
+    card.className = "homepageEffectImagePreviewItem";
+    const number = document.createElement("span");
+    number.className = "homepageEffectImagePreviewNumber";
+    number.textContent = String(index + 1);
+    card.appendChild(number);
+
+    if (item.kind === "file") {
+      const objectUrl = URL.createObjectURL(item.file);
+      homepageEffectPreviewObjectUrls.push(objectUrl);
+      const img = document.createElement("img");
+      img.src = objectUrl;
+      img.alt = item.label;
+      card.appendChild(img);
+    } else if (item.kind === "url") {
+      const img = document.createElement("img");
+      img.src = item.value;
+      img.alt = item.label;
+      card.appendChild(img);
+    } else {
+      const placeholder = document.createElement("div");
+      placeholder.className = "homepageEffectSavedMediaPlaceholder";
+      placeholder.textContent = "🖼";
+      card.appendChild(placeholder);
+    }
+
+    const caption = document.createElement("small");
+    caption.textContent = item.label;
+    card.appendChild(caption);
+    grid.appendChild(card);
+  });
+
+  label.textContent = `${items.length} picture${items.length === 1 ? "" : "s"} ready`;
+  wrap.hidden = items.length === 0;
+}
+
+async function prepareHomepageEffectImageFile(file) {
+  const rawDataUrl = await readAdminAttachmentDataUrl(file);
+  const image = await loadAdminAttachmentImage(rawDataUrl);
+  const compressedBlob = await compressAdminAttachmentImage(image);
+  if (!compressedBlob) throw new Error("Unable to compress the selected picture.");
+  const dataUrl = await readAdminAttachmentDataUrl(compressedBlob);
+  return {
+    name: (file.name || "homepage-display").replace(/\.[^.]+$/, "") + ".jpg",
+    mimeType: "image/jpeg",
+    data: String(dataUrl || "").split(",")[1] || ""
+  };
+}
+
+async function uploadHomepageEffectImage(file, index = 0) {
+  const prepared = await prepareHomepageEffectImageFile(file);
+  const response = await fetch(ADMIN_API_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      type: "homepageEffectImage",
+      payload: { file: prepared, index }
+    })
+  });
+  const result = await response.json();
+  if (!result?.success || !(result.ref || result.mediaRef)) {
+    throw new Error(result?.message || "Unable to upload the homepage display picture.");
+  }
+  return String(result.ref || result.mediaRef || "").trim();
+}
+
+async function saveHomepageEffectSettings() {
+  const status = document.getElementById("homepageEffectStatus");
+  const enabledEl = document.getElementById("homepageEffectEnabled");
+  const modeEl = document.getElementById("homepageEffectMode");
+  const mode = String(modeEl?.value || "normal");
+
+  if (status) status.textContent = "Publishing homepage display...";
+  try {
+    const savedMedia = homepageEffectSavedImages.filter((item) => item.startsWith("sfk-media://"));
+    const externalUrls = readHomepageEffectUrlLines();
+    const uploadedRefs = [];
+    for (let index = 0; index < homepageEffectPendingFiles.length; index += 1) {
+      const file = homepageEffectPendingFiles[index];
+      if (status) status.textContent = `Compressing and uploading picture ${index + 1} of ${homepageEffectPendingFiles.length}...`;
+      uploadedRefs.push(await uploadHomepageEffectImage(file, savedMedia.length + index));
+    }
+
+    const imageValues = uniqueHomepageEffectImages([...savedMedia, ...externalUrls, ...uploadedRefs]);
+    if (mode === "picture" && enabledEl?.checked && !imageValues.length) {
+      throw new Error("Picture Gallery needs at least one uploaded picture or https image address.");
+    }
+
+    const payload = {
+      HomepageEffectEnabled: enabledEl?.checked ? "YES" : "NO",
+      HomepageEffectMode: mode,
+      HomepageEffectTitle: String(document.getElementById("homepageEffectTitle")?.value || "").trim(),
+      HomepageEffectMessage: String(document.getElementById("homepageEffectMessage")?.value || "").trim(),
+      HomepageEffectImage: imageValues[0] || "",
+      HomepageEffectImages: JSON.stringify(imageValues),
+      HomepageEffectDismissible: document.getElementById("homepageEffectDismissible")?.checked ? "YES" : "NO",
+      HomepageEffectAlertSound: document.getElementById("homepageEffectAlertSound")?.checked ? "YES" : "NO",
+      HomepageEffectSpiderSound: document.getElementById("homepageEffectSpiderSound")?.checked ? "YES" : "NO"
+    };
+
+    const saved = await sendAdminData("homepageEffectSettings", payload);
+    if (!saved) throw new Error("Unable to publish the homepage display setting.");
+
+    homepageEffectSavedImages = imageValues;
+    homepageEffectPendingFiles = [];
+    clearHomepageEffectPreviewUrls();
+    const fileInput = document.getElementById("homepageEffectImageFile");
+    if (fileInput) fileInput.value = "";
+    const urlInput = document.getElementById("homepageEffectImageUrls");
+    if (urlInput) urlInput.value = imageValues.filter((item) => /^https:\/\//i.test(item)).join("\n");
+    renderHomepageEffectAdminImagePreview();
+    if (status) status.textContent = mode === "normal" || !enabledEl?.checked
+      ? "Published: Normal / Current ClassBoard."
+      : (mode === "picture"
+        ? `Published picture gallery with ${imageValues.length} picture${imageValues.length === 1 ? "" : "s"}. Open ClassBoard devices will update automatically.`
+        : "Published. Open ClassBoard devices will update automatically.");
+
+    try {
+      localStorage.setItem("sfkClassBoardHomepageEffectUpdatedAt", String(Date.now()));
+      if (typeof BroadcastChannel !== "undefined") {
+        const channel = new BroadcastChannel("sfk-classboard-updates");
+        channel.postMessage({ type: "homepage-effect-updated" });
+        channel.close();
+      }
+    } catch (error) {}
+  } catch (error) {
+    console.error("Homepage effect save failed:", error);
+    showToast(error.message || "Unable to publish homepage display.");
+    if (status) status.textContent = error.message || "Unable to publish homepage display.";
+  }
+}
+
+async function setHomepageEffectNormal() {
+  const enabled = document.getElementById("homepageEffectEnabled");
+  const mode = document.getElementById("homepageEffectMode");
+  if (enabled) enabled.checked = false;
+  if (mode) mode.value = "normal";
+  syncHomepageEffectAdminFields();
+  await saveHomepageEffectSettings();
+}
+
+
 const HOMEPAGE_DESIGN_FIELDS = {
   "HomepageBgColor": "designHomepageBgColor",
   "HomepageTextColor": "designHomepageTextColor",
