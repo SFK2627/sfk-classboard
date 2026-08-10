@@ -1677,6 +1677,8 @@ const HOMEPAGE_EFFECT_KEYS = new Set([
   "HomepageEffectAudioEnabled",
   "HomepageEffectAudioUrl",
   "HomepageEffectAudioLoop",
+  "HomepageEffectYouTubeUrl",
+  "HomepageEffectYouTubeMuted",
   "HomepageEffectUpdatedAt"
 ]);
 
@@ -1710,6 +1712,7 @@ let homepageEffectMusicLoop = true;
 let homepageEffectMusicPrimed = false;
 let homepageEffectPendingSettings = null;
 let homepageEffectStartupWaitTimer = 0;
+let homepageEffectYouTubePlayerKey = "";
 
 function isHomepageEffectStartupBlocked() {
   const intro = document.getElementById("sfkIntroOverlay");
@@ -1877,14 +1880,33 @@ function renderHomepageEffectYouTube(config) {
   const iframe = layer.querySelector("#homepageEffectYouTubeFrame");
   const empty = layer.querySelector("#homepageEffectYouTubeEmpty");
   if (!iframe) return;
+
   const videoId = getHomepageEffectYouTubeVideoId(config.youtubeUrl);
   if (!videoId) {
-    iframe.removeAttribute("src");
+    // Only tear the player down when there truly is no valid video. Do not
+    // churn the iframe during normal dashboard refreshes.
+    if (homepageEffectYouTubePlayerKey) {
+      iframe.removeAttribute("src");
+      homepageEffectYouTubePlayerKey = "";
+    }
     iframe.hidden = true;
     if (empty) empty.hidden = false;
     return;
   }
+
   const muted = config.youtubeMuted !== false;
+  const playerKey = `${videoId}|${muted ? "muted" : "sound"}`;
+
+  // Critical: the dashboard refreshes its data repeatedly. Reassigning even
+  // the exact same iframe.src makes YouTube start over (and may show a new ad).
+  // Keep the existing player alive unless the actual video or mute setting
+  // changed in Admin.
+  if (homepageEffectYouTubePlayerKey === playerKey && iframe.getAttribute("src")) {
+    iframe.hidden = false;
+    if (empty) empty.hidden = true;
+    return;
+  }
+
   const params = new URLSearchParams({
     autoplay: "1",
     mute: muted ? "1" : "0",
@@ -1893,6 +1915,8 @@ function renderHomepageEffectYouTube(config) {
     playsinline: "1",
     modestbranding: "1"
   });
+
+  homepageEffectYouTubePlayerKey = playerKey;
   iframe.src = `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?${params.toString()}`;
   iframe.hidden = false;
   if (empty) empty.hidden = true;
@@ -1901,7 +1925,11 @@ function renderHomepageEffectYouTube(config) {
 function clearHomepageEffectYouTube() {
   const layer = document.getElementById("homepageEffectLayer");
   const iframe = layer?.querySelector("#homepageEffectYouTubeFrame");
-  if (iframe) { iframe.removeAttribute("src"); iframe.hidden = true; }
+  if (iframe && (homepageEffectYouTubePlayerKey || iframe.getAttribute("src"))) {
+    iframe.removeAttribute("src");
+    iframe.hidden = true;
+  }
+  homepageEffectYouTubePlayerKey = "";
 }
 
 function getHomepageAlertAudioContext() {

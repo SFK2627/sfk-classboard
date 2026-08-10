@@ -2,9 +2,9 @@
   let deferredInstallPrompt = null;
 
   const installButton = document.getElementById("installAppBtn");
-  const SW_URL = "./sw.js?v=youtube-effect-v400";
-  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV400YouTubeAudioFix";
-  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV400YouTubeAudioFix";
+  const SW_URL = "./sw.js?v=youtube-stable-v401";
+  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV401YouTubeStable";
+  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV401YouTubeStable";
 
   function isStandaloneApp() {
     return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
@@ -23,7 +23,7 @@
   function askWorkerToActivate(worker) {
     if (!worker) return;
     try {
-      worker.postMessage({ type: "SFK_SKIP_WAITING_YOUTUBE_AUDIO_FIX_V400" });
+      worker.postMessage({ type: "SFK_SKIP_WAITING_YOUTUBE_STABLE_V401" });
     } catch (error) {}
   }
 
