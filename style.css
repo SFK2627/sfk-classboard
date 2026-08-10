@@ -25399,9 +25399,11 @@ body[data-use-subject-period-colors="yes"] .next #nextDetails * {
 .homepageEffectWeatherMessage span {
   margin-top: clamp(7px, 1vw, 13px);
   font-size: clamp(.72rem, 1.35vw, 1.15rem);
-  line-height: 1.35;
+  line-height: 1.45;
   font-weight: 650;
   letter-spacing: clamp(.08em, .45vw, .18em);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
 }
 
 @keyframes sfkEffectCinematicTextIn {

@@ -2,9 +2,9 @@
   let deferredInstallPrompt = null;
 
   const installButton = document.getElementById("installAppBtn");
-  const SW_URL = "./sw.js?v=cinematic-text-v419";
-  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV419RickrollStreamable";
-  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV419RickrollStreamable";
+  const SW_URL = "./sw.js?v=cinematic-text-v420";
+  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV420RickrollStreamable";
+  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV420RickrollStreamable";
 
   function isStandaloneApp() {
     return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
