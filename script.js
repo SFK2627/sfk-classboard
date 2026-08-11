@@ -2499,8 +2499,8 @@ function ensureHomepageEffectLayer() {
       </div>
       <img class="buwanAsset buwanAssetChurch" src="assets/buwan-wika/church.webp?v=441" alt="" draggable="false" decoding="async" loading="eager" />
       <img class="buwanAsset buwanAssetKubo" src="assets/buwan-wika/bahay-kubo.webp?v=441" alt="" draggable="false" decoding="async" loading="eager" />
-      <img class="buwanAsset buwanAssetBarong" src="assets/buwan-wika/barong-person.webp?v=441" alt="" draggable="false" decoding="async" loading="eager" />
-      <img class="buwanAsset buwanAssetFilipiniana" src="assets/buwan-wika/filipiniana-person.webp?v=441" alt="" draggable="false" decoding="async" loading="eager" />
+      <img class="buwanAsset buwanAssetBarong" src="assets/buwan-wika/barong-person-base.png?v=449" alt="" draggable="false" decoding="async" loading="eager" />
+      <img class="buwanAsset buwanAssetFilipiniana" src="assets/buwan-wika/filipiniana-person-base.png?v=449" alt="" draggable="false" decoding="async" loading="eager" />
       <img class="buwanAsset buwanAssetCulture" src="assets/buwan-wika/culture-cluster.webp?v=441" alt="" draggable="false" decoding="async" loading="eager" />
       <img class="buwanAsset buwanAssetProps" src="assets/buwan-wika/heritage-props.webp?v=441" alt="" draggable="false" decoding="async" loading="eager" />
       <img class="buwanAsset buwanAssetJeepney" src="assets/buwan-wika/jeepney.webp?v=441" alt="" draggable="false" decoding="async" loading="eager" />
