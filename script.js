@@ -69,10 +69,11 @@ let subjectRecordsPromise = null;
 let homepageDesignSettings = {};
 let lastPrayerTriggerKey = "";
 let lastScheduleAutoScrollKey = "";
-let isTodayScheduleOpen = false;
-let hasInitializedTodayScheduleScroll = false;
-let todayScheduleRefocusTimer = 0;
+let todayScheduleNoCurrentInitialized = false;
+let lastTodayScheduleRenderSignature = "";
+let todayScheduleReturnTimer = null;
 let todayScheduleAutoScrollLockUntil = 0;
+let isTodayScheduleOpen = false;
 let lastThingsToBringManilaDateKey = "";
 
 function safeSetClassBoardCache(value) {
@@ -3737,14 +3738,32 @@ function isSubjectDetailsScheduleItem(item = {}) {
 
 function renderSchedule(items, currentSubject) {
   const box = document.getElementById("scheduleList");
+  if (!box) return;
+
+  bindTodayScheduleFocusGuard();
+
+  // v443: Disable browser scroll anchoring for this panel. The schedule itself
+  // owns its scroll position, so unrelated DOM/layout updates must never tug it.
+  box.style.overflowAnchor = "none";
 
   if (!items || items.length === 0) {
-    box.classList.remove("all-periods-complete");
-    box.innerHTML = `<p>No schedule for today.</p>`;
+    const emptySignature = "no-schedule";
+    if (lastTodayScheduleRenderSignature !== emptySignature) {
+      box.classList.remove("all-periods-complete");
+      box.innerHTML = `<p>No schedule for today.</p>`;
+      lastTodayScheduleRenderSignature = emptySignature;
+    }
+
     syncTodayScheduleToggle();
+    clearTodayScheduleReturnTimer();
     lastScheduleAutoScrollKey = "";
-    hasInitializedTodayScheduleScroll = true;
-    box.scrollTop = 0;
+
+    // No schedule/current period: top is only the initial/default position for
+    // this page load/state. After the user moves the panel, nothing pulls it.
+    if (!todayScheduleNoCurrentInitialized) {
+      todayScheduleNoCurrentInitialized = true;
+      box.scrollTop = 0;
+    }
     return;
   }
 
@@ -3764,7 +3783,55 @@ function renderSchedule(items, currentSubject) {
 
   box.classList.toggle("all-periods-complete", allScheduleComplete);
 
-  box.innerHTML = items.map(item => {
+  // Only rebuild Today's Schedule when its actual content/current-period state
+  // changes. Dashboard refreshes for announcements, ticker, cleaners, etc. must
+  // leave this DOM completely untouched so there is no visible scroll tug.
+  const scheduleRenderSignature = JSON.stringify({
+    currentKey,
+    useSubjectScheduleColors,
+    design: {
+      cardBg: getHomeCssVar("--home-schedule-card-bg", ""),
+      cardText: getHomeCssVar("--home-schedule-card-text", ""),
+      timeColor: getHomeCssVar("--home-schedule-time-color", ""),
+      detailsColor: getHomeCssVar("--home-schedule-details-color", "")
+    },
+    items: items.map((item) => ({
+      Subject: item?.Subject || "",
+      StartTime: item?.StartTime || "",
+      EndTime: item?.EndTime || "",
+      Teacher: item?.Teacher || "",
+      Room: item?.Room || "",
+      Color: item?.Color || "",
+      TextColor: item?.TextColor || item?.SubjectTextColor || ""
+    }))
+  });
+
+  if (scheduleRenderSignature === lastTodayScheduleRenderSignature) {
+    syncTodayScheduleToggle();
+
+    if (currentKey) {
+      // If a current period has just become active, focus it once. Otherwise do
+      // not touch scrollTop here; the user's temporary manual scroll is handled
+      // only by the current-period focus guard below.
+      todayScheduleNoCurrentInitialized = false;
+      if (currentKey !== lastScheduleAutoScrollKey) {
+        lastScheduleAutoScrollKey = currentKey;
+        scrollToCurrentSchedule();
+      }
+    } else {
+      clearTodayScheduleReturnTimer();
+      lastScheduleAutoScrollKey = "";
+      if (!todayScheduleNoCurrentInitialized) {
+        todayScheduleNoCurrentInitialized = true;
+        box.scrollTop = 0;
+      }
+      // IMPORTANT: once initialized with no current period, do absolutely
+      // nothing to box.scrollTop. Manual scrolling remains exactly where left.
+    }
+    return;
+  }
+
+  const scheduleHtml = items.map(item => {
     const subjectColor = item.Color || getSubjectColor(item.Subject);
     const autoTextColor = getScheduleTextColor(item.Subject, subjectColor);
     const assignedSubjectTextColor = getScheduleItemSubjectTextColor(item, subjectColor);
@@ -3780,7 +3847,6 @@ function renderSchedule(items, currentSubject) {
       item.Subject === currentSubject.Subject &&
       item.StartTime === currentSubject.StartTime &&
       item.EndTime === currentSubject.EndTime;
-    const startMinutes = timeToMinutes(item.StartTime);
     const endMinutes = timeToMinutes(item.EndTime);
     const isPast = !isCurrent && endMinutes > 0 && endMinutes <= nowMinutes;
     const scheduleStateClass = isCurrent ? "current-row" : (isPast ? "past-row" : "future-row");
@@ -3802,6 +3868,12 @@ function renderSchedule(items, currentSubject) {
 `;
   }).join("");
 
+  // Rebuild only for a real schedule/current-state change. When no period is
+  // current and the user already moved the list, restore the old position in
+  // the same JS task (before paint) — no delayed corrections, no bounce.
+  box.innerHTML = scheduleHtml;
+  lastTodayScheduleRenderSignature = scheduleRenderSignature;
+
   box.querySelectorAll("[data-subject-popup]").forEach((card) => {
     card.addEventListener("click", (event) => {
       if (event.target.closest("a, button")) return;
@@ -3811,35 +3883,36 @@ function renderSchedule(items, currentSubject) {
 
   setupTodayScheduleSubjectMarquees();
   syncTodayScheduleToggle();
-  setupTodayScheduleCurrentRefocus();
-
-  // Fresh page / refresh behavior:
-  // - No current period: always begin at the very top once.
-  // - Current period: immediately focus the active subject.
-  if (!hasInitializedTodayScheduleScroll) {
-    hasInitializedTodayScheduleScroll = true;
-    if (!currentKey) {
-      lastScheduleAutoScrollKey = "";
-      box.scrollTop = 0;
-      return;
-    }
-  }
 
   if (currentKey) {
-    // Preserve the user's current position through the frequent dashboard
-    // re-render, then auto-focus only when a new active period appears.
-    box.scrollTop = previousScrollTop;
+    todayScheduleNoCurrentInitialized = false;
+
     if (currentKey !== lastScheduleAutoScrollKey) {
       lastScheduleAutoScrollKey = currentKey;
       scrollToCurrentSchedule();
+      return;
     }
+
+    // Content changed but the same period is still current. Preserve the live
+    // position synchronously; the normal current-period guard will refocus after
+    // manual scrolling becomes idle.
+    box.scrollTop = previousScrollTop;
     return;
   }
 
-  // No active/current period: never auto-scroll after initial load.
-  // Manual scrolling stays exactly where the student leaves it until refresh.
+  clearTodayScheduleReturnTimer();
   lastScheduleAutoScrollKey = "";
-  box.scrollTop = previousScrollTop;
+
+  if (!todayScheduleNoCurrentInitialized) {
+    // Entering no-current state (including initial page load): default to top.
+    todayScheduleNoCurrentInitialized = true;
+    box.scrollTop = 0;
+  } else {
+    // A genuine schedule-content change occurred while no period is current.
+    // Preserve position immediately; never use rAF/setTimeout restoration.
+    const maxScrollTop = Math.max(0, box.scrollHeight - box.clientHeight);
+    box.scrollTop = Math.max(0, Math.min(maxScrollTop, previousScrollTop));
+  }
 }
 
 
@@ -4252,27 +4325,6 @@ function syncTodayScheduleToggle() {
     : "Show Today ▼";
 }
 
-function setupTodayScheduleCurrentRefocus() {
-  const scheduleBox = document.getElementById("scheduleList");
-  if (!scheduleBox || scheduleBox.dataset.currentRefocusBound === "1") return;
-
-  scheduleBox.dataset.currentRefocusBound = "1";
-  scheduleBox.addEventListener("scroll", () => {
-    // Ignore scroll events generated by our own smooth centering animation.
-    if (performance.now() < todayScheduleAutoScrollLockUntil) return;
-
-    // Absolutely no automatic movement when there is no real current period.
-    if (!scheduleBox.querySelector(".current-row")) return;
-
-    if (todayScheduleRefocusTimer) window.clearTimeout(todayScheduleRefocusTimer);
-    todayScheduleRefocusTimer = window.setTimeout(() => {
-      todayScheduleRefocusTimer = 0;
-      if (!scheduleBox.querySelector(".current-row")) return;
-      scrollToCurrentSchedule();
-    }, 950);
-  }, { passive: true });
-}
-
 function toggleTodaySchedule() {
   isTodayScheduleOpen = !isTodayScheduleOpen;
   syncTodayScheduleToggle();
@@ -4282,14 +4334,45 @@ function toggleTodaySchedule() {
   }
 }
 
+function clearTodayScheduleReturnTimer() {
+  if (todayScheduleReturnTimer) {
+    clearTimeout(todayScheduleReturnTimer);
+    todayScheduleReturnTimer = null;
+  }
+}
+
+function bindTodayScheduleFocusGuard() {
+  const scheduleBox = document.getElementById("scheduleList");
+  if (!scheduleBox || scheduleBox.dataset.currentFocusGuardBound === "1") return;
+
+  scheduleBox.dataset.currentFocusGuardBound = "1";
+  scheduleBox.addEventListener("scroll", () => {
+    const currentRow = scheduleBox.querySelector(".current-row");
+    if (!currentRow) {
+      // v443: No active period means manual scroll has absolute ownership.
+      // There is intentionally no save/restore timer and no scroll correction.
+      clearTodayScheduleReturnTimer();
+      return;
+    }
+
+    // Ignore scroll events produced by our own smooth current-period focus.
+    if (Date.now() < todayScheduleAutoScrollLockUntil) return;
+
+    // While a period is current, allow the user to inspect the list, then
+    // return to the active subject after scrolling has been idle for a moment.
+    clearTodayScheduleReturnTimer();
+    todayScheduleReturnTimer = window.setTimeout(() => {
+      todayScheduleReturnTimer = null;
+      if (scheduleBox.querySelector(".current-row")) {
+        scrollToCurrentSchedule();
+      }
+    }, 1200);
+  }, { passive: true });
+}
+
 function scrollToCurrentSchedule(attempt = 0) {
   const scheduleBox = document.getElementById("scheduleList");
   if (!scheduleBox) return;
-
-  if (todayScheduleRefocusTimer) {
-    window.clearTimeout(todayScheduleRefocusTimer);
-    todayScheduleRefocusTimer = 0;
-  }
 
   window.setTimeout(() => {
     const currentRow = scheduleBox.querySelector(".current-row");
@@ -4313,9 +4396,8 @@ function scrollToCurrentSchedule(attempt = 0) {
 
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    // Prevent our own smooth-scroll events from scheduling another refocus.
-    todayScheduleAutoScrollLockUntil = performance.now() + (prefersReducedMotion ? 180 : 1250);
-
+    clearTodayScheduleReturnTimer();
+    todayScheduleAutoScrollLockUntil = Date.now() + 1200;
     scheduleBox.scrollTo({
       top: centeredTop,
       behavior: prefersReducedMotion ? "auto" : "smooth"
