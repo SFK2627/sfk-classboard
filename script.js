@@ -1826,7 +1826,7 @@ function normalizeHomepageEffectConfig(settings = {}) {
     "normal", "drizzle", "heavy-rain", "thunderstorm", "flood-rain", "multiverse", "picture", "youtube", "rickroll", "alert",
     "spider-glitch", "comic-web", "black-symbiote", "portal-rift",
     "fog", "snow", "confetti", "hearts", "koala-family", "stars", "matrix", "bubbles", "fireflies", "minions", "spongebob", "naruto", "akatsuki", "ninja-night", "neon-pulse",
-    "aurora", "galaxy", "solar-system", "pet-dog", "pet-koala", "meteors", "laser-grid", "crt", "pixel-storm", "prism", "petals", "gold-sparkle"
+    "aurora", "galaxy", "solar-system", "pet-dog", "pet-koala", "buwan-wika", "meteors", "laser-grid", "crt", "pixel-storm", "prism", "petals", "gold-sparkle"
   ]);
   const rawMode = String(settings.HomepageEffectMode || "normal").trim().toLowerCase();
   const mode = allowedModes.has(rawMode) ? rawMode : "normal";
@@ -2484,6 +2484,30 @@ function ensureHomepageEffectLayer() {
       <div class="koalaForestLeaf leaf-a"></div><div class="koalaForestLeaf leaf-b"></div><div class="koalaForestLeaf leaf-c"></div><div class="koalaForestLeaf leaf-d"></div><div class="koalaForestLeaf leaf-e"></div>
       <div class="koalaReactionBurst"><span>♥</span><span>🍃</span><span>♥</span><span>🍃</span><span>♥</span></div>
       <div class="koalaInteractionHint">Move, tap or click — your koala is watching from the eucalyptus forest</div>
+    </div>
+    <div class="homepageThemeScene homepageBuwanWikaScene" aria-hidden="true">
+      <div class="buwanWikaSkyGlow"></div>
+      <div class="buwanWikaSunSeal"><span></span></div>
+      <div class="buwanWikaMountains"><i class="m1"></i><i class="m2"></i><i class="m3"></i></div>
+      <div class="buwanWikaChurch"><span class="churchBody"></span><span class="churchPediment"></span><span class="churchCornice"></span><span class="churchPilaster left"></span><span class="churchPilaster right"></span><span class="churchWindow left"></span><span class="churchWindow right"></span><span class="churchDoor"></span><span class="churchDoorArch"></span><span class="churchCross"></span></div>
+      <div class="buwanWikaFlag" aria-hidden="true"><span class="flagBlue"></span><span class="flagRed"></span><span class="flagTriangle"><b class="flagSun"></b><i class="star s1">★</i><i class="star s2">★</i><i class="star s3">★</i></span></div>
+      <div class="buwanWikaBaybayinBanner">
+        <strong lang="tl-Tglg">ᜋᜎᜒᜄᜌᜅ᜔ ᜊᜓᜏᜈ᜔ ᜅ᜔ ᜏᜒᜃ</strong>
+        <span>Maligayang Buwan ng Wika</span>
+      </div>
+      <div class="buwanWikaParol parolLeft"><b></b></div><div class="buwanWikaParol parolRight"><b></b></div>
+      <div class="buwanWikaKubo"><span class="kuboRoof"></span><span class="kuboHouse"><i class="kuboWindow left"></i><i class="kuboWindow right"></i><i class="kuboDoor"></i></span><span class="kuboStilts"></span><span class="kuboLadder"></span></div>
+      <div class="buwanWikaPerson barongPerson"><span class="pinoyHead"><i></i></span><span class="personNeck"></span><span class="barongTop"><i class="barongEmbroidery"></i><i class="barongHem"></i></span><span class="personLeg left"></span><span class="personLeg right"></span><span class="personShoe left"></span><span class="personShoe right"></span><span class="pinoyArm left"></span><span class="pinoyArm right"></span></div>
+      <div class="buwanWikaPerson ternoPerson"><span class="pinayHead"><i></i></span><span class="personNeck"></span><span class="ternoSleeve left"></span><span class="ternoSleeve right"></span><span class="ternoDress"><i class="ternoSash"></i></span><span class="pinayArm left"></span><span class="pinayArm right"></span><span class="personLeg left"></span><span class="personLeg right"></span><span class="personShoe left"></span><span class="personShoe right"></span></div>
+      <div class="buwanWikaSalakot"></div>
+      <div class="buwanWikaAnahaw"><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="buwanWikaFoodCluster"><span class="foodPlate"></span><span class="foodLechon"></span><span class="foodMango one"></span><span class="foodMango two"></span><span class="foodLeaf"></span></div>
+      <div class="buwanWikaRizalDesk"><span class="rizalBook book1"></span><span class="rizalBook book2"></span><span class="rizalBook book3"></span><span class="rizalQuill"></span><span class="rizalInk"></span><span class="rizalLabel">Noli • Fili</span></div>
+      <div class="buwanWikaEagle"><span class="eagleWing left"></span><span class="eagleWing right"></span><span class="eagleBody"></span><span class="eagleHead"></span><span class="eagleBeak"></span></div>
+      <div class="buwanWikaJeepney"><span class="jeepRoof"></span><span class="jeepFront"></span><span class="jeepBody"><b>JEEPNEY</b><i class="jeepStripe"></i><i class="jeepWindow one"></i><i class="jeepWindow two"></i><i class="jeepWindow three"></i><i class="jeepStep"></i><i class="jeepGrill"></i></span><span class="jeepWheel left"></span><span class="jeepWheel right"></span></div>
+      <div class="buwanWikaBanig"></div>
+      <div class="buwanWikaSampaguita flower1">✿</div><div class="buwanWikaSampaguita flower2">✿</div><div class="buwanWikaSampaguita flower3">✿</div><div class="buwanWikaSampaguita flower4">✿</div><div class="buwanWikaSampaguita flower5">✿</div>
+      <div class="buwanWikaRibbon"><span>PILIPINAS</span><b>WIKA • KULTURA • PAGKAKAKILANLAN</b></div>
     </div>
     <div class="homepageEffectKoalaFamily" aria-hidden="true">
       <div class="koalaFamilySoftGlow"></div>
