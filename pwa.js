@@ -2,9 +2,9 @@
   let deferredInstallPrompt = null;
 
   const installButton = document.getElementById("installAppBtn");
-  const SW_URL = "./sw.js?v=buwan-wika-v438";
-  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV427FloodSwimmerSync";
-  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV427FloodSwimmerSync";
+  const SW_URL = "./sw.js?v=schedule-focus-v442";
+  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV442ScheduleFocus";
+  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV442ScheduleFocus";
 
   function isStandaloneApp() {
     return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;

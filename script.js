@@ -70,6 +70,9 @@ let homepageDesignSettings = {};
 let lastPrayerTriggerKey = "";
 let lastScheduleAutoScrollKey = "";
 let isTodayScheduleOpen = false;
+let hasInitializedTodayScheduleScroll = false;
+let todayScheduleRefocusTimer = 0;
+let todayScheduleAutoScrollLockUntil = 0;
 let lastThingsToBringManilaDateKey = "";
 
 function safeSetClassBoardCache(value) {
@@ -2486,27 +2489,20 @@ function ensureHomepageEffectLayer() {
       <div class="koalaInteractionHint">Move, tap or click — your koala is watching from the eucalyptus forest</div>
     </div>
     <div class="homepageThemeScene homepageBuwanWikaScene" aria-hidden="true">
-      <div class="buwanWikaSkyGlow"></div>
-      <div class="buwanWikaSunSeal"><span></span></div>
-      <div class="buwanWikaMountains"><i class="m1"></i><i class="m2"></i><i class="m3"></i></div>
-      <div class="buwanWikaChurch"><span class="churchBody"></span><span class="churchPediment"></span><span class="churchCornice"></span><span class="churchPilaster left"></span><span class="churchPilaster right"></span><span class="churchWindow left"></span><span class="churchWindow right"></span><span class="churchDoor"></span><span class="churchDoorArch"></span><span class="churchCross"></span></div>
-      <div class="buwanWikaFlag" aria-hidden="true"><span class="flagBlue"></span><span class="flagRed"></span><span class="flagTriangle"><b class="flagSun"></b><i class="star s1">★</i><i class="star s2">★</i><i class="star s3">★</i></span></div>
+      <img class="buwanAsset buwanAssetBackdrop" src="assets/buwan-wika/mountains-banig.webp?v=441" alt="" draggable="false" decoding="async" loading="eager" />
+      <img class="buwanAsset buwanAssetFlag" src="assets/buwan-wika/philippine-flag.webp?v=441" alt="" draggable="false" decoding="async" loading="eager" />
+      <img class="buwanAsset buwanAssetEagle" src="assets/buwan-wika/philippine-eagle.webp?v=441" alt="" draggable="false" decoding="async" loading="eager" />
       <div class="buwanWikaBaybayinBanner">
         <strong lang="tl-Tglg">ᜋᜎᜒᜄᜌᜅ᜔ ᜊᜓᜏᜈ᜔ ᜅ᜔ ᜏᜒᜃ</strong>
         <span>Maligayang Buwan ng Wika</span>
       </div>
-      <div class="buwanWikaParol parolLeft"><b></b></div><div class="buwanWikaParol parolRight"><b></b></div>
-      <div class="buwanWikaKubo"><span class="kuboRoof"></span><span class="kuboHouse"><i class="kuboWindow left"></i><i class="kuboWindow right"></i><i class="kuboDoor"></i></span><span class="kuboStilts"></span><span class="kuboLadder"></span></div>
-      <div class="buwanWikaPerson barongPerson"><span class="pinoyHead"><i></i></span><span class="personNeck"></span><span class="barongTop"><i class="barongEmbroidery"></i><i class="barongHem"></i></span><span class="personLeg left"></span><span class="personLeg right"></span><span class="personShoe left"></span><span class="personShoe right"></span><span class="pinoyArm left"></span><span class="pinoyArm right"></span></div>
-      <div class="buwanWikaPerson ternoPerson"><span class="pinayHead"><i></i></span><span class="personNeck"></span><span class="ternoSleeve left"></span><span class="ternoSleeve right"></span><span class="ternoDress"><i class="ternoSash"></i></span><span class="pinayArm left"></span><span class="pinayArm right"></span><span class="personLeg left"></span><span class="personLeg right"></span><span class="personShoe left"></span><span class="personShoe right"></span></div>
-      <div class="buwanWikaSalakot"></div>
-      <div class="buwanWikaAnahaw"><i></i><i></i><i></i><i></i><i></i></div>
-      <div class="buwanWikaFoodCluster"><span class="foodPlate"></span><span class="foodLechon"></span><span class="foodMango one"></span><span class="foodMango two"></span><span class="foodLeaf"></span></div>
-      <div class="buwanWikaRizalDesk"><span class="rizalBook book1"></span><span class="rizalBook book2"></span><span class="rizalBook book3"></span><span class="rizalQuill"></span><span class="rizalInk"></span><span class="rizalLabel">Noli • Fili</span></div>
-      <div class="buwanWikaEagle"><span class="eagleWing left"></span><span class="eagleWing right"></span><span class="eagleBody"></span><span class="eagleHead"></span><span class="eagleBeak"></span></div>
-      <div class="buwanWikaJeepney"><span class="jeepRoof"></span><span class="jeepFront"></span><span class="jeepBody"><b>JEEPNEY</b><i class="jeepStripe"></i><i class="jeepWindow one"></i><i class="jeepWindow two"></i><i class="jeepWindow three"></i><i class="jeepStep"></i><i class="jeepGrill"></i></span><span class="jeepWheel left"></span><span class="jeepWheel right"></span></div>
-      <div class="buwanWikaBanig"></div>
-      <div class="buwanWikaSampaguita flower1">✿</div><div class="buwanWikaSampaguita flower2">✿</div><div class="buwanWikaSampaguita flower3">✿</div><div class="buwanWikaSampaguita flower4">✿</div><div class="buwanWikaSampaguita flower5">✿</div>
+      <img class="buwanAsset buwanAssetChurch" src="assets/buwan-wika/church.webp?v=441" alt="" draggable="false" decoding="async" loading="eager" />
+      <img class="buwanAsset buwanAssetKubo" src="assets/buwan-wika/bahay-kubo.webp?v=441" alt="" draggable="false" decoding="async" loading="eager" />
+      <img class="buwanAsset buwanAssetBarong" src="assets/buwan-wika/barong-person.webp?v=441" alt="" draggable="false" decoding="async" loading="eager" />
+      <img class="buwanAsset buwanAssetFilipiniana" src="assets/buwan-wika/filipiniana-person.webp?v=441" alt="" draggable="false" decoding="async" loading="eager" />
+      <img class="buwanAsset buwanAssetCulture" src="assets/buwan-wika/culture-cluster.webp?v=441" alt="" draggable="false" decoding="async" loading="eager" />
+      <img class="buwanAsset buwanAssetProps" src="assets/buwan-wika/heritage-props.webp?v=441" alt="" draggable="false" decoding="async" loading="eager" />
+      <img class="buwanAsset buwanAssetJeepney" src="assets/buwan-wika/jeepney.webp?v=441" alt="" draggable="false" decoding="async" loading="eager" />
       <div class="buwanWikaRibbon"><span>PILIPINAS</span><b>WIKA • KULTURA • PAGKAKAKILANLAN</b></div>
     </div>
     <div class="homepageEffectKoalaFamily" aria-hidden="true">
@@ -3746,9 +3742,9 @@ function renderSchedule(items, currentSubject) {
     box.classList.remove("all-periods-complete");
     box.innerHTML = `<p>No schedule for today.</p>`;
     syncTodayScheduleToggle();
-    if (!lastScheduleAutoScrollKey) {
-      box.scrollTo({ top: 0, behavior: "smooth" });
-    }
+    lastScheduleAutoScrollKey = "";
+    hasInitializedTodayScheduleScroll = true;
+    box.scrollTop = 0;
     return;
   }
 
@@ -3815,17 +3811,34 @@ function renderSchedule(items, currentSubject) {
 
   setupTodayScheduleSubjectMarquees();
   syncTodayScheduleToggle();
+  setupTodayScheduleCurrentRefocus();
 
-  if (currentKey && currentKey !== lastScheduleAutoScrollKey) {
-    lastScheduleAutoScrollKey = currentKey;
-    scrollToCurrentSchedule();
+  // Fresh page / refresh behavior:
+  // - No current period: always begin at the very top once.
+  // - Current period: immediately focus the active subject.
+  if (!hasInitializedTodayScheduleScroll) {
+    hasInitializedTodayScheduleScroll = true;
+    if (!currentKey) {
+      lastScheduleAutoScrollKey = "";
+      box.scrollTop = 0;
+      return;
+    }
+  }
+
+  if (currentKey) {
+    // Preserve the user's current position through the frequent dashboard
+    // re-render, then auto-focus only when a new active period appears.
+    box.scrollTop = previousScrollTop;
+    if (currentKey !== lastScheduleAutoScrollKey) {
+      lastScheduleAutoScrollKey = currentKey;
+      scrollToCurrentSchedule();
+    }
     return;
   }
 
-  // When there is no active/current period, preserve the user's manual
-  // scroll position. This covers before the first class, breaks/free time,
-  // and after the last class. Auto-focus only happens when a real current
-  // period becomes active above.
+  // No active/current period: never auto-scroll after initial load.
+  // Manual scrolling stays exactly where the student leaves it until refresh.
+  lastScheduleAutoScrollKey = "";
   box.scrollTop = previousScrollTop;
 }
 
@@ -4239,6 +4252,27 @@ function syncTodayScheduleToggle() {
     : "Show Today ▼";
 }
 
+function setupTodayScheduleCurrentRefocus() {
+  const scheduleBox = document.getElementById("scheduleList");
+  if (!scheduleBox || scheduleBox.dataset.currentRefocusBound === "1") return;
+
+  scheduleBox.dataset.currentRefocusBound = "1";
+  scheduleBox.addEventListener("scroll", () => {
+    // Ignore scroll events generated by our own smooth centering animation.
+    if (performance.now() < todayScheduleAutoScrollLockUntil) return;
+
+    // Absolutely no automatic movement when there is no real current period.
+    if (!scheduleBox.querySelector(".current-row")) return;
+
+    if (todayScheduleRefocusTimer) window.clearTimeout(todayScheduleRefocusTimer);
+    todayScheduleRefocusTimer = window.setTimeout(() => {
+      todayScheduleRefocusTimer = 0;
+      if (!scheduleBox.querySelector(".current-row")) return;
+      scrollToCurrentSchedule();
+    }, 950);
+  }, { passive: true });
+}
+
 function toggleTodaySchedule() {
   isTodayScheduleOpen = !isTodayScheduleOpen;
   syncTodayScheduleToggle();
@@ -4251,6 +4285,11 @@ function toggleTodaySchedule() {
 function scrollToCurrentSchedule(attempt = 0) {
   const scheduleBox = document.getElementById("scheduleList");
   if (!scheduleBox) return;
+
+  if (todayScheduleRefocusTimer) {
+    window.clearTimeout(todayScheduleRefocusTimer);
+    todayScheduleRefocusTimer = 0;
+  }
 
   window.setTimeout(() => {
     const currentRow = scheduleBox.querySelector(".current-row");
@@ -4273,6 +4312,9 @@ function scrollToCurrentSchedule(attempt = 0) {
     );
 
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // Prevent our own smooth-scroll events from scheduling another refocus.
+    todayScheduleAutoScrollLockUntil = performance.now() + (prefersReducedMotion ? 180 : 1250);
 
     scheduleBox.scrollTo({
       top: centeredTop,

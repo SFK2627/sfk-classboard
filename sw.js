@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-main-pwa-v438-buwan-wika";
+const CACHE_NAME = "sfk-main-pwa-v442-schedule-focus";
 const CACHE_PREFIXES_TO_DELETE = ["sfk-main-pwa-", "sfk-sw.js-"];
 const NAVIGATION_FALLBACK_URL = "./index.html";
 const NAVIGATION_TIMEOUT_MS = 2500;
@@ -38,7 +38,17 @@ const APP_SHELL = [
   "./st-faustina-portrait.png",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
-  "./icons/icon-maskable-512.png"
+  "./icons/icon-maskable-512.png",
+  "./assets/buwan-wika/philippine-flag.webp",
+  "./assets/buwan-wika/philippine-eagle.webp",
+  "./assets/buwan-wika/church.webp",
+  "./assets/buwan-wika/jeepney.webp",
+  "./assets/buwan-wika/barong-person.webp",
+  "./assets/buwan-wika/filipiniana-person.webp",
+  "./assets/buwan-wika/bahay-kubo.webp",
+  "./assets/buwan-wika/culture-cluster.webp",
+  "./assets/buwan-wika/heritage-props.webp",
+  "./assets/buwan-wika/mountains-banig.webp"
 ];
 
 function appShellRequest(url) {
@@ -253,6 +263,11 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (request.destination === "style" || request.destination === "script") {
+    event.respondWith(networkFirstFreshAsset(request));
+    return;
+  }
+
+  if (url.pathname.includes("/assets/buwan-wika/")) {
     event.respondWith(networkFirstFreshAsset(request));
     return;
   }

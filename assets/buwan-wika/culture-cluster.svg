@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 380">
+<defs><filter id="s"><feDropShadow dx="0" dy="7" stdDeviation="5" flood-color="#433327" flood-opacity=".17"/></filter></defs>
+<g filter="url(#s)" stroke-linejoin="round">
+<ellipse cx="210" cy="290" rx="180" ry="58" fill="#F1F1EC" stroke="#A6AFB3" stroke-width="7"/>
+<path d="M75 225c42-72 198-89 278-19-9 74-51 105-136 105-91 0-131-28-142-86Z" fill="#A94D27" stroke="#71351A" stroke-width="8"/>
+<path d="M112 232c35-37 117-52 184-28-32 4-75 23-95 42-33 3-62-2-89-14Z" fill="#C86B32" opacity=".65"/>
+<circle cx="86" cy="238" r="12" fill="#522817"/><path d="M340 218c8 10 12 18 13 31" stroke="#71351A" stroke-width="7"/>
+<ellipse cx="335" cy="165" rx="34" ry="24" fill="#F0B927" stroke="#C98D1B" stroke-width="4"/><ellipse cx="379" cy="182" rx="35" ry="25" fill="#FFD23C" stroke="#D19B1B" stroke-width="4"/><path d="M332 140c17-24 35-26 54-8-15 1-28 7-40 17Z" fill="#5B9347"/>
+<g transform="translate(422 62)" stroke="#5A4939" stroke-width="5"><rect x="0" y="139" width="150" height="48" rx="8" fill="#A34531"/><rect x="17" y="92" width="150" height="48" rx="8" fill="#225FA1"/><rect x="34" y="45" width="150" height="48" rx="8" fill="#C18A2A"/><path d="M15 151h120M32 104h120M49 57h120" stroke="#F2DFC0" stroke-width="3"/></g>
+<g font-family="Arial,sans-serif" font-weight="800" fill="#FFF"><text x="497" y="232" font-size="18" text-anchor="middle">NOLI</text><text x="514" y="185" font-size="18" text-anchor="middle">FILI</text><text x="531" y="138" font-size="17" text-anchor="middle">AKDA</text></g>
+<g transform="translate(585 38)"><rect x="4" y="166" width="58" height="63" rx="10" fill="#1B2940" stroke="#45536A" stroke-width="5"/><path d="M33 171 82 44" stroke="#9A6A37" stroke-width="9" stroke-linecap="round"/><path d="M80 42c70 16 74 72 34 112-31-13-49-12-75 3 12-36 22-78 41-115Z" fill="#F4E5B1" stroke="#C89F5B" stroke-width="5"/><path d="M79 49 45 147" stroke="#C89F5B" stroke-width="3"/></g>
+<g fill="#FFF" stroke="#D8D8D3" stroke-width="3"><circle cx="408" cy="288" r="19"/><circle cx="439" cy="303" r="18"/><circle cx="466" cy="278" r="17"/><circle cx="489" cy="300" r="15"/></g>
+</g></svg>

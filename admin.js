@@ -2964,6 +2964,7 @@ const HOMEPAGE_EFFECT_MODE_NAMES = {
   "solar-system": "Solar System / All Planets Interactive",
   "pet-dog": "Pets / Cute Interactive Dog",
   "pet-koala": "Pets / Interactive Koala Forest",
+  "buwan-wika": "Buwan ng Wika / Proud Pinoy",
   meteors: "Meteor Shower",
   "laser-grid": "Laser Grid / Synthwave",
   crt: "Retro CRT / TV Static",

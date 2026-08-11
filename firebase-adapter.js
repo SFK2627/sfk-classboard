@@ -301,6 +301,7 @@
       "solar-system",
       "pet-dog",
       "pet-koala",
+      "buwan-wika",
       "meteors",
       "laser-grid",
       "crt",

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 360">
+<defs><filter id="s"><feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#27323a" flood-opacity=".22"/></filter></defs>
+<g filter="url(#s)" stroke="#39444B" stroke-width="7" stroke-linejoin="round">
+<path fill="#CDD5D9" d="M82 74h520l98 83v117H70V127Z"/>
+<path fill="#F7D11E" d="M76 137h546v24H76Z"/><path fill="#CE1126" d="M76 161h546v31H76Z"/><path fill="#164CA2" d="M76 192h546v65H76Z"/>
+<path fill="#B7C0C5" d="M610 106h83l73 58v86H650l-40-40Z"/>
+<path fill="#8DD2EC" d="M128 96h104v55H128ZM249 96h104v55H249ZM370 96h104v55H370ZM491 96h92v55h-92Z"/>
+<path fill="#A9D7E7" d="m635 128 52 0 48 38h-100Z"/>
+<path fill="#E3E8EA" d="M109 51h521v33H109Z"/>
+<path fill="#9DA8AE" d="M672 196h104v58H672Z"/>
+<path fill="#F2E49A" d="M700 207h28v20h-28Z"/>
+<path fill="#7C878E" d="M676 232h96v25h-96Z"/>
+<path fill="#D6DDE0" d="M138 250h436v24H138Z"/>
+<path fill="#F5F5F2" d="M285 204h226v37H285Z"/>
+<text x="398" y="230" text-anchor="middle" font-family="Arial,sans-serif" font-size="28" font-weight="900" fill="#164CA2" stroke="none">JEEPNEY</text>
+<path d="M115 119h488" stroke="#fff" stroke-width="4" opacity=".75"/>
+<path d="M102 273h590" stroke="#727D84" stroke-width="8"/>
+<g fill="#202529"><circle cx="196" cy="286" r="56"/><circle cx="624" cy="286" r="56"/></g><g fill="#9DA8AE" stroke="#4A5156" stroke-width="7"><circle cx="196" cy="286" r="27"/><circle cx="624" cy="286" r="27"/></g>
+<path fill="#F6CC23" d="M95 199h65l-28 24Z"/><path fill="#fff" d="M116 199h34l-17 14Z"/><path fill="#CE1126" d="M128 199h23l-11 11Z"/>
+</g></svg>
