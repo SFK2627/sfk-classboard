@@ -2504,6 +2504,7 @@ function ensureHomepageEffectLayer() {
       <img class="buwanAsset buwanAssetCulture" src="assets/buwan-wika/culture-cluster.webp?v=441" alt="" draggable="false" decoding="async" loading="eager" />
       <img class="buwanAsset buwanAssetProps" src="assets/buwan-wika/heritage-props.webp?v=441" alt="" draggable="false" decoding="async" loading="eager" />
       <img class="buwanAsset buwanAssetJeepney" src="assets/buwan-wika/jeepney.webp?v=441" alt="" draggable="false" decoding="async" loading="eager" />
+      <div class="buwanWikaKalabaw" aria-hidden="true">🐃</div>
       <div class="buwanWikaRibbon"><span>PILIPINAS</span><b>WIKA • KULTURA • PAGKAKAKILANLAN</b></div>
     </div>
     <div class="homepageEffectKoalaFamily" aria-hidden="true">
