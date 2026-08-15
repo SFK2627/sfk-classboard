@@ -2,9 +2,9 @@
   let deferredInstallPrompt = null;
 
   const installButton = document.getElementById("installAppBtn");
-  const SW_URL = "./sw.js?v=buwan-svg-v440";
-  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV440BuwanSvgAssets";
-  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV440BuwanSvgAssets";
+  const SW_URL = "./sw.js?v=v453-hard-effects-story-fix";
+  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV453HardEffectsStoryFix";
+  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV453HardEffectsStoryFix";
 
   function isStandaloneApp() {
     return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;

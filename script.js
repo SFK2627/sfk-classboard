@@ -1838,7 +1838,8 @@ function normalizeHomepageEffectConfig(settings = {}) {
     "normal", "drizzle", "heavy-rain", "thunderstorm", "flood-rain", "multiverse", "picture", "youtube", "rickroll", "alert",
     "spider-glitch", "comic-web", "black-symbiote", "portal-rift",
     "fog", "snow", "confetti", "hearts", "koala-family", "stars", "matrix", "bubbles", "fireflies", "minions", "spongebob", "naruto", "akatsuki", "ninja-night", "neon-pulse",
-    "aurora", "galaxy", "solar-system", "pet-dog", "pet-koala", "buwan-wika", "meteors", "laser-grid", "crt", "pixel-storm", "prism", "petals", "gold-sparkle"
+    "aurora", "galaxy", "solar-system", "pet-dog", "pet-koala", "buwan-wika", "meteors", "laser-grid", "crt", "pixel-storm", "prism", "petals", "gold-sparkle",
+    "sunrise", "underwater", "notebook", "hyperspace", "window-weather", "fiesta", "book-world", "magic-blackboard", "moonlit-garden", "cloud-kingdom", "countdown", "pixel-game", "cyber-classroom", "heritage-journey"
   ]);
   const rawMode = String(settings.HomepageEffectMode || "normal").trim().toLowerCase();
   const mode = allowedModes.has(rawMode) ? rawMode : "normal";
@@ -2567,6 +2568,117 @@ function ensureHomepageEffectLayer() {
         <div class="koalaFamilyLoveBurst"><i>♥</i><i>♡</i><i>♥</i><i>♡</i><i>♥</i><i>♥</i><i>♡</i><i>♥</i><i>♡</i><i>♥</i><i>♡</i><i>♥</i></div>
       </div>
     </div>
+
+    <div class="homepageThemeScene homepageSunriseScene" aria-hidden="true">
+      <div class="sunriseSun"></div>
+      <div class="sunriseCloud cloud-a"></div><div class="sunriseCloud cloud-b"></div><div class="sunriseCloud cloud-c"></div>
+      <div class="sunriseBird bird-a">⌒⌒</div><div class="sunriseBird bird-b">⌒⌒</div><div class="sunriseBird bird-c">⌒⌒</div>
+      <div class="sunriseHill hill-back"></div><div class="sunriseHill hill-front"></div>
+      <div class="sunriseGlowLine"></div>
+    </div>
+
+    <div class="homepageThemeScene homepageUnderwaterScene" aria-hidden="true">
+      <div class="underwaterLight"></div>
+      <div class="underwaterWave wave-a"></div><div class="underwaterWave wave-b"></div>
+      <div class="underwaterFish fish-a"><i></i></div><div class="underwaterFish fish-b"><i></i></div><div class="underwaterFish fish-c"><i></i></div><div class="underwaterFish fish-d"><i></i></div>
+      <div class="underwaterBubble bubble-a"></div><div class="underwaterBubble bubble-b"></div><div class="underwaterBubble bubble-c"></div><div class="underwaterBubble bubble-d"></div>
+      <div class="underwaterSeaweed weed-a"></div><div class="underwaterSeaweed weed-b"></div><div class="underwaterSeaweed weed-c"></div><div class="underwaterSeaweed weed-d"></div>
+      <div class="underwaterCoral coral-a"></div><div class="underwaterCoral coral-b"></div>
+    </div>
+
+    <div class="homepageThemeScene homepageNotebookScene" aria-hidden="true">
+      <div class="notebookPaper"></div><div class="notebookMargin"></div>
+      <div class="notebookSticker sticker-a">A+</div><div class="notebookSticker sticker-b">#BeKind</div>
+      <div class="notebookDoodle doodle-a">&lt;html&gt;</div><div class="notebookDoodle doodle-b">ICT</div><div class="notebookDoodle doodle-c">★</div><div class="notebookDoodle doodle-d">♥</div><div class="notebookDoodle doodle-e">123</div>
+      <div class="notebookPencil"></div><div class="notebookRuler"></div>
+    </div>
+
+    <div class="homepageThemeScene homepageHyperspaceScene" aria-hidden="true">
+      <div class="hyperspaceCore"></div>
+      <span class="hyperspaceStar s1"></span><span class="hyperspaceStar s2"></span><span class="hyperspaceStar s3"></span><span class="hyperspaceStar s4"></span><span class="hyperspaceStar s5"></span><span class="hyperspaceStar s6"></span><span class="hyperspaceStar s7"></span><span class="hyperspaceStar s8"></span><span class="hyperspaceStar s9"></span><span class="hyperspaceStar s10"></span><span class="hyperspaceStar s11"></span><span class="hyperspaceStar s12"></span>
+      <div class="hyperspacePlanet planet-a"></div><div class="hyperspacePlanet planet-b"></div>
+    </div>
+
+    <div class="homepageThemeScene homepageWindowWeatherScene" aria-hidden="true">
+      <div class="windowWeatherGlow"></div>
+      <div class="windowFrame"><span class="windowPane v"></span><span class="windowPane h"></span><div class="windowOutsideSky"></div><div class="windowOutsideCloud cloud-a"></div><div class="windowOutsideCloud cloud-b"></div><div class="windowOutsideBird">⌒⌒</div></div>
+      <div class="windowCurtain curtain-left"></div><div class="windowCurtain curtain-right"></div>
+      <div class="windowPlant"><i></i><i></i><i></i><i></i></div>
+      <div class="windowBranch"><i></i><i></i><i></i><i></i><i></i></div>
+    </div>
+
+    <div class="homepageThemeScene homepageFiestaScene" aria-hidden="true">
+      <div class="fiestaGlow"></div>
+      <div class="fiestaBunting row-a"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="fiestaBunting row-b"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="fiestaLights"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="fiestaChurch"></div><div class="fiestaPlaza"></div><div class="fiestaJeep"></div>
+      <div class="fiestaSpark sparkle-a">✦</div><div class="fiestaSpark sparkle-b">✦</div><div class="fiestaSpark sparkle-c">✦</div>
+    </div>
+
+    <div class="homepageThemeScene homepageBookWorldScene" aria-hidden="true">
+      <div class="bookWorldGlow"></div>
+      <div class="bookWorldBook"><span class="page left"></span><span class="page right"></span><i class="spine"></i></div>
+      <div class="bookWorldMountain m1"></div><div class="bookWorldMountain m2"></div>
+      <div class="bookWorldIcon icon-a">★</div><div class="bookWorldIcon icon-b">✦</div><div class="bookWorldIcon icon-c">📘</div><div class="bookWorldIcon icon-d">💡</div><div class="bookWorldIcon icon-e">☁</div>
+    </div>
+
+    <div class="homepageThemeScene homepageBlackboardScene" aria-hidden="true">
+      <div class="blackboardFrameOuter"></div>
+      <div class="blackboardDust dust-a"></div><div class="blackboardDust dust-b"></div><div class="blackboardDust dust-c"></div>
+      <div class="blackboardText text-a">&lt;/&gt; HTML</div><div class="blackboardText text-b">V = I × R</div><div class="blackboardText text-c">#BeKind</div><div class="blackboardText text-d">Arduino • Web • Code</div><div class="blackboardText text-e">∞ Learning</div>
+      <div class="blackboardFormula formula-a"></div><div class="blackboardFormula formula-b"></div><div class="blackboardFormula formula-c"></div>
+      <div class="blackboardEraser"></div><div class="blackboardChalk"></div>
+    </div>
+
+    <div class="homepageThemeScene homepageMoonGardenScene" aria-hidden="true">
+      <div class="moonGardenMoon"></div><div class="moonGardenGlow"></div>
+      <div class="moonGardenHill hill-back"></div><div class="moonGardenHill hill-front"></div>
+      <div class="moonGardenTree tree-a"></div><div class="moonGardenTree tree-b"></div>
+      <div class="moonGardenFirefly fly-a"></div><div class="moonGardenFirefly fly-b"></div><div class="moonGardenFirefly fly-c"></div><div class="moonGardenFirefly fly-d"></div><div class="moonGardenFirefly fly-e"></div><div class="moonGardenFirefly fly-f"></div>
+      <div class="moonGardenGrass"></div>
+    </div>
+
+    <div class="homepageThemeScene homepageCloudKingdomScene" aria-hidden="true">
+      <div class="cloudKingdomSun"></div><div class="cloudKingdomRay ray-a"></div><div class="cloudKingdomRay ray-b"></div><div class="cloudKingdomRay ray-c"></div>
+      <div class="cloudKingdomCloud cloud-a"></div><div class="cloudKingdomCloud cloud-b"></div><div class="cloudKingdomCloud cloud-c"></div><div class="cloudKingdomCloud cloud-d"></div>
+      <div class="cloudKingdomBird bird-a">⌒⌒</div><div class="cloudKingdomBird bird-b">⌒⌒</div>
+    </div>
+
+    <div class="homepageThemeScene homepageCountdownScene" aria-hidden="true">
+      <div class="countdownGlow"></div><div class="countdownRing ring-a"></div><div class="countdownRing ring-b"></div>
+      <div class="countdownBurst burst-a"></div><div class="countdownBurst burst-b"></div><div class="countdownBurst burst-c"></div>
+      <div class="countdownStage"><span class="countdownWord word-3">3</span><span class="countdownWord word-2">2</span><span class="countdownWord word-1">1</span><span class="countdownWord word-go">GO!</span></div>
+      <div class="countdownConfetti conf-a">✦</div><div class="countdownConfetti conf-b">✦</div><div class="countdownConfetti conf-c">✦</div><div class="countdownConfetti conf-d">✦</div>
+    </div>
+
+    <div class="homepageThemeScene homepagePixelGameScene" aria-hidden="true">
+      <div class="pixelSun"></div><div class="pixelCloud cloud-a"></div><div class="pixelCloud cloud-b"></div>
+      <div class="pixelCoin coin-a"></div><div class="pixelCoin coin-b"></div><div class="pixelCoin coin-c"></div>
+      <div class="pixelHill hill-a"></div><div class="pixelHill hill-b"></div>
+      <div class="pixelRunner"><i class="head"></i><i class="body"></i><i class="arm arm-a"></i><i class="arm arm-b"></i><i class="leg leg-a"></i><i class="leg leg-b"></i></div>
+      <div class="pixelGround"></div>
+    </div>
+
+    <div class="homepageThemeScene homepageCyberClassroomScene" aria-hidden="true">
+      <div class="cyberGrid"></div>
+      <div class="cyberBeam beam-a"></div><div class="cyberBeam beam-b"></div><div class="cyberBeam beam-c"></div>
+      <div class="cyberNode node-a"></div><div class="cyberNode node-b"></div><div class="cyberNode node-c"></div><div class="cyberNode node-d"></div><div class="cyberNode node-e"></div>
+      <div class="cyberPanel panel-a"><span>DATA</span></div><div class="cyberPanel panel-b"><span>LESSONS</span></div><div class="cyberPanel panel-c"><span>COMPLIANCE</span></div>
+      <div class="cyberPulse"></div>
+    </div>
+
+    <div class="homepageThemeScene homepageHeritageJourneyScene" aria-hidden="true">
+      <img class="heritageAsset heritageBackdrop" src="assets/buwan-wika/mountains-banig.webp?v=441" alt="" draggable="false" decoding="async" loading="eager" />
+      <img class="heritageAsset heritageFlag" src="assets/buwan-wika/philippine-flag.webp?v=441" alt="" draggable="false" decoding="async" loading="eager" />
+      <img class="heritageAsset heritageChurch" src="assets/buwan-wika/church.webp?v=441" alt="" draggable="false" decoding="async" loading="eager" />
+      <img class="heritageAsset heritageKubo" src="assets/buwan-wika/bahay-kubo.webp?v=441" alt="" draggable="false" decoding="async" loading="eager" />
+      <img class="heritageAsset heritageJeep" src="assets/buwan-wika/jeepney.webp?v=441" alt="" draggable="false" decoding="async" loading="eager" />
+      <img class="heritageAsset heritageProps" src="assets/buwan-wika/heritage-props.webp?v=441" alt="" draggable="false" decoding="async" loading="eager" />
+      <img class="heritageAsset heritageCulture" src="assets/buwan-wika/culture-cluster.webp?v=441" alt="" draggable="false" decoding="async" loading="eager" />
+      <div class="heritageJourneyTrack"><span class="stop stop-a">Bahay Kubo</span><span class="stop stop-b">Jeepney</span><span class="stop stop-c">Simbahan</span><span class="stop stop-d">Akda at Kultura</span></div>
+    </div>
+
     <div class="homepageEffectContent" role="status" aria-live="polite">
       <div class="homepageEffectWeatherMessage">
         <strong id="homepageEffectWeatherTitle"></strong>
@@ -2616,6 +2728,8 @@ function ensureHomepageEffectLayer() {
     <button id="homepageEffectClose" class="homepageEffectClose" type="button" aria-label="Dismiss display effect" hidden aria-hidden="true" tabindex="-1" disabled>×</button>
   `;
   document.body.appendChild(layer);
+  window.addEventListener("resize", forceHomepageStoryBarViewportV453, { passive: true });
+  forceHomepageStoryBarViewportV453();
 
   layer.querySelector("#homepageEffectClose")?.addEventListener("click", dismissHomepageEffectForView);
   layer.querySelector("#homepageRickrollFakeExit")?.addEventListener("click", revealHomepageRickroll);
@@ -2879,6 +2993,7 @@ function updateHomepageEffectGalleryStoryProgress(progress = null) {
   const host = layer?.querySelector("#homepageEffectStoryProgress");
   const count = homepageEffectGallerySources.length;
   if (!host) return;
+  forceHomepageStoryBarViewportV453();
   host.hidden = count <= 1;
   if (count <= 1) {
     host.innerHTML = "";
@@ -3248,6 +3363,85 @@ async function resolveHomepageEffectImageSource(value) {
   return "";
 }
 
+
+const HOMEPAGE_PREMIUM_SCENE_MAP_V453 = Object.freeze({
+  sunrise: "homepageSunriseScene",
+  underwater: "homepageUnderwaterScene",
+  notebook: "homepageNotebookScene",
+  hyperspace: "homepageHyperspaceScene",
+  "window-weather": "homepageWindowWeatherScene",
+  fiesta: "homepageFiestaScene",
+  "book-world": "homepageBookWorldScene",
+  "magic-blackboard": "homepageBlackboardScene",
+  "moonlit-garden": "homepageMoonGardenScene",
+  "cloud-kingdom": "homepageCloudKingdomScene",
+  countdown: "homepageCountdownScene",
+  "pixel-game": "homepagePixelGameScene",
+  "cyber-classroom": "homepageCyberClassroomScene",
+  "heritage-journey": "homepageHeritageJourneyScene"
+});
+
+function forceHomepagePremiumSceneV453(layer, mode) {
+  if (!layer) return;
+  const wantedClass = HOMEPAGE_PREMIUM_SCENE_MAP_V453[String(mode || "")];
+  const premiumClasses = new Set(Object.values(HOMEPAGE_PREMIUM_SCENE_MAP_V453));
+  layer.querySelectorAll(".homepageThemeScene").forEach((scene) => {
+    const isPremiumScene = Array.from(premiumClasses).some((className) => scene.classList.contains(className));
+    if (!isPremiumScene) return;
+    const shouldShow = Boolean(wantedClass && scene.classList.contains(wantedClass));
+    scene.style.setProperty("display", shouldShow ? "block" : "none", "important");
+    scene.style.setProperty("visibility", shouldShow ? "visible" : "hidden", "important");
+    scene.style.setProperty("opacity", shouldShow ? "1" : "0", "important");
+  });
+
+  // A hard inline backdrop makes every premium mode visibly different even if
+  // an older cached stylesheet is temporarily present during a PWA update.
+  const backdrop = layer.querySelector(".homepageEffectBackdrop");
+  if (!backdrop) return;
+  const fallbackBackgrounds = {
+    sunrise: "linear-gradient(180deg, rgba(255,185,92,.40), rgba(255,116,82,.24) 48%, rgba(68,100,126,.18))",
+    underwater: "linear-gradient(180deg, rgba(80,207,255,.42), rgba(14,103,174,.34) 48%, rgba(3,42,82,.38))",
+    notebook: "linear-gradient(180deg, rgba(255,253,247,.95), rgba(245,239,229,.92))",
+    hyperspace: "radial-gradient(circle at 50% 50%, rgba(123,78,255,.34), transparent 20%), linear-gradient(180deg, rgba(7,5,28,.88), rgba(3,4,14,.92))",
+    "window-weather": "linear-gradient(180deg, rgba(196,229,255,.52), rgba(236,246,255,.34) 58%, rgba(239,228,209,.24))",
+    fiesta: "linear-gradient(180deg, rgba(113,192,255,.36), rgba(255,245,208,.28) 56%, rgba(75,150,76,.20))",
+    "book-world": "linear-gradient(180deg, rgba(163,143,255,.34), rgba(255,236,174,.26))",
+    "magic-blackboard": "linear-gradient(180deg, rgba(27,66,53,.92), rgba(13,39,31,.94))",
+    "moonlit-garden": "linear-gradient(180deg, rgba(8,27,63,.92), rgba(6,24,50,.94) 55%, rgba(3,17,27,.96))",
+    "cloud-kingdom": "linear-gradient(180deg, rgba(176,224,255,.52), rgba(225,245,255,.38) 52%, rgba(255,255,255,.28))",
+    countdown: "radial-gradient(circle at 50% 50%, rgba(209,108,255,.24), transparent 30%), linear-gradient(180deg, rgba(71,19,112,.76), rgba(15,16,58,.88))",
+    "pixel-game": "linear-gradient(180deg, rgba(121,207,255,.46), rgba(207,239,255,.30) 58%, rgba(77,160,73,.28))",
+    "cyber-classroom": "linear-gradient(180deg, rgba(7,29,55,.90), rgba(4,10,27,.94))",
+    "heritage-journey": "linear-gradient(180deg, rgba(255,239,195,.30), rgba(91,174,255,.22))"
+  };
+  if (wantedClass) {
+    backdrop.style.setProperty("background", fallbackBackgrounds[mode] || "rgba(0,0,0,.18)", "important");
+  } else {
+    backdrop.style.removeProperty("background");
+  }
+}
+
+function forceHomepageStoryBarViewportV453() {
+  const layer = document.getElementById("homepageEffectLayer");
+  const host = layer?.querySelector("#homepageEffectStoryProgress");
+  if (!host) return;
+  host.style.setProperty("position", "fixed", "important");
+  host.style.setProperty("top", "max(7px, env(safe-area-inset-top))", "important");
+  host.style.setProperty("left", "0", "important");
+  host.style.setProperty("right", "auto", "important");
+  host.style.setProperty("width", "100vw", "important");
+  host.style.setProperty("max-width", "100vw", "important");
+  host.style.setProperty("margin", "0", "important");
+  host.style.setProperty("padding-left", "max(8px, env(safe-area-inset-left))", "important");
+  host.style.setProperty("padding-right", "max(8px, env(safe-area-inset-right))", "important");
+  host.style.setProperty("box-sizing", "border-box", "important");
+  host.style.setProperty("transform", "none", "important");
+  host.style.setProperty("justify-content", "center", "important");
+  host.style.setProperty("gap", window.innerWidth <= 700 ? "3px" : "5px", "important");
+  host.style.setProperty("height", window.innerWidth <= 700 ? "3px" : "4px", "important");
+  host.style.setProperty("z-index", "2147483646", "important");
+}
+
 async function applyHomepageEffectSettings(settings = {}) {
   // Fresh page load: do not reveal or play any Admin effect on top of the
   // ClassBoard loading screen. Keep only the newest settings and render them
@@ -3289,6 +3483,7 @@ async function applyHomepageEffectSettings(settings = {}) {
   layer.hidden = false;
   layer.setAttribute("aria-hidden", "false");
   layer.className = `homepageEffectLayer is-${config.mode}`;
+  forceHomepagePremiumSceneV453(layer, config.mode);
   document.documentElement.classList.add("sfkHomepageEffectActive");
   document.documentElement.classList.toggle("sfkHomepageMultiverseActive", config.mode === "multiverse");
   document.documentElement.classList.toggle("sfkHomepageSpiderGlitchActive", config.mode === "spider-glitch");

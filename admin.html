@@ -161,6 +161,20 @@
             <option value="prism">Rainbow Prism / Light Beams</option>
             <option value="petals">Falling Petals</option>
             <option value="gold-sparkle">Golden Sparkles</option>
+            <option value="sunrise">Cinematic Sunrise / New Day</option>
+            <option value="underwater">Underwater / Ocean Classroom</option>
+            <option value="notebook">Paper / Notebook World</option>
+            <option value="hyperspace">Space Warp / Hyperspace</option>
+            <option value="window-weather">Classroom Window / Weather Scene</option>
+            <option value="fiesta">Festival / Fiesta sa Barrio</option>
+            <option value="book-world">Book Opens Into a World</option>
+            <option value="magic-blackboard">Magic Blackboard / Chalk World</option>
+            <option value="moonlit-garden">Moonlit Garden Deluxe</option>
+            <option value="cloud-kingdom">Cloud Kingdom / Above the Clouds</option>
+            <option value="countdown">Celebration Countdown</option>
+            <option value="pixel-game">Pixel Game World</option>
+            <option value="cyber-classroom">Neon Data Stream / Cyber Classroom</option>
+            <option value="heritage-journey">Philippine Heritage Journey</option>
             <option value="picture">Fullscreen Picture Gallery</option>
             <option value="youtube">YouTube Video / Autoplay</option>
             <option value="rickroll">Exit Button Prank / Rickroll</option>
@@ -236,7 +250,7 @@
           </label>
 
           <div class="homepageEffectActions">
-            <button type="button" onclick="saveHomepageEffectSettings()">📡 Publish Display</button>
+            <button id="homepageEffectPublishBtn" type="button" onclick="saveHomepageEffectSettings()">📡 Publish Display</button>
             <button type="button" class="homepageEffectNormalBtn" onclick="setHomepageEffectNormal()">☀️ Set Normal / Off</button>
           </div>
           <small id="homepageEffectStatus" class="fieldHint homepageEffectStatus">Loading current display setting...</small>
@@ -1016,9 +1030,101 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js?v=2-secure-auth"></script>
   <script src="auth.js?v=admin-officer-rescue-v2"></script>
-  <script src="firebase-adapter.js?v=buwan-svg-v440"></script>
-  <script src="pwa.js?v=page-lock-v119"></script>
-  <script src="class-chat-admin.js?v=buwan-svg-v440"></script>
-  <script src="admin.js?v=buwan-svg-v440"></script>
+  <script src="firebase-adapter.js?v=v453-hard-effects-story-fix"></script>
+  <script src="pwa.js?v=v453-hard-effects-story-fix"></script>
+  <script src="class-chat-admin.js?v=v453-hard-effects-story-fix"></script>
+  <script src="admin.js?v=v453-hard-effects-story-fix"></script>
+
+
+  <script>
+  /* v453: premium effect save bridge with Firestore read-back verification. */
+  (() => {
+    const PREMIUM_MODES_V453 = new Set([
+      "sunrise","underwater","notebook","hyperspace","window-weather","fiesta","book-world",
+      "magic-blackboard","moonlit-garden","cloud-kingdom","countdown","pixel-game","cyber-classroom","heritage-journey"
+    ]);
+    const originalSaveV453 = typeof window.saveHomepageEffectSettings === "function"
+      ? window.saveHomepageEffectSettings.bind(window) : null;
+
+    const byId = (id) => document.getElementById(id);
+    const modeEl = byId("homepageEffectMode");
+    const enabledEl = byId("homepageEffectEnabled");
+    const statusEl = byId("homepageEffectStatus");
+    const publishBtn = byId("homepageEffectPublishBtn");
+
+    const setStatus = (text, good = false) => {
+      if (!statusEl) return;
+      statusEl.textContent = text;
+      statusEl.style.color = good ? "#18794e" : "#9b1c1c";
+    };
+    const getDb = () => {
+      if (window.SFK_CLASSBOARD_FIREBASE_DB) return window.SFK_CLASSBOARD_FIREBASE_DB;
+      try { if (window.firebase?.apps?.length) return firebase.firestore(); } catch (e) {}
+      return null;
+    };
+
+    modeEl?.addEventListener("change", () => {
+      const mode = String(modeEl.value || "normal").trim().toLowerCase();
+      if (PREMIUM_MODES_V453.has(mode) && enabledEl) enabledEl.checked = true;
+    });
+
+    async function publishPremiumV453(mode) {
+      const db = getDb();
+      if (!db) throw new Error("Firebase is not ready yet.");
+      const updatedAt = String(Date.now());
+      const values = {
+        HomepageEffectEnabled: "YES",
+        HomepageEffectMode: mode,
+        HomepageEffectTitle: String(byId("homepageEffectTitle")?.value || "").trim().slice(0,100),
+        HomepageEffectMessage: String(byId("homepageEffectMessage")?.value || "").trim().slice(0,700),
+        HomepageEffectDismissible: byId("homepageEffectDismissible")?.checked === false ? "NO" : "YES",
+        HomepageEffectAudioEnabled: byId("homepageEffectAudioEnabled")?.checked ? "YES" : "NO",
+        HomepageEffectAudioUrl: String(byId("homepageEffectAudioUrl")?.value || "").trim().slice(0,1200),
+        HomepageEffectAudioLoop: byId("homepageEffectAudioLoop")?.checked === false ? "NO" : "YES",
+        HomepageEffectUpdatedAt: updatedAt
+      };
+      const batch = db.batch();
+      for (const [key,value] of Object.entries(values)) {
+        batch.set(db.collection("settings").doc(key), { Key:key, Value:String(value) }, { merge:true });
+      }
+      await batch.commit();
+      const verify = await db.collection("settings").doc("HomepageEffectMode").get();
+      const saved = String(verify.data()?.Value || "").trim().toLowerCase();
+      if (saved !== mode) throw new Error(`Saved mode verification failed (${saved || "blank"}).`);
+      try { localStorage.setItem("sfkClassBoardHomepageEffectUpdatedAt", updatedAt); } catch (e) {}
+      try { new BroadcastChannel("sfk-classboard-live").postMessage({ type:"homepage-effect-updated", mode, updatedAt }); } catch (e) {}
+      return true;
+    }
+
+    window.saveHomepageEffectSettings = async function saveHomepageEffectSettingsV453(...args) {
+      const mode = String(modeEl?.value || "normal").trim().toLowerCase();
+      if (!PREMIUM_MODES_V453.has(mode)) {
+        if (originalSaveV453) return originalSaveV453(...args);
+        setStatus("Original Homepage Effect save function is unavailable.");
+        return;
+      }
+      if (enabledEl) enabledEl.checked = true;
+      setStatus(`Publishing ${mode.replace(/-/g," ")}…`);
+      try {
+        await publishPremiumV453(mode);
+        setStatus(`Published and verified: ${mode.replace(/-/g," ")}.`, true);
+      } catch (error) {
+        console.error("v453 premium publish failed", error);
+        // Last-resort fallback: let the existing Admin saver try its normal path.
+        if (originalSaveV453) {
+          try {
+            await originalSaveV453(...args);
+            setStatus(`Published using existing Admin saver: ${mode.replace(/-/g," ")}.`, true);
+            return;
+          } catch (fallbackError) {
+            console.error("v453 original saver fallback failed", fallbackError);
+          }
+        }
+        setStatus(`Publish failed: ${error?.message || error}`);
+      }
+    };
+  })();
+  </script>
+
 </body>
 </html>

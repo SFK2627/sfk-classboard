@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-main-pwa-v440-buwan-svg";
+const CACHE_NAME = "sfk-main-pwa-v453-hard-effects-story-fix";
 const CACHE_PREFIXES_TO_DELETE = ["sfk-main-pwa-", "sfk-sw.js-"];
 const NAVIGATION_FALLBACK_URL = "./index.html";
 const NAVIGATION_TIMEOUT_MS = 2500;
@@ -45,6 +45,8 @@ const APP_SHELL = [
   "./assets/buwan-wika/jeepney.webp",
   "./assets/buwan-wika/barong-person.webp",
   "./assets/buwan-wika/filipiniana-person.webp",
+  "./assets/buwan-wika/barong-person-base.png",
+  "./assets/buwan-wika/filipiniana-person-base.png",
   "./assets/buwan-wika/bahay-kubo.webp",
   "./assets/buwan-wika/culture-cluster.webp",
   "./assets/buwan-wika/heritage-props.webp",
@@ -164,13 +166,8 @@ async function updateNavigationCache(request, event) {
 }
 
 async function handleNavigation(request, event) {
-  const cached = await navigationCacheMatch(request);
-
-  if (cached) {
-    event.waitUntil(updateNavigationCache(request, event));
-    return cached;
-  }
-
+  // v453: network-first while online so new deployments appear immediately.
+  // Cache is only the offline/failure fallback; never show an older HTML page first.
   try {
     const response = await fetchWithTimeout(request, NAVIGATION_TIMEOUT_MS);
     event.waitUntil(saveNavigationResponse(request, response.clone()));

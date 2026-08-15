@@ -26967,6 +26967,192 @@ html.sfkHomepageSpiderGlitchActive body > *:not(script):not(style):not(#homepage
 .homepageAmbientParticle.is-gold-sparkle { color:#ffe16a;font-size:clamp(7px,var(--fx-size),22px);text-shadow:0 0 7px #fff0a6,0 0 18px rgba(255,190,0,.95);animation:sfkGoldTwinkle var(--fx-duration) ease-in-out var(--fx-delay) infinite; }
 @keyframes sfkGoldTwinkle { 0%,100%{transform:scale(.3) rotate(0);opacity:.12} 45%{transform:scale(1.35) rotate(120deg);opacity:1} 70%{transform:scale(.72) rotate(210deg);opacity:.46} }
 
+
+/* ---------- v451 Premium Theme Pack ---------- */
+.homepageEffectLayer.is-sunrise .homepageEffectBackdrop{background:linear-gradient(180deg,rgba(255,198,108,.28),rgba(255,119,80,.20) 44%,rgba(33,58,87,.18));backdrop-filter:brightness(.94) saturate(1.18)}
+.homepageSunriseScene{background:linear-gradient(180deg,rgba(255,244,219,.14),transparent 58%)}
+.sunriseSun{position:absolute;left:50%;bottom:20%;translate:-50% 0;width:min(20vw,240px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#fff8d6 0 20%,#ffd869 42%,#ff9b45 72%,rgba(255,170,78,.18) 73% 100%);box-shadow:0 0 0 18px rgba(255,214,103,.10),0 0 72px rgba(255,164,84,.48);animation:sfkSunrisePulse 5.6s ease-in-out infinite}
+.sunriseSun::before{content:"";position:absolute;inset:-38%;border-radius:50%;background:repeating-conic-gradient(from 0deg,rgba(255,233,173,.34) 0 7deg,transparent 7deg 19deg);mask:radial-gradient(circle,transparent 0 44%,#000 45%);animation:sfkSpinSlow 18s linear infinite}
+.sunriseCloud,.windowOutsideCloud,.cloudKingdomCloud{position:absolute;height:clamp(36px,5vw,74px);border-radius:999px;background:rgba(255,255,255,.88);filter:drop-shadow(0 10px 18px rgba(39,54,70,.12))}
+.sunriseCloud::before,.sunriseCloud::after,.windowOutsideCloud::before,.windowOutsideCloud::after,.cloudKingdomCloud::before,.cloudKingdomCloud::after{content:"";position:absolute;border-radius:50%;background:inherit}
+.sunriseCloud::before,.windowOutsideCloud::before,.cloudKingdomCloud::before{width:42%;height:118%;left:10%;top:-38%}
+.sunriseCloud::after,.windowOutsideCloud::after,.cloudKingdomCloud::after{width:36%;height:100%;right:12%;top:-24%}
+.sunriseCloud{animation:sfkCloudDrift 18s ease-in-out infinite}
+.sunriseCloud.cloud-a{left:8%;top:18%;width:min(20vw,240px)}.sunriseCloud.cloud-b{right:12%;top:14%;width:min(16vw,210px);animation-delay:-6s}.sunriseCloud.cloud-c{right:22%;top:30%;width:min(13vw,170px);animation-delay:-11s}
+.sunriseBird{position:absolute;color:rgba(86,57,30,.56);font:700 clamp(16px,2vw,26px)/1 Arial,sans-serif;animation:sfkBirdFloat 8s ease-in-out infinite}.sunriseBird.bird-a{left:18%;top:18%}.sunriseBird.bird-b{right:26%;top:22%;animation-delay:-2.4s}.sunriseBird.bird-c{right:16%;top:17%;animation-delay:-4.2s}
+.sunriseHill{position:absolute;left:-8%;right:-8%;border-radius:50% 50% 0 0/100% 100% 0 0}.sunriseHill.hill-back{bottom:6%;height:30%;background:linear-gradient(180deg,#58854c,#385d39)}.sunriseHill.hill-front{bottom:-1%;height:23%;background:linear-gradient(180deg,#3d713f,#29542c)}
+.sunriseGlowLine{position:absolute;left:0;right:0;bottom:18%;height:4px;background:linear-gradient(90deg,transparent,#ffe6a9 18% 82%,transparent);opacity:.8;filter:blur(2px)}
+@keyframes sfkSunrisePulse{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-10px) scale(1.06)}}
+@keyframes sfkSpinSlow{to{transform:rotate(360deg)}}
+@keyframes sfkCloudDrift{0%,100%{transform:translateX(0)}50%{transform:translateX(24px)}}
+@keyframes sfkBirdFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+.homepageEffectLayer.is-underwater .homepageEffectBackdrop{background:linear-gradient(180deg,rgba(67,197,255,.34),rgba(12,90,161,.22) 48%,rgba(4,33,70,.22));backdrop-filter:brightness(.76) saturate(1.15)}
+.homepageUnderwaterScene{background:radial-gradient(circle at 50% 0%,rgba(255,255,255,.16),transparent 45%)}
+.underwaterLight{position:absolute;inset:0;background:repeating-linear-gradient(105deg,rgba(255,255,255,.12) 0 1px,transparent 1px 10vw);opacity:.35;animation:sfkWaterShift 12s linear infinite}
+.underwaterWave{position:absolute;left:-10%;width:120%;height:16%;border-radius:50%;border:2px solid rgba(185,232,255,.42);opacity:.34}.underwaterWave.wave-a{top:11%;animation:sfkWaterWave 8s linear infinite}.underwaterWave.wave-b{top:18%;animation:sfkWaterWave 10s linear infinite reverse}
+.underwaterFish{position:absolute;width:clamp(52px,6vw,92px);height:clamp(28px,3vw,50px);border-radius:55% 50% 50% 55%/55% 45% 55% 45%;background:linear-gradient(90deg,#ffcf7d,#ff8a5f);box-shadow:0 10px 18px rgba(0,0,0,.14);animation:sfkFishSwim 13s linear infinite}.underwaterFish i{position:absolute;right:-14%;top:18%;width:34%;height:64%;background:inherit;clip-path:polygon(0 50%,100% 0,100% 100%)}
+.fish-a{left:-8%;top:34%;animation-duration:12s}.fish-b{right:-10%;top:46%;animation-duration:15s;animation-direction:reverse;background:linear-gradient(90deg,#c7ff9a,#39c59b)}.fish-c{left:20%;top:58%;animation-duration:17s;background:linear-gradient(90deg,#ffd4e0,#ff8caf)}.fish-d{right:16%;top:30%;animation-duration:11s;background:linear-gradient(90deg,#e9eeff,#7ec6ff)}
+@keyframes sfkFishSwim{0%{transform:translateX(0) translateY(0)}50%{transform:translateX(42vw) translateY(-16px)}100%{transform:translateX(84vw) translateY(0)}}
+.underwaterBubble{position:absolute;width:clamp(10px,1.3vw,18px);aspect-ratio:1;border-radius:50%;border:2px solid rgba(217,244,255,.76);background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 3px rgba(255,255,255,.06);animation:sfkBubbleRise 8s linear infinite}.bubble-a{left:18%;bottom:-8%;animation-duration:8s}.bubble-b{left:54%;bottom:-10%;animation-duration:10s;animation-delay:-2s}.bubble-c{right:18%;bottom:-8%;animation-duration:7.5s;animation-delay:-4s}.bubble-d{right:36%;bottom:-10%;animation-duration:9.5s;animation-delay:-1s}
+@keyframes sfkBubbleRise{0%{transform:translateY(0) scale(.7);opacity:0}15%{opacity:.8}100%{transform:translateY(-86vh) translateX(18px) scale(1.2);opacity:0}}
+.underwaterSeaweed{position:absolute;bottom:-2%;width:20px;height:28%;border-radius:999px 999px 0 0;background:linear-gradient(180deg,#7ef0af,#20835f);transform-origin:bottom center;animation:sfkSeaweed 3.8s ease-in-out infinite}.weed-a{left:8%}.weed-b{left:18%;height:22%;animation-delay:-1.2s}.weed-c{right:12%}.weed-d{right:22%;height:25%;animation-delay:-2.1s}
+.underwaterCoral{position:absolute;bottom:3%;width:9vw;max-width:110px;height:16%;background:linear-gradient(180deg,#ffb7d9,#ff6caa);clip-path:polygon(18% 100%,26% 61%,18% 26%,30% 0,44% 22%,50% 0,61% 22%,75% 3%,69% 31%,82% 53%,77% 100%);opacity:.9}.coral-a{left:24%}.coral-b{right:24%;background:linear-gradient(180deg,#ffef9c,#ff914d)}
+@keyframes sfkSeaweed{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(8deg)}}
+@keyframes sfkWaterShift{to{transform:translateX(10vw)}}
+@keyframes sfkWaterWave{to{transform:translateX(8vw)}}
+
+.homepageEffectLayer.is-notebook .homepageEffectBackdrop{background:rgba(255,252,248,.85);backdrop-filter:blur(2px) brightness(1.02)}
+.homepageNotebookScene{background:linear-gradient(180deg,rgba(255,255,255,.78),rgba(250,247,243,.84))}
+.notebookPaper{position:absolute;inset:3%;border-radius:22px;background:linear-gradient(180deg,#fffdf8,#faf6ee);box-shadow:0 24px 50px rgba(80,60,38,.12)}
+.notebookPaper::before{content:"";position:absolute;inset:7% 4% 6%;background:repeating-linear-gradient(180deg,transparent 0 36px,rgba(100,161,218,.42) 36px 38px);border-radius:12px;opacity:.92}
+.notebookMargin{position:absolute;top:8%;bottom:8%;left:12%;width:2px;background:rgba(231,65,89,.5)}
+.notebookSticker{position:absolute;padding:8px 14px;border-radius:14px;font:900 clamp(12px,1.5vw,18px)/1 Arial,sans-serif;box-shadow:0 10px 18px rgba(69,57,46,.14);transform:rotate(-7deg)}.sticker-a{right:10%;top:12%;background:#ffed89;color:#6c5300}.sticker-b{right:9%;top:24%;background:#ffc6dd;color:#8b2156;transform:rotate(5deg)}
+.notebookDoodle{position:absolute;color:#1d5fa3;font:900 clamp(18px,2.2vw,30px)/1.1 "Comic Sans MS","Trebuchet MS",Arial,sans-serif;opacity:.88}.doodle-a{left:20%;top:16%}.doodle-b{left:18%;top:34%;color:#e85875}.doodle-c{left:56%;top:27%;color:#f1b902}.doodle-d{left:35%;top:54%;color:#ff5688}.doodle-e{left:60%;top:63%;color:#20917c}
+.notebookPencil{position:absolute;left:18%;bottom:12%;width:min(30vw,280px);height:18px;border-radius:999px;background:linear-gradient(90deg,#f6e18d 0 75%,#ffb0a8 75% 90%,#424242 90% 100%);box-shadow:0 6px 14px rgba(90,73,48,.18);transform:rotate(-11deg)}
+.notebookPencil::before{content:"";position:absolute;left:-18px;top:0;border-top:9px solid transparent;border-bottom:9px solid transparent;border-right:18px solid #f0c18c}.notebookPencil::after{content:"";position:absolute;left:-25px;top:6px;border-top:3px solid transparent;border-bottom:3px solid transparent;border-right:8px solid #2a2a2a}
+.notebookRuler{position:absolute;right:16%;bottom:11%;width:min(22vw,190px);height:26px;border-radius:8px;background:linear-gradient(180deg,#ffe7ad,#ffd572);box-shadow:0 8px 18px rgba(84,67,32,.16);transform:rotate(9deg)}
+.notebookRuler::before{content:"";position:absolute;inset:6px 12px;background:repeating-linear-gradient(90deg,transparent 0 12px,rgba(127,95,21,.42) 12px 13px)}
+
+.homepageEffectLayer.is-hyperspace .homepageEffectBackdrop{background:radial-gradient(circle at 50% 50%,rgba(116,70,255,.22),transparent 18%),linear-gradient(180deg,rgba(8,6,26,.78),rgba(4,4,12,.82));backdrop-filter:brightness(.66) saturate(1.2)}
+.homepageHyperspaceScene{background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.04),transparent 62%)}
+.hyperspaceCore{position:absolute;left:50%;top:50%;translate:-50% -50%;width:min(18vw,220px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#fff 0 6%,#85cfff 7% 16%,#7f4dff 24%,rgba(127,77,255,.08) 55%,transparent 70%);filter:blur(.3px);box-shadow:0 0 80px rgba(138,99,255,.45)}
+.hyperspaceStar{position:absolute;left:50%;top:50%;width:2px;height:clamp(120px,26vw,340px);background:linear-gradient(180deg,#fff,rgba(113,218,255,.0));transform-origin:50% 0;opacity:.9;animation:sfkHyperspaceRush 2.6s linear infinite}
+.s1{transform:rotate(0deg)}.s2{transform:rotate(30deg);animation-delay:-.4s}.s3{transform:rotate(60deg);animation-delay:-.9s}.s4{transform:rotate(90deg);animation-delay:-1.1s}.s5{transform:rotate(120deg);animation-delay:-.2s}.s6{transform:rotate(150deg);animation-delay:-1.8s}.s7{transform:rotate(180deg);animation-delay:-.8s}.s8{transform:rotate(210deg);animation-delay:-1.4s}.s9{transform:rotate(240deg);animation-delay:-1.6s}.s10{transform:rotate(270deg);animation-delay:-2.1s}.s11{transform:rotate(300deg);animation-delay:-.6s}.s12{transform:rotate(330deg);animation-delay:-1.3s}
+@keyframes sfkHyperspaceRush{0%{transform-origin:50% 0;opacity:0;scale:.2}22%{opacity:1}100%{opacity:0;scale:1.25}}
+.hyperspacePlanet{position:absolute;border-radius:50%;box-shadow:0 10px 28px rgba(0,0,0,.24)}.planet-a{left:16%;top:18%;width:min(10vw,120px);aspect-ratio:1;background:radial-gradient(circle at 32% 32%,#fef1c7,#f5b24d 58%,#d96b2c)}.planet-b{right:12%;bottom:18%;width:min(14vw,150px);aspect-ratio:1;background:radial-gradient(circle at 34% 34%,#d1ffff,#63c3ff 46%,#6d55ff 78%)}
+
+.homepageEffectLayer.is-window-weather .homepageEffectBackdrop{background:linear-gradient(180deg,rgba(207,234,255,.34),rgba(141,190,255,.16) 52%,rgba(243,235,220,.12));backdrop-filter:brightness(.96)}
+.homepageWindowWeatherScene{background:linear-gradient(180deg,rgba(255,255,255,.12),transparent 52%)}
+.windowWeatherGlow{position:absolute;inset:0;background:radial-gradient(circle at 50% 24%,rgba(255,243,208,.28),transparent 32%)}
+.windowFrame{position:absolute;left:50%;top:50%;translate:-50% -50%;width:min(50vw,560px);height:min(62vh,520px);border-radius:18px;background:#f7efe3;box-shadow:0 20px 44px rgba(83,62,34,.18);overflow:hidden}
+.windowOutsideSky{position:absolute;inset:8%;border-radius:8px;background:linear-gradient(180deg,#9cd2ff,#e6f6ff 55%,#c4edb5)}
+.windowPane{position:absolute;background:#f0e1c8;z-index:3}.windowPane.v{top:8%;bottom:8%;left:50%;width:16px;translate:-50% 0}.windowPane.h{left:8%;right:8%;top:50%;height:16px;translate:0 -50%}
+.windowOutsideCloud{animation:sfkCloudDrift 16s ease-in-out infinite}.windowOutsideCloud.cloud-a{left:20%;top:24%;width:34%}.windowOutsideCloud.cloud-b{right:14%;top:18%;width:28%;animation-delay:-8s}
+.windowOutsideBird{position:absolute;right:20%;top:20%;color:rgba(62,93,138,.55);font:700 clamp(14px,1.6vw,22px)/1 Arial,sans-serif}
+.windowCurtain{position:absolute;top:-1%;width:18%;height:82%;background:linear-gradient(180deg,#ffe6c9,#efc493);box-shadow:inset -10px 0 14px rgba(255,255,255,.3)}.curtain-left{left:14%;transform-origin:top left;animation:sfkCurtain 5.5s ease-in-out infinite}.curtain-right{right:14%;transform-origin:top right;animation:sfkCurtain 5.5s ease-in-out infinite reverse;box-shadow:inset 10px 0 14px rgba(255,255,255,.3)}
+@keyframes sfkCurtain{0%,100%{transform:rotate(0deg)}50%{transform:rotate(3deg)}}
+.windowPlant{position:absolute;left:14%;bottom:6%;width:11vw;max-width:130px;height:22%;background:linear-gradient(180deg,#a86f33,#6d4626);border-radius:14px 14px 20px 20px;box-shadow:0 8px 18px rgba(79,56,31,.16)}
+.windowPlant i{position:absolute;bottom:85%;left:50%;width:14px;height:80px;background:linear-gradient(180deg,#54b77d,#2a8a56);border-radius:999px;transform-origin:bottom center}.windowPlant i:nth-child(1){transform:translateX(-50%) rotate(-18deg)}.windowPlant i:nth-child(2){transform:translateX(-50%) rotate(10deg);height:96px}.windowPlant i:nth-child(3){transform:translateX(-50%) rotate(28deg);height:78px}.windowPlant i:nth-child(4){transform:translateX(-50%) rotate(-32deg);height:70px}
+.windowBranch{position:absolute;right:11%;top:24%;width:min(23vw,260px);height:8px;background:#705131;border-radius:999px;transform-origin:right center;animation:sfkBranch 6s ease-in-out infinite}.windowBranch i{position:absolute;width:16px;height:40px;border-radius:999px;background:linear-gradient(180deg,#6dc077,#36945c)}.windowBranch i:nth-child(1){left:18%;top:-30px;transform:rotate(-32deg)}.windowBranch i:nth-child(2){left:36%;top:-34px;transform:rotate(-15deg)}.windowBranch i:nth-child(3){left:54%;top:-18px;transform:rotate(11deg)}.windowBranch i:nth-child(4){left:68%;top:-34px;transform:rotate(25deg)}.windowBranch i:nth-child(5){left:82%;top:-24px;transform:rotate(38deg)}
+@keyframes sfkBranch{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(5deg)}}
+
+.homepageEffectLayer.is-fiesta .homepageEffectBackdrop{background:linear-gradient(180deg,rgba(90,165,255,.18),rgba(255,251,240,.10));backdrop-filter:brightness(.98) saturate(1.14)}
+.homepageFiestaScene{background:radial-gradient(circle at 50% 0%,rgba(255,255,255,.22),transparent 46%)}
+.fiestaGlow{position:absolute;inset:0;background:radial-gradient(circle at 50% 24%,rgba(255,225,151,.26),transparent 32%)}
+.fiestaBunting{position:absolute;left:-4%;right:-4%;display:flex;justify-content:space-between}.fiestaBunting.row-a{top:7%}.fiestaBunting.row-b{top:16%;transform:scale(.92)}
+.fiestaBunting span{width:clamp(36px,4vw,54px);height:clamp(28px,3vw,42px);clip-path:polygon(0 0,100% 0,50% 100%);background:var(--flag,#f25f5c);box-shadow:0 4px 8px rgba(0,0,0,.12);animation:sfkBunting 2.8s ease-in-out infinite}
+.fiestaBunting span:nth-child(4n+1){--flag:#e84d3d}.fiestaBunting span:nth-child(4n+2){--flag:#ffd144}.fiestaBunting span:nth-child(4n+3){--flag:#3077ff}.fiestaBunting span:nth-child(4n){--flag:#47b96e}
+.fiestaLights{position:absolute;left:9%;right:9%;top:26%;display:flex;justify-content:space-between}.fiestaLights i{width:12px;height:12px;border-radius:50%;background:#fff8dc;box-shadow:0 0 10px currentColor,0 0 24px currentColor;color:#ffe38a;animation:sfkTwinkle 1.5s ease-in-out infinite}.fiestaLights i:nth-child(2n){color:#7ec7ff}.fiestaLights i:nth-child(3n){color:#ff9cbc}
+.fiestaChurch{position:absolute;left:9%;bottom:11%;width:min(22vw,250px);height:min(35vh,320px);background:linear-gradient(180deg,#f0d6ab,#c59d6f);clip-path:polygon(35% 0,65% 0,65% 12%,78% 12%,78% 28%,89% 28%,89% 100%,11% 100%,11% 28%,22% 28%,22% 12%,35% 12%);box-shadow:0 18px 24px rgba(0,0,0,.16)}
+.fiestaChurch::before{content:"";position:absolute;left:38%;top:18%;width:24%;height:24%;border-radius:12px 12px 0 0;background:#8d5f33;box-shadow:0 110px 0 22px #8d5f33,0 44px 0 0 #e6c696}
+.fiestaPlaza{position:absolute;left:0;right:0;bottom:0;height:18%;background:linear-gradient(180deg,#6daf67,#417f43)}
+.fiestaJeep{position:absolute;left:-24%;bottom:8%;width:min(22vw,260px);height:min(12vh,90px);background:linear-gradient(180deg,#ffce36,#ef4747 55%,#1d4fa7 55% 100%);border-radius:20px 28px 16px 12px;box-shadow:0 12px 18px rgba(0,0,0,.18);animation:sfkFiestaJeep 12s linear infinite}.fiestaJeep::before,.fiestaJeep::after{content:"";position:absolute;bottom:-12px;width:24px;height:24px;border-radius:50%;background:#222;box-shadow:inset 0 0 0 4px #666}.fiestaJeep::before{left:24px}.fiestaJeep::after{right:20px}
+.fiestaSpark{position:absolute;color:#fff1a8;font-size:clamp(18px,2vw,28px);text-shadow:0 0 10px rgba(255,222,110,.7);animation:sfkSparkFloat 3s ease-in-out infinite}.sparkle-a{right:13%;top:34%}.sparkle-b{right:24%;top:19%;animation-delay:-1.3s}.sparkle-c{left:24%;top:24%;animation-delay:-2.1s}
+@keyframes sfkBunting{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
+@keyframes sfkFiestaJeep{0%{transform:translateX(0)}100%{transform:translateX(140vw)}}
+@keyframes sfkSparkFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-10px) scale(1.15)}}
+@keyframes sfkTwinkle{0%,100%{opacity:.45;transform:scale(.9)}50%{opacity:1;transform:scale(1.18)}}
+
+.homepageEffectLayer.is-book-world .homepageEffectBackdrop{background:linear-gradient(180deg,rgba(172,153,255,.18),rgba(255,238,188,.14));backdrop-filter:brightness(.95) saturate(1.1)}
+.homepageBookWorldScene{background:radial-gradient(circle at 50% 24%,rgba(255,255,255,.18),transparent 34%)}
+.bookWorldGlow{position:absolute;inset:0;background:radial-gradient(circle at 50% 58%,rgba(255,248,196,.24),transparent 28%)}
+.bookWorldBook{position:absolute;left:50%;bottom:8%;translate:-50% 0;width:min(38vw,420px);height:min(17vh,130px);filter:drop-shadow(0 20px 26px rgba(0,0,0,.16))}
+.bookWorldBook .page{position:absolute;top:0;bottom:0;width:50%;background:linear-gradient(180deg,#fffaf1,#eddcb6);border-radius:18px 16px 12px 12px}.bookWorldBook .page.left{left:0;transform:skewY(8deg)}.bookWorldBook .page.right{right:0;transform:skewY(-8deg)}.bookWorldBook .spine{position:absolute;left:50%;top:4%;bottom:3%;width:14px;translate:-50% 0;border-radius:999px;background:linear-gradient(180deg,#c7a16d,#8e6538)}
+.bookWorldMountain{position:absolute;bottom:20%;width:min(16vw,180px);height:min(20vh,180px);background:linear-gradient(180deg,#9ad0f7,#5c9ddd 60%,#4471a6);clip-path:polygon(50% 0,100% 100%,0 100%);opacity:.92;animation:sfkFloatMini 6s ease-in-out infinite}.bookWorldMountain.m1{left:27%}.bookWorldMountain.m2{right:26%;height:min(17vh,150px);animation-delay:-2s}
+.bookWorldIcon{position:absolute;font-size:clamp(22px,3vw,42px);animation:sfkBookRise 6s ease-in-out infinite}.icon-a{left:28%;bottom:34%;color:#ffd86b}.icon-b{left:44%;bottom:44%;color:#fff}.icon-c{right:24%;bottom:40%}.icon-d{left:55%;bottom:30%}.icon-e{right:38%;bottom:49%;color:#dcecff}
+@keyframes sfkBookRise{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-14px) rotate(6deg)}}
+@keyframes sfkFloatMini{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+
+.homepageEffectLayer.is-magic-blackboard .homepageEffectBackdrop{background:rgba(18,35,29,.82);backdrop-filter:brightness(.68) saturate(.9)}
+.homepageBlackboardScene{background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.03),transparent 64%)}
+.blackboardFrameOuter{position:absolute;inset:6%;border-radius:20px;background:#26453a;box-shadow:inset 0 0 0 16px #a57747,inset 0 0 0 22px #d1b08a,0 24px 40px rgba(0,0,0,.24)}
+.blackboardText{position:absolute;color:rgba(247,251,255,.95);font:900 clamp(18px,2vw,30px)/1.2 "Comic Sans MS","Trebuchet MS",Arial,sans-serif;text-shadow:0 0 2px rgba(255,255,255,.4);animation:sfkChalkDrift 6s ease-in-out infinite}.text-a{left:18%;top:20%}.text-b{right:18%;top:22%}.text-c{left:26%;top:42%;color:#ffe293}.text-d{right:16%;top:50%;max-width:34vw}.text-e{left:40%;top:68%;color:#9fe2ff}
+.blackboardFormula{position:absolute;border-top:4px dashed rgba(255,255,255,.65);border-radius:999px;opacity:.8}.formula-a{left:18%;top:33%;width:18%;transform:rotate(5deg)}.formula-b{right:17%;top:40%;width:16%;transform:rotate(-7deg)}.formula-c{left:32%;top:58%;width:12%;transform:rotate(-18deg)}
+.blackboardEraser{position:absolute;right:18%;bottom:12%;width:min(12vw,120px);height:34px;border-radius:10px;background:linear-gradient(180deg,#d9d3cb,#9a8f84);box-shadow:0 8px 16px rgba(0,0,0,.2)}
+.blackboardChalk{position:absolute;right:12%;bottom:11%;width:62px;height:14px;border-radius:999px;background:#f6fbff;box-shadow:0 4px 10px rgba(255,255,255,.18)}
+.blackboardDust{position:absolute;width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.7);filter:blur(1px);animation:sfkDust 6s linear infinite}.dust-a{left:24%;top:26%}.dust-b{right:34%;top:30%;animation-delay:-2s}.dust-c{left:52%;top:62%;animation-delay:-4s}
+@keyframes sfkChalkDrift{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes sfkDust{0%{transform:translateY(0);opacity:0}20%{opacity:.65}100%{transform:translateY(-60px);opacity:0}}
+
+.homepageEffectLayer.is-moonlit-garden .homepageEffectBackdrop{background:linear-gradient(180deg,rgba(11,28,60,.78),rgba(7,21,47,.78) 54%,rgba(4,17,28,.78));backdrop-filter:brightness(.72) saturate(.95)}
+.homepageMoonGardenScene{background:radial-gradient(circle at 70% 16%,rgba(255,255,255,.08),transparent 26%)}
+.moonGardenMoon{position:absolute;right:14%;top:12%;width:min(12vw,135px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 34% 34%,#fff8e7,#d7e9ff 58%,#c3d7ff);box-shadow:0 0 26px rgba(207,231,255,.45)}
+.moonGardenGlow{position:absolute;right:7%;top:4%;width:min(24vw,280px);height:min(28vw,280px);border-radius:50%;background:radial-gradient(circle,rgba(195,222,255,.22),transparent 65%)}
+.moonGardenHill{position:absolute;left:-8%;right:-8%;border-radius:50% 50% 0 0/100% 100% 0 0}.moonGardenHill.hill-back{bottom:10%;height:26%;background:#1f4b49}.moonGardenHill.hill-front{bottom:-2%;height:18%;background:#153631}
+.moonGardenTree{position:absolute;bottom:12%;width:20px;height:26%;background:#132f2d;border-radius:999px}.tree-a{left:14%}.tree-b{right:16%;height:30%}.moonGardenTree::before{content:"";position:absolute;left:50%;bottom:72%;translate:-50% 0;width:110px;height:90px;border-radius:50%;background:radial-gradient(circle,#1c4f48 0 40%,#143d37 70%)}
+.moonGardenFirefly{position:absolute;width:12px;height:12px;border-radius:50%;background:#fff5a8;box-shadow:0 0 0 6px rgba(255,238,124,.15),0 0 16px rgba(255,238,124,.8);animation:sfkFireflyDance 6.5s ease-in-out infinite}.fly-a{left:20%;top:34%}.fly-b{left:36%;top:48%;animation-delay:-1.2s}.fly-c{left:56%;top:30%;animation-delay:-2.6s}.fly-d{right:20%;top:40%;animation-delay:-3.3s}.fly-e{right:34%;top:56%;animation-delay:-4.8s}.fly-f{right:10%;top:28%;animation-delay:-1.9s}
+.moonGardenGrass{position:absolute;left:0;right:0;bottom:0;height:14%;background:repeating-linear-gradient(102deg,transparent 0 15px,#1d5b4b 15px 18px,transparent 18px 34px),linear-gradient(180deg,#205744,#17352f)}
+@keyframes sfkFireflyDance{0%,100%{transform:translate(0,0) scale(.8);opacity:.45}25%{transform:translate(14px,-12px) scale(1.1);opacity:1}50%{transform:translate(-8px,-24px) scale(.9)}75%{transform:translate(10px,-8px) scale(1.05)}}
+
+.homepageEffectLayer.is-cloud-kingdom .homepageEffectBackdrop{background:linear-gradient(180deg,rgba(189,226,255,.28),rgba(125,193,255,.18) 42%,rgba(255,255,255,.15));backdrop-filter:brightness(1) saturate(1.02)}
+.homepageCloudKingdomScene{background:radial-gradient(circle at 50% 18%,rgba(255,255,255,.22),transparent 28%)}
+.cloudKingdomSun{position:absolute;left:14%;top:14%;width:min(12vw,132px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,#fff4bc,#ffd75c 70%,#ffbe55);box-shadow:0 0 30px rgba(255,213,82,.42)}
+.cloudKingdomRay{position:absolute;left:14%;top:14%;width:2px;height:min(24vh,220px);background:linear-gradient(180deg,rgba(255,255,255,.7),transparent);transform-origin:top center;opacity:.6}.ray-a{transform:translate(66px,66px) rotate(58deg)}.ray-b{transform:translate(66px,66px) rotate(82deg)}.ray-c{transform:translate(66px,66px) rotate(104deg)}
+.cloudKingdomCloud{animation:sfkCloudDrift 18s ease-in-out infinite}.cloudKingdomCloud.cloud-a{left:9%;top:36%;width:min(24vw,280px)}.cloudKingdomCloud.cloud-b{left:42%;top:22%;width:min(19vw,230px);animation-delay:-5s}.cloudKingdomCloud.cloud-c{right:10%;top:34%;width:min(26vw,300px);animation-delay:-8s}.cloudKingdomCloud.cloud-d{left:32%;bottom:16%;width:min(22vw,250px);animation-delay:-10s}
+.cloudKingdomBird{position:absolute;color:rgba(66,98,135,.45);font:700 clamp(14px,1.6vw,22px)/1 Arial,sans-serif}.cloudKingdomBird.bird-a{right:18%;top:16%}.cloudKingdomBird.bird-b{left:42%;top:16%}
+
+.homepageEffectLayer.is-countdown .homepageEffectBackdrop{background:linear-gradient(180deg,rgba(80,17,115,.34),rgba(19,18,62,.24) 54%,rgba(5,9,23,.26));backdrop-filter:brightness(.78) saturate(1.16)}
+.homepageCountdownScene{background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.08),transparent 44%)}
+.countdownGlow{position:absolute;left:50%;top:50%;translate:-50% -50%;width:min(46vw,460px);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.24),rgba(255,255,255,0) 62%)}
+.countdownRing{position:absolute;left:50%;top:50%;translate:-50% -50%;border-radius:50%;border:3px solid rgba(255,255,255,.32);animation:sfkPulseRing 3s ease-out infinite}.ring-a{width:min(26vw,260px);aspect-ratio:1}.ring-b{width:min(38vw,380px);aspect-ratio:1;animation-delay:-1.5s}
+@keyframes sfkPulseRing{0%{transform:translate(-50%,-50%) scale(.72);opacity:.85}100%{transform:translate(-50%,-50%) scale(1.15);opacity:0}}
+.countdownStage{position:absolute;left:50%;top:50%;translate:-50% -50%;width:min(26vw,240px);aspect-ratio:1;border-radius:50%;display:grid;place-items:center;background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,.06));box-shadow:0 20px 34px rgba(0,0,0,.24),inset 0 0 0 2px rgba(255,255,255,.2)}
+.countdownWord{position:absolute;color:#fff;font:900 clamp(36px,6vw,76px)/1 Arial,sans-serif;letter-spacing:.08em;opacity:0;text-shadow:0 6px 16px rgba(0,0,0,.36);animation:sfkCountdown 8s linear infinite}.word-3{animation-delay:0s}.word-2{animation-delay:2s}.word-1{animation-delay:4s}.word-go{animation-delay:6s;color:#ffe57f}
+@keyframes sfkCountdown{0%,18%{opacity:0;transform:scale(.6)}5%,13%{opacity:1;transform:scale(1)}20%,100%{opacity:0;transform:scale(1.3)}}
+.countdownBurst{position:absolute;width:110px;height:110px;border-radius:50%;background:repeating-conic-gradient(from 0deg,#ffe179 0 8deg,transparent 8deg 22deg);mask:radial-gradient(circle,transparent 0 35%,#000 36%);opacity:.68;animation:sfkSpinSlow 10s linear infinite}.burst-a{left:18%;top:24%}.burst-b{right:16%;top:20%;animation-direction:reverse}.burst-c{right:22%;bottom:18%}
+.countdownConfetti{position:absolute;color:#ffd95d;font-size:clamp(16px,2vw,24px);animation:sfkConfettiPop 3.8s ease-in-out infinite}.conf-a{left:14%;top:18%}.conf-b{left:26%;bottom:14%;animation-delay:-1.1s}.conf-c{right:14%;top:30%;animation-delay:-2.2s}.conf-d{right:22%;bottom:16%;animation-delay:-3.1s}
+@keyframes sfkConfettiPop{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-18px) rotate(20deg)}}
+
+.homepageEffectLayer.is-pixel-game .homepageEffectBackdrop{background:linear-gradient(180deg,rgba(136,211,255,.22),rgba(95,170,255,.14) 56%,rgba(60,120,65,.12));backdrop-filter:brightness(.98)}
+.homepagePixelGameScene{image-rendering:pixelated;background:linear-gradient(180deg,rgba(255,255,255,.08),transparent 44%)}
+.pixelSun{position:absolute;right:14%;top:12%;width:min(10vw,110px);aspect-ratio:1;background:#ffd944;box-shadow:0 0 0 10px rgba(255,217,68,.20)}
+.pixelCloud{position:absolute;width:min(16vw,180px);height:min(7vh,50px);background:#fff;box-shadow:20px 0 0 #fff,40px 0 0 #fff,10px -20px 0 #fff,30px -20px 0 #fff}.pixelCloud.cloud-a{left:16%;top:16%}.pixelCloud.cloud-b{right:28%;top:24%}
+.pixelCoin{position:absolute;width:26px;height:26px;background:#ffd24b;box-shadow:inset 0 0 0 4px #d49b00;animation:sfkCoinFloat 1.2s steps(2,end) infinite}.coin-a{left:42%;top:34%}.coin-b{left:49%;top:30%;animation-delay:-.4s}.coin-c{left:56%;top:35%;animation-delay:-.8s}
+@keyframes sfkCoinFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.pixelHill{position:absolute;bottom:14%;width:min(16vw,180px);height:min(18vh,150px);background:#63a85b;clip-path:polygon(50% 0,100% 100%,0 100%)}.hill-a{left:14%}.hill-b{right:18%;height:min(14vh,120px)}
+.pixelRunner{position:absolute;left:-10%;bottom:14%;width:44px;height:72px;animation:sfkPixelRunAcross 10s linear infinite}.pixelRunner i{position:absolute;background:#1a1a1a}.pixelRunner .head{left:8px;top:0;width:28px;height:28px;background:#ffcb9d}.pixelRunner .body{left:10px;top:28px;width:24px;height:22px;background:#ff4b61}.pixelRunner .arm{top:32px;width:10px;height:20px;background:#ffcb9d}.pixelRunner .arm-a{left:0}.pixelRunner .arm-b{right:0}.pixelRunner .leg{top:50px;width:10px;height:22px;background:#3559b8}.pixelRunner .leg-a{left:10px}.pixelRunner .leg-b{right:10px}
+@keyframes sfkPixelRunAcross{0%{transform:translateX(0)}100%{transform:translateX(120vw)}}
+.pixelGround{position:absolute;left:0;right:0;bottom:0;height:14%;background:repeating-linear-gradient(90deg,#6dc868 0 22px,#5bbb56 22px 44px),linear-gradient(180deg,#6dc868,#4d9548)}
+
+.homepageEffectLayer.is-cyber-classroom .homepageEffectBackdrop{background:linear-gradient(180deg,rgba(10,24,45,.74),rgba(8,9,24,.78));backdrop-filter:brightness(.7) saturate(1.18)}
+.homepageCyberClassroomScene{background:radial-gradient(circle at 50% 50%,rgba(67,178,255,.10),transparent 56%)}
+.cyberGrid{position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(89,143,255,.16) 0 1px,transparent 1px 8vw),repeating-linear-gradient(0deg,rgba(89,143,255,.16) 0 1px,transparent 1px 8vh)}
+.cyberBeam{position:absolute;height:2px;background:linear-gradient(90deg,transparent,#58e0ff,transparent);box-shadow:0 0 10px rgba(88,224,255,.6)}.beam-a{left:12%;right:18%;top:28%;animation:sfkCyberBeam 5s linear infinite}.beam-b{left:20%;right:12%;top:58%;animation:sfkCyberBeam 6s linear infinite reverse}.beam-c{left:30%;right:28%;top:42%;animation:sfkCyberBeam 4.8s linear infinite}
+@keyframes sfkCyberBeam{0%{opacity:.2;transform:translateX(-4vw)}50%{opacity:1}100%{opacity:.2;transform:translateX(4vw)}}
+.cyberNode{position:absolute;width:16px;height:16px;border-radius:50%;background:#9af6ff;box-shadow:0 0 0 6px rgba(106,222,255,.14),0 0 18px rgba(90,230,255,.76);animation:sfkNodePulse 2.6s ease-in-out infinite}.node-a{left:16%;top:26%}.node-b{left:72%;top:24%;animation-delay:-.8s}.node-c{left:62%;top:56%;animation-delay:-1.6s}.node-d{left:28%;top:60%;animation-delay:-2.2s}.node-e{left:44%;top:40%;animation-delay:-1.1s}
+@keyframes sfkNodePulse{0%,100%{transform:scale(.8);opacity:.6}50%{transform:scale(1.18);opacity:1}}
+.cyberPanel{position:absolute;display:grid;place-items:center;padding:10px 16px;min-width:min(18vw,190px);min-height:62px;border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.05));border:1px solid rgba(127,224,255,.38);box-shadow:0 12px 24px rgba(0,0,0,.22),inset 0 0 18px rgba(123,223,255,.08);backdrop-filter:blur(8px)}.cyberPanel span{color:#dff9ff;font:900 clamp(12px,1.3vw,18px)/1 Arial,sans-serif;letter-spacing:.14em}.panel-a{left:14%;top:18%}.panel-b{right:14%;top:44%}.panel-c{left:34%;bottom:16%}
+.cyberPulse{position:absolute;left:50%;top:50%;translate:-50% -50%;width:min(34vw,360px);aspect-ratio:1;border-radius:50%;border:1px solid rgba(90,224,255,.28);box-shadow:0 0 0 18px rgba(82,124,255,.05),0 0 0 36px rgba(82,124,255,.03);animation:sfkSpinSlow 20s linear infinite}
+
+.homepageEffectLayer.is-heritage-journey .homepageEffectBackdrop{background:linear-gradient(180deg,rgba(255,244,218,.22),rgba(122,190,255,.12));backdrop-filter:brightness(.95) saturate(1.06)}
+.homepageHeritageJourneyScene{background:linear-gradient(180deg,rgba(255,255,255,.12),transparent 42%)}
+.heritageAsset{position:absolute;display:block;max-width:none;height:auto;object-fit:contain;pointer-events:none;filter:drop-shadow(0 8px 12px rgba(0,0,0,.14))}
+.heritageBackdrop{inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important;filter:none!important;animation:sfkHeritagePan 18s ease-in-out infinite}
+.heritageFlag{left:4%;top:7%;width:clamp(130px,14vw,210px);transform-origin:left center;animation:sfkFlagWaveLite 4s ease-in-out infinite}
+.heritageChurch{left:6%;bottom:12%;width:clamp(200px,23vw,340px);animation:sfkHeritageFade 16s ease-in-out infinite}
+.heritageKubo{right:8%;bottom:14%;width:clamp(150px,17vw,250px);animation:sfkHeritageFade 16s ease-in-out infinite -4s}
+.heritageJeep{left:-24%;bottom:9%;width:clamp(150px,18vw,260px);animation:sfkHeritageDrive 14s linear infinite 1.2s}
+.heritageProps{right:30%;bottom:7%;width:clamp(120px,13vw,190px);animation:sfkFloatMini 5.8s ease-in-out infinite}
+.heritageCulture{left:34%;bottom:6%;width:clamp(170px,19vw,260px);animation:sfkFloatMini 6.6s ease-in-out infinite -2.4s}
+.heritageJourneyTrack{position:absolute;left:50%;bottom:2%;translate:-50% 0;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;z-index:7;max-width:86vw}.heritageJourneyTrack .stop{padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.86);color:#2a4866;font:800 clamp(9px,1vw,13px)/1 Arial,sans-serif;letter-spacing:.05em;box-shadow:0 6px 12px rgba(50,60,73,.10);animation:sfkJourneyStep 16s linear infinite}.heritageJourneyTrack .stop-b{animation-delay:-12s}.heritageJourneyTrack .stop-c{animation-delay:-8s}.heritageJourneyTrack .stop-d{animation-delay:-4s}
+@keyframes sfkHeritagePan{0%,100%{transform:scale(1) translateX(0)}50%{transform:scale(1.04) translateX(-1.2vw)}}
+@keyframes sfkFlagWaveLite{0%,100%{transform:perspective(700px) rotateY(-8deg) rotate(-1deg)}50%{transform:perspective(700px) rotateY(10deg) rotate(1deg)}}
+@keyframes sfkHeritageDrive{0%{transform:translateX(0)}100%{transform:translateX(136vw)}}
+@keyframes sfkHeritageFade{0%,24%{opacity:1;transform:translateY(0)}33%,100%{opacity:.64;transform:translateY(-4px)}}
+@keyframes sfkJourneyStep{0%,18%{background:rgba(255,255,255,.86);color:#2a4866;transform:translateY(0)}6%,12%{background:#f7d053;color:#6b4300;transform:translateY(-4px)}}
+
+@media (max-width:700px){
+  .windowFrame{width:78vw;height:58vh}.windowPlant{width:20vw}.windowBranch{width:34vw}
+  .fiestaChurch{width:30vw;height:28vh}.fiestaJeep{width:30vw;height:9vh}
+  .bookWorldBook{width:56vw}.bookWorldMountain.m1{left:18%}.bookWorldMountain.m2{right:18%}
+  .countdownStage{width:44vw}.ring-a{width:40vw}.ring-b{width:58vw}
+  .heritageFlag{width:24vw}.heritageChurch{width:40vw;left:2%;bottom:16%}.heritageKubo{width:27vw;right:2%;bottom:17%}.heritageJeep{width:32vw;bottom:10%}.heritageProps{width:22vw;right:22%}.heritageCulture{width:28vw;left:31%}
+}
+@media (prefers-reduced-motion: reduce){
+  .homepageEffectLayer.is-sunrise *, .homepageEffectLayer.is-underwater *, .homepageEffectLayer.is-notebook *, .homepageEffectLayer.is-hyperspace *, .homepageEffectLayer.is-window-weather *, .homepageEffectLayer.is-fiesta *, .homepageEffectLayer.is-book-world *, .homepageEffectLayer.is-magic-blackboard *, .homepageEffectLayer.is-moonlit-garden *, .homepageEffectLayer.is-cloud-kingdom *, .homepageEffectLayer.is-countdown *, .homepageEffectLayer.is-pixel-game *, .homepageEffectLayer.is-cyber-classroom *, .homepageEffectLayer.is-heritage-journey *{animation-duration:18s!important}
+}
+
 @media (prefers-reduced-motion: reduce) {
   html.sfkHomepageSpiderGlitchActive body > *:not(script):not(style):not(#homepageEffectLayer) { animation: none !important; }
   .homepageEffectLayer.is-spider-glitch *,
@@ -28534,7 +28720,21 @@ html.sfkHomepageBlackSymbioteActive body > *:not(script):not(style):not(#homepag
 .homepageEffectLayer.is-solar-system .homepageSolarSystemScene,
 .homepageEffectLayer.is-pet-dog .homepagePetDogScene,
 .homepageEffectLayer.is-pet-koala .homepagePetKoalaScene,
-.homepageEffectLayer.is-buwan-wika .homepageBuwanWikaScene{display:block}
+.homepageEffectLayer.is-buwan-wika .homepageBuwanWikaScene,
+.homepageEffectLayer.is-sunrise .homepageSunriseScene,
+.homepageEffectLayer.is-underwater .homepageUnderwaterScene,
+.homepageEffectLayer.is-notebook .homepageNotebookScene,
+.homepageEffectLayer.is-hyperspace .homepageHyperspaceScene,
+.homepageEffectLayer.is-window-weather .homepageWindowWeatherScene,
+.homepageEffectLayer.is-fiesta .homepageFiestaScene,
+.homepageEffectLayer.is-book-world .homepageBookWorldScene,
+.homepageEffectLayer.is-magic-blackboard .homepageBlackboardScene,
+.homepageEffectLayer.is-moonlit-garden .homepageMoonGardenScene,
+.homepageEffectLayer.is-cloud-kingdom .homepageCloudKingdomScene,
+.homepageEffectLayer.is-countdown .homepageCountdownScene,
+.homepageEffectLayer.is-pixel-game .homepagePixelGameScene,
+.homepageEffectLayer.is-cyber-classroom .homepageCyberClassroomScene,
+.homepageEffectLayer.is-heritage-journey .homepageHeritageJourneyScene{display:block}
 .homepageEffectLayer.is-minions .homepageEffectParticles::before,
 .homepageEffectLayer.is-spongebob .homepageEffectParticles::before,
 .homepageEffectLayer.is-naruto .homepageEffectParticles::before,
@@ -28543,7 +28743,21 @@ html.sfkHomepageBlackSymbioteActive body > *:not(script):not(style):not(#homepag
 .homepageEffectLayer.is-solar-system .homepageEffectParticles::before,
 .homepageEffectLayer.is-pet-dog .homepageEffectParticles::before,
 .homepageEffectLayer.is-pet-koala .homepageEffectParticles::before,
-.homepageEffectLayer.is-buwan-wika .homepageEffectParticles::before{content:none!important;display:none!important}
+.homepageEffectLayer.is-buwan-wika .homepageEffectParticles::before,
+.homepageEffectLayer.is-sunrise .homepageEffectParticles::before,
+.homepageEffectLayer.is-underwater .homepageEffectParticles::before,
+.homepageEffectLayer.is-notebook .homepageEffectParticles::before,
+.homepageEffectLayer.is-hyperspace .homepageEffectParticles::before,
+.homepageEffectLayer.is-window-weather .homepageEffectParticles::before,
+.homepageEffectLayer.is-fiesta .homepageEffectParticles::before,
+.homepageEffectLayer.is-book-world .homepageEffectParticles::before,
+.homepageEffectLayer.is-magic-blackboard .homepageEffectParticles::before,
+.homepageEffectLayer.is-moonlit-garden .homepageEffectParticles::before,
+.homepageEffectLayer.is-cloud-kingdom .homepageEffectParticles::before,
+.homepageEffectLayer.is-countdown .homepageEffectParticles::before,
+.homepageEffectLayer.is-pixel-game .homepageEffectParticles::before,
+.homepageEffectLayer.is-cyber-classroom .homepageEffectParticles::before,
+.homepageEffectLayer.is-heritage-journey .homepageEffectParticles::before{content:none!important;display:none!important}
 .homepageEffectLayer.is-minions::before,.homepageEffectLayer.is-minions::after,
 .homepageEffectLayer.is-spongebob::before,.homepageEffectLayer.is-spongebob::after,
 .homepageEffectLayer.is-naruto::before,.homepageEffectLayer.is-naruto::after,
@@ -28552,7 +28766,21 @@ html.sfkHomepageBlackSymbioteActive body > *:not(script):not(style):not(#homepag
 .homepageEffectLayer.is-solar-system::before,.homepageEffectLayer.is-solar-system::after,
 .homepageEffectLayer.is-pet-dog::before,.homepageEffectLayer.is-pet-dog::after,
 .homepageEffectLayer.is-pet-koala::before,.homepageEffectLayer.is-pet-koala::after,
-.homepageEffectLayer.is-buwan-wika::before,.homepageEffectLayer.is-buwan-wika::after{content:none!important;display:none!important}
+.homepageEffectLayer.is-buwan-wika::before,.homepageEffectLayer.is-buwan-wika::after,
+.homepageEffectLayer.is-sunrise::before,.homepageEffectLayer.is-sunrise::after,
+.homepageEffectLayer.is-underwater::before,.homepageEffectLayer.is-underwater::after,
+.homepageEffectLayer.is-notebook::before,.homepageEffectLayer.is-notebook::after,
+.homepageEffectLayer.is-hyperspace::before,.homepageEffectLayer.is-hyperspace::after,
+.homepageEffectLayer.is-window-weather::before,.homepageEffectLayer.is-window-weather::after,
+.homepageEffectLayer.is-fiesta::before,.homepageEffectLayer.is-fiesta::after,
+.homepageEffectLayer.is-book-world::before,.homepageEffectLayer.is-book-world::after,
+.homepageEffectLayer.is-magic-blackboard::before,.homepageEffectLayer.is-magic-blackboard::after,
+.homepageEffectLayer.is-moonlit-garden::before,.homepageEffectLayer.is-moonlit-garden::after,
+.homepageEffectLayer.is-cloud-kingdom::before,.homepageEffectLayer.is-cloud-kingdom::after,
+.homepageEffectLayer.is-countdown::before,.homepageEffectLayer.is-countdown::after,
+.homepageEffectLayer.is-pixel-game::before,.homepageEffectLayer.is-pixel-game::after,
+.homepageEffectLayer.is-cyber-classroom::before,.homepageEffectLayer.is-cyber-classroom::after,
+.homepageEffectLayer.is-heritage-journey::before,.homepageEffectLayer.is-heritage-journey::after{content:none!important;display:none!important}
 
 /* MINIONS: underground lab/workshop */
 .homepageEffectLayer.is-minions .homepageEffectBackdrop{background:linear-gradient(180deg,rgba(28,44,61,.72),rgba(16,27,38,.78));backdrop-filter:brightness(.72) saturate(.9)}
@@ -29756,3 +29984,77 @@ html.sfkHomepageBlackSymbioteActive body > *:not(script):not(style):not(#homepag
 
 }
 
+
+
+/* =========================================================
+   v452 PICTURE STORY PROGRESS — CENTERED FULL SCREEN WIDTH
+   Equal left/right margins on desktop and phone. The segmented
+   IG/FB-style timer spans almost the entire viewport width.
+========================================================= */
+.homepageEffectLayer.is-picture .homepageEffectStoryProgress {
+  top: max(8px, env(safe-area-inset-top)) !important;
+  left: max(10px, env(safe-area-inset-left)) !important;
+  right: max(10px, env(safe-area-inset-right)) !important;
+  width: auto !important;
+  max-width: none !important;
+  margin: 0 !important;
+  transform: none !important;
+  gap: clamp(3px, .45vw, 6px) !important;
+  height: 4px !important;
+  z-index: 19 !important;
+}
+.homepageEffectLayer.is-picture .homepageEffectStorySegment {
+  min-width: 0 !important;
+}
+@media (max-width:700px) {
+  .homepageEffectLayer.is-picture .homepageEffectStoryProgress {
+    top: max(7px, env(safe-area-inset-top)) !important;
+    left: max(7px, env(safe-area-inset-left)) !important;
+    right: max(7px, env(safe-area-inset-right)) !important;
+    gap: 3px !important;
+    height: 3px !important;
+  }
+}
+
+/* Keep the plain white X below the story timer so the last progress segment
+   stays completely visible across the full width. */
+.homepageEffectLayer.is-picture .homepageEffectClose {
+  top: max(20px, calc(env(safe-area-inset-top) + 12px)) !important;
+}
+@media (max-width:700px) {
+  .homepageEffectLayer.is-picture .homepageEffectClose {
+    top: max(18px, calc(env(safe-area-inset-top) + 10px)) !important;
+  }
+}
+
+
+/* =========================================================
+   v453 HARD RUNTIME-COMPANION OVERRIDES
+   Story timer is viewport-wide, not panel-relative.
+========================================================= */
+.homepageEffectLayer.is-picture #homepageEffectStoryProgress.homepageEffectStoryProgress{
+  position:fixed!important;
+  top:max(7px,env(safe-area-inset-top))!important;
+  left:0!important;
+  right:auto!important;
+  width:100vw!important;
+  max-width:100vw!important;
+  box-sizing:border-box!important;
+  padding-left:max(8px,env(safe-area-inset-left))!important;
+  padding-right:max(8px,env(safe-area-inset-right))!important;
+  margin:0!important;
+  transform:none!important;
+  display:flex!important;
+  justify-content:center!important;
+  gap:5px!important;
+  height:4px!important;
+  z-index:2147483646!important;
+  pointer-events:none!important;
+}
+.homepageEffectLayer.is-picture #homepageEffectStoryProgress[hidden]{display:none!important}
+.homepageEffectLayer.is-picture #homepageEffectStoryProgress .homepageEffectStorySegment{flex:1 1 0!important;min-width:0!important;height:100%!important}
+.homepageEffectLayer.is-picture .homepageEffectClose{top:max(19px,calc(env(safe-area-inset-top) + 12px))!important;right:max(10px,env(safe-area-inset-right))!important}
+@media(max-width:700px){
+  .homepageEffectLayer.is-picture #homepageEffectStoryProgress.homepageEffectStoryProgress{gap:3px!important;height:3px!important;padding-left:max(6px,env(safe-area-inset-left))!important;padding-right:max(6px,env(safe-area-inset-right))!important}
+  .homepageEffectLayer.is-picture .homepageEffectClose{top:max(17px,calc(env(safe-area-inset-top) + 10px))!important;right:max(7px,env(safe-area-inset-right))!important}
+}
