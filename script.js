@@ -1699,6 +1699,14 @@ let homepageEffectLatestUpdatedAt = 0;
 let homepageEffectGalleryIndex = 0;
 let homepageEffectGallerySources = [];
 let homepageEffectGalleryScrollTimer = 0;
+let homepageEffectGalleryRenderSignature = "";
+let homepageEffectGalleryStoryTimer = 0;
+let homepageEffectGalleryProgressFrame = 0;
+let homepageEffectGalleryStoryStartedAt = 0;
+let homepageEffectGalleryStoryRemainingMs = 15000;
+let homepageEffectGalleryStoryPaused = false;
+let homepageEffectGalleryStorySignature = "";
+const HOMEPAGE_EFFECT_GALLERY_STORY_MS = 15000;
 let homepageAlertAudioContext = null;
 let homepageAlertSoundTimer = 0;
 let homepageAlertSoundActive = false;
@@ -2570,6 +2578,7 @@ function ensureHomepageEffectLayer() {
           <div id="homepageEffectGalleryTrack" class="homepageEffectGalleryTrack"></div>
         </div>
         <button id="homepageEffectGalleryNext" class="homepageEffectGalleryNav is-next" type="button" aria-label="Next picture">›</button>
+        <div id="homepageEffectStoryProgress" class="homepageEffectStoryProgress" aria-hidden="true"></div>
         <div id="homepageEffectGalleryCount" class="homepageEffectGalleryCount" aria-live="polite"></div>
         <figcaption id="homepageEffectPictureCaption"></figcaption>
       </figure>
@@ -2616,6 +2625,12 @@ function ensureHomepageEffectLayer() {
   galleryViewport?.addEventListener("scroll", () => {
     if (homepageEffectGalleryScrollTimer) window.clearTimeout(homepageEffectGalleryScrollTimer);
     homepageEffectGalleryScrollTimer = window.setTimeout(syncHomepageEffectGalleryIndexFromScroll, 70);
+  }, { passive: true });
+  galleryViewport?.addEventListener("pointerdown", pauseHomepageEffectGalleryStory, { passive: true });
+  galleryViewport?.addEventListener("pointerup", resumeHomepageEffectGalleryStory, { passive: true });
+  galleryViewport?.addEventListener("pointercancel", resumeHomepageEffectGalleryStory, { passive: true });
+  galleryViewport?.addEventListener("pointerleave", (event) => {
+    if (event.pointerType === "mouse" && homepageEffectGalleryStoryPaused) resumeHomepageEffectGalleryStory();
   }, { passive: true });
   galleryViewport?.addEventListener("keydown", (event) => {
     if (event.key === "ArrowLeft") {
@@ -2836,8 +2851,10 @@ function hideHomepageEffectLayer() {
   layer.className = "homepageEffectLayer";
   document.documentElement.classList.remove("sfkHomepageEffectActive", "sfkHomepageMultiverseActive", "sfkHomepageSpiderGlitchActive", "sfkHomepageBlackSymbioteActive");
   homepageEffectAmbientMode = "";
+  stopHomepageEffectGalleryStory(true);
   homepageEffectGalleryIndex = 0;
   homepageEffectGallerySources = [];
+  homepageEffectGalleryRenderSignature = "";
   const galleryTrack = layer.querySelector("#homepageEffectGalleryTrack");
   if (galleryTrack) galleryTrack.innerHTML = "";
   const ambient = layer.querySelector(".homepageEffectParticles");
@@ -2857,6 +2874,114 @@ function hideHomepageEffectLayer() {
   clearHomepageRickroll();
 }
 
+function updateHomepageEffectGalleryStoryProgress(progress = null) {
+  const layer = document.getElementById("homepageEffectLayer");
+  const host = layer?.querySelector("#homepageEffectStoryProgress");
+  const count = homepageEffectGallerySources.length;
+  if (!host) return;
+  host.hidden = count <= 1;
+  if (count <= 1) {
+    host.innerHTML = "";
+    return;
+  }
+  if (host.children.length !== count) {
+    host.innerHTML = "";
+    for (let index = 0; index < count; index += 1) {
+      const segment = document.createElement("span");
+      segment.className = "homepageEffectStorySegment";
+      const fill = document.createElement("i");
+      segment.appendChild(fill);
+      host.appendChild(segment);
+    }
+  }
+  let currentProgress;
+  if (progress == null) {
+    const elapsed = (!homepageEffectGalleryStoryPaused && homepageEffectGalleryStoryStartedAt)
+      ? Math.max(0, performance.now() - homepageEffectGalleryStoryStartedAt)
+      : 0;
+    const liveRemaining = Math.max(0, homepageEffectGalleryStoryRemainingMs - elapsed);
+    currentProgress = Math.max(0, Math.min(1, 1 - (liveRemaining / HOMEPAGE_EFFECT_GALLERY_STORY_MS)));
+  } else {
+    currentProgress = Math.max(0, Math.min(1, Number(progress) || 0));
+  }
+  Array.from(host.children).forEach((segment, index) => {
+    const fill = segment.firstElementChild;
+    if (!fill) return;
+    const amount = index < homepageEffectGalleryIndex ? 1 : (index === homepageEffectGalleryIndex ? currentProgress : 0);
+    fill.style.transform = `scaleX(${amount})`;
+  });
+}
+
+function stopHomepageEffectGalleryStory(resetProgress = false) {
+  if (homepageEffectGalleryStoryTimer) window.clearTimeout(homepageEffectGalleryStoryTimer);
+  if (homepageEffectGalleryProgressFrame) window.cancelAnimationFrame(homepageEffectGalleryProgressFrame);
+  homepageEffectGalleryStoryTimer = 0;
+  homepageEffectGalleryProgressFrame = 0;
+  homepageEffectGalleryStoryStartedAt = 0;
+  homepageEffectGalleryStoryPaused = false;
+  if (resetProgress) {
+    homepageEffectGalleryStoryRemainingMs = HOMEPAGE_EFFECT_GALLERY_STORY_MS;
+    homepageEffectGalleryStorySignature = "";
+    updateHomepageEffectGalleryStoryProgress(0);
+  }
+}
+
+function tickHomepageEffectGalleryStoryProgress() {
+  homepageEffectGalleryProgressFrame = 0;
+  const layer = document.getElementById("homepageEffectLayer");
+  if (!layer || layer.hidden || !layer.classList.contains("is-picture") || homepageEffectGalleryStoryPaused || homepageEffectGallerySources.length <= 1) return;
+  const elapsed = Math.max(0, performance.now() - homepageEffectGalleryStoryStartedAt);
+  const remaining = Math.max(0, homepageEffectGalleryStoryRemainingMs - elapsed);
+  const progress = 1 - (remaining / HOMEPAGE_EFFECT_GALLERY_STORY_MS);
+  updateHomepageEffectGalleryStoryProgress(progress);
+  if (remaining > 0) homepageEffectGalleryProgressFrame = window.requestAnimationFrame(tickHomepageEffectGalleryStoryProgress);
+}
+
+function startHomepageEffectGalleryStory(reset = true, signature = homepageEffectGalleryStorySignature) {
+  stopHomepageEffectGalleryStory(false);
+  homepageEffectGalleryStorySignature = String(signature || homepageEffectGalleryStorySignature || homepageEffectCurrentSignature || "picture");
+  if (reset) homepageEffectGalleryStoryRemainingMs = HOMEPAGE_EFFECT_GALLERY_STORY_MS;
+  const layer = document.getElementById("homepageEffectLayer");
+  if (!layer || layer.hidden || !layer.classList.contains("is-picture") || homepageEffectGallerySources.length <= 1) {
+    updateHomepageEffectGalleryStoryProgress(0);
+    return;
+  }
+  homepageEffectGalleryStoryPaused = false;
+  homepageEffectGalleryStoryStartedAt = performance.now();
+  homepageEffectGalleryStoryTimer = window.setTimeout(() => {
+    homepageEffectGalleryStoryTimer = 0;
+    homepageEffectGalleryStoryRemainingMs = HOMEPAGE_EFFECT_GALLERY_STORY_MS;
+    showHomepageEffectGalleryIndex((homepageEffectGalleryIndex + 1) % homepageEffectGallerySources.length, true, true);
+  }, Math.max(80, homepageEffectGalleryStoryRemainingMs));
+  updateHomepageEffectGalleryStoryProgress(reset ? 0 : 1 - (homepageEffectGalleryStoryRemainingMs / HOMEPAGE_EFFECT_GALLERY_STORY_MS));
+  homepageEffectGalleryProgressFrame = window.requestAnimationFrame(tickHomepageEffectGalleryStoryProgress);
+}
+
+function pauseHomepageEffectGalleryStory() {
+  if (homepageEffectGalleryStoryPaused || homepageEffectGallerySources.length <= 1) return;
+  const layer = document.getElementById("homepageEffectLayer");
+  if (!layer || layer.hidden || !layer.classList.contains("is-picture")) return;
+  const elapsed = homepageEffectGalleryStoryStartedAt ? Math.max(0, performance.now() - homepageEffectGalleryStoryStartedAt) : 0;
+  homepageEffectGalleryStoryRemainingMs = Math.max(0, homepageEffectGalleryStoryRemainingMs - elapsed);
+  if (homepageEffectGalleryStoryTimer) window.clearTimeout(homepageEffectGalleryStoryTimer);
+  if (homepageEffectGalleryProgressFrame) window.cancelAnimationFrame(homepageEffectGalleryProgressFrame);
+  homepageEffectGalleryStoryTimer = 0;
+  homepageEffectGalleryProgressFrame = 0;
+  homepageEffectGalleryStoryPaused = true;
+  updateHomepageEffectGalleryStoryProgress(1 - (homepageEffectGalleryStoryRemainingMs / HOMEPAGE_EFFECT_GALLERY_STORY_MS));
+}
+
+function resumeHomepageEffectGalleryStory() {
+  if (!homepageEffectGalleryStoryPaused) return;
+  homepageEffectGalleryStoryPaused = false;
+  if (homepageEffectGalleryStoryRemainingMs <= 0) {
+    homepageEffectGalleryStoryRemainingMs = HOMEPAGE_EFFECT_GALLERY_STORY_MS;
+    showHomepageEffectGalleryIndex((homepageEffectGalleryIndex + 1) % homepageEffectGallerySources.length, true, true);
+    return;
+  }
+  startHomepageEffectGalleryStory(false, homepageEffectGalleryStorySignature);
+}
+
 function updateHomepageEffectGalleryControls() {
   const layer = ensureHomepageEffectLayer();
   const count = homepageEffectGallerySources.length;
@@ -2869,24 +2994,30 @@ function updateHomepageEffectGalleryControls() {
     label.hidden = count <= 1;
     label.textContent = count ? `${homepageEffectGalleryIndex + 1} / ${count}` : "";
   }
-  if (prev) prev.disabled = count <= 1 || homepageEffectGalleryIndex <= 0;
-  if (next) next.disabled = count <= 1 || homepageEffectGalleryIndex >= count - 1;
+  if (prev) prev.disabled = count <= 1;
+  if (next) next.disabled = count <= 1;
+  updateHomepageEffectGalleryStoryProgress();
 }
 
-function showHomepageEffectGalleryIndex(index, smooth = true) {
+function showHomepageEffectGalleryIndex(index, smooth = true, restartStory = true) {
   const layer = ensureHomepageEffectLayer();
   const viewport = layer.querySelector("#homepageEffectGalleryViewport");
   const count = homepageEffectGallerySources.length;
   if (!viewport || !count) return;
-  homepageEffectGalleryIndex = Math.max(0, Math.min(count - 1, Number(index) || 0));
+  homepageEffectGalleryIndex = ((Number(index) || 0) % count + count) % count;
   const width = viewport.clientWidth || viewport.getBoundingClientRect().width || 1;
   viewport.scrollTo({ left: width * homepageEffectGalleryIndex, behavior: smooth ? "smooth" : "auto" });
+  if (restartStory) {
+    homepageEffectGalleryStoryRemainingMs = HOMEPAGE_EFFECT_GALLERY_STORY_MS;
+    startHomepageEffectGalleryStory(true, homepageEffectGalleryStorySignature || homepageEffectCurrentSignature);
+  }
   updateHomepageEffectGalleryControls();
 }
 
 function moveHomepageEffectGallery(direction) {
-  if (homepageEffectGallerySources.length <= 1) return;
-  showHomepageEffectGalleryIndex(homepageEffectGalleryIndex + Number(direction || 0), true);
+  const count = homepageEffectGallerySources.length;
+  if (count <= 1) return;
+  showHomepageEffectGalleryIndex(homepageEffectGalleryIndex + Number(direction || 0), true, true);
 }
 
 function syncHomepageEffectGalleryIndexFromScroll() {
@@ -2895,8 +3026,14 @@ function syncHomepageEffectGalleryIndexFromScroll() {
   const viewport = layer?.querySelector("#homepageEffectGalleryViewport");
   if (!viewport || !homepageEffectGallerySources.length) return;
   const width = viewport.clientWidth || viewport.getBoundingClientRect().width || 1;
-  homepageEffectGalleryIndex = Math.max(0, Math.min(homepageEffectGallerySources.length - 1, Math.round(viewport.scrollLeft / width)));
+  const nextIndex = Math.max(0, Math.min(homepageEffectGallerySources.length - 1, Math.round(viewport.scrollLeft / width)));
+  const changed = nextIndex !== homepageEffectGalleryIndex;
+  homepageEffectGalleryIndex = nextIndex;
   updateHomepageEffectGalleryControls();
+  if (changed) {
+    homepageEffectGalleryStoryRemainingMs = HOMEPAGE_EFFECT_GALLERY_STORY_MS;
+    startHomepageEffectGalleryStory(true, homepageEffectGalleryStorySignature || homepageEffectCurrentSignature);
+  }
 }
 
 async function renderHomepageEffectPictureGallery(config, token) {
@@ -2905,8 +3042,19 @@ async function renderHomepageEffectPictureGallery(config, token) {
   const viewport = layer.querySelector("#homepageEffectGalleryViewport");
   if (!track || !viewport) return;
 
+  if (homepageEffectGalleryRenderSignature === config.signature && homepageEffectGallerySources.length) {
+    homepageEffectGalleryStorySignature = config.signature;
+    updateHomepageEffectGalleryControls();
+    if (!homepageEffectGalleryStoryTimer && !homepageEffectGalleryStoryPaused) {
+      startHomepageEffectGalleryStory(false, config.signature);
+    }
+    return;
+  }
+
+  stopHomepageEffectGalleryStory(true);
   homepageEffectGalleryIndex = 0;
   homepageEffectGallerySources = [];
+  homepageEffectGalleryRenderSignature = "";
   track.innerHTML = '<div class="homepageEffectGalleryLoading">Loading picture gallery…</div>';
   updateHomepageEffectGalleryControls();
 
@@ -2948,7 +3096,11 @@ async function renderHomepageEffectPictureGallery(config, token) {
   });
 
   viewport.scrollLeft = 0;
+  homepageEffectGalleryRenderSignature = config.signature;
+  homepageEffectGalleryStorySignature = config.signature;
+  homepageEffectGalleryStoryRemainingMs = HOMEPAGE_EFFECT_GALLERY_STORY_MS;
   updateHomepageEffectGalleryControls();
+  startHomepageEffectGalleryStory(true, config.signature);
 }
 
 function buildHomepageRain(mode) {
@@ -3194,8 +3346,10 @@ async function applyHomepageEffectSettings(settings = {}) {
   if (config.mode === "picture") {
     await renderHomepageEffectPictureGallery(config, token);
   } else {
+    stopHomepageEffectGalleryStory(true);
     homepageEffectGalleryIndex = 0;
     homepageEffectGallerySources = [];
+    homepageEffectGalleryRenderSignature = "";
     const galleryTrack = layer.querySelector("#homepageEffectGalleryTrack");
     if (galleryTrack) galleryTrack.innerHTML = "";
     updateHomepageEffectGalleryControls();

@@ -25209,21 +25209,22 @@ body[data-use-subject-period-colors="yes"] .next #nextDetails * {
 .homepageEffectClose {
   position: absolute;
   z-index: 20;
-  top: max(14px, env(safe-area-inset-top));
+  top: max(12px, env(safe-area-inset-top));
   right: max(14px, env(safe-area-inset-right));
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
-  min-height: 44px;
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  min-height: 42px;
   display: grid;
   place-items: center;
   padding: 0;
-  border: 2px solid rgba(255,255,255,.9);
-  border-radius: 999px;
-  background: rgba(10,14,22,.82);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   color: #fff;
-  box-shadow: 0 8px 30px rgba(0,0,0,.28);
-  font: 900 30px/1 Arial, sans-serif;
+  box-shadow: none;
+  text-shadow: 0 2px 8px rgba(0,0,0,.72);
+  font: 400 39px/1 Arial, sans-serif;
   cursor: pointer;
   pointer-events: auto;
   -webkit-tap-highlight-color: transparent;
@@ -25231,9 +25232,10 @@ body[data-use-subject-period-colors="yes"] .next #nextDetails * {
 
 .homepageEffectClose:hover,
 .homepageEffectClose:focus-visible {
-  background: #111;
-  outline: 3px solid #ffd700;
-  outline-offset: 2px;
+  background: transparent;
+  color: #fff;
+  outline: 2px solid rgba(255,255,255,.9);
+  outline-offset: 1px;
 }
 
 .homepageEffectRain {
@@ -25659,7 +25661,7 @@ body[data-use-subject-period-colors="yes"] .next #nextDetails * {
     height: 40px;
     min-width: 40px;
     min-height: 40px;
-    font-size: 27px;
+    font-size: 36px;
   }
 
   .homepageEffectPicturePanel img {
@@ -26570,6 +26572,37 @@ html.sfkHomepageMultiverseActive body > *:not(script):not(style):not(#homepageEf
   gap: 7px;
   pointer-events: auto;
 }
+.homepageEffectStoryProgress {
+  position: absolute;
+  z-index: 19;
+  top: 8px;
+  left: 18px;
+  right: 72px;
+  display: flex;
+  gap: 5px;
+  height: 4px;
+  pointer-events: none;
+}
+.homepageEffectStoryProgress[hidden] { display: none !important; }
+.homepageEffectStorySegment {
+  position: relative;
+  flex: 1 1 0;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255,255,255,.34);
+  box-shadow: 0 1px 4px rgba(0,0,0,.28);
+}
+.homepageEffectStorySegment > i {
+  position: absolute;
+  inset: 0;
+  display: block;
+  background: #fff;
+  border-radius: inherit;
+  transform: scaleX(0);
+  transform-origin: left center;
+  will-change: transform;
+}
 .homepageEffectGalleryViewport {
   grid-row: 1;
   width: 100%;
@@ -26581,6 +26614,9 @@ html.sfkHomepageMultiverseActive body > *:not(script):not(style):not(#homepageEf
   scroll-behavior: smooth;
   overscroll-behavior-x: contain;
   touch-action: pan-x pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
   scrollbar-width: thin;
   scrollbar-color: rgba(255,255,255,.5) rgba(255,255,255,.08);
   border-radius: 20px;
@@ -26955,6 +26991,7 @@ html.sfkHomepageSpiderGlitchActive body > *:not(script):not(style):not(#homepage
   .homepageEffectGalleryNav.is-prev { left: 6px; }
   .homepageEffectGalleryNav.is-next { right: 6px; }
   .homepageEffectGalleryCount { padding: 5px 10px; font-size: .72rem; }
+  .homepageEffectStoryProgress { top: 6px; left: 10px; right: 58px; gap: 3px; height: 3px; }
   .homepageEffectPicturePanel figcaption { font-size: .78rem; max-width: 94vw; }
 }
 
