@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-main-pwa-v456-freedom-wall-layout-admin-delete";
+const CACHE_NAME = "sfk-main-pwa-v458-natural-sticky-width";
 const CACHE_PREFIXES_TO_DELETE = ["sfk-main-pwa-", "sfk-sw.js-"];
 const NAVIGATION_FALLBACK_URL = "./index.html";
 const NAVIGATION_TIMEOUT_MS = 2500;

@@ -3570,6 +3570,156 @@ function createFreedomWallPostingPlacement() {
   };
 }
 
+
+function getFreedomWallVisualRotation(note = {}, index = 0) {
+  const seed = freedomWallHash(note.id || `${note.text || note.Text || "note"}-${index}`);
+  // v457: balanced left/right/straight angles. We intentionally do not rely
+  // only on the saved Rotation value so a batch of notes can never all look
+  // tilted toward the same side by chance.
+  const presets = [-12.5, 8.5, -6.5, 3.2, 0, 11.2, -9.2, 5.6, -3.4, 13.2, 1.5, -10.8, 7.1, -1.6];
+  const base = presets[(seed + index * 5) % presets.length];
+  const jitter = ((((seed >>> 11) % 120) / 100) - .6);
+  return Math.max(-14, Math.min(14, base + jitter));
+}
+
+function getFreedomWallVisualSkew(note = {}, index = 0) {
+  const seed = freedomWallHash(`${note.id || "note"}-skew-${index}`);
+  const presets = [-1.25, -.7, -.25, 0, .35, .8, 1.15];
+  return presets[(seed + index * 3) % presets.length];
+}
+
+function expandFreedomWallRect(rect, pad = 0) {
+  return {
+    left: rect.left - pad,
+    top: rect.top - pad,
+    right: rect.right + pad,
+    bottom: rect.bottom + pad,
+    width: rect.width + pad * 2,
+    height: rect.height + pad * 2
+  };
+}
+
+function freedomWallOverlapArea(a, b) {
+  const width = Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left));
+  const height = Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+  return width * height;
+}
+
+function getFreedomWallReservedRects(layer, stageRect) {
+  const reserved = [];
+  const addReserved = (element, pad) => {
+    if (!element || element.hidden) return;
+    const rect = element.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    reserved.push(expandFreedomWallRect(rect, pad));
+  };
+  // The prompt is the most important safe zone: notes never cover it while it
+  // is visible. Also keep the wall identity and + button readable while space
+  // still exists elsewhere.
+  addReserved(layer?.querySelector("#freedomWallPromptCard"), 18);
+  addReserved(layer?.querySelector(".freedomWallBrand"), 10);
+  addReserved(layer?.querySelector("#freedomWallAddBtn"), 10);
+  return reserved.filter((rect) => rect.right > stageRect.left && rect.left < stageRect.right && rect.bottom > stageRect.top && rect.top < stageRect.bottom);
+}
+
+function getFreedomWallCandidateRect(stageRect, centerX, centerY, width, height, rotation, scale = 1) {
+  const rad = Math.abs(Number(rotation) || 0) * Math.PI / 180;
+  const scaledWidth = width * scale;
+  const scaledHeight = height * scale;
+  const rotatedWidth = Math.abs(scaledWidth * Math.cos(rad)) + Math.abs(scaledHeight * Math.sin(rad));
+  const rotatedHeight = Math.abs(scaledWidth * Math.sin(rad)) + Math.abs(scaledHeight * Math.cos(rad));
+  const left = stageRect.left + centerX - rotatedWidth / 2;
+  const top = stageRect.top + centerY - rotatedHeight / 2;
+  return { left, top, right: left + rotatedWidth, bottom: top + rotatedHeight, width: rotatedWidth, height: rotatedHeight };
+}
+
+function findFreedomWallSmartPlacement(card, note, index, occupiedRects, reservedRects) {
+  const stage = card?.parentElement;
+  const stageRect = stage?.getBoundingClientRect();
+  if (!stageRect || !stageRect.width || !stageRect.height) {
+    const fallback = getFreedomWallDisplayPlacement(note, index);
+    return { ...fallback, rotation: getFreedomWallVisualRotation(note, index), skew: getFreedomWallVisualSkew(note, index) };
+  }
+
+  const narrow = window.matchMedia?.("(max-width:700px)")?.matches;
+  const seed = freedomWallHash(`${note.id || "note"}-smart-${index}`);
+  const rotation = getFreedomWallVisualRotation(note, index);
+  const skew = getFreedomWallVisualSkew(note, index);
+  const scale = Math.max(.84, Math.min(1.14, Number(note.scale) || 1));
+  const width = Math.max(74, card.offsetWidth || card.getBoundingClientRect().width || 140);
+  const height = Math.max(50, card.offsetHeight || card.getBoundingClientRect().height || 80);
+  const rad = Math.abs(rotation) * Math.PI / 180;
+  const boxWidth = (Math.abs(width * Math.cos(rad)) + Math.abs(height * Math.sin(rad))) * scale;
+  const boxHeight = (Math.abs(width * Math.sin(rad)) + Math.abs(height * Math.cos(rad))) * scale;
+  const edge = narrow ? 7 : 10;
+  const minX = boxWidth / 2 + edge;
+  const maxX = Math.max(minX, stageRect.width - boxWidth / 2 - edge);
+  const minY = boxHeight / 2 + edge;
+  const maxY = Math.max(minY, stageRect.height - boxHeight / 2 - edge);
+
+  const preferredX = Math.max(minX, Math.min(maxX, stageRect.width * ((Number(note.x) || 50) / 100)));
+  const preferredY = Math.max(minY, Math.min(maxY, stageRect.height * ((Number(note.y) || 50) / 100)));
+  const candidates = [{ x: preferredX, y: preferredY }];
+
+  // Deterministic pseudo-random sampling covers the whole wall. We test many
+  // positions before allowing overlap, so notes use empty space first on both
+  // desktop and phone. Only once every useful area is occupied do we accept the
+  // least-overlapping candidate.
+  let state = (seed || 1) >>> 0;
+  const nextRandom = () => {
+    state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+    return state / 4294967296;
+  };
+  const samples = narrow ? 190 : 260;
+  for (let i = 0; i < samples; i += 1) {
+    candidates.push({
+      x: minX + nextRandom() * Math.max(1, maxX - minX),
+      y: minY + nextRandom() * Math.max(1, maxY - minY)
+    });
+  }
+
+  // Add a loose grid too, so thin leftover lanes are not missed by random
+  // sampling when the wall is almost full.
+  const cols = narrow ? 5 : 11;
+  const rows = narrow ? 12 : 8;
+  for (let row = 0; row < rows; row += 1) {
+    for (let col = 0; col < cols; col += 1) {
+      const xRatio = cols <= 1 ? .5 : col / (cols - 1);
+      const yRatio = rows <= 1 ? .5 : row / (rows - 1);
+      candidates.push({ x: minX + xRatio * (maxX - minX), y: minY + yRatio * (maxY - minY) });
+    }
+  }
+
+  let best = null;
+  let bestPenalty = Number.POSITIVE_INFINITY;
+  const noteGap = narrow ? 4 : 6;
+  for (const candidate of candidates) {
+    const rect = getFreedomWallCandidateRect(stageRect, candidate.x, candidate.y, width, height, rotation, scale);
+    let overlap = 0;
+    for (const occupied of occupiedRects) overlap += freedomWallOverlapArea(expandFreedomWallRect(rect, noteGap), occupied);
+    // Covering the prompt/brand/+ button receives a much larger penalty so it
+    // happens only if the wall is genuinely out of usable room.
+    for (const reserved of reservedRects) overlap += freedomWallOverlapArea(expandFreedomWallRect(rect, 3), reserved) * 12;
+    const distance = Math.hypot(candidate.x - preferredX, candidate.y - preferredY);
+    const penalty = overlap * 1000 + distance;
+    if (penalty < bestPenalty) {
+      bestPenalty = penalty;
+      best = { x: candidate.x, y: candidate.y, rect };
+      if (overlap === 0 && distance < Math.max(stageRect.width, stageRect.height) * .14) break;
+    }
+  }
+
+  const chosen = best || { x: preferredX, y: preferredY, rect: getFreedomWallCandidateRect(stageRect, preferredX, preferredY, width, height, rotation, scale) };
+  return {
+    x: Math.max(0, Math.min(100, (chosen.x / stageRect.width) * 100)),
+    y: Math.max(0, Math.min(100, (chosen.y / stageRect.height) * 100)),
+    rotation,
+    skew,
+    scale,
+    rect: chosen.rect
+  };
+}
+
 function normalizeFreedomWallNote(doc, index = 0) {
   const data = typeof doc?.data === "function" ? (doc.data() || {}) : (doc || {});
   const id = String(doc?.id || data.ID || data.id || `note-${index}`);
@@ -3588,9 +3738,8 @@ function renderFreedomWallNotes(notes = []) {
   const count = layer?.querySelector("#freedomWallCount");
   if (!stage) return;
 
-  // v455: update ONLY the Freedom Wall note layer. Do not rebuild the effect,
-  // backdrop, prompt, composer, or audio element. This keeps background music
-  // playing continuously while notes arrive live from other devices.
+  // v455+: update ONLY the Freedom Wall note layer. Music and the overall
+  // display effect are never restarted when live notes arrive.
   const sorted = notes
     .filter(Boolean)
     .sort((a,b) => (a.createdAtMs - b.createdAtMs) || a.id.localeCompare(b.id))
@@ -3601,11 +3750,13 @@ function renderFreedomWallNotes(notes = []) {
   const existing = new Map(
     Array.from(stage.querySelectorAll("[data-note-id]")).map((item) => [String(item.dataset.noteId || ""), item])
   );
-
-  // Remove only notes that disappeared from Firestore / fell outside the cap.
   existing.forEach((card, id) => {
     if (!wantedIds.has(id)) card.remove();
   });
+
+  const stageRect = stage.getBoundingClientRect();
+  const reservedRects = getFreedomWallReservedRects(layer, stageRect);
+  const occupiedRects = [];
 
   sorted.forEach((note, index) => {
     let card = existing.get(note.id);
@@ -3619,16 +3770,8 @@ function renderFreedomWallNotes(notes = []) {
       card.append(pin, text);
     }
 
-    const displayPlacement = getFreedomWallDisplayPlacement(note, index);
     const sizeClass = getFreedomWallNoteSizeClass(note);
     card.className = `freedomWallNote is-${note.color} is-size-${sizeClass}${isNew ? " is-new" : ""}`;
-    card.style.setProperty("--fw-x", String(displayPlacement.x));
-    card.style.setProperty("--fw-y", String(displayPlacement.y));
-    card.style.setProperty("--fw-rotation", `${displayPlacement.rotation}deg`);
-    card.style.setProperty("--fw-scale", String(displayPlacement.scale));
-    // Keep every sticky below the centered Admin prompt, even with hundreds of
-    // notes. Later DOM order still makes newer notes sit above older notes.
-    card.style.zIndex = String(40 + Math.min(index, 230));
 
     const textEl = card.querySelector("p");
     if (textEl && textEl.textContent !== note.text) textEl.textContent = note.text;
@@ -3646,12 +3789,40 @@ function renderFreedomWallNotes(notes = []) {
       authorEl.remove();
     }
 
-    // appendChild on an existing node only fixes stacking/order; it does not
-    // recreate it, so old sticky notes do not blink or replay their entrance.
-    stage.appendChild(card);
+    // Existing live notes keep their chosen on-screen spot. Newly appearing
+    // notes search the whole available wall and avoid every occupied note,
+    // prompt, brand and + button before overlap is ever allowed.
     if (isNew) {
-      window.setTimeout(() => card?.classList.remove("is-new"), 650);
+      card.style.visibility = "hidden";
+      card.style.setProperty("--fw-x", "50");
+      card.style.setProperty("--fw-y", "50");
+      card.style.setProperty("--fw-rotation", "0deg");
+      card.style.setProperty("--fw-skew", "0deg");
+      card.style.setProperty("--fw-scale", String(note.scale || 1));
+      stage.appendChild(card);
+      const placement = findFreedomWallSmartPlacement(card, note, index, occupiedRects, reservedRects);
+      card.style.setProperty("--fw-x", String(placement.x));
+      card.style.setProperty("--fw-y", String(placement.y));
+      card.style.setProperty("--fw-rotation", `${placement.rotation}deg`);
+      card.style.setProperty("--fw-skew", `${placement.skew}deg`);
+      card.style.setProperty("--fw-scale", String(placement.scale));
+      card.style.setProperty("--fw-pin-x", `${40 + (freedomWallHash(`${note.id}-pin`) % 21)}%`);
+      card.style.visibility = "";
+      occupiedRects.push(placement.rect);
+    } else {
+      // Do not move old notes every time another device posts. Read their
+      // actual rendered rectangle as occupied space for the next new note.
+      card.style.setProperty("--fw-rotation", `${getFreedomWallVisualRotation(note, index)}deg`);
+      card.style.setProperty("--fw-skew", `${getFreedomWallVisualSkew(note, index)}deg`);
+      stage.appendChild(card);
+      const rect = card.getBoundingClientRect();
+      if (rect.width && rect.height) occupiedRects.push(expandFreedomWallRect(rect, window.innerWidth <= 700 ? 4 : 6));
     }
+
+    // All notes remain below the Admin prompt; newer notes can layer above
+    // older ones only after the wall is crowded enough that overlap is needed.
+    card.style.zIndex = String(40 + Math.min(index, 230));
+    if (isNew) window.setTimeout(() => card?.classList.remove("is-new"), 650);
   });
 
   if (count) count.textContent = sorted.length >= FREEDOM_WALL_MAX_RENDERED_NOTES
