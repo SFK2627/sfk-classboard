@@ -30374,3 +30374,124 @@ html.sfkHomepageBlackSymbioteActive body > *:not(script):not(style):not(#homepag
    Sticky width is driven by content instead of fixed preset rectangles. */
 .freedomWallNote{inline-size:max-content;max-inline-size:var(--fw-note-max-width);min-inline-size:var(--fw-note-min-width)}
 .freedomWallNote p,.freedomWallNote small{max-inline-size:100%}
+
+
+/* v459: Freedom Wall comic / pop-art cleanup */
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallSun,
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallMoon,
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallCloud,
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallRain,
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallFlood,
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallVandalMark{opacity:0!important;display:none!important}
+
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallBg{
+  background:
+    linear-gradient(138deg,#ffe34a 0 31%,#141414 31% 31.8%,#ff708a 31.8% 66%,#141414 66% 66.8%,#67cfff 66.8% 100%);
+}
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallBg::before{
+  inset:0;
+  background:
+    radial-gradient(circle,rgba(17,17,17,.20) 0 1.3px,transparent 1.6px) 0 0/14px 14px,
+    linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,0) 30%);
+  opacity:.58;
+}
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallBg::after{
+  inset:6.3%;
+  border:6px solid #111;
+  box-shadow:9px 9px 0 rgba(17,17,17,.96);
+  background:transparent;
+}
+
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallComicBurst{
+  opacity:1;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  white-space:nowrap;
+  line-height:1;
+  padding:10px 18px;
+  border:4px solid #111;
+  background:#fffef9;
+  box-shadow:5px 5px 0 #111;
+  font:1000 clamp(16px,2.2vw,30px)/1 "Arial Black", Impact, Arial, sans-serif;
+  letter-spacing:.02em;
+  z-index:8;
+}
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallComicBurst.burst-a{
+  left:6%;
+  top:12%;
+  color:#ef304f;
+  transform:rotate(-7deg);
+  border-radius:999px;
+  padding:12px 22px;
+}
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallComicBurst.burst-b{
+  right:7.5%;
+  top:18%;
+  bottom:auto;
+  color:#1c6ad8;
+  transform:rotate(7deg);
+  border-radius:18px;
+  padding:10px 18px;
+}
+
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallBrand{
+  background:#fffef9;
+  border:3px solid #111;
+  box-shadow:6px 6px 0 rgba(17,17,17,.92);
+  color:#111;
+  border-radius:16px;
+  backdrop-filter:none;
+}
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallBrand span{color:#474747}
+
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallPromptCard{
+  background:#fffef9;
+  border:4px solid #111;
+  box-shadow:10px 10px 0 rgba(17,17,17,.94);
+  border-radius:24px;
+}
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallPromptEyebrow{color:#9a6500}
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallPromptClose:hover,
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallPromptClose:focus-visible{background:rgba(17,17,17,.08)}
+
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallNote{
+  border:3px solid #111;
+  box-shadow:4px 4px 0 #111, 0 12px 18px rgba(0,0,0,.12);
+  border-radius:2px;
+}
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallNote::after{border-width:0 0 18px 18px}
+
+@media (max-width: 700px){
+  .homepageFreedomWallScene[data-theme="comic"] .freedomWallBg{
+    background:linear-gradient(140deg,#ffe34a 0 30%,#111 30% 31.2%,#ff708a 31.2% 67%,#111 67% 68.2%,#67cfff 68.2% 100%);
+  }
+  .homepageFreedomWallScene[data-theme="comic"] .freedomWallBg::after{
+    inset:4.6%;
+    border-width:4px;
+    box-shadow:6px 6px 0 rgba(17,17,17,.96);
+  }
+  .homepageFreedomWallScene[data-theme="comic"] .freedomWallComicBurst{
+    font-size:16px;
+    border-width:3px;
+    box-shadow:4px 4px 0 #111;
+  }
+  .homepageFreedomWallScene[data-theme="comic"] .freedomWallComicBurst.burst-a{
+    left:4%;
+    top:11%;
+    padding:9px 14px;
+  }
+  .homepageFreedomWallScene[data-theme="comic"] .freedomWallComicBurst.burst-b{
+    right:4.5%;
+    top:17%;
+    padding:8px 12px;
+  }
+  .homepageFreedomWallScene[data-theme="comic"] .freedomWallPromptCard{
+    border-width:3px;
+    box-shadow:7px 7px 0 rgba(17,17,17,.94);
+  }
+  .homepageFreedomWallScene[data-theme="comic"] .freedomWallBrand{
+    border-width:2px;
+    box-shadow:4px 4px 0 rgba(17,17,17,.92);
+  }
+}
