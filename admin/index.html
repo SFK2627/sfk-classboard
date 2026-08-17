@@ -9,9 +9,9 @@
   <meta name="apple-mobile-web-app-title" content="SFK Admin" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>SFK Admin</title>
-  <link rel="manifest" href="manifest.webmanifest?v=buwan-svg-v440" />
-  <link rel="icon" type="image/png" sizes="192x192" href="../icons/icon-192.png?v=buwan-svg-v440" />
-  <link rel="apple-touch-icon" href="../icons/icon-192.png?v=buwan-svg-v440" />
+  <link rel="manifest" href="manifest.webmanifest?v=v454-freedom-wall" />
+  <link rel="icon" type="image/png" sizes="192x192" href="../icons/icon-192.png?v=v454-freedom-wall" />
+  <link rel="apple-touch-icon" href="../icons/icon-192.png?v=v454-freedom-wall" />
   <style>
     html,
     body {
@@ -30,13 +30,13 @@
       background: #fff8dc;
     }
   </style>
-  <script src="../orientation-lock.js?v=buwan-svg-v440" defer></script>
+  <script src="../orientation-lock.js?v=v454-freedom-wall" defer></script>
 </head>
 <body>
-  <iframe src="../admin.html?embedded=1&v=buwan-svg-v440" title="SFK ClassBoard Admin"></iframe>
+  <iframe src="../admin.html?embedded=1&v=v454-freedom-wall" title="SFK ClassBoard Admin"></iframe>
   <script>
     (function () {
-      var reloadKey = "sfkAdminControllerReloadV423KoalaPet";
+      var reloadKey = "sfkAdminControllerReloadV454FreedomWall";
 
       function reloadOnce() {
         try {
@@ -51,7 +51,7 @@
       function activateWaitingWorker(worker) {
         if (!worker) return;
         try {
-          worker.postMessage({ type: "SFK_SKIP_WAITING_KOALA_PET_V423" });
+          worker.postMessage({ type: "SFK_SKIP_WAITING_FREEDOM_WALL_V454" });
         } catch (error) {}
       }
 
@@ -59,7 +59,7 @@
         navigator.serviceWorker.addEventListener("controllerchange", reloadOnce);
 
         window.addEventListener("load", function () {
-          navigator.serviceWorker.register("./sw.js?v=buwan-svg-v440", {
+          navigator.serviceWorker.register("./sw.js?v=v454-freedom-wall", {
             scope: "./",
             updateViaCache: "none"
           }).then(function (registration) {

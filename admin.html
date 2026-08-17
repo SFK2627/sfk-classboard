@@ -18,6 +18,14 @@
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
   <link rel="stylesheet" href="admin.css?v=youtube-effect-v400" />
   <script src="orientation-lock.js?v=appwide-v6" defer></script>
+
+  <style>
+    .homepageEffectFreedomWallFields{display:grid;gap:10px;margin-top:10px;padding:14px;border:1px solid rgba(0,0,0,.12);border-radius:14px;background:linear-gradient(180deg,#fffef9,#fff9df)}
+    .homepageEffectFreedomWallFields[hidden]{display:none!important}
+    .freedomWallAdminIntro{display:flex;flex-direction:column;gap:5px;padding:10px 12px;border-radius:11px;background:#111;color:#fff}
+    .freedomWallAdminIntro strong{font-size:15px}.freedomWallAdminIntro span{font-size:12px;line-height:1.45;color:rgba(255,255,255,.82)}
+    .freedomWallAdminActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}.freedomWallAdminActions button{border:0;border-radius:10px;padding:9px 12px;font-weight:800;cursor:pointer;background:#111;color:#fff}.freedomWallAdminActions button.is-danger{background:#a82424}
+  </style>
 </head>
 
 <body>
@@ -175,6 +183,7 @@
             <option value="pixel-game">Pixel Game World</option>
             <option value="cyber-classroom">Neon Data Stream / Cyber Classroom</option>
             <option value="heritage-journey">Philippine Heritage Journey</option>
+            <option value="freedom-wall">SFK Freedom Wall / Live Sticky Notes</option>
             <option value="picture">Fullscreen Picture Gallery</option>
             <option value="youtube">YouTube Video / Autoplay</option>
             <option value="rickroll">Exit Button Prank / Rickroll</option>
@@ -187,6 +196,41 @@
 
             <label for="homepageEffectMessage">Message <span class="homepageEffectOptional">optional</span></label>
             <textarea id="homepageEffectMessage" maxlength="700" rows="4" placeholder="Example: Stay safe and dry. Please wait for further announcements."></textarea>
+          </div>
+
+          <div id="homepageEffectFreedomWallFields" class="homepageEffectFreedomWallFields" hidden>
+            <div class="freedomWallAdminIntro">
+              <strong>📝 SFK Freedom Wall</strong>
+              <span>Use the <b>Title</b> above as the main question/prompt and the <b>Message</b> as the short instruction. Students will see it centered first and can close only the prompt card.</span>
+            </div>
+
+            <label for="freedomWallTheme">Freedom Wall Background</label>
+            <select id="freedomWallTheme">
+              <option value="sticky-notes">Classic Sticky Note Board</option>
+              <option value="sunny">Sunny Day</option>
+              <option value="rainy">Rainy Day</option>
+              <option value="night">Night</option>
+              <option value="flood">Rainy Day + Flood</option>
+              <option value="comic">Comic / Pop Art</option>
+              <option value="school-note">School Notebook Paper</option>
+              <option value="vandal">Real Freedom / Vandal Wall</option>
+            </select>
+
+            <label class="homepageEffectToggleRow">
+              <input id="freedomWallAllowPosting" type="checkbox" checked />
+              <span><strong>Allow students to add notes</strong><small>A + button appears on the live wall. Turn this off to freeze the wall without deleting notes.</small></span>
+            </label>
+
+            <label class="homepageEffectToggleRow">
+              <input id="freedomWallShowNames" type="checkbox" checked />
+              <span><strong>Show student name / nickname on notes</strong><small>Students can enter a name when posting. Turn this off for a cleaner anonymous-looking wall.</small></span>
+            </label>
+
+            <div class="freedomWallAdminActions">
+              <button id="freedomWallRefreshCount" type="button">↻ Check Note Count</button>
+              <button id="freedomWallClearNotes" type="button" class="is-danger">🗑 Clear Entire Wall</button>
+            </div>
+            <small id="freedomWallAdminStatus" class="fieldHint">Notes stay live and keep layering over older notes as the wall fills.</small>
           </div>
 
           <div id="homepageEffectPictureFields" class="homepageEffectPictureFields" hidden>
@@ -1030,10 +1074,10 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js?v=2-secure-auth"></script>
   <script src="auth.js?v=admin-officer-rescue-v2"></script>
-  <script src="firebase-adapter.js?v=v453-hard-effects-story-fix"></script>
-  <script src="pwa.js?v=v453-hard-effects-story-fix"></script>
-  <script src="class-chat-admin.js?v=v453-hard-effects-story-fix"></script>
-  <script src="admin.js?v=v453-hard-effects-story-fix"></script>
+  <script src="firebase-adapter.js?v=v454-freedom-wall"></script>
+  <script src="pwa.js?v=v454-freedom-wall"></script>
+  <script src="class-chat-admin.js?v=v454-freedom-wall"></script>
+  <script src="admin.js?v=v454-freedom-wall"></script>
 
 
   <script>
@@ -1041,7 +1085,7 @@
   (() => {
     const PREMIUM_MODES_V453 = new Set([
       "sunrise","underwater","notebook","hyperspace","window-weather","fiesta","book-world",
-      "magic-blackboard","moonlit-garden","cloud-kingdom","countdown","pixel-game","cyber-classroom","heritage-journey"
+      "magic-blackboard","moonlit-garden","cloud-kingdom","countdown","pixel-game","cyber-classroom","heritage-journey","freedom-wall"
     ]);
     const originalSaveV453 = typeof window.saveHomepageEffectSettings === "function"
       ? window.saveHomepageEffectSettings.bind(window) : null;
@@ -1070,7 +1114,7 @@
 
     async function publishPremiumV453(mode) {
       const db = getDb();
-      if (!db) throw new Error("Firebase is not ready yet.");
+      if (!db) throw new Error("Display connection is not ready yet.");
       const updatedAt = String(Date.now());
       const values = {
         HomepageEffectEnabled: "YES",
@@ -1081,6 +1125,9 @@
         HomepageEffectAudioEnabled: byId("homepageEffectAudioEnabled")?.checked ? "YES" : "NO",
         HomepageEffectAudioUrl: String(byId("homepageEffectAudioUrl")?.value || "").trim().slice(0,1200),
         HomepageEffectAudioLoop: byId("homepageEffectAudioLoop")?.checked === false ? "NO" : "YES",
+        FreedomWallTheme: String(byId("freedomWallTheme")?.value || "sticky-notes").trim().toLowerCase(),
+        FreedomWallAllowPosting: byId("freedomWallAllowPosting")?.checked === false ? "NO" : "YES",
+        FreedomWallShowNames: byId("freedomWallShowNames")?.checked === false ? "NO" : "YES",
         HomepageEffectUpdatedAt: updatedAt
       };
       const batch = db.batch();
@@ -1123,6 +1170,104 @@
         setStatus(`Publish failed: ${error?.message || error}`);
       }
     };
+  })();
+  </script>
+
+  <script>
+  /* v454: Freedom Wall Admin controls. */
+  (() => {
+    const $ = (id) => document.getElementById(id);
+    const mode = $("homepageEffectMode");
+    const wallFields = $("homepageEffectFreedomWallFields");
+    const audioFields = $("homepageEffectAudioFields");
+    const status = $("freedomWallAdminStatus");
+    const getDb = () => {
+      if (window.SFK_CLASSBOARD_FIREBASE_DB) return window.SFK_CLASSBOARD_FIREBASE_DB;
+      try { if (window.firebase?.apps?.length) return firebase.firestore(); } catch (error) {}
+      return null;
+    };
+
+    function syncFreedomWallAdminUi() {
+      const active = String(mode?.value || "").toLowerCase() === "freedom-wall";
+      if (wallFields) wallFields.hidden = !active;
+      if (active && audioFields) audioFields.hidden = false;
+      if (active) {
+        const title = $("homepageEffectTitle");
+        const message = $("homepageEffectMessage");
+        if (title) title.placeholder = "Example: What made you smile today?";
+        if (message) message.placeholder = "Add one short note to our SFK Freedom Wall.";
+      }
+    }
+
+    async function refreshFreedomWallCount() {
+      const db = getDb();
+      if (!db) {
+        if (status) status.textContent = "Wall connection is still loading. Try again in a moment.";
+        return;
+      }
+      if (status) status.textContent = "Checking wall…";
+      try {
+        const snap = await db.collection("freedomWallNotes").get();
+        if (status) status.textContent = `${snap.size} ${snap.size === 1 ? "note" : "notes"} currently saved on the Freedom Wall.`;
+      } catch (error) {
+        console.warn("Freedom Wall count failed", error);
+        if (status) status.textContent = "Unable to check the wall right now.";
+      }
+    }
+
+    async function clearFreedomWall() {
+      const ok = window.confirm("Clear ALL Freedom Wall notes? This cannot be undone.");
+      if (!ok) return;
+      const db = getDb();
+      if (!db) {
+        if (status) status.textContent = "Wall connection is still loading. Try again in a moment.";
+        return;
+      }
+      const button = $("freedomWallClearNotes");
+      if (button) button.disabled = true;
+      if (status) status.textContent = "Clearing the wall…";
+      try {
+        let deleted = 0;
+        while (true) {
+          const snap = await db.collection("freedomWallNotes").limit(400).get();
+          if (snap.empty) break;
+          const batch = db.batch();
+          snap.docs.forEach((doc) => batch.delete(doc.ref));
+          await batch.commit();
+          deleted += snap.size;
+          if (snap.size < 400) break;
+        }
+        if (status) status.textContent = `Freedom Wall cleared. ${deleted} ${deleted === 1 ? "note" : "notes"} removed.`;
+      } catch (error) {
+        console.error("Freedom Wall clear failed", error);
+        if (status) status.textContent = "Unable to clear the wall right now.";
+      } finally {
+        if (button) button.disabled = false;
+      }
+    }
+
+    mode?.addEventListener("change", () => window.setTimeout(syncFreedomWallAdminUi, 0));
+    $("freedomWallRefreshCount")?.addEventListener("click", refreshFreedomWallCount);
+    $("freedomWallClearNotes")?.addEventListener("click", clearFreedomWall);
+    syncFreedomWallAdminUi();
+    window.setTimeout(syncFreedomWallAdminUi, 350);
+    window.setTimeout(syncFreedomWallAdminUi, 900);
+    window.setTimeout(syncFreedomWallAdminUi, 1600);
+
+    // Load saved Freedom Wall options even if the older admin.js does not know these new keys yet.
+    window.setTimeout(async () => {
+      const db = getDb();
+      if (!db) return;
+      try {
+        const keys = ["FreedomWallTheme","FreedomWallAllowPosting","FreedomWallShowNames"];
+        const docs = await Promise.all(keys.map((key) => db.collection("settings").doc(key).get()));
+        const values = {};
+        docs.forEach((doc, index) => { if (doc.exists) values[keys[index]] = String(doc.data()?.Value || ""); });
+        if ($("freedomWallTheme") && values.FreedomWallTheme) $("freedomWallTheme").value = values.FreedomWallTheme;
+        if ($("freedomWallAllowPosting")) $("freedomWallAllowPosting").checked = String(values.FreedomWallAllowPosting || "YES").toUpperCase() !== "NO";
+        if ($("freedomWallShowNames")) $("freedomWallShowNames").checked = String(values.FreedomWallShowNames || "YES").toUpperCase() !== "NO";
+      } catch (error) { console.warn("Freedom Wall settings load skipped", error); }
+    }, 700);
   })();
   </script>
 

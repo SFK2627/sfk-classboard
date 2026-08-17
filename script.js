@@ -1684,7 +1684,10 @@ const HOMEPAGE_EFFECT_KEYS = new Set([
   "HomepageEffectYouTubeUrl",
   "HomepageEffectYouTubeMuted",
   "HomepageEffectRickrollUrl",
-  "HomepageEffectUpdatedAt"
+  "HomepageEffectUpdatedAt",
+  "FreedomWallTheme",
+  "FreedomWallAllowPosting",
+  "FreedomWallShowNames"
 ]);
 
 let homepageEffectUnsubscribe = null;
@@ -1732,6 +1735,25 @@ let homepageRickrollRevealed = false;
 let homepageRickrollPlayerKey = "";
 let homepageRickrollUrl = "https://streamable.com/33rhw4";
 const HOMEPAGE_RICKROLL_DEFAULT_URL = "https://streamable.com/33rhw4";
+
+/* =========================================================
+   v454 SFK FREEDOM WALL
+   Live student sticky notes + Admin prompt/background controls.
+========================================================= */
+const FREEDOM_WALL_COLLECTION = "freedomWallNotes";
+const FREEDOM_WALL_MAX_RENDERED_NOTES = 400;
+const FREEDOM_WALL_NOTE_MAX_LENGTH = 240;
+const FREEDOM_WALL_AUTHOR_MAX_LENGTH = 42;
+const FREEDOM_WALL_THEME_SET = new Set(["sunny","rainy","night","flood","comic","school-note","sticky-notes","vandal"]);
+const FREEDOM_WALL_COLORS = ["yellow","pink","blue","mint","orange","violet","peach","white"];
+let freedomWallUnsubscribe = null;
+let freedomWallListenToken = 0;
+let freedomWallConfig = null;
+let freedomWallPromptDismissedSignature = "";
+let freedomWallPosting = false;
+let freedomWallSelectedColor = "yellow";
+let freedomWallLastRenderedCount = 0;
+let freedomWallNotesCache = [];
 
 function isHomepageEffectStartupBlocked() {
   const intro = document.getElementById("sfkIntroOverlay");
@@ -1839,7 +1861,7 @@ function normalizeHomepageEffectConfig(settings = {}) {
     "spider-glitch", "comic-web", "black-symbiote", "portal-rift",
     "fog", "snow", "confetti", "hearts", "koala-family", "stars", "matrix", "bubbles", "fireflies", "minions", "spongebob", "naruto", "akatsuki", "ninja-night", "neon-pulse",
     "aurora", "galaxy", "solar-system", "pet-dog", "pet-koala", "buwan-wika", "meteors", "laser-grid", "crt", "pixel-storm", "prism", "petals", "gold-sparkle",
-    "sunrise", "underwater", "notebook", "hyperspace", "window-weather", "fiesta", "book-world", "magic-blackboard", "moonlit-garden", "cloud-kingdom", "countdown", "pixel-game", "cyber-classroom", "heritage-journey"
+    "sunrise", "underwater", "notebook", "hyperspace", "window-weather", "fiesta", "book-world", "magic-blackboard", "moonlit-garden", "cloud-kingdom", "countdown", "pixel-game", "cyber-classroom", "heritage-journey", "freedom-wall"
   ]);
   const rawMode = String(settings.HomepageEffectMode || "normal").trim().toLowerCase();
   const mode = allowedModes.has(rawMode) ? rawMode : "normal";
@@ -1865,8 +1887,12 @@ function normalizeHomepageEffectConfig(settings = {}) {
   const youtubeMuted = String(settings.HomepageEffectYouTubeMuted || "YES").trim().toUpperCase() !== "NO";
   const rickrollUrl = normalizeHomepageEffectRickrollUrl(settings.HomepageEffectRickrollUrl) || HOMEPAGE_RICKROLL_DEFAULT_URL;
   const updatedAt = String(settings.HomepageEffectUpdatedAt || "").trim();
-  const signature = updatedAt || [enabled ? "1" : "0", mode, title, message, images.join("~"), dismissible ? "1" : "0", alertSound ? "1" : "0", audioEnabled ? "1" : "0", audioUrl, audioLoop ? "1" : "0", youtubeUrl, youtubeMuted ? "1" : "0", rickrollUrl].join("|");
-  return { enabled, mode, title, message, image: images[0] || "", images, dismissible, alertSound, spiderSound, audioEnabled, audioUrl, audioLoop, youtubeUrl, youtubeMuted, rickrollUrl, updatedAt, signature };
+  const rawFreedomWallTheme = String(settings.FreedomWallTheme || "sticky-notes").trim().toLowerCase();
+  const freedomWallTheme = FREEDOM_WALL_THEME_SET.has(rawFreedomWallTheme) ? rawFreedomWallTheme : "sticky-notes";
+  const freedomWallAllowPosting = String(settings.FreedomWallAllowPosting || "YES").trim().toUpperCase() !== "NO";
+  const freedomWallShowNames = String(settings.FreedomWallShowNames || "YES").trim().toUpperCase() !== "NO";
+  const signature = updatedAt || [enabled ? "1" : "0", mode, title, message, images.join("~"), dismissible ? "1" : "0", alertSound ? "1" : "0", audioEnabled ? "1" : "0", audioUrl, audioLoop ? "1" : "0", youtubeUrl, youtubeMuted ? "1" : "0", rickrollUrl, freedomWallTheme, freedomWallAllowPosting ? "1" : "0", freedomWallShowNames ? "1" : "0"].join("|");
+  return { enabled, mode, title, message, image: images[0] || "", images, dismissible, alertSound, spiderSound, audioEnabled, audioUrl, audioLoop, youtubeUrl, youtubeMuted, rickrollUrl, updatedAt, signature, freedomWallTheme, freedomWallAllowPosting, freedomWallShowNames };
 }
 
 function normalizeHomepageEffectYouTubeUrl(value) {
@@ -2679,6 +2705,40 @@ function ensureHomepageEffectLayer() {
       <div class="heritageJourneyTrack"><span class="stop stop-a">Bahay Kubo</span><span class="stop stop-b">Jeepney</span><span class="stop stop-c">Simbahan</span><span class="stop stop-d">Akda at Kultura</span></div>
     </div>
 
+    <div class="homepageThemeScene homepageFreedomWallScene" data-theme="sticky-notes" aria-label="SFK Freedom Wall">
+      <div class="freedomWallBg" aria-hidden="true">
+        <div class="freedomWallSun"></div>
+        <div class="freedomWallMoon"></div>
+        <div class="freedomWallCloud fw-cloud-a"></div><div class="freedomWallCloud fw-cloud-b"></div><div class="freedomWallCloud fw-cloud-c"></div>
+        <div class="freedomWallRain"></div>
+        <div class="freedomWallFlood"><span class="fwFloodWave wave-a"></span><span class="fwFloodWave wave-b"></span></div>
+        <div class="freedomWallComicBurst burst-a">WOW!</div><div class="freedomWallComicBurst burst-b">SFK!</div>
+        <div class="freedomWallVandalMark mark-a">#BEKIND</div><div class="freedomWallVandalMark mark-b">SFK</div><div class="freedomWallVandalMark mark-c">★</div>
+      </div>
+      <div class="freedomWallBrand"><strong>SFK FREEDOM WALL</strong><span id="freedomWallCount">Live wall</span></div>
+      <div id="freedomWallNotesStage" class="freedomWallNotesStage" aria-live="polite"></div>
+      <section id="freedomWallPromptCard" class="freedomWallPromptCard" hidden>
+        <button id="freedomWallPromptClose" class="freedomWallPromptClose" type="button" aria-label="Close prompt">×</button>
+        <span class="freedomWallPromptEyebrow">TODAY'S WALL PROMPT</span>
+        <h2 id="freedomWallPromptTitle"></h2>
+        <p id="freedomWallPromptMessage"></p>
+      </section>
+      <button id="freedomWallAddBtn" class="freedomWallAddBtn" type="button" aria-label="Add a note"><span>+</span><small>Add Note</small></button>
+      <div id="freedomWallComposer" class="freedomWallComposer" hidden>
+        <form id="freedomWallComposerForm" class="freedomWallComposerCard">
+          <div class="freedomWallComposerHead"><div><strong>Add to the Freedom Wall</strong><span>Share a short note with SFK.</span></div><button id="freedomWallComposerClose" type="button" aria-label="Close">×</button></div>
+          <label for="freedomWallAuthorInput">Name / nickname</label>
+          <input id="freedomWallAuthorInput" type="text" maxlength="42" autocomplete="name" placeholder="Your name" />
+          <label for="freedomWallNoteInput">Your note</label>
+          <textarea id="freedomWallNoteInput" maxlength="240" rows="4" placeholder="Write something kind, honest, funny, thankful, or meaningful…" required></textarea>
+          <div class="freedomWallColorRow" aria-label="Sticky note color">
+            <button type="button" data-fw-color="yellow" class="is-selected" aria-label="Yellow"></button><button type="button" data-fw-color="pink" aria-label="Pink"></button><button type="button" data-fw-color="blue" aria-label="Blue"></button><button type="button" data-fw-color="mint" aria-label="Mint"></button><button type="button" data-fw-color="orange" aria-label="Orange"></button><button type="button" data-fw-color="violet" aria-label="Violet"></button><button type="button" data-fw-color="peach" aria-label="Peach"></button><button type="button" data-fw-color="white" aria-label="White"></button>
+          </div>
+          <div class="freedomWallComposerFooter"><span id="freedomWallComposerStatus" role="status"></span><button id="freedomWallPostBtn" type="submit">Post Note</button></div>
+        </form>
+      </div>
+    </div>
+
     <div class="homepageEffectContent" role="status" aria-live="polite">
       <div class="homepageEffectWeatherMessage">
         <strong id="homepageEffectWeatherTitle"></strong>
@@ -2730,6 +2790,15 @@ function ensureHomepageEffectLayer() {
   document.body.appendChild(layer);
   window.addEventListener("resize", forceHomepageStoryBarViewportV453, { passive: true });
   forceHomepageStoryBarViewportV453();
+
+  layer.querySelector("#freedomWallAddBtn")?.addEventListener("click", openFreedomWallComposer);
+  layer.querySelector("#freedomWallComposerClose")?.addEventListener("click", closeFreedomWallComposer);
+  layer.querySelector("#freedomWallPromptClose")?.addEventListener("click", dismissFreedomWallPromptForView);
+  layer.querySelector("#freedomWallComposerForm")?.addEventListener("submit", submitFreedomWallNote);
+  layer.querySelectorAll("[data-fw-color]").forEach((button) => button.addEventListener("click", () => selectFreedomWallColor(button.dataset.fwColor)));
+  layer.querySelector("#freedomWallComposer")?.addEventListener("pointerdown", (event) => {
+    if (event.target?.id === "freedomWallComposer") closeFreedomWallComposer();
+  });
 
   layer.querySelector("#homepageEffectClose")?.addEventListener("click", dismissHomepageEffectForView);
   layer.querySelector("#homepageRickrollFakeExit")?.addEventListener("click", revealHomepageRickroll);
@@ -2965,6 +3034,7 @@ function hideHomepageEffectLayer() {
   layer.className = "homepageEffectLayer";
   document.documentElement.classList.remove("sfkHomepageEffectActive", "sfkHomepageMultiverseActive", "sfkHomepageSpiderGlitchActive", "sfkHomepageBlackSymbioteActive");
   homepageEffectAmbientMode = "";
+  stopFreedomWallLive(true);
   stopHomepageEffectGalleryStory(true);
   homepageEffectGalleryIndex = 0;
   homepageEffectGallerySources = [];
@@ -3344,7 +3414,7 @@ function renderHomepageEffectText(config) {
 
   if (weatherTitle) weatherTitle.textContent = config.title;
   if (weatherMessage) weatherMessage.textContent = config.message;
-  if (weatherBox) weatherBox.hidden = config.mode === "alert" || config.mode === "picture" || config.mode === "youtube" || config.mode === "rickroll" || !(config.title || config.message);
+  if (weatherBox) weatherBox.hidden = config.mode === "alert" || config.mode === "picture" || config.mode === "youtube" || config.mode === "rickroll" || config.mode === "freedom-wall" || !(config.title || config.message);
   if (pictureCaption) {
     pictureCaption.textContent = [config.title, config.message].filter(Boolean).join(" — ");
     pictureCaption.hidden = !(config.title || config.message);
@@ -3363,6 +3433,296 @@ async function resolveHomepageEffectImageSource(value) {
   return "";
 }
 
+
+
+function getFreedomWallDeviceId() {
+  const key = "sfkFreedomWallDeviceIdV454";
+  try {
+    let id = String(localStorage.getItem(key) || "").trim();
+    if (!id) {
+      id = `fw_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,10)}`;
+      localStorage.setItem(key, id);
+    }
+    return id.slice(0, 80);
+  } catch (error) {
+    return `fw_${Math.random().toString(36).slice(2,12)}`;
+  }
+}
+
+function getFreedomWallSavedAuthor() {
+  try { return String(localStorage.getItem("sfkFreedomWallAuthorV454") || "").trim().slice(0, FREEDOM_WALL_AUTHOR_MAX_LENGTH); }
+  catch (error) { return ""; }
+}
+
+function saveFreedomWallAuthor(value) {
+  const name = String(value || "").trim().slice(0, FREEDOM_WALL_AUTHOR_MAX_LENGTH);
+  if (!name) return;
+  try { localStorage.setItem("sfkFreedomWallAuthorV454", name); } catch (error) {}
+}
+
+function freedomWallHash(value) {
+  let hash = 2166136261;
+  const text = String(value || "freedom-wall");
+  for (let index = 0; index < text.length; index += 1) {
+    hash ^= text.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function freedomWallSafeNumber(value, fallback, min, max) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  return Math.max(min, Math.min(max, number));
+}
+
+function getFreedomWallPlacement(note = {}, index = 0) {
+  const seed = freedomWallHash(note.id || note.ID || `${note.Text || "note"}-${index}`);
+  const xFallback = 8 + ((seed % 8400) / 100);
+  const yFallback = 16 + (((seed >>> 7) % 7200) / 100);
+  const rotationFallback = -8 + (((seed >>> 13) % 1600) / 100);
+  const scaleFallback = .92 + (((seed >>> 19) % 170) / 1000);
+  return {
+    x: freedomWallSafeNumber(note.X, xFallback, 5, 95),
+    y: freedomWallSafeNumber(note.Y, yFallback, 12, 90),
+    rotation: freedomWallSafeNumber(note.Rotation, rotationFallback, -10, 10),
+    scale: freedomWallSafeNumber(note.Scale, scaleFallback, .88, 1.12)
+  };
+}
+
+function normalizeFreedomWallNote(doc, index = 0) {
+  const data = typeof doc?.data === "function" ? (doc.data() || {}) : (doc || {});
+  const id = String(doc?.id || data.ID || data.id || `note-${index}`);
+  const text = String(data.Text || data.text || "").trim().slice(0, FREEDOM_WALL_NOTE_MAX_LENGTH);
+  if (!text) return null;
+  const author = String(data.Name || data.Author || data.name || "").trim().slice(0, FREEDOM_WALL_AUTHOR_MAX_LENGTH);
+  const rawColor = String(data.Color || data.color || "").trim().toLowerCase();
+  const color = FREEDOM_WALL_COLORS.includes(rawColor) ? rawColor : FREEDOM_WALL_COLORS[freedomWallHash(id) % FREEDOM_WALL_COLORS.length];
+  const createdAtMs = freedomWallSafeNumber(data.CreatedAtMs || data.createdAtMs, Date.now() - (100000 - index), 0, Number.MAX_SAFE_INTEGER);
+  return { id, text, author, color, createdAtMs, ...getFreedomWallPlacement({ ...data, id }, index) };
+}
+
+function renderFreedomWallNotes(notes = []) {
+  const layer = document.getElementById("homepageEffectLayer");
+  const stage = layer?.querySelector("#freedomWallNotesStage");
+  const count = layer?.querySelector("#freedomWallCount");
+  if (!stage) return;
+  const sorted = notes.filter(Boolean).sort((a,b) => (a.createdAtMs - b.createdAtMs) || a.id.localeCompare(b.id));
+  freedomWallLastRenderedCount = sorted.length;
+  const existingIds = new Set(Array.from(stage.querySelectorAll("[data-note-id]")).map((item) => String(item.dataset.noteId || "")));
+  const fragment = document.createDocumentFragment();
+  sorted.forEach((note, index) => {
+    const card = document.createElement("article");
+    card.className = `freedomWallNote is-${note.color}${existingIds.has(note.id) ? "" : " is-new"}`;
+    card.dataset.noteId = note.id;
+    card.style.setProperty("--fw-x", String(note.x));
+    card.style.setProperty("--fw-y", String(note.y));
+    card.style.setProperty("--fw-rotation", `${note.rotation}deg`);
+    card.style.setProperty("--fw-scale", String(note.scale));
+    card.style.zIndex = String(20 + index);
+    const pin = document.createElement("i");
+    pin.className = "freedomWallNotePin";
+    const text = document.createElement("p");
+    text.textContent = note.text;
+    card.append(pin, text);
+    if (freedomWallConfig?.freedomWallShowNames && note.author) {
+      const author = document.createElement("small");
+      author.textContent = `— ${note.author}`;
+      card.appendChild(author);
+    }
+    fragment.appendChild(card);
+  });
+  stage.replaceChildren(fragment);
+  if (count) count.textContent = sorted.length >= FREEDOM_WALL_MAX_RENDERED_NOTES ? `${sorted.length}+ notes` : `${sorted.length} ${sorted.length === 1 ? "note" : "notes"}`;
+}
+
+function updateFreedomWallPrompt(config) {
+  const layer = document.getElementById("homepageEffectLayer");
+  const card = layer?.querySelector("#freedomWallPromptCard");
+  const title = layer?.querySelector("#freedomWallPromptTitle");
+  const message = layer?.querySelector("#freedomWallPromptMessage");
+  if (!card || !title || !message) return;
+  const promptSignature = `${config?.title || ""}|${config?.message || ""}|${config?.updatedAt || ""}`;
+  card.dataset.promptSignature = promptSignature;
+  title.textContent = config?.title || "";
+  message.textContent = config?.message || "";
+  message.hidden = !config?.message;
+  const hasPrompt = Boolean(config?.title || config?.message);
+  card.hidden = !hasPrompt || freedomWallPromptDismissedSignature === promptSignature;
+}
+
+function dismissFreedomWallPromptForView(event) {
+  event?.preventDefault?.();
+  event?.stopPropagation?.();
+  const card = document.getElementById("homepageEffectLayer")?.querySelector("#freedomWallPromptCard");
+  if (!card) return;
+  freedomWallPromptDismissedSignature = String(card.dataset.promptSignature || "");
+  card.hidden = true;
+}
+
+function selectFreedomWallColor(color) {
+  const safe = FREEDOM_WALL_COLORS.includes(String(color || "").toLowerCase()) ? String(color).toLowerCase() : "yellow";
+  freedomWallSelectedColor = safe;
+  const layer = document.getElementById("homepageEffectLayer");
+  layer?.querySelectorAll("[data-fw-color]").forEach((button) => button.classList.toggle("is-selected", button.dataset.fwColor === safe));
+}
+
+function openFreedomWallComposer() {
+  if (!freedomWallConfig?.freedomWallAllowPosting) return;
+  const layer = document.getElementById("homepageEffectLayer");
+  if (!layer || !layer.classList.contains("is-freedom-wall")) return;
+  const composer = layer.querySelector("#freedomWallComposer");
+  const author = layer.querySelector("#freedomWallAuthorInput");
+  const note = layer.querySelector("#freedomWallNoteInput");
+  const status = layer.querySelector("#freedomWallComposerStatus");
+  if (!composer) return;
+  if (author && !author.value) author.value = getFreedomWallSavedAuthor();
+  if (note) note.value = "";
+  if (status) status.textContent = "";
+  selectFreedomWallColor(FREEDOM_WALL_COLORS[Math.floor(Math.random() * FREEDOM_WALL_COLORS.length)]);
+  composer.hidden = false;
+  window.setTimeout(() => note?.focus(), 30);
+}
+
+function closeFreedomWallComposer(event) {
+  event?.preventDefault?.();
+  const layer = document.getElementById("homepageEffectLayer");
+  const composer = layer?.querySelector("#freedomWallComposer");
+  if (composer) composer.hidden = true;
+}
+
+async function submitFreedomWallNote(event) {
+  event?.preventDefault?.();
+  if (freedomWallPosting || !freedomWallConfig?.freedomWallAllowPosting) return;
+  const layer = document.getElementById("homepageEffectLayer");
+  const noteInput = layer?.querySelector("#freedomWallNoteInput");
+  const authorInput = layer?.querySelector("#freedomWallAuthorInput");
+  const status = layer?.querySelector("#freedomWallComposerStatus");
+  const button = layer?.querySelector("#freedomWallPostBtn");
+  const text = String(noteInput?.value || "").replace(/\r/g, "").replace(/\n{3,}/g, "\n\n").trim().slice(0, FREEDOM_WALL_NOTE_MAX_LENGTH);
+  const author = String(authorInput?.value || "").trim().replace(/\s+/g, " ").slice(0, FREEDOM_WALL_AUTHOR_MAX_LENGTH);
+  if (!text) {
+    if (status) status.textContent = "Write your note first.";
+    noteInput?.focus();
+    return;
+  }
+  const now = Date.now();
+  try {
+    const lastPostAt = Number(localStorage.getItem("sfkFreedomWallLastPostAtV454") || 0);
+    if (lastPostAt && now - lastPostAt < 2200) {
+      if (status) status.textContent = "Give it a moment before posting another note.";
+      return;
+    }
+  } catch (error) {}
+  freedomWallPosting = true;
+  if (button) button.disabled = true;
+  if (status) status.textContent = "Posting…";
+  try {
+    const db = await waitForClassBoardFirestore(12000);
+    if (!db) throw new Error("wall unavailable");
+    const x = +(7 + Math.random() * 86).toFixed(2);
+    const y = +(16 + Math.random() * 72).toFixed(2);
+    const rotation = +(-8 + Math.random() * 16).toFixed(2);
+    const scale = +(.93 + Math.random() * .14).toFixed(3);
+    const payload = {
+      Text: text,
+      Name: author,
+      Color: freedomWallSelectedColor,
+      X: x,
+      Y: y,
+      Rotation: rotation,
+      Scale: scale,
+      DeviceId: getFreedomWallDeviceId(),
+      CreatedAtMs: now
+    };
+    try { payload.CreatedAt = firebase.firestore.FieldValue.serverTimestamp(); } catch (error) {}
+    await db.collection(FREEDOM_WALL_COLLECTION).add(payload);
+    saveFreedomWallAuthor(author);
+    try { localStorage.setItem("sfkFreedomWallLastPostAtV454", String(now)); } catch (error) {}
+    if (status) status.textContent = "Posted!";
+    if (noteInput) noteInput.value = "";
+    window.setTimeout(() => closeFreedomWallComposer(), 280);
+  } catch (error) {
+    console.warn("Freedom Wall post failed:", error);
+    if (status) status.textContent = "Unable to post right now. Please try again.";
+  } finally {
+    freedomWallPosting = false;
+    if (button) button.disabled = false;
+  }
+}
+
+async function startFreedomWallLive() {
+  const token = ++freedomWallListenToken;
+  if (freedomWallUnsubscribe) return;
+  const db = await waitForClassBoardFirestore(12000);
+  if (token !== freedomWallListenToken || !freedomWallConfig) return;
+  if (!db) {
+    const count = document.getElementById("homepageEffectLayer")?.querySelector("#freedomWallCount");
+    if (count) count.textContent = "Live wall";
+    return;
+  }
+  try {
+    freedomWallUnsubscribe = db.collection(FREEDOM_WALL_COLLECTION)
+      .orderBy("CreatedAtMs", "asc")
+      .limitToLast(FREEDOM_WALL_MAX_RENDERED_NOTES)
+      .onSnapshot((snapshot) => {
+        const notes = snapshot.docs.map((doc, index) => normalizeFreedomWallNote(doc, index)).filter(Boolean);
+        freedomWallNotesCache = notes;
+        renderFreedomWallNotes(notes);
+      }, (error) => {
+        console.warn("Freedom Wall live listener unavailable:", error);
+        const count = document.getElementById("homepageEffectLayer")?.querySelector("#freedomWallCount");
+        if (count) count.textContent = freedomWallLastRenderedCount ? `${freedomWallLastRenderedCount} notes` : "Live wall";
+      });
+  } catch (error) {
+    console.warn("Freedom Wall listener setup failed:", error);
+  }
+}
+
+function configureFreedomWall(config) {
+  freedomWallConfig = config;
+  const layer = ensureHomepageEffectLayer();
+  const scene = layer.querySelector(".homepageFreedomWallScene");
+  const addButton = layer.querySelector("#freedomWallAddBtn");
+  const authorInput = layer.querySelector("#freedomWallAuthorInput");
+  const authorLabel = layer.querySelector('label[for="freedomWallAuthorInput"]');
+  if (scene) {
+    scene.dataset.theme = config.freedomWallTheme || "sticky-notes";
+    scene.style.setProperty("display", "block", "important");
+    scene.style.setProperty("visibility", "visible", "important");
+    scene.style.setProperty("opacity", "1", "important");
+  }
+  if (addButton) addButton.hidden = !config.freedomWallAllowPosting;
+  if (authorInput) authorInput.hidden = !config.freedomWallShowNames;
+  if (authorLabel) authorLabel.hidden = !config.freedomWallShowNames;
+  if (!config.freedomWallAllowPosting) closeFreedomWallComposer();
+  updateFreedomWallPrompt(config);
+  if (freedomWallNotesCache.length) renderFreedomWallNotes(freedomWallNotesCache);
+  startFreedomWallLive();
+}
+
+function stopFreedomWallLive(clearStage = false) {
+  freedomWallListenToken += 1;
+  try { freedomWallUnsubscribe?.(); } catch (error) {}
+  freedomWallUnsubscribe = null;
+  freedomWallConfig = null;
+  freedomWallPosting = false;
+  const layer = document.getElementById("homepageEffectLayer");
+  const scene = layer?.querySelector(".homepageFreedomWallScene");
+  const composer = layer?.querySelector("#freedomWallComposer");
+  if (scene) {
+    scene.style.removeProperty("display");
+    scene.style.removeProperty("visibility");
+    scene.style.removeProperty("opacity");
+  }
+  if (composer) composer.hidden = true;
+  if (clearStage) {
+    const stage = layer?.querySelector("#freedomWallNotesStage");
+    if (stage) stage.replaceChildren();
+    freedomWallLastRenderedCount = 0;
+    freedomWallNotesCache = [];
+  }
+}
 
 const HOMEPAGE_PREMIUM_SCENE_MAP_V453 = Object.freeze({
   sunrise: "homepageSunriseScene",
@@ -3536,6 +3896,12 @@ async function applyHomepageEffectSettings(settings = {}) {
     const ambient = layer.querySelector(".homepageEffectParticles");
     if (ambient) ambient.innerHTML = "";
     homepageEffectAmbientMode = "";
+  }
+
+  if (config.mode === "freedom-wall") {
+    configureFreedomWall(config);
+  } else {
+    stopFreedomWallLive(true);
   }
 
   if (config.mode === "picture") {

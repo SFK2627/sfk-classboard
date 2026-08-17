@@ -2,9 +2,9 @@
   let deferredInstallPrompt = null;
 
   const installButton = document.getElementById("installAppBtn");
-  const SW_URL = "./sw.js?v=v453-hard-effects-story-fix";
-  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV453HardEffectsStoryFix";
-  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV453HardEffectsStoryFix";
+  const SW_URL = "./sw.js?v=v454-freedom-wall";
+  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV454FreedomWall";
+  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV454FreedomWall";
 
   function isStandaloneApp() {
     return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;

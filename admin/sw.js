@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-admin-pwa-v440-buwan-svg";
+const CACHE_NAME = "sfk-admin-pwa-v454-freedom-wall";
 const CACHE_PREFIXES_TO_DELETE = ["sfk-admin-pwa-"];
 const NAVIGATION_FALLBACK_URL = "./index.html";
 const NAVIGATION_TIMEOUT_MS = 2500;
@@ -8,12 +8,12 @@ const APP_SHELL = [
   "./index.html",
   "./manifest.webmanifest",
   "./sw.js",
-  "../admin.html?embedded=1&v=buwan-svg-v440",
-  "../admin.css?v=buwan-svg-v440",
-  "../admin.js?v=buwan-svg-v440",
+  "../admin.html?embedded=1&v=v454-freedom-wall",
+  "../admin.css?v=v454-freedom-wall",
+  "../admin.js?v=v454-freedom-wall",
   "../class-chat-admin.js",
   "../firebase-config.js",
-  "../firebase-adapter.js?v=buwan-svg-v440",
+  "../firebase-adapter.js?v=v454-freedom-wall",
   "../auth.js",
   "../orientation-lock.js",
   "../icons/icon-192.png",
