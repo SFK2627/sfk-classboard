@@ -1754,6 +1754,7 @@ let freedomWallPosting = false;
 let freedomWallSelectedColor = "yellow";
 let freedomWallLastRenderedCount = 0;
 let freedomWallNotesCache = [];
+let freedomWallLiveRetryTimer = 0;
 
 function isHomepageEffectStartupBlocked() {
   const intro = document.getElementById("sfkIntroOverlay");
@@ -3478,15 +3479,94 @@ function freedomWallSafeNumber(value, fallback, min, max) {
 
 function getFreedomWallPlacement(note = {}, index = 0) {
   const seed = freedomWallHash(note.id || note.ID || `${note.Text || "note"}-${index}`);
-  const xFallback = 8 + ((seed % 8400) / 100);
-  const yFallback = 16 + (((seed >>> 7) % 7200) / 100);
-  const rotationFallback = -8 + (((seed >>> 13) % 1600) / 100);
-  const scaleFallback = .92 + (((seed >>> 19) % 170) / 1000);
+  const xFallback = 6 + ((seed % 8800) / 100);
+  const yFallback = 12 + (((seed >>> 7) % 7800) / 100);
+  const rotationPresets = [-11.5, -8, -5.5, -3, -1.2, 0, 1.5, 3.5, 6, 8.5, 11.5];
+  const rotationFallback = rotationPresets[(seed >>> 13) % rotationPresets.length] + ((((seed >>> 17) % 120) / 100) - .6);
+  const scaleFallback = .88 + (((seed >>> 19) % 230) / 1000);
   return {
-    x: freedomWallSafeNumber(note.X, xFallback, 5, 95),
-    y: freedomWallSafeNumber(note.Y, yFallback, 12, 90),
-    rotation: freedomWallSafeNumber(note.Rotation, rotationFallback, -10, 10),
-    scale: freedomWallSafeNumber(note.Scale, scaleFallback, .88, 1.12)
+    x: freedomWallSafeNumber(note.X, xFallback, 4, 96),
+    y: freedomWallSafeNumber(note.Y, yFallback, 10, 92),
+    rotation: freedomWallSafeNumber(note.Rotation, rotationFallback, -13, 13),
+    scale: freedomWallSafeNumber(note.Scale, scaleFallback, .84, 1.14)
+  };
+}
+
+function getFreedomWallNoteSizeClass(note = {}) {
+  const length = String(note.text || note.Text || "").trim().length;
+  const lines = String(note.text || note.Text || "").split(/\n/).length;
+  const score = length + Math.max(0, lines - 1) * 18;
+  if (score <= 26) return "compact";
+  if (score <= 72) return "small";
+  if (score <= 145) return "medium";
+  return "large";
+}
+
+function isFreedomWallPromptVisible() {
+  const card = document.getElementById("homepageEffectLayer")?.querySelector("#freedomWallPromptCard");
+  return Boolean(card && !card.hidden);
+}
+
+function getFreedomWallDisplayPlacement(note = {}, index = 0) {
+  let x = Number(note.x) || 50;
+  let y = Number(note.y) || 50;
+  const rotation = Number(note.rotation) || 0;
+  const scale = Number(note.scale) || 1;
+  if (!isFreedomWallPromptVisible()) return { x, y, rotation, scale };
+
+  const seed = freedomWallHash(note.id || `${note.text || "note"}-${index}`);
+  const narrow = window.matchMedia?.("(max-width:700px)")?.matches;
+  if (narrow) {
+    // On phones the centered prompt is almost the full width, so keep notes
+    // above or below it until the viewer closes the prompt.
+    if (y > 27 && y < 74) {
+      const placeAbove = (seed % 2) === 0;
+      y = placeAbove ? 13 + ((seed >>> 4) % 1300) / 100 : 77 + ((seed >>> 4) % 1200) / 100;
+      x = 12 + ((seed >>> 10) % 7600) / 100;
+    }
+  } else {
+    // Reserve a generous central reading lane for the Admin prompt. Notes use
+    // top/bottom/left/right zones rather than sitting behind the prompt card.
+    if (x > 22 && x < 78 && y > 27 && y < 73) {
+      const zone = (seed >>> 5) % 4;
+      if (zone === 0) { x = 7 + ((seed >>> 9) % 1300) / 100; y = 24 + ((seed >>> 15) % 4800) / 100; }
+      else if (zone === 1) { x = 80 + ((seed >>> 9) % 1300) / 100; y = 24 + ((seed >>> 15) % 4800) / 100; }
+      else if (zone === 2) { x = 18 + ((seed >>> 9) % 6400) / 100; y = 12 + ((seed >>> 15) % 1100) / 100; }
+      else { x = 18 + ((seed >>> 9) % 6400) / 100; y = 78 + ((seed >>> 15) % 1000) / 100; }
+    }
+  }
+  return { x: Math.max(4, Math.min(96, x)), y: Math.max(10, Math.min(92, y)), rotation, scale };
+}
+
+function createFreedomWallPostingPlacement() {
+  const promptVisible = isFreedomWallPromptVisible();
+  const narrow = window.matchMedia?.("(max-width:700px)")?.matches;
+  // Keep saved values inside the already-published v454 Firestore rule limits.
+  const rotationPresets = [-9.2, -7.2, -5, -2.5, 0, 2, 4.5, 7, 9.2];
+  let x;
+  let y;
+  if (promptVisible && narrow) {
+    const top = Math.random() < .5;
+    x = 12 + Math.random() * 76;
+    y = top ? 13 + Math.random() * 13 : 77 + Math.random() * 12;
+  } else if (promptVisible) {
+    const zones = [
+      [6, 19, 20, 70], [81, 94, 20, 70],
+      [16, 84, 13, 24], [16, 84, 77, 89]
+    ];
+    const zone = zones[Math.floor(Math.random() * zones.length)];
+    x = zone[0] + Math.random() * (zone[1] - zone[0]);
+    y = zone[2] + Math.random() * (zone[3] - zone[2]);
+  } else {
+    x = 6 + Math.random() * 88;
+    y = 13 + Math.random() * 76;
+  }
+  const baseRotation = rotationPresets[Math.floor(Math.random() * rotationPresets.length)];
+  return {
+    x: +x.toFixed(2),
+    y: +y.toFixed(2),
+    rotation: +Math.max(-9.8, Math.min(9.8, baseRotation + (Math.random() - .5) * 1.2)).toFixed(2),
+    scale: +(.88 + Math.random() * .23).toFixed(3)
   };
 }
 
@@ -3507,33 +3587,76 @@ function renderFreedomWallNotes(notes = []) {
   const stage = layer?.querySelector("#freedomWallNotesStage");
   const count = layer?.querySelector("#freedomWallCount");
   if (!stage) return;
-  const sorted = notes.filter(Boolean).sort((a,b) => (a.createdAtMs - b.createdAtMs) || a.id.localeCompare(b.id));
+
+  // v455: update ONLY the Freedom Wall note layer. Do not rebuild the effect,
+  // backdrop, prompt, composer, or audio element. This keeps background music
+  // playing continuously while notes arrive live from other devices.
+  const sorted = notes
+    .filter(Boolean)
+    .sort((a,b) => (a.createdAtMs - b.createdAtMs) || a.id.localeCompare(b.id))
+    .slice(-FREEDOM_WALL_MAX_RENDERED_NOTES);
   freedomWallLastRenderedCount = sorted.length;
-  const existingIds = new Set(Array.from(stage.querySelectorAll("[data-note-id]")).map((item) => String(item.dataset.noteId || "")));
-  const fragment = document.createDocumentFragment();
-  sorted.forEach((note, index) => {
-    const card = document.createElement("article");
-    card.className = `freedomWallNote is-${note.color}${existingIds.has(note.id) ? "" : " is-new"}`;
-    card.dataset.noteId = note.id;
-    card.style.setProperty("--fw-x", String(note.x));
-    card.style.setProperty("--fw-y", String(note.y));
-    card.style.setProperty("--fw-rotation", `${note.rotation}deg`);
-    card.style.setProperty("--fw-scale", String(note.scale));
-    card.style.zIndex = String(20 + index);
-    const pin = document.createElement("i");
-    pin.className = "freedomWallNotePin";
-    const text = document.createElement("p");
-    text.textContent = note.text;
-    card.append(pin, text);
-    if (freedomWallConfig?.freedomWallShowNames && note.author) {
-      const author = document.createElement("small");
-      author.textContent = `— ${note.author}`;
-      card.appendChild(author);
-    }
-    fragment.appendChild(card);
+
+  const wantedIds = new Set(sorted.map((note) => note.id));
+  const existing = new Map(
+    Array.from(stage.querySelectorAll("[data-note-id]")).map((item) => [String(item.dataset.noteId || ""), item])
+  );
+
+  // Remove only notes that disappeared from Firestore / fell outside the cap.
+  existing.forEach((card, id) => {
+    if (!wantedIds.has(id)) card.remove();
   });
-  stage.replaceChildren(fragment);
-  if (count) count.textContent = sorted.length >= FREEDOM_WALL_MAX_RENDERED_NOTES ? `${sorted.length}+ notes` : `${sorted.length} ${sorted.length === 1 ? "note" : "notes"}`;
+
+  sorted.forEach((note, index) => {
+    let card = existing.get(note.id);
+    const isNew = !card;
+    if (!card) {
+      card = document.createElement("article");
+      card.dataset.noteId = note.id;
+      const pin = document.createElement("i");
+      pin.className = "freedomWallNotePin";
+      const text = document.createElement("p");
+      card.append(pin, text);
+    }
+
+    const displayPlacement = getFreedomWallDisplayPlacement(note, index);
+    const sizeClass = getFreedomWallNoteSizeClass(note);
+    card.className = `freedomWallNote is-${note.color} is-size-${sizeClass}${isNew ? " is-new" : ""}`;
+    card.style.setProperty("--fw-x", String(displayPlacement.x));
+    card.style.setProperty("--fw-y", String(displayPlacement.y));
+    card.style.setProperty("--fw-rotation", `${displayPlacement.rotation}deg`);
+    card.style.setProperty("--fw-scale", String(displayPlacement.scale));
+    // Keep every sticky below the centered Admin prompt, even with hundreds of
+    // notes. Later DOM order still makes newer notes sit above older notes.
+    card.style.zIndex = String(40 + Math.min(index, 230));
+
+    const textEl = card.querySelector("p");
+    if (textEl && textEl.textContent !== note.text) textEl.textContent = note.text;
+
+    let authorEl = card.querySelector("small");
+    const shouldShowAuthor = Boolean(freedomWallConfig?.freedomWallShowNames && note.author);
+    if (shouldShowAuthor) {
+      if (!authorEl) {
+        authorEl = document.createElement("small");
+        card.appendChild(authorEl);
+      }
+      const authorText = `— ${note.author}`;
+      if (authorEl.textContent !== authorText) authorEl.textContent = authorText;
+    } else if (authorEl) {
+      authorEl.remove();
+    }
+
+    // appendChild on an existing node only fixes stacking/order; it does not
+    // recreate it, so old sticky notes do not blink or replay their entrance.
+    stage.appendChild(card);
+    if (isNew) {
+      window.setTimeout(() => card?.classList.remove("is-new"), 650);
+    }
+  });
+
+  if (count) count.textContent = sorted.length >= FREEDOM_WALL_MAX_RENDERED_NOTES
+    ? `${sorted.length}+ notes`
+    : `${sorted.length} ${sorted.length === 1 ? "note" : "notes"}`;
 }
 
 function updateFreedomWallPrompt(config) {
@@ -3558,6 +3681,9 @@ function dismissFreedomWallPromptForView(event) {
   if (!card) return;
   freedomWallPromptDismissedSignature = String(card.dataset.promptSignature || "");
   card.hidden = true;
+  // Once the prompt is closed, notes are free to use their original full-wall
+  // positions, without rebuilding the effect or touching its music.
+  if (freedomWallNotesCache.length) renderFreedomWallNotes(freedomWallNotesCache);
 }
 
 function selectFreedomWallColor(color) {
@@ -3620,26 +3746,40 @@ async function submitFreedomWallNote(event) {
   try {
     const db = await waitForClassBoardFirestore(12000);
     if (!db) throw new Error("wall unavailable");
-    const x = +(7 + Math.random() * 86).toFixed(2);
-    const y = +(16 + Math.random() * 72).toFixed(2);
-    const rotation = +(-8 + Math.random() * 16).toFixed(2);
-    const scale = +(.93 + Math.random() * .14).toFixed(3);
+    const placement = createFreedomWallPostingPlacement();
     const payload = {
       Text: text,
       Name: author,
       Color: freedomWallSelectedColor,
-      X: x,
-      Y: y,
-      Rotation: rotation,
-      Scale: scale,
+      X: placement.x,
+      Y: placement.y,
+      Rotation: placement.rotation,
+      Scale: placement.scale,
       DeviceId: getFreedomWallDeviceId(),
       CreatedAtMs: now
     };
     try { payload.CreatedAt = firebase.firestore.FieldValue.serverTimestamp(); } catch (error) {}
-    await db.collection(FREEDOM_WALL_COLLECTION).add(payload);
+    // Give the document its final Firestore id first, then draw it immediately.
+    // The same id is used by the real-time snapshot, so there is no duplicate.
+    const noteRef = db.collection(FREEDOM_WALL_COLLECTION).doc();
+    const optimisticNote = normalizeFreedomWallNote({ id: noteRef.id, ...payload }, freedomWallNotesCache.length);
+    if (optimisticNote) {
+      freedomWallNotesCache = freedomWallNotesCache.filter((item) => item.id !== optimisticNote.id);
+      freedomWallNotesCache.push(optimisticNote);
+      renderFreedomWallNotes(freedomWallNotesCache);
+    }
+
+    try {
+      await noteRef.set(payload);
+    } catch (writeError) {
+      freedomWallNotesCache = freedomWallNotesCache.filter((item) => item.id !== noteRef.id);
+      renderFreedomWallNotes(freedomWallNotesCache);
+      throw writeError;
+    }
+
     saveFreedomWallAuthor(author);
     try { localStorage.setItem("sfkFreedomWallLastPostAtV454", String(now)); } catch (error) {}
-    if (status) status.textContent = "Posted!";
+    if (status) status.textContent = "Posted live!";
     if (noteInput) noteInput.value = "";
     window.setTimeout(() => closeFreedomWallComposer(), 280);
   } catch (error) {
@@ -3651,31 +3791,50 @@ async function submitFreedomWallNote(event) {
   }
 }
 
+function scheduleFreedomWallLiveRetry() {
+  if (freedomWallLiveRetryTimer || !freedomWallConfig) return;
+  freedomWallLiveRetryTimer = window.setTimeout(() => {
+    freedomWallLiveRetryTimer = 0;
+    if (!freedomWallConfig || freedomWallUnsubscribe) return;
+    startFreedomWallLive();
+  }, 2500);
+}
+
 async function startFreedomWallLive() {
-  const token = ++freedomWallListenToken;
+  // Never tear down/recreate an active listener during the normal ClassBoard
+  // refresh cycle. That listener is independent of the effect music player.
   if (freedomWallUnsubscribe) return;
+  const token = ++freedomWallListenToken;
   const db = await waitForClassBoardFirestore(12000);
   if (token !== freedomWallListenToken || !freedomWallConfig) return;
   if (!db) {
     const count = document.getElementById("homepageEffectLayer")?.querySelector("#freedomWallCount");
-    if (count) count.textContent = "Live wall";
+    if (count) count.textContent = freedomWallLastRenderedCount ? `${freedomWallLastRenderedCount} notes` : "Connecting live…";
+    scheduleFreedomWallLiveRetry();
     return;
   }
+
   try {
-    freedomWallUnsubscribe = db.collection(FREEDOM_WALL_COLLECTION)
+    const query = db.collection(FREEDOM_WALL_COLLECTION)
       .orderBy("CreatedAtMs", "asc")
-      .limitToLast(FREEDOM_WALL_MAX_RENDERED_NOTES)
-      .onSnapshot((snapshot) => {
-        const notes = snapshot.docs.map((doc, index) => normalizeFreedomWallNote(doc, index)).filter(Boolean);
-        freedomWallNotesCache = notes;
-        renderFreedomWallNotes(notes);
-      }, (error) => {
-        console.warn("Freedom Wall live listener unavailable:", error);
-        const count = document.getElementById("homepageEffectLayer")?.querySelector("#freedomWallCount");
-        if (count) count.textContent = freedomWallLastRenderedCount ? `${freedomWallLastRenderedCount} notes` : "Live wall";
-      });
+      .limitToLast(FREEDOM_WALL_MAX_RENDERED_NOTES);
+
+    freedomWallUnsubscribe = query.onSnapshot({ includeMetadataChanges: true }, (snapshot) => {
+      const notes = snapshot.docs.map((doc, index) => normalizeFreedomWallNote(doc, index)).filter(Boolean);
+      freedomWallNotesCache = notes;
+      renderFreedomWallNotes(notes);
+    }, (error) => {
+      console.warn("Freedom Wall live listener unavailable:", error);
+      try { freedomWallUnsubscribe?.(); } catch (unsubscribeError) {}
+      freedomWallUnsubscribe = null;
+      const count = document.getElementById("homepageEffectLayer")?.querySelector("#freedomWallCount");
+      if (count) count.textContent = freedomWallLastRenderedCount ? `${freedomWallLastRenderedCount} notes • reconnecting…` : "Reconnecting live…";
+      scheduleFreedomWallLiveRetry();
+    });
   } catch (error) {
     console.warn("Freedom Wall listener setup failed:", error);
+    freedomWallUnsubscribe = null;
+    scheduleFreedomWallLiveRetry();
   }
 }
 
@@ -3703,6 +3862,8 @@ function configureFreedomWall(config) {
 
 function stopFreedomWallLive(clearStage = false) {
   freedomWallListenToken += 1;
+  if (freedomWallLiveRetryTimer) window.clearTimeout(freedomWallLiveRetryTimer);
+  freedomWallLiveRetryTimer = 0;
   try { freedomWallUnsubscribe?.(); } catch (error) {}
   freedomWallUnsubscribe = null;
   freedomWallConfig = null;

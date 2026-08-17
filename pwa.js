@@ -2,9 +2,9 @@
   let deferredInstallPrompt = null;
 
   const installButton = document.getElementById("installAppBtn");
-  const SW_URL = "./sw.js?v=v454-freedom-wall";
-  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV454FreedomWall";
-  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV454FreedomWall";
+  const SW_URL = "./sw.js?v=v456-freedom-wall-layout-admin-delete";
+  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV455FreedomWallLive";
+  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV455FreedomWallLive";
 
   function isStandaloneApp() {
     return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;

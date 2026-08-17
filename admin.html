@@ -25,6 +25,12 @@
     .freedomWallAdminIntro{display:flex;flex-direction:column;gap:5px;padding:10px 12px;border-radius:11px;background:#111;color:#fff}
     .freedomWallAdminIntro strong{font-size:15px}.freedomWallAdminIntro span{font-size:12px;line-height:1.45;color:rgba(255,255,255,.82)}
     .freedomWallAdminActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}.freedomWallAdminActions button{border:0;border-radius:10px;padding:9px 12px;font-weight:800;cursor:pointer;background:#111;color:#fff}.freedomWallAdminActions button.is-danger{background:#a82424}
+    .freedomWallNoteManager{display:grid;gap:9px;padding:11px;border:1px solid rgba(0,0,0,.12);border-radius:12px;background:#fff}.freedomWallNoteManager[hidden]{display:none!important}
+    .freedomWallNoteManagerHead{display:flex;align-items:center;justify-content:space-between;gap:10px}.freedomWallNoteManagerHead strong{font-size:13px}.freedomWallNoteManagerHead span{font-size:10px;color:#777}
+    .freedomWallAdminNoteList{display:grid;gap:7px;max-height:340px;overflow:auto;padding-right:2px}.freedomWallAdminNoteEmpty{padding:14px;text-align:center;border:1px dashed #ccc;border-radius:10px;color:#777;font-size:12px}
+    .freedomWallAdminNote{display:grid;grid-template-columns:14px minmax(0,1fr) auto;gap:9px;align-items:center;padding:9px;border:1px solid #e5e5e5;border-radius:10px;background:#fafafa}.freedomWallAdminNoteColor{width:14px;height:34px;border-radius:5px;background:var(--fw-admin-note-color,#fff1a5)}
+    .freedomWallAdminNoteText{min-width:0;display:flex;flex-direction:column;gap:3px}.freedomWallAdminNoteText strong{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.freedomWallAdminNoteText span{font-size:11px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:#444}
+    .freedomWallAdminNoteDelete{border:0;border-radius:8px;background:#a82424;color:#fff;padding:8px 10px;font-size:11px;font-weight:900;cursor:pointer}.freedomWallAdminNoteDelete:disabled{opacity:.5;cursor:wait}
   </style>
 </head>
 
@@ -228,7 +234,12 @@
 
             <div class="freedomWallAdminActions">
               <button id="freedomWallRefreshCount" type="button">↻ Check Note Count</button>
+              <button id="freedomWallManageNotes" type="button">🗒 Manage / Delete Notes</button>
               <button id="freedomWallClearNotes" type="button" class="is-danger">🗑 Clear Entire Wall</button>
+            </div>
+            <div id="freedomWallNoteManager" class="freedomWallNoteManager" hidden>
+              <div class="freedomWallNoteManagerHead"><strong>Freedom Wall Notes</strong><span>Live admin moderation</span></div>
+              <div id="freedomWallAdminNoteList" class="freedomWallAdminNoteList"><div class="freedomWallAdminNoteEmpty">Open the manager to load notes.</div></div>
             </div>
             <small id="freedomWallAdminStatus" class="fieldHint">Notes stay live and keep layering over older notes as the wall fills.</small>
           </div>
@@ -1074,10 +1085,10 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js?v=2-secure-auth"></script>
   <script src="auth.js?v=admin-officer-rescue-v2"></script>
-  <script src="firebase-adapter.js?v=v454-freedom-wall"></script>
-  <script src="pwa.js?v=v454-freedom-wall"></script>
-  <script src="class-chat-admin.js?v=v454-freedom-wall"></script>
-  <script src="admin.js?v=v454-freedom-wall"></script>
+  <script src="firebase-adapter.js?v=v456-freedom-wall-layout-admin-delete"></script>
+  <script src="pwa.js?v=v456-freedom-wall-layout-admin-delete"></script>
+  <script src="class-chat-admin.js?v=v456-freedom-wall-layout-admin-delete"></script>
+  <script src="admin.js?v=v456-freedom-wall-layout-admin-delete"></script>
 
 
   <script>
@@ -1181,6 +1192,8 @@
     const wallFields = $("homepageEffectFreedomWallFields");
     const audioFields = $("homepageEffectAudioFields");
     const status = $("freedomWallAdminStatus");
+    let noteManagerUnsubscribe = null;
+    const noteColorMap = {yellow:"#fff1a5",pink:"#ffc7df",blue:"#bfe4ff",mint:"#c9f2d9",orange:"#ffd0a1",violet:"#dfd0ff",peach:"#ffd6c9",white:"#fffdf5"};
     const getDb = () => {
       if (window.SFK_CLASSBOARD_FIREBASE_DB) return window.SFK_CLASSBOARD_FIREBASE_DB;
       try { if (window.firebase?.apps?.length) return firebase.firestore(); } catch (error) {}
@@ -1191,6 +1204,12 @@
       const active = String(mode?.value || "").toLowerCase() === "freedom-wall";
       if (wallFields) wallFields.hidden = !active;
       if (active && audioFields) audioFields.hidden = false;
+      if (!active) {
+        const manager = $("freedomWallNoteManager");
+        if (manager) manager.hidden = true;
+        try { noteManagerUnsubscribe?.(); } catch (error) {}
+        noteManagerUnsubscribe = null;
+      }
       if (active) {
         const title = $("homepageEffectTitle");
         const message = $("homepageEffectMessage");
@@ -1212,6 +1231,89 @@
       } catch (error) {
         console.warn("Freedom Wall count failed", error);
         if (status) status.textContent = "Unable to check the wall right now.";
+      }
+    }
+
+    function escapeWallAdminText(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (char) => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[char] || char));
+    }
+
+    function renderFreedomWallAdminNotes(snapshot) {
+      const list = $("freedomWallAdminNoteList");
+      if (!list) return;
+      if (!snapshot || snapshot.empty) {
+        list.innerHTML = '<div class="freedomWallAdminNoteEmpty">No notes on the Freedom Wall yet.</div>';
+        return;
+      }
+      list.innerHTML = snapshot.docs.map((doc) => {
+        const data = doc.data() || {};
+        const name = String(data.Name || "").trim() || "Anonymous";
+        const text = String(data.Text || "").trim();
+        const color = noteColorMap[String(data.Color || "yellow").toLowerCase()] || noteColorMap.yellow;
+        return `<article class="freedomWallAdminNote" data-fw-admin-note-id="${escapeWallAdminText(doc.id)}">
+          <i class="freedomWallAdminNoteColor" style="--fw-admin-note-color:${color}"></i>
+          <div class="freedomWallAdminNoteText"><strong>${escapeWallAdminText(name)}</strong><span>${escapeWallAdminText(text)}</span></div>
+          <button class="freedomWallAdminNoteDelete" type="button" data-fw-delete-note="${escapeWallAdminText(doc.id)}">Delete</button>
+        </article>`;
+      }).join("");
+    }
+
+    function closeFreedomWallNoteManager() {
+      try { noteManagerUnsubscribe?.(); } catch (error) {}
+      noteManagerUnsubscribe = null;
+      const manager = $("freedomWallNoteManager");
+      if (manager) manager.hidden = true;
+    }
+
+    async function toggleFreedomWallNoteManager() {
+      const manager = $("freedomWallNoteManager");
+      const list = $("freedomWallAdminNoteList");
+      if (!manager || !list) return;
+      if (!manager.hidden) {
+        closeFreedomWallNoteManager();
+        return;
+      }
+      manager.hidden = false;
+      list.innerHTML = '<div class="freedomWallAdminNoteEmpty">Loading notes…</div>';
+      const db = getDb();
+      if (!db) {
+        list.innerHTML = '<div class="freedomWallAdminNoteEmpty">Wall connection is still loading.</div>';
+        return;
+      }
+      try {
+        noteManagerUnsubscribe = db.collection("freedomWallNotes").orderBy("CreatedAtMs", "desc").onSnapshot((snapshot) => {
+          renderFreedomWallAdminNotes(snapshot);
+          if (status) status.textContent = `${snapshot.size} ${snapshot.size === 1 ? "note" : "notes"} • click Delete beside any inappropriate note.`;
+        }, (error) => {
+          console.warn("Freedom Wall admin note manager failed", error);
+          list.innerHTML = '<div class="freedomWallAdminNoteEmpty">Unable to load notes right now.</div>';
+        });
+      } catch (error) {
+        console.warn("Freedom Wall admin manager setup failed", error);
+        list.innerHTML = '<div class="freedomWallAdminNoteEmpty">Unable to load notes right now.</div>';
+      }
+    }
+
+    async function deleteFreedomWallNote(noteId, button) {
+      const id = String(noteId || "").trim();
+      if (!id) return;
+      const card = button?.closest?.("[data-fw-admin-note-id]");
+      const preview = card?.querySelector?.(".freedomWallAdminNoteText span")?.textContent || "this note";
+      const ok = window.confirm(`Delete this Freedom Wall note?\n\n${preview.slice(0, 140)}`);
+      if (!ok) return;
+      const db = getDb();
+      if (!db) {
+        if (status) status.textContent = "Wall connection is still loading. Try again in a moment.";
+        return;
+      }
+      if (button) button.disabled = true;
+      try {
+        await db.collection("freedomWallNotes").doc(id).delete();
+        if (status) status.textContent = "Note deleted. It will disappear live from every open Freedom Wall.";
+      } catch (error) {
+        console.error("Freedom Wall individual delete failed", error);
+        if (status) status.textContent = "Unable to delete that note. Confirm you are signed in as Admin.";
+        if (button) button.disabled = false;
       }
     }
 
@@ -1248,6 +1350,11 @@
 
     mode?.addEventListener("change", () => window.setTimeout(syncFreedomWallAdminUi, 0));
     $("freedomWallRefreshCount")?.addEventListener("click", refreshFreedomWallCount);
+    $("freedomWallManageNotes")?.addEventListener("click", toggleFreedomWallNoteManager);
+    $("freedomWallAdminNoteList")?.addEventListener("click", (event) => {
+      const button = event.target.closest?.("[data-fw-delete-note]");
+      if (button) deleteFreedomWallNote(button.dataset.fwDeleteNote, button);
+    });
     $("freedomWallClearNotes")?.addEventListener("click", clearFreedomWall);
     syncFreedomWallAdminUi();
     window.setTimeout(syncFreedomWallAdminUi, 350);
