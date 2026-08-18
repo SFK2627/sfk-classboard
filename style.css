@@ -34674,3 +34674,63 @@ html.sfkFreedomWallModalOpen body{
   opacity:0 !important;
   pointer-events:none !important;
 }
+
+/* =========================================================
+   v513 — Freedom Wall GIF result tile hard-height fix
+   Animated GIPHY previews can report changing intrinsic sizes
+   while loading. Give each result card a real reserved height
+   and absolutely contain the image so grid rows never overlap.
+========================================================= */
+.homepageEffectLayer.is-freedom-wall .freedomWallMediaSearchModalResults.is-gif-grid{
+  grid-auto-flow:row !important;
+  grid-auto-rows:auto !important;
+  align-items:start !important;
+  align-content:start !important;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallMediaSearchModalResults.is-gif-grid .freedomWallGifResult{
+  position:relative !important;
+  display:block !important;
+  width:100% !important;
+  height:clamp(145px,14vw,180px) !important;
+  min-height:145px !important;
+  max-height:180px !important;
+  aspect-ratio:auto !important;
+  overflow:hidden !important;
+  padding:0 !important;
+  margin:0 !important;
+  border-radius:12px !important;
+  box-sizing:border-box !important;
+  isolation:isolate !important;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallMediaSearchModalResults.is-gif-grid .freedomWallGifResult img{
+  position:absolute !important;
+  inset:0 !important;
+  display:block !important;
+  width:100% !important;
+  height:100% !important;
+  min-width:100% !important;
+  min-height:100% !important;
+  max-width:100% !important;
+  max-height:100% !important;
+  aspect-ratio:auto !important;
+  object-fit:cover !important;
+  object-position:center !important;
+  transform:none !important;
+  margin:0 !important;
+  pointer-events:none !important;
+}
+@media (min-width:701px) and (max-width:900px){
+  .homepageEffectLayer.is-freedom-wall .freedomWallMediaSearchModalResults.is-gif-grid .freedomWallGifResult{
+    height:145px !important;
+    min-height:145px !important;
+    max-height:145px !important;
+  }
+}
+@media (max-width:700px){
+  .homepageEffectLayer.is-freedom-wall .freedomWallMediaSearchModalResults.is-gif-grid .freedomWallGifResult{
+    height:clamp(122px,39vw,158px) !important;
+    min-height:122px !important;
+    max-height:158px !important;
+    border-radius:11px !important;
+  }
+}
