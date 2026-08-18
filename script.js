@@ -1741,6 +1741,9 @@ let homepageEffectMusicPlaylistPosition = 0;
 let homepageEffectMusicPlaylistShuffle = false;
 let homepageEffectMusicPlaylistLoop = true;
 let homepageEffectMusicPlaylistFailures = 0;
+let freedomWallPageLockActive = false;
+let freedomWallPageLockScrollY = 0;
+let freedomWallPageLockBodyStyles = null;
 let homepageEffectPendingSettings = null;
 let homepageEffectStartupWaitTimer = 0;
 let homepageEffectYouTubePlayerKey = "";
@@ -2606,7 +2609,11 @@ function playHomepageEffectPlaylistPosition(position, shouldPlay = true) {
     advanceHomepageEffectPlaylist("invalid");
     return;
   }
-  homepageEffectMusicUrl = url;
+  // Do NOT assign homepageEffectMusicUrl before getHomepageEffectMusicAudio().
+  // That URL is also the player's source identity. Assigning it early makes the
+  // audio factory believe the next track is already loaded and can replay the
+  // previous Audio element forever. The factory updates the global URL only
+  // after it has actually created/switched the Audio element.
   homepageEffectMusicLoop = homepageEffectMusicPlaylistTracks.length === 1 && homepageEffectMusicPlaylistLoop;
   const audio = getHomepageEffectMusicAudio(url, homepageEffectMusicLoop);
   if (audio && shouldPlay) tryPlayHomepageEffectMusic();
@@ -3505,7 +3512,52 @@ function dismissHomepageEffectForView() {
   hideHomepageEffectLayer();
 }
 
+function setFreedomWallPageLock(active) {
+  const shouldLock = Boolean(active);
+  if (shouldLock === freedomWallPageLockActive) return;
+
+  const root = document.documentElement;
+  const body = document.body;
+  if (!root || !body) return;
+
+  if (shouldLock) {
+    freedomWallPageLockActive = true;
+    freedomWallPageLockScrollY = Math.max(0, window.scrollY || window.pageYOffset || 0);
+    freedomWallPageLockBodyStyles = {
+      position: body.style.position,
+      top: body.style.top,
+      left: body.style.left,
+      right: body.style.right,
+      width: body.style.width,
+      overflow: body.style.overflow
+    };
+    root.classList.add("sfkFreedomWallModalOpen");
+    body.style.position = "fixed";
+    body.style.top = `-${freedomWallPageLockScrollY}px`;
+    body.style.left = "0";
+    body.style.right = "0";
+    body.style.width = "100%";
+    body.style.overflow = "hidden";
+    return;
+  }
+
+  freedomWallPageLockActive = false;
+  root.classList.remove("sfkFreedomWallModalOpen");
+  const saved = freedomWallPageLockBodyStyles || {};
+  body.style.position = saved.position || "";
+  body.style.top = saved.top || "";
+  body.style.left = saved.left || "";
+  body.style.right = saved.right || "";
+  body.style.width = saved.width || "";
+  body.style.overflow = saved.overflow || "";
+  freedomWallPageLockBodyStyles = null;
+  const restoreY = freedomWallPageLockScrollY;
+  freedomWallPageLockScrollY = 0;
+  window.requestAnimationFrame(() => window.scrollTo(0, restoreY));
+}
+
 function hideHomepageEffectLayer() {
+  setFreedomWallPageLock(false);
   const layer = document.getElementById("homepageEffectLayer");
   if (!layer) return;
   homepageEffectRenderToken += 1;
@@ -4423,14 +4475,24 @@ function updateFreedomWallReactionSummary(container, reactions = {}, targetType 
   container.classList?.add?.("has-reactions");
 }
 
+function getFreedomWallPromptReactionDocIdFromSignature(signature) {
+  const safe = String(signature || "").trim();
+  if (!safe) return "";
+  const a = (freedomWallHash(safe) >>> 0).toString(36);
+  const b = (freedomWallHash(safe.split("").reverse().join("")) >>> 0).toString(36);
+  return `prompt_${a}_${b}`;
+}
+
 function getFreedomWallPromptReactionDocId() {
   const card = document.getElementById("homepageEffectLayer")?.querySelector("#freedomWallPromptCard");
   if (!card || card.hidden) return "";
-  const signature = String(card.dataset.promptSignature || "").trim();
-  if (!signature) return "";
-  const a = (freedomWallHash(signature) >>> 0).toString(36);
-  const b = (freedomWallHash(signature.split("").reverse().join("")) >>> 0).toString(36);
-  return `prompt_${a}_${b}`;
+  return getFreedomWallPromptReactionDocIdFromSignature(card.dataset.promptSignature);
+}
+
+function getFreedomWallPromptLegacyReactionDocId() {
+  const card = document.getElementById("homepageEffectLayer")?.querySelector("#freedomWallPromptCard");
+  if (!card || card.hidden) return "";
+  return getFreedomWallPromptReactionDocIdFromSignature(card.dataset.promptLegacySignature);
 }
 
 function getFreedomWallReactionMapForTarget(target = freedomWallReactionMenuTarget) {
@@ -4637,11 +4699,31 @@ async function syncFreedomWallPromptReactionLive() {
   const db = await waitForClassBoardFirestore(12000);
   if (token !== freedomWallPromptReactionListenToken || !db || getFreedomWallPromptReactionDocId() !== docId) return;
   try {
-    freedomWallPromptReactionUnsubscribe = db.collection(FREEDOM_WALL_PROMPT_REACTION_COLLECTION).doc(docId).onSnapshot((snapshot) => {
+    freedomWallPromptReactionUnsubscribe = db.collection(FREEDOM_WALL_PROMPT_REACTION_COLLECTION).doc(docId).onSnapshot(async (snapshot) => {
       freedomWallPromptReactionConnecting = false;
       if (freedomWallPromptReactionDocId !== docId) return;
-      freedomWallPromptReactionsCache = normalizeFreedomWallReactions(snapshot.exists ? (snapshot.data()?.Reactions || {}) : {});
-      freedomWallPromptReactionLastType = normalizeFreedomWallReactionLastType(snapshot.exists ? (snapshot.data()?.ReactionLastType || "") : "");
+
+      const stableData = snapshot.exists ? (snapshot.data() || {}) : {};
+      let legacyData = {};
+      // v487 transition: also read the current v484-v486 key and merge it for
+      // display. Stable-key reactions override the same device from the legacy
+      // document. This prevents an upgrade/refresh from visually dropping old
+      // counts while all new reactions are written to the refresh-safe key.
+      const legacyId = getFreedomWallPromptLegacyReactionDocId();
+      if (legacyId && legacyId !== docId) {
+        try {
+          const legacySnapshot = await db.collection(FREEDOM_WALL_PROMPT_REACTION_COLLECTION).doc(legacyId).get();
+          if (freedomWallPromptReactionDocId !== docId) return;
+          if (legacySnapshot.exists) legacyData = legacySnapshot.data() || {};
+        } catch (legacyError) {}
+      }
+
+      const legacyReactions = normalizeFreedomWallReactions(legacyData?.Reactions || {});
+      const stableReactions = normalizeFreedomWallReactions(stableData?.Reactions || {});
+      freedomWallPromptReactionsCache = { ...legacyReactions, ...stableReactions };
+      freedomWallPromptReactionLastType = normalizeFreedomWallReactionLastType(
+        stableData?.ReactionLastType || legacyData?.ReactionLastType || ""
+      );
       const card = document.getElementById("homepageEffectLayer")?.querySelector("#freedomWallPromptCard");
       updateFreedomWallReactionSummary(card, freedomWallPromptReactionsCache, "prompt", freedomWallPromptReactionLastType);
       if (freedomWallReactionMenuTarget?.type === "prompt" && freedomWallReactionMenuTarget.id === docId) updateFreedomWallReactionMenuState();
@@ -5374,8 +5456,14 @@ function updateFreedomWallPrompt(config) {
   const title = layer?.querySelector("#freedomWallPromptTitle");
   const message = layer?.querySelector("#freedomWallPromptMessage");
   if (!card || !title || !message) return;
-  const promptSignature = `${config?.title || ""}|${config?.message || ""}|${config?.updatedAt || ""}`;
+  // Prompt reactions must survive page refreshes and unrelated Admin saves
+  // (playlist/theme/settings). Key the prompt by its actual visible content, not
+  // the generic HomepageEffectUpdatedAt value. Keep the previous v484-v486 key
+  // available for one-way display compatibility with reactions already saved.
+  const promptSignature = `${String(config?.title || "").trim()}|${String(config?.message || "").trim()}`;
+  const legacyPromptSignature = `${config?.title || ""}|${config?.message || ""}|${config?.updatedAt || ""}`;
   card.dataset.promptSignature = promptSignature;
+  card.dataset.promptLegacySignature = legacyPromptSignature;
   title.textContent = config?.title || "";
   message.textContent = config?.message || "";
   message.hidden = !config?.message;
@@ -6026,7 +6114,10 @@ async function applyHomepageEffectSettings(settings = {}) {
   // Freedom Wall configuration is byte-for-byte the same, leave the existing
   // full-screen layer alone instead of reassigning classes/theme/scene styles.
   // The independent Firestore listener still updates notes in real time.
-  if (unchangedActiveFreedomWall) return;
+  if (unchangedActiveFreedomWall) {
+    setFreedomWallPageLock(true);
+    return;
+  }
 
   const layer = ensureHomepageEffectLayer();
 
@@ -6070,6 +6161,9 @@ async function applyHomepageEffectSettings(settings = {}) {
     if (!showNow && document.activeElement === close) close.blur();
   }
   layer.dataset.dismissible = homepageEffectDismissAllowed ? "true" : "false";
+  // Freedom Wall behaves like a true modal workspace: blank wall areas absorb
+  // clicks and the ClassBoard underneath cannot scroll until the wall closes.
+  setFreedomWallPageLock(config.mode === "freedom-wall");
   renderHomepageEffectText(config);
 
   const hasFreedomWallPlaylist = Boolean(

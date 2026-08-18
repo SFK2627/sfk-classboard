@@ -34026,3 +34026,26 @@ label[for="freedomWallTheme"]{display:block}
 .homepageEffectLayer.is-freedom-wall .freedomWallReactionSummary.is-prompt .freedomWallReactionCount.is-mine{
   outline:none!important;
 }
+
+/* =========================================================
+   v487 FREEDOM WALL — MODAL INPUT / BACKGROUND SCROLL LOCK
+   Freedom Wall alone blocks the underlying ClassBoard.
+========================================================= */
+.homepageEffectLayer.is-freedom-wall{
+  pointer-events:auto!important;
+}
+html.sfkFreedomWallModalOpen,
+html.sfkFreedomWallModalOpen body{
+  overscroll-behavior:none!important;
+}
+html.sfkFreedomWallModalOpen body{
+  overflow:hidden!important;
+}
+/* Keep actual wall controls interactive while the full-screen layer absorbs
+   all otherwise-empty clicks. Composer/pickers retain their own scrolling. */
+.homepageEffectLayer.is-freedom-wall .freedomWallComposerCard,
+.homepageEffectLayer.is-freedom-wall .freedomWallCustomizerOptions,
+.homepageEffectLayer.is-freedom-wall .freedomWallReactionMenu{
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+}
