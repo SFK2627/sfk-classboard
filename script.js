@@ -2270,6 +2270,8 @@ function normalizeFreedomWallYouTubePlaybackMode(value) {
 // self-contained so a missing/invalid URL can NEVER stop the Freedom Wall
 // prompt and live-note renderer from starting. v501 referenced this helper
 // without defining it, which caused the blank-wall runtime failure.
+const FREEDOM_WALL_YOUTUBE_SEARCH_FALLBACK_URL = "https://script.google.com/macros/s/AKfycbxntR5jJpDeKPOK7lJ7iLwEXQCNy1_rQF3Zg-KDJ1mwP8QAMKnz0eIiSMXP__PSgfpFsA/exec";
+
 function normalizeFreedomWallMediaSearchUrl(value) {
   const raw = String(value || "").trim().slice(0, 1200);
   if (!raw) return "";
@@ -2282,7 +2284,17 @@ function normalizeFreedomWallMediaSearchUrl(value) {
 }
 
 function getFreedomWallMediaSearchEndpoint() {
-  return normalizeFreedomWallMediaSearchUrl(freedomWallConfig?.freedomWallMediaSearchUrl || "");
+  // v508: use the Admin-configured endpoint when valid, but fall back to the
+  // deployment that was directly verified to return YouTube results. This
+  // repairs stale/old saved proxy URLs without affecting GIPHY (client-side).
+  return normalizeFreedomWallMediaSearchUrl(freedomWallConfig?.freedomWallMediaSearchUrl || "")
+    || normalizeFreedomWallMediaSearchUrl(FREEDOM_WALL_YOUTUBE_SEARCH_FALLBACK_URL);
+}
+
+function getFreedomWallYouTubeSearchEndpoints() {
+  const configured = normalizeFreedomWallMediaSearchUrl(freedomWallConfig?.freedomWallMediaSearchUrl || "");
+  const fallback = normalizeFreedomWallMediaSearchUrl(FREEDOM_WALL_YOUTUBE_SEARCH_FALLBACK_URL);
+  return [configured, fallback].filter((value, index, list) => value && list.indexOf(value) === index);
 }
 
 function getFreedomWallGiphyApiKey() {
@@ -2452,8 +2464,48 @@ async function fetchFreedomWallMediaSearchResults(provider, query) {
 }
 
 async function fetchFreedomWallYouTubeResults(query) {
-  const list = await fetchFreedomWallMediaSearchResults("youtube", query);
-  return list.map(normalizeFreedomWallYouTubeItem).filter(Boolean).slice(0, 8);
+  const q = String(query || "").trim().slice(0, 80);
+  if (!q) return [];
+
+  const endpoints = getFreedomWallYouTubeSearchEndpoints();
+  if (!endpoints.length) throw new Error("YouTube Search is not configured yet.");
+
+  let lastError = null;
+  for (const endpoint of endpoints) {
+    try {
+      const url = new URL(endpoint);
+      url.searchParams.set("provider", "youtube");
+      url.searchParams.set("action", "youtube");
+      url.searchParams.set("q", q);
+      url.searchParams.set("limit", "10");
+      url.searchParams.set("debug", "1");
+      url.searchParams.set("_sfk", Date.now().toString());
+
+      let data;
+      try {
+        data = await freedomWallJsonp(url.toString());
+      } catch (jsonpError) {
+        const response = await fetch(url.toString(), { cache: "no-store", redirect: "follow" });
+        if (!response.ok) throw new Error(`YouTube search HTTP ${response.status}.`);
+        data = await response.json();
+      }
+
+      if (!data || data.ok === false) throw new Error(data?.error || "YouTube search failed.");
+      const raw = Array.isArray(data.items) ? data.items : [];
+      const normalized = raw.map(normalizeFreedomWallYouTubeItem).filter(Boolean).slice(0, 10);
+      if (normalized.length) return normalized;
+
+      // A stale proxy can respond successfully but return an empty list.
+      // In that case continue to the next known endpoint instead of showing
+      // a false "No YouTube videos found" result immediately.
+      lastError = new Error(`YouTube proxy returned 0 results${data?.debug?.receivedQuery ? ` for "${data.debug.receivedQuery}"` : ""}.`);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  if (lastError) throw lastError;
+  return [];
 }
 
 async function fetchFreedomWallGifResults(query) {
@@ -2467,7 +2519,7 @@ async function fetchFreedomWallGifResults(query) {
   const url = new URL("https://api.giphy.com/v1/gifs/search");
   url.searchParams.set("api_key", key);
   url.searchParams.set("q", q);
-  url.searchParams.set("limit", "8");
+  url.searchParams.set("limit", "18");
   url.searchParams.set("rating", "pg");
 
   const response = await fetch(url.toString(), { cache: "no-store" });
@@ -2488,7 +2540,7 @@ async function fetchFreedomWallGifResults(query) {
       url: String(gif?.url || preview?.url || ""),
       previewUrl: String(preview?.url || gif?.url || "")
     });
-  }).filter(Boolean).slice(0, 8);
+  }).filter(Boolean).slice(0, 18);
 }
 
 function renderHomepageEffectYouTube(config) {
@@ -3739,6 +3791,21 @@ function ensureHomepageEffectLayer() {
           <div class="freedomWallComposerFooter"><span id="freedomWallComposerStatus" role="status"></span><button id="freedomWallPostBtn" type="submit">Post Note</button></div>
         </form>
       </div>
+
+      <div id="freedomWallMediaSearchModal" class="freedomWallMediaSearchModal" hidden>
+        <section class="freedomWallMediaSearchDialog" role="dialog" aria-modal="true" aria-labelledby="freedomWallMediaSearchModalTitle">
+          <div class="freedomWallMediaSearchDialogHead">
+            <div><strong id="freedomWallMediaSearchModalTitle">Media Search</strong><span id="freedomWallMediaSearchModalHint">Search and choose one result.</span></div>
+            <button id="freedomWallMediaSearchModalClose" type="button" aria-label="Close media search">×</button>
+          </div>
+          <div class="freedomWallMediaSearchDialogBar">
+            <input id="freedomWallMediaSearchModalInput" type="search" autocomplete="off" placeholder="Search..." />
+            <button id="freedomWallMediaSearchModalBtn" type="button">Search</button>
+          </div>
+          <div id="freedomWallMediaSearchModalStatus" class="freedomWallMediaSearchModalStatus" role="status"></div>
+          <div id="freedomWallMediaSearchModalResults" class="freedomWallMediaSearchModalResults"></div>
+        </section>
+      </div>
     </div>
 
     <div class="homepageEffectContent" role="status" aria-live="polite">
@@ -3811,11 +3878,25 @@ function ensureHomepageEffectLayer() {
   layer.querySelector("#freedomWallMediaInput")?.addEventListener("change", handleFreedomWallMediaInput);
   layer.querySelector("#freedomWallYouTubeInput")?.addEventListener("change", handleFreedomWallYouTubeInput);
   layer.querySelector("#freedomWallYouTubeInput")?.addEventListener("input", handleFreedomWallYouTubeInput);
-  layer.querySelector("#freedomWallMediaType")?.addEventListener("change", (event) => setFreedomWallAttachmentMode(String(event?.target?.value || "none")));
+  layer.querySelector("#freedomWallMediaType")?.addEventListener("change", (event) => {
+    const mode = String(event?.target?.value || "none");
+    setFreedomWallAttachmentMode(mode);
+    if (mode === "youtube-search") openFreedomWallMediaSearchModal("youtube");
+    else if (mode === "gif-search") openFreedomWallMediaSearchModal("gif");
+  });
   layer.querySelector("#freedomWallYouTubeSearchBtn")?.addEventListener("click", runFreedomWallYouTubeSearch);
   layer.querySelector("#freedomWallYouTubeSearchInput")?.addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); runFreedomWallYouTubeSearch(); } });
   layer.querySelector("#freedomWallGifSearchBtn")?.addEventListener("click", runFreedomWallGifSearch);
   layer.querySelector("#freedomWallGifSearchInput")?.addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); runFreedomWallGifSearch(); } });
+  layer.querySelector("#freedomWallMediaSearchModalClose")?.addEventListener("click", closeFreedomWallMediaSearchModal);
+  layer.querySelector("#freedomWallMediaSearchModalBtn")?.addEventListener("click", runFreedomWallMediaSearchModalSearch);
+  layer.querySelector("#freedomWallMediaSearchModalInput")?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") { event.preventDefault(); runFreedomWallMediaSearchModalSearch(); }
+    else if (event.key === "Escape") { event.preventDefault(); closeFreedomWallMediaSearchModal(); }
+  });
+  layer.querySelector("#freedomWallMediaSearchModal")?.addEventListener("pointerdown", (event) => {
+    if (event.target?.id === "freedomWallMediaSearchModal") closeFreedomWallMediaSearchModal();
+  });
   layer.querySelector("#freedomWallMediaRemove")?.addEventListener("click", (event) => { event.preventDefault(); resetFreedomWallPendingMedia(); });
   layer.querySelector("#freedomWallComposer")?.addEventListener("pointerdown", (event) => {
     if (event.target?.id === "freedomWallComposer") closeFreedomWallComposer();
@@ -5769,9 +5850,95 @@ async function handleFreedomWallMediaInput(event) {
 
 
 
+function getFreedomWallMediaSearchModalRefs() {
+  const layer = document.getElementById("homepageEffectLayer");
+  const modal = layer?.querySelector("#freedomWallMediaSearchModal");
+  return {
+    layer,
+    modal,
+    title: modal?.querySelector("#freedomWallMediaSearchModalTitle"),
+    hint: modal?.querySelector("#freedomWallMediaSearchModalHint"),
+    input: modal?.querySelector("#freedomWallMediaSearchModalInput"),
+    button: modal?.querySelector("#freedomWallMediaSearchModalBtn"),
+    status: modal?.querySelector("#freedomWallMediaSearchModalStatus"),
+    results: modal?.querySelector("#freedomWallMediaSearchModalResults")
+  };
+}
+
+function openFreedomWallMediaSearchModal(provider = "youtube", initialQuery = "") {
+  const refs = getFreedomWallMediaSearchModalRefs();
+  if (!refs.modal) return;
+  const safeProvider = provider === "gif" ? "gif" : "youtube";
+  refs.modal.dataset.provider = safeProvider;
+  refs.modal.hidden = false;
+  if (refs.title) refs.title.textContent = safeProvider === "gif" ? "Search GIFs" : "Search YouTube";
+  if (refs.hint) refs.hint.textContent = safeProvider === "gif"
+    ? "Browse more GIFs, then choose one."
+    : "Browse more videos, then choose one.";
+  if (refs.input) {
+    refs.input.placeholder = safeProvider === "gif" ? "Search GIFs..." : "Song, topic, or video title...";
+    if (initialQuery) refs.input.value = initialQuery;
+  }
+  if (refs.status) refs.status.textContent = "";
+  if (refs.results) {
+    refs.results.replaceChildren();
+    refs.results.classList.toggle("is-gif-grid", safeProvider === "gif");
+  }
+  window.setTimeout(() => refs.input?.focus(), 20);
+  if (String(initialQuery || "").trim()) runFreedomWallMediaSearchModalSearch();
+}
+
+function closeFreedomWallMediaSearchModal(event) {
+  event?.preventDefault?.();
+  event?.stopPropagation?.();
+  const refs = getFreedomWallMediaSearchModalRefs();
+  if (!refs.modal) return;
+  refs.modal.hidden = true;
+  refs.modal.removeAttribute("data-provider");
+  if (refs.status) refs.status.textContent = "";
+  if (refs.results) refs.results.replaceChildren();
+}
+
+async function runFreedomWallMediaSearchModalSearch() {
+  if (freedomWallMediaSearchBusy) return;
+  const refs = getFreedomWallMediaSearchModalRefs();
+  if (!refs.modal || refs.modal.hidden) return;
+  const provider = refs.modal.dataset.provider === "gif" ? "gif" : "youtube";
+  const q = String(refs.input?.value || "").trim();
+  if (!q) {
+    if (refs.status) refs.status.textContent = provider === "gif" ? "Type a word to search GIFs." : "Type a video or song to search YouTube.";
+    refs.input?.focus();
+    return;
+  }
+
+  freedomWallMediaSearchBusy = provider;
+  if (refs.button) refs.button.disabled = true;
+  if (refs.status) refs.status.textContent = provider === "gif" ? "Searching GIPHY…" : "Searching YouTube…";
+  if (refs.results) refs.results.innerHTML = `<small class="freedomWallMediaSearchEmpty">${provider === "gif" ? "Searching GIFs…" : "Searching YouTube…"}</small>`;
+
+  try {
+    const items = provider === "gif"
+      ? await fetchFreedomWallGifResults(q)
+      : await fetchFreedomWallYouTubeResults(q);
+    if (provider === "gif") renderFreedomWallGifResults(items);
+    else renderFreedomWallYouTubeResults(items);
+    if (refs.status) refs.status.textContent = items.length
+      ? `${items.length} ${provider === "gif" ? "GIF" : "YouTube"} result${items.length === 1 ? "" : "s"} — choose one.`
+      : `No ${provider === "gif" ? "GIF" : "YouTube"} results found.`;
+  } catch (error) {
+    const message = String(error?.message || (provider === "gif" ? "GIF search failed." : "YouTube search failed."));
+    if (refs.results) refs.results.innerHTML = `<small class="freedomWallMediaSearchEmpty">${message}</small>`;
+    if (refs.status) refs.status.textContent = message;
+  } finally {
+    freedomWallMediaSearchBusy = "";
+    if (refs.button) refs.button.disabled = false;
+  }
+}
+
+
 function renderFreedomWallYouTubeResults(items = []) {
   const layer = document.getElementById("homepageEffectLayer");
-  const results = layer?.querySelector("#freedomWallYouTubeResults");
+  const results = layer?.querySelector("#freedomWallMediaSearchModalResults");
   if (!results) return;
   results.replaceChildren();
   if (!items.length) {
@@ -5828,32 +5995,19 @@ function selectFreedomWallYouTubeItem(item) {
   }
   if (remove) remove.hidden = false;
   if (status) status.textContent = "YouTube video selected.";
+  closeFreedomWallMediaSearchModal();
 }
 
 async function runFreedomWallYouTubeSearch() {
-  if (freedomWallMediaSearchBusy) return;
   const layer = document.getElementById("homepageEffectLayer");
   const input = layer?.querySelector("#freedomWallYouTubeSearchInput");
-  const results = layer?.querySelector("#freedomWallYouTubeResults");
-  const status = layer?.querySelector("#freedomWallComposerStatus");
   const q = String(input?.value || "").trim();
-  if (!q) { input?.focus(); if (status) status.textContent = "Type a video or song to search YouTube."; return; }
-  freedomWallMediaSearchBusy = "youtube";
-  if (results) results.innerHTML = '<small class="freedomWallMediaSearchEmpty">Searching YouTube…</small>';
-  if (status) status.textContent = "Searching YouTube…";
-  try {
-    const items = await fetchFreedomWallYouTubeResults(q);
-    renderFreedomWallYouTubeResults(items);
-    if (status) status.textContent = items.length ? "Choose a YouTube result." : "No YouTube results found.";
-  } catch (error) {
-    if (results) results.innerHTML = `<small class="freedomWallMediaSearchEmpty">${String(error?.message || "YouTube search failed.")}</small>`;
-    if (status) status.textContent = String(error?.message || "YouTube search failed.");
-  } finally { freedomWallMediaSearchBusy = ""; }
+  openFreedomWallMediaSearchModal("youtube", q);
 }
 
 function renderFreedomWallGifResults(items = []) {
   const layer = document.getElementById("homepageEffectLayer");
-  const results = layer?.querySelector("#freedomWallGifResults");
+  const results = layer?.querySelector("#freedomWallMediaSearchModalResults");
   if (!results) return;
   results.replaceChildren();
   if (!items.length) {
@@ -5908,27 +6062,14 @@ function selectFreedomWallGifItem(item) {
   }
   if (remove) remove.hidden = false;
   if (status) status.textContent = "GIF selected.";
+  closeFreedomWallMediaSearchModal();
 }
 
 async function runFreedomWallGifSearch() {
-  if (freedomWallMediaSearchBusy) return;
   const layer = document.getElementById("homepageEffectLayer");
   const input = layer?.querySelector("#freedomWallGifSearchInput");
-  const results = layer?.querySelector("#freedomWallGifResults");
-  const status = layer?.querySelector("#freedomWallComposerStatus");
   const q = String(input?.value || "").trim();
-  if (!q) { input?.focus(); if (status) status.textContent = "Type a word to search GIFs."; return; }
-  freedomWallMediaSearchBusy = "gif";
-  if (results) results.innerHTML = '<small class="freedomWallMediaSearchEmpty">Searching GIFs…</small>';
-  if (status) status.textContent = "Searching GIFs…";
-  try {
-    const items = await fetchFreedomWallGifResults(q);
-    renderFreedomWallGifResults(items);
-    if (status) status.textContent = items.length ? "Choose a GIF." : "No GIF results found.";
-  } catch (error) {
-    if (results) results.innerHTML = `<small class="freedomWallMediaSearchEmpty">${String(error?.message || "GIF search failed.")}</small>`;
-    if (status) status.textContent = String(error?.message || "GIF search failed.");
-  } finally { freedomWallMediaSearchBusy = ""; }
+  openFreedomWallMediaSearchModal("gif", q);
 }
 
 function renderFreedomWallGifPreview(media, note) {
@@ -6515,13 +6656,13 @@ function updateFreedomWallPrompt(config) {
   // v502 blank-wall guard: if an Admin save leaves the active wall prompt blank,
   // do not render a large empty white wall. Show a safe default prompt instead.
   const fallbackTitle = "SFK #BeKind Wall";
-  const fallbackMessage = "Share something kind, honest, funny, thankful, or meaningful.";
   card.dataset.promptSignature = promptSignature;
   card.dataset.promptLegacySignature = legacyPromptSignature;
   card.dataset.promptFallback = hasAdminPrompt ? "NO" : "YES";
   title.textContent = rawTitle || fallbackTitle;
-  message.textContent = rawMessage || fallbackMessage;
-  message.hidden = false;
+  // v510: an intentionally blank Admin message stays blank.
+  message.textContent = rawMessage;
+  message.hidden = !rawMessage;
   card.hidden = freedomWallPromptDismissedSignature === promptSignature;
   if (!card.hidden) syncFreedomWallPromptReactionLive();
   else stopFreedomWallPromptReactionLive();
@@ -6793,6 +6934,7 @@ function closeFreedomWallComposer(event) {
   event?.preventDefault?.();
   const layer = document.getElementById("homepageEffectLayer");
   const composer = layer?.querySelector("#freedomWallComposer");
+  closeFreedomWallMediaSearchModal();
   setFreedomWallCustomizeOpen(false);
   if (composer) composer.hidden = true;
 }

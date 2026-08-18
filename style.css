@@ -34426,3 +34426,179 @@ html.sfkFreedomWallModalOpen body{
   color:#6b7280;
   text-align:right;
 }
+
+
+/* =========================================================
+   v510 — Freedom Wall large media-search modal
+   Keeps GIF/YouTube discovery out of the compact composer so
+   more results are visible at once.
+========================================================= */
+.freedomWallMediaSearchModal[hidden]{display:none!important}
+.freedomWallMediaSearchModal{
+  position:absolute;
+  inset:0;
+  z-index:640;
+  display:grid;
+  place-items:center;
+  box-sizing:border-box;
+  padding:22px;
+  background:rgba(4,7,12,.68);
+  backdrop-filter:blur(8px);
+  pointer-events:auto;
+}
+.freedomWallMediaSearchDialog{
+  width:min(920px,calc(100vw - 36px));
+  height:min(720px,calc(100dvh - 44px));
+  min-height:360px;
+  box-sizing:border-box;
+  overflow:hidden;
+  display:grid;
+  grid-template-rows:auto auto auto minmax(0,1fr);
+  gap:10px;
+  padding:18px;
+  border-radius:22px;
+  background:#fff;
+  color:#151515;
+  box-shadow:0 26px 70px rgba(0,0,0,.42);
+  font-family:Arial,sans-serif;
+}
+.freedomWallMediaSearchDialogHead{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+}
+.freedomWallMediaSearchDialogHead>div{display:grid;gap:3px;min-width:0}
+.freedomWallMediaSearchDialogHead strong{font:1000 20px/1.1 Arial,sans-serif}
+.freedomWallMediaSearchDialogHead span{font:700 11px/1.3 Arial,sans-serif;color:#6b7280}
+.freedomWallMediaSearchDialogHead button{
+  flex:0 0 auto;
+  width:36px;height:36px;
+  border:0;border-radius:10px;
+  background:#f2f2f2;color:#111;
+  font:400 29px/1 Arial,sans-serif;
+  cursor:pointer;
+}
+.freedomWallMediaSearchDialogBar{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:8px;
+}
+.freedomWallMediaSearchDialogBar input{
+  width:100%;
+  min-height:44px;
+  box-sizing:border-box;
+  border:1.5px solid #d6d6d6;
+  border-radius:12px;
+  padding:10px 13px;
+  background:#fafafa;
+  color:#151515;
+  font:700 14px/1.25 Arial,sans-serif;
+  outline:none;
+}
+.freedomWallMediaSearchDialogBar input:focus{
+  border-color:#111;
+  background:#fff;
+  box-shadow:0 0 0 3px rgba(247,198,0,.22);
+}
+.freedomWallMediaSearchDialogBar button{
+  min-width:92px;
+  border:0;
+  border-radius:12px;
+  padding:0 16px;
+  background:#111;
+  color:#fff;
+  font:900 13px/1 Arial,sans-serif;
+  cursor:pointer;
+}
+.freedomWallMediaSearchDialogBar button:disabled{opacity:.55;cursor:wait}
+.freedomWallMediaSearchModalStatus{
+  min-height:16px;
+  font:800 10.5px/1.3 Arial,sans-serif;
+  color:#6b7280;
+}
+.freedomWallMediaSearchModalResults{
+  min-height:0;
+  overflow:auto;
+  align-content:start;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  padding:2px 4px 10px 1px;
+  overscroll-behavior:contain;
+}
+.freedomWallMediaSearchModalResults .freedomWallMediaSearchEmpty{
+  grid-column:1/-1;
+  padding:16px 4px;
+  font-size:12px;
+}
+.freedomWallMediaSearchModalResults .freedomWallMediaSearchResult.is-youtube{
+  grid-template-columns:150px minmax(0,1fr);
+  grid-template-rows:auto auto;
+  gap:9px 10px;
+  align-items:start;
+  min-height:102px;
+  padding:9px;
+  border-radius:13px;
+}
+.freedomWallMediaSearchModalResults .freedomWallMediaSearchResult.is-youtube img{
+  grid-row:1/3;
+  width:150px;
+  height:84px;
+  border-radius:9px;
+}
+.freedomWallMediaSearchModalResults .freedomWallMediaSearchResult.is-youtube span{
+  align-self:center;
+  gap:5px;
+}
+.freedomWallMediaSearchModalResults .freedomWallMediaSearchResult.is-youtube b{
+  white-space:normal;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  line-height:1.25;
+}
+.freedomWallMediaSearchModalResults .freedomWallMediaSearchResult.is-youtube em{
+  justify-self:start;
+  align-self:start;
+}
+.freedomWallMediaSearchModalResults.is-gif-grid{
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:9px;
+}
+.freedomWallMediaSearchModalResults.is-gif-grid .freedomWallGiphyAttribution{
+  grid-column:1/-1;
+}
+.freedomWallMediaSearchModalResults .freedomWallGifResult{
+  min-height:0;
+  aspect-ratio:1/1;
+  border-radius:12px;
+}
+@media(max-width:900px){
+  .freedomWallMediaSearchDialog{width:min(760px,calc(100vw - 24px))}
+  .freedomWallMediaSearchModalResults{grid-template-columns:1fr}
+  .freedomWallMediaSearchModalResults.is-gif-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:700px){
+  .freedomWallMediaSearchModal{padding:8px}
+  .freedomWallMediaSearchDialog{
+    width:calc(100vw - 16px);
+    height:calc(100dvh - 16px);
+    min-height:0;
+    padding:13px;
+    border-radius:18px;
+    gap:8px;
+  }
+  .freedomWallMediaSearchDialogHead strong{font-size:18px}
+  .freedomWallMediaSearchDialogBar{grid-template-columns:minmax(0,1fr) auto}
+  .freedomWallMediaSearchDialogBar button{min-width:72px;padding:0 12px}
+  .freedomWallMediaSearchModalResults .freedomWallMediaSearchResult.is-youtube{
+    grid-template-columns:112px minmax(0,1fr);
+    min-height:80px;
+    padding:8px;
+  }
+  .freedomWallMediaSearchModalResults .freedomWallMediaSearchResult.is-youtube img{
+    width:112px;height:63px;
+  }
+  .freedomWallMediaSearchModalResults.is-gif-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
