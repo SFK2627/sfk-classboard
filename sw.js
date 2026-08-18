@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-main-pwa-v495-customize-visibility";
+const CACHE_NAME = "sfk-main-pwa-v497-composer-single-scroll";
 const CACHE_PREFIXES_TO_DELETE = ["sfk-main-pwa-", "sfk-sw.js-"];
 const NAVIGATION_FALLBACK_URL = "./index.html";
 const NAVIGATION_TIMEOUT_MS = 2500;

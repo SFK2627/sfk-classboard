@@ -3420,6 +3420,7 @@ function ensureHomepageEffectLayer() {
       <div id="freedomWallComposer" class="freedomWallComposer" hidden>
         <form id="freedomWallComposerForm" class="freedomWallComposerCard">
           <div class="freedomWallComposerHead"><div><strong>Add to the SFK #BeKind Wall</strong><span>Share a short note with SFK.</span></div><button id="freedomWallComposerClose" type="button" aria-label="Close">×</button></div>
+          <div id="freedomWallComposerScroll" class="freedomWallComposerScroll">
           <label for="freedomWallAuthorInput">Name / nickname</label>
           <input id="freedomWallAuthorInput" type="text" maxlength="42" autocomplete="name" placeholder="Your name" />
           <label for="freedomWallNoteInput">Your note</label>
@@ -3483,6 +3484,7 @@ function ensureHomepageEffectLayer() {
             </div>
             <div id="freedomWallCustomizerBackdrop" class="freedomWallCustomizerBackdrop" hidden aria-hidden="true"></div>
           </section>
+          </div>
           <div class="freedomWallComposerFooter"><span id="freedomWallComposerStatus" role="status"></span><button id="freedomWallPostBtn" type="submit">Post Note</button></div>
         </form>
       </div>

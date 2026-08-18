@@ -34215,8 +34215,8 @@ html.sfkFreedomWallModalOpen body{
 .homepageEffectLayer.is-freedom-wall .freedomWallNotesStage.has-inline-youtube,
 .homepageEffectLayer.is-freedom-wall .freedomWallDragOverlay.has-inline-youtube{z-index:460!important}
 .homepageEffectLayer.is-freedom-wall .freedomWallNote.is-inline-video-active{
-  --fw-note-min-width:min(440px,calc(100vw - 64px));
-  --fw-note-max-width:min(440px,calc(100vw - 64px));
+  --fw-note-min-width:min(350px,calc(100vw - 64px));
+  --fw-note-max-width:min(350px,calc(100vw - 64px));
   min-inline-size:var(--fw-note-min-width)!important;
   max-inline-size:var(--fw-note-max-width)!important;
   inline-size:var(--fw-note-max-width)!important;
@@ -34237,7 +34237,7 @@ html.sfkFreedomWallModalOpen body{
 .homepageEffectLayer.is-freedom-wall .freedomWallYoutubeInlineClose:hover,.homepageEffectLayer.is-freedom-wall .freedomWallYoutubeInlineClose:focus-visible{background:#171a20;outline:2px solid #fff;outline-offset:1px}
 @media(max-width:700px){
   .homepageEffectLayer.is-freedom-wall .freedomWallNote.is-inline-video-active{
-    --fw-note-min-width:min(88vw,390px);--fw-note-max-width:min(88vw,390px);
+    --fw-note-min-width:min(84vw,330px);--fw-note-max-width:min(84vw,330px);
     padding:9px 9px 14px!important
   }
   .homepageEffectLayer.is-freedom-wall .freedomWallYoutubeInlineClose{width:28px;height:28px;right:4px;top:4px;font-size:19px}
@@ -34277,4 +34277,78 @@ html.sfkFreedomWallModalOpen body{
 }
 @media(max-height:650px){
   .freedomWallCustomizeBody{max-height:min(150px,25dvh)}
+}
+
+
+/* =========================================================
+   v497 — Freedom Wall composer single-scroll layout
+   One scroll area owns Name/Note/Media/Customize. Header + Post footer stay visible.
+   Removes the nested Customize Note scrollbar that could hide Font or push the
+   whole customization panel out of reach when GIF/YouTube controls are enabled.
+========================================================= */
+.homepageEffectLayer.is-freedom-wall .freedomWallComposerCard{
+  overflow:hidden!important;
+  display:flex!important;
+  flex-direction:column!important;
+  max-height:min(720px,calc(100dvh - 28px))!important;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallComposerHead{
+  flex:0 0 auto!important;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallComposerScroll{
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  padding:0 3px 4px 0;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-gutter:stable;
+  scroll-padding:10px 0 18px;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallComposerFooter{
+  position:relative!important;
+  bottom:auto!important;
+  flex:0 0 auto!important;
+  margin-top:5px!important;
+  padding-top:9px!important;
+  padding-bottom:1px!important;
+  background:#fff!important;
+  border-top:1px solid #e2e5e9;
+}
+/* No nested scroll inside Customize Note. All three rows remain in normal flow. */
+.homepageEffectLayer.is-freedom-wall .freedomWallCustomizeBody{
+  min-height:0!important;
+  max-height:none!important;
+  overflow:visible!important;
+  overscroll-behavior:auto!important;
+  scrollbar-gutter:auto!important;
+}
+.homepageEffectLayer.is-freedom-wall #freedomWallFontField.is-admin-enabled,
+.homepageEffectLayer.is-freedom-wall #freedomWallTextColorField.is-admin-enabled{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+/* Media can be long, but it must remain part of the same natural composer flow. */
+.homepageEffectLayer.is-freedom-wall .freedomWallMediaField,
+.homepageEffectLayer.is-freedom-wall .freedomWallCustomizePanel{
+  flex:0 0 auto;
+}
+@media(max-width:700px){
+  .homepageEffectLayer.is-freedom-wall .freedomWallComposerCard{
+    max-height:calc(100dvh - 16px)!important;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallComposerScroll{
+    gap:7px;
+    padding-right:2px;
+    scrollbar-gutter:auto;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallComposerFooter{
+    margin-top:4px!important;
+    padding-top:8px!important;
+  }
 }
