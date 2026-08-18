@@ -1,0 +1,13 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SFK Refresh v468</title>
+<style>body{font-family:Arial,sans-serif;display:grid;place-items:center;min-height:100vh;margin:0;background:#f7c600;color:#111}.card{background:#fff;border:2px solid #111;border-radius:18px;padding:24px;max-width:520px;margin:18px;text-align:center;box-shadow:8px 8px 0 #111}strong{display:block;font-size:24px;margin-bottom:8px}small{display:block;margin-top:10px}</style></head>
+<body><div class="card"><strong>Updating SFK ClassBoard…</strong><span id="msg">Clearing old app cache and loading v468.</span><small>This runs once, then opens the homepage.</small></div>
+<script>
+(async()=>{try{
+ if('serviceWorker'in navigator){const regs=await navigator.serviceWorker.getRegistrations();await Promise.all(regs.map(r=>r.unregister().catch(()=>false)));}
+ if('caches'in window){const keys=await caches.keys();await Promise.all(keys.filter(k=>k.startsWith('sfk-')).map(k=>caches.delete(k)));}
+ try{localStorage.removeItem('sfkClassBoardCache');}catch(e){}
+ document.getElementById('msg').textContent='Old cache cleared. Opening the updated ClassBoard…';
+ setTimeout(()=>location.replace('./index.html?v=v468-theme-matched-prompt-fonts&t='+Date.now()),500);
+}catch(e){document.getElementById('msg').textContent='Refresh cleanup finished with a browser limitation. Opening ClassBoard…';setTimeout(()=>location.replace('./index.html?v=v468-theme-matched-prompt-fonts&t='+Date.now()),700);}})();
+</script></body></html>

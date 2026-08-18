@@ -30495,3 +30495,727 @@ html.sfkHomepageBlackSymbioteActive body > *:not(script):not(style):not(#homepag
     box-shadow:4px 4px 0 rgba(17,17,17,.92);
   }
 }
+
+/* v460 TEMPORARY DRAGGABLE FREEDOM WALL NOTES
+   Mouse: hold + drag. Touch/pen: short long-press + drag.
+   Positions are local DOM state only and reset on page refresh. */
+.homepageEffectLayer.is-freedom-wall .freedomWallNote{
+  pointer-events:auto;
+  cursor:grab;
+  user-select:none;
+  -webkit-user-select:none;
+  touch-action:none;
+  -webkit-touch-callout:none;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallNote.is-dragging{
+  cursor:grabbing;
+  transition:none!important;
+  box-shadow:0 22px 38px rgba(20,18,15,.30),0 5px 8px rgba(0,0,0,.13);
+  filter:brightness(1.025);
+}
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallNote.is-dragging{
+  box-shadow:7px 7px 0 #111,0 24px 36px rgba(0,0,0,.22)!important;
+}
+@media(max-width:700px){
+  .homepageEffectLayer.is-freedom-wall .freedomWallNote.is-dragging{
+    box-shadow:0 18px 30px rgba(20,18,15,.28),0 4px 7px rgba(0,0,0,.12);
+  }
+}
+
+/* v461: true hold-drag + smoother compositor movement */
+.homepageEffectLayer.is-freedom-wall .freedomWallNote{
+  will-change:transform,left,top;
+  -webkit-tap-highlight-color:transparent;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallNote.is-dragging{
+  z-index:390;
+  transform:translate3d(-50%,-50%,0) rotate(var(--fw-rotation)) skewY(var(--fw-skew,0deg)) scale(var(--fw-scale));
+  transition:none!important;
+  animation:none!important;
+}
+
+
+/* v462: true pointer-held drag overlay above the center prompt */
+.freedomWallDragOverlay{
+  position:absolute;
+  inset:0;
+  overflow:hidden;
+  z-index:390;
+  pointer-events:none;
+}
+.freedomWallDragOverlay .freedomWallNote{
+  pointer-events:auto;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallNote{
+  --fw-drag-x:0px;
+  --fw-drag-y:0px;
+  transform:translate3d(calc(-50% + var(--fw-drag-x)),calc(-50% + var(--fw-drag-y)),0)
+    rotate(var(--fw-rotation)) skewY(var(--fw-skew,0deg)) scale(var(--fw-scale));
+  will-change:transform;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallNote.is-dragging{
+  transform:translate3d(calc(-50% + var(--fw-drag-x)),calc(-50% + var(--fw-drag-y)),0)
+    rotate(var(--fw-rotation)) skewY(var(--fw-skew,0deg)) scale(var(--fw-scale));
+  transition:none!important;
+  animation:none!important;
+  cursor:grabbing;
+}
+
+
+/* v464: Additional SFK #BeKind Wall themes */
+/* Jungle theme */
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallBg{
+  background:
+    radial-gradient(circle at 18% 12%, rgba(255,247,185,.25), transparent 16%),
+    linear-gradient(180deg,#8fd98f 0%,#4d9a60 30%,#2f6f46 62%,#1b4b2f 100%);
+}
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallBg::before{
+  inset:0;
+  background:
+    radial-gradient(ellipse at 10% 22%, rgba(37,92,47,.68) 0 26%, transparent 27%),
+    radial-gradient(ellipse at 88% 18%, rgba(27,79,41,.62) 0 24%, transparent 25%),
+    radial-gradient(ellipse at 24% 90%, rgba(21,71,40,.86) 0 18%, transparent 19%),
+    radial-gradient(ellipse at 76% 92%, rgba(22,76,43,.82) 0 21%, transparent 22%),
+    radial-gradient(ellipse at 50% 100%, rgba(17,58,33,.94) 0 23%, transparent 24%);
+  opacity:1;
+}
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallBg::after{
+  inset:auto 0 0 0;
+  height:28%;
+  background:
+    repeating-linear-gradient(78deg, rgba(145,210,111,.9) 0 14px, rgba(74,149,75,.95) 14px 28px, rgba(49,109,55,.95) 28px 40px),
+    linear-gradient(180deg, rgba(40,97,48,.92), rgba(22,61,31,.98));
+  clip-path:polygon(0 32%, 4% 18%, 8% 30%, 12% 14%, 16% 34%, 20% 12%, 24% 28%, 28% 8%, 32% 30%, 36% 16%, 40% 34%, 44% 10%, 48% 28%, 52% 12%, 56% 32%, 60% 18%, 64% 34%, 68% 10%, 72% 28%, 76% 14%, 80% 34%, 84% 12%, 88% 28%, 92% 16%, 96% 30%, 100% 20%, 100% 100%, 0 100%);
+  opacity:.96;
+}
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallSun{opacity:.92; right:7%; top:8%;}
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallCloud{opacity:.34; background:rgba(242,255,244,.72)}
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallBrand,
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallPromptCard{background:rgba(255,255,248,.92)}
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallNote{box-shadow:0 12px 20px rgba(8,44,20,.24),0 3px 0 rgba(255,255,255,.18) inset}
+
+/* School bulletin board */
+.homepageFreedomWallScene[data-theme="bulletin-board"] .freedomWallBg{
+  background:
+    radial-gradient(circle at 30% 24%, rgba(255,255,255,.06) 0 2px, transparent 3px) 0 0/18px 18px,
+    linear-gradient(135deg,#c89155,#b67f44 58%,#9b6935 100%);
+}
+.homepageFreedomWallScene[data-theme="bulletin-board"] .freedomWallBg::before{
+  inset:3.2%;
+  border-radius:18px;
+  background:
+    radial-gradient(circle at 1px 1px, rgba(82,53,21,.14) 0 1px, transparent 1.3px) 0 0/14px 14px,
+    linear-gradient(135deg,#d9b07b,#c48d51 65%,#ae7845);
+  box-shadow: inset 0 0 0 8px #7a4f26, inset 0 0 0 12px #cba06b, 0 16px 28px rgba(55,31,12,.22);
+}
+.homepageFreedomWallScene[data-theme="bulletin-board"] .freedomWallBg::after{
+  inset:4.6%;
+  background:
+    radial-gradient(circle at 12% 14%, rgba(255,249,236,.94) 0 15px, transparent 16px),
+    radial-gradient(circle at 88% 22%, rgba(255,249,236,.92) 0 14px, transparent 15px),
+    radial-gradient(circle at 20% 84%, rgba(255,249,236,.88) 0 13px, transparent 14px),
+    radial-gradient(circle at 78% 78%, rgba(255,249,236,.9) 0 14px, transparent 15px);
+  opacity:.65;
+}
+.homepageFreedomWallScene[data-theme="bulletin-board"] .freedomWallBrand,
+.homepageFreedomWallScene[data-theme="bulletin-board"] .freedomWallPromptCard{background:rgba(255,252,244,.95)}
+.homepageFreedomWallScene[data-theme="bulletin-board"] .freedomWallNote{box-shadow:0 14px 22px rgba(88,52,18,.18)}
+.homepageFreedomWallScene[data-theme="bulletin-board"] .freedomWallNote::before{background:#d14f4f;}
+
+/* Utility post / Meralco pole */
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallBg{
+  background:linear-gradient(180deg,#d9d9d9 0%,#bdbdbd 55%,#a7a7a7 100%);
+}
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallBg::before{
+  inset:0;
+  background:
+    linear-gradient(90deg, transparent 0 11%, rgba(0,0,0,.11) 11.1% 11.5%, transparent 11.6% 48%, rgba(0,0,0,.11) 48.1% 48.5%, transparent 48.6% 73%, rgba(0,0,0,.11) 73.1% 73.5%, transparent 73.6% 100%),
+    linear-gradient(180deg, rgba(255,255,255,.18), rgba(0,0,0,.05));
+  opacity:1;
+}
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallBg::after{
+  inset:0;
+  background:
+    linear-gradient(90deg, transparent 42%, rgba(122,106,92,.92) 42.2% 57.8%, transparent 58%),
+    linear-gradient(90deg, transparent 46%, rgba(148,133,119,.85) 46.2% 53.8%, transparent 54%),
+    linear-gradient(0deg, transparent 0 6%, rgba(0,0,0,.18) 6.2% 6.6%, transparent 6.8% 27%, rgba(0,0,0,.17) 27.2% 27.6%, transparent 27.8% 56%, rgba(0,0,0,.18) 56.2% 56.6%, transparent 56.8% 100%);
+  opacity:1;
+}
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallBrand,
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallPromptCard{background:rgba(253,250,242,.94)}
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallNote{
+  border-radius:0;
+  box-shadow:0 10px 18px rgba(45,45,45,.20);
+}
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallNote::after{border-width:0 0 16px 16px}
+
+/* Graffiti street art */
+.homepageFreedomWallScene[data-theme="graffiti"] .freedomWallBg{
+  background:
+    linear-gradient(160deg, rgba(255,255,255,.04), rgba(255,255,255,0) 25%),
+    linear-gradient(180deg,#4d4d53 0%,#3b3c42 48%,#2f3036 100%);
+}
+.homepageFreedomWallScene[data-theme="graffiti"] .freedomWallBg::before{
+  inset:0;
+  background:
+    radial-gradient(circle at 14% 18%, rgba(255,64,129,.48) 0 6%, transparent 7%),
+    radial-gradient(circle at 22% 22%, rgba(255,196,0,.42) 0 4.5%, transparent 5.5%),
+    radial-gradient(circle at 76% 16%, rgba(61,226,255,.42) 0 5%, transparent 6%),
+    radial-gradient(circle at 84% 20%, rgba(167,97,255,.40) 0 4.5%, transparent 5.5%),
+    radial-gradient(circle at 30% 72%, rgba(111,255,158,.34) 0 6%, transparent 7%),
+    radial-gradient(circle at 74% 74%, rgba(255,124,56,.34) 0 7%, transparent 8%),
+    linear-gradient(135deg, transparent 0 30%, rgba(255,255,255,.04) 30.5% 31%, transparent 31.5% 100%);
+  opacity:1;
+}
+.homepageFreedomWallScene[data-theme="graffiti"] .freedomWallBg::after{
+  inset:0;
+  background:
+    radial-gradient(ellipse at 17% 23%, rgba(255,0,111,.88) 0 2%, transparent 2.8%),
+    radial-gradient(ellipse at 20% 28%, rgba(255,208,0,.84) 0 1.6%, transparent 2.3%),
+    radial-gradient(ellipse at 79% 25%, rgba(0,231,255,.92) 0 2.2%, transparent 2.9%),
+    radial-gradient(ellipse at 74% 71%, rgba(123,255,151,.86) 0 2.3%, transparent 3%),
+    radial-gradient(ellipse at 41% 61%, rgba(255,255,255,.10) 0 1.4%, transparent 2%),
+    linear-gradient(90deg, transparent 0 15%, rgba(0,0,0,.10) 15.2% 15.5%, transparent 15.8% 100%);
+  opacity:.95;
+}
+.homepageFreedomWallScene[data-theme="graffiti"] .freedomWallVandalMark{opacity:1;filter:none;mix-blend-mode:screen;text-shadow:0 2px 0 rgba(0,0,0,.3), 0 0 10px currentColor}
+.homepageFreedomWallScene[data-theme="graffiti"] .freedomWallVandalMark.mark-a{color:rgba(255,72,157,.78); left:4%; top:10%; transform:rotate(-8deg) scale(1.02)}
+.homepageFreedomWallScene[data-theme="graffiti"] .freedomWallVandalMark.mark-b{color:rgba(45,225,255,.74); right:5%; bottom:7%; transform:rotate(10deg) scale(1.06)}
+.homepageFreedomWallScene[data-theme="graffiti"] .freedomWallVandalMark.mark-c{color:rgba(255,208,0,.70); left:44%; top:38%; transform:rotate(-12deg) scale(1.04)}
+.homepageFreedomWallScene[data-theme="graffiti"] .freedomWallBrand,
+.homepageFreedomWallScene[data-theme="graffiti"] .freedomWallPromptCard{background:rgba(255,255,255,.92)}
+.homepageFreedomWallScene[data-theme="graffiti"] .freedomWallNote{border:2px solid rgba(0,0,0,.12); box-shadow:0 14px 20px rgba(0,0,0,.28)}
+
+@media(max-width:700px){
+  .homepageFreedomWallScene[data-theme="bulletin-board"] .freedomWallBg::before{inset:2.6%; box-shadow: inset 0 0 0 6px #7a4f26, inset 0 0 0 10px #cba06b, 0 10px 18px rgba(55,31,12,.22);}
+  .homepageFreedomWallScene[data-theme="poste"] .freedomWallBg::after{background:linear-gradient(90deg, transparent 39%, rgba(122,106,92,.90) 39.2% 60.8%, transparent 61%), linear-gradient(90deg, transparent 45%, rgba(148,133,119,.85) 45.2% 54.8%, transparent 55%), linear-gradient(0deg, transparent 0 8%, rgba(0,0,0,.18) 8.2% 8.8%, transparent 9% 28%, rgba(0,0,0,.17) 28.2% 28.8%, transparent 29% 58%, rgba(0,0,0,.18) 58.2% 58.8%, transparent 59% 100%);} 
+  .homepageFreedomWallScene[data-theme="jungle"] .freedomWallBg::after{height:32%;}
+  .homepageFreedomWallScene[data-theme="graffiti"] .freedomWallVandalMark{font-size:clamp(28px,10vw,72px)}
+}
+
+
+/* v465: Classroom Whiteboard theme */
+.homepageFreedomWallScene[data-theme="whiteboard"] .freedomWallBg{
+  background:
+    linear-gradient(180deg,#ece9e2 0 7%,#f7f7f4 7% 93%,#ddd8cf 93% 100%);
+}
+.homepageFreedomWallScene[data-theme="whiteboard"] .freedomWallBg::before{
+  inset:4.2% 5.2% 9.2%;
+  border-radius:14px;
+  background:
+    radial-gradient(ellipse at 16% 18%, rgba(70,108,150,.035) 0 12%, transparent 13%),
+    radial-gradient(ellipse at 78% 24%, rgba(35,35,35,.022) 0 10%, transparent 11%),
+    linear-gradient(180deg,rgba(255,255,255,.98),rgba(247,249,250,.99));
+  box-shadow:
+    inset 0 0 0 3px #c6c8ca,
+    inset 0 0 0 8px #e1e2e2,
+    0 12px 28px rgba(54,61,68,.18);
+  opacity:1;
+}
+.homepageFreedomWallScene[data-theme="whiteboard"] .freedomWallBg::after{
+  left:10%;right:10%;top:auto;bottom:6.8%;height:22px;
+  border-radius:4px 4px 8px 8px;
+  background:
+    linear-gradient(90deg,
+      transparent 0 8%,
+      #e74d4d 8% 15%,
+      transparent 15% 18%,
+      #2c68c7 18% 25%,
+      transparent 25% 28%,
+      #222 28% 35%,
+      transparent 35% 78%,
+      #777 78% 88%,
+      transparent 88% 100%),
+    linear-gradient(180deg,#d6d8d9,#aeb1b4);
+  box-shadow:0 5px 10px rgba(0,0,0,.18);
+  opacity:1;
+}
+.homepageFreedomWallScene[data-theme="whiteboard"] .freedomWallBrand{
+  background:rgba(255,255,255,.92);
+  border:1px solid rgba(71,78,84,.14);
+  box-shadow:0 8px 18px rgba(63,69,75,.12);
+}
+.homepageFreedomWallScene[data-theme="whiteboard"] .freedomWallPromptCard{
+  background:rgba(255,255,255,.96);
+  border:2px solid #cfd3d6;
+  box-shadow:0 18px 38px rgba(49,57,66,.20);
+}
+.homepageFreedomWallScene[data-theme="whiteboard"] .freedomWallPromptEyebrow{color:#2f67a6}
+.homepageFreedomWallScene[data-theme="whiteboard"] .freedomWallNote{
+  box-shadow:0 10px 18px rgba(41,48,54,.16),0 1px 2px rgba(0,0,0,.06);
+}
+
+@media(max-width:700px){
+  .homepageFreedomWallScene[data-theme="whiteboard"] .freedomWallBg::before{
+    inset:3.2% 3.6% 10%;
+    border-radius:10px;
+    box-shadow:inset 0 0 0 2px #c6c8ca,inset 0 0 0 6px #e1e2e2,0 9px 20px rgba(54,61,68,.16);
+  }
+  .homepageFreedomWallScene[data-theme="whiteboard"] .freedomWallBg::after{
+    left:8%;right:8%;bottom:7.1%;height:18px;
+  }
+}
+
+/* =========================================================
+   v466 — SFK #BeKind Wall: theme-matched sticky designs
+   The wall theme now changes the sticky itself, not only the backdrop.
+========================================================= */
+.freedomWallNote.is-yellow{--fw-paper:#fff1a5;background:var(--fw-paper)}
+.freedomWallNote.is-pink{--fw-paper:#ffc7df;background:var(--fw-paper)}
+.freedomWallNote.is-blue{--fw-paper:#bfe4ff;background:var(--fw-paper)}
+.freedomWallNote.is-mint{--fw-paper:#c9f2d9;background:var(--fw-paper)}
+.freedomWallNote.is-orange{--fw-paper:#ffd0a1;background:var(--fw-paper)}
+.freedomWallNote.is-violet{--fw-paper:#dfd0ff;background:var(--fw-paper)}
+.freedomWallNote.is-peach{--fw-paper:#ffd6c9;background:var(--fw-paper)}
+.freedomWallNote.is-white{--fw-paper:#fffdf5;background:var(--fw-paper)}
+.freedomWallNote p,.freedomWallNote small,.freedomWallNotePin{position:relative;z-index:2}
+.freedomWallNote::before{pointer-events:none;z-index:1}
+
+/* Classic board — familiar curled sticky paper + thumbtack */
+.homepageFreedomWallScene[data-theme="sticky-notes"] .freedomWallNote{
+  background:linear-gradient(175deg,rgba(255,255,255,.30),transparent 30%),var(--fw-paper,#fff1a5);
+  border:1px solid rgba(95,58,20,.12);
+  border-radius:2px 2px 5px 3px;
+  box-shadow:0 13px 19px rgba(74,44,20,.20),inset 0 1px rgba(255,255,255,.38);
+}
+.homepageFreedomWallScene[data-theme="sticky-notes"] .freedomWallNotePin{background:#d94b45;width:9px;height:9px}
+.homepageFreedomWallScene[data-theme="sticky-notes"] .freedomWallNote::after{border-width:0 0 24px 24px;border-color:transparent transparent rgba(86,55,21,.065) transparent}
+
+/* Sunny day — cheerful rounded memo cards with tiny sun tack */
+.homepageFreedomWallScene[data-theme="sunny"] .freedomWallNote{
+  background:linear-gradient(145deg,rgba(255,255,255,.55),rgba(255,255,255,.05) 55%),var(--fw-paper,#fff1a5);
+  border:2px solid rgba(255,255,255,.68);
+  border-radius:12px 7px 13px 8px;
+  box-shadow:0 14px 24px rgba(54,119,70,.18),0 2px 0 rgba(255,255,255,.55) inset;
+}
+.homepageFreedomWallScene[data-theme="sunny"] .freedomWallNotePin{
+  width:11px;height:11px;background:#f5b928;box-shadow:0 0 0 3px rgba(255,225,94,.34),0 2px 4px rgba(90,69,12,.22);
+}
+.homepageFreedomWallScene[data-theme="sunny"] .freedomWallNote::after{border-width:0 0 18px 18px;border-color:transparent transparent rgba(255,183,65,.12) transparent}
+
+/* Rainy day — laminated/water-resistant note */
+.homepageFreedomWallScene[data-theme="rainy"] .freedomWallNote{
+  background:linear-gradient(150deg,rgba(255,255,255,.42),rgba(185,219,236,.17) 54%,rgba(255,255,255,.10)),var(--fw-paper,#fff1a5);
+  border:1.5px solid rgba(65,104,130,.30);
+  border-radius:9px;
+  box-shadow:0 14px 28px rgba(15,39,58,.30),inset 0 0 0 1px rgba(255,255,255,.34);
+}
+.homepageFreedomWallScene[data-theme="rainy"] .freedomWallNote::before{
+  content:"";position:absolute;left:8px;right:8px;top:6px;height:7px;border-radius:99px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.58),transparent);opacity:.75;
+}
+.homepageFreedomWallScene[data-theme="rainy"] .freedomWallNotePin{background:#4e8fc0;box-shadow:0 2px 4px rgba(12,44,68,.34),inset 0 1px rgba(255,255,255,.6)}
+
+/* Night — glow-card notes with deeper versions of each selected color */
+.homepageFreedomWallScene[data-theme="night"] .freedomWallNote{
+  color:#fff;border:1px solid rgba(255,255,255,.26);border-radius:8px;
+  box-shadow:0 0 0 1px rgba(255,255,255,.06) inset,0 0 18px rgba(129,190,255,.22),0 16px 26px rgba(0,0,0,.38);
+}
+.homepageFreedomWallScene[data-theme="night"] .freedomWallNote.is-yellow{background:linear-gradient(145deg,#7c681e,#50451b)}
+.homepageFreedomWallScene[data-theme="night"] .freedomWallNote.is-pink{background:linear-gradient(145deg,#8d3b63,#5f2b49)}
+.homepageFreedomWallScene[data-theme="night"] .freedomWallNote.is-blue{background:linear-gradient(145deg,#255f88,#173e60)}
+.homepageFreedomWallScene[data-theme="night"] .freedomWallNote.is-mint{background:linear-gradient(145deg,#36775a,#23503f)}
+.homepageFreedomWallScene[data-theme="night"] .freedomWallNote.is-orange{background:linear-gradient(145deg,#985c2e,#633d22)}
+.homepageFreedomWallScene[data-theme="night"] .freedomWallNote.is-violet{background:linear-gradient(145deg,#644d91,#433661)}
+.homepageFreedomWallScene[data-theme="night"] .freedomWallNote.is-peach{background:linear-gradient(145deg,#91504b,#623936)}
+.homepageFreedomWallScene[data-theme="night"] .freedomWallNote.is-white{background:linear-gradient(145deg,#495568,#303b4d)}
+.homepageFreedomWallScene[data-theme="night"] .freedomWallNote small{opacity:.78}
+.homepageFreedomWallScene[data-theme="night"] .freedomWallNotePin{background:#d7eaff;box-shadow:0 0 8px rgba(180,221,255,.92)}
+.homepageFreedomWallScene[data-theme="night"] .freedomWallNote::after{border-color:transparent transparent rgba(255,255,255,.09) transparent}
+
+/* Flood — clipped waterproof tags with blue sealing strip */
+.homepageFreedomWallScene[data-theme="flood"] .freedomWallNote{
+  background:linear-gradient(180deg,rgba(255,255,255,.38),rgba(255,255,255,.08)),var(--fw-paper,#fff1a5);
+  border:2px solid rgba(40,109,158,.42);border-radius:7px;
+  box-shadow:0 15px 26px rgba(18,60,91,.34),inset 0 0 0 1px rgba(255,255,255,.32);
+}
+.homepageFreedomWallScene[data-theme="flood"] .freedomWallNote::before{
+  content:"";position:absolute;left:18%;right:18%;top:-1px;height:10px;background:rgba(87,167,213,.62);border-radius:0 0 5px 5px;
+}
+.homepageFreedomWallScene[data-theme="flood"] .freedomWallNotePin{display:none}
+.homepageFreedomWallScene[data-theme="flood"] .freedomWallNote::after{border-width:0 0 15px 15px;border-color:transparent transparent rgba(38,105,150,.12) transparent}
+
+/* School notebook — lined loose-leaf note with red margin and blue tape */
+.homepageFreedomWallScene[data-theme="school-note"] .freedomWallNote{
+  color:#27364a;
+  background:
+    linear-gradient(90deg,transparent 0 18px,rgba(226,81,93,.32) 18px 20px,transparent 20px),
+    repeating-linear-gradient(180deg,rgba(255,255,255,.86) 0 21px,rgba(94,156,213,.20) 21px 22px),
+    var(--fw-paper,#fffdf5);
+  border:1px solid rgba(73,103,130,.18);border-radius:2px;
+  box-shadow:0 10px 18px rgba(49,70,91,.17);
+  padding-left:max(23px,calc(var(--fw-note-min-width) * .12));
+}
+.homepageFreedomWallScene[data-theme="school-note"] .freedomWallNote::before{
+  content:"";position:absolute;left:37%;top:-2px;width:28%;height:11px;background:rgba(120,180,228,.62);transform:rotate(-2deg);box-shadow:0 1px 1px rgba(0,0,0,.08);
+}
+.homepageFreedomWallScene[data-theme="school-note"] .freedomWallNotePin{display:none}
+.homepageFreedomWallScene[data-theme="school-note"] .freedomWallNote::after{display:none}
+
+/* Jungle — organic leaf-card feel, vine-green edge and wood tack */
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallNote{
+  background:linear-gradient(145deg,rgba(236,255,220,.52),rgba(255,255,255,.04) 48%),var(--fw-paper,#c9f2d9);
+  border:2px solid rgba(38,111,55,.34);
+  border-radius:18px 5px 18px 6px;
+  box-shadow:0 15px 26px rgba(10,57,28,.27),inset 0 0 0 1px rgba(255,255,255,.30);
+}
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallNote::before{
+  content:"";position:absolute;inset:5px 7px 7px;opacity:.20;
+  background:linear-gradient(62deg,transparent 47%,#2c743d 48% 50%,transparent 51%),linear-gradient(118deg,transparent 47%,#2c743d 48% 50%,transparent 51%);
+  background-size:32px 24px;
+}
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallNotePin{background:#8a5c33;width:10px;height:10px;box-shadow:0 2px 3px rgba(53,32,15,.38),inset 0 1px rgba(255,235,205,.55)}
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallNote::after{border-width:0 0 19px 19px;border-color:transparent transparent rgba(45,119,61,.10) transparent}
+
+/* School bulletin board — pinned index-card / classroom memo */
+.homepageFreedomWallScene[data-theme="bulletin-board"] .freedomWallNote{
+  background:linear-gradient(180deg,rgba(255,255,255,.44),rgba(255,255,255,.03)),var(--fw-paper,#fff1a5);
+  border:1px solid rgba(105,70,36,.22);border-radius:3px;
+  box-shadow:0 11px 16px rgba(78,48,20,.22);
+}
+.homepageFreedomWallScene[data-theme="bulletin-board"] .freedomWallNotePin{
+  width:12px;height:12px;background:#d64747;box-shadow:0 2px 4px rgba(92,35,23,.35),inset 0 2px rgba(255,255,255,.48);
+}
+.homepageFreedomWallScene[data-theme="bulletin-board"] .freedomWallNote::before{
+  content:"";position:absolute;left:8px;right:8px;bottom:20px;height:1px;background:rgba(100,70,40,.10);
+}
+.homepageFreedomWallScene[data-theme="bulletin-board"] .freedomWallNote::after{border-width:0 0 14px 14px;border-color:transparent transparent rgba(77,47,20,.08) transparent}
+
+/* Classroom whiteboard — magnetic mini memo cards */
+.homepageFreedomWallScene[data-theme="whiteboard"] .freedomWallNote{
+  background:linear-gradient(165deg,rgba(255,255,255,.70),rgba(245,248,249,.22)),var(--fw-paper,#fffdf5);
+  border:2px solid rgba(97,113,123,.24);border-radius:9px;
+  box-shadow:0 8px 14px rgba(49,57,66,.17),inset 0 0 0 1px rgba(255,255,255,.52);
+}
+.homepageFreedomWallScene[data-theme="whiteboard"] .freedomWallNotePin{
+  left:auto;right:10px;top:7px;translate:0 0;width:22px;height:7px;border-radius:999px;background:#4e75bd;
+  box-shadow:0 2px 4px rgba(54,68,87,.28),inset 0 1px rgba(255,255,255,.55);
+}
+.homepageFreedomWallScene[data-theme="whiteboard"] .freedomWallNote::before{
+  content:"";position:absolute;left:10px;right:10px;top:12px;height:1px;background:rgba(54,93,124,.10);
+}
+.homepageFreedomWallScene[data-theme="whiteboard"] .freedomWallNote::after{display:none}
+
+/* Utility pole — weathered flyer/poster held by transparent tape */
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallNote{
+  color:#25211d;
+  background:linear-gradient(160deg,rgba(255,255,255,.32),rgba(110,91,70,.035)),var(--fw-paper,#fff5d7);
+  border:1px solid rgba(82,70,58,.30);border-radius:0;
+  clip-path:polygon(1% 0,99% 1%,100% 91%,94% 95%,88% 92%,81% 98%,72% 94%,64% 99%,55% 95%,46% 99%,37% 94%,28% 98%,18% 93%,9% 97%,0 92%);
+  box-shadow:0 10px 18px rgba(40,34,28,.30);
+}
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallNote::before{
+  content:"";position:absolute;left:28%;top:-3px;width:44%;height:14px;background:rgba(224,211,178,.70);border:1px solid rgba(124,110,83,.12);transform:rotate(-1.5deg);
+}
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallNotePin{display:none}
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallNote::after{display:none}
+
+/* Graffiti — die-cut street sticker / wheat-paste label */
+.homepageFreedomWallScene[data-theme="graffiti"] .freedomWallNote{
+  background:linear-gradient(135deg,rgba(255,255,255,.24),transparent 55%),var(--fw-paper,#fff1a5);
+  border:3px solid #171717;border-radius:14px 5px 13px 7px;
+  box-shadow:0 0 0 3px rgba(255,255,255,.80),6px 7px 0 rgba(0,0,0,.58),0 18px 26px rgba(0,0,0,.28);
+}
+.homepageFreedomWallScene[data-theme="graffiti"] .freedomWallNote p{font-weight:950;letter-spacing:.01em;text-shadow:.5px .5px 0 rgba(255,255,255,.35)}
+.homepageFreedomWallScene[data-theme="graffiti"] .freedomWallNotePin{display:none}
+.homepageFreedomWallScene[data-theme="graffiti"] .freedomWallNote::before{
+  content:"";position:absolute;right:8px;top:7px;width:18px;height:7px;border-radius:50%;background:rgba(17,17,17,.13);transform:rotate(18deg);
+}
+.homepageFreedomWallScene[data-theme="graffiti"] .freedomWallNote::after{border-width:0 0 16px 16px;border-color:transparent transparent rgba(20,20,20,.12) transparent}
+
+/* Vandal wall — torn wheat-paste paper with marker/ink personality */
+.homepageFreedomWallScene[data-theme="vandal"] .freedomWallNote{
+  background:linear-gradient(145deg,rgba(255,255,255,.23),rgba(0,0,0,.025)),var(--fw-paper,#fffdf5);
+  border:1px solid rgba(18,18,18,.32);border-radius:0;
+  clip-path:polygon(1% 1%,97% 0,100% 8%,99% 94%,94% 97%,88% 94%,82% 99%,74% 95%,66% 99%,58% 94%,50% 98%,41% 95%,33% 99%,25% 94%,17% 98%,9% 94%,1% 97%,0 7%);
+  box-shadow:3px 3px 0 rgba(0,0,0,.22),0 16px 22px rgba(0,0,0,.22);
+}
+.homepageFreedomWallScene[data-theme="vandal"] .freedomWallNote p{font-family:"Arial Black","Trebuchet MS",Arial,sans-serif;font-weight:900}
+.homepageFreedomWallScene[data-theme="vandal"] .freedomWallNotePin{display:none}
+.homepageFreedomWallScene[data-theme="vandal"] .freedomWallNote::before{
+  content:"";position:absolute;left:10%;right:10%;top:5px;height:5px;background:rgba(30,30,30,.10);transform:rotate(-1deg);
+}
+.homepageFreedomWallScene[data-theme="vandal"] .freedomWallNote::after{display:none}
+
+/* Comic is intentionally the boldest: speech-card / inked panel look */
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallNote{
+  background:linear-gradient(145deg,rgba(255,255,255,.32),transparent 50%),var(--fw-paper,#fff1a5);
+  border:3px solid #111;box-shadow:5px 5px 0 #111,0 14px 20px rgba(0,0,0,.14);border-radius:2px;
+}
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallNotePin{background:#111;box-shadow:0 0 0 2px #fff,0 0 0 3px #111}
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallNote p{font-family:"Arial Black","Trebuchet MS",Arial,sans-serif;font-weight:950}
+
+/* Keep the drag lift visually compatible with every theme. */
+.homepageEffectLayer.is-freedom-wall .homepageFreedomWallScene .freedomWallNote.is-dragging{
+  filter:brightness(1.035) saturate(1.03);
+}
+
+@media(max-width:700px){
+  .homepageFreedomWallScene[data-theme="sunny"] .freedomWallNote{border-radius:9px 5px 10px 6px}
+  .homepageFreedomWallScene[data-theme="school-note"] .freedomWallNote{padding-left:21px}
+  .homepageFreedomWallScene[data-theme="whiteboard"] .freedomWallNotePin{right:8px;width:18px;height:6px}
+  .homepageFreedomWallScene[data-theme="graffiti"] .freedomWallNote{border-width:2px;box-shadow:0 0 0 2px rgba(255,255,255,.82),4px 5px 0 rgba(0,0,0,.58),0 12px 20px rgba(0,0,0,.24)}
+}
+
+
+/* v467: Always show the full Freedom Wall author / nickname. */
+.freedomWallNote small{
+  display:block;
+  width:100%;
+  max-width:100%;
+  margin-top:4px;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+  line-height:1.2;
+  text-align:right;
+}
+@media(max-width:700px){
+  .freedomWallNote small{
+    font-size:9px;
+    line-height:1.22;
+  }
+}
+
+/* =========================================================
+   v468 — SFK #BeKind Wall full theme typography + prompt matching
+   Each theme now controls the center prompt and note typography too.
+========================================================= */
+.homepageFreedomWallScene .freedomWallPromptCard > *{position:relative;z-index:2}
+.homepageFreedomWallScene .freedomWallPromptClose{z-index:4}
+.homepageFreedomWallScene .freedomWallPromptCard::before,
+.homepageFreedomWallScene .freedomWallPromptCard::after{
+  content:"";position:absolute;pointer-events:none;z-index:1;
+}
+
+/* Classic sticky board — pinned classroom card */
+.homepageFreedomWallScene[data-theme="sticky-notes"] .freedomWallPromptCard{
+  background:linear-gradient(175deg,#fffdf2,#f8eac7 100%);
+  border:1px solid rgba(94,57,20,.28);border-radius:5px;
+  box-shadow:0 18px 34px rgba(67,41,18,.28),inset 0 1px rgba(255,255,255,.75);
+  backdrop-filter:none;
+}
+.homepageFreedomWallScene[data-theme="sticky-notes"] .freedomWallPromptCard::before{
+  width:13px;height:13px;left:50%;top:9px;translate:-50% 0;border-radius:50%;
+  background:#d84b45;box-shadow:0 2px 4px rgba(61,26,20,.35),inset 0 2px rgba(255,255,255,.42);
+}
+.homepageFreedomWallScene[data-theme="sticky-notes"] .freedomWallPromptEyebrow{color:#8b5b20;font-family:Arial,sans-serif}
+.homepageFreedomWallScene[data-theme="sticky-notes"] .freedomWallPromptCard h2{font-family:"Trebuchet MS",Arial,sans-serif;font-weight:900;letter-spacing:-.025em}
+.homepageFreedomWallScene[data-theme="sticky-notes"] .freedomWallPromptCard p{font-family:"Trebuchet MS",Arial,sans-serif;color:#5a4630}
+.homepageFreedomWallScene[data-theme="sticky-notes"] .freedomWallNote p{font-family:"Trebuchet MS",Arial,sans-serif;font-weight:800}
+.homepageFreedomWallScene[data-theme="sticky-notes"] .freedomWallNote small{font-family:"Trebuchet MS",Arial,sans-serif;font-weight:800}
+
+/* Sunny — warm cheerful card */
+.homepageFreedomWallScene[data-theme="sunny"] .freedomWallPromptCard{
+  background:linear-gradient(145deg,rgba(255,255,255,.98),rgba(255,249,205,.95));
+  border:3px solid rgba(255,191,59,.74);border-radius:26px;
+  box-shadow:0 20px 42px rgba(61,117,76,.22),0 0 0 7px rgba(255,255,255,.26);
+  backdrop-filter:blur(8px);
+}
+.homepageFreedomWallScene[data-theme="sunny"] .freedomWallPromptCard::before{
+  width:22px;height:22px;left:18px;top:16px;border-radius:50%;background:#f5bc31;
+  box-shadow:0 0 0 5px rgba(255,219,83,.20);
+}
+.homepageFreedomWallScene[data-theme="sunny"] .freedomWallPromptEyebrow{color:#c57600;font-family:"Trebuchet MS",Arial,sans-serif}
+.homepageFreedomWallScene[data-theme="sunny"] .freedomWallPromptCard h2{font-family:"Trebuchet MS",Arial,sans-serif;font-weight:1000;color:#2d6846;letter-spacing:-.035em}
+.homepageFreedomWallScene[data-theme="sunny"] .freedomWallPromptCard p{font-family:"Trebuchet MS",Arial,sans-serif;color:#486153}
+.homepageFreedomWallScene[data-theme="sunny"] .freedomWallNote p{font-family:"Trebuchet MS",Arial,sans-serif;font-weight:900;color:#284d37}
+.homepageFreedomWallScene[data-theme="sunny"] .freedomWallNote small{font-family:"Trebuchet MS",Arial,sans-serif;color:#355d44;font-weight:900}
+
+/* Rainy — translucent weather card */
+.homepageFreedomWallScene[data-theme="rainy"] .freedomWallPromptCard{
+  background:linear-gradient(155deg,rgba(22,43,62,.94),rgba(36,63,82,.88));
+  border:1px solid rgba(211,237,255,.32);border-radius:20px;color:#f4fbff;
+  box-shadow:0 24px 50px rgba(6,25,39,.42),inset 0 0 0 1px rgba(255,255,255,.08);
+  backdrop-filter:blur(16px);
+}
+.homepageFreedomWallScene[data-theme="rainy"] .freedomWallPromptCard::before{
+  left:12%;right:12%;top:8px;height:2px;border-radius:99px;
+  background:linear-gradient(90deg,transparent,rgba(211,239,255,.82),transparent);opacity:.72;
+}
+.homepageFreedomWallScene[data-theme="rainy"] .freedomWallPromptEyebrow{color:#9fd7fb;font-family:"Segoe UI",Arial,sans-serif}
+.homepageFreedomWallScene[data-theme="rainy"] .freedomWallPromptCard h2{font-family:"Segoe UI",Arial,sans-serif;font-weight:850;letter-spacing:-.025em}
+.homepageFreedomWallScene[data-theme="rainy"] .freedomWallPromptCard p{font-family:"Segoe UI",Arial,sans-serif;color:#d5e8f4;font-weight:600}
+.homepageFreedomWallScene[data-theme="rainy"] .freedomWallNote p{font-family:"Segoe UI",Arial,sans-serif;font-weight:800;color:#244258}
+.homepageFreedomWallScene[data-theme="rainy"] .freedomWallNote small{font-family:"Segoe UI",Arial,sans-serif;color:#31556d;font-weight:800}
+
+/* Night — quiet illuminated message card */
+.homepageFreedomWallScene[data-theme="night"] .freedomWallPromptCard{
+  background:radial-gradient(circle at 50% 0,rgba(79,119,178,.22),transparent 45%),linear-gradient(155deg,rgba(12,25,49,.96),rgba(22,39,70,.94));
+  border:1px solid rgba(186,217,255,.30);border-radius:24px;color:#fff;
+  box-shadow:0 0 0 1px rgba(255,255,255,.04) inset,0 0 38px rgba(99,154,238,.20),0 25px 54px rgba(0,0,0,.46);
+  backdrop-filter:blur(14px);
+}
+.homepageFreedomWallScene[data-theme="night"] .freedomWallPromptCard::before{
+  width:7px;height:7px;left:14%;top:17px;border-radius:50%;background:#fff;box-shadow:72px 20px 0 rgba(255,255,255,.72),340px 2px 0 rgba(255,255,255,.64),430px 28px 0 rgba(255,255,255,.52);opacity:.75;
+}
+.homepageFreedomWallScene[data-theme="night"] .freedomWallPromptEyebrow{color:#f8d77b;font-family:Georgia,"Times New Roman",serif}
+.homepageFreedomWallScene[data-theme="night"] .freedomWallPromptCard h2{font-family:Georgia,"Times New Roman",serif;font-weight:800;letter-spacing:-.025em;text-shadow:0 0 16px rgba(183,213,255,.22)}
+.homepageFreedomWallScene[data-theme="night"] .freedomWallPromptCard p{font-family:"Segoe UI",Arial,sans-serif;color:#dce9fb;font-weight:600}
+.homepageFreedomWallScene[data-theme="night"] .freedomWallNote p{font-family:Georgia,"Times New Roman",serif;font-weight:800;letter-spacing:.005em}
+.homepageFreedomWallScene[data-theme="night"] .freedomWallNote small{font-family:"Segoe UI",Arial,sans-serif;font-weight:700}
+
+/* Flood — waterproof emergency tag */
+.homepageFreedomWallScene[data-theme="flood"] .freedomWallPromptCard{
+  background:linear-gradient(180deg,rgba(17,47,69,.96),rgba(19,57,82,.94));
+  color:#fff;border:2px solid rgba(122,203,247,.48);border-radius:13px;
+  box-shadow:0 24px 48px rgba(7,35,55,.48),inset 0 0 0 1px rgba(255,255,255,.08);
+  backdrop-filter:blur(13px);
+}
+.homepageFreedomWallScene[data-theme="flood"] .freedomWallPromptCard::before{
+  left:28%;right:28%;top:-2px;height:12px;border-radius:0 0 7px 7px;background:rgba(76,166,215,.78);
+}
+.homepageFreedomWallScene[data-theme="flood"] .freedomWallPromptEyebrow{color:#82d8ff;font-family:"Arial Narrow",Arial,sans-serif;letter-spacing:.18em}
+.homepageFreedomWallScene[data-theme="flood"] .freedomWallPromptCard h2{font-family:"Arial Narrow","Segoe UI",Arial,sans-serif;font-weight:1000;text-transform:none;letter-spacing:-.025em}
+.homepageFreedomWallScene[data-theme="flood"] .freedomWallPromptCard p{font-family:"Segoe UI",Arial,sans-serif;color:#d9f1fb}
+.homepageFreedomWallScene[data-theme="flood"] .freedomWallNote p{font-family:"Arial Narrow","Segoe UI",Arial,sans-serif;font-weight:900;color:#244e67}
+.homepageFreedomWallScene[data-theme="flood"] .freedomWallNote small{font-family:"Segoe UI",Arial,sans-serif;color:#2f627f;font-weight:800}
+
+/* School notebook — handwritten paper prompt */
+.homepageFreedomWallScene[data-theme="school-note"] .freedomWallPromptCard{
+  background:
+    linear-gradient(90deg,transparent 0 42px,rgba(225,70,88,.36) 42px 44px,transparent 44px),
+    repeating-linear-gradient(180deg,#fffef8 0 31px,rgba(91,153,211,.21) 31px 33px);
+  color:#26384f;border:1px solid rgba(82,112,142,.22);border-radius:4px;
+  box-shadow:0 18px 32px rgba(52,74,94,.22);backdrop-filter:none;
+  padding-left:max(54px,7vw);
+}
+.homepageFreedomWallScene[data-theme="school-note"] .freedomWallPromptCard::before{
+  width:31%;height:14px;left:34.5%;top:-4px;background:rgba(113,177,225,.68);transform:rotate(-1.5deg);box-shadow:0 1px 1px rgba(0,0,0,.08);
+}
+.homepageFreedomWallScene[data-theme="school-note"] .freedomWallPromptEyebrow{color:#d54b5d;font-family:"Segoe Print","Comic Sans MS",cursive;letter-spacing:.10em}
+.homepageFreedomWallScene[data-theme="school-note"] .freedomWallPromptCard h2{font-family:"Segoe Print","Comic Sans MS",cursive;font-weight:900;color:#244f7a;letter-spacing:-.02em}
+.homepageFreedomWallScene[data-theme="school-note"] .freedomWallPromptCard p{font-family:"Segoe Print","Comic Sans MS",cursive;color:#3f5871;font-weight:600}
+.homepageFreedomWallScene[data-theme="school-note"] .freedomWallNote p{font-family:"Segoe Print","Comic Sans MS",cursive;font-weight:700;color:#294d73}
+.homepageFreedomWallScene[data-theme="school-note"] .freedomWallNote small{font-family:"Segoe Print","Comic Sans MS",cursive;font-weight:700;color:#496783}
+
+/* Jungle — expedition/leaf placard */
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallPromptCard{
+  background:linear-gradient(145deg,rgba(247,255,230,.96),rgba(224,244,193,.94));
+  border:3px solid rgba(54,113,49,.62);border-radius:28px 8px 28px 9px;color:#1f4c2b;
+  box-shadow:0 24px 46px rgba(10,57,27,.34),inset 0 0 0 2px rgba(255,255,255,.35);backdrop-filter:blur(8px);
+}
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallPromptCard::before{
+  inset:8px;opacity:.16;border-radius:22px 5px 22px 6px;
+  background:linear-gradient(62deg,transparent 48%,#347745 49% 50%,transparent 51%),linear-gradient(118deg,transparent 48%,#347745 49% 50%,transparent 51%);background-size:48px 34px;
+}
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallPromptEyebrow{color:#6c6b27;font-family:Georgia,"Times New Roman",serif;letter-spacing:.14em}
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallPromptCard h2{font-family:Georgia,"Times New Roman",serif;font-weight:900;color:#205c32;letter-spacing:-.02em}
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallPromptCard p{font-family:"Trebuchet MS",Arial,sans-serif;color:#3d6444;font-weight:700}
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallNote p{font-family:Georgia,"Times New Roman",serif;font-weight:800;color:#275b36}
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallNote small{font-family:"Trebuchet MS",Arial,sans-serif;color:#3f6849;font-weight:900}
+
+/* School bulletin board — posted classroom announcement */
+.homepageFreedomWallScene[data-theme="bulletin-board"] .freedomWallPromptCard{
+  background:linear-gradient(180deg,#fffdf8,#f8edd9);color:#352819;
+  border:2px solid rgba(103,65,31,.34);border-radius:5px;
+  box-shadow:0 18px 30px rgba(69,42,18,.28),0 0 0 7px rgba(122,76,35,.18);backdrop-filter:none;
+}
+.homepageFreedomWallScene[data-theme="bulletin-board"] .freedomWallPromptCard::before,
+.homepageFreedomWallScene[data-theme="bulletin-board"] .freedomWallPromptCard::after{
+  width:13px;height:13px;top:11px;border-radius:50%;background:#d74848;box-shadow:0 2px 3px rgba(82,30,23,.34),inset 0 2px rgba(255,255,255,.40);
+}
+.homepageFreedomWallScene[data-theme="bulletin-board"] .freedomWallPromptCard::before{left:16px}
+.homepageFreedomWallScene[data-theme="bulletin-board"] .freedomWallPromptCard::after{right:16px}
+.homepageFreedomWallScene[data-theme="bulletin-board"] .freedomWallPromptEyebrow{color:#a44a31;font-family:"Arial Narrow",Arial,sans-serif}
+.homepageFreedomWallScene[data-theme="bulletin-board"] .freedomWallPromptCard h2{font-family:"Arial Black","Trebuchet MS",Arial,sans-serif;font-weight:900;color:#3e3023;letter-spacing:-.025em}
+.homepageFreedomWallScene[data-theme="bulletin-board"] .freedomWallPromptCard p{font-family:"Trebuchet MS",Arial,sans-serif;color:#5b4937}
+.homepageFreedomWallScene[data-theme="bulletin-board"] .freedomWallNote p{font-family:"Trebuchet MS",Arial,sans-serif;font-weight:850;color:#3d3024}
+.homepageFreedomWallScene[data-theme="bulletin-board"] .freedomWallNote small{font-family:"Trebuchet MS",Arial,sans-serif;color:#6b5137;font-weight:900}
+
+/* Classroom whiteboard — marker-written center board */
+.homepageFreedomWallScene[data-theme="whiteboard"] .freedomWallPromptCard{
+  background:linear-gradient(155deg,rgba(255,255,255,.98),rgba(246,250,251,.97));
+  color:#173953;border:4px solid #9da8ad;border-radius:10px;
+  box-shadow:inset 0 0 0 2px #dfe4e6,0 17px 34px rgba(46,58,65,.24);backdrop-filter:none;
+}
+.homepageFreedomWallScene[data-theme="whiteboard"] .freedomWallPromptCard::before{
+  left:13%;right:13%;bottom:-12px;height:9px;border-radius:0 0 6px 6px;background:linear-gradient(180deg,#9fa7aa,#6f787c);box-shadow:0 3px 5px rgba(0,0,0,.20);
+}
+.homepageFreedomWallScene[data-theme="whiteboard"] .freedomWallPromptEyebrow{color:#d04444;font-family:"Segoe Print","Comic Sans MS",cursive;letter-spacing:.08em}
+.homepageFreedomWallScene[data-theme="whiteboard"] .freedomWallPromptCard h2{font-family:"Segoe Print","Comic Sans MS",cursive;font-weight:900;color:#195d92;letter-spacing:-.025em}
+.homepageFreedomWallScene[data-theme="whiteboard"] .freedomWallPromptCard p{font-family:"Segoe Print","Comic Sans MS",cursive;color:#384e5d;font-weight:600}
+.homepageFreedomWallScene[data-theme="whiteboard"] .freedomWallNote p{font-family:"Segoe Print","Comic Sans MS",cursive;font-weight:800;color:#1f5277}
+.homepageFreedomWallScene[data-theme="whiteboard"] .freedomWallNote small{font-family:"Segoe Print","Comic Sans MS",cursive;color:#55707f;font-weight:700}
+
+/* Utility post — pasted street flyer */
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallPromptCard{
+  background:linear-gradient(155deg,#fff8e9,#eee0c5);color:#241f1a;
+  border:1px solid rgba(76,65,53,.38);border-radius:0;
+  clip-path:polygon(1% 0,99% 1%,100% 93%,97% 96%,91% 94%,85% 98%,78% 95%,70% 99%,63% 95%,55% 99%,47% 95%,39% 98%,31% 95%,23% 99%,15% 94%,8% 98%,1% 95%,0 7%);
+  box-shadow:0 20px 38px rgba(39,34,29,.34);backdrop-filter:none;
+}
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallPromptCard::before{
+  width:36%;height:17px;left:32%;top:-5px;background:rgba(215,199,162,.83);border:1px solid rgba(101,89,65,.16);transform:rotate(-1.2deg);
+}
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallPromptEyebrow{color:#8a3b2f;font-family:"Courier New",monospace;letter-spacing:.10em}
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallPromptCard h2{font-family:Impact,"Arial Black",Arial,sans-serif;font-weight:900;color:#2e2a25;letter-spacing:.015em}
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallPromptCard p{font-family:"Courier New",monospace;color:#4f463c;font-weight:700}
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallNote p{font-family:"Courier New",monospace;font-weight:900;color:#312b25}
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallNote small{font-family:"Courier New",monospace;color:#625649;font-weight:900}
+
+/* Graffiti — street sticker / marker poster */
+.homepageFreedomWallScene[data-theme="graffiti"] .freedomWallPromptCard{
+  background:linear-gradient(145deg,#fcfcf5,#f3f1e8);color:#111;
+  border:4px solid #111;border-radius:17px 5px 16px 7px;
+  box-shadow:0 0 0 5px rgba(255,255,255,.82),9px 10px 0 #111,0 25px 45px rgba(0,0,0,.36);backdrop-filter:none;
+}
+.homepageFreedomWallScene[data-theme="graffiti"] .freedomWallPromptCard::before{
+  width:70px;height:13px;left:20px;top:-7px;background:#ff3b86;transform:rotate(-7deg);box-shadow:340px 20px 0 #30d7f2;
+}
+.homepageFreedomWallScene[data-theme="graffiti"] .freedomWallPromptEyebrow{color:#e41666;font-family:"Arial Black",Impact,Arial,sans-serif;letter-spacing:.08em}
+.homepageFreedomWallScene[data-theme="graffiti"] .freedomWallPromptCard h2{font-family:"Arial Black",Impact,Arial,sans-serif;font-weight:1000;color:#111;letter-spacing:-.045em;text-shadow:2px 2px 0 #ffd51f}
+.homepageFreedomWallScene[data-theme="graffiti"] .freedomWallPromptCard p{font-family:"Trebuchet MS",Arial,sans-serif;color:#343434;font-weight:800}
+.homepageFreedomWallScene[data-theme="graffiti"] .freedomWallNote p{font-family:"Arial Black",Impact,"Trebuchet MS",Arial,sans-serif;font-weight:950;letter-spacing:-.01em}
+.homepageFreedomWallScene[data-theme="graffiti"] .freedomWallNote small{font-family:"Arial Black","Trebuchet MS",Arial,sans-serif;font-weight:900;letter-spacing:.01em}
+
+/* Vandal — rough wheat-paste poster */
+.homepageFreedomWallScene[data-theme="vandal"] .freedomWallPromptCard{
+  background:linear-gradient(155deg,#f2eee4,#ded8cb);color:#171717;border:2px solid rgba(10,10,10,.72);border-radius:0;
+  clip-path:polygon(1% 1%,97% 0,100% 7%,99% 95%,94% 98%,89% 95%,82% 99%,75% 95%,67% 99%,59% 94%,51% 98%,43% 95%,35% 99%,27% 94%,19% 98%,10% 94%,1% 97%,0 7%);
+  box-shadow:5px 5px 0 rgba(0,0,0,.28),0 25px 42px rgba(0,0,0,.30);backdrop-filter:none;
+}
+.homepageFreedomWallScene[data-theme="vandal"] .freedomWallPromptCard::before{
+  left:8%;right:8%;top:7px;height:6px;background:rgba(12,12,12,.10);transform:rotate(-.8deg);
+}
+.homepageFreedomWallScene[data-theme="vandal"] .freedomWallPromptEyebrow{color:#a92a35;font-family:"Arial Black",Impact,Arial,sans-serif;letter-spacing:.10em}
+.homepageFreedomWallScene[data-theme="vandal"] .freedomWallPromptCard h2{font-family:"Arial Black",Impact,Arial,sans-serif;font-weight:1000;color:#181818;letter-spacing:-.035em}
+.homepageFreedomWallScene[data-theme="vandal"] .freedomWallPromptCard p{font-family:"Trebuchet MS",Arial,sans-serif;color:#3c3934;font-weight:800}
+.homepageFreedomWallScene[data-theme="vandal"] .freedomWallNote p{font-family:"Arial Black",Impact,"Trebuchet MS",Arial,sans-serif;font-weight:900}
+.homepageFreedomWallScene[data-theme="vandal"] .freedomWallNote small{font-family:"Trebuchet MS",Arial,sans-serif;font-weight:900}
+
+/* Comic / Pop Art — full comic panel including prompt typography */
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallPromptCard{
+  background:#fffef9;color:#111;border:4px solid #111;border-radius:22px 7px 22px 8px;
+  box-shadow:9px 9px 0 #111,0 22px 42px rgba(0,0,0,.22);backdrop-filter:none;
+}
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallPromptCard::before{
+  inset:0;opacity:.055;border-radius:inherit;background:radial-gradient(circle,#111 0 1.2px,transparent 1.5px);background-size:10px 10px;
+}
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallPromptEyebrow{color:#e7374f;font-family:"Arial Black",Impact,Arial,sans-serif;letter-spacing:.08em}
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallPromptCard h2{font-family:"Arial Black",Impact,Arial,sans-serif;font-weight:1000;color:#111;letter-spacing:-.045em;text-shadow:2px 2px 0 #ffd83b}
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallPromptCard p{font-family:"Trebuchet MS",Arial,sans-serif;color:#333;font-weight:900}
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallNote p{font-family:"Arial Black",Impact,"Trebuchet MS",Arial,sans-serif;font-weight:950}
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallNote small{font-family:"Arial Black","Trebuchet MS",Arial,sans-serif;font-weight:900}
+
+/* Protect v467 full nickname wrapping while applying theme fonts. */
+.homepageFreedomWallScene .freedomWallNote small{
+  overflow:visible!important;text-overflow:clip!important;white-space:normal!important;
+  overflow-wrap:anywhere;word-break:break-word;
+}
+
+@media(max-width:700px){
+  .homepageFreedomWallScene[data-theme="school-note"] .freedomWallPromptCard{padding-left:45px}
+  .homepageFreedomWallScene[data-theme="whiteboard"] .freedomWallPromptCard{border-width:3px}
+  .homepageFreedomWallScene[data-theme="graffiti"] .freedomWallPromptCard{border-width:3px;box-shadow:0 0 0 3px rgba(255,255,255,.84),6px 7px 0 #111,0 18px 32px rgba(0,0,0,.32)}
+  .homepageFreedomWallScene[data-theme="graffiti"] .freedomWallPromptCard::before{width:46px;height:10px;left:12px;box-shadow:210px 18px 0 #30d7f2}
+  .homepageFreedomWallScene[data-theme="bulletin-board"] .freedomWallPromptCard{box-shadow:0 15px 26px rgba(69,42,18,.28),0 0 0 4px rgba(122,76,35,.18)}
+  .homepageFreedomWallScene[data-theme="poste"] .freedomWallPromptCard h2,
+  .homepageFreedomWallScene[data-theme="graffiti"] .freedomWallPromptCard h2,
+  .homepageFreedomWallScene[data-theme="comic"] .freedomWallPromptCard h2,
+  .homepageFreedomWallScene[data-theme="vandal"] .freedomWallPromptCard h2{font-size:clamp(21px,6.5vw,30px)}
+  .homepageFreedomWallScene[data-theme="school-note"] .freedomWallPromptCard h2,
+  .homepageFreedomWallScene[data-theme="whiteboard"] .freedomWallPromptCard h2{font-size:clamp(20px,6.2vw,29px)}
+}

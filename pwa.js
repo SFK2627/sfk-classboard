@@ -2,7 +2,7 @@
   let deferredInstallPrompt = null;
 
   const installButton = document.getElementById("installAppBtn");
-  const SW_URL = "./sw.js?v=v458-natural-sticky-width";
+  const SW_URL = "./sw.js?v=v468-theme-matched-prompt-fonts";
   const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV455FreedomWallLive";
   const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV455FreedomWallLive";
 

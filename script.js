@@ -1744,7 +1744,7 @@ const FREEDOM_WALL_COLLECTION = "freedomWallNotes";
 const FREEDOM_WALL_MAX_RENDERED_NOTES = 400;
 const FREEDOM_WALL_NOTE_MAX_LENGTH = 240;
 const FREEDOM_WALL_AUTHOR_MAX_LENGTH = 42;
-const FREEDOM_WALL_THEME_SET = new Set(["sunny","rainy","night","flood","comic","school-note","sticky-notes","vandal"]);
+const FREEDOM_WALL_THEME_SET = new Set(["sunny","rainy","night","flood","comic","school-note","sticky-notes","jungle","bulletin-board","whiteboard","poste","graffiti","vandal"]);
 const FREEDOM_WALL_COLORS = ["yellow","pink","blue","mint","orange","violet","peach","white"];
 let freedomWallUnsubscribe = null;
 let freedomWallListenToken = 0;
@@ -1755,6 +1755,14 @@ let freedomWallSelectedColor = "yellow";
 let freedomWallLastRenderedCount = 0;
 let freedomWallNotesCache = [];
 let freedomWallLiveRetryTimer = 0;
+// v460: temporary local drag positions. Never saved to Firestore, so a page
+// refresh/reopen restores the normal smart Freedom Wall arrangement.
+const freedomWallLocalDragPositions = new Map();
+let freedomWallDragState = null;
+let freedomWallDragPending = null;
+let freedomWallDragLongPressTimer = 0;
+let freedomWallDragMoveFrame = 0;
+let freedomWallDragFrontZ = 350;
 
 function isHomepageEffectStartupBlocked() {
   const intro = document.getElementById("sfkIntroOverlay");
@@ -2706,7 +2714,7 @@ function ensureHomepageEffectLayer() {
       <div class="heritageJourneyTrack"><span class="stop stop-a">Bahay Kubo</span><span class="stop stop-b">Jeepney</span><span class="stop stop-c">Simbahan</span><span class="stop stop-d">Akda at Kultura</span></div>
     </div>
 
-    <div class="homepageThemeScene homepageFreedomWallScene" data-theme="sticky-notes" aria-label="SFK Freedom Wall">
+    <div class="homepageThemeScene homepageFreedomWallScene" data-theme="sticky-notes" aria-label="SFK #BeKind Wall">
       <div class="freedomWallBg" aria-hidden="true">
         <div class="freedomWallSun"></div>
         <div class="freedomWallMoon"></div>
@@ -2716,8 +2724,9 @@ function ensureHomepageEffectLayer() {
         <div class="freedomWallComicBurst burst-a">WOW!</div><div class="freedomWallComicBurst burst-b">SFK!</div>
         <div class="freedomWallVandalMark mark-a">#BEKIND</div><div class="freedomWallVandalMark mark-b">SFK</div><div class="freedomWallVandalMark mark-c">★</div>
       </div>
-      <div class="freedomWallBrand"><strong>SFK FREEDOM WALL</strong><span id="freedomWallCount">Live wall</span></div>
+      <div class="freedomWallBrand"><strong>SFK #BeKind WALL</strong><span id="freedomWallCount">Live wall</span></div>
       <div id="freedomWallNotesStage" class="freedomWallNotesStage" aria-live="polite"></div>
+      <div id="freedomWallDragOverlay" class="freedomWallDragOverlay" aria-hidden="true"></div>
       <section id="freedomWallPromptCard" class="freedomWallPromptCard" hidden>
         <button id="freedomWallPromptClose" class="freedomWallPromptClose" type="button" aria-label="Close prompt">×</button>
         <span class="freedomWallPromptEyebrow">TODAY'S WALL PROMPT</span>
@@ -2727,7 +2736,7 @@ function ensureHomepageEffectLayer() {
       <button id="freedomWallAddBtn" class="freedomWallAddBtn" type="button" aria-label="Add a note"><span>+</span><small>Add Note</small></button>
       <div id="freedomWallComposer" class="freedomWallComposer" hidden>
         <form id="freedomWallComposerForm" class="freedomWallComposerCard">
-          <div class="freedomWallComposerHead"><div><strong>Add to the Freedom Wall</strong><span>Share a short note with SFK.</span></div><button id="freedomWallComposerClose" type="button" aria-label="Close">×</button></div>
+          <div class="freedomWallComposerHead"><div><strong>Add to the SFK #BeKind Wall</strong><span>Share a short note with SFK.</span></div><button id="freedomWallComposerClose" type="button" aria-label="Close">×</button></div>
           <label for="freedomWallAuthorInput">Name / nickname</label>
           <input id="freedomWallAuthorInput" type="text" maxlength="42" autocomplete="name" placeholder="Your name" />
           <label for="freedomWallNoteInput">Your note</label>
@@ -2800,6 +2809,7 @@ function ensureHomepageEffectLayer() {
   layer.querySelector("#freedomWallComposer")?.addEventListener("pointerdown", (event) => {
     if (event.target?.id === "freedomWallComposer") closeFreedomWallComposer();
   });
+  setupFreedomWallNoteDragging(layer);
 
   layer.querySelector("#homepageEffectClose")?.addEventListener("click", dismissHomepageEffectForView);
   layer.querySelector("#homepageRickrollFakeExit")?.addEventListener("click", revealHomepageRickroll);
@@ -3720,6 +3730,256 @@ function findFreedomWallSmartPlacement(card, note, index, occupiedRects, reserve
   };
 }
 
+
+function clearFreedomWallDragLongPressTimer() {
+  if (freedomWallDragLongPressTimer) window.clearTimeout(freedomWallDragLongPressTimer);
+  freedomWallDragLongPressTimer = 0;
+}
+
+function getFreedomWallCssNumber(card, name, fallback = 0) {
+  const raw = String(card?.style?.getPropertyValue(name) || "").replace(/deg|%/g, "").trim();
+  const value = Number(raw);
+  return Number.isFinite(value) ? value : fallback;
+}
+
+function getFreedomWallDragGeometry(stage, card) {
+  const stageRect = stage.getBoundingClientRect();
+  const width = Math.max(1, card.offsetWidth || card.getBoundingClientRect().width || 100);
+  const height = Math.max(1, card.offsetHeight || card.getBoundingClientRect().height || 60);
+  const rotation = getFreedomWallCssNumber(card, "--fw-rotation", 0);
+  const scale = getFreedomWallCssNumber(card, "--fw-scale", 1) || 1;
+  const rad = Math.abs(rotation) * Math.PI / 180;
+  const rotatedWidth = (Math.abs(width * Math.cos(rad)) + Math.abs(height * Math.sin(rad))) * scale;
+  const rotatedHeight = (Math.abs(width * Math.sin(rad)) + Math.abs(height * Math.cos(rad))) * scale;
+  const edge = window.innerWidth <= 700 ? 4 : 7;
+  const minX = rotatedWidth / 2 + edge;
+  const maxX = Math.max(minX, stageRect.width - rotatedWidth / 2 - edge);
+  const minY = rotatedHeight / 2 + edge;
+  const maxY = Math.max(minY, stageRect.height - rotatedHeight / 2 - edge);
+  return { stageRect, width, height, rotation, scale, minX, maxX, minY, maxY };
+}
+
+function beginFreedomWallNoteDrag(card, event) {
+  const layer = card?.closest?.("#homepageEffectLayer") || document.getElementById("homepageEffectLayer");
+  const stage = layer?.querySelector?.("#freedomWallNotesStage");
+  const overlay = layer?.querySelector?.("#freedomWallDragOverlay");
+  if (!stage || !overlay || !card?.dataset?.noteId) return;
+
+  clearFreedomWallDragLongPressTimer();
+  const geometry = getFreedomWallDragGeometry(stage, card);
+  const rect = card.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2 - geometry.stageRect.left;
+  const centerY = rect.top + rect.height / 2 - geometry.stageRect.top;
+  const xPercent = Math.max(0, Math.min(100, (centerX / geometry.stageRect.width) * 100));
+  const yPercent = Math.max(0, Math.min(100, (centerY / geometry.stageRect.height) * 100));
+  const rotation = getFreedomWallCssNumber(card, "--fw-rotation", 0);
+  const skew = getFreedomWallCssNumber(card, "--fw-skew", 0);
+  const scale = getFreedomWallCssNumber(card, "--fw-scale", 1) || 1;
+
+  freedomWallDragState = {
+    pointerId: event.pointerId,
+    pointerType: event.pointerType || "mouse",
+    card,
+    layer,
+    stage,
+    overlay,
+    startPointerX: event.clientX,
+    startPointerY: event.clientY,
+    latestPointerX: event.clientX,
+    latestPointerY: event.clientY,
+    startCenterX: centerX,
+    startCenterY: centerY,
+    currentXPercent: xPercent,
+    currentYPercent: yPercent,
+    geometry,
+    moved: false
+  };
+  freedomWallDragPending = null;
+
+  // v462: manually moved notes live in a temporary overlay ABOVE the prompt.
+  // This overlay is browser-session-only and is never written to Firestore.
+  overlay.appendChild(card);
+  card.classList.add("is-dragging");
+  card.style.setProperty("--fw-drag-x", "0px");
+  card.style.setProperty("--fw-drag-y", "0px");
+  freedomWallDragFrontZ = Math.min(900, Math.max(1, freedomWallDragFrontZ + 1));
+  card.style.zIndex = String(freedomWallDragFrontZ);
+  card.dataset.fwDragged = "true";
+
+  // Seed local state immediately so a live Firestore snapshot cannot move the
+  // actively-held card back under the prompt or recreate a duplicate.
+  freedomWallLocalDragPositions.set(String(card.dataset.noteId), {
+    x: xPercent,
+    y: yPercent,
+    rotation,
+    skew,
+    scale,
+    zIndex: freedomWallDragFrontZ
+  });
+
+  try { card.setPointerCapture?.(event.pointerId); } catch (error) {}
+  event.preventDefault?.();
+}
+
+function applyFreedomWallNoteDragFrame() {
+  freedomWallDragMoveFrame = 0;
+  const state = freedomWallDragState;
+  if (!state) return;
+
+  const dx = state.latestPointerX - state.startPointerX;
+  const dy = state.latestPointerY - state.startPointerY;
+  if (Math.abs(dx) + Math.abs(dy) > 2) state.moved = true;
+
+  const g = state.geometry;
+  const x = Math.max(g.minX, Math.min(g.maxX, state.startCenterX + dx));
+  const y = Math.max(g.minY, Math.min(g.maxY, state.startCenterY + dy));
+  state.currentXPercent = Math.max(0, Math.min(100, (x / g.stageRect.width) * 100));
+  state.currentYPercent = Math.max(0, Math.min(100, (y / g.stageRect.height) * 100));
+
+  // Smooth compositor-only movement while the pointer remains physically held.
+  // The real % position is committed only on pointerup, preventing jitter from
+  // repeated left/top layout changes.
+  state.card.style.setProperty("--fw-drag-x", `${(x - state.startCenterX).toFixed(2)}px`);
+  state.card.style.setProperty("--fw-drag-y", `${(y - state.startCenterY).toFixed(2)}px`);
+}
+
+function moveFreedomWallNoteDrag(event) {
+  const state = freedomWallDragState;
+  if (!state || state.pointerId !== event.pointerId) return;
+  state.latestPointerX = event.clientX;
+  state.latestPointerY = event.clientY;
+  if (!freedomWallDragMoveFrame) freedomWallDragMoveFrame = window.requestAnimationFrame(applyFreedomWallNoteDragFrame);
+  event.preventDefault?.();
+}
+
+function endFreedomWallNoteDrag(event, force = false) {
+  clearFreedomWallDragLongPressTimer();
+
+  if (freedomWallDragPending && (force || event?.pointerId == null || freedomWallDragPending.pointerId === event.pointerId)) {
+    try { freedomWallDragPending.card?.releasePointerCapture?.(freedomWallDragPending.pointerId); } catch (error) {}
+    freedomWallDragPending = null;
+  }
+
+  const state = freedomWallDragState;
+  if (!state || (!force && event?.pointerId != null && state.pointerId !== event.pointerId)) return;
+
+  if (freedomWallDragMoveFrame) {
+    window.cancelAnimationFrame(freedomWallDragMoveFrame);
+    freedomWallDragMoveFrame = 0;
+    applyFreedomWallNoteDragFrame();
+  }
+
+  const finalX = Number.isFinite(state.currentXPercent) ? state.currentXPercent : 50;
+  const finalY = Number.isFinite(state.currentYPercent) ? state.currentYPercent : 50;
+  state.card.style.setProperty("--fw-x", finalX.toFixed(3));
+  state.card.style.setProperty("--fw-y", finalY.toFixed(3));
+  state.card.style.setProperty("--fw-drag-x", "0px");
+  state.card.style.setProperty("--fw-drag-y", "0px");
+  state.card.classList.remove("is-dragging");
+  state.card.dataset.fwDragged = "true";
+
+  const local = freedomWallLocalDragPositions.get(String(state.card.dataset.noteId)) || {};
+  freedomWallLocalDragPositions.set(String(state.card.dataset.noteId), {
+    ...local,
+    x: finalX,
+    y: finalY,
+    rotation: getFreedomWallCssNumber(state.card, "--fw-rotation", local.rotation || 0),
+    skew: getFreedomWallCssNumber(state.card, "--fw-skew", local.skew || 0),
+    scale: getFreedomWallCssNumber(state.card, "--fw-scale", local.scale || 1) || 1,
+    zIndex: Number(state.card.style.zIndex) || freedomWallDragFrontZ
+  });
+
+  try { state.card.releasePointerCapture?.(state.pointerId); } catch (error) {}
+  freedomWallDragState = null;
+  event?.preventDefault?.();
+}
+
+function setupFreedomWallNoteDragging(layer) {
+  const stage = layer?.querySelector?.("#freedomWallNotesStage");
+  const overlay = layer?.querySelector?.("#freedomWallDragOverlay");
+  if (!stage || !overlay || layer.dataset.dragReady === "true") return;
+  layer.dataset.dragReady = "true";
+
+  // Delegate from the whole effect layer so notes already moved to the overlay
+  // can be grabbed again without moving them back under the prompt.
+  layer.addEventListener("pointerdown", (event) => {
+    const card = event.target?.closest?.(".freedomWallNote");
+    if (!card || !layer.contains(card)) return;
+
+    // If a stale pointer somehow survived an OS interruption, a new physical
+    // press safely takes ownership instead of leaving the wall stuck.
+    if (freedomWallDragState && freedomWallDragState.pointerId !== event.pointerId) {
+      endFreedomWallNoteDrag(null, true);
+    }
+
+    if (event.pointerType === "mouse") {
+      if (event.button !== 0) return;
+      beginFreedomWallNoteDrag(card, event);
+      return;
+    }
+
+    clearFreedomWallDragLongPressTimer();
+    freedomWallDragPending = {
+      card,
+      stage,
+      pointerId: event.pointerId,
+      pointerType: event.pointerType,
+      startX: event.clientX,
+      startY: event.clientY,
+      latestX: event.clientX,
+      latestY: event.clientY
+    };
+    try { card.setPointerCapture?.(event.pointerId); } catch (error) {}
+    freedomWallDragLongPressTimer = window.setTimeout(() => {
+      freedomWallDragLongPressTimer = 0;
+      const pending = freedomWallDragPending;
+      if (!pending || pending.pointerId !== event.pointerId || !pending.card.isConnected) return;
+      beginFreedomWallNoteDrag(pending.card, {
+        pointerId: pending.pointerId,
+        pointerType: pending.pointerType,
+        clientX: pending.latestX,
+        clientY: pending.latestY,
+        preventDefault() {}
+      });
+    }, 220);
+    event.preventDefault();
+  });
+
+  // v462: track the active pointer at document capture level. Crossing the
+  // prompt, leaving the note's original box, or moving between stacking layers
+  // cannot end the hold. Only the real pointerup releases it.
+  document.addEventListener("pointermove", (event) => {
+    if (freedomWallDragState && freedomWallDragState.pointerId === event.pointerId) {
+      moveFreedomWallNoteDrag(event);
+      return;
+    }
+    if (freedomWallDragPending && freedomWallDragPending.pointerId === event.pointerId) {
+      freedomWallDragPending.latestX = event.clientX;
+      freedomWallDragPending.latestY = event.clientY;
+      event.preventDefault();
+    }
+  }, { capture: true, passive: false });
+
+  document.addEventListener("pointerup", (event) => {
+    if (
+      (freedomWallDragState && freedomWallDragState.pointerId === event.pointerId) ||
+      (freedomWallDragPending && freedomWallDragPending.pointerId === event.pointerId)
+    ) endFreedomWallNoteDrag(event);
+  }, true);
+
+  // Do NOT release active notes on pointercancel/lostpointercapture. Some mobile
+  // browsers emit those while the finger is still touching during long drags.
+  // Real release is pointerup; blur/hidden are safety cleanup only.
+  window.addEventListener("blur", () => endFreedomWallNoteDrag(null, true));
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) endFreedomWallNoteDrag(null, true);
+  });
+
+  layer.addEventListener("contextmenu", (event) => {
+    if (event.target?.closest?.(".freedomWallNote")) event.preventDefault();
+  });
+}
+
 function normalizeFreedomWallNote(doc, index = 0) {
   const data = typeof doc?.data === "function" ? (doc.data() || {}) : (doc || {});
   const id = String(doc?.id || data.ID || data.id || `note-${index}`);
@@ -3748,10 +4008,13 @@ function renderFreedomWallNotes(notes = []) {
 
   const wantedIds = new Set(sorted.map((note) => note.id));
   const existing = new Map(
-    Array.from(stage.querySelectorAll("[data-note-id]")).map((item) => [String(item.dataset.noteId || ""), item])
+    Array.from(layer.querySelectorAll(".freedomWallNote[data-note-id]")).map((item) => [String(item.dataset.noteId || ""), item])
   );
   existing.forEach((card, id) => {
-    if (!wantedIds.has(id)) card.remove();
+    if (!wantedIds.has(id)) {
+      card.remove();
+      freedomWallLocalDragPositions.delete(id);
+    }
   });
 
   const stageRect = stage.getBoundingClientRect();
@@ -3771,7 +4034,8 @@ function renderFreedomWallNotes(notes = []) {
     }
 
     const sizeClass = getFreedomWallNoteSizeClass(note);
-    card.className = `freedomWallNote is-${note.color} is-size-${sizeClass}${isNew ? " is-new" : ""}`;
+    const isActivelyDragged = freedomWallDragState?.card === card;
+    card.className = `freedomWallNote is-${note.color} is-size-${sizeClass}${isNew ? " is-new" : ""}${isActivelyDragged ? " is-dragging" : ""}`;
 
     const textEl = card.querySelector("p");
     if (textEl && textEl.textContent !== note.text) textEl.textContent = note.text;
@@ -3789,10 +4053,22 @@ function renderFreedomWallNotes(notes = []) {
       authorEl.remove();
     }
 
-    // Existing live notes keep their chosen on-screen spot. Newly appearing
-    // notes search the whole available wall and avoid every occupied note,
-    // prompt, brand and + button before overlap is ever allowed.
-    if (isNew) {
+    // v460: a note manually moved in this browser keeps that temporary spot
+    // for the current session only. We NEVER write this position to Firestore.
+    const localDrag = freedomWallLocalDragPositions.get(note.id);
+    if (localDrag) {
+      card.style.setProperty("--fw-x", String(localDrag.x));
+      card.style.setProperty("--fw-y", String(localDrag.y));
+      card.style.setProperty("--fw-rotation", `${localDrag.rotation}deg`);
+      card.style.setProperty("--fw-skew", `${localDrag.skew}deg`);
+      card.style.setProperty("--fw-scale", String(localDrag.scale));
+      card.dataset.fwDragged = "true";
+      const dragOverlay = layer.querySelector("#freedomWallDragOverlay");
+      if (dragOverlay && card.parentElement !== dragOverlay) dragOverlay.appendChild(card);
+      const rect = card.getBoundingClientRect();
+      if (rect.width && rect.height) occupiedRects.push(expandFreedomWallRect(rect, window.innerWidth <= 700 ? 4 : 6));
+      if (!isActivelyDragged) card.style.zIndex = String(Math.max(1, Number(localDrag.zIndex) || 1));
+    } else if (isNew) {
       card.style.visibility = "hidden";
       card.style.setProperty("--fw-x", "50");
       card.style.setProperty("--fw-y", "50");
@@ -3809,6 +4085,7 @@ function renderFreedomWallNotes(notes = []) {
       card.style.setProperty("--fw-pin-x", `${40 + (freedomWallHash(`${note.id}-pin`) % 21)}%`);
       card.style.visibility = "";
       occupiedRects.push(placement.rect);
+      card.style.zIndex = String(40 + Math.min(index, 230));
     } else {
       // Do not move old notes every time another device posts. Read their
       // actual rendered rectangle as occupied space for the next new note.
@@ -3817,11 +4094,8 @@ function renderFreedomWallNotes(notes = []) {
       stage.appendChild(card);
       const rect = card.getBoundingClientRect();
       if (rect.width && rect.height) occupiedRects.push(expandFreedomWallRect(rect, window.innerWidth <= 700 ? 4 : 6));
+      card.style.zIndex = String(40 + Math.min(index, 230));
     }
-
-    // All notes remain below the Admin prompt; newer notes can layer above
-    // older ones only after the wall is crowded enough that overlap is needed.
-    card.style.zIndex = String(40 + Math.min(index, 230));
     if (isNew) window.setTimeout(() => card?.classList.remove("is-new"), 650);
   });
 
