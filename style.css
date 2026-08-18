@@ -33729,3 +33729,30 @@ label[for="freedomWallTheme"]{display:block}
 .freedomWallComposer.is-customizer-picker-open .freedomWallCustomizationField.is-options-open{
   overflow:visible;
 }
+
+
+/* =========================================================
+   v483 FREEDOM WALL — PHONE ANTI-FLICKER / COMPOSITING STABILITY
+   Keep theme motion, but avoid promoting every sticky note to its own GPU
+   layer. Repeated full-screen repaints are prevented in script.js.
+========================================================= */
+@media (max-width:700px){
+  .homepageEffectLayer.is-freedom-wall .homepageFreedomWallScene,
+  .homepageEffectLayer.is-freedom-wall .freedomWallBg,
+  .homepageEffectLayer.is-freedom-wall .freedomWallNotesStage{
+    -webkit-backface-visibility:hidden;
+    backface-visibility:hidden;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallNote{
+    /* Hundreds of will-change layers can flash/flicker on mobile GPUs. */
+    will-change:auto!important;
+    -webkit-backface-visibility:hidden;
+    backface-visibility:hidden;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallBrand,
+  .homepageEffectLayer.is-freedom-wall .freedomWallPromptCard,
+  .homepageEffectLayer.is-freedom-wall .freedomWallAddBtn{
+    -webkit-backface-visibility:hidden;
+    backface-visibility:hidden;
+  }
+}

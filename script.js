@@ -1958,6 +1958,9 @@ let freedomWallPendingMedia = null;
 let freedomWallMediaPrepareToken = 0;
 let freedomWallLastRenderedCount = 0;
 let freedomWallNotesCache = [];
+// v483: fingerprint the last painted wall so Firestore/cache callbacks that
+// contain the same notes do not repaint the entire phone viewport.
+let freedomWallLastRenderSignature = "";
 let freedomWallLiveRetryTimer = 0;
 // v460: temporary local drag positions. Never saved to Firestore, so a page
 // refresh/reopen restores the normal smart Freedom Wall arrangement.
@@ -4609,6 +4612,27 @@ function renderFreedomWallNotes(notes = []) {
     .slice(-FREEDOM_WALL_MAX_RENDERED_NOTES);
   freedomWallLastRenderedCount = sorted.length;
 
+  // v483 mobile anti-flicker: realtime listeners can legitimately deliver the
+  // same document set more than once (cache/server state, reconnects, etc.).
+  // Do not touch card classes/styles/layout unless something visible changed.
+  const renderSignature = JSON.stringify({
+    theme: String(freedomWallConfig?.freedomWallTheme || "sticky-notes"),
+    showNames: Boolean(freedomWallConfig?.freedomWallShowNames),
+    allowTextColor: Boolean(freedomWallConfig?.freedomWallAllowTextColor),
+    allowFont: Boolean(freedomWallConfig?.freedomWallAllowFont),
+    promptVisible: isFreedomWallPromptVisible(),
+    viewport: window.innerWidth <= 700 ? "phone" : "wide",
+    notes: sorted.map((note) => [
+      note.id, note.text, note.author, note.color, note.textColor, note.fontStyle,
+      note.createdAtMs, note.mediaRef, note.mediaType, note.x, note.y, note.rotation, note.scale
+    ])
+  });
+  if (renderSignature === freedomWallLastRenderSignature && stage.childElementCount) {
+    if (count) count.textContent = getFreedomWallUiCopy(freedomWallConfig?.freedomWallTheme).formatCount(sorted.length, "normal");
+    return;
+  }
+  freedomWallLastRenderSignature = renderSignature;
+
   const wantedIds = new Set(sorted.map((note) => note.id));
   const existing = new Map(
     Array.from(layer.querySelectorAll(".freedomWallNote[data-note-id]")).map((item) => [String(item.dataset.noteId || ""), item])
@@ -5162,7 +5186,9 @@ async function startFreedomWallLive() {
       .orderBy("CreatedAtMs", "asc")
       .limitToLast(FREEDOM_WALL_MAX_RENDERED_NOTES);
 
-    freedomWallUnsubscribe = query.onSnapshot({ includeMetadataChanges: true }, (snapshot) => {
+    // v483: metadata-only snapshots are intentionally ignored. They do not
+    // change what students see and were causing unnecessary phone repaints.
+    freedomWallUnsubscribe = query.onSnapshot((snapshot) => {
       const notes = snapshot.docs.map((doc, index) => normalizeFreedomWallNote(doc, index)).filter(Boolean);
       freedomWallNotesCache = notes;
       renderFreedomWallNotes(notes);
@@ -5241,6 +5267,7 @@ function stopFreedomWallLive(clearStage = false) {
     if (stage) stage.replaceChildren();
     freedomWallLastRenderedCount = 0;
     freedomWallNotesCache = [];
+    freedomWallLastRenderSignature = "";
   }
 }
 
@@ -5338,8 +5365,28 @@ async function applyHomepageEffectSettings(settings = {}) {
   const incomingUpdatedAt = Number(config.updatedAt || 0);
   if (incomingUpdatedAt && homepageEffectLatestUpdatedAt && incomingUpdatedAt < homepageEffectLatestUpdatedAt) return;
   if (incomingUpdatedAt > homepageEffectLatestUpdatedAt) homepageEffectLatestUpdatedAt = incomingUpdatedAt;
+
+  const previousEffectSignature = homepageEffectCurrentSignature;
+  const existingLayer = document.getElementById("homepageEffectLayer");
+  const unchangedActiveFreedomWall = Boolean(
+    config.enabled
+    && config.mode === "freedom-wall"
+    && previousEffectSignature === config.signature
+    && freedomWallConfig
+    && existingLayer
+    && !existingLayer.hidden
+    && existingLayer.classList.contains("is-freedom-wall")
+  );
+
   homepageEffectCurrentSignature = config.signature;
   homepageEffectDismissAllowed = Boolean(config.dismissible);
+
+  // v483: the dashboard itself may refresh for unrelated data. If the active
+  // Freedom Wall configuration is byte-for-byte the same, leave the existing
+  // full-screen layer alone instead of reassigning classes/theme/scene styles.
+  // The independent Firestore listener still updates notes in real time.
+  if (unchangedActiveFreedomWall) return;
+
   const layer = ensureHomepageEffectLayer();
 
   // If Admin disables Allow Dismiss, a previously dismissed copy of this same
