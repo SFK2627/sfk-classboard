@@ -2664,14 +2664,16 @@ function loadFreedomWallYouTubeApi() {
 
 function restoreFreedomWallYoutubePreview(playback, { resumeMusic = true } = {}) {
   if (!playback) return;
-  const { media, videoId, player } = playback;
+  const { media, videoId, player, viewer } = playback;
   try { player?.destroy?.(); } catch (error) {}
-  if (media?.isConnected && videoId) {
+  try { viewer?.remove?.(); } catch (error) {}
+  // v492: video playback lives in a dedicated large viewer. The small note
+  // keeps its thumbnail so the note never expands into an unusably tiny player.
+  if (media?.isConnected && videoId && !media.querySelector('.freedomWallYoutubePlayCard')) {
     media.replaceChildren();
-    const button = createFreedomWallYoutubePlayButton(media, videoId);
-    media.appendChild(button);
-    media.classList.remove("is-loading", "is-unavailable", "is-youtube-playing");
+    media.appendChild(createFreedomWallYoutubePlayButton(media, videoId));
   }
+  media?.classList?.remove('is-loading', 'is-unavailable', 'is-youtube-playing');
   if (freedomWallActiveYoutubePlayback === playback) freedomWallActiveYoutubePlayback = null;
   if (resumeMusic) resumeHomepageEffectMusicAfterFreedomWallVideo();
   else homepageEffectMusicSuppressedByWallVideo = false;
@@ -2687,35 +2689,75 @@ function closeFreedomWallActiveYoutube({ resumeMusic = true } = {}) {
   restoreFreedomWallYoutubePreview(playback, { resumeMusic });
 }
 
+function createFreedomWallYoutubeViewer(videoId) {
+  const layer = document.getElementById('homepageEffectLayer');
+  if (!layer) return null;
+  layer.querySelectorAll('.freedomWallYoutubeViewer').forEach((item) => item.remove());
+
+  const viewer = document.createElement('div');
+  viewer.className = 'freedomWallYoutubeViewer';
+  viewer.setAttribute('role', 'dialog');
+  viewer.setAttribute('aria-modal', 'true');
+  viewer.setAttribute('aria-label', 'Freedom Wall YouTube video');
+
+  const panel = document.createElement('section');
+  panel.className = 'freedomWallYoutubeViewerPanel';
+
+  const head = document.createElement('div');
+  head.className = 'freedomWallYoutubeViewerHead';
+  const title = document.createElement('strong');
+  title.textContent = 'YouTube Video';
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.className = 'freedomWallYoutubeViewerClose';
+  close.setAttribute('aria-label', 'Close video and resume background music');
+  close.textContent = '×';
+  head.append(title, close);
+
+  const stage = document.createElement('div');
+  stage.className = 'freedomWallYoutubeViewerStage';
+  const slot = document.createElement('div');
+  slot.className = 'freedomWallYoutubePlayerSlot';
+  slot.id = `fwYoutube_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,7)}`;
+  stage.appendChild(slot);
+  panel.append(head, stage);
+  viewer.appendChild(panel);
+  layer.appendChild(viewer);
+
+  viewer.addEventListener('pointerdown', (event) => event.stopPropagation());
+  viewer.addEventListener('click', (event) => {
+    event.stopPropagation();
+    if (event.target === viewer && freedomWallActiveYoutubePlayback?.viewer === viewer) {
+      closeFreedomWallActiveYoutube({ resumeMusic:true });
+    }
+  });
+  return { viewer, panel, stage, slot, close };
+}
+
 function createFreedomWallYoutubePlayButton(media, videoId) {
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "freedomWallYoutubePlayCard";
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'freedomWallYoutubePlayCard';
   button.innerHTML = `<img src="https://i.ytimg.com/vi/${encodeURIComponent(videoId)}/hqdefault.jpg" alt="YouTube video thumbnail" loading="lazy" decoding="async" /><span class="freedomWallYoutubePlayBadge">▶ Play Video</span>`;
-  button.addEventListener("click", async (event) => {
+  button.addEventListener('click', async (event) => {
     event.preventDefault();
     event.stopPropagation();
     if (!media?.isConnected) return;
 
-    if (freedomWallActiveYoutubePlayback?.media !== media) closeFreedomWallActiveYoutube({ resumeMusic:false });
+    if (freedomWallActiveYoutubePlayback) closeFreedomWallActiveYoutube({ resumeMusic:false });
     pauseHomepageEffectMusicForFreedomWallVideo();
 
-    media.replaceChildren();
-    media.classList.add("is-youtube-playing");
-    media.classList.remove("is-loading", "is-unavailable");
-    const slot = document.createElement("div");
-    slot.className = "freedomWallYoutubePlayerSlot";
-    slot.id = `fwYoutube_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,7)}`;
-    const close = document.createElement("button");
-    close.type = "button";
-    close.className = "freedomWallYoutubeClose";
-    close.setAttribute("aria-label", "Close video and resume background music");
-    close.textContent = "×";
-    media.append(slot, close);
-
-    const playback = { media, videoId, player:null };
+    const ui = createFreedomWallYoutubeViewer(videoId);
+    if (!ui) {
+      resumeHomepageEffectMusicAfterFreedomWallVideo();
+      return;
+    }
+    const { viewer, slot, close } = ui;
+    const playback = { media, videoId, player:null, viewer };
     freedomWallActiveYoutubePlayback = playback;
-    close.addEventListener("click", (closeEvent) => {
+    media.classList.add('is-youtube-playing');
+
+    close.addEventListener('click', (closeEvent) => {
       closeEvent.preventDefault();
       closeEvent.stopPropagation();
       restoreFreedomWallYoutubePreview(playback, { resumeMusic:true });
@@ -2726,7 +2768,16 @@ function createFreedomWallYoutubePlayButton(media, videoId) {
       if (freedomWallActiveYoutubePlayback !== playback || !slot.isConnected) return;
       playback.player = new YT.Player(slot.id, {
         videoId,
-        playerVars: { autoplay:1, rel:0, modestbranding:1, playsinline:1 },
+        width:'100%',
+        height:'100%',
+        playerVars: {
+          autoplay:1,
+          controls:1,
+          rel:0,
+          modestbranding:1,
+          playsinline:1,
+          fs:1
+        },
         events: {
           onStateChange: (playerEvent) => {
             if (playerEvent?.data === YT.PlayerState.ENDED && freedomWallActiveYoutubePlayback === playback) {
@@ -2740,14 +2791,14 @@ function createFreedomWallYoutubePlayButton(media, videoId) {
       });
     } catch (error) {
       if (freedomWallActiveYoutubePlayback !== playback || !slot.isConnected) return;
-      const frame = document.createElement("iframe");
-      frame.className = "freedomWallYoutubeFrame";
-      frame.title = "Freedom Wall YouTube video";
-      frame.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
+      const frame = document.createElement('iframe');
+      frame.className = 'freedomWallYoutubeFrame';
+      frame.title = 'Freedom Wall YouTube video';
+      frame.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
       frame.allowFullscreen = true;
-      frame.referrerPolicy = "strict-origin-when-cross-origin";
-      frame.src = `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
-      slot.replaceWith(frame);
+      frame.referrerPolicy = 'strict-origin-when-cross-origin';
+      frame.src = `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?autoplay=1&controls=1&rel=0&modestbranding=1&playsinline=1&fs=1`;
+      slot.replaceChildren(frame);
     }
   });
   return button;

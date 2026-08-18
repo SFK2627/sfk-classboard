@@ -34104,3 +34104,106 @@ html.sfkFreedomWallModalOpen body{
 .freedomWallYoutubeClose{position:absolute;z-index:6;top:6px;right:6px;width:28px;height:28px;border:1px solid rgba(255,255,255,.55);border-radius:50%;display:grid;place-items:center;padding:0;background:rgba(0,0,0,.72);color:#fff;font:900 20px/1 Arial,sans-serif;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.28)}
 .freedomWallYoutubeClose:hover,.freedomWallYoutubeClose:focus-visible{background:#111;outline:2px solid rgba(255,255,255,.75);outline-offset:1px}
 @media (max-width:700px){.freedomWallYoutubeClose{width:26px;height:26px;top:4px;right:4px;font-size:18px}}
+
+
+/* v492 - full-size Freedom Wall YouTube viewer */
+.homepageEffectLayer.is-freedom-wall .freedomWallYoutubeViewer{
+  position:absolute;
+  inset:0;
+  z-index:1200;
+  display:grid;
+  place-items:center;
+  padding:clamp(12px,3vw,34px);
+  box-sizing:border-box;
+  background:rgba(7,10,15,.78);
+  pointer-events:auto;
+  animation:fwYoutubeViewerIn .16s ease-out both;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallYoutubeViewerPanel{
+  width:min(920px,calc(100vw - 56px));
+  max-width:100%;
+  border:1px solid rgba(255,255,255,.24);
+  border-radius:16px;
+  overflow:hidden;
+  background:#070707;
+  box-shadow:0 24px 60px rgba(0,0,0,.48);
+  transform:translateZ(0);
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallYoutubeViewerHead{
+  height:46px;
+  padding:0 10px 0 15px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  background:#101216;
+  color:#fff;
+  font:800 13px/1 Arial,sans-serif;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallYoutubeViewerClose{
+  width:34px;
+  height:34px;
+  flex:0 0 34px;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(255,255,255,.34);
+  border-radius:9px;
+  padding:0;
+  background:#20242b;
+  color:#fff;
+  font:900 22px/1 Arial,sans-serif;
+  cursor:pointer;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallYoutubeViewerClose:hover,
+.homepageEffectLayer.is-freedom-wall .freedomWallYoutubeViewerClose:focus-visible{
+  background:#303641;
+  outline:2px solid #fff;
+  outline-offset:1px;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallYoutubeViewerStage{
+  width:100%;
+  aspect-ratio:16/9;
+  max-height:calc(100vh - 120px);
+  background:#000;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallYoutubeViewerStage .freedomWallYoutubePlayerSlot,
+.homepageEffectLayer.is-freedom-wall .freedomWallYoutubeViewerStage .freedomWallYoutubePlayerSlot iframe,
+.homepageEffectLayer.is-freedom-wall .freedomWallYoutubeViewerStage .freedomWallYoutubeFrame{
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  border:0;
+  display:block;
+}
+/* The note keeps a thumbnail while playback is in the large viewer. */
+.homepageEffectLayer.is-freedom-wall .freedomWallNoteMedia.is-youtube-playing{
+  overflow:hidden;
+}
+@keyframes fwYoutubeViewerIn{
+  from{opacity:0}
+  to{opacity:1}
+}
+@media (max-width:700px){
+  .homepageEffectLayer.is-freedom-wall .freedomWallYoutubeViewer{
+    padding:10px;
+    place-items:center;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallYoutubeViewerPanel{
+    width:calc(100vw - 20px);
+    border-radius:13px;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallYoutubeViewerHead{
+    height:42px;
+    padding-left:12px;
+    font-size:12px;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallYoutubeViewerClose{
+    width:32px;
+    height:32px;
+    flex-basis:32px;
+    font-size:20px;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallYoutubeViewerStage{
+    max-height:calc(100svh - 88px);
+  }
+}
