@@ -37,7 +37,14 @@
     .freedomWallPlaylistRow{display:grid;grid-template-columns:minmax(110px,.72fr) minmax(180px,1.5fr) auto;gap:7px;align-items:center;padding:8px;border:1px solid #e3e5e8;border-radius:10px;background:#fafafa}
     .freedomWallPlaylistRow input{width:100%;min-width:0;box-sizing:border-box}.freedomWallPlaylistRowActions{display:flex;gap:4px}.freedomWallPlaylistRowActions button,.freedomWallPlaylistAdd{border:0;border-radius:8px;padding:7px 9px;font-weight:900;cursor:pointer;background:#111;color:#fff}.freedomWallPlaylistRowActions button{min-width:32px;padding:7px}.freedomWallPlaylistRowActions button[data-fw-playlist-remove]{background:#a82424}.freedomWallPlaylistAdd{justify-self:start;background:#165f45}
     .freedomWallPlaylistOptions{display:grid;grid-template-columns:1fr 1fr;gap:7px}.freedomWallPlaylistHint{font-size:10px;line-height:1.45;color:#68707a}
-    @media (max-width:700px){.freedomWallPlaylistRow{grid-template-columns:1fr}.freedomWallPlaylistRowActions{justify-content:flex-end}.freedomWallPlaylistOptions{grid-template-columns:1fr}}
+    .freedomWallSessionAdmin{display:grid;gap:9px;margin-top:2px;padding:11px;border:1px solid rgba(0,0,0,.11);border-radius:12px;background:#fff}
+    .freedomWallSessionHead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.freedomWallSessionHead>div{display:flex;flex-direction:column;gap:3px}.freedomWallSessionHead strong{font-size:13px}.freedomWallSessionHead small{font-size:10px;line-height:1.4;color:#68707a}
+    .freedomWallCurrentSession{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:8px 9px;border-radius:9px;background:#f6f7f8;font-size:11px}.freedomWallCurrentSession b{font-size:11px}.freedomWallCurrentSession code{font:700 9px/1.2 monospace;color:#5f6770}
+    .freedomWallSessionButtons{display:flex;gap:7px;flex-wrap:wrap}.freedomWallSessionButtons button{border:0;border-radius:9px;padding:8px 10px;background:#111;color:#fff;font-size:11px;font-weight:900;cursor:pointer}.freedomWallSessionButtons button[data-fw-session-new]{background:#165f45}
+    .freedomWallSessionList{display:grid;gap:7px;max-height:320px;overflow:auto;padding-right:2px}.freedomWallSessionEmpty{padding:12px;text-align:center;border:1px dashed #ccd0d5;border-radius:9px;color:#737980;font-size:11px}
+    .freedomWallSessionCard{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px;border:1px solid #e3e5e8;border-radius:10px;background:#fafafa}.freedomWallSessionCard.is-active{border-color:#246b50;box-shadow:0 0 0 1px #246b50 inset;background:#f4fbf7}.freedomWallSessionInfo{min-width:0;display:flex;flex-direction:column;gap:3px}.freedomWallSessionInfo strong{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.freedomWallSessionInfo span{font-size:10px;color:#5f6770;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.freedomWallSessionInfo small{font-size:9px;color:#858b92}.freedomWallSessionActions{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}.freedomWallSessionActions button{border:0;border-radius:7px;padding:6px 7px;background:#24272b;color:#fff;font-size:9px;font-weight:900;cursor:pointer}.freedomWallSessionActions button[data-fw-session-delete]{background:#a82424}.freedomWallSessionActions button:disabled{opacity:.45;cursor:not-allowed}
+
+    @media (max-width:700px){.freedomWallPlaylistRow{grid-template-columns:1fr}.freedomWallPlaylistRowActions{justify-content:flex-end}.freedomWallPlaylistOptions{grid-template-columns:1fr}.freedomWallSessionCard{grid-template-columns:1fr}.freedomWallSessionActions{justify-content:flex-start}}
   </style>
 </head>
 
@@ -306,10 +313,20 @@
               <small id="freedomWallPlaylistHint" class="freedomWallPlaylistHint">Use direct audio links such as MP3, M4A, OGG, or direct Jukehost audio URLs. Up to 20 songs.</small>
             </div>
 
+            <div class="freedomWallSessionAdmin" id="freedomWallSessionAdmin">
+              <div class="freedomWallSessionHead"><div><strong>🗂 Saved Freedom Walls</strong><small>Each wall keeps its own prompt, theme, notes and reactions. Load an old wall anytime without deleting its responses.</small></div></div>
+              <div class="freedomWallCurrentSession"><span>Current:</span><b id="freedomWallCurrentSessionLabel">Current Freedom Wall</b><code id="freedomWallCurrentSessionId">legacy</code></div>
+              <div class="freedomWallSessionButtons">
+                <button type="button" data-fw-session-save>💾 Save / Update Current Wall</button>
+                <button type="button" data-fw-session-new>＋ Save Current & Create New Wall</button>
+              </div>
+              <div id="freedomWallSessionList" class="freedomWallSessionList"><div class="freedomWallSessionEmpty">Loading saved walls…</div></div>
+            </div>
+
             <div class="freedomWallAdminActions">
               <button id="freedomWallRefreshCount" type="button">↻ Check Note Count</button>
               <button id="freedomWallManageNotes" type="button">🗒 Manage / Delete Notes</button>
-              <button id="freedomWallClearNotes" type="button" class="is-danger">🗑 Clear Entire Wall</button>
+              <button id="freedomWallClearNotes" type="button" class="is-danger">🗑 Clear Current Wall Notes</button>
             </div>
             <div id="freedomWallNoteManager" class="freedomWallNoteManager" hidden>
               <div class="freedomWallNoteManagerHead"><strong>SFK #BeKind Wall Notes</strong><span>Live admin moderation</span></div>
@@ -1202,6 +1219,9 @@
       if (!db) throw new Error("Display connection is not ready yet.");
       const updatedAt = String(Date.now());
       const wallMode = mode === "freedom-wall";
+      const wallSessionId = wallMode && typeof window.getFreedomWallActiveSessionIdAdmin === "function"
+        ? String(window.getFreedomWallActiveSessionIdAdmin() || "legacy").trim() || "legacy"
+        : "legacy";
       const wallPlaylist = wallMode && typeof window.getFreedomWallPlaylistAdminTracks === "function"
         ? window.getFreedomWallPlaylistAdminTracks() : [];
       const wallPlaylistRequested = wallMode && byId("freedomWallPlaylistEnabled")?.checked === true;
@@ -1227,6 +1247,7 @@
         FreedomWallPlaylist: wallMode ? JSON.stringify(wallPlaylist) : "[]",
         FreedomWallPlaylistShuffle: wallMode && byId("freedomWallPlaylistShuffle")?.checked ? "YES" : "NO",
         FreedomWallPlaylistLoop: wallMode && byId("freedomWallPlaylistLoop")?.checked === false ? "NO" : "YES",
+        FreedomWallActiveWallID: wallMode ? wallSessionId : "legacy",
         HomepageEffectUpdatedAt: updatedAt
       };
       // Keep a saved Freedom Wall playlist intact when Admin publishes another Homepage Effect.
@@ -1235,12 +1256,22 @@
         delete values.FreedomWallPlaylist;
         delete values.FreedomWallPlaylistShuffle;
         delete values.FreedomWallPlaylistLoop;
+        delete values.FreedomWallActiveWallID;
       }
       const batch = db.batch();
       for (const [key,value] of Object.entries(values)) {
         batch.set(db.collection("settings").doc(key), { Key:key, Value:String(value) }, { merge:true });
       }
+      if (wallMode) {
+        batch.set(db.collection("freedomWallSessions").doc(wallSessionId), {
+          PromptTitle: String(byId("homepageEffectTitle")?.value || "").trim().slice(0,100),
+          PromptMessage: String(byId("homepageEffectMessage")?.value || "").trim().slice(0,700),
+          Theme: String(byId("freedomWallTheme")?.value || "sticky-notes").trim().toLowerCase(),
+          UpdatedAtMs: Number(updatedAt)
+        }, { merge:true });
+      }
       await batch.commit();
+      if (wallMode) window.refreshFreedomWallSavedSessions?.();
       const verify = await db.collection("settings").doc("HomepageEffectMode").get();
       const saved = String(verify.data()?.Value || "").trim().toLowerCase();
       if (saved !== mode) throw new Error(`Saved mode verification failed (${saved || "blank"}).`);
@@ -1391,6 +1422,16 @@
       }
     }
 
+    const getFreedomWallAdminActiveId = () => {
+      try { return String(window.getFreedomWallActiveSessionIdAdmin?.() || "legacy").trim() || "legacy"; } catch (error) { return "legacy"; }
+    };
+    const isFreedomWallDocInActiveSession = (doc) => {
+      const activeId = getFreedomWallAdminActiveId();
+      const data = typeof doc?.data === "function" ? (doc.data() || {}) : {};
+      const wallId = String(data.WallID || "legacy").trim() || "legacy";
+      return wallId === activeId;
+    };
+
     async function refreshFreedomWallCount() {
       const db = getDb();
       if (!db) {
@@ -1399,8 +1440,12 @@
       }
       if (status) status.textContent = "Checking wall…";
       try {
-        const snap = await db.collection("freedomWallNotes").get();
-        if (status) status.textContent = `${snap.size} ${snap.size === 1 ? "note" : "notes"} currently saved on the SFK #BeKind Wall.`;
+        const activeId = getFreedomWallAdminActiveId();
+        const snap = activeId === "legacy"
+          ? await db.collection("freedomWallNotes").get()
+          : await db.collection("freedomWallNotes").where("WallID", "==", activeId).get();
+        const countNow = activeId === "legacy" ? snap.docs.filter(isFreedomWallDocInActiveSession).length : snap.size;
+        if (status) status.textContent = `${countNow} ${countNow === 1 ? "note" : "notes"} in the current saved Freedom Wall.`;
       } catch (error) {
         console.warn("Freedom Wall count failed", error);
         if (status) status.textContent = "Unable to check the wall right now.";
@@ -1414,11 +1459,12 @@
     function renderFreedomWallAdminNotes(snapshot) {
       const list = $("freedomWallAdminNoteList");
       if (!list) return;
-      if (!snapshot || snapshot.empty) {
-        list.innerHTML = '<div class="freedomWallAdminNoteEmpty">No notes on the SFK #BeKind Wall yet.</div>';
+      const activeDocs = snapshot?.docs?.filter?.(isFreedomWallDocInActiveSession) || [];
+      if (!activeDocs.length) {
+        list.innerHTML = '<div class="freedomWallAdminNoteEmpty">No notes in this Freedom Wall yet.</div>';
         return;
       }
-      list.innerHTML = snapshot.docs.map((doc) => {
+      list.innerHTML = activeDocs.map((doc) => {
         const data = doc.data() || {};
         const name = String(data.Name || "").trim() || "Anonymous";
         const text = String(data.Text || "").trim();
@@ -1455,9 +1501,14 @@
         return;
       }
       try {
-        noteManagerUnsubscribe = db.collection("freedomWallNotes").orderBy("CreatedAtMs", "desc").onSnapshot((snapshot) => {
+        const activeId = getFreedomWallAdminActiveId();
+        const query = activeId === "legacy"
+          ? db.collection("freedomWallNotes").limit(400)
+          : db.collection("freedomWallNotes").where("WallID", "==", activeId).limit(400);
+        noteManagerUnsubscribe = query.onSnapshot((snapshot) => {
           renderFreedomWallAdminNotes(snapshot);
-          if (status) status.textContent = `${snapshot.size} ${snapshot.size === 1 ? "note" : "notes"} • click Delete beside any inappropriate note.`;
+          const visibleCount = snapshot.docs.filter(isFreedomWallDocInActiveSession).length;
+          if (status) status.textContent = `${visibleCount} ${visibleCount === 1 ? "note" : "notes"} in the current wall • click Delete beside any inappropriate note.`;
         }, (error) => {
           console.warn("Freedom Wall admin note manager failed", error);
           list.innerHTML = '<div class="freedomWallAdminNoteEmpty">Unable to load notes right now.</div>';
@@ -1495,7 +1546,8 @@
     }
 
     async function clearFreedomWall() {
-      const ok = window.confirm("Clear ALL SFK #BeKind Wall notes? This cannot be undone.");
+      const activeId = getFreedomWallAdminActiveId();
+      const ok = window.confirm("Clear ALL notes from the CURRENT Freedom Wall? Saved/archived walls will not be touched. This cannot be undone.");
       if (!ok) return;
       const db = getDb();
       if (!db) {
@@ -1504,33 +1556,27 @@
       }
       const button = $("freedomWallClearNotes");
       if (button) button.disabled = true;
-      if (status) status.textContent = "Clearing the wall…";
+      if (status) status.textContent = "Clearing current wall notes…";
       try {
+        const snap = activeId === "legacy"
+          ? await db.collection("freedomWallNotes").get()
+          : await db.collection("freedomWallNotes").where("WallID", "==", activeId).get();
+        const docs = activeId === "legacy" ? snap.docs.filter(isFreedomWallDocInActiveSession) : snap.docs;
         let deleted = 0;
-        while (true) {
-          const snap = await db.collection("freedomWallNotes").limit(200).get();
-          if (snap.empty) break;
+        for (let start = 0; start < docs.length; start += 180) {
+          const chunk = docs.slice(start, start + 180);
           const batch = db.batch();
-          snap.docs.forEach((doc) => {
+          chunk.forEach((doc) => {
             batch.delete(doc.ref);
             batch.delete(db.collection("freedomWallMedia").doc(doc.id));
           });
           await batch.commit();
-          deleted += snap.size;
-          if (snap.size < 200) break;
+          deleted += chunk.length;
         }
-        while (true) {
-          const mediaSnap = await db.collection("freedomWallMedia").limit(400).get();
-          if (mediaSnap.empty) break;
-          const mediaBatch = db.batch();
-          mediaSnap.docs.forEach((doc) => mediaBatch.delete(doc.ref));
-          await mediaBatch.commit();
-          if (mediaSnap.size < 400) break;
-        }
-        if (status) status.textContent = `SFK #BeKind Wall cleared. ${deleted} ${deleted === 1 ? "note" : "notes"} removed, including Polaroid media.`;
+        if (status) status.textContent = `Current Freedom Wall cleared. ${deleted} ${deleted === 1 ? "note" : "notes"} removed. Other saved walls are untouched.`;
       } catch (error) {
         console.error("Freedom Wall clear failed", error);
-        if (status) status.textContent = "Unable to clear the wall right now.";
+        if (status) status.textContent = "Unable to clear the current wall right now.";
       } finally {
         if (button) button.disabled = false;
       }
@@ -1573,7 +1619,7 @@
       const db = getDb();
       if (!db) return;
       try {
-        const keys = ["FreedomWallTheme","FreedomWallAllowPosting","FreedomWallShowNames","FreedomWallAllowTextColor","FreedomWallAllowFont","FreedomWallPlaylistEnabled","FreedomWallPlaylist","FreedomWallPlaylistShuffle","FreedomWallPlaylistLoop","HomepageEffectAudioEnabled","HomepageEffectAudioUrl"];
+        const keys = ["FreedomWallTheme","FreedomWallAllowPosting","FreedomWallShowNames","FreedomWallAllowTextColor","FreedomWallAllowFont","FreedomWallPlaylistEnabled","FreedomWallPlaylist","FreedomWallPlaylistShuffle","FreedomWallPlaylistLoop","FreedomWallActiveWallID","HomepageEffectAudioEnabled","HomepageEffectAudioUrl"];
         const docs = await Promise.all(keys.map((key) => db.collection("settings").doc(key).get()));
         const values = {};
         docs.forEach((doc, index) => { if (doc.exists) values[keys[index]] = String(doc.data()?.Value || ""); });
@@ -1595,6 +1641,320 @@
         if ($("freedomWallPlaylistLoop")) $("freedomWallPlaylistLoop").checked = String(values.FreedomWallPlaylistLoop || "YES").toUpperCase() !== "NO";
       } catch (error) { console.warn("Freedom Wall settings load skipped", error); }
     }, 700);
+  })();
+  </script>
+
+
+  <script>
+  (() => {
+    const $ = (id) => document.getElementById(id);
+    const SESSION_COLLECTION = "freedomWallSessions";
+    const LEGACY_ID = "legacy";
+    let activeWallId = LEGACY_ID;
+    let sessionBusy = false;
+
+    const getDb = () => {
+      if (window.SFK_CLASSBOARD_FIREBASE_DB) return window.SFK_CLASSBOARD_FIREBASE_DB;
+      try { if (window.firebase?.apps?.length) return firebase.firestore(); } catch (error) {}
+      return null;
+    };
+    const safeId = (value) => {
+      const raw = String(value || "").trim();
+      if (!raw || raw === LEGACY_ID) return LEGACY_ID;
+      return /^wall_[A-Za-z0-9_-]{6,80}$/.test(raw) ? raw : LEGACY_ID;
+    };
+    const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (ch) => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch] || ch));
+    const setStatus = (text) => { const el = $("freedomWallAdminStatus"); if (el) el.textContent = text; };
+    const now = () => Date.now();
+    const currentTitle = () => String($("homepageEffectTitle")?.value || "").trim().slice(0,100);
+    const currentMessage = () => String($("homepageEffectMessage")?.value || "").trim().slice(0,700);
+    const currentTheme = () => String($("freedomWallTheme")?.value || "sticky-notes").trim().toLowerCase();
+    const currentLabelFallback = () => currentTitle() || (activeWallId === LEGACY_ID ? "Original Freedom Wall" : "Saved Freedom Wall");
+
+    window.getFreedomWallActiveSessionIdAdmin = () => activeWallId;
+
+    function updateCurrentSessionChip(label = "") {
+      const labelEl = $("freedomWallCurrentSessionLabel");
+      const idEl = $("freedomWallCurrentSessionId");
+      if (labelEl) labelEl.textContent = label || currentLabelFallback();
+      if (idEl) idEl.textContent = activeWallId;
+    }
+
+    function closeNoteManagerIfOpen() {
+      const manager = $("freedomWallNoteManager");
+      if (manager && !manager.hidden) $("freedomWallManageNotes")?.click();
+    }
+
+    function promptReactionDocIdForSession(sessionId) {
+      const signature = `session:${sessionId}`;
+      const hash = (value) => {
+        let h = 2166136261;
+        const text = String(value || "freedom-wall");
+        for (let i = 0; i < text.length; i += 1) { h ^= text.charCodeAt(i); h = Math.imul(h, 16777619); }
+        return h >>> 0;
+      };
+      const a = hash(signature).toString(36);
+      const b = hash(signature.split("").reverse().join("")).toString(36);
+      return `prompt_${a}_${b}`;
+    }
+
+    async function saveCurrentSession({ announce = true, live = true } = {}) {
+      const db = getDb();
+      if (!db) throw new Error("Wall connection is still loading.");
+      const id = safeId(activeWallId);
+      const existing = await db.collection(SESSION_COLLECTION).doc(id).get();
+      const old = existing.exists ? (existing.data() || {}) : {};
+      // First v488 save of the original wall tags pre-session notes as legacy.
+      // This is a one-time migration so the original wall remains loadable even
+      // after many newer saved walls have been created.
+      if (id === LEGACY_ID) {
+        const legacySnap = await db.collection("freedomWallNotes").get();
+        const legacyDocs = legacySnap.docs.filter((doc) => !String(doc.data()?.WallID || "").trim());
+        for (let start = 0; start < legacyDocs.length; start += 180) {
+          const migrateBatch = db.batch();
+          legacyDocs.slice(start,start+180).forEach((doc) => migrateBatch.update(doc.ref, { WallID:LEGACY_ID }));
+          await migrateBatch.commit();
+        }
+      }
+      const stamp = now();
+      const label = String(old.Label || currentLabelFallback()).trim().slice(0,100) || currentLabelFallback();
+      const batch = db.batch();
+      batch.set(db.collection(SESSION_COLLECTION).doc(id), {
+        Label: label,
+        PromptTitle: currentTitle(),
+        PromptMessage: currentMessage(),
+        Theme: currentTheme(),
+        CreatedAtMs: Number(old.CreatedAtMs || stamp),
+        UpdatedAtMs: stamp
+      }, { merge:true });
+      if (live) {
+        const liveValues = {
+          HomepageEffectEnabled:"YES",
+          HomepageEffectMode:"freedom-wall",
+          HomepageEffectTitle:currentTitle(),
+          HomepageEffectMessage:currentMessage(),
+          FreedomWallTheme:currentTheme(),
+          FreedomWallActiveWallID:id,
+          HomepageEffectUpdatedAt:String(stamp)
+        };
+        Object.entries(liveValues).forEach(([key,value]) => batch.set(db.collection("settings").doc(key), { Key:key, Value:String(value) }, { merge:true }));
+      }
+      await batch.commit();
+      updateCurrentSessionChip(label);
+      if (announce) setStatus("Current Freedom Wall saved. Its prompt, notes and reactions will remain available in Saved Freedom Walls.");
+      return { id, label };
+    }
+
+    async function getNoteCountsByWall() {
+      const db = getDb();
+      const counts = new Map();
+      if (!db) return counts;
+      try {
+        const snap = await db.collection("freedomWallNotes").limit(1200).get();
+        snap.docs.forEach((doc) => {
+          const data = doc.data() || {};
+          const id = safeId(data.WallID || LEGACY_ID);
+          counts.set(id, (counts.get(id) || 0) + 1);
+        });
+      } catch (error) {}
+      return counts;
+    }
+
+    async function refreshSessionList() {
+      const list = $("freedomWallSessionList");
+      const db = getDb();
+      if (!list) return;
+      if (!db) { list.innerHTML = '<div class="freedomWallSessionEmpty">Wall connection is still loading…</div>'; return; }
+      try {
+        const [sessionSnap, counts] = await Promise.all([
+          db.collection(SESSION_COLLECTION).limit(60).get(),
+          getNoteCountsByWall()
+        ]);
+        const items = sessionSnap.docs.map((doc) => ({ id:doc.id, ...(doc.data() || {}) }));
+        if (!items.some((item) => safeId(item.id) === activeWallId)) {
+          items.push({ id:activeWallId, Label:currentLabelFallback(), PromptTitle:currentTitle(), PromptMessage:currentMessage(), Theme:currentTheme(), UpdatedAtMs:now(), virtual:true });
+        }
+        items.sort((a,b) => Number(b.UpdatedAtMs || b.CreatedAtMs || 0) - Number(a.UpdatedAtMs || a.CreatedAtMs || 0));
+        if (!items.length) { list.innerHTML = '<div class="freedomWallSessionEmpty">No saved Freedom Walls yet.</div>'; return; }
+        list.innerHTML = items.map((item) => {
+          const id = safeId(item.id);
+          const active = id === activeWallId;
+          const label = String(item.Label || item.PromptTitle || (id === LEGACY_ID ? "Original Freedom Wall" : "Saved Freedom Wall")).trim();
+          const prompt = String(item.PromptTitle || "No prompt title yet").trim();
+          const noteCount = counts.get(id) || 0;
+          const stamp = Number(item.UpdatedAtMs || item.CreatedAtMs || 0);
+          const dateText = stamp ? new Date(stamp).toLocaleString([], { month:"short", day:"numeric", year:"numeric", hour:"numeric", minute:"2-digit" }) : "Saved wall";
+          return `<article class="freedomWallSessionCard${active ? " is-active" : ""}" data-fw-session-id="${esc(id)}">
+            <div class="freedomWallSessionInfo"><strong>${esc(label)}${active ? " • ACTIVE" : ""}</strong><span>${esc(prompt)}</span><small>${noteCount} ${noteCount === 1 ? "note" : "notes"} • ${esc(dateText)}</small></div>
+            <div class="freedomWallSessionActions">
+              <button type="button" data-fw-session-load ${active ? "disabled" : ""}>Load</button>
+              <button type="button" data-fw-session-rename>Rename</button>
+              <button type="button" data-fw-session-delete ${active || id === LEGACY_ID ? "disabled" : ""}>Delete</button>
+            </div>
+          </article>`;
+        }).join("");
+      } catch (error) {
+        console.warn("Saved Freedom Walls load failed", error);
+        list.innerHTML = '<div class="freedomWallSessionEmpty">Unable to load saved walls right now.</div>';
+      }
+    }
+
+    async function createNewSession() {
+      if (sessionBusy) return;
+      const labelInput = window.prompt("Name the new Freedom Wall. The current wall will be saved first.", "New Freedom Wall");
+      if (labelInput === null) return;
+      const label = String(labelInput || "New Freedom Wall").trim().slice(0,100) || "New Freedom Wall";
+      sessionBusy = true;
+      try {
+        await saveCurrentSession({ announce:false, live:false });
+        const db = getDb();
+        if (!db) throw new Error("Wall connection is still loading.");
+        const id = `wall_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`;
+        const stamp = now();
+        const theme = currentTheme();
+        const batch = db.batch();
+        batch.set(db.collection(SESSION_COLLECTION).doc(id), { Label:label, PromptTitle:"", PromptMessage:"", Theme:theme, CreatedAtMs:stamp, UpdatedAtMs:stamp });
+        const values = {
+          HomepageEffectEnabled:"YES", HomepageEffectMode:"freedom-wall",
+          HomepageEffectTitle:"", HomepageEffectMessage:"", FreedomWallTheme:theme,
+          FreedomWallActiveWallID:id, HomepageEffectUpdatedAt:String(stamp)
+        };
+        Object.entries(values).forEach(([key,value]) => batch.set(db.collection("settings").doc(key), { Key:key, Value:String(value) }, { merge:true }));
+        await batch.commit();
+        activeWallId = id;
+        if ($("homepageEffectTitle")) $("homepageEffectTitle").value = "";
+        if ($("homepageEffectMessage")) $("homepageEffectMessage").value = "";
+        updateCurrentSessionChip(label);
+        closeNoteManagerIfOpen();
+        setStatus(`New Freedom Wall created: ${label}. Add the new prompt above, then Save / Update Current Wall or Publish.`);
+        await refreshSessionList();
+      } catch (error) {
+        console.error("Create Freedom Wall session failed", error);
+        setStatus("Unable to create a new Freedom Wall right now. Publish the updated Firebase Rules first.");
+      } finally { sessionBusy = false; }
+    }
+
+    async function loadSession(id) {
+      if (sessionBusy) return;
+      id = safeId(id);
+      if (id === activeWallId) return;
+      sessionBusy = true;
+      try {
+        const db = getDb();
+        if (!db) throw new Error("Wall connection is still loading.");
+        const snap = await db.collection(SESSION_COLLECTION).doc(id).get();
+        if (!snap.exists) throw new Error("Saved wall not found.");
+        const data = snap.data() || {};
+        const stamp = now();
+        const title = String(data.PromptTitle || "").slice(0,100);
+        const message = String(data.PromptMessage || "").slice(0,700);
+        const theme = String(data.Theme || "sticky-notes").trim().toLowerCase();
+        const batch = db.batch();
+        const values = {
+          HomepageEffectEnabled:"YES", HomepageEffectMode:"freedom-wall",
+          HomepageEffectTitle:title, HomepageEffectMessage:message, FreedomWallTheme:theme,
+          FreedomWallActiveWallID:id, HomepageEffectUpdatedAt:String(stamp)
+        };
+        Object.entries(values).forEach(([key,value]) => batch.set(db.collection("settings").doc(key), { Key:key, Value:String(value) }, { merge:true }));
+        batch.set(db.collection(SESSION_COLLECTION).doc(id), { UpdatedAtMs:stamp }, { merge:true });
+        await batch.commit();
+        activeWallId = id;
+        if ($("homepageEffectTitle")) $("homepageEffectTitle").value = title;
+        if ($("homepageEffectMessage")) $("homepageEffectMessage").value = message;
+        if ($("freedomWallTheme")) $("freedomWallTheme").value = theme;
+        updateCurrentSessionChip(String(data.Label || title || "Saved Freedom Wall"));
+        closeNoteManagerIfOpen();
+        setStatus(`Loaded saved Freedom Wall: ${String(data.Label || title || "Saved Freedom Wall")}. Its original notes and reactions are live again.`);
+        await refreshSessionList();
+      } catch (error) {
+        console.error("Load Freedom Wall session failed", error);
+        setStatus("Unable to load that saved Freedom Wall right now.");
+      } finally { sessionBusy = false; }
+    }
+
+    async function renameSession(id) {
+      const db = getDb();
+      if (!db) return;
+      id = safeId(id);
+      try {
+        const snap = await db.collection(SESSION_COLLECTION).doc(id).get();
+        const old = snap.exists ? String(snap.data()?.Label || snap.data()?.PromptTitle || "Saved Freedom Wall") : "Saved Freedom Wall";
+        const input = window.prompt("Rename this saved Freedom Wall:", old);
+        if (input === null) return;
+        const label = String(input || "").trim().slice(0,100);
+        if (!label) return;
+        await db.collection(SESSION_COLLECTION).doc(id).set({ Label:label, UpdatedAtMs:now() }, { merge:true });
+        if (id === activeWallId) updateCurrentSessionChip(label);
+        await refreshSessionList();
+      } catch (error) { setStatus("Unable to rename that saved wall right now."); }
+    }
+
+    async function deleteSession(id) {
+      id = safeId(id);
+      if (id === activeWallId || id === LEGACY_ID || sessionBusy) return;
+      const ok = window.confirm("Delete this SAVED Freedom Wall, including all of its notes, media and reactions? This cannot be undone.");
+      if (!ok) return;
+      sessionBusy = true;
+      try {
+        const db = getDb();
+        if (!db) throw new Error("Wall connection is still loading.");
+        const snap = await db.collection("freedomWallNotes").where("WallID", "==", id).get();
+        for (let start = 0; start < snap.docs.length; start += 160) {
+          const batch = db.batch();
+          snap.docs.slice(start,start+160).forEach((doc) => {
+            batch.delete(doc.ref);
+            batch.delete(db.collection("freedomWallMedia").doc(doc.id));
+          });
+          await batch.commit();
+        }
+        const batch = db.batch();
+        batch.delete(db.collection("freedomWallPromptReactions").doc(promptReactionDocIdForSession(id)));
+        batch.delete(db.collection(SESSION_COLLECTION).doc(id));
+        await batch.commit();
+        setStatus("Saved Freedom Wall deleted. The current live wall was not affected.");
+        await refreshSessionList();
+      } catch (error) {
+        console.error("Delete Freedom Wall session failed", error);
+        setStatus("Unable to delete that saved wall right now.");
+      } finally { sessionBusy = false; }
+    }
+
+    async function initializeSessions() {
+      const db = getDb();
+      if (!db) { window.setTimeout(initializeSessions, 500); return; }
+      try {
+        const activeSnap = await db.collection("settings").doc("FreedomWallActiveWallID").get();
+        activeWallId = safeId(activeSnap.exists ? activeSnap.data()?.Value : LEGACY_ID);
+      } catch (error) { activeWallId = LEGACY_ID; }
+      let label = currentLabelFallback();
+      try {
+        const sessionSnap = await db.collection(SESSION_COLLECTION).doc(activeWallId).get();
+        if (sessionSnap.exists) label = String(sessionSnap.data()?.Label || sessionSnap.data()?.PromptTitle || label);
+      } catch (error) {}
+      updateCurrentSessionChip(label);
+      await refreshSessionList();
+    }
+
+    document.querySelector('[data-fw-session-save]')?.addEventListener("click", async () => {
+      if (sessionBusy) return;
+      sessionBusy = true;
+      try { await saveCurrentSession(); await refreshSessionList(); }
+      catch (error) { console.error(error); setStatus("Unable to save the current Freedom Wall. Publish the updated Firebase Rules first."); }
+      finally { sessionBusy = false; }
+    });
+    document.querySelector('[data-fw-session-new]')?.addEventListener("click", createNewSession);
+    $("freedomWallSessionList")?.addEventListener("click", (event) => {
+      const card = event.target.closest?.("[data-fw-session-id]");
+      const button = event.target.closest?.("button");
+      if (!card || !button) return;
+      const id = card.dataset.fwSessionId;
+      if (button.hasAttribute("data-fw-session-load")) loadSession(id);
+      else if (button.hasAttribute("data-fw-session-rename")) renameSession(id);
+      else if (button.hasAttribute("data-fw-session-delete")) deleteSession(id);
+    });
+
+    window.refreshFreedomWallSavedSessions = refreshSessionList;
+    window.setTimeout(initializeSessions, 900);
   })();
   </script>
 

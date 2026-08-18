@@ -1694,7 +1694,8 @@ const HOMEPAGE_EFFECT_KEYS = new Set([
   "FreedomWallPlaylistEnabled",
   "FreedomWallPlaylist",
   "FreedomWallPlaylistShuffle",
-  "FreedomWallPlaylistLoop"
+  "FreedomWallPlaylistLoop",
+  "FreedomWallActiveWallID"
 ]);
 
 let homepageEffectUnsubscribe = null;
@@ -1758,7 +1759,9 @@ const HOMEPAGE_RICKROLL_DEFAULT_URL = "https://streamable.com/33rhw4";
    Live student sticky notes + Admin prompt/background controls.
 ========================================================= */
 const FREEDOM_WALL_COLLECTION = "freedomWallNotes";
+const FREEDOM_WALL_SESSION_COLLECTION = "freedomWallSessions";
 const FREEDOM_WALL_PROMPT_REACTION_COLLECTION = "freedomWallPromptReactions";
+const FREEDOM_WALL_LEGACY_SESSION_ID = "legacy";
 const FREEDOM_WALL_MAX_RENDERED_NOTES = 400;
 const FREEDOM_WALL_NOTE_MAX_LENGTH = 240;
 const FREEDOM_WALL_AUTHOR_MAX_LENGTH = 42;
@@ -1791,10 +1794,10 @@ const FREEDOM_WALL_LEGACY_COLOR_MAP = Object.freeze({
   orange:"orange", tan:"orange", gray:"white", navy:"blue", black:"blue"
 });
 const FREEDOM_WALL_TEXTURED_TEXT_THEMES = new Set(["jungle","chalkboard","graffiti","vandal","poste","comic","comic-noir","comic-manga","comic-strip","spiderman"]);
-const FREEDOM_WALL_REACTIONS = Object.freeze({ heart:"❤️", haha:"😂", wow:"😮" });
+const FREEDOM_WALL_REACTIONS = Object.freeze({ heart:"❤️", haha:"😂", wow:"😮", sad:"😢", like:"👍" });
 const FREEDOM_WALL_REACTION_TYPES = Object.freeze(Object.keys(FREEDOM_WALL_REACTIONS));
-const FREEDOM_WALL_REACTION_HOLD_MS = 500;
-const FREEDOM_WALL_REACTION_MOVE_THRESHOLD = 12;
+const FREEDOM_WALL_REACTION_HOLD_MS = 480;
+const FREEDOM_WALL_REACTION_MOVE_THRESHOLD = 11;
 let freedomWallUnsubscribe = null;
 let freedomWallListenToken = 0;
 let freedomWallConfig = null;
@@ -2100,6 +2103,17 @@ function normalizeHomepageEffectImageList(value, fallback = "") {
   return result;
 }
 
+function normalizeFreedomWallSessionId(value) {
+  const raw = String(value || "").trim();
+  if (!raw || raw === FREEDOM_WALL_LEGACY_SESSION_ID) return FREEDOM_WALL_LEGACY_SESSION_ID;
+  if (/^wall_[A-Za-z0-9_-]{6,80}$/.test(raw)) return raw;
+  return FREEDOM_WALL_LEGACY_SESSION_ID;
+}
+
+function getFreedomWallActiveSessionId(config = freedomWallConfig) {
+  return normalizeFreedomWallSessionId(config?.freedomWallActiveWallId || FREEDOM_WALL_LEGACY_SESSION_ID);
+}
+
 function normalizeFreedomWallPlaylist(value, fallbackUrl = "") {
   let list = [];
   const raw = String(value || "").trim();
@@ -2174,9 +2188,10 @@ function normalizeHomepageEffectConfig(settings = {}) {
     : audioEnabled);
   const freedomWallPlaylistShuffle = String(settings.FreedomWallPlaylistShuffle || "NO").trim().toUpperCase() === "YES";
   const freedomWallPlaylistLoop = String(settings.FreedomWallPlaylistLoop || "YES").trim().toUpperCase() !== "NO";
+  const freedomWallActiveWallId = normalizeFreedomWallSessionId(settings.FreedomWallActiveWallID || FREEDOM_WALL_LEGACY_SESSION_ID);
   const playlistSignature = freedomWallPlaylist.map((track) => `${track.title}~${track.url}`).join("~~");
-  const signature = updatedAt || [enabled ? "1" : "0", mode, title, message, images.join("~"), dismissible ? "1" : "0", alertSound ? "1" : "0", audioEnabled ? "1" : "0", audioUrl, audioLoop ? "1" : "0", youtubeUrl, youtubeMuted ? "1" : "0", rickrollUrl, freedomWallTheme, freedomWallAllowPosting ? "1" : "0", freedomWallShowNames ? "1" : "0", freedomWallAllowTextColor ? "1" : "0", freedomWallAllowFont ? "1" : "0", freedomWallPlaylistEnabled ? "1" : "0", freedomWallPlaylistShuffle ? "1" : "0", freedomWallPlaylistLoop ? "1" : "0", playlistSignature].join("|");
-  return { enabled, mode, title, message, image: images[0] || "", images, dismissible, alertSound, spiderSound, audioEnabled, audioUrl, audioLoop, youtubeUrl, youtubeMuted, rickrollUrl, updatedAt, signature, freedomWallTheme, freedomWallAllowPosting, freedomWallShowNames, freedomWallAllowTextColor, freedomWallAllowFont, freedomWallPlaylistEnabled, freedomWallPlaylist, freedomWallPlaylistShuffle, freedomWallPlaylistLoop };
+  const signature = updatedAt || [enabled ? "1" : "0", mode, title, message, images.join("~"), dismissible ? "1" : "0", alertSound ? "1" : "0", audioEnabled ? "1" : "0", audioUrl, audioLoop ? "1" : "0", youtubeUrl, youtubeMuted ? "1" : "0", rickrollUrl, freedomWallTheme, freedomWallAllowPosting ? "1" : "0", freedomWallShowNames ? "1" : "0", freedomWallAllowTextColor ? "1" : "0", freedomWallAllowFont ? "1" : "0", freedomWallPlaylistEnabled ? "1" : "0", freedomWallPlaylistShuffle ? "1" : "0", freedomWallPlaylistLoop ? "1" : "0", playlistSignature, freedomWallActiveWallId].join("|");
+  return { enabled, mode, title, message, image: images[0] || "", images, dismissible, alertSound, spiderSound, audioEnabled, audioUrl, audioLoop, youtubeUrl, youtubeMuted, rickrollUrl, updatedAt, signature, freedomWallTheme, freedomWallAllowPosting, freedomWallShowNames, freedomWallAllowTextColor, freedomWallAllowFont, freedomWallPlaylistEnabled, freedomWallPlaylist, freedomWallPlaylistShuffle, freedomWallPlaylistLoop, freedomWallActiveWallId };
 }
 
 function normalizeHomepageEffectYouTubeUrl(value) {
@@ -3139,6 +3154,8 @@ function ensureHomepageEffectLayer() {
           <button type="button" role="menuitem" data-fw-reaction="heart" aria-label="Heart"><span>❤️</span><b>Heart</b><small data-fw-reaction-count="heart">0</small></button>
           <button type="button" role="menuitem" data-fw-reaction="haha" aria-label="Haha"><span>😂</span><b>Haha</b><small data-fw-reaction-count="haha">0</small></button>
           <button type="button" role="menuitem" data-fw-reaction="wow" aria-label="Wow"><span>😮</span><b>Wow</b><small data-fw-reaction-count="wow">0</small></button>
+          <button type="button" role="menuitem" data-fw-reaction="sad" aria-label="Sad"><span>😢</span><b>Sad</b><small data-fw-reaction-count="sad">0</small></button>
+          <button type="button" role="menuitem" data-fw-reaction="like" aria-label="Like"><span>👍</span><b>Like</b><small data-fw-reaction-count="like">0</small></button>
         </div>
         <small id="freedomWallReactionStatus" class="freedomWallReactionStatus" role="status"></small>
       </div>
@@ -4440,7 +4457,7 @@ function normalizeFreedomWallReactionLastType(value) {
 
 function getFreedomWallReactionStats(reactions = {}, lastType = "") {
   const normalized = normalizeFreedomWallReactions(reactions);
-  const counts = { heart:0, haha:0, wow:0 };
+  const counts = Object.fromEntries(FREEDOM_WALL_REACTION_TYPES.map((type) => [type, 0]));
   Object.values(normalized).forEach((type) => { if (type in counts) counts[type] += 1; });
   const mine = normalized[getFreedomWallDeviceId()] || "";
   const total = FREEDOM_WALL_REACTION_TYPES.reduce((sum, type) => sum + counts[type], 0);
@@ -4665,7 +4682,7 @@ async function toggleFreedomWallReaction(type) {
       await writeFreedomWallReactionFast(db, target, deviceId, type, removing, optimisticLastType, false);
     }
     if (status) status.textContent = removing ? "Reaction removed" : "Reaction saved";
-    // Keep the picker open so users can immediately see all three live counts.
+    // Keep the picker open so users can immediately see all five live counts.
     // It closes only with X, outside tap/click, or another wall action.
   } catch (error) {
     console.warn("Freedom Wall reaction failed:", error);
@@ -5271,14 +5288,15 @@ function normalizeFreedomWallNote(doc, index = 0) {
   const mediaType = mediaRef ? String(data.MediaType || data.mediaType || "image/jpeg").trim().toLowerCase().slice(0, 32) : "";
   const reactions = normalizeFreedomWallReactions(data.Reactions || data.reactions || {});
   const reactionLastType = normalizeFreedomWallReactionLastType(data.ReactionLastType || data.reactionLastType || "");
+  const wallId = normalizeFreedomWallSessionId(data.WallID || data.wallId || FREEDOM_WALL_LEGACY_SESSION_ID);
   if (!text && !mediaRef) return null;
-  return { id, text, author, color, textColor, fontStyle, createdAtMs, mediaRef, mediaType, reactions, reactionLastType, ...getFreedomWallPlacement({ ...data, id }, index) };
+  return { id, text, author, color, textColor, fontStyle, createdAtMs, mediaRef, mediaType, reactions, reactionLastType, wallId, ...getFreedomWallPlacement({ ...data, id }, index) };
 }
 
 function getFreedomWallNoteCoreSignature(note) {
   return JSON.stringify([
     note?.id, note?.text, note?.author, note?.color, note?.textColor, note?.fontStyle,
-    note?.createdAtMs, note?.mediaRef, note?.mediaType, note?.x, note?.y, note?.rotation, note?.scale
+    note?.createdAtMs, note?.mediaRef, note?.mediaType, note?.wallId, note?.x, note?.y, note?.rotation, note?.scale
   ]);
 }
 
@@ -5460,8 +5478,14 @@ function updateFreedomWallPrompt(config) {
   // (playlist/theme/settings). Key the prompt by its actual visible content, not
   // the generic HomepageEffectUpdatedAt value. Keep the previous v484-v486 key
   // available for one-way display compatibility with reactions already saved.
-  const promptSignature = `${String(config?.title || "").trim()}|${String(config?.message || "").trim()}`;
-  const legacyPromptSignature = `${config?.title || ""}|${config?.message || ""}|${config?.updatedAt || ""}`;
+  const activeWallId = getFreedomWallActiveSessionId(config);
+  // v488: every saved wall — including the original legacy wall — owns one
+  // stable prompt-reaction identity. The previous v487 content-based id is
+  // still read once as a compatibility source so existing counts survive.
+  const promptSignature = `session:${activeWallId}`;
+  const legacyPromptSignature = activeWallId === FREEDOM_WALL_LEGACY_SESSION_ID
+    ? `${String(config?.title || "").trim()}|${String(config?.message || "").trim()}`
+    : "";
   card.dataset.promptSignature = promptSignature;
   card.dataset.promptLegacySignature = legacyPromptSignature;
   title.textContent = config?.title || "";
@@ -5714,6 +5738,7 @@ function buildFreedomWallLegacyCompatiblePayload(payload = {}) {
   const legacy = { ...payload };
   delete legacy.TextColor;
   delete legacy.FontStyle;
+  delete legacy.WallID;
   const requestedColor = String(legacy.Color || "yellow").trim().toLowerCase();
   legacy.Color = FREEDOM_WALL_LEGACY_COLORS.has(requestedColor)
     ? requestedColor
@@ -5753,6 +5778,7 @@ async function submitFreedomWallNote(event) {
     const db = await waitForClassBoardFirestore(12000);
     if (!db) throw new Error("wall unavailable");
     const placement = createFreedomWallPostingPlacement();
+    const activeWallId = getFreedomWallActiveSessionId();
     const payload = {
       Text: text,
       Name: author,
@@ -5764,6 +5790,7 @@ async function submitFreedomWallNote(event) {
       DeviceId: getFreedomWallDeviceId(),
       CreatedAtMs: now
     };
+    payload.WallID = activeWallId;
     if (freedomWallConfig?.freedomWallAllowTextColor) payload.TextColor = freedomWallSelectedTextColor;
     if (freedomWallConfig?.freedomWallAllowFont) payload.FontStyle = freedomWallSelectedFont;
     try { payload.CreatedAt = firebase.firestore.FieldValue.serverTimestamp(); } catch (error) {}
@@ -5812,7 +5839,7 @@ async function submitFreedomWallNote(event) {
       // Retry once with a rules-compatible payload instead of making the user
       // think the wall is broken. Full customization persists as soon as the
       // updated Firestore rules are published.
-      if (isFreedomWallRulesCompatibilityError(writeError)) {
+      if (isFreedomWallRulesCompatibilityError(writeError) && activeWallId === FREEDOM_WALL_LEGACY_SESSION_ID) {
         const legacyPayload = buildFreedomWallLegacyCompatiblePayload(payload);
         try {
           await commitNotePayload(legacyPayload);
@@ -5878,9 +5905,12 @@ async function startFreedomWallLive() {
   }
 
   try {
-    const query = db.collection(FREEDOM_WALL_COLLECTION)
-      .orderBy("CreatedAtMs", "asc")
-      .limitToLast(FREEDOM_WALL_MAX_RENDERED_NOTES);
+    const activeWallId = getFreedomWallActiveSessionId();
+    // Session-aware query. New walls are isolated by WallID. The legacy wall
+    // keeps supporting old documents that predate WallID without requiring a migration.
+    const query = activeWallId === FREEDOM_WALL_LEGACY_SESSION_ID
+      ? db.collection(FREEDOM_WALL_COLLECTION).limit(Math.max(FREEDOM_WALL_MAX_RENDERED_NOTES, 800))
+      : db.collection(FREEDOM_WALL_COLLECTION).where("WallID", "==", activeWallId).limit(FREEDOM_WALL_MAX_RENDERED_NOTES);
 
     // v483: metadata-only snapshots are intentionally ignored. They do not
     // change what students see and were causing unnecessary phone repaints.
@@ -5915,7 +5945,10 @@ async function startFreedomWallLive() {
           return;
         }
       }
-      const notes = snapshot.docs.map((doc, index) => normalizeFreedomWallNote(doc, index)).filter(Boolean);
+      const notes = snapshot.docs
+        .map((doc, index) => normalizeFreedomWallNote(doc, index))
+        .filter(Boolean)
+        .filter((note) => note.wallId === activeWallId);
       freedomWallNotesCache = notes;
       renderFreedomWallNotes(notes);
     }, (error) => {
@@ -5934,8 +5967,29 @@ async function startFreedomWallLive() {
 }
 
 function configureFreedomWall(config) {
+  const previousWallId = getFreedomWallActiveSessionId(freedomWallConfig);
+  const nextWallId = getFreedomWallActiveSessionId(config);
+  const wallChanged = Boolean(freedomWallConfig && previousWallId !== nextWallId);
+  if (wallChanged) {
+    freedomWallListenToken += 1;
+    try { freedomWallUnsubscribe?.(); } catch (error) {}
+    freedomWallUnsubscribe = null;
+    stopFreedomWallPromptReactionLive();
+    closeFreedomWallReactionMenu();
+    freedomWallNotesCache = [];
+    freedomWallLastRenderSignature = "";
+    freedomWallLastRenderedCount = 0;
+    freedomWallLocalDragPositions.clear();
+    freedomWallPromptDismissedSignature = "";
+  }
   freedomWallConfig = config;
   const layer = ensureHomepageEffectLayer();
+  if (wallChanged) {
+    const stage = layer?.querySelector("#freedomWallNotesStage");
+    const dragOverlay = layer?.querySelector("#freedomWallDragOverlay");
+    if (stage) stage.replaceChildren();
+    if (dragOverlay) dragOverlay.replaceChildren();
+  }
   const scene = layer.querySelector(".homepageFreedomWallScene");
   const addButton = layer.querySelector("#freedomWallAddBtn");
   const authorInput = layer.querySelector("#freedomWallAuthorInput");
