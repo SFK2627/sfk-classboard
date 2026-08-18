@@ -1696,6 +1696,7 @@ const HOMEPAGE_EFFECT_KEYS = new Set([
   "FreedomWallAllowYouTubeSearch",
   "FreedomWallAllowGifSearch",
   "FreedomWallMediaSearchUrl",
+  "FreedomWallGiphyApiKey",
   "FreedomWallYouTubePlaybackMode",
   "FreedomWallPlaylistEnabled",
   "FreedomWallPlaylist",
@@ -2211,6 +2212,7 @@ function normalizeHomepageEffectConfig(settings = {}) {
   const freedomWallAllowYouTubeSearch = String(settings.FreedomWallAllowYouTubeSearch || "NO").trim().toUpperCase() === "YES";
   const freedomWallYouTubePlaybackMode = normalizeFreedomWallYouTubePlaybackMode(settings.FreedomWallYouTubePlaybackMode || "viewer");
   const freedomWallMediaSearchUrl = String(settings.FreedomWallMediaSearchUrl || "").trim().slice(0, 1200);
+  const freedomWallGiphyApiKey = String(settings.FreedomWallGiphyApiKey || "").trim().slice(0, 240);
   const hasFreedomWallPlaylistSetting = Object.prototype.hasOwnProperty.call(settings || {}, "FreedomWallPlaylistEnabled");
   const freedomWallPlaylist = normalizeFreedomWallPlaylist(settings.FreedomWallPlaylist, mode === "freedom-wall" ? audioUrl : "");
   const freedomWallPlaylistEnabled = mode === "freedom-wall" && freedomWallPlaylist.length > 0 && (hasFreedomWallPlaylistSetting
@@ -2220,8 +2222,8 @@ function normalizeHomepageEffectConfig(settings = {}) {
   const freedomWallPlaylistLoop = String(settings.FreedomWallPlaylistLoop || "YES").trim().toUpperCase() !== "NO";
   const freedomWallActiveWallId = normalizeFreedomWallSessionId(settings.FreedomWallActiveWallID || FREEDOM_WALL_LEGACY_SESSION_ID);
   const playlistSignature = freedomWallPlaylist.map((track) => `${track.title}~${track.url}`).join("~~");
-  const signature = updatedAt || [enabled ? "1" : "0", mode, title, message, images.join("~"), dismissible ? "1" : "0", alertSound ? "1" : "0", audioEnabled ? "1" : "0", audioUrl, audioLoop ? "1" : "0", youtubeUrl, youtubeMuted ? "1" : "0", rickrollUrl, freedomWallTheme, freedomWallAllowPosting ? "1" : "0", freedomWallShowNames ? "1" : "0", freedomWallAllowTextColor ? "1" : "0", freedomWallAllowFont ? "1" : "0", freedomWallAllowGif ? "1" : "0", freedomWallAllowGifSearch ? "1" : "0", freedomWallAllowYouTube ? "1" : "0", freedomWallAllowYouTubeSearch ? "1" : "0", freedomWallYouTubePlaybackMode, freedomWallMediaSearchUrl, freedomWallPlaylistEnabled ? "1" : "0", freedomWallPlaylistShuffle ? "1" : "0", freedomWallPlaylistLoop ? "1" : "0", playlistSignature, freedomWallActiveWallId].join("|");
-  return { enabled, mode, title, message, image: images[0] || "", images, dismissible, alertSound, spiderSound, audioEnabled, audioUrl, audioLoop, youtubeUrl, youtubeMuted, rickrollUrl, updatedAt, signature, freedomWallTheme, freedomWallAllowPosting, freedomWallShowNames, freedomWallAllowTextColor, freedomWallAllowFont, freedomWallAllowGif, freedomWallAllowGifSearch, freedomWallAllowYouTube, freedomWallAllowYouTubeSearch, freedomWallYouTubePlaybackMode, freedomWallMediaSearchUrl, freedomWallPlaylistEnabled, freedomWallPlaylist, freedomWallPlaylistShuffle, freedomWallPlaylistLoop, freedomWallActiveWallId };
+  const signature = updatedAt || [enabled ? "1" : "0", mode, title, message, images.join("~"), dismissible ? "1" : "0", alertSound ? "1" : "0", audioEnabled ? "1" : "0", audioUrl, audioLoop ? "1" : "0", youtubeUrl, youtubeMuted ? "1" : "0", rickrollUrl, freedomWallTheme, freedomWallAllowPosting ? "1" : "0", freedomWallShowNames ? "1" : "0", freedomWallAllowTextColor ? "1" : "0", freedomWallAllowFont ? "1" : "0", freedomWallAllowGif ? "1" : "0", freedomWallAllowGifSearch ? "1" : "0", freedomWallAllowYouTube ? "1" : "0", freedomWallAllowYouTubeSearch ? "1" : "0", freedomWallYouTubePlaybackMode, freedomWallMediaSearchUrl, freedomWallGiphyApiKey ? "giphy-key" : "", freedomWallPlaylistEnabled ? "1" : "0", freedomWallPlaylistShuffle ? "1" : "0", freedomWallPlaylistLoop ? "1" : "0", playlistSignature, freedomWallActiveWallId].join("|");
+  return { enabled, mode, title, message, image: images[0] || "", images, dismissible, alertSound, spiderSound, audioEnabled, audioUrl, audioLoop, youtubeUrl, youtubeMuted, rickrollUrl, updatedAt, signature, freedomWallTheme, freedomWallAllowPosting, freedomWallShowNames, freedomWallAllowTextColor, freedomWallAllowFont, freedomWallAllowGif, freedomWallAllowGifSearch, freedomWallAllowYouTube, freedomWallAllowYouTubeSearch, freedomWallYouTubePlaybackMode, freedomWallMediaSearchUrl, freedomWallGiphyApiKey, freedomWallPlaylistEnabled, freedomWallPlaylist, freedomWallPlaylistShuffle, freedomWallPlaylistLoop, freedomWallActiveWallId };
 }
 
 function normalizeHomepageEffectYouTubeUrl(value) {
@@ -2281,6 +2283,10 @@ function normalizeFreedomWallMediaSearchUrl(value) {
 
 function getFreedomWallMediaSearchEndpoint() {
   return normalizeFreedomWallMediaSearchUrl(freedomWallConfig?.freedomWallMediaSearchUrl || "");
+}
+
+function getFreedomWallGiphyApiKey() {
+  return String(freedomWallConfig?.freedomWallGiphyApiKey || "").trim().slice(0, 240);
 }
 
 function normalizeFreedomWallSpotifySearchUrl(value) {
@@ -2408,13 +2414,39 @@ async function fetchFreedomWallMediaSearchResults(provider, query) {
   url.searchParams.set("action", provider);
   url.searchParams.set("q", q);
   url.searchParams.set("limit", "8");
+  url.searchParams.set("_sfk", Date.now().toString());
+
   let data;
-  try {
-    const response = await fetch(url.toString(), { cache: "no-store" });
-    data = await response.json();
-  } catch (error) {
-    data = await freedomWallJsonp(url.toString());
+
+  // v507: Apps Script ContentService can be inconsistent with cross-origin
+  // fetch(), especially from file:// and some GitHub Pages/browser paths.
+  // The proxy already supports callback= JSONP, so use that as the PRIMARY
+  // path for YouTube. This avoids CORS/redirect behavior while keeping the
+  // YouTube API key private inside Apps Script.
+  if (String(provider || "").toLowerCase().startsWith("youtube")) {
+    try {
+      data = await freedomWallJsonp(url.toString());
+    } catch (jsonpError) {
+      // Network fetch is only a fallback for environments where JSONP/script
+      // loading is blocked. Never silently turn a transport failure into [].
+      try {
+        const response = await fetch(url.toString(), { cache: "no-store", redirect: "follow" });
+        if (!response.ok) throw new Error(`YouTube search HTTP ${response.status}.`);
+        data = await response.json();
+      } catch (fetchError) {
+        throw new Error(jsonpError?.message || fetchError?.message || "YouTube search service could not be reached.");
+      }
+    }
+  } else {
+    try {
+      const response = await fetch(url.toString(), { cache: "no-store", redirect: "follow" });
+      if (!response.ok) throw new Error(`Media search HTTP ${response.status}.`);
+      data = await response.json();
+    } catch (error) {
+      data = await freedomWallJsonp(url.toString());
+    }
   }
+
   if (!data || data.ok === false) throw new Error(data?.error || "Media search failed.");
   return Array.isArray(data.items) ? data.items : [];
 }
@@ -2425,8 +2457,38 @@ async function fetchFreedomWallYouTubeResults(query) {
 }
 
 async function fetchFreedomWallGifResults(query) {
-  const list = await fetchFreedomWallMediaSearchResults("gif", query);
-  return list.map(normalizeFreedomWallGifItem).filter(Boolean).slice(0, 8);
+  const key = getFreedomWallGiphyApiKey();
+  const q = String(query || "").trim().slice(0, 50);
+  if (!key) throw new Error("GIPHY Search is not configured yet.");
+  if (!q) return [];
+
+  // GIPHY requires Search API requests to be made directly from the client.
+  // Do not route this request through the Apps Script YouTube proxy.
+  const url = new URL("https://api.giphy.com/v1/gifs/search");
+  url.searchParams.set("api_key", key);
+  url.searchParams.set("q", q);
+  url.searchParams.set("limit", "8");
+  url.searchParams.set("rating", "pg");
+
+  const response = await fetch(url.toString(), { cache: "no-store" });
+  let data = {};
+  try { data = await response.json(); } catch (error) {}
+  if (!response.ok) {
+    const message = String(data?.meta?.msg || data?.meta?.message || `GIPHY search failed (${response.status}).`);
+    throw new Error(message);
+  }
+
+  const list = Array.isArray(data?.data) ? data.data : [];
+  return list.map((item) => {
+    const images = item?.images || {};
+    const gif = images.downsized_medium || images.downsized || images.fixed_height || images.original || {};
+    const preview = images.fixed_width_small || images.fixed_height_small || images.preview_gif || gif || {};
+    return normalizeFreedomWallGifItem({
+      title: item?.title || "GIF",
+      url: String(gif?.url || preview?.url || ""),
+      previewUrl: String(preview?.url || gif?.url || "")
+    });
+  }).filter(Boolean).slice(0, 8);
 }
 
 function renderHomepageEffectYouTube(config) {
@@ -5573,7 +5635,8 @@ function getFreedomWallAllowedAttachmentModes() {
   const isPolaroid = theme === "polaroid";
   const allowGif = Boolean(freedomWallConfig?.freedomWallAllowGif);
   const searchEndpoint = getFreedomWallMediaSearchEndpoint();
-  const allowGifSearch = Boolean(freedomWallConfig?.freedomWallAllowGifSearch && searchEndpoint);
+  const giphyKey = getFreedomWallGiphyApiKey();
+  const allowGifSearch = Boolean(freedomWallConfig?.freedomWallAllowGifSearch && giphyKey);
   const allowYouTube = Boolean(freedomWallConfig?.freedomWallAllowYouTube);
   const allowYouTubeSearch = Boolean(freedomWallConfig?.freedomWallAllowYouTubeSearch && searchEndpoint);
   const modes = [{ value:"none", label:"None" }];
@@ -5800,6 +5863,10 @@ function renderFreedomWallGifResults(items = []) {
     results.appendChild(empty);
     return;
   }
+  const attribution = document.createElement("small");
+  attribution.className = "freedomWallGiphyAttribution";
+  attribution.textContent = "Powered by GIPHY";
+  results.appendChild(attribution);
   items.forEach((item) => {
     const btn = document.createElement("button");
     btn.type = "button";

@@ -312,8 +312,12 @@
                 </select>
               </div>
               <div class="freedomWallSpotifySetting freedomWallMediaSearchSetting">
-                <label for="freedomWallMediaSearchUrl"><strong>Media Search Apps Script URL</strong><small>Paste the v501 Media Search proxy URL. Used by GIF Search and YouTube Search only.</small></label>
+                <label for="freedomWallMediaSearchUrl"><strong>YouTube Search Apps Script URL</strong><small>Paste the deployed YouTube Search proxy /exec URL. This proxy is for YouTube only.</small></label>
                 <input id="freedomWallMediaSearchUrl" type="url" inputmode="url" placeholder="https://script.google.com/macros/s/.../exec" />
+              </div>
+              <div class="freedomWallSpotifySetting freedomWallGiphyKeySetting">
+                <label for="freedomWallGiphyApiKey"><strong>GIPHY API Key</strong><small>Used directly by the browser for GIF Search. GIPHY requires Search requests to be client-side, so this key is not sent through Apps Script.</small></label>
+                <input id="freedomWallGiphyApiKey" type="password" autocomplete="off" placeholder="Paste your GIPHY API key" />
               </div>
             </div>
 
@@ -1283,6 +1287,7 @@
         FreedomWallYouTubePlaybackMode: String(byId("freedomWallYouTubePlaybackMode")?.value || "viewer").trim().toLowerCase() === "inline" ? "inline" : "viewer",
         FreedomWallAllowSpotify: "NO",
         FreedomWallMediaSearchUrl: String(byId("freedomWallMediaSearchUrl")?.value || "").trim().slice(0,1200),
+        FreedomWallGiphyApiKey: String(byId("freedomWallGiphyApiKey")?.value || "").trim().slice(0,240),
         FreedomWallSpotifySearchUrl: "",
         FreedomWallPlaylistEnabled: wallMode ? (wallPlaylistEnabled ? "YES" : "NO") : "NO",
         FreedomWallPlaylist: wallMode ? JSON.stringify(wallPlaylist) : "[]",
@@ -1650,20 +1655,25 @@
       }
     });
     function syncFreedomWallYouTubePlaybackUi(){
-      const enabled = $("freedomWallAllowYouTube")?.checked === true;
+      const enabled = $("freedomWallAllowYouTube")?.checked === true || $("freedomWallAllowYouTubeSearch")?.checked === true;
       const select = $("freedomWallYouTubePlaybackMode");
       const wrap = select?.closest?.(".freedomWallYoutubePlaybackSetting");
       if (select) select.disabled = !enabled;
       wrap?.classList?.toggle("is-disabled", !enabled);
     }
-    $("freedomWallAllowYouTube")?.addEventListener("change", syncFreedomWallYouTubePlaybackUi);
+    ["freedomWallAllowYouTube","freedomWallAllowYouTubeSearch"].forEach((id) => $(id)?.addEventListener("change", syncFreedomWallYouTubePlaybackUi));
     syncFreedomWallYouTubePlaybackUi();
     function syncFreedomWallMediaSearchUi(){
-      const anySearch = $("freedomWallAllowYouTubeSearch")?.checked === true || $("freedomWallAllowGifSearch")?.checked === true;
+      const youtubeSearch = $("freedomWallAllowYouTubeSearch")?.checked === true;
+      const gifSearch = $("freedomWallAllowGifSearch")?.checked === true;
       const mediaInput = $("freedomWallMediaSearchUrl");
       const mediaWrap = mediaInput?.closest?.(".freedomWallMediaSearchSetting");
-      if (mediaInput) mediaInput.disabled = !anySearch;
-      mediaWrap?.classList?.toggle("is-disabled", !anySearch);
+      const giphyInput = $("freedomWallGiphyApiKey");
+      const giphyWrap = giphyInput?.closest?.(".freedomWallGiphyKeySetting");
+      if (mediaInput) mediaInput.disabled = !youtubeSearch;
+      mediaWrap?.classList?.toggle("is-disabled", !youtubeSearch);
+      if (giphyInput) giphyInput.disabled = !gifSearch;
+      giphyWrap?.classList?.toggle("is-disabled", !gifSearch);
     }
     ["freedomWallAllowYouTubeSearch","freedomWallAllowGifSearch"].forEach((id) => $(id)?.addEventListener("change", syncFreedomWallMediaSearchUi));
     syncFreedomWallMediaSearchUi();
@@ -1679,7 +1689,7 @@
       const db = getDb();
       if (!db) return;
       try {
-        const keys = ["FreedomWallTheme","FreedomWallAllowPosting","FreedomWallShowNames","FreedomWallAllowTextColor","FreedomWallAllowFont","FreedomWallAllowGif","FreedomWallAllowGifSearch","FreedomWallAllowYouTube","FreedomWallAllowYouTubeSearch","FreedomWallYouTubePlaybackMode","FreedomWallMediaSearchUrl","FreedomWallPlaylistEnabled","FreedomWallPlaylist","FreedomWallPlaylistShuffle","FreedomWallPlaylistLoop","FreedomWallActiveWallID","HomepageEffectAudioEnabled","HomepageEffectAudioUrl"];
+        const keys = ["FreedomWallTheme","FreedomWallAllowPosting","FreedomWallShowNames","FreedomWallAllowTextColor","FreedomWallAllowFont","FreedomWallAllowGif","FreedomWallAllowGifSearch","FreedomWallAllowYouTube","FreedomWallAllowYouTubeSearch","FreedomWallYouTubePlaybackMode","FreedomWallMediaSearchUrl","FreedomWallGiphyApiKey","FreedomWallPlaylistEnabled","FreedomWallPlaylist","FreedomWallPlaylistShuffle","FreedomWallPlaylistLoop","FreedomWallActiveWallID","HomepageEffectAudioEnabled","HomepageEffectAudioUrl"];
         const docs = await Promise.all(keys.map((key) => db.collection("settings").doc(key).get()));
         const values = {};
         docs.forEach((doc, index) => { if (doc.exists) values[keys[index]] = String(doc.data()?.Value || ""); });
@@ -1694,6 +1704,7 @@
         if ($("freedomWallAllowYouTubeSearch")) $("freedomWallAllowYouTubeSearch").checked = String(values.FreedomWallAllowYouTubeSearch || "NO").toUpperCase() === "YES";
         if ($("freedomWallYouTubePlaybackMode")) $("freedomWallYouTubePlaybackMode").value = String(values.FreedomWallYouTubePlaybackMode || "viewer").toLowerCase() === "inline" ? "inline" : "viewer";
         if ($("freedomWallMediaSearchUrl")) $("freedomWallMediaSearchUrl").value = String(values.FreedomWallMediaSearchUrl || "").trim();
+        if ($("freedomWallGiphyApiKey")) $("freedomWallGiphyApiKey").value = String(values.FreedomWallGiphyApiKey || "").trim();
         syncFreedomWallYouTubePlaybackUi();
         syncFreedomWallMediaSearchUi();
         let savedPlaylist = parsePlaylistValue(values.FreedomWallPlaylist || "[]");

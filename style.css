@@ -34415,3 +34415,14 @@ html.sfkFreedomWallModalOpen body{
 .freedomWallGifSearchWrap[hidden] {
   display: none !important;
 }
+
+/* v506 — GIPHY direct client-side search attribution */
+.freedomWallGiphyAttribution{
+  grid-column:1/-1;
+  display:block;
+  margin:0 0 2px;
+  font:900 9px/1.2 Arial,sans-serif;
+  letter-spacing:.02em;
+  color:#6b7280;
+  text-align:right;
+}
