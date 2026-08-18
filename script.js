@@ -1744,6 +1744,7 @@ const HOMEPAGE_RICKROLL_DEFAULT_URL = "https://streamable.com/33rhw4";
    Live student sticky notes + Admin prompt/background controls.
 ========================================================= */
 const FREEDOM_WALL_COLLECTION = "freedomWallNotes";
+const FREEDOM_WALL_PROMPT_REACTION_COLLECTION = "freedomWallPromptReactions";
 const FREEDOM_WALL_MAX_RENDERED_NOTES = 400;
 const FREEDOM_WALL_NOTE_MAX_LENGTH = 240;
 const FREEDOM_WALL_AUTHOR_MAX_LENGTH = 42;
@@ -1776,6 +1777,10 @@ const FREEDOM_WALL_LEGACY_COLOR_MAP = Object.freeze({
   orange:"orange", tan:"orange", gray:"white", navy:"blue", black:"blue"
 });
 const FREEDOM_WALL_TEXTURED_TEXT_THEMES = new Set(["jungle","chalkboard","graffiti","vandal","poste","comic","comic-noir","comic-manga","comic-strip","spiderman"]);
+const FREEDOM_WALL_REACTIONS = Object.freeze({ heart:"❤️", haha:"😂", wow:"😮" });
+const FREEDOM_WALL_REACTION_TYPES = Object.freeze(Object.keys(FREEDOM_WALL_REACTIONS));
+const FREEDOM_WALL_REACTION_HOLD_MS = 520;
+const FREEDOM_WALL_REACTION_MOVE_THRESHOLD = 9;
 let freedomWallUnsubscribe = null;
 let freedomWallListenToken = 0;
 let freedomWallConfig = null;
@@ -1970,6 +1975,15 @@ let freedomWallDragPending = null;
 let freedomWallDragLongPressTimer = 0;
 let freedomWallDragMoveFrame = 0;
 let freedomWallDragFrontZ = 350;
+let freedomWallReactionMenuTarget = null;
+let freedomWallReactionWriting = false;
+let freedomWallPromptReactionUnsubscribe = null;
+let freedomWallPromptReactionDocId = "";
+let freedomWallPromptReactionConnecting = false;
+let freedomWallPromptReactionListenToken = 0;
+let freedomWallPromptReactionsCache = {};
+let freedomWallPromptReactionPending = null;
+let freedomWallPromptReactionTimer = 0;
 
 function isHomepageEffectStartupBlocked() {
   const intro = document.getElementById("sfkIntroOverlay");
@@ -2952,7 +2966,17 @@ function ensureHomepageEffectLayer() {
         <span class="freedomWallPromptEyebrow">TODAY'S WALL PROMPT</span>
         <h2 id="freedomWallPromptTitle"></h2>
         <p id="freedomWallPromptMessage"></p>
+        <div id="freedomWallPromptReactionSummary" class="freedomWallReactionSummary is-prompt" aria-live="polite" hidden></div>
       </section>
+      <div id="freedomWallReactionMenu" class="freedomWallReactionMenu" role="menu" aria-label="React" hidden>
+        <div class="freedomWallReactionMenuHead"><strong id="freedomWallReactionMenuTitle">React</strong><button id="freedomWallReactionMenuClose" type="button" aria-label="Close reactions">×</button></div>
+        <div class="freedomWallReactionChoices">
+          <button type="button" role="menuitem" data-fw-reaction="heart" aria-label="Heart"><span>❤️</span><b>Heart</b><small data-fw-reaction-count="heart">0</small></button>
+          <button type="button" role="menuitem" data-fw-reaction="haha" aria-label="Haha"><span>😂</span><b>Haha</b><small data-fw-reaction-count="haha">0</small></button>
+          <button type="button" role="menuitem" data-fw-reaction="wow" aria-label="Wow"><span>😮</span><b>Wow</b><small data-fw-reaction-count="wow">0</small></button>
+        </div>
+        <small id="freedomWallReactionStatus" class="freedomWallReactionStatus" role="status"></small>
+      </div>
       <button id="freedomWallAddBtn" class="freedomWallAddBtn" type="button" aria-label="Add a note"><span>+</span><small>Add Note</small></button>
       <div id="freedomWallComposer" class="freedomWallComposer" hidden>
         <form id="freedomWallComposerForm" class="freedomWallComposerCard">
@@ -3096,6 +3120,7 @@ function ensureHomepageEffectLayer() {
     if (event.target?.id === "freedomWallComposer") closeFreedomWallComposer();
   });
   setupFreedomWallNoteDragging(layer);
+  setupFreedomWallReactions(layer);
 
   layer.querySelector("#homepageEffectClose")?.addEventListener("click", dismissHomepageEffectForView);
   layer.querySelector("#homepageRickrollFakeExit")?.addEventListener("click", revealHomepageRickroll);
@@ -4198,23 +4223,284 @@ function endFreedomWallNoteDrag(event, force = false) {
   event?.preventDefault?.();
 }
 
+function updateFreedomWallReactionSummary(container, reactions = {}, targetType = "note") {
+  if (!container) return;
+  const id = targetType === "prompt" ? "freedomWallPromptReactionSummary" : "";
+  let summary = targetType === "prompt" ? container.querySelector?.(`#${id}`) : container.querySelector?.(".freedomWallReactionSummary.is-note");
+  if (!summary && targetType === "note") {
+    summary = document.createElement("div");
+    summary.className = "freedomWallReactionSummary is-note";
+    summary.setAttribute("aria-live", "polite");
+    container.appendChild(summary);
+  }
+  if (!summary) return;
+  const { counts, mine } = getFreedomWallReactionStats(reactions);
+  const parts = FREEDOM_WALL_REACTION_TYPES.filter((type) => counts[type] > 0).map((type) => {
+    const selected = mine === type ? " is-mine" : "";
+    return `<span class="freedomWallReactionCount${selected}" data-reaction="${type}">${FREEDOM_WALL_REACTIONS[type]} <b>${counts[type]}</b></span>`;
+  });
+  summary.innerHTML = parts.join("");
+  summary.hidden = parts.length === 0;
+  container.classList?.toggle?.("has-reactions", parts.length > 0);
+}
+
+function getFreedomWallPromptReactionDocId() {
+  const card = document.getElementById("homepageEffectLayer")?.querySelector("#freedomWallPromptCard");
+  if (!card || card.hidden) return "";
+  const signature = String(card.dataset.promptSignature || "").trim();
+  if (!signature) return "";
+  const a = (freedomWallHash(signature) >>> 0).toString(36);
+  const b = (freedomWallHash(signature.split("").reverse().join("")) >>> 0).toString(36);
+  return `prompt_${a}_${b}`;
+}
+
+function getFreedomWallReactionMapForTarget(target = freedomWallReactionMenuTarget) {
+  if (!target) return {};
+  if (target.type === "prompt") return normalizeFreedomWallReactions(freedomWallPromptReactionsCache);
+  const note = freedomWallNotesCache.find((item) => String(item?.id || "") === String(target.id || ""));
+  return normalizeFreedomWallReactions(note?.reactions || {});
+}
+
+function updateFreedomWallReactionMenuState() {
+  const layer = document.getElementById("homepageEffectLayer");
+  const menu = layer?.querySelector("#freedomWallReactionMenu");
+  if (!menu || menu.hidden || !freedomWallReactionMenuTarget) return;
+  const { counts, mine } = getFreedomWallReactionStats(getFreedomWallReactionMapForTarget());
+  menu.querySelectorAll("[data-fw-reaction]").forEach((button) => {
+    const type = String(button.dataset.fwReaction || "");
+    button.classList.toggle("is-selected", mine === type);
+    button.setAttribute("aria-pressed", mine === type ? "true" : "false");
+    const count = button.querySelector(`[data-fw-reaction-count="${type}"]`);
+    if (count) count.textContent = String(counts[type] || 0);
+  });
+}
+
+function positionFreedomWallReactionMenu(clientX, clientY) {
+  const layer = document.getElementById("homepageEffectLayer");
+  const menu = layer?.querySelector("#freedomWallReactionMenu");
+  if (!menu || menu.hidden || window.innerWidth <= 700) return;
+  menu.style.left = `${Math.max(10, Number(clientX) || window.innerWidth / 2)}px`;
+  menu.style.top = `${Math.max(10, Number(clientY) || window.innerHeight / 2)}px`;
+  menu.style.transform = "none";
+  const rect = menu.getBoundingClientRect();
+  const left = Math.max(10, Math.min(window.innerWidth - rect.width - 10, Number(clientX) || 10));
+  const top = Math.max(10, Math.min(window.innerHeight - rect.height - 10, Number(clientY) || 10));
+  menu.style.left = `${left}px`;
+  menu.style.top = `${top}px`;
+}
+
+function openFreedomWallReactionMenu(target, clientX, clientY, pointerType = "mouse") {
+  if (!target?.type || !target?.id) return;
+  const layer = document.getElementById("homepageEffectLayer");
+  const menu = layer?.querySelector("#freedomWallReactionMenu");
+  const status = layer?.querySelector("#freedomWallReactionStatus");
+  const title = layer?.querySelector("#freedomWallReactionMenuTitle");
+  if (!menu) return;
+  closeFreedomWallCustomizerPanel();
+  freedomWallReactionMenuTarget = { type: target.type, id: String(target.id) };
+  if (title) title.textContent = target.type === "prompt" ? "React to the prompt" : "React to this note";
+  if (status) status.textContent = "";
+  menu.dataset.pointerType = pointerType || "mouse";
+  menu.hidden = false;
+  updateFreedomWallReactionMenuState();
+  positionFreedomWallReactionMenu(clientX, clientY);
+  window.requestAnimationFrame(() => menu.classList.add("is-open"));
+  try { if (pointerType !== "mouse" && navigator.vibrate) navigator.vibrate(8); } catch (error) {}
+}
+
+function closeFreedomWallReactionMenu() {
+  const menu = document.getElementById("homepageEffectLayer")?.querySelector("#freedomWallReactionMenu");
+  if (!menu) { freedomWallReactionMenuTarget = null; return; }
+  menu.classList.remove("is-open");
+  menu.hidden = true;
+  menu.style.removeProperty("left");
+  menu.style.removeProperty("top");
+  menu.style.removeProperty("transform");
+  freedomWallReactionMenuTarget = null;
+}
+
+function applyFreedomWallOptimisticReaction(target, reactions) {
+  const clean = normalizeFreedomWallReactions(reactions);
+  if (target.type === "prompt") {
+    freedomWallPromptReactionsCache = clean;
+    const promptCard = document.getElementById("homepageEffectLayer")?.querySelector("#freedomWallPromptCard");
+    updateFreedomWallReactionSummary(promptCard, clean, "prompt");
+  } else {
+    const note = freedomWallNotesCache.find((item) => String(item?.id || "") === String(target.id || ""));
+    if (note) note.reactions = clean;
+    const card = document.getElementById("homepageEffectLayer")?.querySelector(`.freedomWallNote[data-note-id="${CSS.escape(String(target.id || ""))}"]`);
+    updateFreedomWallReactionSummary(card, clean, "note");
+  }
+  updateFreedomWallReactionMenuState();
+}
+
+async function toggleFreedomWallReaction(type) {
+  if (freedomWallReactionWriting || !FREEDOM_WALL_REACTION_TYPES.includes(String(type || ""))) return;
+  const target = freedomWallReactionMenuTarget ? { ...freedomWallReactionMenuTarget } : null;
+  if (!target) return;
+  const layer = document.getElementById("homepageEffectLayer");
+  const status = layer?.querySelector("#freedomWallReactionStatus");
+  const deviceId = getFreedomWallDeviceId();
+  const previous = getFreedomWallReactionMapForTarget(target);
+  const optimistic = { ...previous };
+  if (optimistic[deviceId] === type) delete optimistic[deviceId];
+  else optimistic[deviceId] = type;
+  freedomWallReactionWriting = true;
+  applyFreedomWallOptimisticReaction(target, optimistic);
+  if (status) status.textContent = "Saving…";
+  try {
+    const db = await waitForClassBoardFirestore(12000);
+    if (!db) throw new Error("wall unavailable");
+    const ref = target.type === "prompt"
+      ? db.collection(FREEDOM_WALL_PROMPT_REACTION_COLLECTION).doc(target.id)
+      : db.collection(FREEDOM_WALL_COLLECTION).doc(target.id);
+    await db.runTransaction(async (transaction) => {
+      const snapshot = await transaction.get(ref);
+      if (target.type === "note" && !snapshot.exists) throw new Error("note missing");
+      const current = normalizeFreedomWallReactions(snapshot.exists ? (snapshot.data()?.Reactions || {}) : {});
+      if (current[deviceId] === type) delete current[deviceId];
+      else current[deviceId] = type;
+      const payload = {
+        Reactions: current,
+        ReactionDeviceId: deviceId,
+        ReactionUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      if (target.type === "prompt") {
+        payload.PromptKey = target.id;
+        transaction.set(ref, payload, { merge: true });
+      } else {
+        transaction.update(ref, payload);
+      }
+    });
+    if (status) status.textContent = "Saved";
+    window.setTimeout(() => closeFreedomWallReactionMenu(), 90);
+  } catch (error) {
+    console.warn("Freedom Wall reaction failed:", error);
+    applyFreedomWallOptimisticReaction(target, previous);
+    if (status) status.textContent = isFreedomWallRulesCompatibilityError(error) ? "Update the Firebase Rules to enable reactions." : "Unable to react right now.";
+  } finally {
+    freedomWallReactionWriting = false;
+  }
+}
+
+function stopFreedomWallPromptReactionLive() {
+  freedomWallPromptReactionListenToken += 1;
+  try { freedomWallPromptReactionUnsubscribe?.(); } catch (error) {}
+  freedomWallPromptReactionUnsubscribe = null;
+  freedomWallPromptReactionConnecting = false;
+  freedomWallPromptReactionDocId = "";
+  freedomWallPromptReactionsCache = {};
+  const card = document.getElementById("homepageEffectLayer")?.querySelector("#freedomWallPromptCard");
+  updateFreedomWallReactionSummary(card, {}, "prompt");
+}
+
+async function syncFreedomWallPromptReactionLive() {
+  const docId = getFreedomWallPromptReactionDocId();
+  if (!docId) { stopFreedomWallPromptReactionLive(); return; }
+  if (freedomWallPromptReactionDocId === docId && (freedomWallPromptReactionUnsubscribe || freedomWallPromptReactionConnecting)) return;
+  stopFreedomWallPromptReactionLive();
+  freedomWallPromptReactionDocId = docId;
+  freedomWallPromptReactionConnecting = true;
+  const token = ++freedomWallPromptReactionListenToken;
+  const db = await waitForClassBoardFirestore(12000);
+  if (token !== freedomWallPromptReactionListenToken || !db || getFreedomWallPromptReactionDocId() !== docId) return;
+  try {
+    freedomWallPromptReactionUnsubscribe = db.collection(FREEDOM_WALL_PROMPT_REACTION_COLLECTION).doc(docId).onSnapshot((snapshot) => {
+      freedomWallPromptReactionConnecting = false;
+      if (freedomWallPromptReactionDocId !== docId) return;
+      freedomWallPromptReactionsCache = normalizeFreedomWallReactions(snapshot.exists ? (snapshot.data()?.Reactions || {}) : {});
+      const card = document.getElementById("homepageEffectLayer")?.querySelector("#freedomWallPromptCard");
+      updateFreedomWallReactionSummary(card, freedomWallPromptReactionsCache, "prompt");
+      if (freedomWallReactionMenuTarget?.type === "prompt" && freedomWallReactionMenuTarget.id === docId) updateFreedomWallReactionMenuState();
+    }, (error) => {
+      console.warn("Freedom Wall prompt reactions unavailable:", error);
+      try { freedomWallPromptReactionUnsubscribe?.(); } catch (unsubscribeError) {}
+      freedomWallPromptReactionUnsubscribe = null;
+      freedomWallPromptReactionConnecting = false;
+      freedomWallPromptReactionDocId = "";
+    });
+  } catch (error) {
+    console.warn("Freedom Wall prompt reaction listener failed:", error);
+    freedomWallPromptReactionUnsubscribe = null;
+    freedomWallPromptReactionConnecting = false;
+    freedomWallPromptReactionDocId = "";
+  }
+}
+
+function clearFreedomWallPromptReactionPending() {
+  if (freedomWallPromptReactionTimer) window.clearTimeout(freedomWallPromptReactionTimer);
+  freedomWallPromptReactionTimer = 0;
+  if (freedomWallPromptReactionPending) {
+    try { freedomWallPromptReactionPending.card?.releasePointerCapture?.(freedomWallPromptReactionPending.pointerId); } catch (error) {}
+  }
+  freedomWallPromptReactionPending = null;
+}
+
+function setupFreedomWallReactions(layer) {
+  if (!layer || layer.dataset.reactionsReady === "true") return;
+  layer.dataset.reactionsReady = "true";
+  layer.querySelector("#freedomWallReactionMenuClose")?.addEventListener("click", closeFreedomWallReactionMenu);
+  layer.querySelectorAll("[data-fw-reaction]").forEach((button) => button.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    toggleFreedomWallReaction(button.dataset.fwReaction);
+  }));
+
+  layer.addEventListener("pointerdown", (event) => {
+    if (event.pointerType === "mouse") return;
+    if (event.target?.closest?.("#freedomWallReactionMenu")) return;
+    const prompt = event.target?.closest?.("#freedomWallPromptCard");
+    if (!prompt || prompt.hidden || event.target?.closest?.("button,a,input,textarea,select")) return;
+    clearFreedomWallPromptReactionPending();
+    freedomWallPromptReactionPending = { card: prompt, pointerId:event.pointerId, startX:event.clientX, startY:event.clientY, latestX:event.clientX, latestY:event.clientY };
+    try { prompt.setPointerCapture?.(event.pointerId); } catch (error) {}
+    freedomWallPromptReactionTimer = window.setTimeout(() => {
+      const pending = freedomWallPromptReactionPending;
+      freedomWallPromptReactionTimer = 0;
+      if (!pending || pending.pointerId !== event.pointerId || !pending.card.isConnected) return;
+      const docId = getFreedomWallPromptReactionDocId();
+      clearFreedomWallPromptReactionPending();
+      if (docId) openFreedomWallReactionMenu({ type:"prompt", id:docId }, pending.latestX, pending.latestY, event.pointerType || "touch");
+    }, FREEDOM_WALL_REACTION_HOLD_MS);
+    if (event.cancelable) event.preventDefault();
+  });
+
+  document.addEventListener("pointermove", (event) => {
+    const pending = freedomWallPromptReactionPending;
+    if (!pending || pending.pointerId !== event.pointerId) return;
+    pending.latestX = event.clientX;
+    pending.latestY = event.clientY;
+    if (Math.hypot(event.clientX - pending.startX, event.clientY - pending.startY) > FREEDOM_WALL_REACTION_MOVE_THRESHOLD) clearFreedomWallPromptReactionPending();
+  }, { capture:true, passive:true });
+  document.addEventListener("pointerup", (event) => {
+    if (freedomWallPromptReactionPending?.pointerId === event.pointerId) clearFreedomWallPromptReactionPending();
+  }, true);
+  document.addEventListener("pointercancel", (event) => {
+    if (freedomWallPromptReactionPending?.pointerId === event.pointerId) clearFreedomWallPromptReactionPending();
+  }, true);
+
+  layer.addEventListener("pointerdown", (event) => {
+    if (event.target === layer || event.target?.closest?.(".homepageFreedomWallScene") && !event.target?.closest?.(".freedomWallNote,#freedomWallPromptCard,#freedomWallReactionMenu,#freedomWallAddBtn,#freedomWallComposer,.freedomWallBrand")) {
+      closeFreedomWallReactionMenu();
+    }
+  });
+}
+
 function setupFreedomWallNoteDragging(layer) {
   const stage = layer?.querySelector?.("#freedomWallNotesStage");
   const overlay = layer?.querySelector?.("#freedomWallDragOverlay");
   if (!stage || !overlay || layer.dataset.dragReady === "true") return;
   layer.dataset.dragReady = "true";
 
-  // Delegate from the whole effect layer so notes already moved to the overlay
-  // can be grabbed again without moving them back under the prompt.
+  // v484: touch gesture split. A deliberate stationary hold opens reactions;
+  // movement beyond the threshold starts dragging immediately. Desktop keeps
+  // left-drag for movement and right-click for reactions.
   layer.addEventListener("pointerdown", (event) => {
     const card = event.target?.closest?.(".freedomWallNote");
-    if (!card || !layer.contains(card)) return;
+    if (!card || !layer.contains(card) || event.target?.closest?.("#freedomWallReactionMenu")) return;
+    closeFreedomWallReactionMenu();
 
-    // If a stale pointer somehow survived an OS interruption, a new physical
-    // press safely takes ownership instead of leaving the wall stuck.
-    if (freedomWallDragState && freedomWallDragState.pointerId !== event.pointerId) {
-      endFreedomWallNoteDrag(null, true);
-    }
+    if (freedomWallDragState && freedomWallDragState.pointerId !== event.pointerId) endFreedomWallNoteDrag(null, true);
 
     if (event.pointerType === "mouse") {
       if (event.button !== 0) return;
@@ -4224,81 +4510,89 @@ function setupFreedomWallNoteDragging(layer) {
 
     clearFreedomWallDragLongPressTimer();
     freedomWallDragPending = {
-      card,
-      stage,
-      pointerId: event.pointerId,
-      pointerType: event.pointerType,
-      startX: event.clientX,
-      startY: event.clientY,
-      latestX: event.clientX,
-      latestY: event.clientY
+      card, stage, pointerId:event.pointerId, pointerType:event.pointerType,
+      startX:event.clientX, startY:event.clientY, latestX:event.clientX, latestY:event.clientY
     };
     try { card.setPointerCapture?.(event.pointerId); } catch (error) {}
     freedomWallDragLongPressTimer = window.setTimeout(() => {
-      freedomWallDragLongPressTimer = 0;
       const pending = freedomWallDragPending;
+      freedomWallDragLongPressTimer = 0;
       if (!pending || pending.pointerId !== event.pointerId || !pending.card.isConnected) return;
-      beginFreedomWallNoteDrag(pending.card, {
-        pointerId: pending.pointerId,
-        pointerType: pending.pointerType,
-        clientX: pending.latestX,
-        clientY: pending.latestY,
-        preventDefault() {}
-      });
-    }, 120);
-    event.preventDefault();
+      const id = String(pending.card.dataset.noteId || "");
+      const x = pending.latestX, y = pending.latestY, pointerType = pending.pointerType;
+      try { pending.card.releasePointerCapture?.(pending.pointerId); } catch (error) {}
+      freedomWallDragPending = null;
+      if (id) openFreedomWallReactionMenu({ type:"note", id }, x, y, pointerType || "touch");
+    }, FREEDOM_WALL_REACTION_HOLD_MS);
+    if (event.cancelable) event.preventDefault();
   });
 
-  // v462: track the active pointer at document capture level. Crossing the
-  // prompt, leaving the note's original box, or moving between stacking layers
-  // cannot end the hold. Only the real pointerup releases it.
   const handleFreedomWallPointerMotion = (event) => {
     if (freedomWallDragState && freedomWallDragState.pointerId === event.pointerId) {
       moveFreedomWallNoteDrag(event);
       return;
     }
-    if (freedomWallDragPending && freedomWallDragPending.pointerId === event.pointerId) {
-      let sample = event;
-      try {
-        const points = event.getCoalescedEvents?.();
-        if (points?.length) sample = points[points.length - 1];
-      } catch (error) {}
-      freedomWallDragPending.latestX = sample.clientX;
-      freedomWallDragPending.latestY = sample.clientY;
-      if (event.cancelable) event.preventDefault();
+    const pending = freedomWallDragPending;
+    if (!pending || pending.pointerId !== event.pointerId) return;
+    let sample = event;
+    try {
+      const points = event.getCoalescedEvents?.();
+      if (points?.length) sample = points[points.length - 1];
+    } catch (error) {}
+    pending.latestX = sample.clientX;
+    pending.latestY = sample.clientY;
+    const moved = Math.hypot(sample.clientX - pending.startX, sample.clientY - pending.startY);
+    if (moved > FREEDOM_WALL_REACTION_MOVE_THRESHOLD) {
+      clearFreedomWallDragLongPressTimer();
+      const startEvent = {
+        pointerId: pending.pointerId,
+        pointerType: pending.pointerType,
+        clientX: pending.startX,
+        clientY: pending.startY,
+        preventDefault() {}
+      };
+      const card = pending.card;
+      beginFreedomWallNoteDrag(card, startEvent);
+      moveFreedomWallNoteDrag(event);
+      return;
     }
+    if (event.cancelable) event.preventDefault();
   };
 
-  // pointerrawupdate can arrive at device sampling speed on supported phones.
-  // Fall back to pointermove everywhere else.
   const dragMoveEvent = ("onpointerrawupdate" in window) ? "pointerrawupdate" : "pointermove";
-  document.addEventListener(dragMoveEvent, handleFreedomWallPointerMotion, { capture: true, passive: false });
+  document.addEventListener(dragMoveEvent, handleFreedomWallPointerMotion, { capture:true, passive:false });
   if (dragMoveEvent !== "pointermove") {
-    // Safari/embedded browsers may expose pointerrawupdate inconsistently; keep
-    // pointermove only for the pre-drag hold tracker as a safe fallback.
     document.addEventListener("pointermove", (event) => {
       if (freedomWallDragState) return;
       handleFreedomWallPointerMotion(event);
-    }, { capture: true, passive: false });
+    }, { capture:true, passive:false });
   }
 
   document.addEventListener("pointerup", (event) => {
-    if (
-      (freedomWallDragState && freedomWallDragState.pointerId === event.pointerId) ||
-      (freedomWallDragPending && freedomWallDragPending.pointerId === event.pointerId)
-    ) endFreedomWallNoteDrag(event);
+    if ((freedomWallDragState && freedomWallDragState.pointerId === event.pointerId) || (freedomWallDragPending && freedomWallDragPending.pointerId === event.pointerId)) endFreedomWallNoteDrag(event);
   }, true);
-
-  // Do NOT release active notes on pointercancel/lostpointercapture. Some mobile
-  // browsers emit those while the finger is still touching during long drags.
-  // Real release is pointerup; blur/hidden are safety cleanup only.
-  window.addEventListener("blur", () => endFreedomWallNoteDrag(null, true));
+  document.addEventListener("pointercancel", (event) => {
+    if (freedomWallDragPending?.pointerId === event.pointerId) endFreedomWallNoteDrag(event);
+  }, true);
+  window.addEventListener("blur", () => { endFreedomWallNoteDrag(null, true); clearFreedomWallPromptReactionPending(); closeFreedomWallReactionMenu(); });
   document.addEventListener("visibilitychange", () => {
-    if (document.hidden) endFreedomWallNoteDrag(null, true);
+    if (document.hidden) { endFreedomWallNoteDrag(null, true); clearFreedomWallPromptReactionPending(); closeFreedomWallReactionMenu(); }
   });
 
   layer.addEventListener("contextmenu", (event) => {
-    if (event.target?.closest?.(".freedomWallNote")) event.preventDefault();
+    const note = event.target?.closest?.(".freedomWallNote");
+    const prompt = event.target?.closest?.("#freedomWallPromptCard");
+    if (note) {
+      event.preventDefault();
+      openFreedomWallReactionMenu({ type:"note", id:String(note.dataset.noteId || "") }, event.clientX, event.clientY, "mouse");
+      return;
+    }
+    if (prompt && !event.target?.closest?.("button,a,input,textarea,select")) {
+      const docId = getFreedomWallPromptReactionDocId();
+      if (!docId) return;
+      event.preventDefault();
+      openFreedomWallReactionMenu({ type:"prompt", id:docId }, event.clientX, event.clientY, "mouse");
+    }
   });
 }
 
@@ -4580,6 +4874,28 @@ function normalizeFreedomWallFont(value) {
   return FREEDOM_WALL_FONTS.includes(safe) ? safe : "theme-default";
 }
 
+function normalizeFreedomWallReactions(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const out = {};
+  Object.entries(value).forEach(([deviceId, reaction]) => {
+    const id = String(deviceId || "").trim().slice(0, 80);
+    const type = String(reaction || "").trim().toLowerCase();
+    if (/^fw_[A-Za-z0-9_]+$/.test(id) && FREEDOM_WALL_REACTION_TYPES.includes(type)) out[id] = type;
+  });
+  return out;
+}
+
+function getFreedomWallReactionStats(reactions = {}) {
+  const counts = { heart:0, haha:0, wow:0 };
+  Object.values(normalizeFreedomWallReactions(reactions)).forEach((type) => { if (type in counts) counts[type] += 1; });
+  const mine = normalizeFreedomWallReactions(reactions)[getFreedomWallDeviceId()] || "";
+  return { counts, mine };
+}
+
+function getFreedomWallReactionSignature(reactions = {}) {
+  return Object.entries(normalizeFreedomWallReactions(reactions)).sort((a,b) => a[0].localeCompare(b[0])).map(([id,type]) => `${id}:${type}`).join(",");
+}
+
 function normalizeFreedomWallNote(doc, index = 0) {
   const data = typeof doc?.data === "function" ? (doc.data() || {}) : (doc || {});
   const id = String(doc?.id || data.ID || data.id || `note-${index}`);
@@ -4594,8 +4910,28 @@ function normalizeFreedomWallNote(doc, index = 0) {
   const parsedMediaRef = parseClassBoardMediaRef(rawMediaRef);
   const mediaRef = parsedMediaRef?.kind === "freedomWall" ? parsedMediaRef.raw : "";
   const mediaType = mediaRef ? String(data.MediaType || data.mediaType || "image/jpeg").trim().toLowerCase().slice(0, 32) : "";
+  const reactions = normalizeFreedomWallReactions(data.Reactions || data.reactions || {});
   if (!text && !mediaRef) return null;
-  return { id, text, author, color, textColor, fontStyle, createdAtMs, mediaRef, mediaType, ...getFreedomWallPlacement({ ...data, id }, index) };
+  return { id, text, author, color, textColor, fontStyle, createdAtMs, mediaRef, mediaType, reactions, ...getFreedomWallPlacement({ ...data, id }, index) };
+}
+
+function getFreedomWallNoteCoreSignature(note) {
+  return JSON.stringify([
+    note?.id, note?.text, note?.author, note?.color, note?.textColor, note?.fontStyle,
+    note?.createdAtMs, note?.mediaRef, note?.mediaType, note?.x, note?.y, note?.rotation, note?.scale
+  ]);
+}
+
+function buildFreedomWallRenderSignature(notes = []) {
+  return JSON.stringify({
+    theme: String(freedomWallConfig?.freedomWallTheme || "sticky-notes"),
+    showNames: Boolean(freedomWallConfig?.freedomWallShowNames),
+    allowTextColor: Boolean(freedomWallConfig?.freedomWallAllowTextColor),
+    allowFont: Boolean(freedomWallConfig?.freedomWallAllowFont),
+    promptVisible: isFreedomWallPromptVisible(),
+    viewport: window.innerWidth <= 700 ? "phone" : "wide",
+    notes: notes.map((note) => [getFreedomWallNoteCoreSignature(note), getFreedomWallReactionSignature(note?.reactions)])
+  });
 }
 
 function renderFreedomWallNotes(notes = []) {
@@ -4615,18 +4951,7 @@ function renderFreedomWallNotes(notes = []) {
   // v483 mobile anti-flicker: realtime listeners can legitimately deliver the
   // same document set more than once (cache/server state, reconnects, etc.).
   // Do not touch card classes/styles/layout unless something visible changed.
-  const renderSignature = JSON.stringify({
-    theme: String(freedomWallConfig?.freedomWallTheme || "sticky-notes"),
-    showNames: Boolean(freedomWallConfig?.freedomWallShowNames),
-    allowTextColor: Boolean(freedomWallConfig?.freedomWallAllowTextColor),
-    allowFont: Boolean(freedomWallConfig?.freedomWallAllowFont),
-    promptVisible: isFreedomWallPromptVisible(),
-    viewport: window.innerWidth <= 700 ? "phone" : "wide",
-    notes: sorted.map((note) => [
-      note.id, note.text, note.author, note.color, note.textColor, note.fontStyle,
-      note.createdAtMs, note.mediaRef, note.mediaType, note.x, note.y, note.rotation, note.scale
-    ])
-  });
+  const renderSignature = buildFreedomWallRenderSignature(sorted);
   if (renderSignature === freedomWallLastRenderSignature && stage.childElementCount) {
     if (count) count.textContent = getFreedomWallUiCopy(freedomWallConfig?.freedomWallTheme).formatCount(sorted.length, "normal");
     return;
@@ -4711,6 +5036,7 @@ function renderFreedomWallNotes(notes = []) {
     } else if (authorEl) {
       authorEl.remove();
     }
+    updateFreedomWallReactionSummary(card, note.reactions, "note");
 
     // v460: a note manually moved in this browser keeps that temporary spot
     // for the current session only. We NEVER write this position to Firestore.
@@ -4777,6 +5103,8 @@ function updateFreedomWallPrompt(config) {
   message.hidden = !config?.message;
   const hasPrompt = Boolean(config?.title || config?.message);
   card.hidden = !hasPrompt || freedomWallPromptDismissedSignature === promptSignature;
+  if (!card.hidden) syncFreedomWallPromptReactionLive();
+  else stopFreedomWallPromptReactionLive();
 }
 
 function dismissFreedomWallPromptForView(event) {
@@ -4786,6 +5114,8 @@ function dismissFreedomWallPromptForView(event) {
   if (!card) return;
   freedomWallPromptDismissedSignature = String(card.dataset.promptSignature || "");
   card.hidden = true;
+  stopFreedomWallPromptReactionLive();
+  closeFreedomWallReactionMenu();
   // Once the prompt is closed, notes are free to use their original full-wall
   // positions, without rebuilding the effect or touching its music.
   if (freedomWallNotesCache.length) renderFreedomWallNotes(freedomWallNotesCache);
@@ -5189,6 +5519,35 @@ async function startFreedomWallLive() {
     // v483: metadata-only snapshots are intentionally ignored. They do not
     // change what students see and were causing unnecessary phone repaints.
     freedomWallUnsubscribe = query.onSnapshot((snapshot) => {
+      const changes = typeof snapshot.docChanges === "function" ? snapshot.docChanges() : [];
+      // v484 performance path: a reaction modifies only Reactions + reaction
+      // metadata on one note. Update just that tiny counter strip instead of
+      // recalculating placement/styles for up to 400 notes.
+      if (freedomWallNotesCache.length && changes.length && changes.every((change) => change.type === "modified")) {
+        let reactionOnly = true;
+        const pending = [];
+        for (const change of changes) {
+          const next = normalizeFreedomWallNote(change.doc, 0);
+          const index = freedomWallNotesCache.findIndex((item) => item.id === next?.id);
+          if (!next || index < 0 || getFreedomWallNoteCoreSignature(freedomWallNotesCache[index]) !== getFreedomWallNoteCoreSignature(next)) {
+            reactionOnly = false;
+            break;
+          }
+          pending.push({ index, next });
+        }
+        if (reactionOnly) {
+          const layer = document.getElementById("homepageEffectLayer");
+          pending.forEach(({ index, next }) => {
+            freedomWallNotesCache[index].reactions = next.reactions;
+            const card = Array.from(layer?.querySelectorAll?.(".freedomWallNote[data-note-id]") || []).find((item) => String(item.dataset.noteId || "") === String(next.id));
+            updateFreedomWallReactionSummary(card, next.reactions, "note");
+            if (freedomWallReactionMenuTarget?.type === "note" && freedomWallReactionMenuTarget.id === next.id) updateFreedomWallReactionMenuState();
+          });
+          const sortedForSignature = freedomWallNotesCache.filter(Boolean).sort((a,b) => (a.createdAtMs - b.createdAtMs) || a.id.localeCompare(b.id)).slice(-FREEDOM_WALL_MAX_RENDERED_NOTES);
+          freedomWallLastRenderSignature = buildFreedomWallRenderSignature(sortedForSignature);
+          return;
+        }
+      }
       const notes = snapshot.docs.map((doc, index) => normalizeFreedomWallNote(doc, index)).filter(Boolean);
       freedomWallNotesCache = notes;
       renderFreedomWallNotes(notes);
@@ -5253,6 +5612,9 @@ function stopFreedomWallLive(clearStage = false) {
   freedomWallUnsubscribe = null;
   freedomWallConfig = null;
   freedomWallPosting = false;
+  stopFreedomWallPromptReactionLive();
+  clearFreedomWallPromptReactionPending();
+  closeFreedomWallReactionMenu();
   const layer = document.getElementById("homepageEffectLayer");
   const scene = layer?.querySelector(".homepageFreedomWallScene");
   const composer = layer?.querySelector("#freedomWallComposer");

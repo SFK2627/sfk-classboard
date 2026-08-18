@@ -33756,3 +33756,132 @@ label[for="freedomWallTheme"]{display:block}
     backface-visibility:hidden;
   }
 }
+
+/* =========================================================
+   v484 FREEDOM WALL — LIGHTWEIGHT NOTE + PROMPT REACTIONS
+   Desktop: right-click. Phone/tablet: stationary long-press.
+========================================================= */
+.homepageEffectLayer.is-freedom-wall{
+  --fw-react-bg:#fffdf7;
+  --fw-react-fg:#202124;
+  --fw-react-border:rgba(31,35,40,.18);
+  --fw-react-chip:rgba(255,255,255,.72);
+  --fw-react-accent:#e23d58;
+}
+.freedomWallReactionSummary{
+  position:relative;
+  z-index:7;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  flex-wrap:wrap;
+  gap:4px;
+  margin-top:7px;
+  min-height:18px;
+  pointer-events:none!important;
+  user-select:none;
+  -webkit-user-select:none;
+}
+.freedomWallReactionSummary[hidden]{display:none!important}
+.freedomWallReactionSummary.is-prompt{justify-content:center;margin-top:9px}
+.freedomWallReactionCount{
+  display:inline-flex;
+  align-items:center;
+  gap:3px;
+  min-height:18px;
+  padding:2px 6px;
+  border:1px solid rgba(0,0,0,.11);
+  border-radius:999px;
+  background:rgba(255,255,255,.66);
+  color:inherit;
+  box-shadow:0 1px 2px rgba(0,0,0,.08);
+  font:800 10px/1 Arial,sans-serif!important;
+  letter-spacing:0!important;
+  text-shadow:none!important;
+}
+.freedomWallReactionCount b{font:900 9px/1 Arial,sans-serif!important}
+.freedomWallReactionCount.is-mine{outline:2px solid rgba(255,255,255,.72);box-shadow:0 0 0 2px currentColor,0 1px 2px rgba(0,0,0,.08)}
+.freedomWallNote.has-reactions .freedomWallReactionSummary{margin-bottom:-1px}
+
+.freedomWallReactionMenu{
+  position:fixed;
+  z-index:640;
+  width:min(300px,calc(100vw - 20px));
+  padding:10px;
+  border:1px solid var(--fw-react-border);
+  border-radius:15px;
+  background:var(--fw-react-bg);
+  color:var(--fw-react-fg);
+  box-shadow:0 15px 34px rgba(0,0,0,.24);
+  opacity:0;
+  transform:translateY(5px) scale(.985);
+  transform-origin:top left;
+  transition:opacity .12s ease,transform .12s ease;
+  touch-action:manipulation;
+  user-select:none;
+  -webkit-user-select:none;
+}
+.freedomWallReactionMenu[hidden]{display:none!important}
+.freedomWallReactionMenu.is-open{opacity:1;transform:translateY(0) scale(1)}
+.freedomWallReactionMenuHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;padding:0 2px}
+.freedomWallReactionMenuHead strong{font:900 12px/1.15 Arial,sans-serif;letter-spacing:.01em}
+.freedomWallReactionMenuHead button{
+  width:27px;height:27px;border:0;border-radius:999px;background:rgba(127,127,127,.13);color:inherit;
+  display:grid;place-items:center;font:900 20px/1 Arial,sans-serif;cursor:pointer;touch-action:manipulation;
+}
+.freedomWallReactionChoices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.freedomWallReactionChoices>button{
+  min-width:0;min-height:70px;padding:8px 5px 7px;border:1px solid var(--fw-react-border);border-radius:12px;
+  background:var(--fw-react-chip);color:inherit;display:grid;grid-template-rows:auto auto auto;place-items:center;gap:3px;
+  cursor:pointer;touch-action:manipulation;transition:transform .09s ease,border-color .09s ease,box-shadow .09s ease;
+}
+.freedomWallReactionChoices>button:active{transform:scale(.95)}
+.freedomWallReactionChoices>button.is-selected{border-color:var(--fw-react-accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--fw-react-accent) 28%,transparent)}
+.freedomWallReactionChoices>button>span{font-size:25px;line-height:1}
+.freedomWallReactionChoices>button>b{font:900 10px/1 Arial,sans-serif}
+.freedomWallReactionChoices>button>small{min-height:11px;font:800 9px/1 Arial,sans-serif;opacity:.68}
+.freedomWallReactionStatus{display:block;min-height:12px;margin:7px 2px 0;font:700 9px/1.2 Arial,sans-serif;opacity:.72;text-align:center}
+
+/* Reaction popup follows the active wall's visual family without expensive filters. */
+.homepageEffectLayer[data-freedom-wall-theme="jungle"]{--fw-react-bg:#75502f;--fw-react-fg:#fff4d4;--fw-react-border:#4b321f;--fw-react-chip:rgba(255,245,215,.11);--fw-react-accent:#f0cd6e}
+.homepageEffectLayer[data-freedom-wall-theme="chalkboard"]{--fw-react-bg:#183b2a;--fw-react-fg:#f3f0d9;--fw-react-border:#a07b51;--fw-react-chip:rgba(255,255,235,.08);--fw-react-accent:#f4e995}
+.homepageEffectLayer[data-freedom-wall-theme="newspaper"]{--fw-react-bg:#f5f0e3;--fw-react-fg:#151515;--fw-react-border:#252525;--fw-react-chip:#fffdf5;--fw-react-accent:#1b1b1b}
+.homepageEffectLayer[data-freedom-wall-theme="coding-lab"],
+.homepageEffectLayer[data-freedom-wall-theme="night"],
+.homepageEffectLayer[data-freedom-wall-theme="galaxy"],
+.homepageEffectLayer[data-freedom-wall-theme="retro-arcade"],
+.homepageEffectLayer[data-freedom-wall-theme="neon-music"]{--fw-react-bg:#10191f;--fw-react-fg:#eef8f4;--fw-react-border:#425660;--fw-react-chip:#17252d;--fw-react-accent:#62e5a0}
+.homepageEffectLayer[data-freedom-wall-theme="comic"],
+.homepageEffectLayer[data-freedom-wall-theme="comic-strip"],
+.homepageEffectLayer[data-freedom-wall-theme="comic-manga"],
+.homepageEffectLayer[data-freedom-wall-theme="comic-noir"]{--fw-react-bg:#fffdf3;--fw-react-fg:#111;--fw-react-border:#111;--fw-react-chip:#fff;--fw-react-accent:#e92f4f}
+.homepageEffectLayer[data-freedom-wall-theme="filipino"]{--fw-react-bg:#fffaf0;--fw-react-fg:#173b6b;--fw-react-border:#174a8b;--fw-react-chip:#fffdf8;--fw-react-accent:#d12631}
+.homepageEffectLayer[data-freedom-wall-theme="poste"]{--fw-react-bg:#eee6d6;--fw-react-fg:#272727;--fw-react-border:#575047;--fw-react-chip:#fff9ea;--fw-react-accent:#a57c22}
+.homepageEffectLayer[data-freedom-wall-theme="polaroid"]{--fw-react-bg:#fffdfa;--fw-react-fg:#554438;--fw-react-border:#cdb79f;--fw-react-chip:#fff;--fw-react-accent:#d16b88}
+
+/* Stop native text-selection/callout from stealing the deliberate long press. */
+.homepageEffectLayer.is-freedom-wall .freedomWallNote,
+.homepageEffectLayer.is-freedom-wall .freedomWallPromptCard{
+  -webkit-touch-callout:none;
+}
+
+@media(max-width:700px){
+  .freedomWallReactionMenu{
+    left:10px!important;
+    right:10px!important;
+    top:auto!important;
+    bottom:max(10px,env(safe-area-inset-bottom))!important;
+    width:auto;
+    transform:translateY(12px) scale(.99);
+    transform-origin:bottom center;
+    border-radius:18px;
+    padding:11px 11px 12px;
+    box-shadow:0 -10px 30px rgba(0,0,0,.24);
+  }
+  .freedomWallReactionMenu.is-open{transform:translateY(0) scale(1)}
+  .freedomWallReactionChoices>button{min-height:72px}
+  .freedomWallReactionChoices>button>span{font-size:27px}
+  .freedomWallReactionSummary{gap:3px;margin-top:5px}
+  .freedomWallReactionSummary.is-prompt{margin-top:7px}
+  .freedomWallReactionCount{min-height:17px;padding:2px 5px;font-size:9px!important}
+}
