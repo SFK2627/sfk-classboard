@@ -34097,3 +34097,10 @@ html.sfkFreedomWallModalOpen body{
 .freedomWallYoutubeFrame{width:100%;height:100%;border:0;border-radius:inherit;background:#000}
 .homepageEffectLayer.is-freedom-wall .freedomWallNote.has-video .freedomWallNoteMedia,.homepageEffectLayer.is-freedom-wall .freedomWallNote.has-media>.freedomWallNoteMedia{aspect-ratio:16/9;border-radius:8px;margin-bottom:8px}
 @media (max-width:700px){.freedomWallYoutubePlayBadge{font-size:10px;padding:6px 10px}}
+
+/* v491 Freedom Wall YouTube/music audio handoff */
+.freedomWallNoteMedia.is-youtube-playing{position:relative;background:#000;overflow:hidden}
+.freedomWallYoutubePlayerSlot,.freedomWallYoutubePlayerSlot iframe{width:100%!important;height:100%!important;min-height:0;border:0;display:block}
+.freedomWallYoutubeClose{position:absolute;z-index:6;top:6px;right:6px;width:28px;height:28px;border:1px solid rgba(255,255,255,.55);border-radius:50%;display:grid;place-items:center;padding:0;background:rgba(0,0,0,.72);color:#fff;font:900 20px/1 Arial,sans-serif;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.28)}
+.freedomWallYoutubeClose:hover,.freedomWallYoutubeClose:focus-visible{background:#111;outline:2px solid rgba(255,255,255,.75);outline-offset:1px}
+@media (max-width:700px){.freedomWallYoutubeClose{width:26px;height:26px;top:4px;right:4px;font-size:18px}}

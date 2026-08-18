@@ -1744,6 +1744,9 @@ let homepageEffectMusicPlaylistPosition = 0;
 let homepageEffectMusicPlaylistShuffle = false;
 let homepageEffectMusicPlaylistLoop = true;
 let homepageEffectMusicPlaylistFailures = 0;
+let homepageEffectMusicSuppressedByWallVideo = false;
+let freedomWallActiveYoutubePlayback = null;
+let freedomWallYoutubeApiPromise = null;
 let freedomWallPageLockActive = false;
 let freedomWallPageLockScrollY = 0;
 let freedomWallPageLockBodyStyles = null;
@@ -2597,6 +2600,7 @@ function getHomepageEffectMusicAudio(url, loop = true) {
 }
 
 async function tryPlayHomepageEffectMusic() {
+  if (homepageEffectMusicSuppressedByWallVideo) return;
   if (!homepageEffectMusicWanted || !homepageEffectMusicUrl) return;
   const audio = getHomepageEffectMusicAudio(homepageEffectMusicUrl, homepageEffectMusicLoop);
   if (!audio) return;
@@ -2615,6 +2619,138 @@ function primeHomepageEffectMusicOnInteraction() {
   };
   document.addEventListener("pointerdown", resume, { capture: true, passive: true });
   document.addEventListener("keydown", resume, { capture: true });
+}
+
+function pauseHomepageEffectMusicForFreedomWallVideo() {
+  homepageEffectMusicSuppressedByWallVideo = true;
+  const audio = homepageEffectMusicAudio;
+  if (!audio) return;
+  try { audio.pause(); } catch (error) {}
+}
+
+function resumeHomepageEffectMusicAfterFreedomWallVideo() {
+  homepageEffectMusicSuppressedByWallVideo = false;
+  if (homepageEffectMusicWanted && homepageEffectMusicUrl) tryPlayHomepageEffectMusic();
+}
+
+function loadFreedomWallYouTubeApi() {
+  if (window.YT?.Player) return Promise.resolve(window.YT);
+  if (freedomWallYoutubeApiPromise) return freedomWallYoutubeApiPromise;
+  freedomWallYoutubeApiPromise = new Promise((resolve, reject) => {
+    const existing = document.querySelector('script[data-freedom-wall-youtube-api="true"]');
+    const previousReady = window.onYouTubeIframeAPIReady;
+    let finished = false;
+    const done = () => {
+      if (finished) return;
+      finished = true;
+      if (typeof previousReady === "function") { try { previousReady(); } catch (error) {} }
+      if (window.YT?.Player) resolve(window.YT);
+      else reject(new Error("YouTube player API unavailable"));
+    };
+    window.onYouTubeIframeAPIReady = done;
+    if (!existing) {
+      const script = document.createElement("script");
+      script.src = "https://www.youtube.com/iframe_api";
+      script.async = true;
+      script.dataset.freedomWallYoutubeApi = "true";
+      script.onerror = () => { if (!finished) { finished = true; reject(new Error("Unable to load YouTube player API")); } };
+      document.head.appendChild(script);
+    }
+    window.setTimeout(() => { if (window.YT?.Player) done(); }, 900);
+    window.setTimeout(() => { if (!finished && !window.YT?.Player) { finished = true; reject(new Error("YouTube player API timed out")); } }, 6000);
+  }).catch((error) => { freedomWallYoutubeApiPromise = null; throw error; });
+  return freedomWallYoutubeApiPromise;
+}
+
+function restoreFreedomWallYoutubePreview(playback, { resumeMusic = true } = {}) {
+  if (!playback) return;
+  const { media, videoId, player } = playback;
+  try { player?.destroy?.(); } catch (error) {}
+  if (media?.isConnected && videoId) {
+    media.replaceChildren();
+    const button = createFreedomWallYoutubePlayButton(media, videoId);
+    media.appendChild(button);
+    media.classList.remove("is-loading", "is-unavailable", "is-youtube-playing");
+  }
+  if (freedomWallActiveYoutubePlayback === playback) freedomWallActiveYoutubePlayback = null;
+  if (resumeMusic) resumeHomepageEffectMusicAfterFreedomWallVideo();
+  else homepageEffectMusicSuppressedByWallVideo = false;
+}
+
+function closeFreedomWallActiveYoutube({ resumeMusic = true } = {}) {
+  const playback = freedomWallActiveYoutubePlayback;
+  if (!playback) {
+    if (resumeMusic) resumeHomepageEffectMusicAfterFreedomWallVideo();
+    else homepageEffectMusicSuppressedByWallVideo = false;
+    return;
+  }
+  restoreFreedomWallYoutubePreview(playback, { resumeMusic });
+}
+
+function createFreedomWallYoutubePlayButton(media, videoId) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "freedomWallYoutubePlayCard";
+  button.innerHTML = `<img src="https://i.ytimg.com/vi/${encodeURIComponent(videoId)}/hqdefault.jpg" alt="YouTube video thumbnail" loading="lazy" decoding="async" /><span class="freedomWallYoutubePlayBadge">▶ Play Video</span>`;
+  button.addEventListener("click", async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!media?.isConnected) return;
+
+    if (freedomWallActiveYoutubePlayback?.media !== media) closeFreedomWallActiveYoutube({ resumeMusic:false });
+    pauseHomepageEffectMusicForFreedomWallVideo();
+
+    media.replaceChildren();
+    media.classList.add("is-youtube-playing");
+    media.classList.remove("is-loading", "is-unavailable");
+    const slot = document.createElement("div");
+    slot.className = "freedomWallYoutubePlayerSlot";
+    slot.id = `fwYoutube_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,7)}`;
+    const close = document.createElement("button");
+    close.type = "button";
+    close.className = "freedomWallYoutubeClose";
+    close.setAttribute("aria-label", "Close video and resume background music");
+    close.textContent = "×";
+    media.append(slot, close);
+
+    const playback = { media, videoId, player:null };
+    freedomWallActiveYoutubePlayback = playback;
+    close.addEventListener("click", (closeEvent) => {
+      closeEvent.preventDefault();
+      closeEvent.stopPropagation();
+      restoreFreedomWallYoutubePreview(playback, { resumeMusic:true });
+    });
+
+    try {
+      const YT = await loadFreedomWallYouTubeApi();
+      if (freedomWallActiveYoutubePlayback !== playback || !slot.isConnected) return;
+      playback.player = new YT.Player(slot.id, {
+        videoId,
+        playerVars: { autoplay:1, rel:0, modestbranding:1, playsinline:1 },
+        events: {
+          onStateChange: (playerEvent) => {
+            if (playerEvent?.data === YT.PlayerState.ENDED && freedomWallActiveYoutubePlayback === playback) {
+              restoreFreedomWallYoutubePreview(playback, { resumeMusic:true });
+            }
+          },
+          onError: () => {
+            if (freedomWallActiveYoutubePlayback === playback) restoreFreedomWallYoutubePreview(playback, { resumeMusic:true });
+          }
+        }
+      });
+    } catch (error) {
+      if (freedomWallActiveYoutubePlayback !== playback || !slot.isConnected) return;
+      const frame = document.createElement("iframe");
+      frame.className = "freedomWallYoutubeFrame";
+      frame.title = "Freedom Wall YouTube video";
+      frame.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
+      frame.allowFullscreen = true;
+      frame.referrerPolicy = "strict-origin-when-cross-origin";
+      frame.src = `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
+      slot.replaceWith(frame);
+    }
+  });
+  return button;
 }
 
 function buildHomepageEffectPlaylistOrder(length, shuffle = false, avoidFirst = -1) {
@@ -2742,6 +2878,7 @@ function startHomepageEffectMusic(url, loop, signature) {
 }
 
 function stopHomepageEffectMusic() {
+  homepageEffectMusicSuppressedByWallVideo = false;
   homepageEffectMusicWanted = false;
   homepageEffectMusicSignature = "";
   const audio = homepageEffectMusicAudio;
@@ -5263,23 +5400,7 @@ async function hydrateFreedomWallNoteMedia(card, note) {
       return;
     }
     media.replaceChildren();
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "freedomWallYoutubePlayCard";
-    button.innerHTML = `<img src="https://i.ytimg.com/vi/${encodeURIComponent(videoId)}/hqdefault.jpg" alt="YouTube video thumbnail" loading="lazy" decoding="async" /><span class="freedomWallYoutubePlayBadge">▶ Play Video</span>`;
-    button.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      const frame = document.createElement("iframe");
-      frame.className = "freedomWallYoutubeFrame";
-      frame.title = "Freedom Wall YouTube video";
-      frame.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
-      frame.allowFullscreen = true;
-      frame.referrerPolicy = "strict-origin-when-cross-origin";
-      frame.src = `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?autoplay=1&rel=0&modestbranding=1`;
-      media.replaceChildren(frame);
-      media.classList.remove("is-loading", "is-unavailable");
-    });
+    const button = createFreedomWallYoutubePlayButton(media, videoId);
     media.appendChild(button);
     media.classList.remove("is-loading", "is-unavailable");
     return;
@@ -6131,6 +6252,7 @@ function configureFreedomWall(config) {
   const nextWallId = getFreedomWallActiveSessionId(config);
   const wallChanged = Boolean(freedomWallConfig && previousWallId !== nextWallId);
   if (wallChanged) {
+    closeFreedomWallActiveYoutube({ resumeMusic:true });
     freedomWallListenToken += 1;
     try { freedomWallUnsubscribe?.(); } catch (error) {}
     freedomWallUnsubscribe = null;
@@ -6186,6 +6308,7 @@ function configureFreedomWall(config) {
 }
 
 function stopFreedomWallLive(clearStage = false) {
+  closeFreedomWallActiveYoutube({ resumeMusic:false });
   freedomWallListenToken += 1;
   if (freedomWallLiveRetryTimer) window.clearTimeout(freedomWallLiveRetryTimer);
   freedomWallLiveRetryTimer = 0;
