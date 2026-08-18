@@ -2600,6 +2600,8 @@ function primeHomepageEffectMusicOnInteraction() {
 }
 
 function buildHomepageEffectPlaylistOrder(length, shuffle = false, avoidFirst = -1) {
+  // One complete cycle is always a permutation of every track index exactly once.
+  // Shuffle changes only the order; it never randomly picks with replacement.
   const order = Array.from({ length: Math.max(0, Number(length) || 0) }, (_, index) => index);
   if (!shuffle || order.length < 2) return order;
   for (let index = order.length - 1; index > 0; index -= 1) {
@@ -6234,11 +6236,21 @@ async function applyHomepageEffectSettings(settings = {}) {
   }
 
   if (hasFreedomWallPlaylist) {
+    // v489: the playlist owns its own playback signature. Prompt edits, saved-wall
+    // loads, reactions, or unrelated HomepageEffectUpdatedAt changes must NOT
+    // restart the shuffled cycle and accidentally repeat a song before every
+    // track in the current cycle has played once.
+    const playlistPlaybackSignature = [
+      "freedom-wall-playlist-v489",
+      config.freedomWallPlaylist.map((track) => String(track?.url || "").trim()).join("|"),
+      config.freedomWallPlaylistShuffle ? "shuffle" : "ordered",
+      config.freedomWallPlaylistLoop ? "loop" : "once"
+    ].join("::");
     startHomepageEffectPlaylist(
       config.freedomWallPlaylist,
       config.freedomWallPlaylistShuffle,
       config.freedomWallPlaylistLoop,
-      config.signature
+      playlistPlaybackSignature
     );
   } else if (hasCustomEffectAudio) {
     startHomepageEffectMusic(config.audioUrl, config.audioLoop, config.signature);

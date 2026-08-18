@@ -1229,11 +1229,16 @@
         throw new Error("Playlist is ON, but there is no valid direct HTTPS audio link yet.");
       }
       const wallPlaylistEnabled = wallPlaylistRequested && wallPlaylist.length > 0;
+      const wallPromptTitle = String(byId("homepageEffectTitle")?.value || "").trim().slice(0,100);
+      const wallPromptMessage = String(byId("homepageEffectMessage")?.value || "").trim().slice(0,700);
+      if (wallMode && !wallPromptTitle && !wallPromptMessage) {
+        throw new Error("Add a Freedom Wall prompt title or message before publishing.");
+      }
       const values = {
         HomepageEffectEnabled: "YES",
         HomepageEffectMode: mode,
-        HomepageEffectTitle: String(byId("homepageEffectTitle")?.value || "").trim().slice(0,100),
-        HomepageEffectMessage: String(byId("homepageEffectMessage")?.value || "").trim().slice(0,700),
+        HomepageEffectTitle: wallMode ? wallPromptTitle : String(byId("homepageEffectTitle")?.value || "").trim().slice(0,100),
+        HomepageEffectMessage: wallMode ? wallPromptMessage : String(byId("homepageEffectMessage")?.value || "").trim().slice(0,700),
         HomepageEffectDismissible: byId("homepageEffectDismissible")?.checked === false ? "NO" : "YES",
         HomepageEffectAudioEnabled: wallMode ? (wallPlaylistEnabled ? "YES" : "NO") : (byId("homepageEffectAudioEnabled")?.checked ? "YES" : "NO"),
         HomepageEffectAudioUrl: wallMode ? String(wallPlaylist[0]?.url || "").slice(0,1200) : String(byId("homepageEffectAudioUrl")?.value || "").trim().slice(0,1200),
@@ -1264,8 +1269,8 @@
       }
       if (wallMode) {
         batch.set(db.collection("freedomWallSessions").doc(wallSessionId), {
-          PromptTitle: String(byId("homepageEffectTitle")?.value || "").trim().slice(0,100),
-          PromptMessage: String(byId("homepageEffectMessage")?.value || "").trim().slice(0,700),
+          PromptTitle: wallPromptTitle,
+          PromptMessage: wallPromptMessage,
           Theme: String(byId("freedomWallTheme")?.value || "sticky-notes").trim().toLowerCase(),
           UpdatedAtMs: Number(updatedAt)
         }, { merge:true });
@@ -1716,13 +1721,18 @@
           await migrateBatch.commit();
         }
       }
+      const promptTitle = currentTitle();
+      const promptMessage = currentMessage();
+      if (!promptTitle && !promptMessage) {
+        throw new Error("Add a centered prompt title or message before saving this Freedom Wall.");
+      }
       const stamp = now();
       const label = String(old.Label || currentLabelFallback()).trim().slice(0,100) || currentLabelFallback();
       const batch = db.batch();
       batch.set(db.collection(SESSION_COLLECTION).doc(id), {
         Label: label,
-        PromptTitle: currentTitle(),
-        PromptMessage: currentMessage(),
+        PromptTitle: promptTitle,
+        PromptMessage: promptMessage,
         Theme: currentTheme(),
         CreatedAtMs: Number(old.CreatedAtMs || stamp),
         UpdatedAtMs: stamp
@@ -1731,8 +1741,8 @@
         const liveValues = {
           HomepageEffectEnabled:"YES",
           HomepageEffectMode:"freedom-wall",
-          HomepageEffectTitle:currentTitle(),
-          HomepageEffectMessage:currentMessage(),
+          HomepageEffectTitle:promptTitle,
+          HomepageEffectMessage:promptMessage,
           FreedomWallTheme:currentTheme(),
           FreedomWallActiveWallID:id,
           HomepageEffectUpdatedAt:String(stamp)
@@ -1801,36 +1811,62 @@
 
     async function createNewSession() {
       if (sessionBusy) return;
-      const labelInput = window.prompt("Name the new Freedom Wall. The current wall will be saved first.", "New Freedom Wall");
+      const labelInput = window.prompt("Name this saved Freedom Wall (for your Admin archive):", "New Freedom Wall");
       if (labelInput === null) return;
       const label = String(labelInput || "New Freedom Wall").trim().slice(0,100) || "New Freedom Wall";
+
+      const promptTitleInput = window.prompt(
+        "Enter the CENTERED PROMPT TITLE for the new Freedom Wall.\n\nExample: What made you smile today?",
+        ""
+      );
+      if (promptTitleInput === null) return;
+      const promptMessageInput = window.prompt(
+        "Enter the prompt message/instruction (optional).\n\nYou may leave this blank if the title already contains the full question.",
+        ""
+      );
+      if (promptMessageInput === null) return;
+      const promptTitle = String(promptTitleInput || "").trim().slice(0,100);
+      const promptMessage = String(promptMessageInput || "").trim().slice(0,700);
+      if (!promptTitle && !promptMessage) {
+        setStatus("New Freedom Wall was not created because its centered prompt is blank.");
+        return;
+      }
+
       sessionBusy = true;
       try {
-        await saveCurrentSession({ announce:false, live:false });
+        // Preserve a valid current wall before switching. If the active v488 wall
+        // is one of the broken blank sessions, do not let that blank-state
+        // validation trap the Admin and prevent creation of a repaired new wall.
+        if (currentTitle() || currentMessage()) {
+          await saveCurrentSession({ announce:false, live:false });
+        }
         const db = getDb();
         if (!db) throw new Error("Wall connection is still loading.");
         const id = `wall_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`;
         const stamp = now();
         const theme = currentTheme();
         const batch = db.batch();
-        batch.set(db.collection(SESSION_COLLECTION).doc(id), { Label:label, PromptTitle:"", PromptMessage:"", Theme:theme, CreatedAtMs:stamp, UpdatedAtMs:stamp });
+        batch.set(db.collection(SESSION_COLLECTION).doc(id), {
+          Label:label, PromptTitle:promptTitle, PromptMessage:promptMessage, Theme:theme,
+          CreatedAtMs:stamp, UpdatedAtMs:stamp
+        });
         const values = {
           HomepageEffectEnabled:"YES", HomepageEffectMode:"freedom-wall",
-          HomepageEffectTitle:"", HomepageEffectMessage:"", FreedomWallTheme:theme,
+          HomepageEffectTitle:promptTitle, HomepageEffectMessage:promptMessage, FreedomWallTheme:theme,
           FreedomWallActiveWallID:id, HomepageEffectUpdatedAt:String(stamp)
         };
         Object.entries(values).forEach(([key,value]) => batch.set(db.collection("settings").doc(key), { Key:key, Value:String(value) }, { merge:true }));
         await batch.commit();
         activeWallId = id;
-        if ($("homepageEffectTitle")) $("homepageEffectTitle").value = "";
-        if ($("homepageEffectMessage")) $("homepageEffectMessage").value = "";
+        if ($("homepageEffectTitle")) $("homepageEffectTitle").value = promptTitle;
+        if ($("homepageEffectMessage")) $("homepageEffectMessage").value = promptMessage;
         updateCurrentSessionChip(label);
         closeNoteManagerIfOpen();
-        setStatus(`New Freedom Wall created: ${label}. Add the new prompt above, then Save / Update Current Wall or Publish.`);
+        setStatus(`New Freedom Wall is now live: ${label}. Its centered prompt is already saved; new student notes will belong only to this wall.`);
         await refreshSessionList();
       } catch (error) {
         console.error("Create Freedom Wall session failed", error);
-        setStatus("Unable to create a new Freedom Wall right now. Publish the updated Firebase Rules first.");
+        setStatus(error?.message || "Unable to create a new Freedom Wall right now. Publish the updated Firebase Rules first.");
       } finally { sessionBusy = false; }
     }
 
@@ -1846,8 +1882,11 @@
         if (!snap.exists) throw new Error("Saved wall not found.");
         const data = snap.data() || {};
         const stamp = now();
-        const title = String(data.PromptTitle || "").slice(0,100);
-        const message = String(data.PromptMessage || "").slice(0,700);
+        let title = String(data.PromptTitle || "").trim().slice(0,100);
+        const message = String(data.PromptMessage || "").trim().slice(0,700);
+        // v489 repair path: early v488 sessions could be created with a Label
+        // but blank PromptTitle/PromptMessage. Never load those as an empty wall.
+        if (!title && !message) title = String(data.Label || "Saved Freedom Wall").trim().slice(0,100) || "Saved Freedom Wall";
         const theme = String(data.Theme || "sticky-notes").trim().toLowerCase();
         const batch = db.batch();
         const values = {
@@ -1856,7 +1895,9 @@
           FreedomWallActiveWallID:id, HomepageEffectUpdatedAt:String(stamp)
         };
         Object.entries(values).forEach(([key,value]) => batch.set(db.collection("settings").doc(key), { Key:key, Value:String(value) }, { merge:true }));
-        batch.set(db.collection(SESSION_COLLECTION).doc(id), { UpdatedAtMs:stamp }, { merge:true });
+        batch.set(db.collection(SESSION_COLLECTION).doc(id), {
+          PromptTitle:title, PromptMessage:message, UpdatedAtMs:stamp
+        }, { merge:true });
         await batch.commit();
         activeWallId = id;
         if ($("homepageEffectTitle")) $("homepageEffectTitle").value = title;
@@ -1928,8 +1969,33 @@
       } catch (error) { activeWallId = LEGACY_ID; }
       let label = currentLabelFallback();
       try {
-        const sessionSnap = await db.collection(SESSION_COLLECTION).doc(activeWallId).get();
-        if (sessionSnap.exists) label = String(sessionSnap.data()?.Label || sessionSnap.data()?.PromptTitle || label);
+        const sessionRef = db.collection(SESSION_COLLECTION).doc(activeWallId);
+        const sessionSnap = await sessionRef.get();
+        if (sessionSnap.exists) {
+          const sessionData = sessionSnap.data() || {};
+          label = String(sessionData.Label || sessionData.PromptTitle || label).trim() || label;
+          let savedTitle = String(sessionData.PromptTitle || "").trim().slice(0,100);
+          const savedMessage = String(sessionData.PromptMessage || "").trim().slice(0,700);
+          // v489 auto-repair for a v488-created active blank session. The old
+          // create flow saved only Label and made PromptTitle/PromptMessage blank.
+          // Use that label as a visible prompt so the live wall is never empty.
+          if (!savedTitle && !savedMessage && label) {
+            savedTitle = label.slice(0,100);
+            const stamp = now();
+            const batch = db.batch();
+            batch.set(sessionRef, { PromptTitle:savedTitle, PromptMessage:"", UpdatedAtMs:stamp }, { merge:true });
+            const repairValues = {
+              HomepageEffectEnabled:"YES", HomepageEffectMode:"freedom-wall",
+              HomepageEffectTitle:savedTitle, HomepageEffectMessage:"",
+              FreedomWallActiveWallID:activeWallId, HomepageEffectUpdatedAt:String(stamp)
+            };
+            Object.entries(repairValues).forEach(([key,value]) => batch.set(db.collection("settings").doc(key), { Key:key, Value:String(value) }, { merge:true }));
+            await batch.commit();
+            if ($("homepageEffectTitle")) $("homepageEffectTitle").value = savedTitle;
+            if ($("homepageEffectMessage")) $("homepageEffectMessage").value = "";
+            setStatus("Recovered the blank v488 Freedom Wall. Its saved wall name is now shown as the centered prompt; you can edit the prompt and Save / Update Current Wall.");
+          }
+        }
       } catch (error) {}
       updateCurrentSessionChip(label);
       await refreshSessionList();
@@ -1939,7 +2005,7 @@
       if (sessionBusy) return;
       sessionBusy = true;
       try { await saveCurrentSession(); await refreshSessionList(); }
-      catch (error) { console.error(error); setStatus("Unable to save the current Freedom Wall. Publish the updated Firebase Rules first."); }
+      catch (error) { console.error(error); setStatus(error?.message || "Unable to save the current Freedom Wall. Publish the updated Firebase Rules first."); }
       finally { sessionBusy = false; }
     });
     document.querySelector('[data-fw-session-new]')?.addEventListener("click", createNewSession);
