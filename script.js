@@ -2738,7 +2738,7 @@ function createFreedomWallYoutubePlayButton(media, videoId) {
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'freedomWallYoutubePlayCard';
-  button.innerHTML = `<img src="https://i.ytimg.com/vi/${encodeURIComponent(videoId)}/hqdefault.jpg" alt="YouTube video thumbnail" loading="lazy" decoding="async" /><span class="freedomWallYoutubePlayBadge">▶ Play Video</span>`;
+  button.innerHTML = `<img src="https://i.ytimg.com/vi/${encodeURIComponent(videoId)}/hqdefault.jpg" alt="YouTube video thumbnail" loading="lazy" decoding="async" /><span class="freedomWallYoutubePlayBadge" aria-hidden="true"><span class="freedomWallYoutubePlayTriangle"></span></span>`;
   button.addEventListener('click', async (event) => {
     event.preventDefault();
     event.stopPropagation();

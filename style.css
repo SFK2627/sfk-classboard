@@ -34093,10 +34093,13 @@ html.sfkFreedomWallModalOpen body{
 .freedomWallMediaTypeWrap select,.freedomWallYouTubeWrap input{width:100%;box-sizing:border-box;border:1px solid rgba(0,0,0,.14);border-radius:10px;padding:10px 12px;background:#fff;font:700 12px/1.2 Arial,sans-serif;color:#222}
 .freedomWallYoutubePlayCard{position:relative;width:100%;height:100%;border:0;padding:0;margin:0;background:#000;border-radius:inherit;overflow:hidden;cursor:pointer}
 .freedomWallYoutubePlayCard img{width:100%;height:100%;object-fit:cover;display:block;opacity:.92}
-.freedomWallYoutubePlayBadge{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.72);color:#fff;padding:7px 12px;border-radius:999px;font:900 11px/1 Arial,sans-serif;letter-spacing:.02em;box-shadow:0 6px 14px rgba(0,0,0,.24)}
+.freedomWallYoutubePlayBadge{position:absolute;left:50%;top:50%;width:44px;height:31px;transform:translate(-50%,-50%);display:grid;place-items:center;background:#ff0000;border-radius:8px;box-shadow:0 5px 14px rgba(0,0,0,.28);transition:transform .16s ease,filter .16s ease,box-shadow .16s ease;pointer-events:none}
+.freedomWallYoutubePlayTriangle{display:block;width:0;height:0;border-top:7px solid transparent;border-bottom:7px solid transparent;border-left:12px solid #fff;margin-left:3px}
+.freedomWallYoutubePlayCard:hover .freedomWallYoutubePlayBadge,.freedomWallYoutubePlayCard:focus-visible .freedomWallYoutubePlayBadge{transform:translate(-50%,-50%) scale(1.07);filter:brightness(1.05);box-shadow:0 6px 18px rgba(0,0,0,.34)}
+.freedomWallYoutubePlayCard:active .freedomWallYoutubePlayBadge{transform:translate(-50%,-50%) scale(.95)}
 .freedomWallYoutubeFrame{width:100%;height:100%;border:0;border-radius:inherit;background:#000}
 .homepageEffectLayer.is-freedom-wall .freedomWallNote.has-video .freedomWallNoteMedia,.homepageEffectLayer.is-freedom-wall .freedomWallNote.has-media>.freedomWallNoteMedia{aspect-ratio:16/9;border-radius:8px;margin-bottom:8px}
-@media (max-width:700px){.freedomWallYoutubePlayBadge{font-size:10px;padding:6px 10px}}
+@media (max-width:700px){.freedomWallYoutubePlayBadge{width:42px;height:30px}.freedomWallYoutubePlayTriangle{border-top-width:6px;border-bottom-width:6px;border-left-width:11px}}
 
 /* v491 Freedom Wall YouTube/music audio handoff */
 .freedomWallNoteMedia.is-youtube-playing{position:relative;background:#000;overflow:hidden}
