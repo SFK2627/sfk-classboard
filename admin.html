@@ -287,6 +287,14 @@
                 <input id="freedomWallAllowFont" type="checkbox" checked />
                 <span><strong>Allow Font Change</strong><small>Students may choose from the curated font list. Turning this off renders Theme Default without deleting saved font choices.</small></span>
               </label>
+              <label class="homepageEffectToggleRow">
+                <input id="freedomWallAllowGif" type="checkbox" />
+                <span><strong>Allow GIF outside Polaroid</strong><small>Students may attach GIFs even when the wall theme is not Polaroid. Static photos remain Polaroid-only.</small></span>
+              </label>
+              <label class="homepageEffectToggleRow">
+                <input id="freedomWallAllowYouTube" type="checkbox" />
+                <span><strong>Allow YouTube video notes</strong><small>Students may paste a YouTube link. Videos stay paused until someone presses Play.</small></span>
+              </label>
             </div>
 
             <div class="freedomWallPlaylistAdmin" id="freedomWallPlaylistAdmin">
@@ -1248,6 +1256,8 @@
         FreedomWallShowNames: byId("freedomWallShowNames")?.checked === false ? "NO" : "YES",
         FreedomWallAllowTextColor: byId("freedomWallAllowTextColor")?.checked === false ? "NO" : "YES",
         FreedomWallAllowFont: byId("freedomWallAllowFont")?.checked === false ? "NO" : "YES",
+        FreedomWallAllowGif: byId("freedomWallAllowGif")?.checked ? "YES" : "NO",
+        FreedomWallAllowYouTube: byId("freedomWallAllowYouTube")?.checked ? "YES" : "NO",
         FreedomWallPlaylistEnabled: wallMode ? (wallPlaylistEnabled ? "YES" : "NO") : "NO",
         FreedomWallPlaylist: wallMode ? JSON.stringify(wallPlaylist) : "[]",
         FreedomWallPlaylistShuffle: wallMode && byId("freedomWallPlaylistShuffle")?.checked ? "YES" : "NO",
@@ -1624,7 +1634,7 @@
       const db = getDb();
       if (!db) return;
       try {
-        const keys = ["FreedomWallTheme","FreedomWallAllowPosting","FreedomWallShowNames","FreedomWallAllowTextColor","FreedomWallAllowFont","FreedomWallPlaylistEnabled","FreedomWallPlaylist","FreedomWallPlaylistShuffle","FreedomWallPlaylistLoop","FreedomWallActiveWallID","HomepageEffectAudioEnabled","HomepageEffectAudioUrl"];
+        const keys = ["FreedomWallTheme","FreedomWallAllowPosting","FreedomWallShowNames","FreedomWallAllowTextColor","FreedomWallAllowFont","FreedomWallAllowGif","FreedomWallAllowYouTube","FreedomWallPlaylistEnabled","FreedomWallPlaylist","FreedomWallPlaylistShuffle","FreedomWallPlaylistLoop","FreedomWallActiveWallID","HomepageEffectAudioEnabled","HomepageEffectAudioUrl"];
         const docs = await Promise.all(keys.map((key) => db.collection("settings").doc(key).get()));
         const values = {};
         docs.forEach((doc, index) => { if (doc.exists) values[keys[index]] = String(doc.data()?.Value || ""); });
@@ -1633,6 +1643,8 @@
         if ($("freedomWallShowNames")) $("freedomWallShowNames").checked = String(values.FreedomWallShowNames || "YES").toUpperCase() !== "NO";
         if ($("freedomWallAllowTextColor")) $("freedomWallAllowTextColor").checked = String(values.FreedomWallAllowTextColor || "YES").toUpperCase() !== "NO";
         if ($("freedomWallAllowFont")) $("freedomWallAllowFont").checked = String(values.FreedomWallAllowFont || "YES").toUpperCase() !== "NO";
+        if ($("freedomWallAllowGif")) $("freedomWallAllowGif").checked = String(values.FreedomWallAllowGif || "NO").toUpperCase() === "YES";
+        if ($("freedomWallAllowYouTube")) $("freedomWallAllowYouTube").checked = String(values.FreedomWallAllowYouTube || "NO").toUpperCase() === "YES";
         let savedPlaylist = parsePlaylistValue(values.FreedomWallPlaylist || "[]");
         const hasNewPlaylistSetting = Object.prototype.hasOwnProperty.call(values, "FreedomWallPlaylistEnabled");
         if (!savedPlaylist.length && String(values.HomepageEffectAudioUrl || "").trim().match(/^https:\/\//i)) {
