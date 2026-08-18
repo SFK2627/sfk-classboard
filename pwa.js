@@ -2,7 +2,7 @@
   let deferredInstallPrompt = null;
 
   const installButton = document.getElementById("installAppBtn");
-  const SW_URL = "./sw.js?v=v471-mobile-smooth-drag";
+  const SW_URL = "./sw.js?v=v473-wall-pin-spacing";
   const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV471MobileSmoothDrag";
   const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV471MobileSmoothDrag";
 

@@ -1744,12 +1744,136 @@ const FREEDOM_WALL_COLLECTION = "freedomWallNotes";
 const FREEDOM_WALL_MAX_RENDERED_NOTES = 400;
 const FREEDOM_WALL_NOTE_MAX_LENGTH = 240;
 const FREEDOM_WALL_AUTHOR_MAX_LENGTH = 42;
-const FREEDOM_WALL_THEME_SET = new Set(["sunny","rainy","night","flood","comic","school-note","sticky-notes","jungle","bulletin-board","whiteboard","cafe","sakura","galaxy","beach","art-room","library","newspaper","polaroid","retro-arcade","coding-lab","rainbow","brick-alley","school-fair","eco","dreamy-clouds","chalkboard","detective","appreciation","seasonal","neon-music","poste","graffiti","vandal"]);
+const FREEDOM_WALL_THEME_SET = new Set(["sunny","rainy","night","flood","comic","comic-noir","comic-manga","comic-strip","school-note","sticky-notes","jungle","bulletin-board","whiteboard","cafe","sakura","galaxy","beach","art-room","library","newspaper","polaroid","retro-arcade","coding-lab","rainbow","brick-alley","school-fair","eco","dreamy-clouds","chalkboard","detective","appreciation","seasonal","neon-music","spiderman","filipino","poste","graffiti","vandal"]);
 const FREEDOM_WALL_COLORS = ["yellow","pink","blue","mint","orange","violet","peach","white"];
 let freedomWallUnsubscribe = null;
 let freedomWallListenToken = 0;
 let freedomWallConfig = null;
 let freedomWallPromptDismissedSignature = "";
+
+function isFreedomWallFilipinoTheme(theme = freedomWallConfig?.freedomWallTheme) {
+  return String(theme || "").trim().toLowerCase() === "filipino";
+}
+
+function getFreedomWallUiCopy(theme = freedomWallConfig?.freedomWallTheme) {
+  if (isFreedomWallFilipinoTheme(theme)) {
+    return {
+      brand: "SFK #BeKind WALL",
+      live: "Buhay na pader",
+      promptEyebrow: "PAKSA NG ATING PADER",
+      addButton: "Mag-Note",
+      addButtonAria: "Magdagdag ng note",
+      composerTitle: "Magdagdag sa SFK #BeKind Wall",
+      composerSubtitle: "Mag-iwan ng maikling mensahe para sa kapwa SFK.",
+      nameLabel: "Pangalan / palayaw",
+      namePlaceholder: "Iyong pangalan",
+      noteLabel: "Iyong mensahe",
+      notePlaceholder: "Sumulat ng mabait, totoo, masaya, taos-puso, o makabuluhang mensahe…",
+      colorAria: "Kulay ng note",
+      postButton: "Idikit ang Note",
+      closePromptAria: "Isara ang paksa",
+      closeComposerAria: "Isara",
+      statusEmpty: "Isulat muna ang iyong mensahe.",
+      statusWait: "Sandali lang bago muling magpost ng panibagong note.",
+      statusPosting: "Ipinapaskil…",
+      statusDone: "Naipaskil na nang live!",
+      statusFail: "Hindi maipaskil sa ngayon. Pakisubukang muli.",
+      formatCount(count, mode = "normal") {
+        if (mode === "connecting") return count ? `${count} mensahe • muling kumokonekta…` : "Muling kumokonekta…";
+        if (mode === "initial") return count ? `${count} mensahe` : "Kumokonekta nang live…";
+        return count ? `${count} mensahe` : "Buhay na pader";
+      }
+    };
+  }
+  return {
+    brand: "SFK #BeKind WALL",
+    live: "Live wall",
+    promptEyebrow: "TODAY'S WALL PROMPT",
+    addButton: "Add Note",
+    addButtonAria: "Add a note",
+    composerTitle: "Add to the SFK #BeKind Wall",
+    composerSubtitle: "Share a short note with SFK.",
+    nameLabel: "Name / nickname",
+    namePlaceholder: "Your name",
+    noteLabel: "Your note",
+    notePlaceholder: "Write something kind, honest, funny, thankful, or meaningful…",
+    colorAria: "Sticky note color",
+    postButton: "Post Note",
+    closePromptAria: "Close prompt",
+    closeComposerAria: "Close",
+    statusEmpty: "Write your note first.",
+    statusWait: "Give it a moment before posting another note.",
+    statusPosting: "Posting…",
+    statusDone: "Posted live!",
+    statusFail: "Unable to post right now. Please try again.",
+    formatCount(count, mode = "normal") {
+      if (mode === "connecting") return count ? `${count} notes • reconnecting…` : "Reconnecting live…";
+      if (mode === "initial") return count ? `${count} notes` : "Connecting live…";
+      return count ? `${count} ${count === 1 ? "note" : "notes"}` : "Live wall";
+    }
+  };
+}
+
+function applyFreedomWallThemeCopy(theme = freedomWallConfig?.freedomWallTheme) {
+  const layer = document.getElementById("homepageEffectLayer");
+  if (!layer) return;
+  const copy = getFreedomWallUiCopy(theme);
+  const brandStrong = layer.querySelector('.freedomWallBrand strong');
+  const brandSpan = layer.querySelector('#freedomWallCount');
+  const eyebrow = layer.querySelector('.freedomWallPromptEyebrow');
+  const promptClose = layer.querySelector('#freedomWallPromptClose');
+  const addBtn = layer.querySelector('#freedomWallAddBtn');
+  const addSmall = addBtn?.querySelector('small');
+  const composerTitle = layer.querySelector('.freedomWallComposerHead strong');
+  const composerSubtitle = layer.querySelector('.freedomWallComposerHead span');
+  const composerClose = layer.querySelector('#freedomWallComposerClose');
+  const nameLabel = layer.querySelector('label[for="freedomWallAuthorInput"]');
+  const nameInput = layer.querySelector('#freedomWallAuthorInput');
+  const noteLabel = layer.querySelector('label[for="freedomWallNoteInput"]');
+  const noteInput = layer.querySelector('#freedomWallNoteInput');
+  const colorRow = layer.querySelector('.freedomWallColorRow');
+  const postBtn = layer.querySelector('#freedomWallPostBtn');
+  if (brandStrong) brandStrong.textContent = copy.brand;
+  if (brandSpan && !freedomWallLastRenderedCount) brandSpan.textContent = copy.live;
+  if (eyebrow) eyebrow.textContent = copy.promptEyebrow;
+  if (promptClose) promptClose.setAttribute('aria-label', copy.closePromptAria);
+  if (addBtn) addBtn.setAttribute('aria-label', copy.addButtonAria);
+  if (addSmall) addSmall.textContent = copy.addButton;
+  if (composerTitle) composerTitle.textContent = copy.composerTitle;
+  if (composerSubtitle) composerSubtitle.textContent = copy.composerSubtitle;
+  if (composerClose) composerClose.setAttribute('aria-label', copy.closeComposerAria);
+  if (nameLabel) nameLabel.textContent = copy.nameLabel;
+  if (nameInput) nameInput.placeholder = copy.namePlaceholder;
+  if (noteLabel) noteLabel.textContent = copy.noteLabel;
+  if (noteInput) noteInput.placeholder = copy.notePlaceholder;
+  if (colorRow) colorRow.setAttribute('aria-label', copy.colorAria);
+  if (postBtn) postBtn.textContent = copy.postButton;
+}
+
+function applyFreedomWallThemeDecor(theme = freedomWallConfig?.freedomWallTheme) {
+  const layer = document.getElementById("homepageEffectLayer");
+  if (!layer) return;
+  const burstA = layer.querySelector('.freedomWallComicBurst.burst-a');
+  const burstB = layer.querySelector('.freedomWallComicBurst.burst-b');
+  const markA = layer.querySelector('.freedomWallVandalMark.mark-a');
+  const markB = layer.querySelector('.freedomWallVandalMark.mark-b');
+  const markC = layer.querySelector('.freedomWallVandalMark.mark-c');
+  const safe = String(theme || '').trim().toLowerCase();
+  const map = {
+    'comic': ['WOW!','SFK!','#BEKIND','SFK','★'],
+    'comic-noir': ['CASE FILE','ISSUE 01','NOIR','INK',''],
+    'comic-manga': ['KIRA!','SPEED','MANGA','DOKI!',''],
+    'comic-strip': ['PANEL 01','NEXT','STRIP','SFK',''],
+    'spiderman': ['THWIP!','WEB','SPIDEY','SFK',''],
+    'filipino': ['MABUHAY!','KAPWA!','BAYANIHAN','#BEKIND','★']
+  };
+  const values = map[safe] || ['WOW!','SFK!','#BEKIND','SFK','★'];
+  if (burstA) burstA.textContent = values[0];
+  if (burstB) burstB.textContent = values[1];
+  if (markA) markA.textContent = values[2];
+  if (markB) markB.textContent = values[3];
+  if (markC) markC.textContent = values[4];
+}
 let freedomWallPosting = false;
 let freedomWallSelectedColor = "yellow";
 let freedomWallLastRenderedCount = 0;
@@ -4134,9 +4258,10 @@ function renderFreedomWallNotes(notes = []) {
     if (isNew) window.setTimeout(() => card?.classList.remove("is-new"), 650);
   });
 
-  if (count) count.textContent = sorted.length >= FREEDOM_WALL_MAX_RENDERED_NOTES
-    ? `${sorted.length}+ notes`
-    : `${sorted.length} ${sorted.length === 1 ? "note" : "notes"}`;
+  if (count) {
+    const displayCount = sorted.length >= FREEDOM_WALL_MAX_RENDERED_NOTES ? sorted.length : sorted.length;
+    count.textContent = getFreedomWallUiCopy(freedomWallConfig?.freedomWallTheme).formatCount(displayCount, "normal");
+  }
 }
 
 function updateFreedomWallPrompt(config) {
@@ -4208,7 +4333,7 @@ async function submitFreedomWallNote(event) {
   const text = String(noteInput?.value || "").replace(/\r/g, "").replace(/\n{3,}/g, "\n\n").trim().slice(0, FREEDOM_WALL_NOTE_MAX_LENGTH);
   const author = String(authorInput?.value || "").trim().replace(/\s+/g, " ").slice(0, FREEDOM_WALL_AUTHOR_MAX_LENGTH);
   if (!text) {
-    if (status) status.textContent = "Write your note first.";
+    if (status) status.textContent = getFreedomWallUiCopy(freedomWallConfig?.freedomWallTheme).statusEmpty;
     noteInput?.focus();
     return;
   }
@@ -4216,13 +4341,13 @@ async function submitFreedomWallNote(event) {
   try {
     const lastPostAt = Number(localStorage.getItem("sfkFreedomWallLastPostAtV454") || 0);
     if (lastPostAt && now - lastPostAt < 2200) {
-      if (status) status.textContent = "Give it a moment before posting another note.";
+      if (status) status.textContent = getFreedomWallUiCopy(freedomWallConfig?.freedomWallTheme).statusWait;
       return;
     }
   } catch (error) {}
   freedomWallPosting = true;
   if (button) button.disabled = true;
-  if (status) status.textContent = "Posting…";
+  if (status) status.textContent = getFreedomWallUiCopy(freedomWallConfig?.freedomWallTheme).statusPosting;
   try {
     const db = await waitForClassBoardFirestore(12000);
     if (!db) throw new Error("wall unavailable");
@@ -4259,12 +4384,12 @@ async function submitFreedomWallNote(event) {
 
     saveFreedomWallAuthor(author);
     try { localStorage.setItem("sfkFreedomWallLastPostAtV454", String(now)); } catch (error) {}
-    if (status) status.textContent = "Posted live!";
+    if (status) status.textContent = getFreedomWallUiCopy(freedomWallConfig?.freedomWallTheme).statusDone;
     if (noteInput) noteInput.value = "";
     window.setTimeout(() => closeFreedomWallComposer(), 280);
   } catch (error) {
     console.warn("Freedom Wall post failed:", error);
-    if (status) status.textContent = "Unable to post right now. Please try again.";
+    if (status) status.textContent = getFreedomWallUiCopy(freedomWallConfig?.freedomWallTheme).statusFail;
   } finally {
     freedomWallPosting = false;
     if (button) button.disabled = false;
@@ -4289,7 +4414,7 @@ async function startFreedomWallLive() {
   if (token !== freedomWallListenToken || !freedomWallConfig) return;
   if (!db) {
     const count = document.getElementById("homepageEffectLayer")?.querySelector("#freedomWallCount");
-    if (count) count.textContent = freedomWallLastRenderedCount ? `${freedomWallLastRenderedCount} notes` : "Connecting live…";
+    if (count) count.textContent = getFreedomWallUiCopy(freedomWallConfig?.freedomWallTheme).formatCount(freedomWallLastRenderedCount, "initial");
     scheduleFreedomWallLiveRetry();
     return;
   }
@@ -4308,7 +4433,7 @@ async function startFreedomWallLive() {
       try { freedomWallUnsubscribe?.(); } catch (unsubscribeError) {}
       freedomWallUnsubscribe = null;
       const count = document.getElementById("homepageEffectLayer")?.querySelector("#freedomWallCount");
-      if (count) count.textContent = freedomWallLastRenderedCount ? `${freedomWallLastRenderedCount} notes • reconnecting…` : "Reconnecting live…";
+      if (count) count.textContent = getFreedomWallUiCopy(freedomWallConfig?.freedomWallTheme).formatCount(freedomWallLastRenderedCount, "connecting");
       scheduleFreedomWallLiveRetry();
     });
   } catch (error) {
@@ -4337,6 +4462,8 @@ function configureFreedomWall(config) {
     scene.style.setProperty("visibility", "visible", "important");
     scene.style.setProperty("opacity", "1", "important");
   }
+  applyFreedomWallThemeCopy(config.freedomWallTheme || "sticky-notes");
+  applyFreedomWallThemeDecor(config.freedomWallTheme || "sticky-notes");
   if (addButton) addButton.hidden = !config.freedomWallAllowPosting;
   if (authorInput) authorInput.hidden = !config.freedomWallShowNames;
   if (authorLabel) authorLabel.hidden = !config.freedomWallShowNames;

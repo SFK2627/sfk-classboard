@@ -31941,3 +31941,1090 @@ label[for="freedomWallTheme"]{display:block}
     pointer-events:none;
   }
 }
+
+
+/* v472: new comic variants + Spider-Man + Filipino / Makabayang wall */
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallSun,
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallMoon,
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallCloud,
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallRain,
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallFlood,
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallSun,
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallMoon,
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallCloud,
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallRain,
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallFlood,
+.homepageFreedomWallScene[data-theme="comic-strip"] .freedomWallSun,
+.homepageFreedomWallScene[data-theme="comic-strip"] .freedomWallMoon,
+.homepageFreedomWallScene[data-theme="comic-strip"] .freedomWallCloud,
+.homepageFreedomWallScene[data-theme="comic-strip"] .freedomWallRain,
+.homepageFreedomWallScene[data-theme="comic-strip"] .freedomWallFlood,
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallSun,
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallMoon,
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallCloud,
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallRain,
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallFlood,
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallMoon,
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallRain,
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallFlood{opacity:0 !important;display:none !important}
+
+/* Comic noir */
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallBg{background:linear-gradient(180deg,#d9d9d9,#9c9c9c 52%,#6b6b6b 52%,#3a3a3a);filter:grayscale(1)}
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallBg::before{background:repeating-linear-gradient(135deg, rgba(255,255,255,.24) 0 10px, transparent 10px 22px), radial-gradient(circle at 20% 18%, rgba(255,255,255,.38) 0 16%, transparent 16.5%), radial-gradient(circle at 82% 28%, rgba(255,255,255,.28) 0 12%, transparent 12.5%)}
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallBg::after{background:linear-gradient(180deg, transparent 0 76%, rgba(0,0,0,.22) 76% 100%), linear-gradient(90deg, transparent 0 8%, rgba(255,255,255,.12) 8.4% 8.9%, transparent 9.3% 55%, rgba(255,255,255,.12) 55.4% 55.9%, transparent 56.3% 100%)}
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallComicBurst{opacity:1;color:#111;background:#f6f1dd;border:3px solid #111;box-shadow:5px 5px 0 #111;text-shadow:none}
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallComicBurst.burst-a{left:7%;top:12%;font-size:clamp(18px,3.3vw,34px);transform:rotate(-8deg)}
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallComicBurst.burst-b{right:8%;bottom:14%;font-size:clamp(16px,3vw,30px);transform:rotate(8deg)}
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallBrand{background:rgba(14,14,14,.88);color:#f4f1e6;border-color:rgba(255,255,255,.14)}
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallBrand span{color:#d9d1bd}
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallPromptCard{background:rgba(250,246,236,.97);border:3px solid #111;box-shadow:8px 8px 0 #111,0 20px 34px rgba(0,0,0,.24)}
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallPromptCard::before{background:linear-gradient(90deg,#111,#666,#111)}
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallPromptEyebrow{color:#3f3f3f;font-family:"Courier New",monospace;letter-spacing:.16em}
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallPromptCard h2,.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallNote p{font-family:Impact,"Arial Black",Arial,sans-serif;color:#111;font-weight:1000;letter-spacing:-.03em;text-transform:uppercase}
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallPromptCard p,.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallNote small{font-family:"Courier New",monospace;color:#474747;font-weight:700}
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallNote{background:linear-gradient(180deg,#fffef8,#eae2cf)!important;border:3px solid #111;border-radius:3px;box-shadow:6px 6px 0 #111,0 16px 24px rgba(0,0,0,.16)}
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallNotePin{background:#111;box-shadow:0 0 0 2px #f6f1dd,0 0 0 4px #111}
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallNote::after{border-width:0 0 16px 16px;border-color:transparent transparent rgba(0,0,0,.12) transparent}
+
+/* Comic manga */
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallBg{background:linear-gradient(180deg,#ffffff,#f5f5f5)}
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallBg::before{background:repeating-conic-gradient(from -10deg at 50% 56%, rgba(0,0,0,.12) 0deg 2deg, transparent 2deg 9deg), radial-gradient(circle at 26% 22%, rgba(0,0,0,.06) 0 2px, transparent 2.4px) 0 0/14px 14px, radial-gradient(circle at 68% 66%, rgba(0,0,0,.06) 0 2px, transparent 2.4px) 0 0/12px 12px}
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallBg::after{background:linear-gradient(180deg, transparent 0 78%, rgba(0,0,0,.12) 78% 100%)}
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallComicBurst{opacity:1;color:#111;background:#fff;border:4px solid #111;border-radius:26px;box-shadow:0 0 0 3px #fff, 5px 5px 0 #111;text-shadow:none}
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallComicBurst.burst-a{left:5%;top:10%;font-size:clamp(20px,3.8vw,36px);transform:rotate(-4deg)}
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallComicBurst.burst-b{right:7%;top:18%;font-size:clamp(16px,3vw,28px);transform:rotate(6deg)}
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallBrand{background:rgba(255,255,255,.94);color:#111;border:2px solid #111;box-shadow:5px 5px 0 #111}
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallBrand span{color:#353535}
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallPromptCard{background:rgba(255,255,255,.98);border:4px solid #111;border-radius:28px;box-shadow:10px 10px 0 #111,0 18px 30px rgba(0,0,0,.18)}
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallPromptCard::before{background:linear-gradient(90deg,#111,#fff,#111)}
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallPromptEyebrow{color:#111;font-family:"Yu Gothic UI","Trebuchet MS",Arial,sans-serif;letter-spacing:.18em}
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallPromptCard h2,.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallNote p{font-family:"Yu Gothic UI","Trebuchet MS",Arial,sans-serif;color:#111;font-weight:1000;letter-spacing:-.03em}
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallPromptCard p,.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallNote small{font-family:"Yu Gothic UI","Trebuchet MS",Arial,sans-serif;color:#434343;font-weight:700}
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallNote{background:#fff !important;border:4px solid #111;border-radius:22px;box-shadow:6px 6px 0 #111,0 14px 22px rgba(0,0,0,.14)}
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallNote::before{content:"";position:absolute;left:14px;top:10px;width:44px;height:10px;border-bottom:3px solid #111;border-top:3px solid #111;opacity:.3}
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallNotePin{display:none}
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallNote::after{display:none}
+
+/* Comic strip */
+.homepageFreedomWallScene[data-theme="comic-strip"] .freedomWallBg{background:linear-gradient(180deg,#fff9d9,#ffd7cf 52%,#d5ecff 52%,#d5ecff 100%)}
+.homepageFreedomWallScene[data-theme="comic-strip"] .freedomWallBg::before{background:linear-gradient(90deg, rgba(0,0,0,.18) 0 1.8%, transparent 1.8% 32%, rgba(0,0,0,.18) 32% 33.5%, transparent 33.5% 66%, rgba(0,0,0,.18) 66% 67.5%, transparent 67.5% 100%), linear-gradient(180deg, transparent 0 8%, rgba(0,0,0,.18) 8.3% 9.3%, transparent 9.6% 49%, rgba(0,0,0,.18) 49.3% 50.3%, transparent 50.6% 100%)}
+.homepageFreedomWallScene[data-theme="comic-strip"] .freedomWallBg::after{background:linear-gradient(0deg, rgba(255,255,255,.18), rgba(255,255,255,0));mix-blend-mode:screen}
+.homepageFreedomWallScene[data-theme="comic-strip"] .freedomWallComicBurst{opacity:1;color:#18263a;background:#fffdf1;border:3px solid #18263a;box-shadow:4px 4px 0 #18263a;text-shadow:none;border-radius:14px}
+.homepageFreedomWallScene[data-theme="comic-strip"] .freedomWallComicBurst.burst-a{left:6%;top:11%;font-size:clamp(18px,3.4vw,32px);transform:rotate(-5deg)}
+.homepageFreedomWallScene[data-theme="comic-strip"] .freedomWallComicBurst.burst-b{right:8%;bottom:16%;font-size:clamp(18px,3.2vw,30px);transform:rotate(5deg)}
+.homepageFreedomWallScene[data-theme="comic-strip"] .freedomWallBrand{background:rgba(255,255,255,.92);color:#243452;border:2px solid #243452;box-shadow:4px 4px 0 rgba(36,52,82,.65)}
+.homepageFreedomWallScene[data-theme="comic-strip"] .freedomWallBrand span{color:#425b86}
+.homepageFreedomWallScene[data-theme="comic-strip"] .freedomWallPromptCard{background:rgba(255,255,255,.97);border:3px solid #243452;border-radius:20px;box-shadow:8px 8px 0 rgba(36,52,82,.68),0 16px 30px rgba(14,26,53,.18)}
+.homepageFreedomWallScene[data-theme="comic-strip"] .freedomWallPromptCard::before{background:linear-gradient(90deg,#ffd65c,#ff7c75,#6db9ff)}
+.homepageFreedomWallScene[data-theme="comic-strip"] .freedomWallPromptEyebrow{color:#d8504c;font-family:"Trebuchet MS",Arial,sans-serif;letter-spacing:.14em}
+.homepageFreedomWallScene[data-theme="comic-strip"] .freedomWallPromptCard h2,.homepageFreedomWallScene[data-theme="comic-strip"] .freedomWallNote p{font-family:"Trebuchet MS",Arial,sans-serif;color:#243452;font-weight:1000}
+.homepageFreedomWallScene[data-theme="comic-strip"] .freedomWallPromptCard p,.homepageFreedomWallScene[data-theme="comic-strip"] .freedomWallNote small{font-family:"Trebuchet MS",Arial,sans-serif;color:#53657f;font-weight:700}
+.homepageFreedomWallScene[data-theme="comic-strip"] .freedomWallNote{background:#fffef7 !important;border:3px solid #243452;border-radius:18px;box-shadow:5px 5px 0 rgba(36,52,82,.58),0 14px 24px rgba(14,26,53,.12)}
+.homepageFreedomWallScene[data-theme="comic-strip"] .freedomWallNotePin{display:none}
+.homepageFreedomWallScene[data-theme="comic-strip"] .freedomWallNote::after{border-width:0 0 18px 18px;border-color:transparent transparent rgba(109,185,255,.22) transparent}
+
+/* Spider-Man */
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallBg{background:linear-gradient(180deg,#11397f 0%,#1e60be 46%,#8d1421 46.2%,#b51d2d 100%)}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallBg::before{background:repeating-radial-gradient(circle at 50% -10%, rgba(255,255,255,.95) 0 1.4px, transparent 1.6px 36px), repeating-conic-gradient(from 0deg at 50% -8%, rgba(255,255,255,.75) 0deg .8deg, transparent .8deg 8deg);opacity:.55}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallBg::after{background:linear-gradient(180deg, transparent 0 58%, rgba(255,255,255,.08) 58% 100%), linear-gradient(90deg, transparent 0 6%, rgba(13,28,55,.92) 6.4% 12%, transparent 12.4% 18%, rgba(22,43,76,.96) 18.4% 27%, transparent 27.4% 33%, rgba(13,28,55,.94) 33.4% 45%, transparent 45.4% 50%, rgba(21,38,67,.94) 50.4% 58%, transparent 58.4% 64%, rgba(16,33,59,.95) 64.4% 74%, transparent 74.4% 81%, rgba(19,36,64,.96) 81.4% 90%, transparent 90.4% 100%)}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallComicBurst{opacity:1;color:#fff;background:#d71f2f;border:3px solid #fff;box-shadow:0 0 0 3px #143f87,0 10px 16px rgba(0,0,0,.22);text-shadow:none}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallComicBurst.burst-a{left:8%;top:12%;font-size:clamp(18px,3.3vw,34px);transform:rotate(-10deg)}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallComicBurst.burst-b{right:7%;top:18%;font-size:clamp(18px,3vw,30px);transform:rotate(8deg)}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallVandalMark{opacity:1;filter:none;mix-blend-mode:normal;text-shadow:0 2px 0 rgba(0,0,0,.18)}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallVandalMark.mark-a{color:rgba(255,255,255,.85);left:4%;bottom:10%;top:auto;font-size:clamp(22px,5vw,44px);transform:rotate(-12deg)}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallVandalMark.mark-b{color:rgba(255,220,81,.92);right:5%;bottom:9%;font-size:clamp(18px,4vw,34px);transform:rotate(8deg)}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallVandalMark.mark-c{color:rgba(255,255,255,.9);left:48%;top:21%;font-size:clamp(20px,5vw,34px)}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallBrand{background:rgba(9,20,42,.88);color:#fff;border-color:rgba(255,255,255,.20);box-shadow:0 10px 18px rgba(0,0,0,.25)}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallBrand span{color:#c5d8ff}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallPromptCard{background:rgba(255,255,255,.98);border:3px solid #11397f;border-radius:24px;box-shadow:0 0 0 5px #d71f2f,0 18px 30px rgba(0,0,0,.22)}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallPromptCard::before{background:linear-gradient(90deg,#d71f2f,#ffffff,#1e60be)}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallPromptEyebrow{color:#d71f2f;font-family:Impact,"Arial Black",Arial,sans-serif;letter-spacing:.12em}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallPromptCard h2,.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallNote p{font-family:Impact,"Arial Black",Arial,sans-serif;color:#11397f;font-weight:1000;letter-spacing:-.03em}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallPromptCard p,.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallNote small{font-family:"Trebuchet MS",Arial,sans-serif;color:#4c5871;font-weight:700}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallNote{background:#fff !important;border:3px solid #11397f;border-radius:18px;box-shadow:0 0 0 4px rgba(215,31,47,.85),0 15px 24px rgba(0,0,0,.18)}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallNote::before{content:"";position:absolute;inset:6px;pointer-events:none;border:1px dashed rgba(17,57,127,.22);border-radius:12px}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallNotePin{background:#d71f2f;box-shadow:0 0 0 2px #fff,0 0 0 4px #11397f}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallNote::after{border-width:0 0 16px 16px;border-color:transparent transparent rgba(17,57,127,.12) transparent}
+
+/* Filipino */
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallSun{opacity:1;left:6%;top:7%;transform:none;width:clamp(68px,8vw,110px);height:clamp(68px,8vw,110px);background:radial-gradient(circle at 50% 50%, #fff3b0 0 34%, #ffd74f 35% 70%, rgba(255,215,79,.15) 71% 100%);box-shadow:0 0 0 10px rgba(255,220,124,.14)}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallBg{background:linear-gradient(180deg,#5ebcff 0%,#9bd7ff 36%,#f7f7f7 36.2%,#f7f7f7 60%,#ebf5e3 60.2%,#cfe1b5 100%)}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallBg::before{background:repeating-linear-gradient(90deg, transparent 0 6%, rgba(255,0,0,.12) 6.1% 6.5%, transparent 6.6% 13%, rgba(0,56,168,.12) 13.1% 13.5%, transparent 13.6% 20%), linear-gradient(180deg, transparent 0 16%, rgba(255,255,255,.38) 16.2% 17.5%, transparent 17.7% 100%), radial-gradient(circle at 18% 18%, rgba(255,221,99,.85) 0 7%, transparent 7.4%), conic-gradient(from -45deg at 18% 18%, rgba(255,214,56,.55) 0deg 14deg, transparent 14deg 30deg, rgba(255,214,56,.55) 30deg 44deg, transparent 44deg 60deg, rgba(255,214,56,.55) 60deg 74deg, transparent 74deg 90deg, rgba(255,214,56,.55) 90deg 104deg, transparent 104deg 120deg, rgba(255,214,56,.55) 120deg 134deg, transparent 134deg 150deg, rgba(255,214,56,.55) 150deg 164deg, transparent 164deg 180deg, rgba(255,214,56,.55) 180deg 194deg, transparent 194deg 210deg, rgba(255,214,56,.55) 210deg 224deg, transparent 224deg 240deg, rgba(255,214,56,.55) 240deg 254deg, transparent 254deg 270deg, rgba(255,214,56,.55) 270deg 284deg, transparent 284deg 300deg, rgba(255,214,56,.55) 300deg 314deg, transparent 314deg 330deg, rgba(255,214,56,.55) 330deg 344deg, transparent 344deg 360deg)}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallBg::after{background:linear-gradient(180deg, transparent 0 74%, rgba(0,0,0,.07) 74% 100%), linear-gradient(90deg, transparent 0 8%, rgba(13,87,38,.28) 8.3% 14%, transparent 14.4% 30%, rgba(21,97,42,.25) 30.3% 34%, transparent 34.4% 64%, rgba(89,52,23,.38) 64.3% 67%, transparent 67.4% 100%)}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallCloud{opacity:.42;background:rgba(255,255,255,.78)}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallComicBurst{opacity:1;color:#9a1f18;background:#fff8ea;border:3px solid #14428c;box-shadow:4px 4px 0 #f2be2b;text-shadow:none}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallComicBurst.burst-a{left:6%;top:16%;font-size:clamp(18px,3.4vw,32px);transform:rotate(-6deg)}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallComicBurst.burst-b{right:7%;top:14%;font-size:clamp(18px,3.2vw,30px);transform:rotate(6deg)}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallVandalMark{opacity:1;filter:none;mix-blend-mode:normal;text-shadow:none}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallVandalMark.mark-a{color:#0f4ca4;left:5%;bottom:10%;top:auto;font-size:clamp(19px,4vw,34px);transform:rotate(-8deg)}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallVandalMark.mark-b{color:#b2232e;right:7%;bottom:11%;font-size:clamp(20px,4vw,34px);transform:rotate(8deg)}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallVandalMark.mark-c{color:#e0a915;left:48%;top:19%;font-size:clamp(16px,3vw,24px)}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallBrand{background:rgba(255,253,245,.94);color:#0d377c;border-color:#d9a92a;box-shadow:0 14px 24px rgba(24,56,113,.15)}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallBrand span{color:#8d1f25}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallPromptCard{background:rgba(255,252,243,.97);border:3px solid #0d4fa8;border-radius:22px;box-shadow:0 0 0 5px rgba(242,190,43,.75),0 18px 30px rgba(18,53,110,.18)}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallPromptCard::before{background:linear-gradient(90deg,#0d4fa8,#ffffff,#d0252d,#f0c139)}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallPromptEyebrow{color:#b11f28;font-family:"Trebuchet MS",Arial,sans-serif;letter-spacing:.14em}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallPromptCard h2,.homepageFreedomWallScene[data-theme="filipino"] .freedomWallNote p{font-family:"Trebuchet MS",Arial,sans-serif;color:#143f87;font-weight:1000}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallPromptCard p,.homepageFreedomWallScene[data-theme="filipino"] .freedomWallNote small{font-family:"Trebuchet MS",Arial,sans-serif;color:#6f4e21;font-weight:700}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallNote{background:linear-gradient(180deg,#fffdf5,#f6ecd6)!important;border:2px solid rgba(137,89,31,.20);border-radius:14px;box-shadow:0 14px 22px rgba(24,56,113,.12),0 0 0 4px rgba(255,255,255,.55) inset}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallNote::before{content:"";position:absolute;left:0;top:0;right:0;height:12px;background:linear-gradient(90deg,#0d4fa8 0 33.33%, #ffffff 33.33% 66.66%, #d0252d 66.66% 100%);border-radius:14px 14px 0 0;opacity:.95}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallNote{padding-top:24px}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallNotePin{background:#f0c139;box-shadow:0 0 0 2px #fff,0 0 0 4px #0d4fa8}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallNote::after{border-width:0 0 16px 16px;border-color:transparent transparent rgba(13,79,168,.10) transparent}
+
+@media (max-width:700px){
+  .homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallPromptCard,
+  .homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallPromptCard,
+  .homepageFreedomWallScene[data-theme="comic-strip"] .freedomWallPromptCard,
+  .homepageFreedomWallScene[data-theme="spiderman"] .freedomWallPromptCard,
+  .homepageFreedomWallScene[data-theme="filipino"] .freedomWallPromptCard{padding-left:18px;padding-right:18px}
+  .homepageFreedomWallScene[data-theme="spiderman"] .freedomWallVandalMark.mark-c,
+  .homepageFreedomWallScene[data-theme="filipino"] .freedomWallVandalMark.mark-c{display:none}
+}
+
+/* =========================================================
+   v473 — SFK #BeKind Wall universal pin / top-decoration safety pass
+   Fixes the old v466 cascade that accidentally made the tack relative,
+   and reserves a clean header lane before any note text begins.
+========================================================= */
+
+/* Critical fix: the tack/pin must NEVER participate in the text flow. */
+.homepageFreedomWallScene .freedomWallNotePin{
+  position:absolute !important;
+  top:4px !important;
+  z-index:5 !important;
+  pointer-events:none !important;
+  flex:0 0 auto !important;
+}
+
+/* Keep text / nickname in their own readable layer below the hardware. */
+.homepageFreedomWallScene .freedomWallNote > p,
+.homepageFreedomWallScene .freedomWallNote > small{
+  position:relative;
+  z-index:3;
+}
+
+/* Themes that intentionally show a pin, tack, magnet or pixel fastener.
+   Give them a guaranteed top lane so even 11–12px tacks never touch text. */
+.homepageFreedomWallScene:is(
+  [data-theme="sticky-notes"],
+  [data-theme="sunny"],
+  [data-theme="rainy"],
+  [data-theme="night"],
+  [data-theme="jungle"],
+  [data-theme="bulletin-board"],
+  [data-theme="whiteboard"],
+  [data-theme="cafe"],
+  [data-theme="galaxy"],
+  [data-theme="beach"],
+  [data-theme="art-room"],
+  [data-theme="library"],
+  [data-theme="retro-arcade"],
+  [data-theme="rainbow"],
+  [data-theme="brick-alley"],
+  [data-theme="eco"],
+  [data-theme="dreamy-clouds"],
+  [data-theme="detective"],
+  [data-theme="appreciation"],
+  [data-theme="seasonal"],
+  [data-theme="comic"],
+  [data-theme="comic-noir"],
+  [data-theme="spiderman"],
+  [data-theme="filipino"]
+) .freedomWallNote{
+  padding-top:24px !important;
+}
+
+.homepageFreedomWallScene:is(
+  [data-theme="sticky-notes"],
+  [data-theme="sunny"],
+  [data-theme="rainy"],
+  [data-theme="night"],
+  [data-theme="jungle"],
+  [data-theme="bulletin-board"],
+  [data-theme="whiteboard"],
+  [data-theme="cafe"],
+  [data-theme="galaxy"],
+  [data-theme="beach"],
+  [data-theme="art-room"],
+  [data-theme="library"],
+  [data-theme="retro-arcade"],
+  [data-theme="rainbow"],
+  [data-theme="brick-alley"],
+  [data-theme="eco"],
+  [data-theme="dreamy-clouds"],
+  [data-theme="detective"],
+  [data-theme="appreciation"],
+  [data-theme="seasonal"],
+  [data-theme="comic"],
+  [data-theme="comic-noir"],
+  [data-theme="spiderman"],
+  [data-theme="filipino"]
+) .freedomWallNote.is-size-medium{
+  padding-top:25px !important;
+}
+
+.homepageFreedomWallScene:is(
+  [data-theme="sticky-notes"],
+  [data-theme="sunny"],
+  [data-theme="rainy"],
+  [data-theme="night"],
+  [data-theme="jungle"],
+  [data-theme="bulletin-board"],
+  [data-theme="whiteboard"],
+  [data-theme="cafe"],
+  [data-theme="galaxy"],
+  [data-theme="beach"],
+  [data-theme="art-room"],
+  [data-theme="library"],
+  [data-theme="retro-arcade"],
+  [data-theme="rainbow"],
+  [data-theme="brick-alley"],
+  [data-theme="eco"],
+  [data-theme="dreamy-clouds"],
+  [data-theme="detective"],
+  [data-theme="appreciation"],
+  [data-theme="seasonal"],
+  [data-theme="comic"],
+  [data-theme="comic-noir"],
+  [data-theme="spiderman"],
+  [data-theme="filipino"]
+) .freedomWallNote.is-size-large{
+  padding-top:27px !important;
+}
+
+/* Largest classroom pushpin needs a little more air. */
+.homepageFreedomWallScene[data-theme="bulletin-board"] .freedomWallNotePin{
+  top:3px !important;
+}
+.homepageFreedomWallScene[data-theme="bulletin-board"] .freedomWallNote{
+  padding-top:27px !important;
+}
+
+/* Whiteboard uses a horizontal magnet at top-right rather than a round tack. */
+.homepageFreedomWallScene[data-theme="whiteboard"] .freedomWallNotePin{
+  top:4px !important;
+  left:auto !important;
+  right:8px !important;
+  translate:0 0 !important;
+}
+.homepageFreedomWallScene[data-theme="whiteboard"] .freedomWallNote{
+  padding-top:23px !important;
+}
+
+/* Ringed fasteners need room for their outer halo too. */
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallNotePin,
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallNotePin,
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallNotePin{
+  top:5px !important;
+}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallNote,
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallNote,
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallNote{
+  padding-top:28px !important;
+}
+
+/* Themes without pins still have tape/header/photo elements. Give each of
+   those decorations its own safe lane instead of letting text begin under it. */
+.homepageFreedomWallScene[data-theme="flood"] .freedomWallNote{padding-top:22px !important}
+.homepageFreedomWallScene[data-theme="school-note"] .freedomWallNote{padding-top:23px !important}
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallNote{padding-top:23px !important}
+.homepageFreedomWallScene[data-theme="graffiti"] .freedomWallNote{padding-top:23px !important}
+.homepageFreedomWallScene[data-theme="vandal"] .freedomWallNote{padding-top:22px !important}
+.homepageFreedomWallScene[data-theme="newspaper"] .freedomWallNote{padding-top:31px !important}
+.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallNote{padding-top:36px !important}
+.homepageFreedomWallScene[data-theme="sakura"] .freedomWallNote{padding-top:21px !important}
+.homepageFreedomWallScene[data-theme="school-fair"] .freedomWallNote{padding-top:25px !important}
+.homepageFreedomWallScene[data-theme="chalkboard"] .freedomWallNote{padding-top:27px !important}
+.homepageFreedomWallScene[data-theme="neon-music"] .freedomWallNote{padding-top:26px !important}
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallNote{padding-top:29px !important}
+.homepageFreedomWallScene[data-theme="comic-strip"] .freedomWallNote{padding-top:22px !important}
+
+/* Polaroid must preserve its real photo-frame space. */
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallNote{
+  padding-top:72px !important;
+}
+
+/* Extra safety for top-right labels/icons that otherwise can collide with
+   very long first lines. */
+.homepageFreedomWallScene[data-theme="beach"] .freedomWallNote,
+.homepageFreedomWallScene[data-theme="library"] .freedomWallNote,
+.homepageFreedomWallScene[data-theme="appreciation"] .freedomWallNote{
+  padding-top:27px !important;
+}
+
+@media (max-width:700px){
+  .homepageFreedomWallScene .freedomWallNotePin{top:3px !important}
+
+  .homepageFreedomWallScene:is(
+    [data-theme="sticky-notes"],
+    [data-theme="sunny"],
+    [data-theme="rainy"],
+    [data-theme="night"],
+    [data-theme="jungle"],
+    [data-theme="bulletin-board"],
+    [data-theme="whiteboard"],
+    [data-theme="cafe"],
+    [data-theme="galaxy"],
+    [data-theme="beach"],
+    [data-theme="art-room"],
+    [data-theme="library"],
+    [data-theme="retro-arcade"],
+    [data-theme="rainbow"],
+    [data-theme="brick-alley"],
+    [data-theme="eco"],
+    [data-theme="dreamy-clouds"],
+    [data-theme="detective"],
+    [data-theme="appreciation"],
+    [data-theme="seasonal"],
+    [data-theme="comic"],
+    [data-theme="comic-noir"],
+    [data-theme="spiderman"],
+    [data-theme="filipino"]
+  ) .freedomWallNote{
+    padding-top:22px !important;
+  }
+
+  .homepageFreedomWallScene[data-theme="bulletin-board"] .freedomWallNote{padding-top:25px !important}
+  .homepageFreedomWallScene[data-theme="whiteboard"] .freedomWallNote{padding-top:22px !important}
+  .homepageFreedomWallScene[data-theme="spiderman"] .freedomWallNote,
+  .homepageFreedomWallScene[data-theme="filipino"] .freedomWallNote,
+  .homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallNote{padding-top:26px !important}
+
+  .homepageFreedomWallScene[data-theme="newspaper"] .freedomWallNote{padding-top:29px !important}
+  .homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallNote{padding-top:33px !important}
+  .homepageFreedomWallScene[data-theme="school-fair"] .freedomWallNote{padding-top:23px !important}
+  .homepageFreedomWallScene[data-theme="chalkboard"] .freedomWallNote{padding-top:25px !important}
+  .homepageFreedomWallScene[data-theme="neon-music"] .freedomWallNote{padding-top:24px !important}
+  .homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallNote{padding-top:27px !important}
+  .homepageFreedomWallScene[data-theme="polaroid"] .freedomWallNote{padding-top:64px !important}
+  .homepageFreedomWallScene[data-theme="beach"] .freedomWallNote,
+  .homepageFreedomWallScene[data-theme="library"] .freedomWallNote,
+  .homepageFreedomWallScene[data-theme="appreciation"] .freedomWallNote{padding-top:25px !important}
+}
+
+
+/* v474: distinct comic variants + cleaner Spider-Man wall */
+/* Goal: make the new comic themes feel truly different, remove the repeated
+   tall speech-bubble look, and clean up Spider-Man colors/layout. */
+
+/* --- Comic Noir: detective / graphic-novel caption style --- */
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallComicBurst{
+  opacity:1;
+  border-radius:8px;
+  padding:8px 14px;
+  background:#111;
+  color:#f7f0dd;
+  border:2px solid #f7f0dd;
+  box-shadow:4px 4px 0 rgba(17,17,17,.72);
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallComicBurst.burst-a{
+  left:5.5%;top:8.5%;
+  font-size:clamp(12px,2vw,19px);
+  transform:rotate(-4deg);
+}
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallComicBurst.burst-b{display:none !important}
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallVandalMark{
+  opacity:.18;
+  filter:none;
+  mix-blend-mode:multiply;
+  text-shadow:none;
+}
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallVandalMark.mark-a{
+  left:auto;right:4.5%;bottom:8%;top:auto;
+  font-size:clamp(40px,7vw,88px);
+  color:rgba(22,22,22,.34);
+  transform:rotate(-8deg);
+}
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallVandalMark.mark-b{
+  left:5%;top:auto;bottom:10%;right:auto;
+  font-size:clamp(18px,3vw,26px);
+  color:rgba(55,55,55,.42);
+  transform:rotate(-10deg);
+}
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallVandalMark.mark-c{display:none !important}
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallPromptCard{
+  border-radius:10px;
+}
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallNote{
+  border-radius:4px !important;
+}
+
+/* --- Comic Manga: sharp manga burst + speed sidebar, not another bubble --- */
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallComicBurst{
+  opacity:1;
+  padding:12px 18px;
+  background:#111;
+  color:#fff;
+  border:3px solid #fff;
+  border-radius:0;
+  clip-path:polygon(50% 0%, 61% 12%, 77% 5%, 73% 22%, 92% 20%, 82% 36%, 100% 50%, 82% 63%, 93% 80%, 73% 77%, 78% 95%, 61% 87%, 50% 100%, 39% 88%, 22% 95%, 27% 77%, 7% 80%, 18% 63%, 0% 50%, 18% 36%, 8% 20%, 27% 22%, 22% 5%, 39% 12%);
+  box-shadow:6px 6px 0 #111;
+  text-shadow:none;
+}
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallComicBurst.burst-a{
+  left:6%;top:10%;
+  font-size:clamp(16px,2.8vw,28px);
+  transform:rotate(-8deg);
+}
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallComicBurst.burst-b{display:none !important}
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallVandalMark{
+  opacity:1;
+  filter:none;
+  mix-blend-mode:normal;
+  text-shadow:none;
+}
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallVandalMark.mark-a{
+  left:auto;right:2.8%;top:20%;bottom:auto;
+  font-size:clamp(28px,5vw,62px);
+  color:rgba(0,0,0,.18);
+  transform:rotate(90deg);
+  letter-spacing:.06em;
+}
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallVandalMark.mark-b{
+  left:6%;bottom:11%;top:auto;right:auto;
+  font-size:clamp(18px,3vw,26px);
+  color:rgba(0,0,0,.32);
+  transform:rotate(-14deg);
+}
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallVandalMark.mark-c{display:none !important}
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallPromptCard{
+  border-radius:18px;
+}
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallPromptCard h2,
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallNote p{
+  letter-spacing:-.015em;
+}
+
+/* --- Comic Strip: caption label + next badge, playful panel style --- */
+.homepageFreedomWallScene[data-theme="comic-strip"] .freedomWallComicBurst{
+  opacity:1;
+  text-shadow:none;
+}
+.homepageFreedomWallScene[data-theme="comic-strip"] .freedomWallComicBurst.burst-a{
+  left:5%;top:8.5%;
+  padding:8px 12px;
+  border-radius:7px;
+  background:#ffe166;
+  color:#1d3157;
+  border:3px solid #1d3157;
+  box-shadow:4px 4px 0 #1d3157;
+  font-size:clamp(12px,2vw,18px);
+  transform:rotate(-4deg);
+  letter-spacing:.08em;
+}
+.homepageFreedomWallScene[data-theme="comic-strip"] .freedomWallComicBurst.burst-b{
+  right:5.5%;bottom:10%;
+  padding:8px 14px;
+  border-radius:999px;
+  background:#1d3157;
+  color:#fff;
+  border:3px solid #fff6cf;
+  box-shadow:0 0 0 3px #1d3157;
+  font-size:clamp(12px,2vw,17px);
+  transform:rotate(5deg);
+  letter-spacing:.05em;
+}
+.homepageFreedomWallScene[data-theme="comic-strip"] .freedomWallVandalMark{display:none !important}
+.homepageFreedomWallScene[data-theme="comic-strip"] .freedomWallPromptCard{
+  border-radius:14px;
+}
+.homepageFreedomWallScene[data-theme="comic-strip"] .freedomWallNote{
+  border-radius:10px !important;
+}
+
+/* --- Spider-Man: cleaner red/blue web-city wall, no repeated white balloon --- */
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallBg{
+  background:linear-gradient(180deg,#0d1c3f 0%,#16408a 48%,#c81f2f 48.4%,#a61423 100%);
+}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallBg::before{
+  background:
+    repeating-radial-gradient(circle at 50% 15%, rgba(255,255,255,.18) 0 1.3px, transparent 1.3px 24px),
+    repeating-conic-gradient(from 0deg at 50% 15%, rgba(255,255,255,.26) 0deg 1.1deg, transparent 1.1deg 16deg),
+    radial-gradient(circle at 50% 10%, rgba(255,255,255,.10) 0 42px, transparent 43px);
+  opacity:.88;
+}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallBg::after{
+  background:
+    linear-gradient(180deg, transparent 0 80%, rgba(0,0,0,.24) 80% 100%),
+    linear-gradient(90deg,
+      transparent 0 6%, rgba(4,12,30,.95) 6% 10%, transparent 10% 16%,
+      rgba(4,12,30,.96) 16% 21%, transparent 21% 28%,
+      rgba(4,12,30,.94) 28% 34%, transparent 34% 40%,
+      rgba(4,12,30,.98) 40% 48%, transparent 48% 55%,
+      rgba(4,12,30,.94) 55% 60%, transparent 60% 68%,
+      rgba(4,12,30,.96) 68% 75%, transparent 75% 82%,
+      rgba(4,12,30,.93) 82% 88%, transparent 88% 100%);
+  opacity:.95;
+}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallComicBurst{
+  opacity:1;
+  padding:8px 12px;
+  border-radius:10px;
+  background:#d82635;
+  color:#fff;
+  border:2px solid #fff;
+  box-shadow:0 0 0 3px #17479b,0 10px 16px rgba(0,0,0,.18);
+  text-shadow:none;
+}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallComicBurst.burst-a{
+  left:5.5%;top:8.5%;
+  font-size:clamp(12px,2vw,20px);
+  transform:rotate(-6deg);
+  letter-spacing:.06em;
+}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallComicBurst.burst-b{display:none !important}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallVandalMark{
+  opacity:1;
+  filter:none;
+  mix-blend-mode:normal;
+  text-shadow:none;
+}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallVandalMark.mark-a{
+  left:auto;right:5%;top:13%;bottom:auto;
+  font-size:clamp(22px,4vw,34px);
+  color:rgba(255,255,255,.92);
+  transform:rotate(8deg);
+}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallVandalMark.mark-b{
+  left:5%;bottom:10%;top:auto;right:auto;
+  font-size:clamp(34px,7vw,68px);
+  color:rgba(255,255,255,.20);
+  transform:rotate(-8deg);
+}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallVandalMark.mark-c{display:none !important}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallBrand{
+  background:rgba(6,15,33,.9);
+  color:#fff;
+  border-color:rgba(255,255,255,.18);
+}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallBrand span{color:#c8d7ff}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallPromptCard{
+  background:rgba(255,255,255,.985);
+  border:3px solid #17479b;
+  border-radius:18px;
+  box-shadow:0 0 0 4px #d82635,0 18px 30px rgba(0,0,0,.24);
+}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallPromptCard::before{
+  background:linear-gradient(90deg,#d82635,#ffffff,#17479b);
+}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallPromptEyebrow{
+  color:#d82635;
+  font-family:Impact,"Arial Black",Arial,sans-serif;
+  letter-spacing:.11em;
+}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallPromptCard h2,
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallNote p{
+  font-family:Impact,"Arial Black",Arial,sans-serif;
+  color:#173d86;
+  font-weight:1000;
+  letter-spacing:-.02em;
+}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallPromptCard p,
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallNote small{
+  font-family:"Trebuchet MS",Arial,sans-serif;
+  color:#4b5875;
+  font-weight:800;
+}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallNote{
+  background:linear-gradient(180deg,#ffffff,#f5f8ff) !important;
+  border:3px solid #17479b;
+  border-radius:16px !important;
+  box-shadow:0 0 0 4px rgba(216,38,53,.9),0 14px 22px rgba(0,0,0,.18);
+}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallNote::before{
+  content:"";
+  position:absolute;
+  inset:7px;
+  pointer-events:none;
+  border:1px dashed rgba(23,71,155,.24);
+  border-radius:10px;
+}
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallNotePin{
+  background:#d82635;
+  box-shadow:0 0 0 2px #fff,0 0 0 4px #17479b;
+}
+
+/* Mobile cleanup: keep the new variants compact and remove awkward tall shapes. */
+@media (max-width:700px){
+  .homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallComicBurst.burst-a,
+  .homepageFreedomWallScene[data-theme="comic-strip"] .freedomWallComicBurst.burst-a,
+  .homepageFreedomWallScene[data-theme="spiderman"] .freedomWallComicBurst.burst-a{
+    font-size:12px;
+    padding:7px 10px;
+  }
+  .homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallComicBurst.burst-a{
+    font-size:14px;
+    padding:10px 12px;
+  }
+  .homepageFreedomWallScene[data-theme="comic-strip"] .freedomWallComicBurst.burst-b{
+    font-size:11px;
+    padding:6px 10px;
+    bottom:12%;
+  }
+  .homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallVandalMark.mark-a{
+    right:1.5%;top:24%;font-size:28px;
+  }
+  .homepageFreedomWallScene[data-theme="spiderman"] .freedomWallVandalMark.mark-a{
+    right:4%;top:14%;font-size:20px;
+  }
+  .homepageFreedomWallScene[data-theme="spiderman"] .freedomWallVandalMark.mark-b{
+    left:4%;bottom:12%;font-size:32px;
+  }
+}
+
+
+/* =========================================================
+   v475 — Freedom Wall theme cleanliness pass
+   Goal: remove unrelated clutter / accidental-looking vertical elements,
+   especially in the Filipino wall, and keep overlays theme-relevant.
+========================================================= */
+
+/* FILIPINO THEME CLEANUP
+   Before: flag-like vertical bars and a tall oval badge felt unrelated.
+   Now: cleaner sky / field / soft horizon with properly themed labels. */
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallBg{
+  background:
+    linear-gradient(180deg,#7fc9ff 0%,#bfe7ff 34%,#f8f5ed 34.2%,#f8f5ed 60%,#dceac8 60.2%,#bdd98e 100%) !important;
+}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallBg::before{
+  inset:0;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255,220,84,.92) 0 10px, transparent 10.5px),
+    conic-gradient(from -45deg at 18% 18%, rgba(255,214,56,.45) 0deg 14deg, transparent 14deg 30deg, rgba(255,214,56,.45) 30deg 44deg, transparent 44deg 60deg, rgba(255,214,56,.45) 60deg 74deg, transparent 74deg 90deg, rgba(255,214,56,.45) 90deg 104deg, transparent 104deg 120deg, rgba(255,214,56,.45) 120deg 134deg, transparent 134deg 150deg, rgba(255,214,56,.45) 150deg 164deg, transparent 164deg 180deg, rgba(255,214,56,.45) 180deg 194deg, transparent 194deg 210deg, rgba(255,214,56,.45) 210deg 224deg, transparent 224deg 240deg, rgba(255,214,56,.45) 240deg 254deg, transparent 254deg 270deg, rgba(255,214,56,.45) 270deg 284deg, transparent 284deg 300deg, rgba(255,214,56,.45) 300deg 314deg, transparent 314deg 330deg, rgba(255,214,56,.45) 330deg 344deg, transparent 344deg 360deg),
+    radial-gradient(circle at 12% 20%, rgba(255,255,255,.35) 0 6px, transparent 6.5px),
+    radial-gradient(circle at 24% 22%, rgba(255,255,255,.28) 0 5px, transparent 5.5px),
+    linear-gradient(180deg, transparent 0 18%, rgba(255,255,255,.28) 18.2% 19.2%, transparent 19.4% 100%);
+  opacity:1 !important;
+}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallBg::after{
+  inset:0;
+  background:
+    linear-gradient(180deg, transparent 0 74%, rgba(0,0,0,.06) 74% 100%),
+    radial-gradient(circle at 14% 92%, rgba(255,242,196,.45) 0 16px, transparent 16.5px),
+    radial-gradient(circle at 84% 90%, rgba(255,245,214,.34) 0 12px, transparent 12.5px);
+  opacity:1 !important;
+}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallCloud{
+  opacity:.38 !important;
+  background:rgba(255,255,255,.82) !important;
+}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallComicBurst{
+  opacity:1 !important;
+  display:inline-flex !important;
+  align-items:center;
+  justify-content:center;
+  white-space:nowrap;
+  width:auto !important;
+  height:auto !important;
+  padding:8px 14px !important;
+  border-radius:12px !important;
+  background:#fff8ea !important;
+  color:#9a1f18 !important;
+  border:3px solid #14428c !important;
+  box-shadow:4px 4px 0 #f2be2b !important;
+  text-shadow:none !important;
+  font:1000 clamp(14px,2.4vw,24px)/1 "Trebuchet MS", Arial, sans-serif !important;
+  letter-spacing:.03em;
+}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallComicBurst.burst-a{
+  left:5.5% !important;
+  top:12.5% !important;
+  transform:rotate(-5deg) !important;
+}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallComicBurst.burst-b{
+  right:5.8% !important;
+  top:13.5% !important;
+  bottom:auto !important;
+  transform:rotate(5deg) !important;
+  padding:7px 13px !important;
+}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallVandalMark{
+  opacity:1 !important;
+  filter:none !important;
+  mix-blend-mode:normal !important;
+  text-shadow:none !important;
+  font-family:"Trebuchet MS", Arial, sans-serif !important;
+  font-weight:1000 !important;
+  letter-spacing:.01em;
+}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallVandalMark.mark-a{
+  left:5% !important;
+  bottom:10% !important;
+  top:auto !important;
+  font-size:clamp(16px,2.6vw,26px) !important;
+  color:rgba(13,79,168,.92) !important;
+  transform:rotate(-6deg) !important;
+}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallVandalMark.mark-b{
+  right:6% !important;
+  bottom:11% !important;
+  top:auto !important;
+  font-size:clamp(16px,2.5vw,26px) !important;
+  color:rgba(186,34,46,.92) !important;
+  transform:rotate(6deg) !important;
+}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallVandalMark.mark-c{
+  display:none !important;
+}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallBrand{
+  background:rgba(255,252,243,.95) !important;
+  color:#0d377c !important;
+  border-color:#d9a92a !important;
+  box-shadow:0 14px 24px rgba(24,56,113,.14) !important;
+}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallBrand strong{
+  letter-spacing:.08em;
+}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallPromptCard{
+  background:rgba(255,252,243,.98) !important;
+  border:3px solid #0d4fa8 !important;
+  border-radius:24px !important;
+  box-shadow:0 0 0 5px rgba(242,190,43,.72),0 18px 30px rgba(18,53,110,.16) !important;
+}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallPromptCard::before{
+  background:linear-gradient(90deg,#0d4fa8,#ffffff,#d0252d,#f0c139) !important;
+}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallNote{
+  background:linear-gradient(180deg,#fffdf5,#f6ecd6) !important;
+  border:2px solid rgba(137,89,31,.20) !important;
+  box-shadow:0 14px 22px rgba(24,56,113,.11),0 0 0 4px rgba(255,255,255,.55) inset !important;
+}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallNote::before{
+  content:"";
+  position:absolute;
+  left:0;top:0;right:0;height:12px;
+  background:linear-gradient(90deg,#0d4fa8 0 33.33%, #ffffff 33.33% 66.66%, #d0252d 66.66% 100%);
+  border-radius:14px 14px 0 0;
+  opacity:.95;
+}
+
+/* SPIDER-MAN cleanup: keep it heroic and clean, remove the leftover tall-bubble feel entirely. */
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallComicBurst,
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallComicBurst.burst-a,
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallComicBurst.burst-b{
+  width:auto !important;
+  height:auto !important;
+  white-space:nowrap;
+}
+
+/* Generic cleanliness safeguard for the three added comic variants.
+   Ensures no theme falls back to the old round speech-bubble silhouette. */
+.homepageFreedomWallScene:is([data-theme="comic-noir"],[data-theme="comic-manga"],[data-theme="comic-strip"],[data-theme="filipino"]) .freedomWallComicBurst{
+  width:auto !important;
+  height:auto !important;
+  white-space:nowrap;
+}
+
+@media (max-width:700px){
+  .homepageFreedomWallScene[data-theme="filipino"] .freedomWallComicBurst{
+    font-size:12px !important;
+    padding:7px 10px !important;
+  }
+  .homepageFreedomWallScene[data-theme="filipino"] .freedomWallComicBurst.burst-a{
+    left:4% !important;
+    top:11.5% !important;
+  }
+  .homepageFreedomWallScene[data-theme="filipino"] .freedomWallComicBurst.burst-b{
+    right:4% !important;
+    top:13% !important;
+  }
+  .homepageFreedomWallScene[data-theme="filipino"] .freedomWallVandalMark.mark-a,
+  .homepageFreedomWallScene[data-theme="filipino"] .freedomWallVandalMark.mark-b{
+    font-size:15px !important;
+  }
+}
+
+
+/* =========================================================
+   v476 — SFK #BeKind Wall FULL PREMIUM THEME HYGIENE PASS
+   Every optional visual layer is opt-in by theme. This prevents old/shared
+   decorations from leaking into unrelated themes and keeps each wall clean.
+========================================================= */
+
+/* 1) Global hygiene: optional atmosphere / FX are OFF unless whitelisted. */
+.homepageFreedomWallScene .freedomWallSun,
+.homepageFreedomWallScene .freedomWallMoon,
+.homepageFreedomWallScene .freedomWallCloud,
+.homepageFreedomWallScene .freedomWallRain,
+.homepageFreedomWallScene .freedomWallFlood,
+.homepageFreedomWallScene .freedomWallComicBurst,
+.homepageFreedomWallScene .freedomWallVandalMark{
+  display:none !important;
+  opacity:0 !important;
+}
+
+/* Weather themes: only weather-related elements. */
+.homepageFreedomWallScene[data-theme="sunny"] .freedomWallSun,
+.homepageFreedomWallScene[data-theme="sunny"] .freedomWallCloud{
+  display:block !important;opacity:1 !important;
+}
+.homepageFreedomWallScene[data-theme="sunny"] .freedomWallCloud{opacity:.72 !important}
+
+.homepageFreedomWallScene[data-theme="rainy"] .freedomWallCloud,
+.homepageFreedomWallScene[data-theme="rainy"] .freedomWallRain{
+  display:block !important;opacity:.72 !important;
+}
+.homepageFreedomWallScene[data-theme="rainy"] .freedomWallRain{opacity:.62 !important}
+
+.homepageFreedomWallScene[data-theme="night"] .freedomWallMoon,
+.homepageFreedomWallScene[data-theme="night"] .freedomWallCloud{
+  display:block !important;
+}
+.homepageFreedomWallScene[data-theme="night"] .freedomWallMoon{opacity:1 !important}
+.homepageFreedomWallScene[data-theme="night"] .freedomWallCloud{opacity:.14 !important}
+
+.homepageFreedomWallScene[data-theme="flood"] .freedomWallCloud,
+.homepageFreedomWallScene[data-theme="flood"] .freedomWallRain,
+.homepageFreedomWallScene[data-theme="flood"] .freedomWallFlood{
+  display:block !important;
+}
+.homepageFreedomWallScene[data-theme="flood"] .freedomWallCloud{opacity:.65 !important}
+.homepageFreedomWallScene[data-theme="flood"] .freedomWallRain{opacity:.7 !important}
+.homepageFreedomWallScene[data-theme="flood"] .freedomWallFlood{opacity:.92 !important}
+
+/* Comic / street themes: only their intentional labels/art. */
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallComicBurst,
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallComicBurst.burst-a,
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallComicBurst.burst-a,
+.homepageFreedomWallScene[data-theme="comic-strip"] .freedomWallComicBurst,
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallComicBurst.burst-a,
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallComicBurst,
+.homepageFreedomWallScene[data-theme="graffiti"] .freedomWallVandalMark,
+.homepageFreedomWallScene[data-theme="vandal"] .freedomWallVandalMark{
+  display:block !important;opacity:1 !important;
+}
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallVandalMark.mark-a,
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallVandalMark.mark-b,
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallVandalMark.mark-a,
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallVandalMark.mark-b,
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallVandalMark.mark-a,
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallVandalMark.mark-b,
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallVandalMark.mark-a,
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallVandalMark.mark-b{
+  display:block !important;opacity:1 !important;
+}
+
+/* Keep hidden secondary elements explicitly hidden. */
+.homepageFreedomWallScene[data-theme="comic-noir"] .freedomWallComicBurst.burst-b,
+.homepageFreedomWallScene[data-theme="comic-manga"] .freedomWallComicBurst.burst-b,
+.homepageFreedomWallScene[data-theme="spiderman"] .freedomWallComicBurst.burst-b,
+.homepageFreedomWallScene:is([data-theme="comic-noir"],[data-theme="comic-manga"],[data-theme="spiderman"],[data-theme="filipino"]) .freedomWallVandalMark.mark-c{
+  display:none !important;opacity:0 !important;
+}
+
+/* 2) Filipino — clean makabayan atmosphere; no duplicate sun/cloud layers. */
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallSun,
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallCloud{
+  display:none !important;opacity:0 !important;
+}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallBg{
+  background:linear-gradient(180deg,#83cfff 0%,#c7ebff 35%,#f8f5eb 35.2%,#f8f5eb 63%,#d9e9c3 63.2%,#b9d688 100%) !important;
+}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallBg::before{
+  inset:0 !important;
+  background:
+    radial-gradient(circle at 14% 16%,#ffd84e 0 10px,rgba(255,216,78,.26) 10.5px 18px,transparent 18.5px),
+    radial-gradient(ellipse at 80% 16%,rgba(255,255,255,.56) 0 28px,transparent 29px),
+    radial-gradient(ellipse at 87% 18%,rgba(255,255,255,.50) 0 20px,transparent 21px),
+    radial-gradient(ellipse at 7% 87%,rgba(94,143,66,.24) 0 28px,transparent 29px),
+    radial-gradient(ellipse at 92% 88%,rgba(94,143,66,.20) 0 32px,transparent 33px) !important;
+  opacity:1 !important;
+}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallBg::after{
+  inset:0 !important;
+  background:linear-gradient(180deg,transparent 0 82%,rgba(80,116,54,.10) 82% 100%) !important;
+  opacity:1 !important;
+}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallComicBurst{
+  display:inline-flex !important;
+  opacity:1 !important;
+  width:auto !important;height:auto !important;
+  border-radius:10px !important;
+  padding:7px 12px !important;
+  box-shadow:3px 3px 0 rgba(240,193,57,.95) !important;
+}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallComicBurst.burst-a{
+  left:5% !important;top:12% !important;
+}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallComicBurst.burst-b{
+  right:5% !important;top:13% !important;bottom:auto !important;
+}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallVandalMark.mark-a,
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallVandalMark.mark-b{
+  font-size:clamp(14px,2.2vw,22px) !important;
+  opacity:.82 !important;
+}
+
+/* 3) Jungle — organic foliage only; remove striped/artificial grass. */
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallBg::after{
+  inset:auto 0 0 0 !important;
+  height:30% !important;
+  background:
+    radial-gradient(ellipse at 5% 100%,rgba(51,126,60,.98) 0 24%,transparent 25%),
+    radial-gradient(ellipse at 22% 104%,rgba(38,104,51,.98) 0 24%,transparent 25%),
+    radial-gradient(ellipse at 43% 100%,rgba(61,136,65,.96) 0 26%,transparent 27%),
+    radial-gradient(ellipse at 64% 105%,rgba(38,105,50,.98) 0 26%,transparent 27%),
+    radial-gradient(ellipse at 84% 100%,rgba(50,125,59,.98) 0 27%,transparent 28%),
+    linear-gradient(180deg,transparent 0 45%,rgba(26,78,38,.96) 46% 100%) !important;
+  clip-path:none !important;
+  opacity:.96 !important;
+}
+
+/* 4) Bulletin Board — clean cork board; remove floating white circles. */
+.homepageFreedomWallScene[data-theme="bulletin-board"] .freedomWallBg::after{
+  inset:4.6% !important;
+  background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(91,51,18,.035)) !important;
+  opacity:1 !important;
+}
+
+/* 5) Library — real shelf rhythm instead of full-height multicolor stripes. */
+.homepageFreedomWallScene[data-theme="library"] .freedomWallBg{
+  background:linear-gradient(180deg,#6e482e 0%,#5a3823 100%) !important;
+}
+.homepageFreedomWallScene[data-theme="library"] .freedomWallBg::before{
+  inset:auto 5% 8% 5% !important;
+  height:22% !important;
+  background:
+    linear-gradient(90deg,
+      #8e3c42 0 7%,#d1a657 7% 13%,#345e7c 13% 21%,#6e844d 21% 28%,#b46c3d 28% 36%,
+      #624f7d 36% 44%,#d8d0b8 44% 50%,#79462e 50% 58%,#416d82 58% 66%,#987332 66% 74%,
+      #6a843f 74% 82%,#a44d4b 82% 90%,#c39a55 90% 100%) !important;
+  border-radius:3px 3px 0 0;
+  box-shadow:0 -8px 0 rgba(62,37,22,.92),0 8px 0 rgba(43,25,15,.95) !important;
+  opacity:.92 !important;
+}
+.homepageFreedomWallScene[data-theme="library"] .freedomWallBg::after{
+  inset:0 !important;
+  background:
+    linear-gradient(180deg,transparent 0 28%,rgba(55,32,18,.82) 28.2% 29.6%,transparent 29.8% 57%,rgba(55,32,18,.82) 57.2% 58.6%,transparent 58.8% 82%,rgba(55,32,18,.88) 82.2% 83.8%,transparent 84% 100%),
+    linear-gradient(180deg,rgba(255,241,211,.055),rgba(0,0,0,.12)) !important;
+  box-shadow:none !important;
+}
+
+/* 6) Coding Lab — code-row ambience, no checker/grid clutter. */
+.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallBg::before{
+  inset:0 !important;
+  background:
+    linear-gradient(90deg,rgba(38,255,121,.14) 0 18%,transparent 18% 100%) 7% 17%/38% 2px no-repeat,
+    linear-gradient(90deg,rgba(86,164,255,.14) 0 72%,transparent 72% 100%) 12% 29%/34% 2px no-repeat,
+    linear-gradient(90deg,rgba(255,212,82,.12) 0 50%,transparent 50% 100%) 9% 41%/30% 2px no-repeat,
+    linear-gradient(90deg,rgba(184,117,255,.11) 0 64%,transparent 64% 100%) 56% 25%/30% 2px no-repeat,
+    linear-gradient(90deg,rgba(38,255,121,.10) 0 40%,transparent 40% 100%) 60% 54%/28% 2px no-repeat !important;
+  opacity:1 !important;
+}
+.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallBg::after{
+  inset:0 !important;
+  background:radial-gradient(circle at 50% 50%,transparent 0 58%,rgba(0,0,0,.10) 100%) !important;
+}
+
+/* 7) Neon / Music — equalizer is a bottom-stage element, not full-screen bars. */
+.homepageFreedomWallScene[data-theme="neon-music"] .freedomWallBg::before{
+  left:7% !important;right:7% !important;top:auto !important;bottom:6% !important;height:24% !important;
+  background:
+    repeating-linear-gradient(90deg,
+      rgba(255,70,195,.70) 0 7px,transparent 7px 14px,
+      rgba(66,241,255,.70) 14px 21px,transparent 21px 28px,
+      rgba(144,255,80,.64) 28px 35px,transparent 35px 42px) !important;
+  clip-path:polygon(0 72%,4% 35%,8% 63%,12% 18%,16% 52%,20% 26%,24% 70%,28% 40%,32% 15%,36% 56%,40% 30%,44% 66%,48% 22%,52% 50%,56% 32%,60% 72%,64% 25%,68% 57%,72% 18%,76% 46%,80% 28%,84% 65%,88% 36%,92% 20%,96% 55%,100% 34%,100% 100%,0 100%) !important;
+  opacity:.72 !important;
+}
+.homepageFreedomWallScene[data-theme="neon-music"] .freedomWallBg::after{
+  inset:0 !important;
+  background:
+    radial-gradient(circle at 20% 18%,rgba(255,61,193,.16) 0 64px,transparent 66px),
+    radial-gradient(circle at 76% 24%,rgba(74,227,255,.16) 0 72px,transparent 74px) !important;
+}
+
+/* 8) Utility Post / Meralco — keep only concrete + pole + wires. */
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallBg::before{
+  inset:0 !important;
+  background:
+    radial-gradient(circle at 12px 12px,rgba(0,0,0,.035) 0 1px,transparent 1.2px) 0 0/24px 24px,
+    linear-gradient(180deg,rgba(255,255,255,.15),rgba(0,0,0,.04)) !important;
+  opacity:1 !important;
+}
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallBg::after{
+  inset:0 !important;
+  background:
+    linear-gradient(90deg,transparent 43%,rgba(116,105,94,.94) 43.3% 56.7%,transparent 57%),
+    linear-gradient(90deg,transparent 47%,rgba(153,141,129,.70) 47.3% 52.7%,transparent 53%),
+    linear-gradient(180deg,transparent 0 13%,rgba(35,35,35,.30) 13.2% 13.7%,transparent 13.9% 31%,rgba(35,35,35,.26) 31.2% 31.7%,transparent 31.9% 100%) !important;
+  opacity:1 !important;
+}
+
+/* 9) Graffiti — keep paint and lettering, remove random wall seam. */
+.homepageFreedomWallScene[data-theme="graffiti"] .freedomWallBg::after{
+  inset:0 !important;
+  background:
+    radial-gradient(ellipse at 17% 23%,rgba(255,0,111,.80) 0 2%,transparent 2.8%),
+    radial-gradient(ellipse at 20% 28%,rgba(255,208,0,.76) 0 1.6%,transparent 2.3%),
+    radial-gradient(ellipse at 79% 25%,rgba(0,231,255,.82) 0 2.2%,transparent 2.9%),
+    radial-gradient(ellipse at 74% 71%,rgba(123,255,151,.74) 0 2.3%,transparent 3%),
+    radial-gradient(ellipse at 41% 61%,rgba(255,255,255,.08) 0 1.4%,transparent 2%) !important;
+  opacity:.9 !important;
+}
+
+/* 10) Seasonal Halloween — remove unrelated vertical divider. */
+.homepageFreedomWallScene[data-theme="seasonal"][data-seasonal-variant="halloween"] .freedomWallBg::after{
+  inset:0 !important;
+  background:
+    radial-gradient(circle at 18% 84%,rgba(255,127,31,.08) 0 70px,transparent 72px),
+    linear-gradient(180deg,transparent 0 78%,rgba(0,0,0,.22) 78% 100%) !important;
+}
+
+/* 11) Detective — strings stay, but make them subtle and purposeful. */
+.homepageFreedomWallScene[data-theme="detective"] .freedomWallBg::before{
+  inset:0 !important;
+  background:
+    radial-gradient(circle at 16% 22%,rgba(150,39,39,.72) 0 3px,transparent 4px),
+    radial-gradient(circle at 82% 18%,rgba(150,39,39,.72) 0 3px,transparent 4px),
+    linear-gradient(42deg,transparent 0 24%,rgba(150,39,39,.44) 24.2% 24.55%,transparent 24.8% 100%),
+    linear-gradient(140deg,transparent 0 62%,rgba(150,39,39,.42) 62.2% 62.55%,transparent 62.8% 100%),
+    radial-gradient(circle at 10px 10px,rgba(102,72,39,.14) 0 1px,transparent 1.2px) 0 0/17px 17px !important;
+  opacity:.68 !important;
+}
+
+/* 12) Newspaper — retain columns, but soften them behind content. */
+.homepageFreedomWallScene[data-theme="newspaper"] .freedomWallBg::before{
+  inset:0 !important;
+  background:
+    repeating-linear-gradient(90deg,transparent 0 32%,rgba(0,0,0,.045) 32% 32.25%,transparent 32.25% 33%),
+    repeating-linear-gradient(180deg,rgba(0,0,0,.035) 0 1px,transparent 1px 12px) !important;
+  opacity:.52 !important;
+}
+
+/* 13) Classic / café / whiteboard / chalkboard / notebook keep their real-world structural lines,
+       because those lines are part of the object itself rather than decorative clutter. */
+
+/* Keep mobile versions even cleaner. */
+@media(max-width:700px){
+  .homepageFreedomWallScene[data-theme="filipino"] .freedomWallComicBurst{
+    font-size:11px !important;padding:6px 9px !important;
+  }
+  .homepageFreedomWallScene[data-theme="filipino"] .freedomWallVandalMark.mark-a,
+  .homepageFreedomWallScene[data-theme="filipino"] .freedomWallVandalMark.mark-b{
+    font-size:13px !important;
+  }
+  .homepageFreedomWallScene[data-theme="library"] .freedomWallBg::before{
+    left:4% !important;right:4% !important;bottom:7% !important;height:18% !important;
+  }
+  .homepageFreedomWallScene[data-theme="neon-music"] .freedomWallBg::before{
+    left:5% !important;right:5% !important;bottom:5% !important;height:18% !important;
+  }
+  .homepageFreedomWallScene[data-theme="poste"] .freedomWallBg::after{
+    background:
+      linear-gradient(90deg,transparent 40%,rgba(116,105,94,.94) 40.4% 59.6%,transparent 60%),
+      linear-gradient(90deg,transparent 46%,rgba(153,141,129,.70) 46.4% 53.6%,transparent 54%),
+      linear-gradient(180deg,transparent 0 13%,rgba(35,35,35,.30) 13.2% 13.8%,transparent 14% 32%,rgba(35,35,35,.26) 32.2% 32.8%,transparent 33% 100%) !important;
+  }
+}
+
+/* v476 final display corrections */
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallComicBurst{
+  display:inline-flex !important;
+  align-items:center;
+  justify-content:center;
+}
