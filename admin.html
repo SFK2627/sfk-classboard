@@ -45,7 +45,8 @@
     .freedomWallSessionCard{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px;border:1px solid #e3e5e8;border-radius:10px;background:#fafafa}.freedomWallSessionCard.is-active{border-color:#246b50;box-shadow:0 0 0 1px #246b50 inset;background:#f4fbf7}.freedomWallSessionInfo{min-width:0;display:flex;flex-direction:column;gap:3px}.freedomWallSessionInfo strong{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.freedomWallSessionInfo span{font-size:10px;color:#5f6770;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.freedomWallSessionInfo small{font-size:9px;color:#858b92}.freedomWallSessionActions{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}.freedomWallSessionActions button{border:0;border-radius:7px;padding:6px 7px;background:#24272b;color:#fff;font-size:9px;font-weight:900;cursor:pointer}.freedomWallSessionActions button[data-fw-session-delete]{background:#a82424}.freedomWallSessionActions button:disabled{opacity:.45;cursor:not-allowed}
 
     @media (max-width:700px){.freedomWallPlaylistRow{grid-template-columns:1fr}.freedomWallPlaylistRowActions{justify-content:flex-end}.freedomWallPlaylistOptions{grid-template-columns:1fr}.freedomWallSessionCard{grid-template-columns:1fr}.freedomWallSessionActions{justify-content:flex-start}}
-  </style>
+  .freedomWallYoutubePlaybackSetting{display:grid;grid-template-columns:minmax(180px,1fr) minmax(150px,220px);gap:10px;align-items:center;padding:9px 11px;border:1px solid #e3e5e8;border-radius:10px;background:#fafafa}.freedomWallYoutubePlaybackSetting label{display:grid;gap:3px}.freedomWallYoutubePlaybackSetting strong{font-size:12px}.freedomWallYoutubePlaybackSetting small{font-size:10px;line-height:1.35;color:#68707a}.freedomWallYoutubePlaybackSetting select{width:100%;box-sizing:border-box;border:1px solid #cfd4db;border-radius:9px;padding:9px 10px;background:#fff;font-weight:800;color:#222}.freedomWallYoutubePlaybackSetting.is-disabled{opacity:.55}.freedomWallYoutubePlaybackSetting select:disabled{cursor:not-allowed}@media(max-width:700px){.freedomWallYoutubePlaybackSetting{grid-template-columns:1fr}}
+</style>
 </head>
 
 <body>
@@ -295,6 +296,13 @@
                 <input id="freedomWallAllowYouTube" type="checkbox" />
                 <span><strong>Allow YouTube video notes</strong><small>Students may paste a YouTube link. Videos stay paused until someone presses Play.</small></span>
               </label>
+              <div class="freedomWallYoutubePlaybackSetting">
+                <label for="freedomWallYouTubePlaybackMode"><strong>YouTube Playback Style</strong><small>Choose where YouTube videos open after the student presses the red Play button.</small></label>
+                <select id="freedomWallYouTubePlaybackMode">
+                  <option value="inline">Play Inside Note</option>
+                  <option value="viewer" selected>Open Large Viewer</option>
+                </select>
+              </div>
             </div>
 
             <div class="freedomWallPlaylistAdmin" id="freedomWallPlaylistAdmin">
@@ -1258,6 +1266,7 @@
         FreedomWallAllowFont: byId("freedomWallAllowFont")?.checked === false ? "NO" : "YES",
         FreedomWallAllowGif: byId("freedomWallAllowGif")?.checked ? "YES" : "NO",
         FreedomWallAllowYouTube: byId("freedomWallAllowYouTube")?.checked ? "YES" : "NO",
+        FreedomWallYouTubePlaybackMode: String(byId("freedomWallYouTubePlaybackMode")?.value || "viewer").trim().toLowerCase() === "inline" ? "inline" : "viewer",
         FreedomWallPlaylistEnabled: wallMode ? (wallPlaylistEnabled ? "YES" : "NO") : "NO",
         FreedomWallPlaylist: wallMode ? JSON.stringify(wallPlaylist) : "[]",
         FreedomWallPlaylistShuffle: wallMode && byId("freedomWallPlaylistShuffle")?.checked ? "YES" : "NO",
@@ -1623,6 +1632,16 @@
         if (next) playlistList.insertBefore(next, row);
       }
     });
+    function syncFreedomWallYouTubePlaybackUi(){
+      const enabled = $("freedomWallAllowYouTube")?.checked === true;
+      const select = $("freedomWallYouTubePlaybackMode");
+      const wrap = select?.closest?.(".freedomWallYoutubePlaybackSetting");
+      if (select) select.disabled = !enabled;
+      wrap?.classList?.toggle("is-disabled", !enabled);
+    }
+    $("freedomWallAllowYouTube")?.addEventListener("change", syncFreedomWallYouTubePlaybackUi);
+    syncFreedomWallYouTubePlaybackUi();
+
     renderPlaylistRows([]);
     syncFreedomWallAdminUi();
     window.setTimeout(syncFreedomWallAdminUi, 350);
@@ -1634,7 +1653,7 @@
       const db = getDb();
       if (!db) return;
       try {
-        const keys = ["FreedomWallTheme","FreedomWallAllowPosting","FreedomWallShowNames","FreedomWallAllowTextColor","FreedomWallAllowFont","FreedomWallAllowGif","FreedomWallAllowYouTube","FreedomWallPlaylistEnabled","FreedomWallPlaylist","FreedomWallPlaylistShuffle","FreedomWallPlaylistLoop","FreedomWallActiveWallID","HomepageEffectAudioEnabled","HomepageEffectAudioUrl"];
+        const keys = ["FreedomWallTheme","FreedomWallAllowPosting","FreedomWallShowNames","FreedomWallAllowTextColor","FreedomWallAllowFont","FreedomWallAllowGif","FreedomWallAllowYouTube","FreedomWallYouTubePlaybackMode","FreedomWallPlaylistEnabled","FreedomWallPlaylist","FreedomWallPlaylistShuffle","FreedomWallPlaylistLoop","FreedomWallActiveWallID","HomepageEffectAudioEnabled","HomepageEffectAudioUrl"];
         const docs = await Promise.all(keys.map((key) => db.collection("settings").doc(key).get()));
         const values = {};
         docs.forEach((doc, index) => { if (doc.exists) values[keys[index]] = String(doc.data()?.Value || ""); });
@@ -1645,6 +1664,8 @@
         if ($("freedomWallAllowFont")) $("freedomWallAllowFont").checked = String(values.FreedomWallAllowFont || "YES").toUpperCase() !== "NO";
         if ($("freedomWallAllowGif")) $("freedomWallAllowGif").checked = String(values.FreedomWallAllowGif || "NO").toUpperCase() === "YES";
         if ($("freedomWallAllowYouTube")) $("freedomWallAllowYouTube").checked = String(values.FreedomWallAllowYouTube || "NO").toUpperCase() === "YES";
+        if ($("freedomWallYouTubePlaybackMode")) $("freedomWallYouTubePlaybackMode").value = String(values.FreedomWallYouTubePlaybackMode || "viewer").toLowerCase() === "inline" ? "inline" : "viewer";
+        syncFreedomWallYouTubePlaybackUi();
         let savedPlaylist = parsePlaylistValue(values.FreedomWallPlaylist || "[]");
         const hasNewPlaylistSetting = Object.prototype.hasOwnProperty.call(values, "FreedomWallPlaylistEnabled");
         if (!savedPlaylist.length && String(values.HomepageEffectAudioUrl || "").trim().match(/^https:\/\//i)) {

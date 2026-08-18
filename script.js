@@ -1693,6 +1693,7 @@ const HOMEPAGE_EFFECT_KEYS = new Set([
   "FreedomWallAllowFont",
   "FreedomWallAllowGif",
   "FreedomWallAllowYouTube",
+  "FreedomWallYouTubePlaybackMode",
   "FreedomWallPlaylistEnabled",
   "FreedomWallPlaylist",
   "FreedomWallPlaylistShuffle",
@@ -2194,6 +2195,7 @@ function normalizeHomepageEffectConfig(settings = {}) {
   const freedomWallAllowFont = String(settings.FreedomWallAllowFont || "YES").trim().toUpperCase() !== "NO";
   const freedomWallAllowGif = String(settings.FreedomWallAllowGif || "NO").trim().toUpperCase() === "YES";
   const freedomWallAllowYouTube = String(settings.FreedomWallAllowYouTube || "NO").trim().toUpperCase() === "YES";
+  const freedomWallYouTubePlaybackMode = normalizeFreedomWallYouTubePlaybackMode(settings.FreedomWallYouTubePlaybackMode || "viewer");
   const hasFreedomWallPlaylistSetting = Object.prototype.hasOwnProperty.call(settings || {}, "FreedomWallPlaylistEnabled");
   const freedomWallPlaylist = normalizeFreedomWallPlaylist(settings.FreedomWallPlaylist, mode === "freedom-wall" ? audioUrl : "");
   const freedomWallPlaylistEnabled = mode === "freedom-wall" && freedomWallPlaylist.length > 0 && (hasFreedomWallPlaylistSetting
@@ -2203,8 +2205,8 @@ function normalizeHomepageEffectConfig(settings = {}) {
   const freedomWallPlaylistLoop = String(settings.FreedomWallPlaylistLoop || "YES").trim().toUpperCase() !== "NO";
   const freedomWallActiveWallId = normalizeFreedomWallSessionId(settings.FreedomWallActiveWallID || FREEDOM_WALL_LEGACY_SESSION_ID);
   const playlistSignature = freedomWallPlaylist.map((track) => `${track.title}~${track.url}`).join("~~");
-  const signature = updatedAt || [enabled ? "1" : "0", mode, title, message, images.join("~"), dismissible ? "1" : "0", alertSound ? "1" : "0", audioEnabled ? "1" : "0", audioUrl, audioLoop ? "1" : "0", youtubeUrl, youtubeMuted ? "1" : "0", rickrollUrl, freedomWallTheme, freedomWallAllowPosting ? "1" : "0", freedomWallShowNames ? "1" : "0", freedomWallAllowTextColor ? "1" : "0", freedomWallAllowFont ? "1" : "0", freedomWallAllowGif ? "1" : "0", freedomWallAllowYouTube ? "1" : "0", freedomWallPlaylistEnabled ? "1" : "0", freedomWallPlaylistShuffle ? "1" : "0", freedomWallPlaylistLoop ? "1" : "0", playlistSignature, freedomWallActiveWallId].join("|");
-  return { enabled, mode, title, message, image: images[0] || "", images, dismissible, alertSound, spiderSound, audioEnabled, audioUrl, audioLoop, youtubeUrl, youtubeMuted, rickrollUrl, updatedAt, signature, freedomWallTheme, freedomWallAllowPosting, freedomWallShowNames, freedomWallAllowTextColor, freedomWallAllowFont, freedomWallAllowGif, freedomWallAllowYouTube, freedomWallPlaylistEnabled, freedomWallPlaylist, freedomWallPlaylistShuffle, freedomWallPlaylistLoop, freedomWallActiveWallId };
+  const signature = updatedAt || [enabled ? "1" : "0", mode, title, message, images.join("~"), dismissible ? "1" : "0", alertSound ? "1" : "0", audioEnabled ? "1" : "0", audioUrl, audioLoop ? "1" : "0", youtubeUrl, youtubeMuted ? "1" : "0", rickrollUrl, freedomWallTheme, freedomWallAllowPosting ? "1" : "0", freedomWallShowNames ? "1" : "0", freedomWallAllowTextColor ? "1" : "0", freedomWallAllowFont ? "1" : "0", freedomWallAllowGif ? "1" : "0", freedomWallAllowYouTube ? "1" : "0", freedomWallYouTubePlaybackMode, freedomWallPlaylistEnabled ? "1" : "0", freedomWallPlaylistShuffle ? "1" : "0", freedomWallPlaylistLoop ? "1" : "0", playlistSignature, freedomWallActiveWallId].join("|");
+  return { enabled, mode, title, message, image: images[0] || "", images, dismissible, alertSound, spiderSound, audioEnabled, audioUrl, audioLoop, youtubeUrl, youtubeMuted, rickrollUrl, updatedAt, signature, freedomWallTheme, freedomWallAllowPosting, freedomWallShowNames, freedomWallAllowTextColor, freedomWallAllowFont, freedomWallAllowGif, freedomWallAllowYouTube, freedomWallYouTubePlaybackMode, freedomWallPlaylistEnabled, freedomWallPlaylist, freedomWallPlaylistShuffle, freedomWallPlaylistLoop, freedomWallActiveWallId };
 }
 
 function normalizeHomepageEffectYouTubeUrl(value) {
@@ -2240,6 +2242,11 @@ function getFreedomWallYouTubeVideoId(value) {
 
 function normalizeFreedomWallYouTubeUrl(value) {
   return normalizeHomepageEffectYouTubeUrl(value);
+}
+
+function normalizeFreedomWallYouTubePlaybackMode(value) {
+  const mode = String(value || "viewer").trim().toLowerCase();
+  return mode === "inline" ? "inline" : "viewer";
 }
 
 function renderHomepageEffectYouTube(config) {
@@ -2664,12 +2671,16 @@ function loadFreedomWallYouTubeApi() {
 
 function restoreFreedomWallYoutubePreview(playback, { resumeMusic = true } = {}) {
   if (!playback) return;
-  const { media, videoId, player, viewer } = playback;
+  const { media, videoId, player, viewer, card, stage, originalX, originalY } = playback;
   try { player?.destroy?.(); } catch (error) {}
   try { viewer?.remove?.(); } catch (error) {}
-  // v492: video playback lives in a dedicated large viewer. The small note
-  // keeps its thumbnail so the note never expands into an unusably tiny player.
-  if (media?.isConnected && videoId && !media.querySelector('.freedomWallYoutubePlayCard')) {
+  if (card?.isConnected) {
+    card.classList.remove('is-inline-video-active');
+    if (originalX) card.style.setProperty('--fw-x', originalX); else card.style.removeProperty('--fw-x');
+    if (originalY) card.style.setProperty('--fw-y', originalY); else card.style.removeProperty('--fw-y');
+  }
+  stage?.classList?.remove('has-inline-youtube');
+  if (media?.isConnected && videoId) {
     media.replaceChildren();
     media.appendChild(createFreedomWallYoutubePlayButton(media, videoId));
   }
@@ -2702,7 +2713,6 @@ function createFreedomWallYoutubeViewer(videoId) {
 
   const panel = document.createElement('section');
   panel.className = 'freedomWallYoutubeViewerPanel';
-
   const head = document.createElement('div');
   head.className = 'freedomWallYoutubeViewerHead';
   const title = document.createElement('strong');
@@ -2731,7 +2741,82 @@ function createFreedomWallYoutubeViewer(videoId) {
       closeFreedomWallActiveYoutube({ resumeMusic:true });
     }
   });
-  return { viewer, panel, stage, slot, close };
+  return { viewer, stage:null, card:null, slot, close, originalX:"", originalY:"" };
+}
+
+function clampFreedomWallInlineVideoCard(card, stage) {
+  if (!card?.isConnected || !stage?.isConnected) return;
+  const stageRect = stage.getBoundingClientRect();
+  const width = card.offsetWidth || 320;
+  const height = card.offsetHeight || 240;
+  const currentX = (parseFloat(card.style.getPropertyValue('--fw-x')) || 50) / 100 * stageRect.width;
+  const currentY = (parseFloat(card.style.getPropertyValue('--fw-y')) || 50) / 100 * stageRect.height;
+  const margin = 12;
+  const minX = Math.min(stageRect.width / 2, width / 2 + margin);
+  const maxX = Math.max(stageRect.width / 2, stageRect.width - width / 2 - margin);
+  const minY = Math.min(stageRect.height / 2, height / 2 + margin);
+  const maxY = Math.max(stageRect.height / 2, stageRect.height - height / 2 - margin);
+  const x = Math.max(minX, Math.min(maxX, currentX));
+  const y = Math.max(minY, Math.min(maxY, currentY));
+  card.style.setProperty('--fw-x', String((x / Math.max(1, stageRect.width) * 100).toFixed(3)));
+  card.style.setProperty('--fw-y', String((y / Math.max(1, stageRect.height) * 100).toFixed(3)));
+}
+
+function createFreedomWallYoutubeInlinePlayer(media, videoId) {
+  const card = media?.closest?.('.freedomWallNote');
+  const stage = card?.closest?.('.freedomWallNotesStage, .freedomWallDragOverlay') || document.getElementById('homepageEffectLayer')?.querySelector?.('#freedomWallNotesStage');
+  if (!card || !stage) return null;
+  const originalX = card.style.getPropertyValue('--fw-x');
+  const originalY = card.style.getPropertyValue('--fw-y');
+  card.classList.add('is-inline-video-active');
+  stage.classList.add('has-inline-youtube');
+  media.replaceChildren();
+  media.classList.add('is-youtube-playing');
+
+  const slot = document.createElement('div');
+  slot.className = 'freedomWallYoutubePlayerSlot';
+  slot.id = `fwYoutubeInline_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,7)}`;
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.className = 'freedomWallYoutubeInlineClose';
+  close.setAttribute('aria-label', 'Close video and resume background music');
+  close.textContent = '×';
+  media.append(slot, close);
+  window.requestAnimationFrame(() => clampFreedomWallInlineVideoCard(card, stage));
+  return { viewer:null, stage, card, slot, close, originalX, originalY };
+}
+
+async function mountFreedomWallYoutubePlayer(playback, slot, videoId) {
+  try {
+    const YT = await loadFreedomWallYouTubeApi();
+    if (freedomWallActiveYoutubePlayback !== playback || !slot.isConnected) return;
+    playback.player = new YT.Player(slot.id, {
+      videoId,
+      width:'100%',
+      height:'100%',
+      playerVars: { autoplay:1, controls:1, rel:0, modestbranding:1, playsinline:1, fs:1 },
+      events: {
+        onStateChange: (playerEvent) => {
+          if (playerEvent?.data === YT.PlayerState.ENDED && freedomWallActiveYoutubePlayback === playback) {
+            restoreFreedomWallYoutubePreview(playback, { resumeMusic:true });
+          }
+        },
+        onError: () => {
+          if (freedomWallActiveYoutubePlayback === playback) restoreFreedomWallYoutubePreview(playback, { resumeMusic:true });
+        }
+      }
+    });
+  } catch (error) {
+    if (freedomWallActiveYoutubePlayback !== playback || !slot.isConnected) return;
+    const frame = document.createElement('iframe');
+    frame.className = 'freedomWallYoutubeFrame';
+    frame.title = 'Freedom Wall YouTube video';
+    frame.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+    frame.allowFullscreen = true;
+    frame.referrerPolicy = 'strict-origin-when-cross-origin';
+    frame.src = `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?autoplay=1&controls=1&rel=0&modestbranding=1&playsinline=1&fs=1`;
+    slot.replaceChildren(frame);
+  }
 }
 
 function createFreedomWallYoutubePlayButton(media, videoId) {
@@ -2747,13 +2832,14 @@ function createFreedomWallYoutubePlayButton(media, videoId) {
     if (freedomWallActiveYoutubePlayback) closeFreedomWallActiveYoutube({ resumeMusic:false });
     pauseHomepageEffectMusicForFreedomWallVideo();
 
-    const ui = createFreedomWallYoutubeViewer(videoId);
+    const mode = normalizeFreedomWallYouTubePlaybackMode(freedomWallConfig?.freedomWallYouTubePlaybackMode);
+    const ui = mode === 'inline' ? createFreedomWallYoutubeInlinePlayer(media, videoId) : createFreedomWallYoutubeViewer(videoId);
     if (!ui) {
       resumeHomepageEffectMusicAfterFreedomWallVideo();
       return;
     }
-    const { viewer, slot, close } = ui;
-    const playback = { media, videoId, player:null, viewer };
+    const { viewer, stage, card, slot, close, originalX, originalY } = ui;
+    const playback = { media, videoId, player:null, viewer, stage, card, mode, originalX, originalY };
     freedomWallActiveYoutubePlayback = playback;
     media.classList.add('is-youtube-playing');
 
@@ -2762,44 +2848,7 @@ function createFreedomWallYoutubePlayButton(media, videoId) {
       closeEvent.stopPropagation();
       restoreFreedomWallYoutubePreview(playback, { resumeMusic:true });
     });
-
-    try {
-      const YT = await loadFreedomWallYouTubeApi();
-      if (freedomWallActiveYoutubePlayback !== playback || !slot.isConnected) return;
-      playback.player = new YT.Player(slot.id, {
-        videoId,
-        width:'100%',
-        height:'100%',
-        playerVars: {
-          autoplay:1,
-          controls:1,
-          rel:0,
-          modestbranding:1,
-          playsinline:1,
-          fs:1
-        },
-        events: {
-          onStateChange: (playerEvent) => {
-            if (playerEvent?.data === YT.PlayerState.ENDED && freedomWallActiveYoutubePlayback === playback) {
-              restoreFreedomWallYoutubePreview(playback, { resumeMusic:true });
-            }
-          },
-          onError: () => {
-            if (freedomWallActiveYoutubePlayback === playback) restoreFreedomWallYoutubePreview(playback, { resumeMusic:true });
-          }
-        }
-      });
-    } catch (error) {
-      if (freedomWallActiveYoutubePlayback !== playback || !slot.isConnected) return;
-      const frame = document.createElement('iframe');
-      frame.className = 'freedomWallYoutubeFrame';
-      frame.title = 'Freedom Wall YouTube video';
-      frame.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
-      frame.allowFullscreen = true;
-      frame.referrerPolicy = 'strict-origin-when-cross-origin';
-      frame.src = `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?autoplay=1&controls=1&rel=0&modestbranding=1&playsinline=1&fs=1`;
-      slot.replaceChildren(frame);
-    }
+    await mountFreedomWallYoutubePlayer(playback, slot, videoId);
   });
   return button;
 }
@@ -5692,7 +5741,8 @@ function renderFreedomWallNotes(notes = []) {
     const showThemeMedia = Boolean(note.mediaRef || note.youtubeUrl);
     const sizeClass = getFreedomWallNoteSizeClass(note);
     const isActivelyDragged = freedomWallDragState?.card === card;
-    card.className = `freedomWallNote is-${note.color} is-size-${sizeClass}${showThemeMedia ? " has-media" : ""}${note.youtubeUrl ? " has-video" : ""}${isNew ? " is-new" : ""}${isActivelyDragged ? " is-dragging" : ""}`;
+    const inlineYoutubeActive = Boolean(freedomWallActiveYoutubePlayback?.mode === "inline" && freedomWallActiveYoutubePlayback?.card === card);
+    card.className = `freedomWallNote is-${note.color} is-size-${sizeClass}${showThemeMedia ? " has-media" : ""}${note.youtubeUrl ? " has-video" : ""}${inlineYoutubeActive ? " is-inline-video-active" : ""}${isNew ? " is-new" : ""}${isActivelyDragged ? " is-dragging" : ""}`;
     card.style.setProperty("--fw-note-bg", FREEDOM_WALL_COLOR_HEX[note.color] || FREEDOM_WALL_COLOR_HEX.yellow);
     const allowTextColor = Boolean(freedomWallConfig?.freedomWallAllowTextColor);
     const hasAllowedCustomText = Boolean(allowTextColor && note.textColor);
