@@ -290,11 +290,19 @@
               </label>
               <label class="homepageEffectToggleRow">
                 <input id="freedomWallAllowGif" type="checkbox" />
-                <span><strong>Allow GIF outside Polaroid</strong><small>Students may attach GIFs even when the wall theme is not Polaroid. Static photos remain Polaroid-only.</small></span>
+                <span><strong>Allow GIF Upload outside Polaroid</strong><small>Optional fallback only. Search GIFs are controlled separately. Static photos remain Polaroid-only.</small></span>
+              </label>
+              <label class="homepageEffectToggleRow">
+                <input id="freedomWallAllowGifSearch" type="checkbox" />
+                <span><strong>Allow GIF Search Notes</strong><small>Students can search GIFs and choose from results instead of pasting links.</small></span>
               </label>
               <label class="homepageEffectToggleRow">
                 <input id="freedomWallAllowYouTube" type="checkbox" />
-                <span><strong>Allow YouTube video notes</strong><small>Students may paste a YouTube link. Videos stay paused until someone presses Play.</small></span>
+                <span><strong>Allow YouTube Link fallback</strong><small>Optional fallback. Turn on YouTube Search for the Padlet-like picker.</small></span>
+              </label>
+              <label class="homepageEffectToggleRow">
+                <input id="freedomWallAllowYouTubeSearch" type="checkbox" />
+                <span><strong>Allow YouTube Search Notes</strong><small>Students can search YouTube inside the composer and choose a playable preview.</small></span>
               </label>
               <div class="freedomWallYoutubePlaybackSetting">
                 <label for="freedomWallYouTubePlaybackMode"><strong>YouTube Playback Style</strong><small>Choose where YouTube videos open after the student presses the red Play button.</small></label>
@@ -302,6 +310,10 @@
                   <option value="inline">Play Inside Note</option>
                   <option value="viewer" selected>Open Large Viewer</option>
                 </select>
+              </div>
+              <div class="freedomWallSpotifySetting freedomWallMediaSearchSetting">
+                <label for="freedomWallMediaSearchUrl"><strong>Media Search Apps Script URL</strong><small>Paste the v501 Media Search proxy URL. Used by GIF Search and YouTube Search only.</small></label>
+                <input id="freedomWallMediaSearchUrl" type="url" inputmode="url" placeholder="https://script.google.com/macros/s/.../exec" />
               </div>
             </div>
 
@@ -1265,8 +1277,13 @@
         FreedomWallAllowTextColor: byId("freedomWallAllowTextColor")?.checked === false ? "NO" : "YES",
         FreedomWallAllowFont: byId("freedomWallAllowFont")?.checked === false ? "NO" : "YES",
         FreedomWallAllowGif: byId("freedomWallAllowGif")?.checked ? "YES" : "NO",
+        FreedomWallAllowGifSearch: byId("freedomWallAllowGifSearch")?.checked ? "YES" : "NO",
         FreedomWallAllowYouTube: byId("freedomWallAllowYouTube")?.checked ? "YES" : "NO",
+        FreedomWallAllowYouTubeSearch: byId("freedomWallAllowYouTubeSearch")?.checked ? "YES" : "NO",
         FreedomWallYouTubePlaybackMode: String(byId("freedomWallYouTubePlaybackMode")?.value || "viewer").trim().toLowerCase() === "inline" ? "inline" : "viewer",
+        FreedomWallAllowSpotify: "NO",
+        FreedomWallMediaSearchUrl: String(byId("freedomWallMediaSearchUrl")?.value || "").trim().slice(0,1200),
+        FreedomWallSpotifySearchUrl: "",
         FreedomWallPlaylistEnabled: wallMode ? (wallPlaylistEnabled ? "YES" : "NO") : "NO",
         FreedomWallPlaylist: wallMode ? JSON.stringify(wallPlaylist) : "[]",
         FreedomWallPlaylistShuffle: wallMode && byId("freedomWallPlaylistShuffle")?.checked ? "YES" : "NO",
@@ -1641,6 +1658,15 @@
     }
     $("freedomWallAllowYouTube")?.addEventListener("change", syncFreedomWallYouTubePlaybackUi);
     syncFreedomWallYouTubePlaybackUi();
+    function syncFreedomWallMediaSearchUi(){
+      const anySearch = $("freedomWallAllowYouTubeSearch")?.checked === true || $("freedomWallAllowGifSearch")?.checked === true;
+      const mediaInput = $("freedomWallMediaSearchUrl");
+      const mediaWrap = mediaInput?.closest?.(".freedomWallMediaSearchSetting");
+      if (mediaInput) mediaInput.disabled = !anySearch;
+      mediaWrap?.classList?.toggle("is-disabled", !anySearch);
+    }
+    ["freedomWallAllowYouTubeSearch","freedomWallAllowGifSearch"].forEach((id) => $(id)?.addEventListener("change", syncFreedomWallMediaSearchUi));
+    syncFreedomWallMediaSearchUi();
 
     renderPlaylistRows([]);
     syncFreedomWallAdminUi();
@@ -1653,7 +1679,7 @@
       const db = getDb();
       if (!db) return;
       try {
-        const keys = ["FreedomWallTheme","FreedomWallAllowPosting","FreedomWallShowNames","FreedomWallAllowTextColor","FreedomWallAllowFont","FreedomWallAllowGif","FreedomWallAllowYouTube","FreedomWallYouTubePlaybackMode","FreedomWallPlaylistEnabled","FreedomWallPlaylist","FreedomWallPlaylistShuffle","FreedomWallPlaylistLoop","FreedomWallActiveWallID","HomepageEffectAudioEnabled","HomepageEffectAudioUrl"];
+        const keys = ["FreedomWallTheme","FreedomWallAllowPosting","FreedomWallShowNames","FreedomWallAllowTextColor","FreedomWallAllowFont","FreedomWallAllowGif","FreedomWallAllowGifSearch","FreedomWallAllowYouTube","FreedomWallAllowYouTubeSearch","FreedomWallYouTubePlaybackMode","FreedomWallMediaSearchUrl","FreedomWallPlaylistEnabled","FreedomWallPlaylist","FreedomWallPlaylistShuffle","FreedomWallPlaylistLoop","FreedomWallActiveWallID","HomepageEffectAudioEnabled","HomepageEffectAudioUrl"];
         const docs = await Promise.all(keys.map((key) => db.collection("settings").doc(key).get()));
         const values = {};
         docs.forEach((doc, index) => { if (doc.exists) values[keys[index]] = String(doc.data()?.Value || ""); });
@@ -1663,9 +1689,13 @@
         if ($("freedomWallAllowTextColor")) $("freedomWallAllowTextColor").checked = String(values.FreedomWallAllowTextColor || "YES").toUpperCase() !== "NO";
         if ($("freedomWallAllowFont")) $("freedomWallAllowFont").checked = String(values.FreedomWallAllowFont || "YES").toUpperCase() !== "NO";
         if ($("freedomWallAllowGif")) $("freedomWallAllowGif").checked = String(values.FreedomWallAllowGif || "NO").toUpperCase() === "YES";
+        if ($("freedomWallAllowGifSearch")) $("freedomWallAllowGifSearch").checked = String(values.FreedomWallAllowGifSearch || "NO").toUpperCase() === "YES";
         if ($("freedomWallAllowYouTube")) $("freedomWallAllowYouTube").checked = String(values.FreedomWallAllowYouTube || "NO").toUpperCase() === "YES";
+        if ($("freedomWallAllowYouTubeSearch")) $("freedomWallAllowYouTubeSearch").checked = String(values.FreedomWallAllowYouTubeSearch || "NO").toUpperCase() === "YES";
         if ($("freedomWallYouTubePlaybackMode")) $("freedomWallYouTubePlaybackMode").value = String(values.FreedomWallYouTubePlaybackMode || "viewer").toLowerCase() === "inline" ? "inline" : "viewer";
+        if ($("freedomWallMediaSearchUrl")) $("freedomWallMediaSearchUrl").value = String(values.FreedomWallMediaSearchUrl || "").trim();
         syncFreedomWallYouTubePlaybackUi();
+        syncFreedomWallMediaSearchUi();
         let savedPlaylist = parsePlaylistValue(values.FreedomWallPlaylist || "[]");
         const hasNewPlaylistSetting = Object.prototype.hasOwnProperty.call(values, "FreedomWallPlaylistEnabled");
         if (!savedPlaylist.length && String(values.HomepageEffectAudioUrl || "").trim().match(/^https:\/\//i)) {

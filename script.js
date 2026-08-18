@@ -1693,6 +1693,9 @@ const HOMEPAGE_EFFECT_KEYS = new Set([
   "FreedomWallAllowFont",
   "FreedomWallAllowGif",
   "FreedomWallAllowYouTube",
+  "FreedomWallAllowYouTubeSearch",
+  "FreedomWallAllowGifSearch",
+  "FreedomWallMediaSearchUrl",
   "FreedomWallYouTubePlaybackMode",
   "FreedomWallPlaylistEnabled",
   "FreedomWallPlaylist",
@@ -1947,7 +1950,10 @@ function applyFreedomWallThemeCopy(theme = freedomWallConfig?.freedomWallTheme) 
   const isPolaroid = String(theme || '').trim().toLowerCase() === 'polaroid';
   const allowGif = Boolean(freedomWallConfig?.freedomWallAllowGif);
   const allowYouTube = Boolean(freedomWallConfig?.freedomWallAllowYouTube);
-  const mediaAvailable = isPolaroid || allowGif || allowYouTube;
+  const searchEndpoint = getFreedomWallMediaSearchEndpoint();
+  const allowGifSearch = Boolean(freedomWallConfig?.freedomWallAllowGifSearch && searchEndpoint);
+  const allowYouTubeSearch = Boolean(freedomWallConfig?.freedomWallAllowYouTubeSearch && searchEndpoint);
+  const mediaAvailable = isPolaroid || allowGif || allowGifSearch || allowYouTube || allowYouTubeSearch;
   if (mediaField) mediaField.hidden = !mediaAvailable;
   if (mediaLabel) mediaLabel.textContent = copy.mediaLabel;
   if (mediaHint) mediaHint.textContent = copy.mediaHint;
@@ -1988,7 +1994,13 @@ let freedomWallSelectedTextColor = "charcoal";
 let freedomWallSelectedFont = "theme-default";
 let freedomWallPendingMedia = null;
 let freedomWallPendingYouTubeUrl = "";
+let freedomWallPendingYouTube = null;
+let freedomWallPendingGif = null;
+let freedomWallPendingSpotify = null;
+let freedomWallMediaSearchBusy = "";
 let freedomWallSelectedAttachmentMode = "none";
+let freedomWallSpotifySearchBusy = false;
+let freedomWallActiveSpotifyPlayback = null;
 let freedomWallMediaPrepareToken = 0;
 let freedomWallLastRenderedCount = 0;
 let freedomWallNotesCache = [];
@@ -2194,8 +2206,11 @@ function normalizeHomepageEffectConfig(settings = {}) {
   const freedomWallAllowTextColor = String(settings.FreedomWallAllowTextColor || "YES").trim().toUpperCase() !== "NO";
   const freedomWallAllowFont = String(settings.FreedomWallAllowFont || "YES").trim().toUpperCase() !== "NO";
   const freedomWallAllowGif = String(settings.FreedomWallAllowGif || "NO").trim().toUpperCase() === "YES";
+  const freedomWallAllowGifSearch = String(settings.FreedomWallAllowGifSearch || "NO").trim().toUpperCase() === "YES";
   const freedomWallAllowYouTube = String(settings.FreedomWallAllowYouTube || "NO").trim().toUpperCase() === "YES";
+  const freedomWallAllowYouTubeSearch = String(settings.FreedomWallAllowYouTubeSearch || "NO").trim().toUpperCase() === "YES";
   const freedomWallYouTubePlaybackMode = normalizeFreedomWallYouTubePlaybackMode(settings.FreedomWallYouTubePlaybackMode || "viewer");
+  const freedomWallMediaSearchUrl = String(settings.FreedomWallMediaSearchUrl || "").trim().slice(0, 1200);
   const hasFreedomWallPlaylistSetting = Object.prototype.hasOwnProperty.call(settings || {}, "FreedomWallPlaylistEnabled");
   const freedomWallPlaylist = normalizeFreedomWallPlaylist(settings.FreedomWallPlaylist, mode === "freedom-wall" ? audioUrl : "");
   const freedomWallPlaylistEnabled = mode === "freedom-wall" && freedomWallPlaylist.length > 0 && (hasFreedomWallPlaylistSetting
@@ -2205,8 +2220,8 @@ function normalizeHomepageEffectConfig(settings = {}) {
   const freedomWallPlaylistLoop = String(settings.FreedomWallPlaylistLoop || "YES").trim().toUpperCase() !== "NO";
   const freedomWallActiveWallId = normalizeFreedomWallSessionId(settings.FreedomWallActiveWallID || FREEDOM_WALL_LEGACY_SESSION_ID);
   const playlistSignature = freedomWallPlaylist.map((track) => `${track.title}~${track.url}`).join("~~");
-  const signature = updatedAt || [enabled ? "1" : "0", mode, title, message, images.join("~"), dismissible ? "1" : "0", alertSound ? "1" : "0", audioEnabled ? "1" : "0", audioUrl, audioLoop ? "1" : "0", youtubeUrl, youtubeMuted ? "1" : "0", rickrollUrl, freedomWallTheme, freedomWallAllowPosting ? "1" : "0", freedomWallShowNames ? "1" : "0", freedomWallAllowTextColor ? "1" : "0", freedomWallAllowFont ? "1" : "0", freedomWallAllowGif ? "1" : "0", freedomWallAllowYouTube ? "1" : "0", freedomWallYouTubePlaybackMode, freedomWallPlaylistEnabled ? "1" : "0", freedomWallPlaylistShuffle ? "1" : "0", freedomWallPlaylistLoop ? "1" : "0", playlistSignature, freedomWallActiveWallId].join("|");
-  return { enabled, mode, title, message, image: images[0] || "", images, dismissible, alertSound, spiderSound, audioEnabled, audioUrl, audioLoop, youtubeUrl, youtubeMuted, rickrollUrl, updatedAt, signature, freedomWallTheme, freedomWallAllowPosting, freedomWallShowNames, freedomWallAllowTextColor, freedomWallAllowFont, freedomWallAllowGif, freedomWallAllowYouTube, freedomWallYouTubePlaybackMode, freedomWallPlaylistEnabled, freedomWallPlaylist, freedomWallPlaylistShuffle, freedomWallPlaylistLoop, freedomWallActiveWallId };
+  const signature = updatedAt || [enabled ? "1" : "0", mode, title, message, images.join("~"), dismissible ? "1" : "0", alertSound ? "1" : "0", audioEnabled ? "1" : "0", audioUrl, audioLoop ? "1" : "0", youtubeUrl, youtubeMuted ? "1" : "0", rickrollUrl, freedomWallTheme, freedomWallAllowPosting ? "1" : "0", freedomWallShowNames ? "1" : "0", freedomWallAllowTextColor ? "1" : "0", freedomWallAllowFont ? "1" : "0", freedomWallAllowGif ? "1" : "0", freedomWallAllowGifSearch ? "1" : "0", freedomWallAllowYouTube ? "1" : "0", freedomWallAllowYouTubeSearch ? "1" : "0", freedomWallYouTubePlaybackMode, freedomWallMediaSearchUrl, freedomWallPlaylistEnabled ? "1" : "0", freedomWallPlaylistShuffle ? "1" : "0", freedomWallPlaylistLoop ? "1" : "0", playlistSignature, freedomWallActiveWallId].join("|");
+  return { enabled, mode, title, message, image: images[0] || "", images, dismissible, alertSound, spiderSound, audioEnabled, audioUrl, audioLoop, youtubeUrl, youtubeMuted, rickrollUrl, updatedAt, signature, freedomWallTheme, freedomWallAllowPosting, freedomWallShowNames, freedomWallAllowTextColor, freedomWallAllowFont, freedomWallAllowGif, freedomWallAllowGifSearch, freedomWallAllowYouTube, freedomWallAllowYouTubeSearch, freedomWallYouTubePlaybackMode, freedomWallMediaSearchUrl, freedomWallPlaylistEnabled, freedomWallPlaylist, freedomWallPlaylistShuffle, freedomWallPlaylistLoop, freedomWallActiveWallId };
 }
 
 function normalizeHomepageEffectYouTubeUrl(value) {
@@ -2247,6 +2262,153 @@ function normalizeFreedomWallYouTubeUrl(value) {
 function normalizeFreedomWallYouTubePlaybackMode(value) {
   const mode = String(value || "viewer").trim().toLowerCase();
   return mode === "inline" ? "inline" : "viewer";
+}
+
+
+function normalizeFreedomWallSpotifySearchUrl(value) {
+  const raw = String(value || "").trim().slice(0, 1200);
+  return /^https:\/\//i.test(raw) ? raw : "";
+}
+
+function normalizeFreedomWallSpotifyTrackUrl(value) {
+  const raw = String(value || "").trim();
+  try {
+    const url = new URL(raw);
+    const host = url.hostname.toLowerCase();
+    if (host !== "open.spotify.com") return "";
+    const parts = url.pathname.split("/").filter(Boolean);
+    if (parts[0] !== "track" || !parts[1]) return "";
+    return `https://open.spotify.com/track/${encodeURIComponent(parts[1])}`;
+  } catch (error) { return ""; }
+}
+
+function normalizeFreedomWallSpotifyItem(value = {}) {
+  if (!value || typeof value !== "object") return null;
+  const url = normalizeFreedomWallSpotifyTrackUrl(value.url || value.SpotifyUrl || value.externalUrl || "");
+  const uri = String(value.uri || value.SpotifyUri || "").trim().slice(0, 160);
+  const title = String(value.title || value.name || value.SpotifyTitle || "Spotify Track").trim().slice(0, 120) || "Spotify Track";
+  const artist = String(value.artist || value.artists || value.SpotifyArtist || "").trim().slice(0, 160);
+  const image = String(value.image || value.thumbnail || value.SpotifyImage || "").trim().slice(0, 1200);
+  if (!url) return null;
+  return { url, uri, title, artist, image };
+}
+
+
+function normalizeFreedomWallYouTubeItem(value = {}) {
+  const rawUrl = String(value.url || value.YouTubeUrl || value.videoUrl || "").trim();
+  const url = normalizeFreedomWallYouTubeUrl(rawUrl || (value.videoId ? `https://www.youtube.com/watch?v=${value.videoId}` : ""));
+  const videoId = getFreedomWallYouTubeVideoId(url);
+  if (!url || !videoId) return null;
+  const title = String(value.title || value.name || value.YouTubeTitle || "YouTube Video").trim().slice(0, 140) || "YouTube Video";
+  const channel = String(value.channel || value.channelTitle || value.YouTubeChannel || "YouTube").trim().slice(0, 120);
+  const thumbnail = String(value.thumbnail || value.image || value.YouTubeThumb || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`).trim().slice(0, 1200);
+  return { url, videoId, title, channel, thumbnail };
+}
+
+function normalizeFreedomWallGifItem(value = {}) {
+  const url = String(value.url || value.gifUrl || value.GifUrl || "").trim().slice(0, 1200);
+  const previewUrl = String(value.previewUrl || value.preview || value.thumbnail || value.GifPreviewUrl || url).trim().slice(0, 1200);
+  if (!/^https:\/\//i.test(url)) return null;
+  const title = String(value.title || value.name || value.GifTitle || "GIF").trim().slice(0, 120) || "GIF";
+  return { url, previewUrl: /^https:\/\//i.test(previewUrl) ? previewUrl : url, title };
+}
+
+function getFreedomWallSpotifyEmbedUrl(value) {
+  const url = normalizeFreedomWallSpotifyTrackUrl(value);
+  if (!url) return "";
+  try {
+    const parsed = new URL(url);
+    const id = parsed.pathname.split("/").filter(Boolean)[1];
+    return id ? `https://open.spotify.com/embed/track/${encodeURIComponent(id)}?utm_source=generator` : "";
+  } catch (error) { return ""; }
+}
+
+function freedomWallJsonp(url) {
+  return new Promise((resolve, reject) => {
+    const callbackName = `sfkMediaSearch_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+    const script = document.createElement("script");
+    let finished = false;
+    const cleanup = () => {
+      try { delete window[callbackName]; } catch (error) { window[callbackName] = undefined; }
+      try { script.remove(); } catch (error) {}
+    };
+    window[callbackName] = (data) => {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      resolve(data || {});
+    };
+    const finalUrl = new URL(url);
+    finalUrl.searchParams.set("callback", callbackName);
+    script.src = finalUrl.toString();
+    script.async = true;
+    script.onerror = () => {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      reject(new Error("Media search service could not be reached."));
+    };
+    document.head.appendChild(script);
+    window.setTimeout(() => {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      reject(new Error("Media search timed out."));
+    }, 12000);
+  });
+}
+
+async function fetchFreedomWallSpotifyResults(query) {
+  const endpoint = getFreedomWallMediaSearchEndpoint() || normalizeFreedomWallSpotifySearchUrl(freedomWallConfig?.freedomWallSpotifySearchUrl || "");
+  const q = String(query || "").trim().slice(0, 80);
+  if (!endpoint) throw new Error("Spotify search is not configured yet.");
+  if (!q) return [];
+  const url = new URL(endpoint);
+  url.searchParams.set("action", "search");
+  url.searchParams.set("q", q);
+  url.searchParams.set("limit", "8");
+  let data;
+  try {
+    const response = await fetch(url.toString(), { cache: "no-store" });
+    data = await response.json();
+  } catch (error) {
+    data = await freedomWallJsonp(url.toString());
+  }
+  if (!data || data.ok === false) throw new Error(data?.error || "Spotify search failed.");
+  const list = Array.isArray(data.items) ? data.items : (Array.isArray(data.tracks) ? data.tracks : []);
+  return list.map(normalizeFreedomWallSpotifyItem).filter(Boolean).slice(0, 8);
+}
+
+
+async function fetchFreedomWallMediaSearchResults(provider, query) {
+  const endpoint = getFreedomWallMediaSearchEndpoint();
+  const q = String(query || "").trim().slice(0, 80);
+  if (!endpoint) throw new Error("Media search is not configured yet.");
+  if (!q) return [];
+  const url = new URL(endpoint);
+  url.searchParams.set("provider", provider);
+  url.searchParams.set("action", provider);
+  url.searchParams.set("q", q);
+  url.searchParams.set("limit", "8");
+  let data;
+  try {
+    const response = await fetch(url.toString(), { cache: "no-store" });
+    data = await response.json();
+  } catch (error) {
+    data = await freedomWallJsonp(url.toString());
+  }
+  if (!data || data.ok === false) throw new Error(data?.error || "Media search failed.");
+  return Array.isArray(data.items) ? data.items : [];
+}
+
+async function fetchFreedomWallYouTubeResults(query) {
+  const list = await fetchFreedomWallMediaSearchResults("youtube", query);
+  return list.map(normalizeFreedomWallYouTubeItem).filter(Boolean).slice(0, 8);
+}
+
+async function fetchFreedomWallGifResults(query) {
+  const list = await fetchFreedomWallMediaSearchResults("gif", query);
+  return list.map(normalizeFreedomWallGifItem).filter(Boolean).slice(0, 8);
 }
 
 function renderHomepageEffectYouTube(config) {
@@ -2738,7 +2900,8 @@ function createFreedomWallYoutubeViewer(videoId) {
   viewer.addEventListener('click', (event) => {
     event.stopPropagation();
     if (event.target === viewer && freedomWallActiveYoutubePlayback?.viewer === viewer) {
-      closeFreedomWallActiveYoutube({ resumeMusic:true });
+      closeFreedomWallActiveSpotify({ resumeMusic:true });
+    closeFreedomWallActiveYoutube({ resumeMusic:true });
     }
   });
   return { viewer, stage:null, card:null, slot, close, originalX:"", originalY:"" };
@@ -2829,6 +2992,7 @@ function createFreedomWallYoutubePlayButton(media, videoId) {
     event.stopPropagation();
     if (!media?.isConnected) return;
 
+    if (freedomWallActiveSpotifyPlayback) closeFreedomWallActiveSpotify({ resumeMusic:false });
     if (freedomWallActiveYoutubePlayback) closeFreedomWallActiveYoutube({ resumeMusic:false });
     pauseHomepageEffectMusicForFreedomWallVideo();
 
@@ -3434,6 +3598,8 @@ function ensureHomepageEffectLayer() {
               <button id="freedomWallMediaRemove" type="button" hidden>Remove</button>
             </div>
             <div id="freedomWallYouTubeWrap" class="freedomWallYouTubeWrap" hidden><label for="freedomWallYouTubeInput">YouTube Link</label><input id="freedomWallYouTubeInput" type="url" inputmode="url" placeholder="https://www.youtube.com/watch?v=..." /></div>
+            <div id="freedomWallYouTubeSearchWrap" class="freedomWallMediaSearchWrap freedomWallYouTubeSearchWrap" hidden><label for="freedomWallYouTubeSearchInput">YouTube Search</label><div class="freedomWallMediaSearchLine"><input id="freedomWallYouTubeSearchInput" type="search" placeholder="Song, topic, or video title" /><button id="freedomWallYouTubeSearchBtn" type="button">Search</button></div><div id="freedomWallYouTubeSelected" class="freedomWallMediaSelected" hidden></div><div id="freedomWallYouTubeResults" class="freedomWallMediaSearchResults"></div></div>
+            <div id="freedomWallGifSearchWrap" class="freedomWallMediaSearchWrap freedomWallGifSearchWrap" hidden><label for="freedomWallGifSearchInput">GIF Search</label><div class="freedomWallMediaSearchLine"><input id="freedomWallGifSearchInput" type="search" placeholder="happy, thank you, funny…" /><button id="freedomWallGifSearchBtn" type="button">Search</button></div><div id="freedomWallGifSelected" class="freedomWallMediaSelected" hidden></div><div id="freedomWallGifResults" class="freedomWallMediaSearchResults is-gif-grid"></div></div>
             <div id="freedomWallMediaPreview" class="freedomWallMediaPreview" hidden></div>
           </div>
           <section id="freedomWallCustomizePanel" class="freedomWallCustomizePanel">
@@ -3561,6 +3727,10 @@ function ensureHomepageEffectLayer() {
   layer.querySelector("#freedomWallYouTubeInput")?.addEventListener("change", handleFreedomWallYouTubeInput);
   layer.querySelector("#freedomWallYouTubeInput")?.addEventListener("input", handleFreedomWallYouTubeInput);
   layer.querySelector("#freedomWallMediaType")?.addEventListener("change", (event) => setFreedomWallAttachmentMode(String(event?.target?.value || "none")));
+  layer.querySelector("#freedomWallYouTubeSearchBtn")?.addEventListener("click", runFreedomWallYouTubeSearch);
+  layer.querySelector("#freedomWallYouTubeSearchInput")?.addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); runFreedomWallYouTubeSearch(); } });
+  layer.querySelector("#freedomWallGifSearchBtn")?.addEventListener("click", runFreedomWallGifSearch);
+  layer.querySelector("#freedomWallGifSearchInput")?.addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); runFreedomWallGifSearch(); } });
   layer.querySelector("#freedomWallMediaRemove")?.addEventListener("click", (event) => { event.preventDefault(); resetFreedomWallPendingMedia(); });
   layer.querySelector("#freedomWallComposer")?.addEventListener("pointerdown", (event) => {
     if (event.target?.id === "freedomWallComposer") closeFreedomWallComposer();
@@ -4305,7 +4475,7 @@ function getFreedomWallPlacement(note = {}, index = 0) {
 }
 
 function getFreedomWallNoteSizeClass(note = {}) {
-  if (note.mediaRef || note.MediaRef) return "medium";
+  if (note.mediaRef || note.MediaRef || note.youtubeUrl || note.YouTubeUrl || note.gif?.url || note.GifUrl || note.spotify?.url || note.SpotifyUrl) return "medium";
   const length = String(note.text || note.Text || "").trim().length;
   const lines = String(note.text || note.Text || "").split(/\n/).length;
   const score = length + Math.max(0, lines - 1) * 18;
@@ -5140,7 +5310,7 @@ function setupFreedomWallNoteDragging(layer) {
   // left-drag for movement and right-click for reactions.
   layer.addEventListener("pointerdown", (event) => {
     const card = event.target?.closest?.(".freedomWallNote");
-    if (!card || !layer.contains(card) || event.target?.closest?.("#freedomWallReactionMenu") || event.target?.closest?.("button,a,input,textarea,select,iframe,.freedomWallYoutubeFrame,.freedomWallYoutubePlayCard")) return;
+    if (!card || !layer.contains(card) || event.target?.closest?.("#freedomWallReactionMenu") || event.target?.closest?.("button,a,input,textarea,select,iframe,.freedomWallYoutubeFrame,.freedomWallYoutubePlayCard,.freedomWallSpotifyFrame,.freedomWallSpotifyPlayCard")) return;
     if (layer.classList.contains("is-reaction-menu-open")) return;
     closeFreedomWallReactionMenu();
 
@@ -5227,7 +5397,7 @@ function setupFreedomWallNoteDragging(layer) {
   layer.addEventListener("contextmenu", (event) => {
     const note = event.target?.closest?.(".freedomWallNote");
     const prompt = event.target?.closest?.("#freedomWallPromptCard");
-    if (!note && (!prompt || event.target?.closest?.("button,a,input,textarea,select,iframe,.freedomWallYoutubeFrame,.freedomWallYoutubePlayCard"))) return;
+    if (!note && (!prompt || event.target?.closest?.("button,a,input,textarea,select,iframe,.freedomWallYoutubeFrame,.freedomWallYoutubePlayCard,.freedomWallSpotifyFrame,.freedomWallSpotifyPlayCard"))) return;
     event.preventDefault();
     event.stopPropagation();
     endFreedomWallNoteDrag(null, true);
@@ -5346,13 +5516,27 @@ function resetFreedomWallPendingMedia() {
   freedomWallMediaPrepareToken += 1;
   freedomWallPendingMedia = null;
   freedomWallPendingYouTubeUrl = "";
+  freedomWallPendingYouTube = null;
+  freedomWallPendingGif = null;
   const layer = document.getElementById("homepageEffectLayer");
   const input = layer?.querySelector("#freedomWallMediaInput");
   const preview = layer?.querySelector("#freedomWallMediaPreview");
   const remove = layer?.querySelector("#freedomWallMediaRemove");
   const youtube = layer?.querySelector("#freedomWallYouTubeInput");
+  const youtubeSearch = layer?.querySelector("#freedomWallYouTubeSearchInput");
+  const youtubeResults = layer?.querySelector("#freedomWallYouTubeResults");
+  const youtubeSelected = layer?.querySelector("#freedomWallYouTubeSelected");
+  const gifSearch = layer?.querySelector("#freedomWallGifSearchInput");
+  const gifResults = layer?.querySelector("#freedomWallGifResults");
+  const gifSelected = layer?.querySelector("#freedomWallGifSelected");
   if (input) input.value = "";
   if (youtube) youtube.value = "";
+  if (youtubeSearch) youtubeSearch.value = "";
+  if (youtubeResults) youtubeResults.replaceChildren();
+  if (youtubeSelected) { youtubeSelected.hidden = true; youtubeSelected.replaceChildren(); }
+  if (gifSearch) gifSearch.value = "";
+  if (gifResults) gifResults.replaceChildren();
+  if (gifSelected) { gifSelected.hidden = true; gifSelected.replaceChildren(); }
   if (preview) {
     preview.hidden = true;
     preview.replaceChildren();
@@ -5365,11 +5549,16 @@ function getFreedomWallAllowedAttachmentModes() {
   const theme = String(freedomWallConfig?.freedomWallTheme || "").trim().toLowerCase();
   const isPolaroid = theme === "polaroid";
   const allowGif = Boolean(freedomWallConfig?.freedomWallAllowGif);
+  const searchEndpoint = getFreedomWallMediaSearchEndpoint();
+  const allowGifSearch = Boolean(freedomWallConfig?.freedomWallAllowGifSearch && searchEndpoint);
   const allowYouTube = Boolean(freedomWallConfig?.freedomWallAllowYouTube);
+  const allowYouTubeSearch = Boolean(freedomWallConfig?.freedomWallAllowYouTubeSearch && searchEndpoint);
   const modes = [{ value:"none", label:"None" }];
   if (isPolaroid) modes.push({ value:"image", label:"Photo / GIF" });
-  else if (allowGif) modes.push({ value:"gif", label:"GIF" });
-  if (allowYouTube) modes.push({ value:"youtube", label:"YouTube" });
+  else if (allowGifSearch) modes.push({ value:"gif-search", label:"GIF Search" });
+  else if (allowGif) modes.push({ value:"gif", label:"GIF Upload" });
+  if (allowYouTubeSearch) modes.push({ value:"youtube-search", label:"YouTube Search" });
+  else if (allowYouTube) modes.push({ value:"youtube", label:"YouTube Link" });
   return modes;
 }
 
@@ -5377,8 +5566,9 @@ function setFreedomWallAttachmentMode(mode = "none") {
   const allowed = getFreedomWallAllowedAttachmentModes().map((item) => item.value);
   const next = allowed.includes(mode) ? mode : (allowed.includes("image") ? "image" : allowed[0] || "none");
   freedomWallSelectedAttachmentMode = next;
-  if (next !== "youtube") freedomWallPendingYouTubeUrl = "";
-  if (next === "youtube") freedomWallPendingMedia = null;
+  if (next !== "youtube" && next !== "youtube-search") { freedomWallPendingYouTubeUrl = ""; freedomWallPendingYouTube = null; }
+  if (next !== "gif-search") freedomWallPendingGif = null;
+  if (["youtube","youtube-search","gif-search"].includes(next)) freedomWallPendingMedia = null;
   updateFreedomWallMediaUi();
 }
 
@@ -5390,6 +5580,8 @@ function updateFreedomWallMediaUi() {
   const typeSelect = layer.querySelector("#freedomWallMediaType");
   const controls = layer.querySelector(".freedomWallMediaControls");
   const youtubeWrap = layer.querySelector("#freedomWallYouTubeWrap");
+  const youtubeSearchWrap = layer.querySelector("#freedomWallYouTubeSearchWrap");
+  const gifSearchWrap = layer.querySelector("#freedomWallGifSearchWrap");
   const chooseText = layer.querySelector("#freedomWallMediaChooseText");
   const fileInput = layer.querySelector("#freedomWallMediaInput");
   const preview = layer.querySelector("#freedomWallMediaPreview");
@@ -5413,10 +5605,14 @@ function updateFreedomWallMediaUi() {
   const fileMode = mode === "image" || mode === "gif";
   if (controls) controls.hidden = !fileMode;
   if (youtubeWrap) youtubeWrap.hidden = mode !== "youtube";
+  if (youtubeSearchWrap) youtubeSearchWrap.hidden = mode !== "youtube-search";
+  if (gifSearchWrap) gifSearchWrap.hidden = mode !== "gif-search";
   if (chooseText) chooseText.textContent = mode === "gif" ? "Choose GIF" : "Choose Photo / GIF";
   if (fileInput) fileInput.setAttribute("accept", mode === "gif" ? "image/gif,.gif" : "image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp,.gif");
   if (hint) {
-    if (mode === "youtube") hint.textContent = "Paste a YouTube link. The video stays paused until someone presses Play.";
+    if (mode === "youtube-search") hint.textContent = "Search YouTube, choose a result, then post a playable video preview. No autoplay.";
+    else if (mode === "gif-search") hint.textContent = "Search GIFs and choose one animated GIF result. No GIF link paste needed.";
+    else if (mode === "youtube") hint.textContent = "Paste a YouTube link. The video stays paused until someone presses Play.";
     else if (mode === "gif") hint.textContent = "GIF only. Static photos remain Polaroid-only.";
     else hint.textContent = "Available for the Polaroid theme.";
   }
@@ -5424,7 +5620,7 @@ function updateFreedomWallMediaUi() {
     preview.hidden = true;
     preview.replaceChildren();
   }
-  if (remove) remove.hidden = !(freedomWallPendingMedia || freedomWallPendingYouTubeUrl);
+  if (remove) remove.hidden = !(freedomWallPendingMedia || freedomWallPendingYouTubeUrl || freedomWallPendingYouTube || freedomWallPendingGif);
 }
 
 async function handleFreedomWallYouTubeInput(event) {
@@ -5434,6 +5630,7 @@ async function handleFreedomWallYouTubeInput(event) {
   const raw = String(event?.target?.value || "").trim();
   if (!raw) {
     freedomWallPendingYouTubeUrl = "";
+    freedomWallPendingYouTube = null;
     if (remove) remove.hidden = true;
     if (status) status.textContent = "";
     return;
@@ -5445,6 +5642,8 @@ async function handleFreedomWallYouTubeInput(event) {
     return;
   }
   freedomWallPendingMedia = null;
+  freedomWallPendingGif = null;
+  freedomWallPendingYouTube = normalizeFreedomWallYouTubeItem({ url: normalized });
   freedomWallPendingYouTubeUrl = normalized;
   if (status) status.textContent = "YouTube video ready.";
   if (remove) remove.hidden = false;
@@ -5482,14 +5681,350 @@ async function handleFreedomWallMediaInput(event) {
   }
 }
 
+
+
+function renderFreedomWallYouTubeResults(items = []) {
+  const layer = document.getElementById("homepageEffectLayer");
+  const results = layer?.querySelector("#freedomWallYouTubeResults");
+  if (!results) return;
+  results.replaceChildren();
+  if (!items.length) {
+    const empty = document.createElement("small");
+    empty.className = "freedomWallMediaSearchEmpty";
+    empty.textContent = "No YouTube videos found.";
+    results.appendChild(empty);
+    return;
+  }
+  items.forEach((item) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "freedomWallMediaSearchResult is-youtube";
+    const img = document.createElement("img");
+    img.alt = "";
+    img.loading = "lazy";
+    img.decoding = "async";
+    img.src = item.thumbnail || `https://i.ytimg.com/vi/${encodeURIComponent(item.videoId)}/mqdefault.jpg`;
+    const meta = document.createElement("span");
+    meta.innerHTML = `<b></b><small></small>`;
+    meta.querySelector("b").textContent = item.title;
+    meta.querySelector("small").textContent = item.channel || "YouTube";
+    const choose = document.createElement("em");
+    choose.textContent = "Choose";
+    btn.append(img, meta, choose);
+    btn.addEventListener("click", () => selectFreedomWallYouTubeItem(item));
+    results.appendChild(btn);
+  });
+}
+
+function selectFreedomWallYouTubeItem(item) {
+  const safe = normalizeFreedomWallYouTubeItem(item);
+  if (!safe) return;
+  freedomWallPendingMedia = null;
+  freedomWallPendingGif = null;
+  freedomWallPendingYouTube = safe;
+  freedomWallPendingYouTubeUrl = safe.url;
+  freedomWallSelectedAttachmentMode = "youtube-search";
+  const layer = document.getElementById("homepageEffectLayer");
+  const status = layer?.querySelector("#freedomWallComposerStatus");
+  const selected = layer?.querySelector("#freedomWallYouTubeSelected");
+  const remove = layer?.querySelector("#freedomWallMediaRemove");
+  if (selected) {
+    selected.hidden = false;
+    selected.replaceChildren();
+    const img = document.createElement("img");
+    img.alt = "";
+    img.src = safe.thumbnail || `https://i.ytimg.com/vi/${encodeURIComponent(safe.videoId)}/mqdefault.jpg`;
+    const meta = document.createElement("span");
+    meta.innerHTML = `<strong></strong><small></small>`;
+    meta.querySelector("strong").textContent = safe.title;
+    meta.querySelector("small").textContent = safe.channel || "YouTube";
+    selected.append(img, meta);
+  }
+  if (remove) remove.hidden = false;
+  if (status) status.textContent = "YouTube video selected.";
+}
+
+async function runFreedomWallYouTubeSearch() {
+  if (freedomWallMediaSearchBusy) return;
+  const layer = document.getElementById("homepageEffectLayer");
+  const input = layer?.querySelector("#freedomWallYouTubeSearchInput");
+  const results = layer?.querySelector("#freedomWallYouTubeResults");
+  const status = layer?.querySelector("#freedomWallComposerStatus");
+  const q = String(input?.value || "").trim();
+  if (!q) { input?.focus(); if (status) status.textContent = "Type a video or song to search YouTube."; return; }
+  freedomWallMediaSearchBusy = "youtube";
+  if (results) results.innerHTML = '<small class="freedomWallMediaSearchEmpty">Searching YouTube…</small>';
+  if (status) status.textContent = "Searching YouTube…";
+  try {
+    const items = await fetchFreedomWallYouTubeResults(q);
+    renderFreedomWallYouTubeResults(items);
+    if (status) status.textContent = items.length ? "Choose a YouTube result." : "No YouTube results found.";
+  } catch (error) {
+    if (results) results.innerHTML = `<small class="freedomWallMediaSearchEmpty">${String(error?.message || "YouTube search failed.")}</small>`;
+    if (status) status.textContent = String(error?.message || "YouTube search failed.");
+  } finally { freedomWallMediaSearchBusy = ""; }
+}
+
+function renderFreedomWallGifResults(items = []) {
+  const layer = document.getElementById("homepageEffectLayer");
+  const results = layer?.querySelector("#freedomWallGifResults");
+  if (!results) return;
+  results.replaceChildren();
+  if (!items.length) {
+    const empty = document.createElement("small");
+    empty.className = "freedomWallMediaSearchEmpty";
+    empty.textContent = "No GIFs found.";
+    results.appendChild(empty);
+    return;
+  }
+  items.forEach((item) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "freedomWallGifResult";
+    const img = document.createElement("img");
+    img.alt = item.title || "GIF";
+    img.loading = "lazy";
+    img.decoding = "async";
+    img.src = item.previewUrl || item.url;
+    btn.appendChild(img);
+    btn.addEventListener("click", () => selectFreedomWallGifItem(item));
+    results.appendChild(btn);
+  });
+}
+
+function selectFreedomWallGifItem(item) {
+  const safe = normalizeFreedomWallGifItem(item);
+  if (!safe) return;
+  freedomWallPendingMedia = null;
+  freedomWallPendingYouTubeUrl = "";
+  freedomWallPendingYouTube = null;
+  freedomWallPendingGif = safe;
+  freedomWallSelectedAttachmentMode = "gif-search";
+  const layer = document.getElementById("homepageEffectLayer");
+  const status = layer?.querySelector("#freedomWallComposerStatus");
+  const selected = layer?.querySelector("#freedomWallGifSelected");
+  const remove = layer?.querySelector("#freedomWallMediaRemove");
+  if (selected) {
+    selected.hidden = false;
+    selected.replaceChildren();
+    const img = document.createElement("img");
+    img.alt = safe.title || "Selected GIF";
+    img.src = safe.previewUrl || safe.url;
+    const meta = document.createElement("span");
+    meta.innerHTML = `<strong></strong><small></small>`;
+    meta.querySelector("strong").textContent = safe.title || "Selected GIF";
+    meta.querySelector("small").textContent = "GIF selected";
+    selected.append(img, meta);
+  }
+  if (remove) remove.hidden = false;
+  if (status) status.textContent = "GIF selected.";
+}
+
+async function runFreedomWallGifSearch() {
+  if (freedomWallMediaSearchBusy) return;
+  const layer = document.getElementById("homepageEffectLayer");
+  const input = layer?.querySelector("#freedomWallGifSearchInput");
+  const results = layer?.querySelector("#freedomWallGifResults");
+  const status = layer?.querySelector("#freedomWallComposerStatus");
+  const q = String(input?.value || "").trim();
+  if (!q) { input?.focus(); if (status) status.textContent = "Type a word to search GIFs."; return; }
+  freedomWallMediaSearchBusy = "gif";
+  if (results) results.innerHTML = '<small class="freedomWallMediaSearchEmpty">Searching GIFs…</small>';
+  if (status) status.textContent = "Searching GIFs…";
+  try {
+    const items = await fetchFreedomWallGifResults(q);
+    renderFreedomWallGifResults(items);
+    if (status) status.textContent = items.length ? "Choose a GIF." : "No GIF results found.";
+  } catch (error) {
+    if (results) results.innerHTML = `<small class="freedomWallMediaSearchEmpty">${String(error?.message || "GIF search failed.")}</small>`;
+    if (status) status.textContent = String(error?.message || "GIF search failed.");
+  } finally { freedomWallMediaSearchBusy = ""; }
+}
+
+function renderFreedomWallGifPreview(media, note) {
+  const gif = note?.gif;
+  if (!media || !gif?.url) return;
+  media.replaceChildren();
+  const img = document.createElement("img");
+  img.src = gif.url;
+  img.alt = gif.title || "Freedom Wall GIF";
+  img.loading = "lazy";
+  img.decoding = "async";
+  media.appendChild(img);
+  media.classList.remove("is-loading", "is-unavailable");
+}
+
+function renderFreedomWallSpotifyResults(items = []) {
+  const layer = document.getElementById("homepageEffectLayer");
+  const results = layer?.querySelector("#freedomWallSpotifyResults");
+  if (!results) return;
+  results.replaceChildren();
+  if (!items.length) {
+    const empty = document.createElement("small");
+    empty.className = "freedomWallSpotifyEmpty";
+    empty.textContent = "No Spotify tracks found.";
+    results.appendChild(empty);
+    return;
+  }
+  items.forEach((item) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "freedomWallSpotifyResult";
+    const img = document.createElement("img");
+    img.alt = "";
+    img.loading = "lazy";
+    img.decoding = "async";
+    img.src = item.image || "";
+    const meta = document.createElement("span");
+    meta.innerHTML = `<b></b><small></small>`;
+    meta.querySelector("b").textContent = item.title;
+    meta.querySelector("small").textContent = item.artist || "Spotify";
+    const choose = document.createElement("em");
+    choose.textContent = "Choose";
+    btn.append(img, meta, choose);
+    btn.addEventListener("click", () => selectFreedomWallSpotifyItem(item));
+    results.appendChild(btn);
+  });
+}
+
+function selectFreedomWallSpotifyItem(item) {
+  const safe = normalizeFreedomWallSpotifyItem(item);
+  if (!safe) return;
+  freedomWallPendingMedia = null;
+  freedomWallPendingYouTubeUrl = "";
+  freedomWallPendingYouTube = null;
+  freedomWallPendingGif = null;
+  freedomWallPendingSpotify = safe;
+  freedomWallSelectedAttachmentMode = "spotify";
+  const layer = document.getElementById("homepageEffectLayer");
+  const status = layer?.querySelector("#freedomWallComposerStatus");
+  const selected = layer?.querySelector("#freedomWallSpotifySelected");
+  const remove = layer?.querySelector("#freedomWallMediaRemove");
+  if (selected) {
+    selected.hidden = false;
+    selected.replaceChildren();
+    const img = document.createElement("img");
+    img.alt = "";
+    img.src = safe.image || "";
+    const meta = document.createElement("span");
+    meta.innerHTML = `<strong></strong><small></small>`;
+    meta.querySelector("strong").textContent = safe.title;
+    meta.querySelector("small").textContent = safe.artist || "Spotify";
+    selected.append(img, meta);
+  }
+  if (remove) remove.hidden = false;
+  if (status) status.textContent = "Spotify track selected.";
+}
+
+async function runFreedomWallSpotifySearch() {
+  if (freedomWallSpotifySearchBusy) return;
+  const layer = document.getElementById("homepageEffectLayer");
+  const input = layer?.querySelector("#freedomWallSpotifySearchInput");
+  const results = layer?.querySelector("#freedomWallSpotifyResults");
+  const status = layer?.querySelector("#freedomWallComposerStatus");
+  const q = String(input?.value || "").trim();
+  if (!q) {
+    input?.focus();
+    if (status) status.textContent = "Type a song or artist to search Spotify.";
+    return;
+  }
+  freedomWallSpotifySearchBusy = true;
+  if (results) results.innerHTML = '<small class="freedomWallSpotifyEmpty">Searching Spotify…</small>';
+  if (status) status.textContent = "Searching Spotify…";
+  try {
+    const items = await fetchFreedomWallSpotifyResults(q);
+    renderFreedomWallSpotifyResults(items);
+    if (status) status.textContent = items.length ? "Choose a Spotify track." : "No Spotify results found.";
+  } catch (error) {
+    if (results) results.innerHTML = `<small class="freedomWallSpotifyEmpty">${String(error?.message || "Spotify search failed.")}</small>`;
+    if (status) status.textContent = String(error?.message || "Spotify search failed.");
+  } finally {
+    freedomWallSpotifySearchBusy = false;
+  }
+}
+
+function closeFreedomWallActiveSpotify({ resumeMusic = true } = {}) {
+  const playback = freedomWallActiveSpotifyPlayback;
+  if (!playback) return;
+  const { media, note } = playback;
+  media?.classList?.remove("is-spotify-playing");
+  if (media?.isConnected) renderFreedomWallSpotifyPreview(media, note);
+  if (freedomWallActiveSpotifyPlayback === playback) freedomWallActiveSpotifyPlayback = null;
+  if (resumeMusic) resumeHomepageEffectMusicAfterFreedomWallVideo();
+  else homepageEffectMusicSuppressedByWallVideo = false;
+}
+
+function renderFreedomWallSpotifyPreview(media, note) {
+  const spotify = note?.spotify;
+  if (!media || !spotify?.url) return;
+  media.replaceChildren();
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "freedomWallSpotifyPlayCard";
+  const img = document.createElement("img");
+  img.alt = "Spotify track cover";
+  img.loading = "lazy";
+  img.decoding = "async";
+  img.src = spotify.image || "";
+  const meta = document.createElement("span");
+  meta.className = "freedomWallSpotifyMeta";
+  meta.innerHTML = `<b></b><small></small>`;
+  meta.querySelector("b").textContent = spotify.title || "Spotify Track";
+  meta.querySelector("small").textContent = spotify.artist || "Spotify";
+  const badge = document.createElement("i");
+  badge.className = "freedomWallSpotifyPlayBadge";
+  badge.textContent = "▶";
+  button.append(img, meta, badge);
+  button.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const embed = getFreedomWallSpotifyEmbedUrl(spotify.url);
+    if (!embed || !media.isConnected) return;
+    if (freedomWallActiveYoutubePlayback) closeFreedomWallActiveYoutube({ resumeMusic:false });
+    if (freedomWallActiveSpotifyPlayback) closeFreedomWallActiveSpotify({ resumeMusic:false });
+    pauseHomepageEffectMusicForFreedomWallVideo();
+    media.replaceChildren();
+    media.classList.add("is-spotify-playing");
+    const close = document.createElement("button");
+    close.type = "button";
+    close.className = "freedomWallSpotifyClose";
+    close.setAttribute("aria-label", "Close Spotify preview and resume background music");
+    close.textContent = "×";
+    const iframe = document.createElement("iframe");
+    iframe.className = "freedomWallSpotifyFrame";
+    iframe.title = `Spotify preview: ${spotify.title || "track"}`;
+    iframe.src = embed;
+    iframe.allow = "autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture";
+    iframe.loading = "lazy";
+    media.append(iframe, close);
+    const playback = { media, note };
+    freedomWallActiveSpotifyPlayback = playback;
+    close.addEventListener("click", (closeEvent) => {
+      closeEvent.preventDefault();
+      closeEvent.stopPropagation();
+      closeFreedomWallActiveSpotify({ resumeMusic:true });
+    });
+  });
+  media.appendChild(button);
+  media.classList.remove("is-loading", "is-unavailable", "is-spotify-playing");
+}
+
 async function hydrateFreedomWallNoteMedia(card, note) {
-  if (!card || (!note?.mediaRef && !note?.youtubeUrl)) return;
+  if (!card || (!note?.mediaRef && !note?.youtubeUrl && !note?.gif?.url && !note?.spotify?.url)) return;
   const media = card.querySelector(".freedomWallNoteMedia");
   if (!media) return;
-  const expectedRef = String(note.youtubeUrl || note.mediaRef || "");
+  const expectedRef = String(note.spotify?.url || note.youtubeUrl || note.gif?.url || note.mediaRef || "");
   if (media.dataset.mediaLoaded === expectedRef && (media.querySelector("img") || media.querySelector("iframe") || media.querySelector("button"))) return;
   media.dataset.mediaLoaded = expectedRef;
   media.classList.add("is-loading");
+  if (note.spotify?.url) {
+    renderFreedomWallSpotifyPreview(media, note);
+    return;
+  }
+  if (note.gif?.url) {
+    renderFreedomWallGifPreview(media, note);
+    return;
+  }
   if (note.youtubeUrl) {
     const videoId = getFreedomWallYouTubeVideoId(note.youtubeUrl);
     if (!videoId) {
@@ -5662,18 +6197,36 @@ function normalizeFreedomWallNote(doc, index = 0) {
   const parsedMediaRef = parseClassBoardMediaRef(rawMediaRef);
   const mediaRef = parsedMediaRef?.kind === "freedomWall" ? parsedMediaRef.raw : "";
   const mediaType = mediaRef ? String(data.MediaType || data.mediaType || "image/jpeg").trim().toLowerCase().slice(0, 32) : "";
-  const youtubeUrl = normalizeFreedomWallYouTubeUrl(data.YouTubeUrl || data.youtubeUrl || "");
+  const youtube = normalizeFreedomWallYouTubeItem({
+    url: data.YouTubeUrl || data.youtubeUrl || "",
+    title: data.YouTubeTitle || data.youtubeTitle || "",
+    channel: data.YouTubeChannel || data.youtubeChannel || "",
+    thumbnail: data.YouTubeThumb || data.youtubeThumb || ""
+  });
+  const youtubeUrl = youtube?.url || "";
+  const gif = normalizeFreedomWallGifItem({
+    url: data.GifUrl || data.gifUrl || "",
+    previewUrl: data.GifPreviewUrl || data.gifPreviewUrl || "",
+    title: data.GifTitle || data.gifTitle || ""
+  });
+  const spotify = normalizeFreedomWallSpotifyItem({
+    url: data.SpotifyUrl || data.spotifyUrl || "",
+    uri: data.SpotifyUri || data.spotifyUri || "",
+    title: data.SpotifyTitle || data.spotifyTitle || "",
+    artist: data.SpotifyArtist || data.spotifyArtist || "",
+    image: data.SpotifyImage || data.spotifyImage || ""
+  });
   const reactions = normalizeFreedomWallReactions(data.Reactions || data.reactions || {});
   const reactionLastType = normalizeFreedomWallReactionLastType(data.ReactionLastType || data.reactionLastType || "");
   const wallId = normalizeFreedomWallSessionId(data.WallID || data.wallId || FREEDOM_WALL_LEGACY_SESSION_ID);
-  if (!text && !mediaRef && !youtubeUrl) return null;
-  return { id, text, author, color, textColor, fontStyle, createdAtMs, mediaRef, mediaType, youtubeUrl, reactions, reactionLastType, wallId, ...getFreedomWallPlacement({ ...data, id }, index) };
+  if (!text && !mediaRef && !youtubeUrl && !gif?.url && !spotify?.url) return null;
+  return { id, text, author, color, textColor, fontStyle, createdAtMs, mediaRef, mediaType, youtubeUrl, youtube, gif, spotify, reactions, reactionLastType, wallId, ...getFreedomWallPlacement({ ...data, id }, index) };
 }
 
 function getFreedomWallNoteCoreSignature(note) {
   return JSON.stringify([
     note?.id, note?.text, note?.author, note?.color, note?.textColor, note?.fontStyle,
-    note?.createdAtMs, note?.mediaRef, note?.mediaType, note?.youtubeUrl, note?.wallId, note?.x, note?.y, note?.rotation, note?.scale
+    note?.createdAtMs, note?.mediaRef, note?.mediaType, note?.youtubeUrl, note?.youtube?.title, note?.gif?.url, note?.spotify?.url, note?.spotify?.title, note?.spotify?.artist, note?.wallId, note?.x, note?.y, note?.rotation, note?.scale
   ]);
 }
 
@@ -5740,11 +6293,11 @@ function renderFreedomWallNotes(notes = []) {
       card.append(pin, text);
     }
 
-    const showThemeMedia = Boolean(note.mediaRef || note.youtubeUrl);
+    const showThemeMedia = Boolean(note.mediaRef || note.youtubeUrl || note.gif?.url || note.spotify?.url);
     const sizeClass = getFreedomWallNoteSizeClass(note);
     const isActivelyDragged = freedomWallDragState?.card === card;
     const inlineYoutubeActive = Boolean(freedomWallActiveYoutubePlayback?.mode === "inline" && freedomWallActiveYoutubePlayback?.card === card);
-    card.className = `freedomWallNote is-${note.color} is-size-${sizeClass}${showThemeMedia ? " has-media" : ""}${note.youtubeUrl ? " has-video" : ""}${inlineYoutubeActive ? " is-inline-video-active" : ""}${isNew ? " is-new" : ""}${isActivelyDragged ? " is-dragging" : ""}`;
+    card.className = `freedomWallNote is-${note.color} is-size-${sizeClass}${showThemeMedia ? " has-media" : ""}${note.youtubeUrl ? " has-video" : ""}${note.gif?.url ? " has-gif" : ""}${note.spotify?.url ? " has-spotify" : ""}${inlineYoutubeActive ? " is-inline-video-active" : ""}${isNew ? " is-new" : ""}${isActivelyDragged ? " is-dragging" : ""}`;
     card.style.setProperty("--fw-note-bg", FREEDOM_WALL_COLOR_HEX[note.color] || FREEDOM_WALL_COLOR_HEX.yellow);
     const allowTextColor = Boolean(freedomWallConfig?.freedomWallAllowTextColor);
     const hasAllowedCustomText = Boolean(allowTextColor && note.textColor);
@@ -6147,6 +6700,17 @@ function buildFreedomWallLegacyCompatiblePayload(payload = {}) {
   delete legacy.FontStyle;
   delete legacy.WallID;
   delete legacy.YouTubeUrl;
+  delete legacy.SpotifyUrl;
+  delete legacy.SpotifyUri;
+  delete legacy.SpotifyTitle;
+  delete legacy.SpotifyArtist;
+  delete legacy.SpotifyImage;
+  delete legacy.YouTubeTitle;
+  delete legacy.YouTubeChannel;
+  delete legacy.YouTubeThumb;
+  delete legacy.GifUrl;
+  delete legacy.GifPreviewUrl;
+  delete legacy.GifTitle;
   const requestedColor = String(legacy.Color || "yellow").trim().toLowerCase();
   legacy.Color = FREEDOM_WALL_LEGACY_COLORS.has(requestedColor)
     ? requestedColor
@@ -6166,9 +6730,11 @@ async function submitFreedomWallNote(event) {
   const author = String(authorInput?.value || "").trim().replace(/\s+/g, " ").slice(0, FREEDOM_WALL_AUTHOR_MAX_LENGTH);
   const attachmentMode = freedomWallSelectedAttachmentMode;
   const pendingMedia = (attachmentMode === "image" || attachmentMode === "gif") ? freedomWallPendingMedia : null;
-  const pendingYouTubeUrl = attachmentMode === "youtube" ? normalizeFreedomWallYouTubeUrl(freedomWallPendingYouTubeUrl) : "";
-  if (!text && !pendingMedia && !pendingYouTubeUrl) {
-    if (status) status.textContent = attachmentMode === "youtube" ? "Write a note or paste a YouTube link first." : "Write a note or add media first.";
+  const pendingYouTube = (attachmentMode === "youtube-search") ? normalizeFreedomWallYouTubeItem(freedomWallPendingYouTube || {}) : null;
+  const pendingYouTubeUrl = attachmentMode === "youtube" ? normalizeFreedomWallYouTubeUrl(freedomWallPendingYouTubeUrl) : (pendingYouTube?.url || "");
+  const pendingGif = attachmentMode === "gif-search" ? normalizeFreedomWallGifItem(freedomWallPendingGif || {}) : null;
+  if (!text && !pendingMedia && !pendingYouTubeUrl && !pendingGif?.url) {
+    if (status) status.textContent = attachmentMode === "youtube-search" ? "Write a note or choose a YouTube result first." : (attachmentMode === "gif-search" ? "Write a note or choose a GIF first." : (attachmentMode === "youtube" ? "Write a note or paste a YouTube link first." : "Write a note or add media first."));
     noteInput?.focus();
     return;
   }
@@ -6207,7 +6773,17 @@ async function submitFreedomWallNote(event) {
     const noteRef = db.collection(FREEDOM_WALL_COLLECTION).doc();
     let mediaDocRef = null;
     let mediaPayload = null;
-    if (pendingYouTubeUrl) payload.YouTubeUrl = pendingYouTubeUrl;
+    if (pendingYouTubeUrl) {
+      payload.YouTubeUrl = pendingYouTubeUrl;
+      if (pendingYouTube?.title) payload.YouTubeTitle = pendingYouTube.title;
+      if (pendingYouTube?.channel) payload.YouTubeChannel = pendingYouTube.channel;
+      if (pendingYouTube?.thumbnail) payload.YouTubeThumb = pendingYouTube.thumbnail;
+    }
+    if (pendingGif?.url) {
+      payload.GifUrl = pendingGif.url;
+      if (pendingGif.previewUrl) payload.GifPreviewUrl = pendingGif.previewUrl;
+      if (pendingGif.title) payload.GifTitle = pendingGif.title;
+    }
     if (pendingMedia) {
       payload.MediaRef = `${CLASSBOARD_MEDIA_REF_PREFIX}freedomWall/${noteRef.id}`;
       payload.MediaType = pendingMedia.mimeType;
@@ -6438,6 +7014,7 @@ function configureFreedomWall(config) {
 }
 
 function stopFreedomWallLive(clearStage = false) {
+  closeFreedomWallActiveSpotify({ resumeMusic:false });
   closeFreedomWallActiveYoutube({ resumeMusic:false });
   freedomWallListenToken += 1;
   if (freedomWallLiveRetryTimer) window.clearTimeout(freedomWallLiveRetryTimer);
