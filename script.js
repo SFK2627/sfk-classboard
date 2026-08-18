@@ -1744,7 +1744,7 @@ const FREEDOM_WALL_COLLECTION = "freedomWallNotes";
 const FREEDOM_WALL_MAX_RENDERED_NOTES = 400;
 const FREEDOM_WALL_NOTE_MAX_LENGTH = 240;
 const FREEDOM_WALL_AUTHOR_MAX_LENGTH = 42;
-const FREEDOM_WALL_THEME_SET = new Set(["sunny","rainy","night","flood","comic","school-note","sticky-notes","jungle","bulletin-board","whiteboard","poste","graffiti","vandal"]);
+const FREEDOM_WALL_THEME_SET = new Set(["sunny","rainy","night","flood","comic","school-note","sticky-notes","jungle","bulletin-board","whiteboard","cafe","sakura","galaxy","beach","art-room","library","newspaper","polaroid","retro-arcade","coding-lab","rainbow","brick-alley","school-fair","eco","dreamy-clouds","chalkboard","detective","appreciation","seasonal","neon-music","poste","graffiti","vandal"]);
 const FREEDOM_WALL_COLORS = ["yellow","pink","blue","mint","orange","violet","peach","white"];
 let freedomWallUnsubscribe = null;
 let freedomWallListenToken = 0;
@@ -3792,6 +3792,9 @@ function beginFreedomWallNoteDrag(card, event) {
     currentXPercent: xPercent,
     currentYPercent: yPercent,
     geometry,
+    rotation,
+    skew,
+    scale,
     moved: false
   };
   freedomWallDragPending = null;
@@ -3799,9 +3802,11 @@ function beginFreedomWallNoteDrag(card, event) {
   // v462: manually moved notes live in a temporary overlay ABOVE the prompt.
   // This overlay is browser-session-only and is never written to Firestore.
   overlay.appendChild(card);
+  layer.classList.add("is-note-dragging");
   card.classList.add("is-dragging");
   card.style.setProperty("--fw-drag-x", "0px");
   card.style.setProperty("--fw-drag-y", "0px");
+  card.style.transform = `translate(-50%,-50%) translate3d(0,0,0) rotate(${rotation}deg) skewY(${skew}deg) scale(${scale})`;
   freedomWallDragFrontZ = Math.min(900, Math.max(1, freedomWallDragFrontZ + 1));
   card.style.zIndex = String(freedomWallDragFrontZ);
   card.dataset.fwDragged = "true";
@@ -3821,13 +3826,12 @@ function beginFreedomWallNoteDrag(card, event) {
   event.preventDefault?.();
 }
 
-function applyFreedomWallNoteDragFrame() {
-  freedomWallDragMoveFrame = 0;
+function applyFreedomWallNoteDragInstant(clientX, clientY) {
   const state = freedomWallDragState;
   if (!state) return;
 
-  const dx = state.latestPointerX - state.startPointerX;
-  const dy = state.latestPointerY - state.startPointerY;
+  const dx = clientX - state.startPointerX;
+  const dy = clientY - state.startPointerY;
   if (Math.abs(dx) + Math.abs(dy) > 2) state.moved = true;
 
   const g = state.geometry;
@@ -3836,20 +3840,30 @@ function applyFreedomWallNoteDragFrame() {
   state.currentXPercent = Math.max(0, Math.min(100, (x / g.stageRect.width) * 100));
   state.currentYPercent = Math.max(0, Math.min(100, (y / g.stageRect.height) * 100));
 
-  // Smooth compositor-only movement while the pointer remains physically held.
-  // The real % position is committed only on pointerup, preventing jitter from
-  // repeated left/top layout changes.
-  state.card.style.setProperty("--fw-drag-x", `${(x - state.startCenterX).toFixed(2)}px`);
-  state.card.style.setProperty("--fw-drag-y", `${(y - state.startCenterY).toFixed(2)}px`);
+  // v471: write the compositor transform directly. No queued animation frame,
+  // no left/top updates, and no CSS-variable recalculation while the finger is
+  // moving. This keeps the note visually attached to the current pointer sample.
+  const tx = x - state.startCenterX;
+  const ty = y - state.startCenterY;
+  state.card.style.transform = `translate(-50%,-50%) translate3d(${tx.toFixed(2)}px,${ty.toFixed(2)}px,0) rotate(${state.rotation}deg) skewY(${state.skew}deg) scale(${state.scale})`;
 }
 
 function moveFreedomWallNoteDrag(event) {
   const state = freedomWallDragState;
   if (!state || state.pointerId !== event.pointerId) return;
-  state.latestPointerX = event.clientX;
-  state.latestPointerY = event.clientY;
-  if (!freedomWallDragMoveFrame) freedomWallDragMoveFrame = window.requestAnimationFrame(applyFreedomWallNoteDragFrame);
-  event.preventDefault?.();
+
+  // Use the newest coalesced pointer sample when the browser provides one.
+  // On phones this can be newer than the outer pointermove event itself.
+  let sample = event;
+  try {
+    const points = event.getCoalescedEvents?.();
+    if (points?.length) sample = points[points.length - 1];
+  } catch (error) {}
+
+  state.latestPointerX = sample.clientX;
+  state.latestPointerY = sample.clientY;
+  applyFreedomWallNoteDragInstant(state.latestPointerX, state.latestPointerY);
+  if (event.cancelable) event.preventDefault();
 }
 
 function endFreedomWallNoteDrag(event, force = false) {
@@ -3863,10 +3877,11 @@ function endFreedomWallNoteDrag(event, force = false) {
   const state = freedomWallDragState;
   if (!state || (!force && event?.pointerId != null && state.pointerId !== event.pointerId)) return;
 
+  // v471 moves directly on every pointer sample, so there is no queued frame
+  // to wait for at release.
   if (freedomWallDragMoveFrame) {
     window.cancelAnimationFrame(freedomWallDragMoveFrame);
     freedomWallDragMoveFrame = 0;
-    applyFreedomWallNoteDragFrame();
   }
 
   const finalX = Number.isFinite(state.currentXPercent) ? state.currentXPercent : 50;
@@ -3875,7 +3890,9 @@ function endFreedomWallNoteDrag(event, force = false) {
   state.card.style.setProperty("--fw-y", finalY.toFixed(3));
   state.card.style.setProperty("--fw-drag-x", "0px");
   state.card.style.setProperty("--fw-drag-y", "0px");
+  state.card.style.removeProperty("transform");
   state.card.classList.remove("is-dragging");
+  state.layer?.classList?.remove("is-note-dragging");
   state.card.dataset.fwDragged = "true";
 
   const local = freedomWallLocalDragPositions.get(String(state.card.dataset.noteId)) || {};
@@ -3941,24 +3958,42 @@ function setupFreedomWallNoteDragging(layer) {
         clientY: pending.latestY,
         preventDefault() {}
       });
-    }, 220);
+    }, 120);
     event.preventDefault();
   });
 
   // v462: track the active pointer at document capture level. Crossing the
   // prompt, leaving the note's original box, or moving between stacking layers
   // cannot end the hold. Only the real pointerup releases it.
-  document.addEventListener("pointermove", (event) => {
+  const handleFreedomWallPointerMotion = (event) => {
     if (freedomWallDragState && freedomWallDragState.pointerId === event.pointerId) {
       moveFreedomWallNoteDrag(event);
       return;
     }
     if (freedomWallDragPending && freedomWallDragPending.pointerId === event.pointerId) {
-      freedomWallDragPending.latestX = event.clientX;
-      freedomWallDragPending.latestY = event.clientY;
-      event.preventDefault();
+      let sample = event;
+      try {
+        const points = event.getCoalescedEvents?.();
+        if (points?.length) sample = points[points.length - 1];
+      } catch (error) {}
+      freedomWallDragPending.latestX = sample.clientX;
+      freedomWallDragPending.latestY = sample.clientY;
+      if (event.cancelable) event.preventDefault();
     }
-  }, { capture: true, passive: false });
+  };
+
+  // pointerrawupdate can arrive at device sampling speed on supported phones.
+  // Fall back to pointermove everywhere else.
+  const dragMoveEvent = ("onpointerrawupdate" in window) ? "pointerrawupdate" : "pointermove";
+  document.addEventListener(dragMoveEvent, handleFreedomWallPointerMotion, { capture: true, passive: false });
+  if (dragMoveEvent !== "pointermove") {
+    // Safari/embedded browsers may expose pointerrawupdate inconsistently; keep
+    // pointermove only for the pre-drag hold tracker as a safe fallback.
+    document.addEventListener("pointermove", (event) => {
+      if (freedomWallDragState) return;
+      handleFreedomWallPointerMotion(event);
+    }, { capture: true, passive: false });
+  }
 
   document.addEventListener("pointerup", (event) => {
     if (
@@ -4291,7 +4326,13 @@ function configureFreedomWall(config) {
   const authorInput = layer.querySelector("#freedomWallAuthorInput");
   const authorLabel = layer.querySelector('label[for="freedomWallAuthorInput"]');
   if (scene) {
-    scene.dataset.theme = config.freedomWallTheme || "sticky-notes";
+    const theme = config.freedomWallTheme || "sticky-notes";
+    scene.dataset.theme = theme;
+    if (theme === "seasonal") {
+      scene.dataset.seasonalVariant = getFreedomWallSeasonalVariant();
+    } else {
+      delete scene.dataset.seasonalVariant;
+    }
     scene.style.setProperty("display", "block", "important");
     scene.style.setProperty("visibility", "visible", "important");
     scene.style.setProperty("opacity", "1", "important");

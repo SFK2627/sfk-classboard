@@ -31219,3 +31219,725 @@ html.sfkHomepageBlackSymbioteActive body > *:not(script):not(style):not(#homepag
   .homepageFreedomWallScene[data-theme="school-note"] .freedomWallPromptCard h2,
   .homepageFreedomWallScene[data-theme="whiteboard"] .freedomWallPromptCard h2{font-size:clamp(20px,6.2vw,29px)}
 }
+
+
+/* v469: expanded SFK #BeKind Wall theme pack */
+/* ---------- New background worlds ---------- */
+.homepageFreedomWallScene[data-theme="cafe"] .freedomWallBg{
+  background:linear-gradient(180deg,#5b3a27 0%,#7d5540 42%,#a88061 100%);
+}
+.homepageFreedomWallScene[data-theme="cafe"] .freedomWallBg::before{
+  inset:0;
+  background:
+    radial-gradient(circle at 8% 10%, rgba(255,228,154,.95) 0 4px, transparent 5px) 0 0/92px 54px,
+    radial-gradient(circle at 52% 26%, rgba(255,236,176,.9) 0 3.5px, transparent 4.5px) 0 0/92px 54px,
+    linear-gradient(90deg, rgba(255,255,255,.04) 0 2px, transparent 2px 78px, rgba(0,0,0,.05) 78px 80px) 0 0/80px 100%;
+  opacity:.85;
+}
+.homepageFreedomWallScene[data-theme="cafe"] .freedomWallBg::after{inset:0;background:linear-gradient(180deg,rgba(0,0,0,.08),transparent 36%,rgba(0,0,0,.10));}
+
+.homepageFreedomWallScene[data-theme="sakura"] .freedomWallBg{
+  background:linear-gradient(180deg,#ffe8f0 0%,#ffd5e6 56%,#fff7fb 100%);
+}
+.homepageFreedomWallScene[data-theme="sakura"] .freedomWallBg::before{
+  inset:0;
+  background:
+    radial-gradient(circle at 14% 20%, rgba(255,184,209,.92) 0 12px, transparent 13px),
+    radial-gradient(circle at 18% 24%, rgba(255,211,228,.96) 0 8px, transparent 9px),
+    radial-gradient(circle at 86% 16%, rgba(255,186,212,.9) 0 14px, transparent 15px),
+    radial-gradient(circle at 82% 22%, rgba(255,221,232,.95) 0 9px, transparent 10px),
+    radial-gradient(circle at 10% 84%, rgba(214,164,102,.45) 0 18px, transparent 19px),
+    radial-gradient(circle at 92% 88%, rgba(214,164,102,.45) 0 18px, transparent 19px);
+  opacity:.9;
+}
+.homepageFreedomWallScene[data-theme="sakura"] .freedomWallBg::after{
+  inset:0;
+  background:
+    radial-gradient(circle at 22% 34%, rgba(255,170,205,.6) 0 4px, transparent 4.8px) 0 0/120px 90px,
+    radial-gradient(circle at 60% 68%, rgba(255,192,221,.56) 0 3px, transparent 3.8px) 0 0/140px 100px;
+  opacity:.5;
+}
+
+.homepageFreedomWallScene[data-theme="galaxy"] .freedomWallBg{
+  background:radial-gradient(circle at 22% 18%, rgba(107,92,255,.58), transparent 18%), radial-gradient(circle at 78% 30%, rgba(255,92,190,.35), transparent 22%), radial-gradient(circle at 55% 70%, rgba(70,197,255,.28), transparent 18%), linear-gradient(180deg,#090b1c 0%,#141a3f 45%,#0b1029 100%);
+}
+.homepageFreedomWallScene[data-theme="galaxy"] .freedomWallBg::before{inset:0;background:radial-gradient(circle,rgba(255,255,255,.95) 0 1.3px,transparent 1.7px) 0 0/26px 26px, radial-gradient(circle,rgba(167,223,255,.95) 0 1.2px,transparent 1.6px) 12px 10px/38px 38px;opacity:.74}
+.homepageFreedomWallScene[data-theme="galaxy"] .freedomWallBg::after{inset:0;background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,0) 25%), radial-gradient(circle at 50% 50%, transparent 0 44%, rgba(255,255,255,.03) 44% 45%, transparent 45%)}
+
+.homepageFreedomWallScene[data-theme="beach"] .freedomWallBg{
+  background:linear-gradient(180deg,#88d5ff 0 44%, #22b8d6 44% 61%, #31c3cf 61% 68%, #f0cf8b 68% 100%);
+}
+.homepageFreedomWallScene[data-theme="beach"] .freedomWallBg::before{inset:0;background:radial-gradient(circle at 84% 20%, rgba(255,235,139,.98) 0 44px, transparent 46px), linear-gradient(180deg, transparent 0 52%, rgba(255,255,255,.62) 52% 54%, transparent 54% 58%, rgba(255,255,255,.52) 58% 60%, transparent 60%)}
+.homepageFreedomWallScene[data-theme="beach"] .freedomWallBg::after{inset:0;background:radial-gradient(circle at 18% 88%, rgba(255,255,255,.5) 0 10px, transparent 11px), radial-gradient(circle at 80% 88%, rgba(255,242,208,.9) 0 7px, transparent 8px), linear-gradient(180deg, transparent 0 68%, rgba(255,255,255,.14) 68%)}
+
+.homepageFreedomWallScene[data-theme="art-room"] .freedomWallBg{background:linear-gradient(180deg,#fff5e5 0%,#fff7ef 100%)}
+.homepageFreedomWallScene[data-theme="art-room"] .freedomWallBg::before{inset:0;background:radial-gradient(circle at 14% 20%, rgba(255,77,109,.30) 0 36px, transparent 37px), radial-gradient(circle at 80% 24%, rgba(94,181,255,.32) 0 40px, transparent 41px), radial-gradient(circle at 28% 74%, rgba(255,196,0,.30) 0 30px, transparent 31px), radial-gradient(circle at 72% 78%, rgba(93,218,138,.28) 0 36px, transparent 37px), linear-gradient(135deg, rgba(0,0,0,.03) 0 2px, transparent 2px 18px) 0 0/20px 20px}
+.homepageFreedomWallScene[data-theme="art-room"] .freedomWallBg::after{inset:0;background:linear-gradient(140deg, transparent 0 22%, rgba(255,115,0,.24) 22% 27%, transparent 27% 100%), linear-gradient(42deg, transparent 0 70%, rgba(55,176,255,.25) 70% 74%, transparent 74%)}
+
+.homepageFreedomWallScene[data-theme="library"] .freedomWallBg{background:linear-gradient(180deg,#74492a 0%,#5b3820 100%)}
+.homepageFreedomWallScene[data-theme="library"] .freedomWallBg::before{inset:0;background:linear-gradient(90deg, rgba(107,53,22,.88) 0 6%, rgba(210,169,91,.92) 6% 10%, rgba(126,55,61,.92) 10% 18%, rgba(230,226,205,.88) 18% 23%, rgba(37,88,129,.92) 23% 30%, rgba(121,90,41,.92) 30% 38%, rgba(68,115,76,.92) 38% 46%, rgba(168,108,47,.92) 46% 54%, rgba(79,58,106,.92) 54% 63%, rgba(198,194,177,.88) 63% 69%, rgba(107,60,35,.92) 69% 77%, rgba(53,95,127,.92) 77% 85%, rgba(128,84,33,.92) 85% 100%); opacity:.72}
+.homepageFreedomWallScene[data-theme="library"] .freedomWallBg::after{inset:0;background:linear-gradient(180deg, rgba(255,240,205,.08), rgba(0,0,0,.18)); box-shadow: inset 0 -36px 0 rgba(41,26,14,.40), inset 0 36px 0 rgba(255,233,196,.05)}
+
+.homepageFreedomWallScene[data-theme="newspaper"] .freedomWallBg{background:linear-gradient(180deg,#f5f2e8 0%,#e8e3d4 100%)}
+.homepageFreedomWallScene[data-theme="newspaper"] .freedomWallBg::before{inset:0;background:repeating-linear-gradient(90deg, transparent 0 31%, rgba(0,0,0,.08) 31% 31.4%, transparent 31.4% 32.2%), repeating-linear-gradient(180deg, rgba(0,0,0,.05) 0 1px, transparent 1px 11px); opacity:.65}
+.homepageFreedomWallScene[data-theme="newspaper"] .freedomWallBg::after{content:"THE SFK TIMES  •  KINDNESS  •  COMMUNITY  •  STORIES"; position:absolute; left:0; right:0; top:8px; text-align:center; font:900 clamp(18px,2vw,28px)/1 Georgia,"Times New Roman",serif; color:rgba(20,20,20,.88); letter-spacing:.08em}
+
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallBg{background:linear-gradient(180deg,#a78264 0%,#9b7658 100%)}
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallBg::before{inset:0;background:radial-gradient(circle at 10% 8%, rgba(255,233,171,.96) 0 3px, transparent 4px) 0 0/80px 44px, radial-gradient(circle at 46% 14%, rgba(255,231,166,.9) 0 3px, transparent 4px) 0 0/80px 44px, radial-gradient(circle at 78% 10%, rgba(255,231,166,.94) 0 3px, transparent 4px) 0 0/80px 44px, radial-gradient(circle at 5px 5px, rgba(110,72,43,.24) 0 1px, transparent 1.2px) 0 0/16px 16px; opacity:.88}
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallBg::after{inset:0;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(0,0,0,.10));}
+
+.homepageFreedomWallScene[data-theme="retro-arcade"] .freedomWallBg{background:linear-gradient(180deg,#130f2c 0%,#070812 100%)}
+.homepageFreedomWallScene[data-theme="retro-arcade"] .freedomWallBg::before{inset:0;background:linear-gradient(rgba(76,255,255,.10) 1px, transparent 1px), linear-gradient(90deg, rgba(76,255,255,.10) 1px, transparent 1px); background-size:26px 26px,26px 26px; transform:perspective(420px) rotateX(72deg); transform-origin:50% 100%; opacity:.45}
+.homepageFreedomWallScene[data-theme="retro-arcade"] .freedomWallBg::after{inset:0;background:radial-gradient(circle at 50% 18%, rgba(255,68,194,.34), transparent 22%), radial-gradient(circle at 20% 82%, rgba(84,255,240,.18), transparent 24%), linear-gradient(180deg, transparent 0 70%, rgba(255,0,179,.12));}
+
+.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallBg{background:linear-gradient(180deg,#0b0f13 0%,#111922 100%)}
+.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallBg::before{inset:0;background:linear-gradient(90deg, rgba(255,255,255,.04) 0 1px, transparent 1px 16px) 0 0/16px 16px, linear-gradient(180deg, rgba(255,255,255,.03) 0 1px, transparent 1px 16px) 0 0/16px 16px; opacity:.35}
+.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallBg::after{inset:0; background: linear-gradient(180deg, transparent 0 14%, rgba(38,255,121,.15) 14% 16%, transparent 16% 28%, rgba(86,164,255,.14) 28% 30%, transparent 30% 42%, rgba(255,212,82,.14) 42% 44%, transparent 44% 100%)}
+
+.homepageFreedomWallScene[data-theme="rainbow"] .freedomWallBg{background:linear-gradient(180deg,#e7f7ff 0%,#f8fbff 100%)}
+.homepageFreedomWallScene[data-theme="rainbow"] .freedomWallBg::before{inset:0;background:radial-gradient(circle at 50% 120%, transparent 0 27%, rgba(255,109,109,.88) 27.8% 31%, transparent 31.6% 100%), radial-gradient(circle at 50% 120%, transparent 0 31.2%, rgba(255,174,71,.88) 32% 35.2%, transparent 35.8% 100%), radial-gradient(circle at 50% 120%, transparent 0 35.4%, rgba(255,229,76,.88) 36.2% 39.4%, transparent 40% 100%), radial-gradient(circle at 50% 120%, transparent 0 39.6%, rgba(109,209,110,.88) 40.4% 43.6%, transparent 44.2% 100%), radial-gradient(circle at 50% 120%, transparent 0 43.8%, rgba(83,168,255,.88) 44.6% 47.8%, transparent 48.4% 100%), radial-gradient(circle at 50% 120%, transparent 0 48%, rgba(164,118,255,.88) 48.8% 52%, transparent 52.6% 100%); opacity:.84}
+.homepageFreedomWallScene[data-theme="rainbow"] .freedomWallBg::after{inset:0;background:radial-gradient(circle at 14% 20%, rgba(255,255,255,.95) 0 22px, transparent 23px), radial-gradient(circle at 22% 24%, rgba(255,255,255,.96) 0 18px, transparent 19px), radial-gradient(circle at 78% 18%, rgba(255,255,255,.95) 0 20px, transparent 21px), radial-gradient(circle at 85% 24%, rgba(255,255,255,.96) 0 17px, transparent 18px)}
+
+.homepageFreedomWallScene[data-theme="brick-alley"] .freedomWallBg{background:linear-gradient(180deg,#ae5b4f 0%,#8d433a 100%)}
+.homepageFreedomWallScene[data-theme="brick-alley"] .freedomWallBg::before{inset:0;background:linear-gradient(90deg, rgba(0,0,0,.18) 0 1px, transparent 1px 66px) 0 0/67px 100%, linear-gradient(0deg, rgba(0,0,0,.17) 0 1px, transparent 1px 25px) 0 0/100% 26px, linear-gradient(90deg, transparent 0 33px, rgba(0,0,0,.16) 33px 34px, transparent 34px 67px) 0 13px/67px 26px; opacity:.6}
+.homepageFreedomWallScene[data-theme="brick-alley"] .freedomWallBg::after{inset:0;background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.10));}
+
+.homepageFreedomWallScene[data-theme="school-fair"] .freedomWallBg{background:linear-gradient(180deg,#fff5d6 0%,#ffe7bf 100%)}
+.homepageFreedomWallScene[data-theme="school-fair"] .freedomWallBg::before{inset:0;background:linear-gradient(135deg, rgba(255,91,91,.95) 0 18px, transparent 18px) 0 0/60px 36px, linear-gradient(225deg, rgba(72,147,255,.95) 0 18px, transparent 18px) 20px 0/60px 36px, linear-gradient(135deg, rgba(255,204,76,.96) 0 18px, transparent 18px) 40px 0/60px 36px; background-repeat:repeat-x; opacity:.9}
+.homepageFreedomWallScene[data-theme="school-fair"] .freedomWallBg::after{inset:0;background:radial-gradient(circle at 8% 10%, rgba(255,255,255,.96) 0 4px, transparent 5px) 0 0/64px 52px, radial-gradient(circle at 20% 16%, rgba(255,255,255,.96) 0 4px, transparent 5px) 0 0/64px 52px; opacity:.7}
+
+.homepageFreedomWallScene[data-theme="eco"] .freedomWallBg{background:linear-gradient(180deg,#d7cfb2 0%,#c6bc97 100%)}
+.homepageFreedomWallScene[data-theme="eco"] .freedomWallBg::before{inset:0;background:radial-gradient(circle at 10px 10px, rgba(88,76,40,.12) 0 1px, transparent 1.2px) 0 0/18px 18px, linear-gradient(90deg, rgba(85,70,38,.08) 0 2px, transparent 2px 120px, rgba(255,255,255,.14) 120px 122px) 0 0/122px 100%; opacity:.7}
+.homepageFreedomWallScene[data-theme="eco"] .freedomWallBg::after{inset:0;background:radial-gradient(ellipse at 10% 16%, rgba(121,147,91,.45) 0 18px, transparent 19px), radial-gradient(ellipse at 88% 78%, rgba(121,147,91,.45) 0 18px, transparent 19px), linear-gradient(180deg,rgba(255,255,255,.05),rgba(0,0,0,.06));}
+
+.homepageFreedomWallScene[data-theme="dreamy-clouds"] .freedomWallBg{background:linear-gradient(180deg,#e9e4ff 0%,#f9f7ff 55%,#e9f4ff 100%)}
+.homepageFreedomWallScene[data-theme="dreamy-clouds"] .freedomWallBg::before{inset:0;background:radial-gradient(circle at 18% 26%, rgba(255,255,255,.96) 0 28px, transparent 29px), radial-gradient(circle at 28% 28%, rgba(255,255,255,.96) 0 22px, transparent 23px), radial-gradient(circle at 76% 18%, rgba(255,255,255,.96) 0 24px, transparent 25px), radial-gradient(circle at 84% 22%, rgba(255,255,255,.96) 0 18px, transparent 19px), radial-gradient(circle, rgba(255,255,255,.95) 0 1.2px, transparent 1.6px) 0 0/34px 34px; opacity:.76}
+.homepageFreedomWallScene[data-theme="dreamy-clouds"] .freedomWallBg::after{inset:0;background:radial-gradient(circle at 58% 32%, rgba(255,227,254,.35) 0 120px, transparent 122px), radial-gradient(circle at 42% 76%, rgba(192,225,255,.32) 0 110px, transparent 112px)}
+
+.homepageFreedomWallScene[data-theme="chalkboard"] .freedomWallBg{background:linear-gradient(180deg,#234332 0%,#173122 100%)}
+.homepageFreedomWallScene[data-theme="chalkboard"] .freedomWallBg::before{inset:3%; border-radius:10px; background:radial-gradient(circle at 12px 12px, rgba(255,255,255,.08) 0 1px, transparent 1.2px) 0 0/18px 18px, linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.06)); box-shadow: inset 0 0 0 8px #a47d55, inset 0 0 0 12px #d7bb91, 0 12px 24px rgba(0,0,0,.25)}
+.homepageFreedomWallScene[data-theme="chalkboard"] .freedomWallBg::after{content:"#BeKind   •   Think   •   Share"; position:absolute; top:14px; left:18px; font:700 clamp(12px,1.5vw,20px)/1.2 "Segoe Print","Comic Sans MS",cursive; color:rgba(243,249,240,.78); letter-spacing:.05em}
+
+.homepageFreedomWallScene[data-theme="detective"] .freedomWallBg{background:linear-gradient(180deg,#b18b63 0%,#9c734d 100%)}
+.homepageFreedomWallScene[data-theme="detective"] .freedomWallBg::before{inset:0;background:radial-gradient(circle at 16% 22%, rgba(150,39,39,.72) 0 3px, transparent 4px), radial-gradient(circle at 82% 18%, rgba(150,39,39,.72) 0 3px, transparent 4px), linear-gradient(42deg, transparent 0 24%, rgba(150,39,39,.76) 24.2% 24.8%, transparent 25% 100%), linear-gradient(140deg, transparent 0 62%, rgba(150,39,39,.76) 62.2% 62.8%, transparent 63% 100%), radial-gradient(circle at 10px 10px, rgba(102,72,39,.18) 0 1px, transparent 1.2px) 0 0/17px 17px; opacity:.75}
+.homepageFreedomWallScene[data-theme="detective"] .freedomWallBg::after{inset:0;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(0,0,0,.07));}
+
+.homepageFreedomWallScene[data-theme="appreciation"] .freedomWallBg{background:linear-gradient(180deg,#fff2f4 0%,#ffe7ec 100%)}
+.homepageFreedomWallScene[data-theme="appreciation"] .freedomWallBg::before{inset:0;background:radial-gradient(circle at 16% 22%, rgba(255,180,195,.65) 0 9px, transparent 10px), radial-gradient(circle at 20% 26%, rgba(255,180,195,.65) 0 9px, transparent 10px), radial-gradient(circle at 18% 30%, rgba(255,180,195,.65) 0 9px, transparent 10px), radial-gradient(circle at 82% 18%, rgba(255,180,195,.65) 0 9px, transparent 10px), radial-gradient(circle at 86% 22%, rgba(255,180,195,.65) 0 9px, transparent 10px), radial-gradient(circle at 84% 26%, rgba(255,180,195,.65) 0 9px, transparent 10px)}
+.homepageFreedomWallScene[data-theme="appreciation"] .freedomWallBg::after{inset:0;background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,0) 30%), radial-gradient(circle at 50% 86%, rgba(255,217,226,.55) 0 120px, transparent 122px)}
+
+.homepageFreedomWallScene[data-theme="seasonal"] .freedomWallBg{background:linear-gradient(180deg,#1d2341 0%,#332a62 100%)}
+.homepageFreedomWallScene[data-theme="seasonal"] .freedomWallBg::before{inset:0;background:radial-gradient(circle, rgba(255,255,255,.95) 0 1.3px, transparent 1.7px) 0 0/24px 24px;opacity:.55}
+.homepageFreedomWallScene[data-theme="seasonal"] .freedomWallBg::after{inset:0;background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(0,0,0,.10))}
+.homepageFreedomWallScene[data-theme="seasonal"][data-seasonal-variant="christmas"] .freedomWallBg{background:linear-gradient(180deg,#0f5b39 0%,#133822 100%)}
+.homepageFreedomWallScene[data-theme="seasonal"][data-seasonal-variant="christmas"] .freedomWallBg::before{background:radial-gradient(circle at 10% 16%, rgba(255,215,87,.95) 0 4px, transparent 5px) 0 0/64px 44px, linear-gradient(180deg, transparent 0 18%, rgba(255,255,255,.08) 18% 20%, transparent 20%)}
+.homepageFreedomWallScene[data-theme="seasonal"][data-seasonal-variant="christmas"] .freedomWallBg::after{background:linear-gradient(180deg,transparent 0 80%, rgba(227,27,35,.28) 80% 100%)}
+.homepageFreedomWallScene[data-theme="seasonal"][data-seasonal-variant="halloween"] .freedomWallBg{background:linear-gradient(180deg,#251333 0%,#0f0b18 100%)}
+.homepageFreedomWallScene[data-theme="seasonal"][data-seasonal-variant="halloween"] .freedomWallBg::before{background:radial-gradient(circle at 78% 18%, rgba(255,145,38,.95) 0 40px, transparent 41px), linear-gradient(180deg, transparent 0 76%, rgba(0,0,0,.28) 76%)}
+.homepageFreedomWallScene[data-theme="seasonal"][data-seasonal-variant="halloween"] .freedomWallBg::after{background:linear-gradient(90deg, transparent 0 16%, rgba(0,0,0,.18) 16.2% 16.6%, transparent 16.8% 100%)}
+.homepageFreedomWallScene[data-theme="seasonal"][data-seasonal-variant="valentine"] .freedomWallBg{background:linear-gradient(180deg,#ffdde7 0%,#fff3f6 100%)}
+.homepageFreedomWallScene[data-theme="seasonal"][data-seasonal-variant="valentine"] .freedomWallBg::before{background:radial-gradient(circle at 16% 18%, rgba(255,130,160,.92) 0 7px, transparent 8px), radial-gradient(circle at 84% 18%, rgba(255,130,160,.92) 0 7px, transparent 8px), radial-gradient(circle at 50% 84%, rgba(255,199,215,.5) 0 100px, transparent 102px)}
+.homepageFreedomWallScene[data-theme="seasonal"][data-seasonal-variant="graduation"] .freedomWallBg{background:linear-gradient(180deg,#112446 0%,#1f335f 100%)}
+.homepageFreedomWallScene[data-theme="seasonal"][data-seasonal-variant="graduation"] .freedomWallBg::before{background:linear-gradient(180deg, transparent 0 80%, rgba(212,176,89,.22) 80% 100%), radial-gradient(circle at 12% 14%, rgba(255,255,255,.95) 0 4px, transparent 5px) 0 0/64px 52px}
+.homepageFreedomWallScene[data-theme="seasonal"][data-seasonal-variant="newyear"] .freedomWallBg{background:linear-gradient(180deg,#16223e 0%,#080d18 100%)}
+.homepageFreedomWallScene[data-theme="seasonal"][data-seasonal-variant="newyear"] .freedomWallBg::before{background:radial-gradient(circle at 14% 14%, rgba(255,209,90,.96) 0 4px, transparent 5px), radial-gradient(circle at 72% 22%, rgba(109,194,255,.96) 0 4px, transparent 5px), radial-gradient(circle at 48% 30%, rgba(255,122,187,.96) 0 4px, transparent 5px), radial-gradient(circle, rgba(255,255,255,.9) 0 1.2px, transparent 1.6px) 0 0/26px 26px}
+
+.homepageFreedomWallScene[data-theme="neon-music"] .freedomWallBg{background:linear-gradient(180deg,#0a0616 0%,#171127 100%)}
+.homepageFreedomWallScene[data-theme="neon-music"] .freedomWallBg::before{inset:0;background:linear-gradient(90deg, transparent 0 8%, rgba(255,70,195,.75) 8.2% 8.8%, transparent 9% 14%, rgba(66,241,255,.75) 14.2% 14.8%, transparent 15% 22%, rgba(144,255,80,.72) 22.2% 22.8%, transparent 23% 100%), linear-gradient(180deg, transparent 0 74%, rgba(255,255,255,.08) 74% 100%); opacity:.9}
+.homepageFreedomWallScene[data-theme="neon-music"] .freedomWallBg::after{inset:0;background:radial-gradient(circle at 20% 18%, rgba(255,61,193,.18) 0 70px, transparent 72px), radial-gradient(circle at 76% 24%, rgba(74,227,255,.18) 0 80px, transparent 82px), linear-gradient(180deg, transparent 0 68%, rgba(166,255,76,.12) 68% 72%, transparent 72%)}
+
+/* ---------- New prompt cards + fonts ---------- */
+.homepageFreedomWallScene[data-theme="cafe"] .freedomWallPromptCard{background:rgba(255,248,236,.95);border-color:#8b5e3d;box-shadow:0 18px 32px rgba(48,25,10,.22)}
+.homepageFreedomWallScene[data-theme="cafe"] .freedomWallPromptCard::before{background:linear-gradient(90deg,#9d6b43,#e9c18b)}
+.homepageFreedomWallScene[data-theme="cafe"] .freedomWallPromptEyebrow{color:#9b6a39;font-family:Georgia,"Times New Roman",serif}
+.homepageFreedomWallScene[data-theme="cafe"] .freedomWallPromptCard h2,.homepageFreedomWallScene[data-theme="cafe"] .freedomWallNote p{font-family:Georgia,"Times New Roman",serif;font-weight:800;color:#59351c}
+.homepageFreedomWallScene[data-theme="cafe"] .freedomWallPromptCard p,.homepageFreedomWallScene[data-theme="cafe"] .freedomWallNote small{font-family:"Trebuchet MS",Arial,sans-serif;color:#6f4c33;font-weight:700}
+.homepageFreedomWallScene[data-theme="cafe"] .freedomWallNote{border-radius:14px 14px 18px 18px;box-shadow:0 14px 22px rgba(59,31,15,.18)}
+.homepageFreedomWallScene[data-theme="cafe"] .freedomWallNotePin{background:#fff0bf}
+
+.homepageFreedomWallScene[data-theme="sakura"] .freedomWallPromptCard{background:rgba(255,250,253,.95);border-color:#efb6ca;border-radius:26px;box-shadow:0 16px 28px rgba(182,106,136,.18)}
+.homepageFreedomWallScene[data-theme="sakura"] .freedomWallPromptCard::before{background:linear-gradient(90deg,#efb6ca,#ffdbe8)}
+.homepageFreedomWallScene[data-theme="sakura"] .freedomWallPromptEyebrow{color:#b86e87;font-family:Georgia,"Times New Roman",serif}
+.homepageFreedomWallScene[data-theme="sakura"] .freedomWallPromptCard h2,.homepageFreedomWallScene[data-theme="sakura"] .freedomWallNote p{font-family:Georgia,"Times New Roman",serif;font-weight:800;color:#9b5672}
+.homepageFreedomWallScene[data-theme="sakura"] .freedomWallPromptCard p,.homepageFreedomWallScene[data-theme="sakura"] .freedomWallNote small{font-family:"Segoe Print","Comic Sans MS",cursive;color:#8f6877;font-weight:700}
+.homepageFreedomWallScene[data-theme="sakura"] .freedomWallNote{border-radius:18px 10px 18px 12px}
+.homepageFreedomWallScene[data-theme="sakura"] .freedomWallNotePin{background:#ffd9e7}
+
+.homepageFreedomWallScene[data-theme="galaxy"] .freedomWallPromptCard{background:rgba(13,18,39,.92);border-color:rgba(129,172,255,.46);box-shadow:0 0 0 1px rgba(133,217,255,.16), 0 18px 40px rgba(0,0,0,.44)}
+.homepageFreedomWallScene[data-theme="galaxy"] .freedomWallPromptCard::before{background:linear-gradient(90deg,#7c8dff,#50d8ff,#ff71c7)}
+.homepageFreedomWallScene[data-theme="galaxy"] .freedomWallPromptEyebrow{color:#9fe3ff;font-family:"Segoe UI",Arial,sans-serif}
+.homepageFreedomWallScene[data-theme="galaxy"] .freedomWallPromptCard h2,.homepageFreedomWallScene[data-theme="galaxy"] .freedomWallNote p{font-family:Georgia,"Times New Roman",serif;color:#edf4ff;font-weight:800}
+.homepageFreedomWallScene[data-theme="galaxy"] .freedomWallPromptCard p,.homepageFreedomWallScene[data-theme="galaxy"] .freedomWallNote small{font-family:"Segoe UI",Arial,sans-serif;color:#c8d5ee;font-weight:700}
+.homepageFreedomWallScene[data-theme="galaxy"] .freedomWallNote{border:1px solid rgba(151,222,255,.36);box-shadow:0 0 0 1px rgba(255,255,255,.15) inset,0 12px 30px rgba(0,0,0,.28)}
+.homepageFreedomWallScene[data-theme="galaxy"] .freedomWallNote::before{background:linear-gradient(135deg, rgba(255,255,255,.95), rgba(162,255,245,.9))}
+
+.homepageFreedomWallScene[data-theme="beach"] .freedomWallPromptCard{background:rgba(255,250,239,.95);border-color:#e4b978;border-radius:26px 26px 18px 18px;box-shadow:0 18px 32px rgba(98,80,36,.18)}
+.homepageFreedomWallScene[data-theme="beach"] .freedomWallPromptCard::before{background:linear-gradient(90deg,#ffd977,#3bc8dd)}
+.homepageFreedomWallScene[data-theme="beach"] .freedomWallPromptEyebrow{color:#ca8d1b;font-family:"Trebuchet MS",Arial,sans-serif}
+.homepageFreedomWallScene[data-theme="beach"] .freedomWallPromptCard h2,.homepageFreedomWallScene[data-theme="beach"] .freedomWallNote p{font-family:Georgia,"Times New Roman",serif;font-weight:800;color:#2b6271}
+.homepageFreedomWallScene[data-theme="beach"] .freedomWallPromptCard p,.homepageFreedomWallScene[data-theme="beach"] .freedomWallNote small{font-family:"Trebuchet MS",Arial,sans-serif;color:#6a7257;font-weight:700}
+.homepageFreedomWallScene[data-theme="beach"] .freedomWallNote{border-radius:12px 12px 18px 18px}
+
+.homepageFreedomWallScene[data-theme="art-room"] .freedomWallPromptCard{background:rgba(255,255,253,.96);border-color:#efc889;box-shadow:0 18px 30px rgba(121,90,36,.16)}
+.homepageFreedomWallScene[data-theme="art-room"] .freedomWallPromptCard::before{background:linear-gradient(90deg,#ff5f75,#4fc0ff,#fbc940,#55d57b)}
+.homepageFreedomWallScene[data-theme="art-room"] .freedomWallPromptEyebrow{color:#da5e3d;font-family:"Segoe Print","Comic Sans MS",cursive}
+.homepageFreedomWallScene[data-theme="art-room"] .freedomWallPromptCard h2,.homepageFreedomWallScene[data-theme="art-room"] .freedomWallNote p{font-family:"Segoe Print","Comic Sans MS",cursive;font-weight:800;color:#564145}
+.homepageFreedomWallScene[data-theme="art-room"] .freedomWallPromptCard p,.homepageFreedomWallScene[data-theme="art-room"] .freedomWallNote small{font-family:"Trebuchet MS",Arial,sans-serif;color:#666057;font-weight:700}
+.homepageFreedomWallScene[data-theme="art-room"] .freedomWallNote{clip-path:polygon(0 6%, 7% 0, 100% 0, 100% 94%, 93% 100%, 0 100%)}
+
+.homepageFreedomWallScene[data-theme="library"] .freedomWallPromptCard{background:rgba(255,250,240,.96);border-color:#8b6642;box-shadow:0 20px 34px rgba(38,19,8,.22)}
+.homepageFreedomWallScene[data-theme="library"] .freedomWallPromptCard::before{background:linear-gradient(90deg,#7a4f2a,#e7cf9b)}
+.homepageFreedomWallScene[data-theme="library"] .freedomWallPromptEyebrow{color:#8e6139;font-family:Georgia,"Times New Roman",serif}
+.homepageFreedomWallScene[data-theme="library"] .freedomWallPromptCard h2,.homepageFreedomWallScene[data-theme="library"] .freedomWallNote p{font-family:Georgia,"Times New Roman",serif;color:#46311f;font-weight:800}
+.homepageFreedomWallScene[data-theme="library"] .freedomWallPromptCard p,.homepageFreedomWallScene[data-theme="library"] .freedomWallNote small{font-family:"Trebuchet MS",Arial,sans-serif;color:#67523b;font-weight:700}
+.homepageFreedomWallScene[data-theme="library"] .freedomWallNote{border-radius:3px;box-shadow:0 14px 24px rgba(31,14,7,.20)}
+
+.homepageFreedomWallScene[data-theme="newspaper"] .freedomWallPromptCard{background:rgba(255,255,252,.97);border-color:#777;border-radius:8px;box-shadow:0 14px 24px rgba(0,0,0,.12)}
+.homepageFreedomWallScene[data-theme="newspaper"] .freedomWallPromptCard::before{background:linear-gradient(90deg,#222,#8f8f8f)}
+.homepageFreedomWallScene[data-theme="newspaper"] .freedomWallPromptEyebrow{color:#555;font-family:Georgia,"Times New Roman",serif;letter-spacing:.18em}
+.homepageFreedomWallScene[data-theme="newspaper"] .freedomWallPromptCard h2,.homepageFreedomWallScene[data-theme="newspaper"] .freedomWallNote p{font-family:Georgia,"Times New Roman",serif;color:#1b1b1b;font-weight:900}
+.homepageFreedomWallScene[data-theme="newspaper"] .freedomWallPromptCard p,.homepageFreedomWallScene[data-theme="newspaper"] .freedomWallNote small{font-family:"Times New Roman",Georgia,serif;color:#434343;font-weight:700}
+.homepageFreedomWallScene[data-theme="newspaper"] .freedomWallNote{filter:grayscale(1); border-radius:2px; box-shadow:0 10px 18px rgba(0,0,0,.10)}
+
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallPromptCard{background:rgba(255,255,252,.98);border-color:#d2b18f;box-shadow:0 18px 30px rgba(55,33,18,.18)}
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallPromptCard::before{background:linear-gradient(90deg,#fff8ea,#e3c7a8)}
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallPromptEyebrow{color:#93735a;font-family:"Trebuchet MS",Arial,sans-serif}
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallPromptCard h2,.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallNote p{font-family:"Segoe Print","Comic Sans MS",cursive;color:#5e4a39;font-weight:800}
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallPromptCard p,.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallNote small{font-family:"Trebuchet MS",Arial,sans-serif;color:#6d5d4e;font-weight:700}
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallNote{border-radius:2px;padding-bottom:18px;box-shadow:0 14px 22px rgba(50,31,16,.18)}
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallNote::after{display:none}
+
+.homepageFreedomWallScene[data-theme="retro-arcade"] .freedomWallPromptCard{background:rgba(19,16,44,.94);border-color:#4bf6ff;box-shadow:0 0 0 2px rgba(255,60,194,.65),0 16px 28px rgba(0,0,0,.34)}
+.homepageFreedomWallScene[data-theme="retro-arcade"] .freedomWallPromptCard::before{background:linear-gradient(90deg,#ff49cc,#4bf6ff,#ffee54)}
+.homepageFreedomWallScene[data-theme="retro-arcade"] .freedomWallPromptEyebrow{color:#ffef79;font-family:"Courier New",monospace;letter-spacing:.16em}
+.homepageFreedomWallScene[data-theme="retro-arcade"] .freedomWallPromptCard h2,.homepageFreedomWallScene[data-theme="retro-arcade"] .freedomWallNote p{font-family:"Courier New",monospace;color:#f4f8ff;font-weight:900;text-transform:uppercase}
+.homepageFreedomWallScene[data-theme="retro-arcade"] .freedomWallPromptCard p,.homepageFreedomWallScene[data-theme="retro-arcade"] .freedomWallNote small{font-family:"Courier New",monospace;color:#d6dff6;font-weight:700}
+.homepageFreedomWallScene[data-theme="retro-arcade"] .freedomWallNote{border:2px solid rgba(255,255,255,.74); box-shadow:0 0 0 2px rgba(255,60,194,.55), 6px 6px 0 rgba(75,246,255,.45); border-radius:0}
+
+.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallPromptCard{background:rgba(10,16,20,.95);border-color:#26333c;box-shadow:0 18px 32px rgba(0,0,0,.35)}
+.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallPromptCard::before{background:linear-gradient(90deg,#26ff79,#56a4ff,#ffd452)}
+.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallPromptEyebrow{color:#59b1ff;font-family:"Courier New",monospace;letter-spacing:.16em}
+.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallPromptCard h2,.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallNote p{font-family:"Courier New",monospace;color:#edf5f2;font-weight:800}
+.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallPromptCard p,.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallNote small{font-family:"Courier New",monospace;color:#a3b7ba;font-weight:700}
+.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallNote{border:1px solid rgba(255,255,255,.14);box-shadow:0 12px 24px rgba(0,0,0,.26)}
+.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallNote::before{background:#26ff79}
+
+.homepageFreedomWallScene[data-theme="rainbow"] .freedomWallPromptCard{background:rgba(255,255,255,.95);border-color:#d5d7f6;border-radius:28px;box-shadow:0 16px 28px rgba(91,124,177,.16)}
+.homepageFreedomWallScene[data-theme="rainbow"] .freedomWallPromptCard::before{background:linear-gradient(90deg,#ff7f7f,#ffbe5c,#ffeb70,#77cf7f,#74b7ff,#ae88ff)}
+.homepageFreedomWallScene[data-theme="rainbow"] .freedomWallPromptEyebrow{color:#8d6ac8;font-family:"Trebuchet MS",Arial,sans-serif}
+.homepageFreedomWallScene[data-theme="rainbow"] .freedomWallPromptCard h2,.homepageFreedomWallScene[data-theme="rainbow"] .freedomWallNote p{font-family:"Trebuchet MS",Arial,sans-serif;font-weight:900;color:#4860aa}
+.homepageFreedomWallScene[data-theme="rainbow"] .freedomWallPromptCard p,.homepageFreedomWallScene[data-theme="rainbow"] .freedomWallNote small{font-family:"Trebuchet MS",Arial,sans-serif;color:#627199;font-weight:700}
+.homepageFreedomWallScene[data-theme="rainbow"] .freedomWallNote{border-radius:16px; box-shadow:0 12px 22px rgba(99,118,184,.16)}
+
+.homepageFreedomWallScene[data-theme="brick-alley"] .freedomWallPromptCard{background:rgba(255,250,243,.96);border-color:#a35c48;box-shadow:0 18px 30px rgba(55,25,19,.24)}
+.homepageFreedomWallScene[data-theme="brick-alley"] .freedomWallPromptCard::before{background:linear-gradient(90deg,#d47652,#f4dab7)}
+.homepageFreedomWallScene[data-theme="brick-alley"] .freedomWallPromptEyebrow{color:#a55d4b;font-family:Georgia,"Times New Roman",serif}
+.homepageFreedomWallScene[data-theme="brick-alley"] .freedomWallPromptCard h2,.homepageFreedomWallScene[data-theme="brick-alley"] .freedomWallNote p{font-family:Georgia,"Times New Roman",serif;color:#5a3426;font-weight:800}
+.homepageFreedomWallScene[data-theme="brick-alley"] .freedomWallPromptCard p,.homepageFreedomWallScene[data-theme="brick-alley"] .freedomWallNote small{font-family:"Trebuchet MS",Arial,sans-serif;color:#6f5744;font-weight:700}
+.homepageFreedomWallScene[data-theme="brick-alley"] .freedomWallNote{border-radius:0;box-shadow:0 14px 24px rgba(42,21,16,.22)}
+
+.homepageFreedomWallScene[data-theme="school-fair"] .freedomWallPromptCard{background:rgba(255,255,249,.96);border-color:#ebb25b;border-radius:22px;box-shadow:0 16px 28px rgba(122,83,22,.18)}
+.homepageFreedomWallScene[data-theme="school-fair"] .freedomWallPromptCard::before{background:linear-gradient(90deg,#ff5c5c,#4893ff,#ffd34a,#63c77b)}
+.homepageFreedomWallScene[data-theme="school-fair"] .freedomWallPromptEyebrow{color:#cb8d1f;font-family:"Trebuchet MS",Arial,sans-serif}
+.homepageFreedomWallScene[data-theme="school-fair"] .freedomWallPromptCard h2,.homepageFreedomWallScene[data-theme="school-fair"] .freedomWallNote p{font-family:"Trebuchet MS",Arial,sans-serif;color:#3b517d;font-weight:900}
+.homepageFreedomWallScene[data-theme="school-fair"] .freedomWallPromptCard p,.homepageFreedomWallScene[data-theme="school-fair"] .freedomWallNote small{font-family:"Trebuchet MS",Arial,sans-serif;color:#6b6457;font-weight:700}
+.homepageFreedomWallScene[data-theme="school-fair"] .freedomWallNote{clip-path:polygon(0 0,100% 0,100% 82%,88% 100%,12% 100%,0 82%)}
+
+.homepageFreedomWallScene[data-theme="eco"] .freedomWallPromptCard{background:rgba(248,244,228,.96);border-color:#8c7a4a;box-shadow:0 16px 28px rgba(57,47,22,.18)}
+.homepageFreedomWallScene[data-theme="eco"] .freedomWallPromptCard::before{background:linear-gradient(90deg,#6e9255,#d2c48a)}
+.homepageFreedomWallScene[data-theme="eco"] .freedomWallPromptEyebrow{color:#68824d;font-family:Georgia,"Times New Roman",serif}
+.homepageFreedomWallScene[data-theme="eco"] .freedomWallPromptCard h2,.homepageFreedomWallScene[data-theme="eco"] .freedomWallNote p{font-family:Georgia,"Times New Roman",serif;color:#455337;font-weight:800}
+.homepageFreedomWallScene[data-theme="eco"] .freedomWallPromptCard p,.homepageFreedomWallScene[data-theme="eco"] .freedomWallNote small{font-family:"Trebuchet MS",Arial,sans-serif;color:#677055;font-weight:700}
+.homepageFreedomWallScene[data-theme="eco"] .freedomWallNote{border-radius:8px;filter:saturate(.92)}
+
+.homepageFreedomWallScene[data-theme="dreamy-clouds"] .freedomWallPromptCard{background:rgba(255,255,255,.92);border-color:#d9cfff;border-radius:28px;box-shadow:0 18px 30px rgba(123,117,187,.16)}
+.homepageFreedomWallScene[data-theme="dreamy-clouds"] .freedomWallPromptCard::before{background:linear-gradient(90deg,#dbc4ff,#bde4ff,#ffd0f4)}
+.homepageFreedomWallScene[data-theme="dreamy-clouds"] .freedomWallPromptEyebrow{color:#9a79c8;font-family:Georgia,"Times New Roman",serif}
+.homepageFreedomWallScene[data-theme="dreamy-clouds"] .freedomWallPromptCard h2,.homepageFreedomWallScene[data-theme="dreamy-clouds"] .freedomWallNote p{font-family:Georgia,"Times New Roman",serif;color:#7966af;font-weight:800}
+.homepageFreedomWallScene[data-theme="dreamy-clouds"] .freedomWallPromptCard p,.homepageFreedomWallScene[data-theme="dreamy-clouds"] .freedomWallNote small{font-family:"Trebuchet MS",Arial,sans-serif;color:#7e88a7;font-weight:700}
+.homepageFreedomWallScene[data-theme="dreamy-clouds"] .freedomWallNote{border-radius:20px;box-shadow:0 10px 24px rgba(123,117,187,.14)}
+
+.homepageFreedomWallScene[data-theme="chalkboard"] .freedomWallPromptCard{background:rgba(242,249,240,.95);border-color:#7f6a4e;box-shadow:0 18px 32px rgba(0,0,0,.28)}
+.homepageFreedomWallScene[data-theme="chalkboard"] .freedomWallPromptCard::before{background:linear-gradient(90deg,#d8bf96,#fbf5e5)}
+.homepageFreedomWallScene[data-theme="chalkboard"] .freedomWallPromptEyebrow{color:#4e6d51;font-family:"Segoe Print","Comic Sans MS",cursive}
+.homepageFreedomWallScene[data-theme="chalkboard"] .freedomWallPromptCard h2,.homepageFreedomWallScene[data-theme="chalkboard"] .freedomWallNote p{font-family:"Segoe Print","Comic Sans MS",cursive;color:#244734;font-weight:900}
+.homepageFreedomWallScene[data-theme="chalkboard"] .freedomWallPromptCard p,.homepageFreedomWallScene[data-theme="chalkboard"] .freedomWallNote small{font-family:"Segoe Print","Comic Sans MS",cursive;color:#4d6653;font-weight:700}
+.homepageFreedomWallScene[data-theme="chalkboard"] .freedomWallNote{border-radius:5px; transform-origin:top center}
+
+.homepageFreedomWallScene[data-theme="detective"] .freedomWallPromptCard{background:rgba(255,250,239,.96);border-color:#8f6846;box-shadow:0 18px 30px rgba(49,27,13,.18)}
+.homepageFreedomWallScene[data-theme="detective"] .freedomWallPromptCard::before{background:linear-gradient(90deg,#9a6a42,#ceb289)}
+.homepageFreedomWallScene[data-theme="detective"] .freedomWallPromptEyebrow{color:#8f5a37;font-family:"Courier New",monospace;letter-spacing:.14em}
+.homepageFreedomWallScene[data-theme="detective"] .freedomWallPromptCard h2,.homepageFreedomWallScene[data-theme="detective"] .freedomWallNote p{font-family:Georgia,"Times New Roman",serif;color:#4b3322;font-weight:900}
+.homepageFreedomWallScene[data-theme="detective"] .freedomWallPromptCard p,.homepageFreedomWallScene[data-theme="detective"] .freedomWallNote small{font-family:"Courier New",monospace;color:#6f5c48;font-weight:700}
+.homepageFreedomWallScene[data-theme="detective"] .freedomWallNotePin{background:#a53b3b}
+
+.homepageFreedomWallScene[data-theme="appreciation"] .freedomWallPromptCard{background:rgba(255,255,252,.96);border-color:#edb8c7;border-radius:24px;box-shadow:0 16px 28px rgba(186,111,141,.16)}
+.homepageFreedomWallScene[data-theme="appreciation"] .freedomWallPromptCard::before{background:linear-gradient(90deg,#f2bfd1,#ffe5ed)}
+.homepageFreedomWallScene[data-theme="appreciation"] .freedomWallPromptEyebrow{color:#c46d8e;font-family:Georgia,"Times New Roman",serif}
+.homepageFreedomWallScene[data-theme="appreciation"] .freedomWallPromptCard h2,.homepageFreedomWallScene[data-theme="appreciation"] .freedomWallNote p{font-family:Georgia,"Times New Roman",serif;color:#8b4d64;font-weight:800}
+.homepageFreedomWallScene[data-theme="appreciation"] .freedomWallPromptCard p,.homepageFreedomWallScene[data-theme="appreciation"] .freedomWallNote small{font-family:"Trebuchet MS",Arial,sans-serif;color:#8d7080;font-weight:700}
+.homepageFreedomWallScene[data-theme="appreciation"] .freedomWallNote{border-radius:10px 10px 16px 10px}
+
+.homepageFreedomWallScene[data-theme="seasonal"] .freedomWallPromptCard{background:rgba(255,255,255,.93);border-color:#cfd5ef;box-shadow:0 16px 28px rgba(10,18,49,.22)}
+.homepageFreedomWallScene[data-theme="seasonal"] .freedomWallPromptCard::before{background:linear-gradient(90deg,#7fa2ff,#f5cf5f,#ff87c7)}
+.homepageFreedomWallScene[data-theme="seasonal"] .freedomWallPromptEyebrow{color:#7a8fc9;font-family:"Trebuchet MS",Arial,sans-serif}
+.homepageFreedomWallScene[data-theme="seasonal"] .freedomWallPromptCard h2,.homepageFreedomWallScene[data-theme="seasonal"] .freedomWallNote p{font-family:Georgia,"Times New Roman",serif;color:#33436d;font-weight:800}
+.homepageFreedomWallScene[data-theme="seasonal"] .freedomWallPromptCard p,.homepageFreedomWallScene[data-theme="seasonal"] .freedomWallNote small{font-family:"Trebuchet MS",Arial,sans-serif;color:#657190;font-weight:700}
+.homepageFreedomWallScene[data-theme="seasonal"][data-seasonal-variant="christmas"] .freedomWallPromptCard::before{background:linear-gradient(90deg,#d12b2b,#f6df73,#2ab16a)}
+.homepageFreedomWallScene[data-theme="seasonal"][data-seasonal-variant="christmas"] .freedomWallPromptEyebrow{color:#2c8f59}
+.homepageFreedomWallScene[data-theme="seasonal"][data-seasonal-variant="halloween"] .freedomWallPromptCard{background:rgba(25,17,37,.94);border-color:#7c4a18}
+.homepageFreedomWallScene[data-theme="seasonal"][data-seasonal-variant="halloween"] .freedomWallPromptCard h2,.homepageFreedomWallScene[data-theme="seasonal"][data-seasonal-variant="halloween"] .freedomWallNote p{color:#fff3df}
+.homepageFreedomWallScene[data-theme="seasonal"][data-seasonal-variant="halloween"] .freedomWallPromptCard p,.homepageFreedomWallScene[data-theme="seasonal"][data-seasonal-variant="halloween"] .freedomWallNote small{color:#d6c9e6}
+.homepageFreedomWallScene[data-theme="seasonal"][data-seasonal-variant="halloween"] .freedomWallPromptCard::before{background:linear-gradient(90deg,#ff9126,#7b53ff)}
+.homepageFreedomWallScene[data-theme="seasonal"][data-seasonal-variant="valentine"] .freedomWallPromptCard::before{background:linear-gradient(90deg,#ff7ca8,#ffd4e4)}
+.homepageFreedomWallScene[data-theme="seasonal"][data-seasonal-variant="graduation"] .freedomWallPromptCard{background:rgba(255,255,255,.95);border-color:#bca56b}
+.homepageFreedomWallScene[data-theme="seasonal"][data-seasonal-variant="graduation"] .freedomWallPromptCard::before{background:linear-gradient(90deg,#1e3d75,#d9bf74)}
+.homepageFreedomWallScene[data-theme="seasonal"][data-seasonal-variant="newyear"] .freedomWallPromptCard{background:rgba(20,26,44,.94);border-color:#445784}
+.homepageFreedomWallScene[data-theme="seasonal"][data-seasonal-variant="newyear"] .freedomWallPromptCard h2,.homepageFreedomWallScene[data-theme="seasonal"][data-seasonal-variant="newyear"] .freedomWallNote p{color:#ffffff}
+.homepageFreedomWallScene[data-theme="seasonal"][data-seasonal-variant="newyear"] .freedomWallPromptCard p,.homepageFreedomWallScene[data-theme="seasonal"][data-seasonal-variant="newyear"] .freedomWallNote small{color:#d8dff0}
+.homepageFreedomWallScene[data-theme="seasonal"][data-seasonal-variant="newyear"] .freedomWallPromptCard::before{background:linear-gradient(90deg,#6dc2ff,#f7cf63,#ff7cbf)}
+
+.homepageFreedomWallScene[data-theme="neon-music"] .freedomWallPromptCard{background:rgba(17,11,30,.94);border-color:#5a4f88;box-shadow:0 0 0 1px rgba(255,64,189,.32),0 18px 34px rgba(0,0,0,.38)}
+.homepageFreedomWallScene[data-theme="neon-music"] .freedomWallPromptCard::before{background:linear-gradient(90deg,#ff40bd,#42f1ff,#90ff50)}
+.homepageFreedomWallScene[data-theme="neon-music"] .freedomWallPromptEyebrow{color:#8eff7d;font-family:"Trebuchet MS",Arial,sans-serif;letter-spacing:.16em}
+.homepageFreedomWallScene[data-theme="neon-music"] .freedomWallPromptCard h2,.homepageFreedomWallScene[data-theme="neon-music"] .freedomWallNote p{font-family:"Arial Black","Trebuchet MS",Arial,sans-serif;color:#f9fbff;font-weight:900}
+.homepageFreedomWallScene[data-theme="neon-music"] .freedomWallPromptCard p,.homepageFreedomWallScene[data-theme="neon-music"] .freedomWallNote small{font-family:"Trebuchet MS",Arial,sans-serif;color:#d9def4;font-weight:700}
+.homepageFreedomWallScene[data-theme="neon-music"] .freedomWallNote{border:2px solid rgba(255,255,255,.18); box-shadow:0 0 0 2px rgba(255,64,189,.34),0 12px 24px rgba(0,0,0,.26); border-radius:14px}
+
+/* Small-screen refinements */
+@media (max-width:700px){
+  .homepageFreedomWallScene[data-theme="newspaper"] .freedomWallBg::after{font-size:15px; top:6px}
+  .homepageFreedomWallScene[data-theme="chalkboard"] .freedomWallBg::before{inset:2.6%; box-shadow: inset 0 0 0 6px #a47d55, inset 0 0 0 9px #d7bb91, 0 10px 18px rgba(0,0,0,.25)}
+  .homepageFreedomWallScene[data-theme="school-fair"] .freedomWallBg::before{background-size:48px 30px,48px 30px,48px 30px}
+  .homepageFreedomWallScene[data-theme="library"] .freedomWallBg::before{opacity:.62}
+}
+
+
+/* v470: BeKind Wall theme readability + stronger themed notes */
+/* Admin safeguard so theme selector stays visible */
+#freedomWallTheme{display:block !important; width:100%}
+label[for="freedomWallTheme"]{display:block}
+
+/* Higher-contrast baseline for v469 added themes */
+.homepageFreedomWallScene[data-theme="cafe"] .freedomWallNote,
+.homepageFreedomWallScene[data-theme="sakura"] .freedomWallNote,
+.homepageFreedomWallScene[data-theme="beach"] .freedomWallNote,
+.homepageFreedomWallScene[data-theme="art-room"] .freedomWallNote,
+.homepageFreedomWallScene[data-theme="library"] .freedomWallNote,
+.homepageFreedomWallScene[data-theme="newspaper"] .freedomWallNote,
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallNote,
+.homepageFreedomWallScene[data-theme="rainbow"] .freedomWallNote,
+.homepageFreedomWallScene[data-theme="brick-alley"] .freedomWallNote,
+.homepageFreedomWallScene[data-theme="school-fair"] .freedomWallNote,
+.homepageFreedomWallScene[data-theme="eco"] .freedomWallNote,
+.homepageFreedomWallScene[data-theme="dreamy-clouds"] .freedomWallNote,
+.homepageFreedomWallScene[data-theme="detective"] .freedomWallNote,
+.homepageFreedomWallScene[data-theme="appreciation"] .freedomWallNote,
+.homepageFreedomWallScene[data-theme="seasonal"] .freedomWallNote,
+.homepageFreedomWallScene[data-theme="chalkboard"] .freedomWallNote,
+.homepageFreedomWallScene[data-theme="cafe"] .freedomWallPromptCard,
+.homepageFreedomWallScene[data-theme="sakura"] .freedomWallPromptCard,
+.homepageFreedomWallScene[data-theme="beach"] .freedomWallPromptCard,
+.homepageFreedomWallScene[data-theme="art-room"] .freedomWallPromptCard,
+.homepageFreedomWallScene[data-theme="library"] .freedomWallPromptCard,
+.homepageFreedomWallScene[data-theme="newspaper"] .freedomWallPromptCard,
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallPromptCard,
+.homepageFreedomWallScene[data-theme="rainbow"] .freedomWallPromptCard,
+.homepageFreedomWallScene[data-theme="brick-alley"] .freedomWallPromptCard,
+.homepageFreedomWallScene[data-theme="school-fair"] .freedomWallPromptCard,
+.homepageFreedomWallScene[data-theme="eco"] .freedomWallPromptCard,
+.homepageFreedomWallScene[data-theme="dreamy-clouds"] .freedomWallPromptCard,
+.homepageFreedomWallScene[data-theme="detective"] .freedomWallPromptCard,
+.homepageFreedomWallScene[data-theme="appreciation"] .freedomWallPromptCard,
+.homepageFreedomWallScene[data-theme="seasonal"] .freedomWallPromptCard,
+.homepageFreedomWallScene[data-theme="chalkboard"] .freedomWallPromptCard{color:#1f1f1f}
+
+.homepageFreedomWallScene[data-theme="galaxy"] .freedomWallNote,
+.homepageFreedomWallScene[data-theme="retro-arcade"] .freedomWallNote,
+.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallNote,
+.homepageFreedomWallScene[data-theme="neon-music"] .freedomWallNote,
+.homepageFreedomWallScene[data-theme="galaxy"] .freedomWallPromptCard,
+.homepageFreedomWallScene[data-theme="retro-arcade"] .freedomWallPromptCard,
+.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallPromptCard,
+.homepageFreedomWallScene[data-theme="neon-music"] .freedomWallPromptCard{color:#f6f9ff}
+
+/* readable note texts */
+.homepageFreedomWallScene[data-theme="cafe"] .freedomWallNote p,
+.homepageFreedomWallScene[data-theme="sakura"] .freedomWallNote p,
+.homepageFreedomWallScene[data-theme="beach"] .freedomWallNote p,
+.homepageFreedomWallScene[data-theme="art-room"] .freedomWallNote p,
+.homepageFreedomWallScene[data-theme="library"] .freedomWallNote p,
+.homepageFreedomWallScene[data-theme="newspaper"] .freedomWallNote p,
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallNote p,
+.homepageFreedomWallScene[data-theme="rainbow"] .freedomWallNote p,
+.homepageFreedomWallScene[data-theme="brick-alley"] .freedomWallNote p,
+.homepageFreedomWallScene[data-theme="school-fair"] .freedomWallNote p,
+.homepageFreedomWallScene[data-theme="eco"] .freedomWallNote p,
+.homepageFreedomWallScene[data-theme="dreamy-clouds"] .freedomWallNote p,
+.homepageFreedomWallScene[data-theme="detective"] .freedomWallNote p,
+.homepageFreedomWallScene[data-theme="appreciation"] .freedomWallNote p,
+.homepageFreedomWallScene[data-theme="seasonal"] .freedomWallNote p,
+.homepageFreedomWallScene[data-theme="chalkboard"] .freedomWallNote p{color:#232323 !important; text-shadow:none}
+.homepageFreedomWallScene[data-theme="cafe"] .freedomWallNote small,
+.homepageFreedomWallScene[data-theme="sakura"] .freedomWallNote small,
+.homepageFreedomWallScene[data-theme="beach"] .freedomWallNote small,
+.homepageFreedomWallScene[data-theme="art-room"] .freedomWallNote small,
+.homepageFreedomWallScene[data-theme="library"] .freedomWallNote small,
+.homepageFreedomWallScene[data-theme="newspaper"] .freedomWallNote small,
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallNote small,
+.homepageFreedomWallScene[data-theme="rainbow"] .freedomWallNote small,
+.homepageFreedomWallScene[data-theme="brick-alley"] .freedomWallNote small,
+.homepageFreedomWallScene[data-theme="school-fair"] .freedomWallNote small,
+.homepageFreedomWallScene[data-theme="eco"] .freedomWallNote small,
+.homepageFreedomWallScene[data-theme="dreamy-clouds"] .freedomWallNote small,
+.homepageFreedomWallScene[data-theme="detective"] .freedomWallNote small,
+.homepageFreedomWallScene[data-theme="appreciation"] .freedomWallNote small,
+.homepageFreedomWallScene[data-theme="seasonal"] .freedomWallNote small,
+.homepageFreedomWallScene[data-theme="chalkboard"] .freedomWallNote small{color:#4a4a4a !important; opacity:.82}
+
+.homepageFreedomWallScene[data-theme="galaxy"] .freedomWallNote p,
+.homepageFreedomWallScene[data-theme="retro-arcade"] .freedomWallNote p,
+.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallNote p,
+.homepageFreedomWallScene[data-theme="neon-music"] .freedomWallNote p{color:#f4f8ff !important; text-shadow:none}
+.homepageFreedomWallScene[data-theme="galaxy"] .freedomWallNote small,
+.homepageFreedomWallScene[data-theme="retro-arcade"] .freedomWallNote small,
+.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallNote small,
+.homepageFreedomWallScene[data-theme="neon-music"] .freedomWallNote small{color:#d9e1f1 !important; opacity:.9}
+
+/* stronger themed notes */
+/* Polaroid: real white frame + photo area + caption area */
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallNote{
+  background:#fff !important;
+  border:1px solid #e9ddd2;
+  border-radius:4px;
+  padding:72px 12px 18px;
+  box-shadow:0 16px 24px rgba(51,31,15,.18);
+  min-inline-size:112px;
+}
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallNote::before{
+  content:"";
+  position:absolute;
+  left:10px; right:10px; top:12px; height:48px;
+  border-radius:2px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,0)),
+    radial-gradient(circle at 72% 24%, rgba(255,235,169,.88) 0 12px, transparent 13px),
+    linear-gradient(180deg,#8fc2e7 0%,#a8d8ef 52%,#e6d7b4 52%,#dbc9a2 100%);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.08);
+}
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallNote p{
+  text-align:left;
+  font-family:"Segoe Print","Comic Sans MS",cursive !important;
+  font-size:clamp(12px,1.2vw,16px);
+  line-height:1.2;
+  color:#4a3e34 !important;
+}
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallNote small{
+  text-align:left;
+  font-family:"Segoe Print","Comic Sans MS",cursive !important;
+  color:#7a695b !important;
+  margin-top:6px;
+}
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallNotePin{display:none}
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallPromptCard{transform:rotate(-.4deg)}
+
+/* Newspaper: cleaner clipping look */
+.homepageFreedomWallScene[data-theme="newspaper"] .freedomWallNote{
+  background:linear-gradient(180deg,#fffef8,#f1eddf) !important;
+  border:1px solid rgba(0,0,0,.22);
+  border-radius:2px;
+  box-shadow:0 10px 18px rgba(0,0,0,.10);
+  filter:grayscale(1);
+}
+.homepageFreedomWallScene[data-theme="newspaper"] .freedomWallNote::before{
+  content:"NEWS • NOTE";
+  position:absolute;
+  left:10px; right:10px; top:8px;
+  font:900 9px/1 Georgia,"Times New Roman",serif;
+  letter-spacing:.14em;
+  color:#333;
+  border-bottom:1px solid rgba(0,0,0,.18);
+  padding-bottom:4px;
+}
+.homepageFreedomWallScene[data-theme="newspaper"] .freedomWallNote{padding-top:28px}
+.homepageFreedomWallScene[data-theme="newspaper"] .freedomWallNote p{font-family:Georgia,"Times New Roman",serif !important}
+.homepageFreedomWallScene[data-theme="newspaper"] .freedomWallNotePin{display:none}
+
+/* Coding lab: real editor window cards */
+.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallNote{
+  background:linear-gradient(180deg,#11161b 0 24px,#1a232c 24px 100%) !important;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:10px;
+  padding-top:34px;
+}
+.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallNote::before{
+  content:"";
+  position:absolute; left:10px; top:8px; width:36px; height:8px;
+  border-radius:999px;
+  background:radial-gradient(circle at 4px 4px,#ff6b6b 0 3px,transparent 4px),radial-gradient(circle at 18px 4px,#ffd166 0 3px,transparent 4px),radial-gradient(circle at 32px 4px,#06d6a0 0 3px,transparent 4px);
+}
+.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallNote p,
+.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallNote small{font-family:"Courier New",monospace !important; text-align:left}
+.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallNotePin{display:none}
+
+/* Retro arcade: pixel box but readable */
+.homepageFreedomWallScene[data-theme="retro-arcade"] .freedomWallNote{
+  background:linear-gradient(180deg,#221a45,#151031) !important;
+  border:3px solid #f7f7ff;
+  border-radius:0;
+  box-shadow:0 0 0 3px #ff47ca, 6px 6px 0 rgba(75,246,255,.45);
+}
+.homepageFreedomWallScene[data-theme="retro-arcade"] .freedomWallNote p,
+.homepageFreedomWallScene[data-theme="retro-arcade"] .freedomWallNote small{font-family:"Courier New",monospace !important; text-transform:none; letter-spacing:0}
+
+/* Galaxy: hologram cards */
+.homepageFreedomWallScene[data-theme="galaxy"] .freedomWallNote{
+  background:linear-gradient(160deg, rgba(16,27,62,.95), rgba(47,34,86,.88)) !important;
+  border:1px solid rgba(137,224,255,.48);
+  box-shadow:0 0 0 1px rgba(255,255,255,.08) inset, 0 14px 28px rgba(0,0,0,.32), 0 0 18px rgba(116,195,255,.12);
+}
+.homepageFreedomWallScene[data-theme="galaxy"] .freedomWallNote::before{
+  content:"";
+  position:absolute; inset:0;
+  background:linear-gradient(115deg, transparent 20%, rgba(255,255,255,.18) 28%, transparent 34%);
+}
+.homepageFreedomWallScene[data-theme="galaxy"] .freedomWallNotePin{background:#a7f2ff}
+
+/* Café: order card look */
+.homepageFreedomWallScene[data-theme="cafe"] .freedomWallNote{
+  background:linear-gradient(180deg,#fff7eb,#f5e3c5) !important;
+  border:1px solid rgba(135,94,57,.22);
+  border-radius:14px;
+}
+.homepageFreedomWallScene[data-theme="cafe"] .freedomWallNote::before{
+  content:"ORDER";
+  position:absolute; left:10px; top:8px;
+  font:900 9px/1.1 "Trebuchet MS",Arial,sans-serif;
+  letter-spacing:.14em; color:#9a6f48;
+}
+.homepageFreedomWallScene[data-theme="cafe"] .freedomWallNote{padding-top:24px}
+.homepageFreedomWallScene[data-theme="cafe"] .freedomWallNote p{text-align:left !important}
+.homepageFreedomWallScene[data-theme="cafe"] .freedomWallNote small{text-align:right !important}
+
+/* Sakura: ema / wish card feel */
+.homepageFreedomWallScene[data-theme="sakura"] .freedomWallNote{
+  background:linear-gradient(180deg,#fff8fb,#ffe7ef) !important;
+  border:1px solid rgba(214,151,176,.28);
+  border-radius:14px 14px 16px 16px;
+  box-shadow:0 12px 20px rgba(165,110,132,.14);
+}
+.homepageFreedomWallScene[data-theme="sakura"] .freedomWallNote::before{
+  content:"";
+  position:absolute; left:50%; top:-7px; translate:-50% 0;
+  width:18px; height:10px; border-radius:0 0 9px 9px;
+  background:#c57a96;
+}
+.homepageFreedomWallScene[data-theme="sakura"] .freedomWallNotePin{display:none}
+
+/* Beach: postcard tag */
+.homepageFreedomWallScene[data-theme="beach"] .freedomWallNote{
+  background:linear-gradient(180deg,#fffdf8,#fff2d8) !important;
+  border:1px solid rgba(221,183,104,.30);
+  border-radius:10px 10px 18px 18px;
+}
+.homepageFreedomWallScene[data-theme="beach"] .freedomWallNote::before{
+  content:"POSTCARD";
+  position:absolute; right:10px; top:8px;
+  font:800 9px/1 Arial,sans-serif; letter-spacing:.12em; color:#cf9650;
+}
+
+/* Art room: cut paper card */
+.homepageFreedomWallScene[data-theme="art-room"] .freedomWallNote{
+  border:2px solid rgba(75,64,54,.12);
+  box-shadow:0 14px 20px rgba(97,77,55,.18);
+}
+.homepageFreedomWallScene[data-theme="art-room"] .freedomWallNote p{font-family:"Trebuchet MS",Arial,sans-serif !important; color:#3b3b3b !important}
+.homepageFreedomWallScene[data-theme="art-room"] .freedomWallNote small{font-family:"Trebuchet MS",Arial,sans-serif !important}
+
+/* Library: index/book card */
+.homepageFreedomWallScene[data-theme="library"] .freedomWallNote{
+  background:linear-gradient(180deg,#fffdf8,#f3ead8) !important;
+  border-left:8px solid #9f6d35;
+  border-radius:4px;
+}
+.homepageFreedomWallScene[data-theme="library"] .freedomWallNote::before{
+  content:"INDEX CARD";
+  position:absolute; top:7px; right:8px;
+  font:800 8px/1 Georgia,"Times New Roman",serif; color:#8a6a4a; letter-spacing:.12em;
+}
+.homepageFreedomWallScene[data-theme="library"] .freedomWallNote{padding-top:22px}
+
+/* Rainbow: softer cloud cards */
+.homepageFreedomWallScene[data-theme="rainbow"] .freedomWallNote{
+  border-radius:18px;
+  box-shadow:0 12px 22px rgba(108,129,184,.16);
+}
+.homepageFreedomWallScene[data-theme="rainbow"] .freedomWallNote::after{border-color:transparent transparent rgba(255,255,255,.38) transparent}
+
+/* Brick alley: community poster */
+.homepageFreedomWallScene[data-theme="brick-alley"] .freedomWallNote{
+  background:linear-gradient(180deg,#fffaf3,#efe1d0) !important;
+  border:1px solid rgba(120,79,60,.18);
+  border-radius:2px;
+  box-shadow:0 14px 24px rgba(42,21,16,.22);
+}
+.homepageFreedomWallScene[data-theme="brick-alley"] .freedomWallNote::before{
+  content:"POSTED";
+  position:absolute; left:10px; top:8px;
+  font:900 8px/1 Arial,sans-serif; letter-spacing:.14em; color:#af6e53;
+}
+.homepageFreedomWallScene[data-theme="brick-alley"] .freedomWallNote{padding-top:23px}
+
+/* School fair: ticket style */
+.homepageFreedomWallScene[data-theme="school-fair"] .freedomWallNote{
+  background:linear-gradient(180deg,#fffaf0,#fff0d9) !important;
+  border:2px dashed rgba(223,151,59,.65);
+  border-radius:14px;
+}
+.homepageFreedomWallScene[data-theme="school-fair"] .freedomWallNote::before{
+  content:"FAIR";
+  position:absolute; right:12px; top:9px;
+  font:900 9px/1 Arial,sans-serif; letter-spacing:.14em; color:#cf8b1e;
+}
+.homepageFreedomWallScene[data-theme="school-fair"] .freedomWallNotePin{display:none}
+
+/* Eco: recycled kraft paper */
+.homepageFreedomWallScene[data-theme="eco"] .freedomWallNote{
+  background:linear-gradient(180deg,#f2ebd5,#e2d6b2) !important;
+  border:1px solid rgba(117,102,62,.24);
+  box-shadow:0 10px 18px rgba(72,61,31,.16);
+}
+.homepageFreedomWallScene[data-theme="eco"] .freedomWallNote::before{
+  content:"";
+  position:absolute; inset:0;
+  background:radial-gradient(circle at 10px 10px, rgba(111,96,58,.09) 0 1px, transparent 1.2px) 0 0/14px 14px;
+}
+.homepageFreedomWallScene[data-theme="eco"] .freedomWallNotePin{background:#8ca76b}
+
+/* Dreamy clouds: soft floating card */
+.homepageFreedomWallScene[data-theme="dreamy-clouds"] .freedomWallNote{
+  background:linear-gradient(180deg,#ffffff,#f7f6ff) !important;
+  border:1px solid rgba(186,176,236,.26);
+  border-radius:20px;
+}
+
+/* Chalkboard: taped classroom paper, not dark unreadable */
+.homepageFreedomWallScene[data-theme="chalkboard"] .freedomWallNote{
+  background:linear-gradient(180deg,#fffef9,#f2ead8) !important;
+  border:1px solid rgba(125,103,74,.26);
+  border-radius:4px;
+  box-shadow:0 12px 18px rgba(0,0,0,.18);
+}
+.homepageFreedomWallScene[data-theme="chalkboard"] .freedomWallNote::before{
+  content:"";
+  position:absolute; left:50%; top:6px; translate:-50% 0;
+  width:34px; height:12px; border-radius:3px; background:rgba(236,219,176,.92);
+}
+.homepageFreedomWallScene[data-theme="chalkboard"] .freedomWallNote p{font-family:"Segoe Print","Comic Sans MS",cursive !important; color:#34402e !important}
+.homepageFreedomWallScene[data-theme="chalkboard"] .freedomWallNote small{font-family:"Segoe Print","Comic Sans MS",cursive !important; color:#5f6858 !important}
+.homepageFreedomWallScene[data-theme="chalkboard"] .freedomWallNotePin{display:none}
+
+/* Detective: evidence paper */
+.homepageFreedomWallScene[data-theme="detective"] .freedomWallNote{
+  background:linear-gradient(180deg,#fffaf1,#efe3cf) !important;
+  border:1px solid rgba(117,89,59,.26);
+  border-radius:2px;
+  transform:rotate(var(--fw-note-tilt,0deg));
+}
+.homepageFreedomWallScene[data-theme="detective"] .freedomWallNote::before{
+  content:"CLUE";
+  position:absolute; left:10px; top:8px;
+  font:900 8px/1 "Courier New",monospace; letter-spacing:.16em; color:#8a5c37;
+}
+.homepageFreedomWallScene[data-theme="detective"] .freedomWallNote{padding-top:24px}
+
+/* Appreciation: letter card */
+.homepageFreedomWallScene[data-theme="appreciation"] .freedomWallNote{
+  background:linear-gradient(180deg,#fffdfd,#ffeef2) !important;
+  border:1px solid rgba(232,177,196,.34);
+  border-radius:10px 10px 16px 10px;
+}
+.homepageFreedomWallScene[data-theme="appreciation"] .freedomWallNote::before{
+  content:"❤";
+  position:absolute; right:10px; top:7px; font-size:14px; color:#cf7e9b;
+}
+
+/* Seasonal: safe note readability across variants */
+.homepageFreedomWallScene[data-theme="seasonal"] .freedomWallNote{
+  background:linear-gradient(180deg,#fffdf7,#f5f2e7) !important;
+  border:1px solid rgba(177,171,146,.28);
+}
+.homepageFreedomWallScene[data-theme="seasonal"][data-seasonal-variant="halloween"] .freedomWallNote{
+  background:linear-gradient(180deg,#fff3dd,#f8e6c2) !important;
+}
+.homepageFreedomWallScene[data-theme="seasonal"][data-seasonal-variant="newyear"] .freedomWallNote{
+  background:linear-gradient(180deg,#fffef9,#f4f1e7) !important;
+}
+
+/* Neon music: pass/ticket style */
+.homepageFreedomWallScene[data-theme="neon-music"] .freedomWallNote{
+  background:linear-gradient(180deg,#211635,#171124) !important;
+  border:2px solid rgba(255,255,255,.18);
+  border-radius:14px;
+  box-shadow:0 0 0 2px rgba(255,64,189,.24),0 14px 24px rgba(0,0,0,.28);
+}
+.homepageFreedomWallScene[data-theme="neon-music"] .freedomWallNote::before{
+  content:"PASS";
+  position:absolute; left:10px; top:8px;
+  font:900 9px/1 Arial,sans-serif; letter-spacing:.14em; color:#8eff7d;
+}
+.homepageFreedomWallScene[data-theme="neon-music"] .freedomWallNote{padding-top:24px}
+.homepageFreedomWallScene[data-theme="neon-music"] .freedomWallNotePin{display:none}
+
+/* Prompt readability fixes for dark prompts */
+.homepageFreedomWallScene[data-theme="galaxy"] .freedomWallPromptCard h2,
+.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallPromptCard h2,
+.homepageFreedomWallScene[data-theme="retro-arcade"] .freedomWallPromptCard h2,
+.homepageFreedomWallScene[data-theme="neon-music"] .freedomWallPromptCard h2{color:#f5f8ff !important}
+.homepageFreedomWallScene[data-theme="galaxy"] .freedomWallPromptCard p,
+.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallPromptCard p,
+.homepageFreedomWallScene[data-theme="retro-arcade"] .freedomWallPromptCard p,
+.homepageFreedomWallScene[data-theme="neon-music"] .freedomWallPromptCard p{color:#d8def0 !important}
+
+@media (max-width:700px){
+  .homepageFreedomWallScene[data-theme="polaroid"] .freedomWallNote{padding-top:64px}
+  .homepageFreedomWallScene[data-theme="polaroid"] .freedomWallNote::before{height:42px}
+  .homepageFreedomWallScene[data-theme="newspaper"] .freedomWallNote,
+  .homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallNote,
+  .homepageFreedomWallScene[data-theme="brick-alley"] .freedomWallNote,
+  .homepageFreedomWallScene[data-theme="detective"] .freedomWallNote,
+  .homepageFreedomWallScene[data-theme="cafe"] .freedomWallNote,
+  .homepageFreedomWallScene[data-theme="beach"] .freedomWallNote,
+  .homepageFreedomWallScene[data-theme="school-fair"] .freedomWallNote,
+  .homepageFreedomWallScene[data-theme="neon-music"] .freedomWallNote{padding-top:22px}
+}
+
+
+/* v471: ultra-smooth touch drag for SFK #BeKind Wall */
+.homepageEffectLayer.is-freedom-wall.is-note-dragging,
+.homepageEffectLayer.is-freedom-wall.is-note-dragging .homepageFreedomWallScene,
+.homepageEffectLayer.is-freedom-wall.is-note-dragging .freedomWallDragOverlay{
+  touch-action:none !important;
+  overscroll-behavior:none;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallNote.is-dragging{
+  transition:none !important;
+  animation:none !important;
+  filter:none !important;
+  will-change:transform;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+  transform-style:flat;
+  contain:layout paint style;
+  pointer-events:auto;
+}
+@media(max-width:700px){
+  .homepageEffectLayer.is-freedom-wall .freedomWallNote.is-dragging{
+    /* Keep the held card visibly lifted without expensive mobile blur/filter. */
+    box-shadow:0 10px 20px rgba(20,18,15,.22),0 2px 5px rgba(0,0,0,.10) !important;
+  }
+  .homepageEffectLayer.is-freedom-wall.is-note-dragging .freedomWallBg,
+  .homepageEffectLayer.is-freedom-wall.is-note-dragging .freedomWallPromptCard{
+    pointer-events:none;
+  }
+}

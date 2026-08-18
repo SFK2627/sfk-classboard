@@ -2,9 +2,9 @@
   let deferredInstallPrompt = null;
 
   const installButton = document.getElementById("installAppBtn");
-  const SW_URL = "./sw.js?v=v468-theme-matched-prompt-fonts";
-  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV455FreedomWallLive";
-  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV455FreedomWallLive";
+  const SW_URL = "./sw.js?v=v471-mobile-smooth-drag";
+  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV471MobileSmoothDrag";
+  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV471MobileSmoothDrag";
 
   function isStandaloneApp() {
     return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;

@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-main-pwa-v468-theme-matched-prompt-fonts";
+const CACHE_NAME = "sfk-main-pwa-v471-mobile-smooth-drag";
 const CACHE_PREFIXES_TO_DELETE = ["sfk-main-pwa-", "sfk-sw.js-"];
 const NAVIGATION_FALLBACK_URL = "./index.html";
 const NAVIGATION_TIMEOUT_MS = 2500;
