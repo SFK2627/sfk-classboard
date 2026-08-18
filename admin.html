@@ -24,7 +24,7 @@
     .homepageEffectFreedomWallFields[hidden]{display:none!important}
     .freedomWallAdminIntro{display:flex;flex-direction:column;gap:5px;padding:10px 12px;border-radius:11px;background:#111;color:#fff}
     .freedomWallAdminIntro strong{font-size:15px}.freedomWallAdminIntro span{font-size:12px;line-height:1.45;color:rgba(255,255,255,.82)}
-    .freedomWallAdminActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}.freedomWallAdminActions button{border:0;border-radius:10px;padding:9px 12px;font-weight:800;cursor:pointer;background:#111;color:#fff}.freedomWallAdminActions button.is-danger{background:#a82424}
+    .freedomWallAdminCustomization{display:grid;gap:7px;margin-top:2px;padding:10px;border:1px solid rgba(0,0,0,.10);border-radius:11px;background:#fff}.freedomWallAdminCustomizationHead{display:flex;flex-direction:column;gap:3px}.freedomWallAdminCustomizationHead strong{font-size:12px}.freedomWallAdminCustomizationHead small{font-size:10px;line-height:1.35;color:#68707a}.freedomWallAdminActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}.freedomWallAdminActions button{border:0;border-radius:10px;padding:9px 12px;font-weight:800;cursor:pointer;background:#111;color:#fff}.freedomWallAdminActions button.is-danger{background:#a82424}
     .freedomWallNoteManager{display:grid;gap:9px;padding:11px;border:1px solid rgba(0,0,0,.12);border-radius:12px;background:#fff}.freedomWallNoteManager[hidden]{display:none!important}
     .freedomWallNoteManagerHead{display:flex;align-items:center;justify-content:space-between;gap:10px}.freedomWallNoteManagerHead strong{font-size:13px}.freedomWallNoteManagerHead span{font-size:10px;color:#777}
     .freedomWallAdminNoteList{display:grid;gap:7px;max-height:340px;overflow:auto;padding-right:2px}.freedomWallAdminNoteEmpty{padding:14px;text-align:center;border:1px dashed #ccc;border-radius:10px;color:#777;font-size:12px}
@@ -262,6 +262,18 @@
               <input id="freedomWallShowNames" type="checkbox" checked />
               <span><strong>Show student name / nickname on notes</strong><small>Students can enter a name when posting. Turn this off for a cleaner anonymous-looking wall.</small></span>
             </label>
+
+            <div class="freedomWallAdminCustomization">
+              <div class="freedomWallAdminCustomizationHead"><strong>Student Note Customization</strong><small>Note Background Color is always available and cannot be disabled.</small></div>
+              <label class="homepageEffectToggleRow">
+                <input id="freedomWallAllowTextColor" type="checkbox" checked />
+                <span><strong>Allow Text Color Change</strong><small>Students may choose a readable text color. Unsafe combinations are automatically corrected.</small></span>
+              </label>
+              <label class="homepageEffectToggleRow">
+                <input id="freedomWallAllowFont" type="checkbox" checked />
+                <span><strong>Allow Font Change</strong><small>Students may choose from the curated font list. Turning this off renders Theme Default without deleting saved font choices.</small></span>
+              </label>
+            </div>
 
             <div class="freedomWallAdminActions">
               <button id="freedomWallRefreshCount" type="button">↻ Check Note Count</button>
@@ -1170,6 +1182,8 @@
         FreedomWallTheme: String(byId("freedomWallTheme")?.value || "sticky-notes").trim().toLowerCase(),
         FreedomWallAllowPosting: byId("freedomWallAllowPosting")?.checked === false ? "NO" : "YES",
         FreedomWallShowNames: byId("freedomWallShowNames")?.checked === false ? "NO" : "YES",
+        FreedomWallAllowTextColor: byId("freedomWallAllowTextColor")?.checked === false ? "NO" : "YES",
+        FreedomWallAllowFont: byId("freedomWallAllowFont")?.checked === false ? "NO" : "YES",
         HomepageEffectUpdatedAt: updatedAt
       };
       const batch = db.batch();
@@ -1224,7 +1238,7 @@
     const audioFields = $("homepageEffectAudioFields");
     const status = $("freedomWallAdminStatus");
     let noteManagerUnsubscribe = null;
-    const noteColorMap = {yellow:"#fff1a5",pink:"#ffc7df",blue:"#bfe4ff",mint:"#c9f2d9",orange:"#ffd0a1",violet:"#dfd0ff",peach:"#ffd6c9",white:"#fffdf5"};
+    const noteColorMap = {yellow:"#fff1a5",cream:"#fff6d9",white:"#fffdf5",peach:"#ffd6c9",coral:"#ffb9a8",pink:"#ffc7df",rose:"#f6b4c9",lavender:"#e6d7ff",violet:"#d6c3ff",sky:"#c7eaff",blue:"#acd3ff",mint:"#c9f2d9",sage:"#d5e3c1",green:"#bfe3b4",lime:"#e2f3a7",orange:"#ffd0a1",tan:"#dfc69c",gray:"#d9dce1",navy:"#26334f",black:"#202124"};
     const getDb = () => {
       if (window.SFK_CLASSBOARD_FIREBASE_DB) return window.SFK_CLASSBOARD_FIREBASE_DB;
       try { if (window.firebase?.apps?.length) return firebase.firestore(); } catch (error) {}
@@ -1412,13 +1426,15 @@
       const db = getDb();
       if (!db) return;
       try {
-        const keys = ["FreedomWallTheme","FreedomWallAllowPosting","FreedomWallShowNames"];
+        const keys = ["FreedomWallTheme","FreedomWallAllowPosting","FreedomWallShowNames","FreedomWallAllowTextColor","FreedomWallAllowFont"];
         const docs = await Promise.all(keys.map((key) => db.collection("settings").doc(key).get()));
         const values = {};
         docs.forEach((doc, index) => { if (doc.exists) values[keys[index]] = String(doc.data()?.Value || ""); });
         if ($("freedomWallTheme") && values.FreedomWallTheme) $("freedomWallTheme").value = values.FreedomWallTheme;
         if ($("freedomWallAllowPosting")) $("freedomWallAllowPosting").checked = String(values.FreedomWallAllowPosting || "YES").toUpperCase() !== "NO";
         if ($("freedomWallShowNames")) $("freedomWallShowNames").checked = String(values.FreedomWallShowNames || "YES").toUpperCase() !== "NO";
+        if ($("freedomWallAllowTextColor")) $("freedomWallAllowTextColor").checked = String(values.FreedomWallAllowTextColor || "YES").toUpperCase() !== "NO";
+        if ($("freedomWallAllowFont")) $("freedomWallAllowFont").checked = String(values.FreedomWallAllowFont || "YES").toUpperCase() !== "NO";
       } catch (error) { console.warn("Freedom Wall settings load skipped", error); }
     }, 700);
   })();

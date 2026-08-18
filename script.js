@@ -1688,7 +1688,9 @@ const HOMEPAGE_EFFECT_KEYS = new Set([
   "HomepageEffectUpdatedAt",
   "FreedomWallTheme",
   "FreedomWallAllowPosting",
-  "FreedomWallShowNames"
+  "FreedomWallShowNames",
+  "FreedomWallAllowTextColor",
+  "FreedomWallAllowFont"
 ]);
 
 let homepageEffectUnsubscribe = null;
@@ -1749,7 +1751,31 @@ const FREEDOM_WALL_MEDIA_MAX_STATIC_SOURCE_BYTES = 8 * 1024 * 1024;
 const FREEDOM_WALL_MEDIA_MAX_BYTES = 520 * 1024;
 const FREEDOM_WALL_MEDIA_MAX_GIF_BYTES = 500 * 1024;
 const FREEDOM_WALL_THEME_SET = new Set(["sunny","rainy","night","flood","comic","comic-noir","comic-manga","comic-strip","school-note","sticky-notes","jungle","bulletin-board","whiteboard","cafe","sakura","galaxy","beach","art-room","library","newspaper","polaroid","retro-arcade","coding-lab","rainbow","brick-alley","school-fair","eco","dreamy-clouds","chalkboard","detective","appreciation","seasonal","neon-music","spiderman","filipino","poste","graffiti","vandal"]);
-const FREEDOM_WALL_COLORS = ["yellow","pink","blue","mint","orange","violet","peach","white"];
+const FREEDOM_WALL_COLORS = ["yellow","cream","white","peach","coral","pink","rose","lavender","violet","sky","blue","mint","sage","green","lime","orange","tan","gray","navy","black"];
+const FREEDOM_WALL_COLOR_HEX = Object.freeze({
+  yellow:"#fff1a5", cream:"#fff6d9", white:"#fffdf5", peach:"#ffd6c9", coral:"#ffb9a8",
+  pink:"#ffc7df", rose:"#f6b4c9", lavender:"#e6d7ff", violet:"#d6c3ff", sky:"#c7eaff",
+  blue:"#acd3ff", mint:"#c9f2d9", sage:"#d5e3c1", green:"#bfe3b4", lime:"#e2f3a7",
+  orange:"#ffd0a1", tan:"#dfc69c", gray:"#d9dce1", navy:"#26334f", black:"#202124"
+});
+const FREEDOM_WALL_TEXT_COLOR_HEX = Object.freeze({
+  black:"#171717", charcoal:"#34383d", white:"#ffffff", navy:"#183153", blue:"#165fbd",
+  red:"#c62828", maroon:"#7f1d2d", green:"#237a3b", brown:"#70452f", purple:"#6d3dad",
+  pink:"#b83280", orange:"#b45309", gold:"#8a6400"
+});
+const FREEDOM_WALL_TEXT_COLORS = Object.freeze(Object.keys(FREEDOM_WALL_TEXT_COLOR_HEX));
+const FREEDOM_WALL_FONTS = Object.freeze(["theme-default","clean","rounded","handwritten","marker","classic-serif","typewriter","comic","bold-poster","elegant","casual","monospace"]);
+// v479 post hotfix: the live site may still be using the older v477 Firestore
+// rules while the new customization UI is already deployed. Keep a compatibility
+// path so posting never dies just because rules have not been upgraded yet.
+const FREEDOM_WALL_LEGACY_COLORS = new Set(["yellow","pink","blue","mint","orange","violet","peach","white"]);
+const FREEDOM_WALL_LEGACY_COLOR_MAP = Object.freeze({
+  yellow:"yellow", cream:"yellow", white:"white", peach:"peach", coral:"peach",
+  pink:"pink", rose:"pink", lavender:"violet", violet:"violet", sky:"blue",
+  blue:"blue", mint:"mint", sage:"mint", green:"mint", lime:"yellow",
+  orange:"orange", tan:"orange", gray:"white", navy:"blue", black:"blue"
+});
+const FREEDOM_WALL_TEXTURED_TEXT_THEMES = new Set(["jungle","chalkboard","graffiti","vandal","poste","comic","comic-noir","comic-manga","comic-strip","spiderman"]);
 let freedomWallUnsubscribe = null;
 let freedomWallListenToken = 0;
 let freedomWallConfig = null;
@@ -1774,6 +1800,13 @@ function getFreedomWallUiCopy(theme = freedomWallConfig?.freedomWallTheme) {
       noteLabel: "Iyong mensahe",
       notePlaceholder: "Sumulat ng mabait, totoo, masaya, taos-puso, o makabuluhang mensahe…",
       colorAria: "Kulay ng note",
+      noteBackgroundLabel: "Kulay ng Note",
+      textColorLabel: "Kulay ng Teksto",
+      fontLabel: "Font",
+      contrastHint: "Awtomatikong inaayos ang mahihinang color combination para malinaw basahin.",
+      customizeLabel: "Ayusin ang Note",
+      customizeClosedHint: "Kulay, teksto at font",
+      customizeOpenHint: "Pumili ng style ng note",
       postButton: "Idikit ang Note",
       mediaLabel: "Larawan / GIF (opsyonal)",
       mediaHint: "Para sa Polaroid theme lamang.",
@@ -1805,7 +1838,14 @@ function getFreedomWallUiCopy(theme = freedomWallConfig?.freedomWallTheme) {
     namePlaceholder: "Your name",
     noteLabel: "Your note",
     notePlaceholder: "Write something kind, honest, funny, thankful, or meaningful…",
-    colorAria: "Sticky note color",
+    colorAria: "Note background color",
+    noteBackgroundLabel: "Note Background",
+    textColorLabel: "Text Color",
+    fontLabel: "Font",
+    contrastHint: "Low-contrast combinations are adjusted automatically for readability.",
+    customizeLabel: "Customize Note",
+    customizeClosedHint: "Background, text color and font",
+    customizeOpenHint: "Choose your note style",
     postButton: "Post Note",
     mediaLabel: "Photo / GIF (optional)",
     mediaHint: "Available for the Polaroid theme.",
@@ -1844,6 +1884,12 @@ function applyFreedomWallThemeCopy(theme = freedomWallConfig?.freedomWallTheme) 
   const noteLabel = layer.querySelector('label[for="freedomWallNoteInput"]');
   const noteInput = layer.querySelector('#freedomWallNoteInput');
   const colorRow = layer.querySelector('.freedomWallColorRow');
+  const backgroundLabel = layer.querySelector('#freedomWallBackgroundLabel');
+  const textColorLabel = layer.querySelector('#freedomWallTextColorLabel');
+  const fontLabel = layer.querySelector('#freedomWallFontLabel');
+  const contrastHint = layer.querySelector('#freedomWallContrastHint');
+  const customizeLabel = layer.querySelector('#freedomWallCustomizeLabel');
+  const customizeHint = layer.querySelector('#freedomWallCustomizeHint');
   const mediaField = layer.querySelector('#freedomWallMediaField');
   const mediaLabel = layer.querySelector('#freedomWallMediaLabel');
   const mediaHint = layer.querySelector('#freedomWallMediaHint');
@@ -1864,6 +1910,12 @@ function applyFreedomWallThemeCopy(theme = freedomWallConfig?.freedomWallTheme) 
   if (noteLabel) noteLabel.textContent = copy.noteLabel;
   if (noteInput) noteInput.placeholder = copy.notePlaceholder;
   if (colorRow) colorRow.setAttribute('aria-label', copy.colorAria);
+  if (backgroundLabel) backgroundLabel.textContent = copy.noteBackgroundLabel;
+  if (textColorLabel) textColorLabel.textContent = copy.textColorLabel;
+  if (fontLabel) fontLabel.textContent = copy.fontLabel;
+  if (contrastHint) contrastHint.textContent = copy.contrastHint;
+  if (customizeLabel) customizeLabel.textContent = copy.customizeLabel;
+  if (customizeHint) customizeHint.textContent = copy.customizeClosedHint;
   const isPolaroid = String(theme || '').trim().toLowerCase() === 'polaroid';
   if (mediaField) mediaField.hidden = !isPolaroid;
   if (mediaLabel) mediaLabel.textContent = copy.mediaLabel;
@@ -1900,6 +1952,8 @@ function applyFreedomWallThemeDecor(theme = freedomWallConfig?.freedomWallTheme)
 }
 let freedomWallPosting = false;
 let freedomWallSelectedColor = "yellow";
+let freedomWallSelectedTextColor = "charcoal";
+let freedomWallSelectedFont = "theme-default";
 let freedomWallPendingMedia = null;
 let freedomWallMediaPrepareToken = 0;
 let freedomWallLastRenderedCount = 0;
@@ -2050,8 +2104,10 @@ function normalizeHomepageEffectConfig(settings = {}) {
   const freedomWallTheme = FREEDOM_WALL_THEME_SET.has(rawFreedomWallTheme) ? rawFreedomWallTheme : "sticky-notes";
   const freedomWallAllowPosting = String(settings.FreedomWallAllowPosting || "YES").trim().toUpperCase() !== "NO";
   const freedomWallShowNames = String(settings.FreedomWallShowNames || "YES").trim().toUpperCase() !== "NO";
-  const signature = updatedAt || [enabled ? "1" : "0", mode, title, message, images.join("~"), dismissible ? "1" : "0", alertSound ? "1" : "0", audioEnabled ? "1" : "0", audioUrl, audioLoop ? "1" : "0", youtubeUrl, youtubeMuted ? "1" : "0", rickrollUrl, freedomWallTheme, freedomWallAllowPosting ? "1" : "0", freedomWallShowNames ? "1" : "0"].join("|");
-  return { enabled, mode, title, message, image: images[0] || "", images, dismissible, alertSound, spiderSound, audioEnabled, audioUrl, audioLoop, youtubeUrl, youtubeMuted, rickrollUrl, updatedAt, signature, freedomWallTheme, freedomWallAllowPosting, freedomWallShowNames };
+  const freedomWallAllowTextColor = String(settings.FreedomWallAllowTextColor || "YES").trim().toUpperCase() !== "NO";
+  const freedomWallAllowFont = String(settings.FreedomWallAllowFont || "YES").trim().toUpperCase() !== "NO";
+  const signature = updatedAt || [enabled ? "1" : "0", mode, title, message, images.join("~"), dismissible ? "1" : "0", alertSound ? "1" : "0", audioEnabled ? "1" : "0", audioUrl, audioLoop ? "1" : "0", youtubeUrl, youtubeMuted ? "1" : "0", rickrollUrl, freedomWallTheme, freedomWallAllowPosting ? "1" : "0", freedomWallShowNames ? "1" : "0", freedomWallAllowTextColor ? "1" : "0", freedomWallAllowFont ? "1" : "0"].join("|");
+  return { enabled, mode, title, message, image: images[0] || "", images, dismissible, alertSound, spiderSound, audioEnabled, audioUrl, audioLoop, youtubeUrl, youtubeMuted, rickrollUrl, updatedAt, signature, freedomWallTheme, freedomWallAllowPosting, freedomWallShowNames, freedomWallAllowTextColor, freedomWallAllowFont };
 }
 
 function normalizeHomepageEffectYouTubeUrl(value) {
@@ -2911,9 +2967,54 @@ function ensureHomepageEffectLayer() {
             </div>
             <div id="freedomWallMediaPreview" class="freedomWallMediaPreview" hidden></div>
           </div>
-          <div class="freedomWallColorRow" aria-label="Sticky note color">
-            <button type="button" data-fw-color="yellow" class="is-selected" aria-label="Yellow"></button><button type="button" data-fw-color="pink" aria-label="Pink"></button><button type="button" data-fw-color="blue" aria-label="Blue"></button><button type="button" data-fw-color="mint" aria-label="Mint"></button><button type="button" data-fw-color="orange" aria-label="Orange"></button><button type="button" data-fw-color="violet" aria-label="Violet"></button><button type="button" data-fw-color="peach" aria-label="Peach"></button><button type="button" data-fw-color="white" aria-label="White"></button>
-          </div>
+          <section id="freedomWallCustomizePanel" class="freedomWallCustomizePanel">
+            <button id="freedomWallCustomizeToggle" class="freedomWallCustomizeToggle" type="button" aria-expanded="false" aria-controls="freedomWallCustomizeBody">
+              <span class="freedomWallCustomizeIcon" aria-hidden="true">✦</span>
+              <span class="freedomWallCustomizeToggleText"><strong id="freedomWallCustomizeLabel">Customize Note</strong><small id="freedomWallCustomizeHint">Background, text color and font</small></span>
+              <span id="freedomWallCustomizeSummary" class="freedomWallCustomizeSummary" aria-live="polite"></span>
+              <span class="freedomWallCustomizeChevron" aria-hidden="true">›</span>
+            </button>
+            <div id="freedomWallCustomizeBody" class="freedomWallCustomizeBody" hidden>
+              <div class="freedomWallCustomizationField freedomWallBackgroundField">
+                <button class="freedomWallCustomizerTrigger" type="button" data-fw-customizer-toggle="background" aria-expanded="false" aria-controls="freedomWallBackgroundOptions">
+                  <span id="freedomWallBackgroundLabel">Note Background</span>
+                  <span class="freedomWallCustomizerValue"><i id="freedomWallBackgroundPreview" class="freedomWallCustomizerColorPreview" aria-hidden="true"></i><b id="freedomWallBackgroundValue">Yellow</b><em aria-hidden="true">⌄</em></span>
+                </button>
+                <div id="freedomWallBackgroundOptions" class="freedomWallCustomizerOptions" data-fw-customizer-panel="background" hidden>
+                  <div class="freedomWallCustomizerOptionsHead"><strong>Choose Note Background</strong><button type="button" data-fw-customizer-close aria-label="Close background choices">×</button></div>
+                  <div class="freedomWallColorRow freedomWallSwatchRow" aria-label="Note background color">
+                    <button type="button" data-fw-color="yellow" class="is-selected" aria-label="Yellow"></button><button type="button" data-fw-color="cream" aria-label="Cream"></button><button type="button" data-fw-color="white" aria-label="White"></button><button type="button" data-fw-color="peach" aria-label="Peach"></button><button type="button" data-fw-color="coral" aria-label="Coral"></button><button type="button" data-fw-color="pink" aria-label="Pink"></button><button type="button" data-fw-color="rose" aria-label="Rose"></button><button type="button" data-fw-color="lavender" aria-label="Lavender"></button><button type="button" data-fw-color="violet" aria-label="Violet"></button><button type="button" data-fw-color="sky" aria-label="Sky Blue"></button><button type="button" data-fw-color="blue" aria-label="Blue"></button><button type="button" data-fw-color="mint" aria-label="Mint"></button><button type="button" data-fw-color="sage" aria-label="Sage"></button><button type="button" data-fw-color="green" aria-label="Green"></button><button type="button" data-fw-color="lime" aria-label="Lime"></button><button type="button" data-fw-color="orange" aria-label="Orange"></button><button type="button" data-fw-color="tan" aria-label="Tan / Kraft"></button><button type="button" data-fw-color="gray" aria-label="Gray"></button><button type="button" data-fw-color="navy" aria-label="Dark Navy"></button><button type="button" data-fw-color="black" aria-label="Black"></button>
+                  </div>
+                </div>
+              </div>
+              <div id="freedomWallTextColorField" class="freedomWallCustomizationField">
+                <button class="freedomWallCustomizerTrigger" type="button" data-fw-customizer-toggle="text" aria-expanded="false" aria-controls="freedomWallTextColorOptions">
+                  <span id="freedomWallTextColorLabel">Text Color</span>
+                  <span class="freedomWallCustomizerValue"><i id="freedomWallTextColorPreview" class="freedomWallCustomizerColorPreview" aria-hidden="true"></i><b id="freedomWallTextColorValue">Charcoal</b><em aria-hidden="true">⌄</em></span>
+                </button>
+                <div id="freedomWallTextColorOptions" class="freedomWallCustomizerOptions" data-fw-customizer-panel="text" hidden>
+                  <div class="freedomWallCustomizerOptionsHead"><strong>Choose Text Color</strong><button type="button" data-fw-customizer-close aria-label="Close text color choices">×</button></div>
+                  <div class="freedomWallTextColorRow freedomWallSwatchRow" aria-label="Text color">
+                    <button type="button" data-fw-text-color="black" aria-label="Black"></button><button type="button" data-fw-text-color="charcoal" class="is-selected" aria-label="Charcoal"></button><button type="button" data-fw-text-color="white" aria-label="White"></button><button type="button" data-fw-text-color="navy" aria-label="Navy"></button><button type="button" data-fw-text-color="blue" aria-label="Blue"></button><button type="button" data-fw-text-color="red" aria-label="Red"></button><button type="button" data-fw-text-color="maroon" aria-label="Maroon"></button><button type="button" data-fw-text-color="green" aria-label="Green"></button><button type="button" data-fw-text-color="brown" aria-label="Brown"></button><button type="button" data-fw-text-color="purple" aria-label="Purple"></button><button type="button" data-fw-text-color="pink" aria-label="Pink"></button><button type="button" data-fw-text-color="orange" aria-label="Orange"></button><button type="button" data-fw-text-color="gold" aria-label="Gold"></button>
+                  </div>
+                  <small id="freedomWallContrastHint" class="freedomWallCustomizationHint">Low-contrast combinations are adjusted automatically for readability.</small>
+                </div>
+              </div>
+              <div id="freedomWallFontField" class="freedomWallCustomizationField">
+                <button class="freedomWallCustomizerTrigger" type="button" data-fw-customizer-toggle="font" aria-expanded="false" aria-controls="freedomWallFontOptions">
+                  <span id="freedomWallFontLabel">Font</span>
+                  <span class="freedomWallCustomizerValue"><b id="freedomWallFontValue">Theme Default</b><em aria-hidden="true">⌄</em></span>
+                </button>
+                <div id="freedomWallFontOptions" class="freedomWallCustomizerOptions" data-fw-customizer-panel="font" hidden>
+                  <div class="freedomWallCustomizerOptionsHead"><strong>Choose Font</strong><button type="button" data-fw-customizer-close aria-label="Close font choices">×</button></div>
+                  <div class="freedomWallFontGrid" role="group" aria-label="Note font">
+                    <button type="button" data-fw-font="theme-default" class="is-selected">Theme Default</button><button type="button" data-fw-font="clean">Clean</button><button type="button" data-fw-font="rounded">Rounded</button><button type="button" data-fw-font="handwritten">Handwritten</button><button type="button" data-fw-font="marker">Marker</button><button type="button" data-fw-font="classic-serif">Classic Serif</button><button type="button" data-fw-font="typewriter">Typewriter</button><button type="button" data-fw-font="comic">Comic</button><button type="button" data-fw-font="bold-poster">Bold Poster</button><button type="button" data-fw-font="elegant">Elegant</button><button type="button" data-fw-font="casual">Casual</button><button type="button" data-fw-font="monospace">Monospace / Coding</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div id="freedomWallCustomizerBackdrop" class="freedomWallCustomizerBackdrop" hidden aria-hidden="true"></div>
+          </section>
           <div class="freedomWallComposerFooter"><span id="freedomWallComposerStatus" role="status"></span><button id="freedomWallPostBtn" type="submit">Post Note</button></div>
         </form>
       </div>
@@ -2975,7 +3076,17 @@ function ensureHomepageEffectLayer() {
   layer.querySelector("#freedomWallComposerClose")?.addEventListener("click", closeFreedomWallComposer);
   layer.querySelector("#freedomWallPromptClose")?.addEventListener("click", dismissFreedomWallPromptForView);
   layer.querySelector("#freedomWallComposerForm")?.addEventListener("submit", submitFreedomWallNote);
-  layer.querySelectorAll("[data-fw-color]").forEach((button) => button.addEventListener("click", () => selectFreedomWallColor(button.dataset.fwColor)));
+  layer.querySelector("#freedomWallCustomizeToggle")?.addEventListener("click", toggleFreedomWallCustomizePanel);
+  layer.querySelectorAll("[data-fw-customizer-toggle]").forEach((button) => button.addEventListener("click", () => toggleFreedomWallCustomizerPanel(button.dataset.fwCustomizerToggle)));
+  layer.querySelectorAll("[data-fw-customizer-close]").forEach((button) => button.addEventListener("click", () => closeFreedomWallCustomizerPanel()));
+  layer.querySelector("#freedomWallCustomizerBackdrop")?.addEventListener("click", () => closeFreedomWallCustomizerPanel());
+  window.addEventListener("resize", () => {
+    const openPanel = layer.querySelector('[data-fw-customizer-panel]:not([hidden])');
+    if (openPanel) positionFreedomWallCustomizerPanel(openPanel.dataset.fwCustomizerPanel);
+  }, { passive: true });
+  layer.querySelectorAll("[data-fw-color]").forEach((button) => button.addEventListener("click", () => { selectFreedomWallColor(button.dataset.fwColor); closeFreedomWallCustomizerPanel("background"); }));
+  layer.querySelectorAll("[data-fw-text-color]").forEach((button) => button.addEventListener("click", () => { selectFreedomWallTextColor(button.dataset.fwTextColor); closeFreedomWallCustomizerPanel("text"); }));
+  layer.querySelectorAll("[data-fw-font]").forEach((button) => button.addEventListener("click", () => { selectFreedomWallFont(button.dataset.fwFont); closeFreedomWallCustomizerPanel("font"); }));
   layer.querySelector("#freedomWallMediaInput")?.addEventListener("change", handleFreedomWallMediaInput);
   layer.querySelector("#freedomWallMediaRemove")?.addEventListener("click", (event) => { event.preventDefault(); resetFreedomWallPendingMedia(); });
   layer.querySelector("#freedomWallComposer")?.addEventListener("pointerdown", (event) => {
@@ -4364,6 +4475,108 @@ async function hydrateFreedomWallNoteMedia(card, note) {
   }
 }
 
+function freedomWallHexToRgb(hex) {
+  const value = String(hex || "").replace("#", "").trim();
+  if (!/^[0-9a-f]{6}$/i.test(value)) return { r: 255, g: 255, b: 255 };
+  return { r: parseInt(value.slice(0,2),16), g: parseInt(value.slice(2,4),16), b: parseInt(value.slice(4,6),16) };
+}
+
+function freedomWallRelativeLuminance(hex) {
+  const { r, g, b } = freedomWallHexToRgb(hex);
+  const convert = (channel) => {
+    const c = channel / 255;
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  };
+  return (0.2126 * convert(r)) + (0.7152 * convert(g)) + (0.0722 * convert(b));
+}
+
+function freedomWallContrastRatio(a, b) {
+  const l1 = freedomWallRelativeLuminance(a);
+  const l2 = freedomWallRelativeLuminance(b);
+  const lighter = Math.max(l1, l2);
+  const darker = Math.min(l1, l2);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+function freedomWallMixHex(baseHex, mixHex, baseWeight = 1) {
+  const a = freedomWallHexToRgb(baseHex);
+  const b = freedomWallHexToRgb(mixHex);
+  const w = Math.min(1, Math.max(0, Number(baseWeight) || 0));
+  const toHex = (value) => Math.round(value).toString(16).padStart(2, "0");
+  return `#${toHex(a.r*w+b.r*(1-w))}${toHex(a.g*w+b.g*(1-w))}${toHex(a.b*w+b.b*(1-w))}`;
+}
+
+function getFreedomWallContrastBackgrounds(color, theme = freedomWallConfig?.freedomWallTheme) {
+  const safeColor = FREEDOM_WALL_COLORS.includes(String(color || "").toLowerCase()) ? String(color).toLowerCase() : "yellow";
+  const base = FREEDOM_WALL_COLOR_HEX[safeColor] || FREEDOM_WALL_COLOR_HEX.yellow;
+  const safeTheme = String(theme || "").toLowerCase();
+  // v479: model the actual visible note/caption surfaces closely enough that
+  // every note (including legacy notes without TextColor) stays readable after
+  // a theme change. The saved student preference is never overwritten here.
+  if (safeTheme === "polaroid") return [freedomWallMixHex(base,"#ffffff",.18), "#fffdf9"];
+  if (safeTheme === "newspaper") return [freedomWallMixHex(base,"#fffef8",.42), freedomWallMixHex(base,"#e9e4d5",.36)];
+  if (safeTheme === "jungle") return [freedomWallMixHex(base,"#fff5cf",.82), freedomWallMixHex(base,"#bd9d62",.82)];
+  if (safeTheme === "poste") return [freedomWallMixHex(base,"#fff7e5",.84), freedomWallMixHex(base,"#c8b792",.82)];
+  if (safeTheme === "coding-lab") return [freedomWallMixHex(base,"#ffffff",.88), freedomWallMixHex(base,"#18232b",.80)];
+  if (safeTheme === "chalkboard") return [freedomWallMixHex(base,"#f7f0d8",.84), freedomWallMixHex(base,"#4d654f",.78)];
+  return [freedomWallMixHex(base,"#ffffff",.94), freedomWallMixHex(base,"#000000",.89)];
+}
+
+function getFreedomWallThemeDefaultTextColor(theme = freedomWallConfig?.freedomWallTheme) {
+  const safeTheme = String(theme || "").trim().toLowerCase();
+  if (["night","rainy","flood","galaxy","retro-arcade","coding-lab","neon-music","spiderman","comic-noir"].includes(safeTheme)) return "white";
+  if (["jungle","eco","chalkboard"].includes(safeTheme)) return "green";
+  if (["cafe","library","brick-alley","detective","poste"].includes(safeTheme)) return "brown";
+  if (["filipino","comic-strip"].includes(safeTheme)) return "navy";
+  return "charcoal";
+}
+
+function resolveFreedomWallTextColor(textColor, backgroundColor, theme = freedomWallConfig?.freedomWallTheme) {
+  const requested = FREEDOM_WALL_TEXT_COLORS.includes(String(textColor || "").toLowerCase()) ? String(textColor).toLowerCase() : getFreedomWallThemeDefaultTextColor(theme);
+  const backgrounds = getFreedomWallContrastBackgrounds(backgroundColor, theme);
+  const requestedHex = FREEDOM_WALL_TEXT_COLOR_HEX[requested] || FREEDOM_WALL_TEXT_COLOR_HEX.charcoal;
+  const minRequestedRatio = Math.min(...backgrounds.map((bg) => freedomWallContrastRatio(requestedHex, bg)));
+  if (minRequestedRatio >= 4.5) return requested;
+  const candidates = ["black","charcoal","navy","brown","white"];
+  let best = "black";
+  let bestRatio = -1;
+  for (const candidate of candidates) {
+    const candidateHex = FREEDOM_WALL_TEXT_COLOR_HEX[candidate];
+    const ratio = Math.min(...backgrounds.map((bg) => freedomWallContrastRatio(candidateHex, bg)));
+    if (ratio > bestRatio) { best = candidate; bestRatio = ratio; }
+  }
+  return best;
+}
+
+function getFreedomWallTextContrastAssist(textColor, theme = freedomWallConfig?.freedomWallTheme) {
+  const safeTheme = String(theme || "").trim().toLowerCase();
+  if (!FREEDOM_WALL_TEXTURED_TEXT_THEMES.has(safeTheme)) return "none";
+  const hex = FREEDOM_WALL_TEXT_COLOR_HEX[textColor] || FREEDOM_WALL_TEXT_COLOR_HEX.charcoal;
+  return freedomWallRelativeLuminance(hex) > .52 ? "0 1px 2px rgba(0,0,0,.38)" : "0 1px 1px rgba(255,255,255,.42)";
+}
+
+function setFreedomWallContrastHint(wasAdjusted = false) {
+  const hint = document.getElementById("homepageEffectLayer")?.querySelector("#freedomWallContrastHint");
+  if (!hint) return;
+  if (wasAdjusted) {
+    hint.textContent = isFreedomWallFilipinoTheme() ? "Inayos ang text color para manatiling malinaw basahin." : "Text color adjusted automatically to keep the note readable.";
+    hint.classList.add("is-warning");
+  } else {
+    hint.textContent = getFreedomWallUiCopy().contrastHint;
+    hint.classList.remove("is-warning");
+  }
+}
+
+function normalizeFreedomWallTextColor(value) {
+  const safe = String(value || "").trim().toLowerCase();
+  return FREEDOM_WALL_TEXT_COLORS.includes(safe) ? safe : "";
+}
+
+function normalizeFreedomWallFont(value) {
+  const safe = String(value || "").trim().toLowerCase();
+  return FREEDOM_WALL_FONTS.includes(safe) ? safe : "theme-default";
+}
+
 function normalizeFreedomWallNote(doc, index = 0) {
   const data = typeof doc?.data === "function" ? (doc.data() || {}) : (doc || {});
   const id = String(doc?.id || data.ID || data.id || `note-${index}`);
@@ -4371,13 +4584,15 @@ function normalizeFreedomWallNote(doc, index = 0) {
   const author = String(data.Name || data.Author || data.name || "").trim().slice(0, FREEDOM_WALL_AUTHOR_MAX_LENGTH);
   const rawColor = String(data.Color || data.color || "").trim().toLowerCase();
   const color = FREEDOM_WALL_COLORS.includes(rawColor) ? rawColor : FREEDOM_WALL_COLORS[freedomWallHash(id) % FREEDOM_WALL_COLORS.length];
+  const textColor = normalizeFreedomWallTextColor(data.TextColor || data.textColor || "");
+  const fontStyle = normalizeFreedomWallFont(data.FontStyle || data.fontStyle || "theme-default");
   const createdAtMs = freedomWallSafeNumber(data.CreatedAtMs || data.createdAtMs, Date.now() - (100000 - index), 0, Number.MAX_SAFE_INTEGER);
   const rawMediaRef = String(data.MediaRef || data.mediaRef || "").trim();
   const parsedMediaRef = parseClassBoardMediaRef(rawMediaRef);
   const mediaRef = parsedMediaRef?.kind === "freedomWall" ? parsedMediaRef.raw : "";
   const mediaType = mediaRef ? String(data.MediaType || data.mediaType || "image/jpeg").trim().toLowerCase().slice(0, 32) : "";
   if (!text && !mediaRef) return null;
-  return { id, text, author, color, createdAtMs, mediaRef, mediaType, ...getFreedomWallPlacement({ ...data, id }, index) };
+  return { id, text, author, color, textColor, fontStyle, createdAtMs, mediaRef, mediaType, ...getFreedomWallPlacement({ ...data, id }, index) };
 }
 
 function renderFreedomWallNotes(notes = []) {
@@ -4425,6 +4640,20 @@ function renderFreedomWallNotes(notes = []) {
     const sizeClass = getFreedomWallNoteSizeClass(note);
     const isActivelyDragged = freedomWallDragState?.card === card;
     card.className = `freedomWallNote is-${note.color} is-size-${sizeClass}${showPolaroidMedia ? " has-media" : ""}${isNew ? " is-new" : ""}${isActivelyDragged ? " is-dragging" : ""}`;
+    card.style.setProperty("--fw-note-bg", FREEDOM_WALL_COLOR_HEX[note.color] || FREEDOM_WALL_COLOR_HEX.yellow);
+    const allowTextColor = Boolean(freedomWallConfig?.freedomWallAllowTextColor);
+    const hasAllowedCustomText = Boolean(allowTextColor && note.textColor);
+    const requestedTextColor = hasAllowedCustomText ? note.textColor : getFreedomWallThemeDefaultTextColor(freedomWallConfig?.freedomWallTheme);
+    const effectiveTextColor = resolveFreedomWallTextColor(requestedTextColor, note.color, freedomWallConfig?.freedomWallTheme);
+    // v479: ALL notes get a contrast-safe rendered color. This fixes legacy
+    // notes and Admin-disabled Text Color too, without changing saved TextColor.
+    card.classList.add("has-safe-text");
+    card.classList.toggle("has-custom-text", hasAllowedCustomText);
+    card.style.setProperty("--fw-note-text-color", FREEDOM_WALL_TEXT_COLOR_HEX[effectiveTextColor] || FREEDOM_WALL_TEXT_COLOR_HEX.charcoal);
+    card.style.setProperty("--fw-note-text-shadow", getFreedomWallTextContrastAssist(effectiveTextColor, freedomWallConfig?.freedomWallTheme));
+    if (freedomWallConfig?.freedomWallAllowFont && note.fontStyle && note.fontStyle !== "theme-default") {
+      card.classList.add(`is-font-${note.fontStyle}`);
+    }
 
     let mediaEl = card.querySelector(".freedomWallNoteMedia");
     if (showPolaroidMedia) {
@@ -4538,11 +4767,184 @@ function dismissFreedomWallPromptForView(event) {
   if (freedomWallNotesCache.length) renderFreedomWallNotes(freedomWallNotesCache);
 }
 
+function getFreedomWallSelectedChoice(selector, fallback = "") {
+  const selected = document.getElementById("homepageEffectLayer")?.querySelector(`${selector}.is-selected`);
+  return String(selected?.getAttribute("aria-label") || selected?.textContent || fallback).trim();
+}
+
+function updateFreedomWallCustomizationSummary() {
+  const layer = document.getElementById("homepageEffectLayer");
+  if (!layer) return;
+  const backgroundButton = layer.querySelector(`[data-fw-color="${freedomWallSelectedColor}"]`);
+  const textButton = layer.querySelector(`[data-fw-text-color="${freedomWallSelectedTextColor}"]`);
+  const fontButton = layer.querySelector(`[data-fw-font="${freedomWallSelectedFont}"]`);
+  const backgroundName = String(backgroundButton?.getAttribute("aria-label") || "Yellow").trim();
+  const textName = String(textButton?.getAttribute("aria-label") || "Charcoal").trim();
+  const fontName = String(fontButton?.textContent || "Theme Default").trim();
+
+  const backgroundValue = layer.querySelector("#freedomWallBackgroundValue");
+  const textValue = layer.querySelector("#freedomWallTextColorValue");
+  const fontValue = layer.querySelector("#freedomWallFontValue");
+  const backgroundPreview = layer.querySelector("#freedomWallBackgroundPreview");
+  const textPreview = layer.querySelector("#freedomWallTextColorPreview");
+  if (backgroundValue) backgroundValue.textContent = backgroundName;
+  if (textValue) textValue.textContent = textName;
+  if (fontValue) fontValue.textContent = fontName;
+  if (backgroundPreview) backgroundPreview.style.backgroundColor = FREEDOM_WALL_COLOR_HEX[freedomWallSelectedColor] || FREEDOM_WALL_COLOR_HEX.yellow;
+  if (textPreview) textPreview.style.backgroundColor = FREEDOM_WALL_TEXT_COLOR_HEX[freedomWallSelectedTextColor] || FREEDOM_WALL_TEXT_COLOR_HEX.charcoal;
+
+  const summary = layer.querySelector("#freedomWallCustomizeSummary");
+  if (summary) {
+    const values = [backgroundName];
+    if (freedomWallConfig?.freedomWallAllowTextColor) values.push(textName);
+    if (freedomWallConfig?.freedomWallAllowFont) values.push(fontName);
+    summary.textContent = values.join(" · ");
+    summary.title = values.join(" · ");
+  }
+}
+
+function closeFreedomWallCustomizerPanel(kind = "") {
+  const layer = document.getElementById("homepageEffectLayer");
+  if (!layer) return;
+  layer.querySelectorAll("[data-fw-customizer-panel]").forEach((panel) => {
+    if (!kind || panel.dataset.fwCustomizerPanel === kind) {
+      panel.hidden = true;
+      panel.style.removeProperty("--fw-picker-left");
+      panel.style.removeProperty("--fw-picker-top");
+      panel.style.removeProperty("--fw-picker-width");
+      panel.style.removeProperty("--fw-picker-max-height");
+    }
+  });
+  layer.querySelectorAll("[data-fw-customizer-toggle]").forEach((button) => {
+    if (!kind || button.dataset.fwCustomizerToggle === kind) button.setAttribute("aria-expanded", "false");
+  });
+  layer.querySelectorAll(".freedomWallCustomizationField.is-options-open").forEach((field) => {
+    const button = field.querySelector("[data-fw-customizer-toggle]");
+    if (!kind || button?.dataset.fwCustomizerToggle === kind) field.classList.remove("is-options-open");
+  });
+  if (!layer.querySelector('[data-fw-customizer-panel]:not([hidden])')) {
+    const backdrop = layer.querySelector("#freedomWallCustomizerBackdrop");
+    if (backdrop) backdrop.hidden = true;
+    layer.querySelector(".freedomWallComposer")?.classList.remove("is-customizer-picker-open");
+  }
+}
+
+function positionFreedomWallCustomizerPanel(kind) {
+  const layer = document.getElementById("homepageEffectLayer");
+  const panel = layer?.querySelector(`[data-fw-customizer-panel="${kind}"]`);
+  const trigger = layer?.querySelector(`[data-fw-customizer-toggle="${kind}"]`);
+  if (!panel || !trigger || panel.hidden) return;
+
+  // Phones use the CSS bottom sheet so every choice has its own scrolling area.
+  if (window.matchMedia("(max-width: 700px)").matches) {
+    panel.style.removeProperty("--fw-picker-left");
+    panel.style.removeProperty("--fw-picker-top");
+    panel.style.removeProperty("--fw-picker-width");
+    panel.style.removeProperty("--fw-picker-max-height");
+    return;
+  }
+
+  requestAnimationFrame(() => {
+    if (panel.hidden) return;
+    const triggerRect = trigger.getBoundingClientRect();
+    const viewportW = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+    const viewportH = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+    const gap = 8;
+    const edge = 14;
+    const width = Math.min(460, Math.max(330, triggerRect.width));
+    const maxHeight = Math.min(360, Math.max(220, viewportH - edge * 2));
+    const measuredHeight = Math.min(panel.scrollHeight || 280, maxHeight);
+    const left = Math.max(edge, Math.min(triggerRect.left, viewportW - width - edge));
+    const roomBelow = viewportH - triggerRect.bottom - edge;
+    let top = triggerRect.bottom + gap;
+    if (roomBelow < Math.min(measuredHeight, 230)) {
+      top = Math.max(edge, triggerRect.top - measuredHeight - gap);
+    }
+    if (top + measuredHeight > viewportH - edge) top = Math.max(edge, viewportH - measuredHeight - edge);
+
+    panel.style.setProperty("--fw-picker-left", `${Math.round(left)}px`);
+    panel.style.setProperty("--fw-picker-top", `${Math.round(top)}px`);
+    panel.style.setProperty("--fw-picker-width", `${Math.round(width)}px`);
+    panel.style.setProperty("--fw-picker-max-height", `${Math.round(maxHeight)}px`);
+  });
+}
+
+function toggleFreedomWallCustomizerPanel(kind) {
+  const layer = document.getElementById("homepageEffectLayer");
+  if (!layer) return;
+  const panel = layer.querySelector(`[data-fw-customizer-panel="${kind}"]`);
+  const trigger = layer.querySelector(`[data-fw-customizer-toggle="${kind}"]`);
+  if (!panel || !trigger || trigger.closest("[hidden]")) return;
+  const shouldOpen = panel.hidden;
+  closeFreedomWallCustomizerPanel();
+  if (!shouldOpen) return;
+
+  panel.hidden = false;
+  trigger.setAttribute("aria-expanded", "true");
+  trigger.closest(".freedomWallCustomizationField")?.classList.add("is-options-open");
+  const backdrop = layer.querySelector("#freedomWallCustomizerBackdrop");
+  if (backdrop) backdrop.hidden = false;
+  layer.querySelector(".freedomWallComposer")?.classList.add("is-customizer-picker-open");
+  positionFreedomWallCustomizerPanel(kind);
+}
+
+function setFreedomWallCustomizeOpen(open) {
+  const layer = document.getElementById("homepageEffectLayer");
+  const body = layer?.querySelector("#freedomWallCustomizeBody");
+  const toggle = layer?.querySelector("#freedomWallCustomizeToggle");
+  const hint = layer?.querySelector("#freedomWallCustomizeHint");
+  if (!body || !toggle) return;
+  const next = Boolean(open);
+  body.hidden = !next;
+  toggle.setAttribute("aria-expanded", next ? "true" : "false");
+  toggle.closest(".freedomWallCustomizePanel")?.classList.toggle("is-open", next);
+  if (!next) closeFreedomWallCustomizerPanel();
+  if (hint) {
+    const copy = getFreedomWallUiCopy(freedomWallConfig?.freedomWallTheme);
+    hint.textContent = next ? copy.customizeOpenHint : copy.customizeClosedHint;
+  }
+}
+
+function toggleFreedomWallCustomizePanel() {
+  const layer = document.getElementById("homepageEffectLayer");
+  const body = layer?.querySelector("#freedomWallCustomizeBody");
+  if (!body) return;
+  setFreedomWallCustomizeOpen(body.hidden);
+}
+
 function selectFreedomWallColor(color) {
   const safe = FREEDOM_WALL_COLORS.includes(String(color || "").toLowerCase()) ? String(color).toLowerCase() : "yellow";
   freedomWallSelectedColor = safe;
   const layer = document.getElementById("homepageEffectLayer");
   layer?.querySelectorAll("[data-fw-color]").forEach((button) => button.classList.toggle("is-selected", button.dataset.fwColor === safe));
+  if (freedomWallConfig?.freedomWallAllowTextColor) {
+    const resolved = resolveFreedomWallTextColor(freedomWallSelectedTextColor, safe, freedomWallConfig?.freedomWallTheme);
+    const adjusted = resolved !== freedomWallSelectedTextColor;
+    freedomWallSelectedTextColor = resolved;
+    layer?.querySelectorAll("[data-fw-text-color]").forEach((button) => button.classList.toggle("is-selected", button.dataset.fwTextColor === resolved));
+    setFreedomWallContrastHint(adjusted);
+  }
+  updateFreedomWallCustomizationSummary();
+}
+
+function selectFreedomWallTextColor(color) {
+  if (!freedomWallConfig?.freedomWallAllowTextColor) return;
+  const requested = normalizeFreedomWallTextColor(color) || "charcoal";
+  const safe = resolveFreedomWallTextColor(requested, freedomWallSelectedColor, freedomWallConfig?.freedomWallTheme);
+  freedomWallSelectedTextColor = safe;
+  const layer = document.getElementById("homepageEffectLayer");
+  layer?.querySelectorAll("[data-fw-text-color]").forEach((button) => button.classList.toggle("is-selected", button.dataset.fwTextColor === safe));
+  setFreedomWallContrastHint(safe !== requested);
+  updateFreedomWallCustomizationSummary();
+}
+
+function selectFreedomWallFont(font) {
+  if (!freedomWallConfig?.freedomWallAllowFont) return;
+  const safe = normalizeFreedomWallFont(font);
+  freedomWallSelectedFont = safe;
+  const layer = document.getElementById("homepageEffectLayer");
+  layer?.querySelectorAll("[data-fw-font]").forEach((button) => button.classList.toggle("is-selected", button.dataset.fwFont === safe));
+  updateFreedomWallCustomizationSummary();
 }
 
 function openFreedomWallComposer() {
@@ -4558,7 +4960,14 @@ function openFreedomWallComposer() {
   if (note) note.value = "";
   resetFreedomWallPendingMedia();
   if (status) status.textContent = "";
+  freedomWallSelectedTextColor = "charcoal";
+  freedomWallSelectedFont = "theme-default";
   selectFreedomWallColor(FREEDOM_WALL_COLORS[Math.floor(Math.random() * FREEDOM_WALL_COLORS.length)]);
+  if (freedomWallConfig?.freedomWallAllowTextColor) selectFreedomWallTextColor(freedomWallSelectedTextColor);
+  if (freedomWallConfig?.freedomWallAllowFont) selectFreedomWallFont("theme-default");
+  setFreedomWallContrastHint(false);
+  updateFreedomWallCustomizationSummary();
+  setFreedomWallCustomizeOpen(false);
   composer.hidden = false;
   window.setTimeout(() => note?.focus(), 30);
 }
@@ -4567,7 +4976,29 @@ function closeFreedomWallComposer(event) {
   event?.preventDefault?.();
   const layer = document.getElementById("homepageEffectLayer");
   const composer = layer?.querySelector("#freedomWallComposer");
+  setFreedomWallCustomizeOpen(false);
   if (composer) composer.hidden = true;
+}
+
+function isFreedomWallRulesCompatibilityError(error) {
+  const code = String(error?.code || "").toLowerCase();
+  const message = String(error?.message || error || "").toLowerCase();
+  return code.includes("permission-denied")
+    || code.includes("permission_denied")
+    || message.includes("missing or insufficient permissions")
+    || message.includes("permission denied")
+    || message.includes("permission_denied");
+}
+
+function buildFreedomWallLegacyCompatiblePayload(payload = {}) {
+  const legacy = { ...payload };
+  delete legacy.TextColor;
+  delete legacy.FontStyle;
+  const requestedColor = String(legacy.Color || "yellow").trim().toLowerCase();
+  legacy.Color = FREEDOM_WALL_LEGACY_COLORS.has(requestedColor)
+    ? requestedColor
+    : (FREEDOM_WALL_LEGACY_COLOR_MAP[requestedColor] || "yellow");
+  return legacy;
 }
 
 async function submitFreedomWallNote(event) {
@@ -4613,6 +5044,8 @@ async function submitFreedomWallNote(event) {
       DeviceId: getFreedomWallDeviceId(),
       CreatedAtMs: now
     };
+    if (freedomWallConfig?.freedomWallAllowTextColor) payload.TextColor = freedomWallSelectedTextColor;
+    if (freedomWallConfig?.freedomWallAllowFont) payload.FontStyle = freedomWallSelectedFont;
     try { payload.CreatedAt = firebase.firestore.FieldValue.serverTimestamp(); } catch (error) {}
     // Give the document its final Firestore id first. Polaroid media uses the same id.
     const noteRef = db.collection(FREEDOM_WALL_COLLECTION).doc();
@@ -4640,20 +5073,50 @@ async function submitFreedomWallNote(event) {
       renderFreedomWallNotes(freedomWallNotesCache);
     }
 
-    try {
+    let committedPayload = payload;
+    const commitNotePayload = async (notePayload) => {
       if (mediaDocRef && mediaPayload) {
         const batch = db.batch();
         batch.set(mediaDocRef, mediaPayload);
-        batch.set(noteRef, payload);
+        batch.set(noteRef, notePayload);
         await batch.commit();
       } else {
-        await noteRef.set(payload);
+        await noteRef.set(notePayload);
       }
+    };
+    try {
+      await commitNotePayload(payload);
     } catch (writeError) {
+      // Fail-safe for deployments that still use the v477/v454 wall rules.
+      // Those rules reject TextColor/FontStyle and any color outside the old 8.
+      // Retry once with a rules-compatible payload instead of making the user
+      // think the wall is broken. Full customization persists as soon as the
+      // updated Firestore rules are published.
+      if (isFreedomWallRulesCompatibilityError(writeError)) {
+        const legacyPayload = buildFreedomWallLegacyCompatiblePayload(payload);
+        try {
+          await commitNotePayload(legacyPayload);
+          committedPayload = legacyPayload;
+          console.warn("Freedom Wall used legacy Firestore-rules compatibility mode. Publish the updated wall rules to persist Text Color, Font, and all 20 note colors.");
+        } catch (fallbackError) {
+          freedomWallNotesCache = freedomWallNotesCache.filter((item) => item.id !== noteRef.id);
+          CLASSBOARD_MEDIA_DATA_CACHE.delete(`freedomWall/${noteRef.id}`);
+          renderFreedomWallNotes(freedomWallNotesCache);
+          throw fallbackError;
+        }
+      } else {
+        freedomWallNotesCache = freedomWallNotesCache.filter((item) => item.id !== noteRef.id);
+        CLASSBOARD_MEDIA_DATA_CACHE.delete(`freedomWall/${noteRef.id}`);
+        renderFreedomWallNotes(freedomWallNotesCache);
+        throw writeError;
+      }
+    }
+
+    if (committedPayload !== payload) {
+      const fallbackNote = normalizeFreedomWallNote({ id: noteRef.id, ...committedPayload }, freedomWallNotesCache.length);
       freedomWallNotesCache = freedomWallNotesCache.filter((item) => item.id !== noteRef.id);
-      CLASSBOARD_MEDIA_DATA_CACHE.delete(`freedomWall/${noteRef.id}`);
+      if (fallbackNote) freedomWallNotesCache.push(fallbackNote);
       renderFreedomWallNotes(freedomWallNotesCache);
-      throw writeError;
     }
 
     saveFreedomWallAuthor(author);
@@ -4725,9 +5188,14 @@ function configureFreedomWall(config) {
   const addButton = layer.querySelector("#freedomWallAddBtn");
   const authorInput = layer.querySelector("#freedomWallAuthorInput");
   const authorLabel = layer.querySelector('label[for="freedomWallAuthorInput"]');
+  const textColorField = layer.querySelector("#freedomWallTextColorField");
+  const fontField = layer.querySelector("#freedomWallFontField");
   if (scene) {
     const theme = config.freedomWallTheme || "sticky-notes";
     scene.dataset.theme = theme;
+    // v479: mirror the wall theme on the overlay so the global close control
+    // can use the same visual language as the wall label and Add Note button.
+    layer.dataset.freedomWallTheme = theme;
     if (theme === "seasonal") {
       scene.dataset.seasonalVariant = getFreedomWallSeasonalVariant();
     } else {
@@ -4742,6 +5210,9 @@ function configureFreedomWall(config) {
   if (addButton) addButton.hidden = !config.freedomWallAllowPosting;
   if (authorInput) authorInput.hidden = !config.freedomWallShowNames;
   if (authorLabel) authorLabel.hidden = !config.freedomWallShowNames;
+  if (textColorField) textColorField.hidden = !config.freedomWallAllowTextColor;
+  if (fontField) fontField.hidden = !config.freedomWallAllowFont;
+  updateFreedomWallCustomizationSummary();
   if (!config.freedomWallAllowPosting) closeFreedomWallComposer();
   updateFreedomWallPrompt(config);
   if (freedomWallNotesCache.length) renderFreedomWallNotes(freedomWallNotesCache);

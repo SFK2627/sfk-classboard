@@ -33137,3 +33137,595 @@ label[for="freedomWallTheme"]{display:block}
 .homepageFreedomWallScene[data-theme="poste"] .fwUtilityNotice{background:#f2cf43;border-color:#665615;border-radius:3px}
 .homepageFreedomWallScene[data-theme="poste"] .fwUtilityNotice::before{content:"⚡";inset:15px 4px;font:900 28px/1 Arial,sans-serif;color:#332d16;opacity:.76}
 .homepageFreedomWallScene[data-theme="polaroid"] .freedomWallColorRow{display:none!important}
+
+/* =========================================================
+   v478 — SFK #BeKind Wall compact prompt + per-note customization
+   Background color always available. Text color/font are Admin-controlled.
+========================================================= */
+.freedomWallCustomizationField{display:grid;gap:5px;margin-top:2px}
+.freedomWallCustomizationField[hidden]{display:none!important}
+.freedomWallCustomizationField>label{margin:0!important}
+.freedomWallCustomizationHint{display:block;margin-top:1px;color:#777;font:700 9.5px/1.3 Arial,sans-serif}
+.freedomWallCustomizationHint.is-warning{color:#9a5200}
+.freedomWallSwatchRow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:4px 1px 6px}
+.freedomWallSwatchRow button{position:relative;width:25px;height:25px;flex:0 0 25px;padding:0;border:2px solid rgba(0,0,0,.10);border-radius:50%;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(255,255,255,.28);transition:transform .12s ease,box-shadow .12s ease,border-color .12s ease}
+.freedomWallSwatchRow button:hover{transform:translateY(-1px)}
+.freedomWallSwatchRow button.is-selected{border-color:#111!important;box-shadow:0 0 0 2px #fff,0 0 0 4px #111!important}
+.freedomWallSwatchRow button.is-selected::after{content:"✓";position:absolute;inset:0;display:grid;place-items:center;color:#111;font:1000 12px/1 Arial,sans-serif;text-shadow:0 1px 2px rgba(255,255,255,.95)}
+.freedomWallSwatchRow button[data-fw-color="navy"].is-selected::after,
+.freedomWallSwatchRow button[data-fw-color="black"].is-selected::after,
+.freedomWallSwatchRow button[data-fw-text-color="black"].is-selected::after,
+.freedomWallSwatchRow button[data-fw-text-color="charcoal"].is-selected::after,
+.freedomWallSwatchRow button[data-fw-text-color="navy"].is-selected::after,
+.freedomWallSwatchRow button[data-fw-text-color="blue"].is-selected::after,
+.freedomWallSwatchRow button[data-fw-text-color="red"].is-selected::after,
+.freedomWallSwatchRow button[data-fw-text-color="maroon"].is-selected::after,
+.freedomWallSwatchRow button[data-fw-text-color="green"].is-selected::after,
+.freedomWallSwatchRow button[data-fw-text-color="brown"].is-selected::after,
+.freedomWallSwatchRow button[data-fw-text-color="purple"].is-selected::after,
+.freedomWallSwatchRow button[data-fw-text-color="pink"].is-selected::after{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.55)}
+
+.freedomWallColorRow button[data-fw-color="yellow"]{background:#fff1a5}.freedomWallColorRow button[data-fw-color="cream"]{background:#fff6d9}.freedomWallColorRow button[data-fw-color="white"]{background:#fffdf5}.freedomWallColorRow button[data-fw-color="peach"]{background:#ffd6c9}.freedomWallColorRow button[data-fw-color="coral"]{background:#ffb9a8}.freedomWallColorRow button[data-fw-color="pink"]{background:#ffc7df}.freedomWallColorRow button[data-fw-color="rose"]{background:#f6b4c9}.freedomWallColorRow button[data-fw-color="lavender"]{background:#e6d7ff}.freedomWallColorRow button[data-fw-color="violet"]{background:#d6c3ff}.freedomWallColorRow button[data-fw-color="sky"]{background:#c7eaff}.freedomWallColorRow button[data-fw-color="blue"]{background:#acd3ff}.freedomWallColorRow button[data-fw-color="mint"]{background:#c9f2d9}.freedomWallColorRow button[data-fw-color="sage"]{background:#d5e3c1}.freedomWallColorRow button[data-fw-color="green"]{background:#bfe3b4}.freedomWallColorRow button[data-fw-color="lime"]{background:#e2f3a7}.freedomWallColorRow button[data-fw-color="orange"]{background:#ffd0a1}.freedomWallColorRow button[data-fw-color="tan"]{background:#dfc69c}.freedomWallColorRow button[data-fw-color="gray"]{background:#d9dce1}.freedomWallColorRow button[data-fw-color="navy"]{background:#26334f}.freedomWallColorRow button[data-fw-color="black"]{background:#202124}
+.freedomWallTextColorRow button[data-fw-text-color="black"]{background:#171717}.freedomWallTextColorRow button[data-fw-text-color="charcoal"]{background:#34383d}.freedomWallTextColorRow button[data-fw-text-color="white"]{background:#fff;border-color:#c7c7c7}.freedomWallTextColorRow button[data-fw-text-color="navy"]{background:#183153}.freedomWallTextColorRow button[data-fw-text-color="blue"]{background:#165fbd}.freedomWallTextColorRow button[data-fw-text-color="red"]{background:#c62828}.freedomWallTextColorRow button[data-fw-text-color="maroon"]{background:#7f1d2d}.freedomWallTextColorRow button[data-fw-text-color="green"]{background:#237a3b}.freedomWallTextColorRow button[data-fw-text-color="brown"]{background:#70452f}.freedomWallTextColorRow button[data-fw-text-color="purple"]{background:#6d3dad}.freedomWallTextColorRow button[data-fw-text-color="pink"]{background:#b83280}.freedomWallTextColorRow button[data-fw-text-color="orange"]{background:#b45309}.freedomWallTextColorRow button[data-fw-text-color="gold"]{background:#b88708}
+
+.freedomWallFontGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;padding:3px 0 5px}
+.freedomWallFontGrid button{min-width:0;border:1px solid #dadde2;border-radius:9px;background:#fafafa;color:#202124;padding:7px 6px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;line-height:1.05;text-align:center}
+.freedomWallFontGrid button.is-selected{border-color:#111;background:#fff7cf;box-shadow:inset 0 0 0 1px #111}
+.freedomWallFontGrid [data-fw-font="theme-default"]{font-family:Arial,sans-serif;font-weight:900}.freedomWallFontGrid [data-fw-font="clean"]{font-family:Arial,"Helvetica Neue",sans-serif}.freedomWallFontGrid [data-fw-font="rounded"]{font-family:"Trebuchet MS","Arial Rounded MT Bold",Arial,sans-serif}.freedomWallFontGrid [data-fw-font="handwritten"]{font-family:"Segoe Print","Bradley Hand","Comic Sans MS",cursive}.freedomWallFontGrid [data-fw-font="marker"]{font-family:"Comic Sans MS","Segoe Print",cursive;font-weight:900}.freedomWallFontGrid [data-fw-font="classic-serif"]{font-family:Georgia,"Times New Roman",serif}.freedomWallFontGrid [data-fw-font="typewriter"]{font-family:"Courier New",Courier,monospace}.freedomWallFontGrid [data-fw-font="comic"]{font-family:"Comic Sans MS","Trebuchet MS",cursive;font-weight:900}.freedomWallFontGrid [data-fw-font="bold-poster"]{font-family:Impact,"Arial Black",Arial,sans-serif;letter-spacing:.02em}.freedomWallFontGrid [data-fw-font="elegant"]{font-family:Georgia,"Palatino Linotype",serif;font-style:italic}.freedomWallFontGrid [data-fw-font="casual"]{font-family:"Trebuchet MS","Segoe UI",sans-serif}.freedomWallFontGrid [data-fw-font="monospace"]{font-family:Consolas,"Courier New",monospace}
+
+/* All notes retain their theme shape/attachment treatment; this layer only changes the paper color. */
+.homepageFreedomWallScene:not([data-theme="polaroid"]) .freedomWallNote{
+  background:var(--fw-note-bg,#fff1a5)!important;
+  background:linear-gradient(175deg,color-mix(in srgb,var(--fw-note-bg,#fff1a5) 94%,#fff 6%),color-mix(in srgb,var(--fw-note-bg,#fff1a5) 89%,#000 11%))!important;
+}
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallNote{background:linear-gradient(180deg,color-mix(in srgb,var(--fw-note-bg,#f7efcf) 82%,#fff5cf 18%),color-mix(in srgb,var(--fw-note-bg,#ead9ad) 82%,#bd9d62 18%))!important}
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallNote{background:linear-gradient(180deg,color-mix(in srgb,var(--fw-note-bg,#fff9e9) 84%,#fff7e5 16%),color-mix(in srgb,var(--fw-note-bg,#e9ddc5) 82%,#c8b792 18%))!important}
+.homepageFreedomWallScene[data-theme="newspaper"] .freedomWallNote{background:linear-gradient(180deg,color-mix(in srgb,var(--fw-note-bg,#fffef8) 42%,#fffef8 58%),color-mix(in srgb,var(--fw-note-bg,#f1eddf) 36%,#e9e4d5 64%))!important;filter:none!important}
+.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallNote{background:linear-gradient(180deg,color-mix(in srgb,var(--fw-note-bg,#d9e7e1) 88%,#fff 12%),color-mix(in srgb,var(--fw-note-bg,#d9e7e1) 80%,#18232b 20%))!important}
+.homepageFreedomWallScene[data-theme="chalkboard"] .freedomWallNote{background:linear-gradient(165deg,color-mix(in srgb,var(--fw-note-bg,#e9e4c9) 84%,#f7f0d8 16%),color-mix(in srgb,var(--fw-note-bg,#e9e4c9) 78%,#4d654f 22%))!important}
+
+/* Polaroid keeps the white frame. Chosen note color becomes caption/backing accent. */
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallNote{--fw-note-bg:#fff1a5;background:#fff!important}
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallNote p{background:color-mix(in srgb,var(--fw-note-bg) 18%,#fff 82%);border-left:4px solid var(--fw-note-bg);border-radius:3px;padding:5px 7px;box-sizing:border-box}
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallNote.has-media p{background:color-mix(in srgb,var(--fw-note-bg) 18%,#fff 82%)!important;border-left:4px solid var(--fw-note-bg)!important;padding:5px 7px!important}
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallColorRow{display:flex!important}
+
+/* Text color safety is decided in JS; this class only renders the safe result. */
+.homepageFreedomWallScene .freedomWallNote.has-custom-text p,
+.homepageFreedomWallScene .freedomWallNote.has-custom-text small{color:var(--fw-note-text-color,#171717)!important;text-shadow:none!important}
+
+/* Curated per-note fonts. Theme Default intentionally adds no class. */
+.homepageFreedomWallScene .freedomWallNote.is-font-clean p,.homepageFreedomWallScene .freedomWallNote.is-font-clean small{font-family:Arial,"Helvetica Neue",sans-serif!important}
+.homepageFreedomWallScene .freedomWallNote.is-font-rounded p,.homepageFreedomWallScene .freedomWallNote.is-font-rounded small{font-family:"Trebuchet MS","Arial Rounded MT Bold",Arial,sans-serif!important}
+.homepageFreedomWallScene .freedomWallNote.is-font-handwritten p,.homepageFreedomWallScene .freedomWallNote.is-font-handwritten small{font-family:"Segoe Print","Bradley Hand","Comic Sans MS",cursive!important}
+.homepageFreedomWallScene .freedomWallNote.is-font-marker p,.homepageFreedomWallScene .freedomWallNote.is-font-marker small{font-family:"Comic Sans MS","Segoe Print",cursive!important;font-weight:900!important}
+.homepageFreedomWallScene .freedomWallNote.is-font-classic-serif p,.homepageFreedomWallScene .freedomWallNote.is-font-classic-serif small{font-family:Georgia,"Times New Roman",serif!important}
+.homepageFreedomWallScene .freedomWallNote.is-font-typewriter p,.homepageFreedomWallScene .freedomWallNote.is-font-typewriter small{font-family:"Courier New",Courier,monospace!important}
+.homepageFreedomWallScene .freedomWallNote.is-font-comic p,.homepageFreedomWallScene .freedomWallNote.is-font-comic small{font-family:"Comic Sans MS","Trebuchet MS",cursive!important;font-weight:900!important}
+.homepageFreedomWallScene .freedomWallNote.is-font-bold-poster p,.homepageFreedomWallScene .freedomWallNote.is-font-bold-poster small{font-family:Impact,"Arial Black",Arial,sans-serif!important;font-weight:900!important;letter-spacing:.015em}
+.homepageFreedomWallScene .freedomWallNote.is-font-elegant p,.homepageFreedomWallScene .freedomWallNote.is-font-elegant small{font-family:Georgia,"Palatino Linotype",serif!important;font-style:italic}
+.homepageFreedomWallScene .freedomWallNote.is-font-casual p,.homepageFreedomWallScene .freedomWallNote.is-font-casual small{font-family:"Trebuchet MS","Segoe UI",sans-serif!important}
+.homepageFreedomWallScene .freedomWallNote.is-font-monospace p,.homepageFreedomWallScene .freedomWallNote.is-font-monospace small{font-family:Consolas,"Courier New",monospace!important}
+
+/* Compact, content-fit center prompt. */
+.homepageFreedomWallScene .freedomWallPromptCard{
+  width:fit-content!important;inline-size:fit-content!important;
+  min-width:240px;max-width:min(510px,calc(100vw - 70px))!important;
+  padding:17px 45px 15px 20px!important;
+  border-radius:14px;
+}
+.homepageFreedomWallScene .freedomWallPromptEyebrow{margin-bottom:5px;font-size:9px}
+.homepageFreedomWallScene .freedomWallPromptCard h2{font-size:clamp(20px,2.35vw,32px)!important;line-height:1.08!important}
+.homepageFreedomWallScene .freedomWallPromptCard p{margin-top:7px!important;font-size:clamp(12px,1.1vw,15px)!important;line-height:1.36!important}
+.homepageFreedomWallScene .freedomWallPromptClose{right:7px;top:6px;width:30px;height:30px;font-size:27px}
+
+/* Jungle prompt = hanging wooden forest sign, not a paper tag. */
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallPromptCard{background:linear-gradient(180deg,#8f6338,#654126)!important;border:4px solid #422a19!important;border-radius:8px!important;box-shadow:inset 0 0 0 2px rgba(255,255,255,.08),0 15px 30px rgba(5,27,15,.35)!important;color:#fff7d9!important}
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallPromptCard::before{left:8%;right:8%;top:6px;width:auto!important;height:3px!important;translate:0!important;border-radius:999px!important;background:rgba(255,224,145,.25)!important}
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallPromptCard::after{left:16%;right:16%;top:-24px;height:24px;border-left:2px solid #4a3928;border-right:2px solid #4a3928;background:none!important}
+
+/* Polaroid prompt = memory-board title placard, deliberately not a photo frame. */
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallPromptCard{transform:rotate(-.35deg);background:linear-gradient(180deg,#f7ecd9,#ead6b9)!important;border:1px solid #b68f69!important;border-radius:8px!important;box-shadow:0 14px 24px rgba(55,33,18,.20)!important;color:#5b4431!important}
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallPromptCard::before{width:62px!important;height:13px!important;left:50%!important;top:-7px!important;translate:-50% 0!important;transform:rotate(-2deg);background:rgba(244,224,180,.92)!important;box-shadow:0 1px 2px rgba(0,0,0,.10)}
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallPromptCard::after{display:none!important}
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallPromptCard h2{font-family:"Trebuchet MS",Arial,sans-serif!important;color:#543f30!important}
+
+/* Utility/Poste prompt = weatherproof utility notice fixed to the pole. */
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallPromptCard{background:linear-gradient(180deg,#f7f3e8,#dfd6c5)!important;border:2px solid #4f4b43!important;border-radius:3px!important;box-shadow:0 12px 22px rgba(32,34,34,.25)!important;color:#272727!important}
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallPromptCard::before{left:11px!important;right:11px!important;top:8px!important;width:auto!important;height:3px!important;background:repeating-linear-gradient(90deg,#2b2b2b 0 10px,#d2b249 10px 20px)!important}
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallPromptCard::after{content:"•                         •"!important;left:0;right:0;top:1px;height:auto!important;background:none!important;color:#5d574f;font:900 12px/1 Arial,sans-serif;text-align:center;letter-spacing:.2em}
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallPromptCard h2{font-family:"Arial Narrow",Arial,sans-serif!important;text-transform:uppercase;letter-spacing:.025em}
+
+/* Comic prompt = title/header panel instead of speech bubble. */
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallPromptCard{background:#fffdf3!important;border:4px solid #111!important;border-radius:4px!important;box-shadow:8px 8px 0 #111!important;transform:rotate(-.5deg)}
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallPromptCard::before{left:0!important;right:0!important;top:0!important;width:auto!important;height:7px!important;background:linear-gradient(90deg,#ef304f 0 33%,#ffd83d 33% 66%,#1c6ad8 66%)!important}
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallPromptCard::after{display:none!important}
+.homepageFreedomWallScene[data-theme="comic"] .freedomWallPromptCard h2{font-family:Impact,"Arial Black",Arial,sans-serif!important;text-transform:uppercase;letter-spacing:.01em}
+
+/* Filipino prompt = clean local-inspired plaque. */
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallPromptCard{background:linear-gradient(180deg,#fffdf6,#f7eed9)!important;border:2px solid #174a8b!important;border-radius:9px!important;box-shadow:0 0 0 3px rgba(240,193,55,.78),0 14px 25px rgba(18,53,110,.17)!important}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallPromptCard::before{left:0!important;right:0!important;bottom:0!important;top:auto!important;width:auto!important;height:5px!important;background:linear-gradient(90deg,#0d4fa8 0 38%,#fff 38% 50%,#d0252d 50% 88%,#f0c139 88%)!important}
+.homepageFreedomWallScene[data-theme="filipino"] .freedomWallPromptCard::after{content:"✦"!important;left:12px;top:9px;width:auto!important;height:auto!important;background:none!important;color:#e2ad20;font:900 14px/1 Georgia,serif}
+
+/* Chalkboard prompt = actual chalk announcement area. */
+.homepageFreedomWallScene[data-theme="chalkboard"] .freedomWallPromptCard{background:linear-gradient(160deg,#244a35,#163626)!important;border:7px solid #9b744d!important;border-radius:3px!important;box-shadow:inset 0 0 0 2px #d4b78e,0 14px 28px rgba(0,0,0,.30)!important;color:#f3f3df!important}
+.homepageFreedomWallScene[data-theme="chalkboard"] .freedomWallPromptCard::before{inset:8px!important;width:auto!important;height:auto!important;background:radial-gradient(circle,rgba(255,255,255,.08) 0 1px,transparent 1.2px) 0 0/11px 11px!important;opacity:.5}
+.homepageFreedomWallScene[data-theme="chalkboard"] .freedomWallPromptCard::after{display:none!important}
+.homepageFreedomWallScene[data-theme="chalkboard"] .freedomWallPromptEyebrow,.homepageFreedomWallScene[data-theme="chalkboard"] .freedomWallPromptCard h2,.homepageFreedomWallScene[data-theme="chalkboard"] .freedomWallPromptCard p{font-family:"Segoe Print","Comic Sans MS",cursive!important;color:#f5f4df!important;text-shadow:0 0 1px rgba(255,255,255,.35)}
+.homepageFreedomWallScene[data-theme="chalkboard"] .freedomWallPromptClose{color:#fff!important}
+
+/* Newspaper prompt = editorial/headline block. */
+.homepageFreedomWallScene[data-theme="newspaper"] .freedomWallPromptCard{background:#f7f3e8!important;border:0!important;border-top:5px double #1b1b1b!important;border-bottom:3px solid #1b1b1b!important;border-radius:0!important;box-shadow:0 10px 20px rgba(0,0,0,.13)!important;color:#171717!important}
+.homepageFreedomWallScene[data-theme="newspaper"] .freedomWallPromptCard::before{left:0!important;right:0!important;top:9px!important;width:auto!important;height:1px!important;background:#777!important}
+.homepageFreedomWallScene[data-theme="newspaper"] .freedomWallPromptCard::after{display:none!important}
+.homepageFreedomWallScene[data-theme="newspaper"] .freedomWallPromptCard h2{font-family:Georgia,"Times New Roman",serif!important;text-transform:none;letter-spacing:-.02em!important}
+
+/* Coding prompt = terminal/header panel. */
+.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallPromptCard{background:#0d151b!important;border:1px solid #40515c!important;border-radius:9px!important;box-shadow:0 14px 26px rgba(0,0,0,.38)!important;color:#eaf5ef!important;padding-top:25px!important;text-align:left!important}
+.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallPromptCard::before{left:0!important;right:0!important;top:0!important;width:auto!important;height:17px!important;background:linear-gradient(180deg,#26333c,#1c272e)!important;border-radius:8px 8px 0 0!important}
+.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallPromptCard::after{content:"●  ●  ●"!important;left:9px;top:4px;width:auto!important;height:auto!important;background:none!important;color:#66d998;font:900 8px/1 monospace;letter-spacing:2px}
+.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallPromptEyebrow,.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallPromptCard h2,.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallPromptCard p{text-align:left!important;font-family:Consolas,"Courier New",monospace!important}
+.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallPromptCard h2{color:#eaf5ef!important}.homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallPromptCard p{color:#b6c8c4!important}
+
+@media(max-width:700px){
+  .homepageFreedomWallScene .freedomWallPromptCard{min-width:0!important;max-width:calc(100vw - 42px)!important;padding:14px 39px 13px 16px!important}
+  .homepageFreedomWallScene .freedomWallPromptEyebrow{font-size:8px;margin-bottom:4px}
+  .homepageFreedomWallScene .freedomWallPromptCard h2{font-size:clamp(18px,5.8vw,27px)!important}
+  .homepageFreedomWallScene .freedomWallPromptCard p{font-size:12px!important;margin-top:5px!important}
+  .homepageFreedomWallScene[data-theme="jungle"] .freedomWallPromptCard{width:fit-content!important;max-width:calc(100vw - 46px)!important;border-width:3px!important}
+  .homepageFreedomWallScene[data-theme="coding-lab"] .freedomWallPromptCard{padding-top:23px!important}
+  .freedomWallComposerCard{gap:6px!important;max-height:calc(100dvh - 20px)!important;padding:14px!important}
+  .freedomWallCustomizationField{gap:4px}.freedomWallSwatchRow{gap:5px;padding:3px 1px 5px}.freedomWallSwatchRow button{width:23px;height:23px;flex-basis:23px}
+  .freedomWallFontGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}.freedomWallFontGrid button{padding:6px 5px;font-size:10.5px}
+  .freedomWallCustomizationHint{font-size:9px}
+}
+
+/* =========================================================
+   v479 — SFK #BeKind Wall themed chrome + universal note readability
+   The wall badge, Add Note button, and global close button now follow the
+   active wall theme. Every note receives a contrast-safe rendered text color.
+========================================================= */
+.homepageFreedomWallScene{
+  --fw-ui-bg:rgba(255,255,255,.94);
+  --fw-ui-fg:#171717;
+  --fw-ui-muted:#5b6168;
+  --fw-ui-border:rgba(0,0,0,.14);
+  --fw-ui-accent:#f4c928;
+  --fw-ui-accent-fg:#171717;
+  --fw-ui-shadow:0 10px 22px rgba(0,0,0,.18);
+  --fw-ui-radius:13px;
+  --fw-ui-font:Arial,sans-serif;
+  --fw-ui-border-width:1px;
+}
+.homepageFreedomWallScene .freedomWallBrand{
+  background:var(--fw-ui-bg)!important;color:var(--fw-ui-fg)!important;
+  border:var(--fw-ui-border-width) solid var(--fw-ui-border)!important;
+  border-radius:var(--fw-ui-radius)!important;box-shadow:var(--fw-ui-shadow)!important;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+}
+.homepageFreedomWallScene .freedomWallBrand strong{color:var(--fw-ui-fg)!important;font-family:var(--fw-ui-font)!important}
+.homepageFreedomWallScene .freedomWallBrand span{color:var(--fw-ui-muted)!important;font-family:var(--fw-ui-font)!important}
+.homepageFreedomWallScene .freedomWallAddBtn{
+  background:var(--fw-ui-bg)!important;color:var(--fw-ui-fg)!important;
+  border:var(--fw-ui-border-width) solid var(--fw-ui-border)!important;
+  border-radius:999px!important;box-shadow:var(--fw-ui-shadow)!important;
+  font-family:var(--fw-ui-font)!important;
+}
+.homepageFreedomWallScene .freedomWallAddBtn span{
+  background:var(--fw-ui-accent)!important;color:var(--fw-ui-accent-fg)!important;
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--fw-ui-border) 70%,transparent)!important;
+}
+.homepageFreedomWallScene .freedomWallAddBtn small{color:var(--fw-ui-fg)!important;font-family:var(--fw-ui-font)!important}
+.homepageFreedomWallScene .freedomWallAddBtn:hover,
+.homepageFreedomWallScene .freedomWallAddBtn:focus-visible{transform:translateY(-2px);outline:2px solid color-mix(in srgb,var(--fw-ui-accent) 68%,#fff 32%);outline-offset:2px}
+
+/* Theme palettes for the badge and + control. */
+.homepageFreedomWallScene:is([data-theme="sticky-notes"],[data-theme="sunny"],[data-theme="school-note"],[data-theme="bulletin-board"],[data-theme="whiteboard"]){--fw-ui-bg:rgba(255,250,225,.95);--fw-ui-fg:#3b2a16;--fw-ui-muted:#705b3e;--fw-ui-border:rgba(95,61,23,.25);--fw-ui-accent:#e6b629;--fw-ui-accent-fg:#2d210f;--fw-ui-shadow:0 10px 22px rgba(76,48,18,.20)}
+.homepageFreedomWallScene:is([data-theme="rainy"],[data-theme="flood"]){--fw-ui-bg:rgba(22,42,57,.91);--fw-ui-fg:#f4fbff;--fw-ui-muted:#c7dce8;--fw-ui-border:rgba(184,222,242,.30);--fw-ui-accent:#74c9f0;--fw-ui-accent-fg:#102d3c;--fw-ui-shadow:0 10px 24px rgba(7,28,42,.35)}
+.homepageFreedomWallScene[data-theme="night"]{--fw-ui-bg:rgba(18,27,48,.93);--fw-ui-fg:#f7f8ff;--fw-ui-muted:#c9d0e9;--fw-ui-border:rgba(185,201,255,.25);--fw-ui-accent:#ffd66b;--fw-ui-accent-fg:#2d2510;--fw-ui-shadow:0 10px 28px rgba(0,0,0,.42)}
+.homepageFreedomWallScene[data-theme="jungle"]{--fw-ui-bg:linear-gradient(180deg,#855b34,#654126);--fw-ui-fg:#fff4cf;--fw-ui-muted:#e5d5a8;--fw-ui-border:#422a19;--fw-ui-accent:#7fc45d;--fw-ui-accent-fg:#17351d;--fw-ui-shadow:inset 0 0 0 1px rgba(255,255,255,.10),0 11px 24px rgba(6,31,16,.34);--fw-ui-radius:7px;--fw-ui-border-width:3px;--fw-ui-font:Georgia,"Times New Roman",serif}
+.homepageFreedomWallScene[data-theme="poste"]{--fw-ui-bg:linear-gradient(180deg,#f4f1e8,#d9d1c2);--fw-ui-fg:#252525;--fw-ui-muted:#5c5850;--fw-ui-border:#4e4a42;--fw-ui-accent:#e4c23a;--fw-ui-accent-fg:#262214;--fw-ui-shadow:0 9px 18px rgba(30,31,31,.28);--fw-ui-radius:3px;--fw-ui-border-width:2px;--fw-ui-font:"Arial Narrow",Arial,sans-serif}
+.homepageFreedomWallScene[data-theme="polaroid"]{--fw-ui-bg:linear-gradient(180deg,#fffdf8,#eee1cf);--fw-ui-fg:#4d392a;--fw-ui-muted:#786653;--fw-ui-border:#b7926e;--fw-ui-accent:#e7c99e;--fw-ui-accent-fg:#4d392a;--fw-ui-shadow:0 11px 22px rgba(55,33,18,.22);--fw-ui-radius:5px;--fw-ui-font:"Segoe Print","Comic Sans MS",cursive}
+.homepageFreedomWallScene[data-theme="newspaper"]{--fw-ui-bg:#f5f0e3;--fw-ui-fg:#171717;--fw-ui-muted:#4d4a45;--fw-ui-border:#1c1c1c;--fw-ui-accent:#1c1c1c;--fw-ui-accent-fg:#fff;--fw-ui-shadow:0 8px 16px rgba(0,0,0,.17);--fw-ui-radius:0px;--fw-ui-border-width:2px;--fw-ui-font:Georgia,"Times New Roman",serif}
+.homepageFreedomWallScene[data-theme="chalkboard"]{--fw-ui-bg:linear-gradient(160deg,#254936,#183626);--fw-ui-fg:#f2f1dd;--fw-ui-muted:#d5d8c2;--fw-ui-border:#9a744e;--fw-ui-accent:#f0e7bd;--fw-ui-accent-fg:#244332;--fw-ui-shadow:inset 0 0 0 2px #d2b98e,0 10px 22px rgba(0,0,0,.34);--fw-ui-radius:3px;--fw-ui-border-width:5px;--fw-ui-font:"Segoe Print","Comic Sans MS",cursive}
+.homepageFreedomWallScene:is([data-theme="comic"],[data-theme="comic-manga"],[data-theme="comic-strip"]){--fw-ui-bg:#fffdf3;--fw-ui-fg:#111;--fw-ui-muted:#414141;--fw-ui-border:#111;--fw-ui-accent:#ffd638;--fw-ui-accent-fg:#111;--fw-ui-shadow:5px 5px 0 #111;--fw-ui-radius:3px;--fw-ui-border-width:3px;--fw-ui-font:Impact,"Arial Black",Arial,sans-serif}
+.homepageFreedomWallScene[data-theme="comic-noir"]{--fw-ui-bg:#161616;--fw-ui-fg:#f4f1e6;--fw-ui-muted:#d2c9b6;--fw-ui-border:#f4f1e6;--fw-ui-accent:#f4f1e6;--fw-ui-accent-fg:#111;--fw-ui-shadow:5px 5px 0 rgba(0,0,0,.60);--fw-ui-radius:2px;--fw-ui-border-width:2px;--fw-ui-font:Georgia,"Times New Roman",serif}
+.homepageFreedomWallScene:is([data-theme="coding-lab"],[data-theme="retro-arcade"]){--fw-ui-bg:#101820;--fw-ui-fg:#eef8f4;--fw-ui-muted:#a9c0bb;--fw-ui-border:#426054;--fw-ui-accent:#43e889;--fw-ui-accent-fg:#092515;--fw-ui-shadow:0 0 0 1px rgba(67,232,137,.18),0 10px 24px rgba(0,0,0,.38);--fw-ui-radius:7px;--fw-ui-font:Consolas,"Courier New",monospace}
+.homepageFreedomWallScene:is([data-theme="galaxy"],[data-theme="neon-music"],[data-theme="spiderman"]){--fw-ui-bg:rgba(18,15,42,.94);--fw-ui-fg:#f8f7ff;--fw-ui-muted:#d2cdf4;--fw-ui-border:rgba(143,207,255,.42);--fw-ui-accent:#67e8ff;--fw-ui-accent-fg:#13213b;--fw-ui-shadow:0 0 0 1px rgba(255,81,202,.22),0 11px 26px rgba(0,0,0,.42);--fw-ui-radius:10px}
+.homepageFreedomWallScene[data-theme="filipino"]{--fw-ui-bg:linear-gradient(180deg,#fffdf5,#f6edd7);--fw-ui-fg:#0f448d;--fw-ui-muted:#8b262b;--fw-ui-border:#d6a72d;--fw-ui-accent:#e4b52d;--fw-ui-accent-fg:#113d7d;--fw-ui-shadow:0 0 0 2px rgba(20,76,151,.20),0 10px 22px rgba(24,56,113,.18);--fw-ui-radius:8px;--fw-ui-border-width:2px;--fw-ui-font:Georgia,"Times New Roman",serif}
+.homepageFreedomWallScene:is([data-theme="graffiti"],[data-theme="vandal"]){--fw-ui-bg:rgba(31,32,37,.92);--fw-ui-fg:#fff;--fw-ui-muted:#d5d7dc;--fw-ui-border:#55e7ff;--fw-ui-accent:#ffcf35;--fw-ui-accent-fg:#161616;--fw-ui-shadow:4px 4px 0 rgba(255,70,167,.65),0 10px 22px rgba(0,0,0,.34);--fw-ui-radius:4px;--fw-ui-border-width:2px;--fw-ui-font:"Arial Black",Arial,sans-serif}
+.homepageFreedomWallScene:is([data-theme="cafe"],[data-theme="library"],[data-theme="brick-alley"],[data-theme="detective"]){--fw-ui-bg:linear-gradient(180deg,#fff6e8,#ead9be);--fw-ui-fg:#563b27;--fw-ui-muted:#79634e;--fw-ui-border:#9d744d;--fw-ui-accent:#b98049;--fw-ui-accent-fg:#fffaf3;--fw-ui-shadow:0 10px 21px rgba(74,46,27,.24);--fw-ui-radius:8px;--fw-ui-font:Georgia,"Times New Roman",serif}
+.homepageFreedomWallScene:is([data-theme="sakura"],[data-theme="appreciation"]){--fw-ui-bg:linear-gradient(180deg,#fff8fb,#f8e2eb);--fw-ui-fg:#81485e;--fw-ui-muted:#9a6d7e;--fw-ui-border:#d59ab0;--fw-ui-accent:#e999b7;--fw-ui-accent-fg:#5c3042;--fw-ui-shadow:0 10px 22px rgba(152,87,111,.18);--fw-ui-radius:13px}
+.homepageFreedomWallScene:is([data-theme="beach"],[data-theme="rainbow"],[data-theme="dreamy-clouds"]){--fw-ui-bg:rgba(249,253,255,.94);--fw-ui-fg:#385784;--fw-ui-muted:#62769a;--fw-ui-border:#9fc8e8;--fw-ui-accent:#ffd166;--fw-ui-accent-fg:#3c4f69;--fw-ui-shadow:0 10px 22px rgba(73,113,160,.18);--fw-ui-radius:15px}
+.homepageFreedomWallScene:is([data-theme="art-room"],[data-theme="school-fair"]){--fw-ui-bg:#fff8e8;--fw-ui-fg:#334a73;--fw-ui-muted:#6f6553;--fw-ui-border:#d18a52;--fw-ui-accent:#ef5f62;--fw-ui-accent-fg:#fff;--fw-ui-shadow:5px 5px 0 rgba(67,93,145,.22),0 9px 18px rgba(72,59,44,.12);--fw-ui-radius:8px;--fw-ui-border-width:2px}
+.homepageFreedomWallScene[data-theme="eco"]{--fw-ui-bg:rgba(244,248,225,.95);--fw-ui-fg:#365038;--fw-ui-muted:#65745c;--fw-ui-border:#80966d;--fw-ui-accent:#8ebc62;--fw-ui-accent-fg:#203b23;--fw-ui-shadow:0 10px 22px rgba(52,84,51,.20);--fw-ui-radius:12px;--fw-ui-font:Georgia,"Times New Roman",serif}
+.homepageFreedomWallScene[data-theme="seasonal"]{--fw-ui-bg:rgba(246,248,255,.95);--fw-ui-fg:#2e416f;--fw-ui-muted:#667393;--fw-ui-border:#a2afd2;--fw-ui-accent:#e2bd55;--fw-ui-accent-fg:#29375c;--fw-ui-shadow:0 10px 24px rgba(21,31,66,.20);--fw-ui-radius:10px}
+
+/* The global X sits outside the scene, so the active theme is mirrored on the layer by JS. */
+.homepageEffectLayer.is-freedom-wall{
+  --fw-close-bg:rgba(255,255,255,.92);--fw-close-fg:#171717;--fw-close-border:rgba(0,0,0,.16);--fw-close-shadow:0 9px 20px rgba(0,0,0,.20);--fw-close-radius:999px;
+}
+.homepageEffectLayer.is-freedom-wall .homepageEffectClose{
+  width:40px!important;height:40px!important;min-width:40px!important;min-height:40px!important;
+  border:1px solid var(--fw-close-border)!important;border-radius:var(--fw-close-radius)!important;
+  background:var(--fw-close-bg)!important;color:var(--fw-close-fg)!important;
+  box-shadow:var(--fw-close-shadow)!important;text-shadow:none!important;
+  font-size:31px!important;font-weight:700!important;line-height:1!important;
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+}
+.homepageEffectLayer.is-freedom-wall .homepageEffectClose:hover,
+.homepageEffectLayer.is-freedom-wall .homepageEffectClose:focus-visible{filter:brightness(.97);outline:2px solid var(--fw-close-fg)!important;outline-offset:2px;background:var(--fw-close-bg)!important;color:var(--fw-close-fg)!important}
+.homepageEffectLayer.is-freedom-wall:is([data-freedom-wall-theme="rainy"],[data-freedom-wall-theme="flood"]){--fw-close-bg:rgba(22,42,57,.92);--fw-close-fg:#f4fbff;--fw-close-border:rgba(184,222,242,.30);--fw-close-shadow:0 9px 22px rgba(7,28,42,.36)}
+.homepageEffectLayer.is-freedom-wall[data-freedom-wall-theme="night"]{--fw-close-bg:rgba(18,27,48,.94);--fw-close-fg:#ffd66b;--fw-close-border:rgba(185,201,255,.28);--fw-close-shadow:0 9px 24px rgba(0,0,0,.44)}
+.homepageEffectLayer.is-freedom-wall[data-freedom-wall-theme="jungle"]{--fw-close-bg:linear-gradient(180deg,#855b34,#654126);--fw-close-fg:#fff4cf;--fw-close-border:#422a19;--fw-close-shadow:inset 0 0 0 1px rgba(255,255,255,.10),0 9px 20px rgba(6,31,16,.36);--fw-close-radius:7px}
+.homepageEffectLayer.is-freedom-wall[data-freedom-wall-theme="poste"]{--fw-close-bg:linear-gradient(180deg,#f4f1e8,#d9d1c2);--fw-close-fg:#252525;--fw-close-border:#4e4a42;--fw-close-shadow:0 8px 18px rgba(30,31,31,.30);--fw-close-radius:3px}
+.homepageEffectLayer.is-freedom-wall[data-freedom-wall-theme="polaroid"]{--fw-close-bg:linear-gradient(180deg,#fffdf8,#eee1cf);--fw-close-fg:#4d392a;--fw-close-border:#b7926e;--fw-close-shadow:0 9px 20px rgba(55,33,18,.23);--fw-close-radius:5px}
+.homepageEffectLayer.is-freedom-wall[data-freedom-wall-theme="newspaper"]{--fw-close-bg:#f5f0e3;--fw-close-fg:#171717;--fw-close-border:#171717;--fw-close-shadow:3px 3px 0 rgba(0,0,0,.18);--fw-close-radius:0px}
+.homepageEffectLayer.is-freedom-wall[data-freedom-wall-theme="chalkboard"]{--fw-close-bg:linear-gradient(160deg,#254936,#183626);--fw-close-fg:#f2f1dd;--fw-close-border:#9a744e;--fw-close-shadow:inset 0 0 0 2px #d2b98e,0 9px 20px rgba(0,0,0,.36);--fw-close-radius:3px}
+.homepageEffectLayer.is-freedom-wall:is([data-freedom-wall-theme="comic"],[data-freedom-wall-theme="comic-manga"],[data-freedom-wall-theme="comic-strip"]){--fw-close-bg:#fffdf3;--fw-close-fg:#111;--fw-close-border:#111;--fw-close-shadow:4px 4px 0 #111;--fw-close-radius:3px}
+.homepageEffectLayer.is-freedom-wall[data-freedom-wall-theme="comic-noir"]{--fw-close-bg:#161616;--fw-close-fg:#f4f1e6;--fw-close-border:#f4f1e6;--fw-close-shadow:4px 4px 0 rgba(0,0,0,.55);--fw-close-radius:2px}
+.homepageEffectLayer.is-freedom-wall:is([data-freedom-wall-theme="coding-lab"],[data-freedom-wall-theme="retro-arcade"]){--fw-close-bg:#101820;--fw-close-fg:#43e889;--fw-close-border:#426054;--fw-close-shadow:0 0 0 1px rgba(67,232,137,.18),0 9px 22px rgba(0,0,0,.40);--fw-close-radius:7px}
+.homepageEffectLayer.is-freedom-wall:is([data-freedom-wall-theme="galaxy"],[data-freedom-wall-theme="neon-music"],[data-freedom-wall-theme="spiderman"]){--fw-close-bg:rgba(18,15,42,.95);--fw-close-fg:#67e8ff;--fw-close-border:rgba(143,207,255,.45);--fw-close-shadow:0 0 0 1px rgba(255,81,202,.22),0 9px 22px rgba(0,0,0,.42)}
+.homepageEffectLayer.is-freedom-wall[data-freedom-wall-theme="filipino"]{--fw-close-bg:linear-gradient(180deg,#fffdf5,#f6edd7);--fw-close-fg:#0f448d;--fw-close-border:#d6a72d;--fw-close-shadow:0 0 0 2px rgba(20,76,151,.18),0 9px 20px rgba(24,56,113,.20);--fw-close-radius:8px}
+.homepageEffectLayer.is-freedom-wall:is([data-freedom-wall-theme="graffiti"],[data-freedom-wall-theme="vandal"]){--fw-close-bg:rgba(31,32,37,.94);--fw-close-fg:#fff;--fw-close-border:#55e7ff;--fw-close-shadow:3px 3px 0 rgba(255,70,167,.70),0 9px 20px rgba(0,0,0,.36);--fw-close-radius:4px}
+.homepageEffectLayer.is-freedom-wall:is([data-freedom-wall-theme="cafe"],[data-freedom-wall-theme="library"],[data-freedom-wall-theme="brick-alley"],[data-freedom-wall-theme="detective"]){--fw-close-bg:linear-gradient(180deg,#fff6e8,#ead9be);--fw-close-fg:#563b27;--fw-close-border:#9d744d;--fw-close-shadow:0 9px 20px rgba(74,46,27,.25);--fw-close-radius:8px}
+.homepageEffectLayer.is-freedom-wall:is([data-freedom-wall-theme="sakura"],[data-freedom-wall-theme="appreciation"]){--fw-close-bg:linear-gradient(180deg,#fff8fb,#f8e2eb);--fw-close-fg:#81485e;--fw-close-border:#d59ab0;--fw-close-shadow:0 9px 20px rgba(152,87,111,.20)}
+.homepageEffectLayer.is-freedom-wall:is([data-freedom-wall-theme="beach"],[data-freedom-wall-theme="rainbow"],[data-freedom-wall-theme="dreamy-clouds"]){--fw-close-bg:rgba(249,253,255,.95);--fw-close-fg:#385784;--fw-close-border:#9fc8e8;--fw-close-shadow:0 9px 20px rgba(73,113,160,.20)}
+.homepageEffectLayer.is-freedom-wall[data-freedom-wall-theme="eco"]{--fw-close-bg:rgba(244,248,225,.96);--fw-close-fg:#365038;--fw-close-border:#80966d;--fw-close-shadow:0 9px 20px rgba(52,84,51,.22)}
+.homepageEffectLayer.is-freedom-wall[data-freedom-wall-theme="seasonal"]{--fw-close-bg:rgba(246,248,255,.96);--fw-close-fg:#2e416f;--fw-close-border:#a2afd2;--fw-close-shadow:0 9px 21px rgba(21,31,66,.22)}
+
+/* v479 universal readable text: applies to legacy notes and custom notes alike. */
+.homepageFreedomWallScene .freedomWallNote.has-safe-text p,
+.homepageFreedomWallScene .freedomWallNote.has-safe-text small{
+  color:var(--fw-note-text-color,#171717)!important;
+  text-shadow:var(--fw-note-text-shadow,none)!important;
+}
+/* Keep author legible without overpowering the message. */
+.homepageFreedomWallScene .freedomWallNote.has-safe-text small{opacity:.78!important}
+
+@media(max-width:700px){
+  .homepageFreedomWallScene .freedomWallBrand{padding:6px 8px!important;gap:1px!important}
+  .homepageFreedomWallScene .freedomWallAddBtn{padding:4px!important}
+  .homepageFreedomWallScene .freedomWallAddBtn span{width:38px!important;height:38px!important}
+  .homepageEffectLayer.is-freedom-wall .homepageEffectClose{width:38px!important;height:38px!important;min-width:38px!important;min-height:38px!important;font-size:29px!important}
+}
+
+/* =========================================================
+   v480 — Freedom Wall message-first Add Note composer
+   Keeps the writing area large while customization stays compact/collapsible.
+========================================================= */
+.freedomWallComposerCard{
+  width:min(540px,calc(100vw - 28px));
+  max-height:min(720px,calc(100dvh - 28px));
+  padding:19px 20px 16px;
+  gap:8px;
+  overscroll-behavior:contain;
+  scrollbar-gutter:stable;
+}
+.freedomWallComposerCard label[for="freedomWallNoteInput"]{margin-top:8px}
+.freedomWallComposerCard #freedomWallAuthorInput{min-height:44px}
+.freedomWallComposerCard #freedomWallNoteInput{
+  min-height:132px;
+  height:132px;
+  max-height:210px;
+  padding:13px 14px;
+  font-size:15px;
+  line-height:1.48;
+  font-weight:650;
+  resize:vertical;
+}
+.freedomWallComposerCard #freedomWallNoteInput::placeholder{font-weight:600;color:#777}
+
+.freedomWallCustomizePanel{
+  margin-top:7px;
+  border:1px solid #d9dde3;
+  border-radius:14px;
+  background:#fafbfc;
+  overflow:hidden;
+}
+.freedomWallCustomizeToggle{
+  width:100%;
+  min-height:58px;
+  display:grid;
+  grid-template-columns:32px minmax(0,1fr) minmax(0,auto) 18px;
+  align-items:center;
+  gap:9px;
+  padding:9px 12px;
+  border:0;
+  background:transparent;
+  color:#1c1f23;
+  text-align:left;
+  cursor:pointer;
+}
+.freedomWallCustomizeToggle:hover{background:#f2f4f7}
+.freedomWallCustomizeToggle:focus-visible,
+.freedomWallCustomizerTrigger:focus-visible{outline:3px solid rgba(247,198,0,.38);outline-offset:-2px}
+.freedomWallCustomizeIcon{
+  width:31px;height:31px;display:grid;place-items:center;
+  border-radius:10px;background:#fff4bd;border:1px solid #e4cf6a;
+  color:#5a4600;font:1000 17px/1 Arial,sans-serif;
+}
+.freedomWallCustomizeToggleText{min-width:0;display:flex;flex-direction:column;gap:3px}
+.freedomWallCustomizeToggleText strong{font:900 12.5px/1.1 Arial,sans-serif;color:#25272a}
+.freedomWallCustomizeToggleText small{font:650 10px/1.2 Arial,sans-serif;color:#73777d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.freedomWallCustomizeSummary{
+  max-width:205px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  padding:5px 8px;border-radius:999px;background:#fff;border:1px solid #e0e3e7;
+  color:#50545a;font:750 9.5px/1 Arial,sans-serif;
+}
+.freedomWallCustomizeChevron{font:900 22px/1 Arial,sans-serif;color:#5e6268;transition:transform .16s ease}
+.freedomWallCustomizeToggle[aria-expanded="true"] .freedomWallCustomizeChevron{transform:rotate(90deg)}
+.freedomWallCustomizePanel.is-open .freedomWallCustomizeToggle{border-bottom:1px solid #e1e4e8;background:#fff}
+.freedomWallCustomizeBody{display:grid;gap:6px;padding:8px;background:#f7f8fa}
+.freedomWallCustomizeBody[hidden]{display:none!important}
+
+.freedomWallCustomizeBody .freedomWallCustomizationField{
+  display:block;
+  margin:0;
+  padding:0;
+  border:1px solid #e0e3e7;
+  border-radius:11px;
+  background:#fff;
+  overflow:hidden;
+}
+.freedomWallCustomizeBody .freedomWallCustomizationField[hidden]{display:none!important}
+.freedomWallCustomizerTrigger{
+  width:100%;min-height:42px;display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:8px 10px;border:0;background:#fff;color:#292c31;cursor:pointer;text-align:left;
+}
+.freedomWallCustomizerTrigger:hover{background:#f8f9fb}
+.freedomWallCustomizerTrigger>span:first-child{font:850 11px/1.15 Arial,sans-serif;letter-spacing:.02em}
+.freedomWallCustomizerValue{min-width:0;display:flex;align-items:center;justify-content:flex-end;gap:7px;color:#555b62}
+.freedomWallCustomizerValue b{max-width:175px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:800 10.5px/1.15 Arial,sans-serif;color:#3e4248}
+.freedomWallCustomizerValue em{font:900 13px/1 Arial,sans-serif;font-style:normal;color:#777;transition:transform .14s ease}
+.freedomWallCustomizerTrigger[aria-expanded="true"] .freedomWallCustomizerValue em{transform:rotate(180deg)}
+.freedomWallCustomizerColorPreview{width:15px;height:15px;flex:0 0 15px;border-radius:50%;border:1px solid rgba(0,0,0,.20);box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+.freedomWallCustomizerOptions{padding:8px 10px 9px;border-top:1px solid #eceef1;background:#fbfcfd}
+.freedomWallCustomizerOptions[hidden]{display:none!important}
+.freedomWallCustomizerOptions .freedomWallSwatchRow{gap:8px;padding:3px 1px 5px}
+.freedomWallCustomizerOptions .freedomWallSwatchRow button{width:27px;height:27px;flex-basis:27px}
+.freedomWallCustomizerOptions .freedomWallFontGrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:1px 0}
+.freedomWallCustomizerOptions .freedomWallFontGrid button{min-height:32px;padding:7px 6px;font-size:10.5px}
+.freedomWallCustomizerOptions .freedomWallCustomizationHint{margin-top:5px;font-size:9px}
+/* Background choice remains available in Polaroid; it controls the accent/caption treatment. */
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallCustomizerOptions .freedomWallColorRow{display:flex!important}
+
+.freedomWallComposerFooter{
+  position:sticky;
+  bottom:-1px;
+  z-index:5;
+  margin-top:7px;
+  padding-top:9px;
+  padding-bottom:1px;
+  background:linear-gradient(180deg,rgba(255,255,255,0),#fff 24%,#fff 100%);
+}
+.freedomWallComposerFooter button{min-height:42px;padding:11px 18px}
+
+@media(max-width:700px){
+  .freedomWallComposer{padding:8px}
+  .freedomWallComposerCard{
+    width:calc(100vw - 16px)!important;
+    max-height:calc(100dvh - 16px)!important;
+    padding:14px 14px 12px!important;
+    gap:7px!important;
+    border-radius:18px;
+    scrollbar-gutter:auto;
+  }
+  .freedomWallComposerHead{margin-bottom:2px;gap:10px}
+  .freedomWallComposerHead strong{font-size:17px!important;line-height:1.12}
+  .freedomWallComposerHead span{font-size:10.5px;line-height:1.2}
+  .freedomWallComposerHead button{width:31px;height:31px;font-size:27px}
+  .freedomWallComposerCard #freedomWallAuthorInput{min-height:42px;padding:10px 11px}
+  .freedomWallComposerCard #freedomWallNoteInput{
+    min-height:138px;
+    height:138px;
+    max-height:190px;
+    padding:12px;
+    font-size:14.5px;
+    resize:none;
+  }
+  .freedomWallCustomizePanel{margin-top:5px;border-radius:12px}
+  .freedomWallCustomizeToggle{
+    min-height:54px;
+    grid-template-columns:29px minmax(0,1fr) 18px;
+    grid-template-areas:"icon copy arrow" "summary summary summary";
+    gap:6px 8px;
+    padding:8px 10px;
+  }
+  .freedomWallCustomizeIcon{grid-area:icon;width:28px;height:28px;border-radius:9px;font-size:15px}
+  .freedomWallCustomizeToggleText{grid-area:copy}
+  .freedomWallCustomizeToggleText strong{font-size:12px}
+  .freedomWallCustomizeToggleText small{font-size:9.5px}
+  .freedomWallCustomizeSummary{grid-area:summary;max-width:100%;justify-self:stretch;text-align:center;padding:4px 7px;font-size:9px}
+  .freedomWallCustomizeChevron{grid-area:arrow;font-size:20px}
+  .freedomWallCustomizeBody{gap:5px;padding:6px}
+  .freedomWallCustomizerTrigger{min-height:40px;padding:7px 9px}
+  .freedomWallCustomizerValue b{max-width:145px;font-size:10px}
+  .freedomWallCustomizerOptions{padding:8px 9px}
+  .freedomWallCustomizerOptions .freedomWallSwatchRow{gap:7px;padding:2px 0 4px}
+  .freedomWallCustomizerOptions .freedomWallSwatchRow button{width:26px;height:26px;flex-basis:26px}
+  .freedomWallCustomizerOptions .freedomWallFontGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+  .freedomWallCustomizerOptions .freedomWallFontGrid button{min-height:31px;padding:6px 5px;font-size:10px}
+  .freedomWallComposerFooter{margin-top:5px;padding-top:7px}
+  .freedomWallComposerFooter span{font-size:9.5px;line-height:1.2}
+  .freedomWallComposerFooter button{min-height:40px;padding:10px 15px}
+}
+
+@media(max-width:380px){
+  .freedomWallComposerCard #freedomWallNoteInput{min-height:124px;height:124px}
+  .freedomWallCustomizerValue b{max-width:118px}
+  .freedomWallCustomizerOptions .freedomWallSwatchRow{gap:6px}
+  .freedomWallCustomizerOptions .freedomWallSwatchRow button{width:25px;height:25px;flex-basis:25px}
+}
+
+@media(max-height:620px) and (max-width:700px){
+  .freedomWallComposerCard #freedomWallNoteInput{min-height:104px;height:104px}
+  .freedomWallComposerHead span{display:none}
+  .freedomWallCustomizeToggle{min-height:48px}
+}
+
+/* =========================================================
+   v481 — Freedom Wall font selector visibility hotfix
+   Keeps Font immediately accessible and prevents option lists from being clipped.
+========================================================= */
+.freedomWallCustomizeBody .freedomWallCustomizationField.is-options-open{
+  border-color:#b8bec8;
+  box-shadow:0 6px 18px rgba(28,35,45,.08);
+}
+.freedomWallCustomizerOptions{
+  max-height:min(250px,38dvh);
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  scrollbar-gutter:stable;
+}
+#freedomWallFontOptions{
+  max-height:min(270px,42dvh);
+}
+.freedomWallComposerCard{
+  scroll-padding-bottom:78px;
+}
+@media(max-width:700px){
+  .freedomWallCustomizerOptions{max-height:min(230px,34dvh)}
+  #freedomWallFontOptions{max-height:min(250px,38dvh)}
+  .freedomWallComposerCard{scroll-padding-bottom:72px}
+}
+@media(max-height:620px) and (max-width:700px){
+  .freedomWallCustomizerOptions{max-height:190px}
+  #freedomWallFontOptions{max-height:205px}
+}
+
+
+/* =========================================================
+   v482 — Freedom Wall customization picker visibility fix
+   Note Background stays first. Choices open in a dedicated floating picker
+   so the composer/card scroll and sticky Post button can never clip them.
+========================================================= */
+.freedomWallCustomizerBackdrop{
+  position:fixed;
+  inset:0;
+  z-index:650;
+  background:rgba(7,10,16,.28);
+  backdrop-filter:blur(1.5px);
+  pointer-events:auto;
+}
+.freedomWallCustomizerBackdrop[hidden]{display:none!important}
+.freedomWallCustomizerOptions:not([hidden]){
+  position:fixed;
+  z-index:660;
+  left:var(--fw-picker-left,50%);
+  top:var(--fw-picker-top,50%);
+  width:var(--fw-picker-width,min(440px,calc(100vw - 28px)));
+  max-width:calc(100vw - 28px);
+  max-height:var(--fw-picker-max-height,min(360px,62dvh));
+  overflow:auto;
+  overscroll-behavior:contain;
+  scrollbar-gutter:stable;
+  box-sizing:border-box;
+  padding:10px 12px 12px;
+  border:1px solid #d8dde5;
+  border-radius:15px;
+  background:#fff;
+  box-shadow:0 22px 55px rgba(0,0,0,.34);
+  transform:none;
+  pointer-events:auto;
+}
+.freedomWallCustomizerOptionsHead{
+  position:sticky;
+  top:-10px;
+  z-index:2;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin:-10px -12px 10px;
+  padding:11px 12px 9px;
+  border-bottom:1px solid #e6e9ee;
+  background:#fff;
+}
+.freedomWallCustomizerOptionsHead strong{font:900 12px/1.15 Arial,sans-serif;color:#23262b}
+.freedomWallCustomizerOptionsHead button{
+  width:30px;height:30px;display:grid;place-items:center;flex:0 0 30px;
+  padding:0;border:0;border-radius:9px;background:#f1f3f6;color:#202124;
+  font:800 22px/1 Arial,sans-serif;cursor:pointer;
+}
+.freedomWallCustomizerOptionsHead button:hover{background:#e7eaee}
+.freedomWallCustomizerOptions:not([hidden]) .freedomWallSwatchRow{
+  display:grid;
+  grid-template-columns:repeat(10,28px);
+  justify-content:center;
+  gap:10px;
+  padding:4px 0 7px;
+}
+.freedomWallCustomizerOptions:not([hidden]) .freedomWallSwatchRow button{
+  width:28px;height:28px;flex-basis:28px;
+}
+.freedomWallCustomizerOptions:not([hidden]) .freedomWallFontGrid{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:7px;
+  padding:2px 0;
+}
+.freedomWallCustomizerOptions:not([hidden]) .freedomWallFontGrid button{
+  min-height:38px;
+  padding:8px 7px;
+  font-size:11px;
+}
+.freedomWallCustomizationField.is-options-open .freedomWallCustomizerTrigger{
+  background:#fff9dd;
+}
+
+@media(max-width:700px){
+  .freedomWallCustomizerBackdrop{background:rgba(7,10,16,.42);backdrop-filter:blur(2px)}
+  .freedomWallCustomizerOptions:not([hidden]){
+    left:10px!important;
+    right:10px!important;
+    top:auto!important;
+    bottom:10px!important;
+    width:auto!important;
+    max-width:none;
+    max-height:min(58dvh,470px)!important;
+    border-radius:18px;
+    padding:11px 12px 14px;
+    box-shadow:0 -10px 38px rgba(0,0,0,.30);
+  }
+  .freedomWallCustomizerOptionsHead{
+    top:-11px;
+    margin:-11px -12px 10px;
+    padding:11px 12px 10px;
+  }
+  .freedomWallCustomizerOptions:not([hidden]) .freedomWallSwatchRow{
+    grid-template-columns:repeat(5,30px);
+    gap:12px 16px;
+    justify-content:center;
+    padding:5px 2px 8px;
+  }
+  .freedomWallCustomizerOptions:not([hidden]) .freedomWallSwatchRow button{
+    width:30px;height:30px;flex-basis:30px;
+  }
+  .freedomWallCustomizerOptions:not([hidden]) .freedomWallFontGrid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:7px;
+  }
+  .freedomWallCustomizerOptions:not([hidden]) .freedomWallFontGrid button{
+    min-height:40px;
+    font-size:10.5px;
+  }
+}
+
+@media(max-width:380px){
+  .freedomWallCustomizerOptions:not([hidden]){
+    left:8px!important;right:8px!important;bottom:8px!important;
+    max-height:min(62dvh,440px)!important;
+  }
+  .freedomWallCustomizerOptions:not([hidden]) .freedomWallSwatchRow{
+    grid-template-columns:repeat(5,28px);
+    gap:10px 14px;
+  }
+  .freedomWallCustomizerOptions:not([hidden]) .freedomWallSwatchRow button{
+    width:28px;height:28px;flex-basis:28px;
+  }
+}
+.freedomWallComposer.is-customizer-picker-open .freedomWallCustomizePanel,
+.freedomWallComposer.is-customizer-picker-open .freedomWallCustomizationField.is-options-open{
+  overflow:visible;
+}
