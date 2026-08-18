@@ -5850,6 +5850,23 @@ async function handleFreedomWallMediaInput(event) {
 
 
 
+function syncFreedomWallChildModalCloseSafety() {
+  const layer = document.getElementById("homepageEffectLayer");
+  if (!layer || !layer.classList.contains("is-freedom-wall")) return;
+  const composer = layer.querySelector("#freedomWallComposer");
+  const mediaModal = layer.querySelector("#freedomWallMediaSearchModal");
+  const childModalOpen = Boolean(
+    (composer && !composer.hidden)
+    || (mediaModal && !mediaModal.hidden)
+  );
+  layer.classList.toggle("has-freedom-wall-child-modal", childModalOpen);
+  if (childModalOpen) {
+    setHomepageEffectRealCloseVisible(false);
+  } else {
+    setHomepageEffectRealCloseVisible(homepageEffectDismissAllowed);
+  }
+}
+
 function getFreedomWallMediaSearchModalRefs() {
   const layer = document.getElementById("homepageEffectLayer");
   const modal = layer?.querySelector("#freedomWallMediaSearchModal");
@@ -5871,6 +5888,7 @@ function openFreedomWallMediaSearchModal(provider = "youtube", initialQuery = ""
   const safeProvider = provider === "gif" ? "gif" : "youtube";
   refs.modal.dataset.provider = safeProvider;
   refs.modal.hidden = false;
+  syncFreedomWallChildModalCloseSafety();
   if (refs.title) refs.title.textContent = safeProvider === "gif" ? "Search GIFs" : "Search YouTube";
   if (refs.hint) refs.hint.textContent = safeProvider === "gif"
     ? "Browse more GIFs, then choose one."
@@ -5895,6 +5913,7 @@ function closeFreedomWallMediaSearchModal(event) {
   if (!refs.modal) return;
   refs.modal.hidden = true;
   refs.modal.removeAttribute("data-provider");
+  syncFreedomWallChildModalCloseSafety();
   if (refs.status) refs.status.textContent = "";
   if (refs.results) refs.results.replaceChildren();
 }
@@ -6927,16 +6946,19 @@ function openFreedomWallComposer() {
   updateFreedomWallCustomizationSummary();
   setFreedomWallCustomizeOpen(false);
   composer.hidden = false;
+  syncFreedomWallChildModalCloseSafety();
   window.setTimeout(() => note?.focus(), 30);
 }
 
 function closeFreedomWallComposer(event) {
   event?.preventDefault?.();
+  event?.stopPropagation?.();
   const layer = document.getElementById("homepageEffectLayer");
   const composer = layer?.querySelector("#freedomWallComposer");
   closeFreedomWallMediaSearchModal();
   setFreedomWallCustomizeOpen(false);
   if (composer) composer.hidden = true;
+  syncFreedomWallChildModalCloseSafety();
 }
 
 function isFreedomWallRulesCompatibilityError(error) {

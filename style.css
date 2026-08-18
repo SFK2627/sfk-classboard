@@ -34602,3 +34602,75 @@ html.sfkFreedomWallModalOpen body{
   }
   .freedomWallMediaSearchModalResults.is-gif-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+/* =========================================================
+   v511 — Freedom Wall GIF search grid layout fix
+   Reserve each GIF tile's height through the image itself so
+   animated images cannot visually spill into the next grid row.
+   Applies to desktop, tablet, and phone media-search modal.
+========================================================= */
+.homepageEffectLayer.is-freedom-wall .freedomWallMediaSearchModalResults.is-gif-grid{
+  grid-auto-rows:auto !important;
+  align-items:start !important;
+  align-content:start !important;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallMediaSearchModalResults.is-gif-grid .freedomWallGifResult{
+  display:block !important;
+  position:relative !important;
+  width:100% !important;
+  height:auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+  aspect-ratio:auto !important;
+  padding:0 !important;
+  margin:0 !important;
+  align-self:start !important;
+  overflow:hidden !important;
+  box-sizing:border-box !important;
+  line-height:0 !important;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallMediaSearchModalResults.is-gif-grid .freedomWallGifResult img{
+  display:block !important;
+  position:static !important;
+  width:100% !important;
+  height:auto !important;
+  min-height:0 !important;
+  max-height:none !important;
+  aspect-ratio:1 / 1 !important;
+  object-fit:cover !important;
+  box-sizing:border-box !important;
+  transform:none !important;
+}
+@media (min-width:901px){
+  .homepageEffectLayer.is-freedom-wall .freedomWallMediaSearchModalResults.is-gif-grid{
+    grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+    gap:12px !important;
+  }
+}
+@media (min-width:701px) and (max-width:900px){
+  .homepageEffectLayer.is-freedom-wall .freedomWallMediaSearchModalResults.is-gif-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+    gap:10px !important;
+  }
+}
+@media (max-width:700px){
+  .homepageEffectLayer.is-freedom-wall .freedomWallMediaSearchModalResults.is-gif-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+    gap:8px !important;
+    padding-right:3px !important;
+  }
+}
+
+
+/* =========================================================
+   v512 — Freedom Wall child-modal close-button safety
+   While Add Note or GIF/YouTube Search is open, hide the
+   global wall X so users cannot accidentally close the whole
+   Freedom Wall when aiming for the child modal close button.
+========================================================= */
+.homepageEffectLayer.is-freedom-wall.has-freedom-wall-child-modal #homepageEffectClose{
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+}
