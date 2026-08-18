@@ -2264,6 +2264,24 @@ function normalizeFreedomWallYouTubePlaybackMode(value) {
   return mode === "inline" ? "inline" : "viewer";
 }
 
+// v503: media search is an optional enhancement. Keep its endpoint lookup
+// self-contained so a missing/invalid URL can NEVER stop the Freedom Wall
+// prompt and live-note renderer from starting. v501 referenced this helper
+// without defining it, which caused the blank-wall runtime failure.
+function normalizeFreedomWallMediaSearchUrl(value) {
+  const raw = String(value || "").trim().slice(0, 1200);
+  if (!raw) return "";
+  try {
+    const url = new URL(raw);
+    return url.protocol === "https:" ? url.toString() : "";
+  } catch (error) {
+    return "";
+  }
+}
+
+function getFreedomWallMediaSearchEndpoint() {
+  return normalizeFreedomWallMediaSearchUrl(freedomWallConfig?.freedomWallMediaSearchUrl || "");
+}
 
 function normalizeFreedomWallSpotifySearchUrl(value) {
   const raw = String(value || "").trim().slice(0, 1200);
@@ -3568,6 +3586,11 @@ function ensureHomepageEffectLayer() {
         <h2 id="freedomWallPromptTitle"></h2>
         <p id="freedomWallPromptMessage"></p>
         <div id="freedomWallPromptReactionSummary" class="freedomWallReactionSummary is-prompt" aria-live="polite" hidden></div>
+      </section>
+      <section id="freedomWallEmptyState" class="freedomWallEmptyState" hidden aria-live="polite">
+        <span aria-hidden="true">✦</span>
+        <strong>SFK #BeKind Wall is ready</strong>
+        <p>Press Add Note to start sharing. If old notes are missing, check the active saved wall in Admin.</p>
       </section>
       <div id="freedomWallReactionMenu" class="freedomWallReactionMenu" role="menu" aria-label="React" hidden>
         <div class="freedomWallReactionMenuHead"><strong id="freedomWallReactionMenuTitle">React</strong><button id="freedomWallReactionMenuClose" type="button" aria-label="Close reactions">×</button></div>
@@ -6262,6 +6285,7 @@ function renderFreedomWallNotes(notes = []) {
   const renderSignature = buildFreedomWallRenderSignature(sorted);
   if (renderSignature === freedomWallLastRenderSignature && stage.childElementCount) {
     if (count) count.textContent = getFreedomWallUiCopy(freedomWallConfig?.freedomWallTheme).formatCount(sorted.length, "normal");
+    updateFreedomWallEmptyState();
     return;
   }
   freedomWallLastRenderSignature = renderSignature;
@@ -6397,6 +6421,7 @@ function renderFreedomWallNotes(notes = []) {
     const displayCount = sorted.length >= FREEDOM_WALL_MAX_RENDERED_NOTES ? sorted.length : sorted.length;
     count.textContent = getFreedomWallUiCopy(freedomWallConfig?.freedomWallTheme).formatCount(displayCount, "normal");
   }
+  updateFreedomWallEmptyState();
 }
 
 function updateFreedomWallPrompt(config) {
@@ -6417,16 +6442,36 @@ function updateFreedomWallPrompt(config) {
   const legacyPromptSignature = activeWallId === FREEDOM_WALL_LEGACY_SESSION_ID
     ? `${String(config?.title || "").trim()}|${String(config?.message || "").trim()}`
     : "";
+  const rawTitle = String(config?.title || "").trim();
+  const rawMessage = String(config?.message || "").trim();
+  const hasAdminPrompt = Boolean(rawTitle || rawMessage);
+  // v502 blank-wall guard: if an Admin save leaves the active wall prompt blank,
+  // do not render a large empty white wall. Show a safe default prompt instead.
+  const fallbackTitle = "SFK #BeKind Wall";
+  const fallbackMessage = "Share something kind, honest, funny, thankful, or meaningful.";
   card.dataset.promptSignature = promptSignature;
   card.dataset.promptLegacySignature = legacyPromptSignature;
-  title.textContent = config?.title || "";
-  message.textContent = config?.message || "";
-  message.hidden = !config?.message;
-  const hasPrompt = Boolean(config?.title || config?.message);
-  card.hidden = !hasPrompt || freedomWallPromptDismissedSignature === promptSignature;
+  card.dataset.promptFallback = hasAdminPrompt ? "NO" : "YES";
+  title.textContent = rawTitle || fallbackTitle;
+  message.textContent = rawMessage || fallbackMessage;
+  message.hidden = false;
+  card.hidden = freedomWallPromptDismissedSignature === promptSignature;
   if (!card.hidden) syncFreedomWallPromptReactionLive();
   else stopFreedomWallPromptReactionLive();
+  updateFreedomWallEmptyState();
 }
+
+function updateFreedomWallEmptyState() {
+  const layer = document.getElementById("homepageEffectLayer");
+  const empty = layer?.querySelector("#freedomWallEmptyState");
+  if (!empty) return;
+  const stage = layer.querySelector("#freedomWallNotesStage");
+  const prompt = layer.querySelector("#freedomWallPromptCard");
+  const hasNotes = Boolean((freedomWallNotesCache || []).length || stage?.querySelector?.(".freedomWallNote[data-note-id]"));
+  const promptVisible = Boolean(prompt && !prompt.hidden);
+  empty.hidden = hasNotes || promptVisible || !freedomWallConfig;
+}
+
 
 function dismissFreedomWallPromptForView(event) {
   event?.preventDefault?.();
@@ -6440,6 +6485,7 @@ function dismissFreedomWallPromptForView(event) {
   // Once the prompt is closed, notes are free to use their original full-wall
   // positions, without rebuilding the effect or touching its music.
   if (freedomWallNotesCache.length) renderFreedomWallNotes(freedomWallNotesCache);
+  updateFreedomWallEmptyState();
 }
 
 function getFreedomWallSelectedChoice(selector, fallback = "") {
@@ -6990,7 +7036,11 @@ function configureFreedomWall(config) {
     // can use the same visual language as the wall label and Add Note button.
     layer.dataset.freedomWallTheme = theme;
     if (theme === "seasonal") {
-      scene.dataset.seasonalVariant = getFreedomWallSeasonalVariant();
+      // v503: older builds referenced a seasonal helper that may not exist in
+      // every deployment. Never let that optional theme detail stop the wall.
+      scene.dataset.seasonalVariant = typeof getFreedomWallSeasonalVariant === "function"
+        ? getFreedomWallSeasonalVariant()
+        : "graduation";
     } else {
       delete scene.dataset.seasonalVariant;
     }
@@ -6998,8 +7048,19 @@ function configureFreedomWall(config) {
     scene.style.setProperty("visibility", "visible", "important");
     scene.style.setProperty("opacity", "1", "important");
   }
-  applyFreedomWallThemeCopy(config.freedomWallTheme || "sticky-notes");
-  applyFreedomWallThemeDecor(config.freedomWallTheme || "sticky-notes");
+  // v503 fail-safe: visual/media-control helpers must never be able to abort
+  // the core prompt + Firestore live-note startup. If an optional UI helper
+  // fails, keep rendering the wall and log the isolated error instead.
+  try {
+    applyFreedomWallThemeCopy(config.freedomWallTheme || "sticky-notes");
+  } catch (error) {
+    console.warn("Freedom Wall UI copy/media controls skipped:", error);
+  }
+  try {
+    applyFreedomWallThemeDecor(config.freedomWallTheme || "sticky-notes");
+  } catch (error) {
+    console.warn("Freedom Wall theme decoration skipped:", error);
+  }
   if (addButton) addButton.hidden = !config.freedomWallAllowPosting;
   if (authorInput) authorInput.hidden = !config.freedomWallShowNames;
   if (authorLabel) authorLabel.hidden = !config.freedomWallShowNames;
@@ -7010,6 +7071,7 @@ function configureFreedomWall(config) {
   if (!config.freedomWallAllowPosting) closeFreedomWallComposer();
   updateFreedomWallPrompt(config);
   if (freedomWallNotesCache.length) renderFreedomWallNotes(freedomWallNotesCache);
+  updateFreedomWallEmptyState();
   startFreedomWallLive();
 }
 

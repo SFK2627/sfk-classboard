@@ -30085,6 +30085,7 @@ html.sfkHomepageBlackSymbioteActive body > *:not(script):not(style):not(#homepag
 }
 .homepageFreedomWallScene[hidden],
 .freedomWallPromptCard[hidden],
+.freedomWallEmptyState[hidden],
 .freedomWallComposer[hidden],
 .freedomWallAddBtn[hidden]{display:none!important}
 
@@ -30283,6 +30284,24 @@ html.sfkHomepageBlackSymbioteActive body > *:not(script):not(style):not(#homepag
 .homepageFreedomWallScene[data-theme="vandal"] .freedomWallNote{box-shadow:2px 2px 0 rgba(0,0,0,.22),0 14px 18px rgba(0,0,0,.18);border-radius:0}
 .homepageFreedomWallScene[data-theme="comic"] .freedomWallNote{border:3px solid #111;box-shadow:6px 6px 0 #111;border-radius:1px}
 
+
+.freedomWallEmptyState{
+  position:absolute;left:50%;top:50%;translate:-50% -50%;z-index:335;pointer-events:auto;
+  width:min(420px,calc(100vw - 44px));box-sizing:border-box;padding:22px 24px;border-radius:24px;
+  background:rgba(255,255,255,.88);color:#171717;border:1px solid rgba(0,0,0,.10);
+  box-shadow:0 22px 48px rgba(0,0,0,.20);backdrop-filter:blur(12px);text-align:center;
+  animation:fwPromptIn .38s cubic-bezier(.2,.8,.2,1) both;
+}
+.freedomWallEmptyState span{display:inline-grid;place-items:center;width:42px;height:42px;margin:0 auto 10px;border-radius:14px;background:#fff3bf;border:1px solid rgba(0,0,0,.12);font-size:21px;color:#8c6100;box-shadow:0 8px 18px rgba(0,0,0,.10)}
+.freedomWallEmptyState strong{display:block;font:1000 clamp(18px,2.2vw,26px)/1.08 Arial,sans-serif;letter-spacing:-.03em}
+.freedomWallEmptyState p{margin:8px 0 0;font:750 12px/1.45 Arial,sans-serif;color:#545454}
+.homepageFreedomWallScene[data-theme="night"] .freedomWallEmptyState,
+.homepageFreedomWallScene[data-theme="rainy"] .freedomWallEmptyState,
+.homepageFreedomWallScene[data-theme="flood"] .freedomWallEmptyState{background:rgba(15,23,36,.86);color:#fff;border-color:rgba(255,255,255,.15)}
+.homepageFreedomWallScene[data-theme="night"] .freedomWallEmptyState p,
+.homepageFreedomWallScene[data-theme="rainy"] .freedomWallEmptyState p,
+.homepageFreedomWallScene[data-theme="flood"] .freedomWallEmptyState p{color:rgba(255,255,255,.78)}
+
 .freedomWallPromptCard{
   position:absolute;left:50%;top:50%;translate:-50% -50%;z-index:340;pointer-events:auto;
   width:min(620px,calc(100vw - 42px));box-sizing:border-box;padding:26px 52px 24px 28px;border-radius:22px;
@@ -30347,7 +30366,7 @@ html.sfkHomepageBlackSymbioteActive body > *:not(script):not(style):not(#homepag
   .freedomWallNote.is-size-medium{--fw-note-min-width:92px;--fw-note-max-width:min(52vw,178px);--fw-note-min-height:62px;padding:19px 11px 9px}
   .freedomWallNote.is-size-large{--fw-note-min-width:104px;--fw-note-max-width:min(60vw,208px);--fw-note-min-height:76px;padding:21px 12px 10px}
   .freedomWallNote p{font-size:clamp(12px,3.6vw,15px)}.freedomWallNote small{font-size:9px}
-  .freedomWallPromptCard{width:calc(100vw - 28px);padding:21px 45px 20px 20px;border-radius:18px}.freedomWallPromptCard h2{font-size:clamp(22px,7vw,32px)}.freedomWallPromptCard p{font-size:13px}
+  .freedomWallPromptCard{width:calc(100vw - 28px);padding:21px 45px 20px 20px;border-radius:18px}.freedomWallPromptCard h2{font-size:clamp(22px,7vw,32px)}.freedomWallPromptCard p{font-size:13px}.freedomWallEmptyState{width:calc(100vw - 32px);padding:19px 18px;border-radius:19px}.freedomWallEmptyState strong{font-size:21px}.freedomWallEmptyState p{font-size:11px}
   .freedomWallAddBtn{right:max(10px,env(safe-area-inset-right));bottom:max(10px,env(safe-area-inset-bottom));padding:5px;border-radius:50%}.freedomWallAddBtn span{width:38px;height:38px;font-size:27px}.freedomWallAddBtn small{display:none}
   .freedomWallComposer{padding:10px}.freedomWallComposerCard{width:calc(100vw - 20px);padding:16px;border-radius:18px}.freedomWallComposerHead strong{font-size:18px}
   .freedomWallSun{right:6%;top:9%;width:88px}.freedomWallMoon{right:7%;top:9%;width:78px}.fw-cloud-a{left:-7%;top:15%;width:145px}.fw-cloud-b{left:39%;top:9%;width:120px}.fw-cloud-c{right:-9%;top:27%;width:130px}
@@ -34382,3 +34401,17 @@ html.sfkFreedomWallModalOpen body{
 .freedomWallGifResult img{width:100%;height:100%;object-fit:cover;display:block}
 .homepageEffectLayer.is-freedom-wall .freedomWallNote.has-gif .freedomWallNoteMedia{aspect-ratio:1/1;border-radius:10px;margin-bottom:8px;background:#111}
 @media(max-width:700px){.freedomWallMediaSearchLine{grid-template-columns:1fr}.freedomWallMediaSearchLine button{min-height:38px}.freedomWallMediaSearchResults{max-height:155px}.freedomWallMediaSearchResults.is-gif-grid{grid-template-columns:repeat(2,minmax(0,1fr));max-height:180px}}
+
+/* =========================================================
+   v504 — Freedom Wall media-control visibility hardening
+   Respect JS `hidden` state even when component display rules
+   use flex/grid. Prevents inactive Photo/GIF and YouTube Link
+   controls from appearing beside YouTube/GIF Search.
+========================================================= */
+.freedomWallMediaControls[hidden],
+.freedomWallYouTubeWrap[hidden],
+.freedomWallMediaTypeWrap[hidden],
+.freedomWallYouTubeSearchWrap[hidden],
+.freedomWallGifSearchWrap[hidden] {
+  display: none !important;
+}
