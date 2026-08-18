@@ -33885,3 +33885,144 @@ label[for="freedomWallTheme"]{display:block}
   .freedomWallReactionSummary.is-prompt{margin-top:7px}
   .freedomWallReactionCount{min-height:17px;padding:2px 5px;font-size:9px!important}
 }
+
+/* =========================================================
+   v485 FREEDOM WALL — REACTION INTERACTION + COMPACT SUMMARY FIX
+   Critical: reaction picker must receive pointer events even though the
+   Freedom Wall scene itself is pointer-events:none.
+========================================================= */
+.homepageEffectLayer.is-freedom-wall .freedomWallReactionMenu{
+  pointer-events:auto!important;
+  isolation:isolate;
+  contain:layout paint style;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallReactionMenu *,
+.homepageEffectLayer.is-freedom-wall .freedomWallReactionChoices,
+.homepageEffectLayer.is-freedom-wall .freedomWallReactionChoices>button{
+  pointer-events:auto!important;
+}
+.homepageEffectLayer.is-freedom-wall.is-reaction-menu-open .freedomWallNote{
+  cursor:default!important;
+}
+.homepageEffectLayer.is-freedom-wall.is-reaction-menu-open .freedomWallReactionChoices>button{
+  cursor:pointer!important;
+}
+
+/* Only one compact dominant reaction + TOTAL count is visible on the note. */
+.homepageEffectLayer.is-freedom-wall .freedomWallReactionSummary.is-note{
+  position:absolute!important;
+  left:7px!important;
+  bottom:6px!important;
+  z-index:12!important;
+  margin:0!important;
+  min-height:0!important;
+  width:auto!important;
+  max-width:calc(100% - 14px)!important;
+  display:flex;
+  flex-wrap:nowrap!important;
+  pointer-events:none!important;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallReactionSummary.is-note[hidden]{display:none!important}
+.homepageEffectLayer.is-freedom-wall .freedomWallReactionSummary.is-note .freedomWallReactionCount.is-dominant{
+  min-height:21px!important;
+  height:21px!important;
+  box-sizing:border-box!important;
+  padding:2px 7px!important;
+  gap:4px!important;
+  border:1px solid rgba(24,24,24,.16)!important;
+  border-radius:999px!important;
+  background:rgba(255,255,255,.90)!important;
+  color:#202124!important;
+  box-shadow:0 2px 5px rgba(0,0,0,.12)!important;
+  font:800 11px/1 Arial,sans-serif!important;
+  white-space:nowrap!important;
+  text-shadow:none!important;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallReactionSummary.is-note .freedomWallReactionCount.is-dominant b{
+  font:900 10px/1 Arial,sans-serif!important;
+  color:inherit!important;
+}
+/* Reserve a small footer lane so the reaction chip does not cover message/name. */
+.homepageEffectLayer.is-freedom-wall .freedomWallNote.has-reactions>p{
+  margin-bottom:18px!important;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallNote.has-reactions>small{
+  margin-bottom:18px!important;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallNote.has-reactions.has-media>.freedomWallNoteMedia{
+  margin-bottom:0!important;
+}
+
+/* Prompt also shows only dominant emoji + total, centered below its message. */
+.homepageEffectLayer.is-freedom-wall .freedomWallReactionSummary.is-prompt{
+  margin:8px auto 0!important;
+  min-height:21px!important;
+  justify-content:center!important;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallReactionSummary.is-prompt .freedomWallReactionCount.is-dominant{
+  min-height:22px!important;
+  padding:3px 8px!important;
+  background:rgba(255,255,255,.88)!important;
+  color:#202124!important;
+  font:800 11px/1 Arial,sans-serif!important;
+}
+
+/* Picker: counts are deliberately obvious but still compact. */
+.homepageEffectLayer.is-freedom-wall .freedomWallReactionChoices>button{
+  min-height:64px!important;
+  padding:7px 5px 6px!important;
+  will-change:auto!important;
+  -webkit-tap-highlight-color:transparent!important;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallReactionChoices>button>span{
+  font-size:25px!important;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallReactionChoices>button>b{
+  font:900 10px/1 Arial,sans-serif!important;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallReactionChoices>button>small{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-width:20px!important;
+  min-height:16px!important;
+  padding:1px 5px!important;
+  box-sizing:border-box!important;
+  border-radius:999px!important;
+  background:rgba(127,127,127,.13)!important;
+  color:inherit!important;
+  opacity:.92!important;
+  font:900 10px/1 Arial,sans-serif!important;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallReactionStatus{
+  min-height:12px!important;
+  margin-top:6px!important;
+}
+
+@media(max-width:700px){
+  .homepageEffectLayer.is-freedom-wall .freedomWallReactionMenu{
+    padding:10px!important;
+    box-shadow:0 -7px 20px rgba(0,0,0,.20)!important;
+    transition:opacity .10s ease,transform .10s ease!important;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallReactionChoices>button{
+    min-height:62px!important;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallReactionChoices>button>span{
+    font-size:26px!important;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallReactionSummary.is-note{
+    left:6px!important;
+    bottom:5px!important;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallReactionSummary.is-note .freedomWallReactionCount.is-dominant{
+    min-height:20px!important;
+    height:20px!important;
+    padding:2px 6px!important;
+    font-size:10px!important;
+  }
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallReactionSummary.is-note .freedomWallReactionCount.is-mine,
+.homepageEffectLayer.is-freedom-wall .freedomWallReactionSummary.is-prompt .freedomWallReactionCount.is-mine{
+  outline:none!important;
+}
