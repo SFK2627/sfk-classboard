@@ -34242,3 +34242,39 @@ html.sfkFreedomWallModalOpen body{
   }
   .homepageEffectLayer.is-freedom-wall .freedomWallYoutubeInlineClose{width:28px;height:28px;right:4px;top:4px;font-size:19px}
 }
+
+
+/* =========================================================
+   v495 — Freedom Wall Customize Note visibility/scroll fix
+   Keeps Background -> Text Color -> Font reachable even when media fields
+   make the composer taller, and repairs stale hidden state for enabled rows.
+========================================================= */
+.freedomWallCustomizeBody{
+  min-height:0;
+  max-height:min(188px,30dvh);
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  scrollbar-gutter:stable;
+  scroll-padding:6px;
+}
+.freedomWallCustomizeBody .freedomWallCustomizationField.is-admin-enabled{
+  display:block!important;
+}
+.freedomWallCustomizeBody .freedomWallCustomizationField.is-admin-disabled,
+.freedomWallCustomizeBody .freedomWallCustomizationField[hidden]:not(.is-admin-enabled){
+  display:none!important;
+}
+#freedomWallFontField.is-admin-enabled{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+@media(max-width:700px){
+  .freedomWallCustomizeBody{
+    max-height:min(174px,28dvh);
+    scrollbar-gutter:auto;
+  }
+}
+@media(max-height:650px){
+  .freedomWallCustomizeBody{max-height:min(150px,25dvh)}
+}

@@ -5892,7 +5892,31 @@ function getFreedomWallSelectedChoice(selector, fallback = "") {
   return String(selected?.getAttribute("aria-label") || selected?.textContent || fallback).trim();
 }
 
+function syncFreedomWallCustomizationVisibility() {
+  const layer = document.getElementById("homepageEffectLayer");
+  if (!layer) return;
+  const textColorField = layer.querySelector("#freedomWallTextColorField");
+  const fontField = layer.querySelector("#freedomWallFontField");
+  const allowTextColor = Boolean(freedomWallConfig?.freedomWallAllowTextColor);
+  const allowFont = Boolean(freedomWallConfig?.freedomWallAllowFont);
+
+  // v495: keep DOM visibility in sync with the exact same config used by the
+  // customization summary. This repairs the v494 state where Theme Default
+  // could appear in the summary while the Font row itself remained hidden.
+  if (textColorField) {
+    textColorField.hidden = !allowTextColor;
+    textColorField.classList.toggle("is-admin-enabled", allowTextColor);
+    textColorField.classList.toggle("is-admin-disabled", !allowTextColor);
+  }
+  if (fontField) {
+    fontField.hidden = !allowFont;
+    fontField.classList.toggle("is-admin-enabled", allowFont);
+    fontField.classList.toggle("is-admin-disabled", !allowFont);
+  }
+}
+
 function updateFreedomWallCustomizationSummary() {
+  syncFreedomWallCustomizationVisibility();
   const layer = document.getElementById("homepageEffectLayer");
   if (!layer) return;
   const backgroundButton = layer.querySelector(`[data-fw-color="${freedomWallSelectedColor}"]`);
@@ -6014,6 +6038,7 @@ function setFreedomWallCustomizeOpen(open) {
   const toggle = layer?.querySelector("#freedomWallCustomizeToggle");
   const hint = layer?.querySelector("#freedomWallCustomizeHint");
   if (!body || !toggle) return;
+  syncFreedomWallCustomizationVisibility();
   const next = Boolean(open);
   body.hidden = !next;
   toggle.setAttribute("aria-expanded", next ? "true" : "false");
@@ -6089,6 +6114,7 @@ function openFreedomWallComposer() {
   if (freedomWallConfig?.freedomWallAllowTextColor) selectFreedomWallTextColor(freedomWallSelectedTextColor);
   if (freedomWallConfig?.freedomWallAllowFont) selectFreedomWallFont("theme-default");
   setFreedomWallContrastHint(false);
+  syncFreedomWallCustomizationVisibility();
   updateFreedomWallCustomizationSummary();
   setFreedomWallCustomizeOpen(false);
   composer.hidden = false;
@@ -6401,6 +6427,7 @@ function configureFreedomWall(config) {
   if (authorLabel) authorLabel.hidden = !config.freedomWallShowNames;
   if (textColorField) textColorField.hidden = !config.freedomWallAllowTextColor;
   if (fontField) fontField.hidden = !config.freedomWallAllowFont;
+  syncFreedomWallCustomizationVisibility();
   updateFreedomWallCustomizationSummary();
   if (!config.freedomWallAllowPosting) closeFreedomWallComposer();
   updateFreedomWallPrompt(config);
