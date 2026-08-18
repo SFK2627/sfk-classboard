@@ -1690,7 +1690,11 @@ const HOMEPAGE_EFFECT_KEYS = new Set([
   "FreedomWallAllowPosting",
   "FreedomWallShowNames",
   "FreedomWallAllowTextColor",
-  "FreedomWallAllowFont"
+  "FreedomWallAllowFont",
+  "FreedomWallPlaylistEnabled",
+  "FreedomWallPlaylist",
+  "FreedomWallPlaylistShuffle",
+  "FreedomWallPlaylistLoop"
 ]);
 
 let homepageEffectUnsubscribe = null;
@@ -1730,6 +1734,13 @@ let homepageEffectMusicSignature = "";
 let homepageEffectMusicUrl = "";
 let homepageEffectMusicLoop = true;
 let homepageEffectMusicPrimed = false;
+let homepageEffectMusicPlaylistActive = false;
+let homepageEffectMusicPlaylistTracks = [];
+let homepageEffectMusicPlaylistOrder = [];
+let homepageEffectMusicPlaylistPosition = 0;
+let homepageEffectMusicPlaylistShuffle = false;
+let homepageEffectMusicPlaylistLoop = true;
+let homepageEffectMusicPlaylistFailures = 0;
 let homepageEffectPendingSettings = null;
 let homepageEffectStartupWaitTimer = 0;
 let homepageEffectYouTubePlayerKey = "";
@@ -2086,6 +2097,35 @@ function normalizeHomepageEffectImageList(value, fallback = "") {
   return result;
 }
 
+function normalizeFreedomWallPlaylist(value, fallbackUrl = "") {
+  let list = [];
+  const raw = String(value || "").trim();
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) list = parsed;
+    } catch (error) {
+      list = raw.split(/\r?\n/g);
+    }
+  }
+  if (!list.length && fallbackUrl) list = [{ url: fallbackUrl }];
+
+  const result = [];
+  const seen = new Set();
+  list.forEach((item) => {
+    if (result.length >= 20) return;
+    const source = typeof item === "string" ? { url:item } : (item || {});
+    const url = String(source.url || source.URL || "").trim().slice(0,1200);
+    if (!/^https:\/\//i.test(url) || seen.has(url)) return;
+    seen.add(url);
+    result.push({
+      title: String(source.title || source.Title || "").trim().slice(0,80),
+      url
+    });
+  });
+  return result;
+}
+
 function normalizeHomepageEffectConfig(settings = {}) {
   const allowedModes = new Set([
     "normal", "drizzle", "heavy-rain", "thunderstorm", "flood-rain", "multiverse", "picture", "youtube", "rickroll", "alert",
@@ -2124,8 +2164,16 @@ function normalizeHomepageEffectConfig(settings = {}) {
   const freedomWallShowNames = String(settings.FreedomWallShowNames || "YES").trim().toUpperCase() !== "NO";
   const freedomWallAllowTextColor = String(settings.FreedomWallAllowTextColor || "YES").trim().toUpperCase() !== "NO";
   const freedomWallAllowFont = String(settings.FreedomWallAllowFont || "YES").trim().toUpperCase() !== "NO";
-  const signature = updatedAt || [enabled ? "1" : "0", mode, title, message, images.join("~"), dismissible ? "1" : "0", alertSound ? "1" : "0", audioEnabled ? "1" : "0", audioUrl, audioLoop ? "1" : "0", youtubeUrl, youtubeMuted ? "1" : "0", rickrollUrl, freedomWallTheme, freedomWallAllowPosting ? "1" : "0", freedomWallShowNames ? "1" : "0", freedomWallAllowTextColor ? "1" : "0", freedomWallAllowFont ? "1" : "0"].join("|");
-  return { enabled, mode, title, message, image: images[0] || "", images, dismissible, alertSound, spiderSound, audioEnabled, audioUrl, audioLoop, youtubeUrl, youtubeMuted, rickrollUrl, updatedAt, signature, freedomWallTheme, freedomWallAllowPosting, freedomWallShowNames, freedomWallAllowTextColor, freedomWallAllowFont };
+  const hasFreedomWallPlaylistSetting = Object.prototype.hasOwnProperty.call(settings || {}, "FreedomWallPlaylistEnabled");
+  const freedomWallPlaylist = normalizeFreedomWallPlaylist(settings.FreedomWallPlaylist, mode === "freedom-wall" ? audioUrl : "");
+  const freedomWallPlaylistEnabled = mode === "freedom-wall" && freedomWallPlaylist.length > 0 && (hasFreedomWallPlaylistSetting
+    ? String(settings.FreedomWallPlaylistEnabled || "NO").trim().toUpperCase() === "YES"
+    : audioEnabled);
+  const freedomWallPlaylistShuffle = String(settings.FreedomWallPlaylistShuffle || "NO").trim().toUpperCase() === "YES";
+  const freedomWallPlaylistLoop = String(settings.FreedomWallPlaylistLoop || "YES").trim().toUpperCase() !== "NO";
+  const playlistSignature = freedomWallPlaylist.map((track) => `${track.title}~${track.url}`).join("~~");
+  const signature = updatedAt || [enabled ? "1" : "0", mode, title, message, images.join("~"), dismissible ? "1" : "0", alertSound ? "1" : "0", audioEnabled ? "1" : "0", audioUrl, audioLoop ? "1" : "0", youtubeUrl, youtubeMuted ? "1" : "0", rickrollUrl, freedomWallTheme, freedomWallAllowPosting ? "1" : "0", freedomWallShowNames ? "1" : "0", freedomWallAllowTextColor ? "1" : "0", freedomWallAllowFont ? "1" : "0", freedomWallPlaylistEnabled ? "1" : "0", freedomWallPlaylistShuffle ? "1" : "0", freedomWallPlaylistLoop ? "1" : "0", playlistSignature].join("|");
+  return { enabled, mode, title, message, image: images[0] || "", images, dismissible, alertSound, spiderSound, audioEnabled, audioUrl, audioLoop, youtubeUrl, youtubeMuted, rickrollUrl, updatedAt, signature, freedomWallTheme, freedomWallAllowPosting, freedomWallShowNames, freedomWallAllowTextColor, freedomWallAllowFont, freedomWallPlaylistEnabled, freedomWallPlaylist, freedomWallPlaylistShuffle, freedomWallPlaylistLoop };
 }
 
 function normalizeHomepageEffectYouTubeUrl(value) {
@@ -2485,6 +2533,8 @@ function getHomepageEffectMusicAudio(url, loop = true) {
 
   if (homepageEffectMusicAudio) {
     try {
+      homepageEffectMusicAudio.removeEventListener("ended", handleHomepageEffectMusicEnded);
+      homepageEffectMusicAudio.removeEventListener("error", handleHomepageEffectMusicError);
       homepageEffectMusicAudio.pause();
       homepageEffectMusicAudio.currentTime = 0;
       homepageEffectMusicAudio.removeAttribute("src");
@@ -2498,6 +2548,9 @@ function getHomepageEffectMusicAudio(url, loop = true) {
     audio.preload = "auto";
     audio.volume = .62;
     audio.playsInline = true;
+    audio.addEventListener("ended", handleHomepageEffectMusicEnded);
+    audio.addEventListener("error", handleHomepageEffectMusicError);
+    audio.addEventListener("playing", () => { homepageEffectMusicPlaylistFailures = 0; });
     homepageEffectMusicAudio = audio;
     homepageEffectMusicUrl = safeUrl;
   } catch (error) {
@@ -2526,6 +2579,101 @@ function primeHomepageEffectMusicOnInteraction() {
   };
   document.addEventListener("pointerdown", resume, { capture: true, passive: true });
   document.addEventListener("keydown", resume, { capture: true });
+}
+
+function buildHomepageEffectPlaylistOrder(length, shuffle = false, avoidFirst = -1) {
+  const order = Array.from({ length: Math.max(0, Number(length) || 0) }, (_, index) => index);
+  if (!shuffle || order.length < 2) return order;
+  for (let index = order.length - 1; index > 0; index -= 1) {
+    const swap = Math.floor(Math.random() * (index + 1));
+    [order[index], order[swap]] = [order[swap], order[index]];
+  }
+  if (order.length > 1 && order[0] === avoidFirst) {
+    const swapIndex = 1 + Math.floor(Math.random() * (order.length - 1));
+    [order[0], order[swapIndex]] = [order[swapIndex], order[0]];
+  }
+  return order;
+}
+
+function playHomepageEffectPlaylistPosition(position, shouldPlay = true) {
+  if (!homepageEffectMusicPlaylistActive || !homepageEffectMusicPlaylistTracks.length) return;
+  const safePosition = Math.max(0, Math.min(homepageEffectMusicPlaylistOrder.length - 1, Number(position) || 0));
+  homepageEffectMusicPlaylistPosition = safePosition;
+  const trackIndex = homepageEffectMusicPlaylistOrder[safePosition];
+  const track = homepageEffectMusicPlaylistTracks[trackIndex];
+  const url = String(track?.url || "").trim();
+  if (!/^https:\/\//i.test(url)) {
+    advanceHomepageEffectPlaylist("invalid");
+    return;
+  }
+  homepageEffectMusicUrl = url;
+  homepageEffectMusicLoop = homepageEffectMusicPlaylistTracks.length === 1 && homepageEffectMusicPlaylistLoop;
+  const audio = getHomepageEffectMusicAudio(url, homepageEffectMusicLoop);
+  if (audio && shouldPlay) tryPlayHomepageEffectMusic();
+}
+
+function advanceHomepageEffectPlaylist(reason = "ended") {
+  if (!homepageEffectMusicPlaylistActive || !homepageEffectMusicPlaylistTracks.length) return;
+  if (reason === "error") homepageEffectMusicPlaylistFailures += 1;
+  if (homepageEffectMusicPlaylistFailures >= homepageEffectMusicPlaylistTracks.length) {
+    console.warn("Freedom Wall playlist stopped because no playable track was available.");
+    stopHomepageEffectMusic();
+    return;
+  }
+
+  let nextPosition = homepageEffectMusicPlaylistPosition + 1;
+  if (nextPosition >= homepageEffectMusicPlaylistOrder.length) {
+    if (!homepageEffectMusicPlaylistLoop) {
+      homepageEffectMusicWanted = false;
+      homepageEffectMusicPlaylistActive = false;
+      return;
+    }
+    const previousTrackIndex = homepageEffectMusicPlaylistOrder[homepageEffectMusicPlaylistPosition] ?? -1;
+    homepageEffectMusicPlaylistOrder = buildHomepageEffectPlaylistOrder(
+      homepageEffectMusicPlaylistTracks.length,
+      homepageEffectMusicPlaylistShuffle,
+      previousTrackIndex
+    );
+    nextPosition = 0;
+  }
+  playHomepageEffectPlaylistPosition(nextPosition, true);
+}
+
+function handleHomepageEffectMusicEnded() {
+  if (!homepageEffectMusicPlaylistActive) return;
+  advanceHomepageEffectPlaylist("ended");
+}
+
+function handleHomepageEffectMusicError() {
+  if (!homepageEffectMusicPlaylistActive) return;
+  window.setTimeout(() => advanceHomepageEffectPlaylist("error"), 80);
+}
+
+function startHomepageEffectPlaylist(tracks, shuffle, loop, signature) {
+  const safeTracks = normalizeFreedomWallPlaylist(JSON.stringify(Array.isArray(tracks) ? tracks : []));
+  if (!safeTracks.length) {
+    stopHomepageEffectMusic();
+    return;
+  }
+  const nextSignature = String(signature || safeTracks.map((track) => track.url).join("|"));
+  const samePlaylist = homepageEffectMusicWanted
+    && homepageEffectMusicPlaylistActive
+    && homepageEffectMusicSignature === nextSignature
+    && homepageEffectMusicPlaylistShuffle === Boolean(shuffle)
+    && homepageEffectMusicPlaylistLoop === Boolean(loop);
+  if (samePlaylist) return;
+
+  stopHomepageEffectMusic();
+  homepageEffectMusicWanted = true;
+  homepageEffectMusicSignature = nextSignature;
+  homepageEffectMusicPlaylistActive = true;
+  homepageEffectMusicPlaylistTracks = safeTracks;
+  homepageEffectMusicPlaylistShuffle = Boolean(shuffle);
+  homepageEffectMusicPlaylistLoop = Boolean(loop);
+  homepageEffectMusicPlaylistFailures = 0;
+  homepageEffectMusicPlaylistOrder = buildHomepageEffectPlaylistOrder(safeTracks.length, homepageEffectMusicPlaylistShuffle);
+  homepageEffectMusicPlaylistPosition = 0;
+  playHomepageEffectPlaylistPosition(0, true);
 }
 
 function startHomepageEffectMusic(url, loop, signature) {
@@ -2557,6 +2705,8 @@ function stopHomepageEffectMusic() {
   const audio = homepageEffectMusicAudio;
   if (audio) {
     try {
+      audio.removeEventListener("ended", handleHomepageEffectMusicEnded);
+      audio.removeEventListener("error", handleHomepageEffectMusicError);
       audio.pause();
       audio.currentTime = 0;
       audio.removeAttribute("src");
@@ -2566,6 +2716,13 @@ function stopHomepageEffectMusic() {
   homepageEffectMusicAudio = null;
   homepageEffectMusicUrl = "";
   homepageEffectMusicLoop = true;
+  homepageEffectMusicPlaylistActive = false;
+  homepageEffectMusicPlaylistTracks = [];
+  homepageEffectMusicPlaylistOrder = [];
+  homepageEffectMusicPlaylistPosition = 0;
+  homepageEffectMusicPlaylistShuffle = false;
+  homepageEffectMusicPlaylistLoop = true;
+  homepageEffectMusicPlaylistFailures = 0;
 }
 
 function ensureHomepageEffectLayer() {
@@ -5915,14 +6072,27 @@ async function applyHomepageEffectSettings(settings = {}) {
   layer.dataset.dismissible = homepageEffectDismissAllowed ? "true" : "false";
   renderHomepageEffectText(config);
 
-  const hasCustomEffectAudio = Boolean(!["youtube", "rickroll"].includes(config.mode) && config.audioEnabled && config.audioUrl);
+  const hasFreedomWallPlaylist = Boolean(
+    config.mode === "freedom-wall"
+    && config.freedomWallPlaylistEnabled
+    && Array.isArray(config.freedomWallPlaylist)
+    && config.freedomWallPlaylist.length
+  );
+  const hasCustomEffectAudio = Boolean(!["youtube", "rickroll"].includes(config.mode) && !hasFreedomWallPlaylist && config.audioEnabled && config.audioUrl);
   if (config.mode === "alert" && config.alertSound && !hasCustomEffectAudio) {
     startHomepageAlertSound(config.signature);
   } else {
     stopHomepageAlertSound();
   }
 
-  if (hasCustomEffectAudio) {
+  if (hasFreedomWallPlaylist) {
+    startHomepageEffectPlaylist(
+      config.freedomWallPlaylist,
+      config.freedomWallPlaylistShuffle,
+      config.freedomWallPlaylistLoop,
+      config.signature
+    );
+  } else if (hasCustomEffectAudio) {
     startHomepageEffectMusic(config.audioUrl, config.audioLoop, config.signature);
   } else {
     stopHomepageEffectMusic();
