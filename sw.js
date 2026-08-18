@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-main-pwa-v473-wall-pin-spacing";
+const CACHE_NAME = "sfk-main-pwa-v477-jungle-poste-polaroid-media";
 const CACHE_PREFIXES_TO_DELETE = ["sfk-main-pwa-", "sfk-sw.js-"];
 const NAVIGATION_FALLBACK_URL = "./index.html";
 const NAVIGATION_TIMEOUT_MS = 2500;

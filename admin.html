@@ -219,6 +219,9 @@
               <option value="night">Night</option>
               <option value="flood">Rainy Day + Flood</option>
               <option value="comic">Comic / Pop Art</option>
+              <option value="comic-noir">Comic / Noir Graphic Novel</option>
+              <option value="comic-manga">Comic / Manga Speed Lines</option>
+              <option value="comic-strip">Comic / Sunday Strip Panels</option>
               <option value="school-note">School Notebook Paper</option>
               <option value="jungle">Jungle Theme</option>
               <option value="bulletin-board">School Bulletin Board</option>
@@ -243,6 +246,8 @@
               <option value="appreciation">Love & Appreciation Wall</option>
               <option value="seasonal">Seasonal Wall System</option>
               <option value="neon-music">Neon / Music Wall</option>
+              <option value="spiderman">Spider-Man Web City</option>
+              <option value="filipino">Filipino / Makabayang Pader</option>
               <option value="poste">Utility Post / Meralco Pole</option>
               <option value="graffiti">Graffiti Street Art</option>
               <option value="vandal">Real Freedom / Vandal Wall</option>
@@ -1276,9 +1281,10 @@
         const name = String(data.Name || "").trim() || "Anonymous";
         const text = String(data.Text || "").trim();
         const color = noteColorMap[String(data.Color || "yellow").toLowerCase()] || noteColorMap.yellow;
+        const mediaBadge = String(data.MediaRef || "").startsWith("sfk-media://freedomWall/") ? " 📷" : "";
         return `<article class="freedomWallAdminNote" data-fw-admin-note-id="${escapeWallAdminText(doc.id)}">
           <i class="freedomWallAdminNoteColor" style="--fw-admin-note-color:${color}"></i>
-          <div class="freedomWallAdminNoteText"><strong>${escapeWallAdminText(name)}</strong><span>${escapeWallAdminText(text)}</span></div>
+          <div class="freedomWallAdminNoteText"><strong>${escapeWallAdminText(name)}${mediaBadge}</strong><span>${escapeWallAdminText(text || (mediaBadge ? "Photo / GIF note" : ""))}</span></div>
           <button class="freedomWallAdminNoteDelete" type="button" data-fw-delete-note="${escapeWallAdminText(doc.id)}">Delete</button>
         </article>`;
       }).join("");
@@ -1334,8 +1340,11 @@
       }
       if (button) button.disabled = true;
       try {
-        await db.collection("freedomWallNotes").doc(id).delete();
-        if (status) status.textContent = "Note deleted. It will disappear live from every open SFK #BeKind Wall.";
+        const batch = db.batch();
+        batch.delete(db.collection("freedomWallNotes").doc(id));
+        batch.delete(db.collection("freedomWallMedia").doc(id));
+        await batch.commit();
+        if (status) status.textContent = "Note deleted. Its Polaroid photo/GIF (if any) was removed too.";
       } catch (error) {
         console.error("Freedom Wall individual delete failed", error);
         if (status) status.textContent = "Unable to delete that note. Confirm you are signed in as Admin.";
@@ -1357,15 +1366,26 @@
       try {
         let deleted = 0;
         while (true) {
-          const snap = await db.collection("freedomWallNotes").limit(400).get();
+          const snap = await db.collection("freedomWallNotes").limit(200).get();
           if (snap.empty) break;
           const batch = db.batch();
-          snap.docs.forEach((doc) => batch.delete(doc.ref));
+          snap.docs.forEach((doc) => {
+            batch.delete(doc.ref);
+            batch.delete(db.collection("freedomWallMedia").doc(doc.id));
+          });
           await batch.commit();
           deleted += snap.size;
-          if (snap.size < 400) break;
+          if (snap.size < 200) break;
         }
-        if (status) status.textContent = `SFK #BeKind Wall cleared. ${deleted} ${deleted === 1 ? "note" : "notes"} removed.`;
+        while (true) {
+          const mediaSnap = await db.collection("freedomWallMedia").limit(400).get();
+          if (mediaSnap.empty) break;
+          const mediaBatch = db.batch();
+          mediaSnap.docs.forEach((doc) => mediaBatch.delete(doc.ref));
+          await mediaBatch.commit();
+          if (mediaSnap.size < 400) break;
+        }
+        if (status) status.textContent = `SFK #BeKind Wall cleared. ${deleted} ${deleted === 1 ? "note" : "notes"} removed, including Polaroid media.`;
       } catch (error) {
         console.error("Freedom Wall clear failed", error);
         if (status) status.textContent = "Unable to clear the wall right now.";

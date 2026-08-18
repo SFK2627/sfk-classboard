@@ -2,9 +2,9 @@
   let deferredInstallPrompt = null;
 
   const installButton = document.getElementById("installAppBtn");
-  const SW_URL = "./sw.js?v=v473-wall-pin-spacing";
-  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV471MobileSmoothDrag";
-  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV471MobileSmoothDrag";
+  const SW_URL = "./sw.js?v=v477-jungle-poste-polaroid-media";
+  const CONTROLLER_RELOAD_KEY = "sfkPwaControllerReloadV477JunglePostePolaroid";
+  const STANDALONE_BOOT_RELOAD_KEY = "sfkPwaStandaloneBootReloadV477JunglePostePolaroid";
 
   function isStandaloneApp() {
     return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;

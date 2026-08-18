@@ -33028,3 +33028,112 @@ label[for="freedomWallTheme"]{display:block}
   align-items:center;
   justify-content:center;
 }
+
+/* =========================================================
+   v477 — Jungle environment + real utility pole + Polaroid media
+========================================================= */
+.freedomWallJungleEnvironment,.freedomWallUtilityPole{display:none;position:absolute;inset:0;pointer-events:none;overflow:hidden}
+
+/* JUNGLE / FOREST — layered environment, not a green pattern */
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallBg{
+  background:
+    radial-gradient(circle at 52% 22%,rgba(236,255,205,.22),transparent 22%),
+    linear-gradient(180deg,#183e2b 0%,#235f3b 32%,#2c7044 57%,#183d28 100%) !important;
+}
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallBg::before{
+  inset:0 !important;
+  background:
+    radial-gradient(ellipse at 2% 5%,#153f29 0 18%,transparent 19%),
+    radial-gradient(ellipse at 18% -2%,#205837 0 22%,transparent 23%),
+    radial-gradient(ellipse at 42% 1%,#17472e 0 19%,transparent 20%),
+    radial-gradient(ellipse at 67% -2%,#26633d 0 22%,transparent 23%),
+    radial-gradient(ellipse at 92% 3%,#173f2a 0 22%,transparent 23%),
+    linear-gradient(115deg,transparent 0 35%,rgba(242,255,195,.10) 36% 41%,transparent 42% 100%),
+    linear-gradient(72deg,transparent 0 58%,rgba(242,255,195,.08) 59% 63%,transparent 64% 100%) !important;
+  opacity:1 !important;
+}
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallBg::after{
+  inset:auto 0 0 !important;height:30% !important;
+  background:
+    radial-gradient(ellipse at 5% 100%,#0d321f 0 24%,transparent 25%),
+    radial-gradient(ellipse at 18% 100%,#1c5a34 0 27%,transparent 28%),
+    radial-gradient(ellipse at 34% 100%,#0f4328 0 24%,transparent 25%),
+    radial-gradient(ellipse at 55% 100%,#1d6037 0 28%,transparent 29%),
+    radial-gradient(ellipse at 73% 100%,#0d3a24 0 24%,transparent 25%),
+    radial-gradient(ellipse at 92% 100%,#195631 0 28%,transparent 29%),
+    linear-gradient(180deg,transparent,#102f20 72%) !important;
+  opacity:1 !important;
+}
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallSun,
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallCloud{display:none !important;opacity:0 !important}
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallJungleEnvironment{display:block}
+.fwJungleTree{position:absolute;bottom:-8%;width:clamp(46px,6vw,90px);height:88%;background:linear-gradient(90deg,#2d2116,#65472a 38%,#3f2d1c 70%,#221a12);border-radius:48% 42% 12% 15%;box-shadow:inset 8px 0 10px rgba(255,255,255,.06),inset -10px 0 12px rgba(0,0,0,.22)}
+.fwJungleTree::before,.fwJungleTree::after{content:"";position:absolute;top:11%;width:110%;height:18px;background:#49331f;border-radius:999px;transform-origin:left center}
+.fwJungleTree::before{left:45%;transform:rotate(-31deg)}.fwJungleTree::after{right:42%;transform-origin:right center;transform:rotate(32deg)}
+.fwJungleTree.tree-a{left:2%;transform:rotate(-2deg)}.fwJungleTree.tree-b{right:3%;height:82%;transform:rotate(2deg);opacity:.95}.fwJungleTree.tree-c{left:67%;height:60%;width:clamp(30px,4vw,56px);opacity:.42;filter:blur(.3px)}
+.fwJungleVine{position:absolute;top:-4%;width:3px;height:48%;border-left:3px solid rgba(65,112,48,.9);border-radius:50%;transform-origin:top center}
+.fwJungleVine::after{content:"";position:absolute;left:-10px;bottom:2%;width:22px;height:34px;background:#477f43;border-radius:100% 0 100% 0;transform:rotate(28deg);box-shadow:15px -45px 0 -2px #356d39,-10px -88px 0 -3px #568d47}
+.fwJungleVine.vine-a{left:20%;transform:rotate(5deg)}.fwJungleVine.vine-b{left:48%;height:36%;transform:rotate(-4deg);opacity:.72}.fwJungleVine.vine-c{right:20%;height:44%;transform:rotate(7deg)}
+.fwJungleFoliage{position:absolute;width:clamp(100px,14vw,190px);height:clamp(75px,10vw,135px);background:radial-gradient(ellipse at 24% 58%,#2c8148 0 22%,transparent 23%),radial-gradient(ellipse at 48% 38%,#3b9655 0 24%,transparent 25%),radial-gradient(ellipse at 72% 62%,#1f6c3d 0 25%,transparent 26%),radial-gradient(ellipse at 54% 82%,#165735 0 26%,transparent 27%);filter:drop-shadow(0 8px 7px rgba(0,0,0,.12))}
+.fwJungleFoliage.foliage-a{left:-3%;top:19%;transform:rotate(16deg)}.fwJungleFoliage.foliage-b{right:-3%;top:23%;transform:rotate(-18deg)}.fwJungleFoliage.foliage-c{left:12%;bottom:2%;transform:scale(1.15)}.fwJungleFoliage.foliage-d{right:11%;bottom:0;transform:scale(1.2) rotate(-5deg)}
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallBrand{background:rgba(244,236,204,.94)!important;border:1px solid rgba(74,55,28,.38)!important;color:#25472c!important;box-shadow:0 10px 24px rgba(7,31,18,.22)!important}
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallBrand span{color:#5c6949!important}
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallPromptCard{background:linear-gradient(180deg,#8f6338,#6d4829)!important;border:5px solid #4a301d!important;border-radius:12px!important;box-shadow:inset 0 0 0 2px rgba(255,255,255,.10),0 18px 38px rgba(5,27,15,.36)!important;color:#fff7d9!important}
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallPromptCard::before{background:linear-gradient(90deg,#315f37,#d4b66d,#315f37)!important}
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallPromptEyebrow{color:#e7cf82!important;font-family:Georgia,"Times New Roman",serif!important}
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallPromptCard h2{color:#fff8dd!important;text-shadow:0 2px 0 rgba(52,32,17,.38)}
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallPromptCard p{color:#f4ead1!important}
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallPromptClose{color:#fff!important}
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallNote{background:linear-gradient(180deg,#f7efcf,#ead9ad)!important;border:1px solid rgba(77,59,30,.26)!important;border-radius:8px 11px 7px 10px!important;box-shadow:0 14px 22px rgba(5,34,18,.24)!important}
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallNote::before{content:"";position:absolute;left:8px;right:8px;top:9px;height:7px;background:linear-gradient(90deg,transparent,#5d8a50 22%,#47743e 50%,#5d8a50 78%,transparent);border-radius:999px;opacity:.38}
+.homepageFreedomWallScene[data-theme="jungle"] .freedomWallNote p{color:#27462c!important;font-family:Georgia,"Times New Roman",serif!important}.homepageFreedomWallScene[data-theme="jungle"] .freedomWallNote small{color:#536145!important}
+
+/* UTILITY POST / MERALCO — actual pole, crossarm, insulators and cable/jumper lines */
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallBg{background:linear-gradient(180deg,#9ed4f2 0%,#c9e8f5 56%,#d7d3c4 56.2%,#b8b1a0 100%)!important}
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallBg::before{inset:0!important;background:radial-gradient(circle at 18% 18%,rgba(255,255,255,.55) 0 8%,transparent 9%),linear-gradient(180deg,rgba(255,255,255,.08),transparent 45%)!important;opacity:1!important}
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallBg::after{inset:auto 0 0!important;height:32%!important;background:linear-gradient(90deg,#8d8b7e 0 14%,#9a9788 14% 26%,#77776f 26% 39%,#a29e91 39% 54%,#85847a 54% 67%,#999587 67% 80%,#7c7b73 80% 100%)!important;clip-path:polygon(0 68%,8% 55%,14% 63%,22% 47%,29% 59%,38% 43%,46% 61%,54% 48%,63% 58%,72% 45%,81% 63%,90% 50%,100% 59%,100% 100%,0 100%);opacity:.42!important}
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallUtilityPole{display:block}
+.fwUtilityPoleBody{position:absolute;left:50%;top:5%;bottom:-10%;width:clamp(58px,7vw,94px);transform:translateX(-50%);clip-path:polygon(38% 0,62% 0,74% 100%,26% 100%);background:linear-gradient(90deg,#77746e,#b8b3a9 33%,#d4d0c6 52%,#9a968e 72%,#65635f);box-shadow:inset 9px 0 12px rgba(255,255,255,.12),inset -12px 0 14px rgba(0,0,0,.15);z-index:2}
+.fwUtilityPoleBody::before{content:"";position:absolute;inset:8% 33% 5%;background:repeating-linear-gradient(180deg,rgba(52,51,49,.18) 0 2px,transparent 2px 76px);opacity:.45}
+.fwUtilityCrossArm{position:absolute;left:50%;top:16%;width:min(58vw,620px);height:18px;transform:translateX(-50%);background:linear-gradient(180deg,#4a3a2a,#261e17);border-radius:4px;box-shadow:0 5px 6px rgba(0,0,0,.24);z-index:4}
+.fwUtilityInsulator{position:absolute;top:12.9%;width:12px;height:29px;border-radius:7px 7px 4px 4px;background:repeating-linear-gradient(180deg,#d9ecf0 0 4px,#74939a 4px 7px);box-shadow:0 2px 4px rgba(0,0,0,.18);z-index:5}
+.fwUtilityInsulator.ins-a{left:31%}.fwUtilityInsulator.ins-b{left:42%}.fwUtilityInsulator.ins-c{right:42%}.fwUtilityInsulator.ins-d{right:31%}
+.fwUtilityWire{position:absolute;left:-8%;width:116%;height:90px;border-top:4px solid #242527;border-radius:50%;z-index:3;filter:drop-shadow(0 1px 1px rgba(255,255,255,.20))}
+.fwUtilityWire.wire-a{top:11%;transform:rotate(-1deg)}.fwUtilityWire.wire-b{top:16%;height:115px;transform:rotate(.8deg)}.fwUtilityWire.wire-c{top:23%;height:140px;border-top-width:3px;transform:rotate(-.5deg)}.fwUtilityWire.wire-d{top:29%;height:155px;border-top:3px solid #3b3c3f;transform:rotate(.6deg)}
+.fwUtilityJumper{position:absolute;top:15%;width:76px;height:92px;border:4px solid #252629;border-top:0;border-radius:0 0 55% 55%;z-index:5}
+.fwUtilityJumper.jumper-a{left:calc(50% - 105px);transform:rotate(7deg)}.fwUtilityJumper.jumper-b{right:calc(50% - 105px);transform:rotate(-7deg)}
+.fwUtilityNotice{position:absolute;left:50%;top:39%;width:44px;height:72px;transform:translateX(-50%) rotate(-2deg);background:#efe3bf;border:2px solid rgba(88,65,35,.52);box-shadow:0 4px 7px rgba(0,0,0,.22);z-index:6}
+.fwUtilityNotice::before{content:"POST NO BILLS";position:absolute;inset:10px 4px;font:900 7px/1.2 Arial,sans-serif;text-align:center;color:#6c553b;opacity:.58}
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallBrand{background:rgba(248,247,242,.94)!important;border-color:rgba(65,65,65,.18)!important}
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallPromptCard{background:linear-gradient(180deg,#fffdf5,#eee5d1)!important;border:2px solid #5d5143!important;border-radius:5px!important;box-shadow:0 16px 28px rgba(38,39,39,.24)!important}
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallPromptCard::before{background:linear-gradient(90deg,#2e2e2e,#c9aa65,#2e2e2e)!important}
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallNote{background:linear-gradient(180deg,#fff9e9,#e9ddc5)!important;border:1px solid rgba(67,57,43,.30)!important;border-radius:1px!important;box-shadow:0 10px 16px rgba(35,36,36,.22)!important;padding-top:27px!important}
+.homepageFreedomWallScene[data-theme="poste"] .freedomWallNote::before{content:""!important;position:absolute!important;left:50%!important;top:5px!important;translate:-50% 0!important;width:48%!important;height:13px!important;background:rgba(215,198,153,.92)!important;transform:rotate(-2deg)!important;border-radius:1px!important;box-shadow:0 1px 2px rgba(0,0,0,.12)!important}
+
+/* POLAROID — real photo/GIF frame */
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallNote.has-media{--fw-note-min-width:184px;--fw-note-max-width:232px;min-inline-size:184px!important;max-inline-size:232px!important;padding:10px 10px 18px!important;background:#fff!important;border:1px solid #e7ddd3!important;border-radius:3px!important;box-shadow:0 17px 27px rgba(48,29,15,.22)!important}
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallNote.has-media::before{display:none!important}
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallNote.has-media p{margin-top:8px!important;font-size:clamp(12px,1.15vw,15px)!important;line-height:1.22!important;color:#493d34!important}
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallNote.has-media small{margin-top:6px!important;color:#776557!important}
+.freedomWallNoteMedia{position:relative;z-index:3;width:100%;aspect-ratio:4/3;overflow:hidden;border-radius:2px;background:linear-gradient(135deg,#e7e1d8,#f8f5ef);box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);display:grid;place-items:center;color:#82776c;font:800 10px/1.2 Arial,sans-serif;text-align:center}
+.freedomWallNoteMedia img{display:block;width:100%;height:100%;object-fit:cover;background:#ece8e2}
+.freedomWallNoteMedia.is-loading::after{content:"";position:absolute;width:18px;height:18px;border:2px solid rgba(75,61,49,.22);border-top-color:#705746;border-radius:50%;animation:fwPolaroidMediaSpin .8s linear infinite}
+.freedomWallNoteMedia.is-loading span{opacity:.32}.freedomWallNoteMedia.is-unavailable{background:#f0ede8;color:#866b62}
+@keyframes fwPolaroidMediaSpin{to{transform:rotate(360deg)}}
+
+/* Composer media picker */
+.freedomWallMediaField{margin:4px 0 2px;padding:11px;border:1px solid rgba(0,0,0,.10);border-radius:13px;background:rgba(255,255,255,.58)}
+.freedomWallMediaField[hidden]{display:none!important}.freedomWallMediaFieldHead{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-bottom:8px}.freedomWallMediaFieldHead label{margin:0!important;font-weight:900!important}.freedomWallMediaFieldHead small{color:#77695d;font:700 10px/1.25 Arial,sans-serif;text-align:right}
+.freedomWallMediaControls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.freedomWallMediaControls input[type="file"]{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);clip-path:inset(50%);white-space:nowrap}.freedomWallMediaChoose{display:inline-flex!important;align-items:center;gap:8px;margin:0!important;padding:9px 12px;border:1px solid rgba(78,60,44,.18);border-radius:10px;background:#fffaf2;color:#4e3e31;cursor:pointer;font:800 12px/1 Arial,sans-serif!important}.freedomWallMediaChoose span{font-size:17px}.freedomWallMediaControls button{border:0;border-radius:9px;padding:8px 10px;background:#ece6df;color:#5f4f44;font:800 11px/1 Arial,sans-serif;cursor:pointer}.freedomWallMediaPreview{margin-top:9px;width:min(100%,260px);aspect-ratio:4/3;border-radius:8px;overflow:hidden;background:#eee9e3;border:1px solid rgba(0,0,0,.08)}.freedomWallMediaPreview[hidden]{display:none!important}.freedomWallMediaPreview img{width:100%;height:100%;object-fit:cover;display:block}
+
+@media(max-width:700px){
+  .fwJungleTree.tree-c{display:none}.fwJungleFoliage{width:115px;height:84px}.fwJungleVine.vine-b{display:none}
+  .homepageFreedomWallScene[data-theme="jungle"] .freedomWallPromptCard{width:calc(100vw - 34px)!important;border-width:4px!important}
+  .fwUtilityCrossArm{width:78vw;height:14px;top:17%}.fwUtilityInsulator{top:14.2%;height:23px;width:10px}.fwUtilityInsulator.ins-a{left:25%}.fwUtilityInsulator.ins-b{left:39%}.fwUtilityInsulator.ins-c{right:39%}.fwUtilityInsulator.ins-d{right:25%}
+  .fwUtilityPoleBody{width:72px}.fwUtilityWire{left:-18%;width:136%;border-top-width:3px}.fwUtilityJumper{width:56px;height:74px;border-width:3px}.fwUtilityJumper.jumper-a{left:calc(50% - 79px)}.fwUtilityJumper.jumper-b{right:calc(50% - 79px)}
+  .homepageFreedomWallScene[data-theme="polaroid"] .freedomWallNote.has-media{--fw-note-min-width:150px;--fw-note-max-width:min(56vw,190px);min-inline-size:150px!important;max-inline-size:min(56vw,190px)!important;padding:8px 8px 14px!important}
+  .freedomWallMediaFieldHead{align-items:flex-start;flex-direction:column;gap:3px}.freedomWallMediaFieldHead small{text-align:left}.freedomWallMediaPreview{width:100%}
+}
+.homepageFreedomWallScene[data-theme="poste"] .fwUtilityNotice{background:#f2cf43;border-color:#665615;border-radius:3px}
+.homepageFreedomWallScene[data-theme="poste"] .fwUtilityNotice::before{content:"⚡";inset:15px 4px;font:900 28px/1 Arial,sans-serif;color:#332d16;opacity:.76}
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallColorRow{display:none!important}

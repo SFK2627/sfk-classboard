@@ -2,6 +2,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzCjWVnO-ZNvKTNqKN1zVsc
 const CLASSBOARD_MEDIA_REF_PREFIX = "sfk-media://";
 const ANNOUNCEMENT_MEDIA_COLLECTION = "announcementMedia";
 const MEMORY_MEDIA_COLLECTION = "memoryMedia";
+const FREEDOM_WALL_MEDIA_COLLECTION = "freedomWallMedia";
 const CLASSBOARD_MEDIA_DATA_CACHE = new Map();
 const CLASSBOARD_MEDIA_BLOB_URL_CACHE = new Map();
 
@@ -10,7 +11,7 @@ const ANNOUNCEMENT_ROTATE_MS = 10000;
 const BIRTHDAY_ROTATE_MS = 30000;
 const CACHE_KEY = "sfkClassBoardData";
 const CLASSBOARD_MEDIA_FIX_CACHE_VERSION_KEY = "sfkClassBoardMediaFixVersion";
-const CLASSBOARD_MEDIA_FIX_CACHE_VERSION = "homepage-page-lock-v119";
+const CLASSBOARD_MEDIA_FIX_CACHE_VERSION = "v477-polaroid-jungle-poste";
 const ANNOUNCEMENT_HEARTS_KEY = "sfkClassBoardHeartedAnnouncements";
 
 try {
@@ -1744,6 +1745,9 @@ const FREEDOM_WALL_COLLECTION = "freedomWallNotes";
 const FREEDOM_WALL_MAX_RENDERED_NOTES = 400;
 const FREEDOM_WALL_NOTE_MAX_LENGTH = 240;
 const FREEDOM_WALL_AUTHOR_MAX_LENGTH = 42;
+const FREEDOM_WALL_MEDIA_MAX_STATIC_SOURCE_BYTES = 8 * 1024 * 1024;
+const FREEDOM_WALL_MEDIA_MAX_BYTES = 520 * 1024;
+const FREEDOM_WALL_MEDIA_MAX_GIF_BYTES = 500 * 1024;
 const FREEDOM_WALL_THEME_SET = new Set(["sunny","rainy","night","flood","comic","comic-noir","comic-manga","comic-strip","school-note","sticky-notes","jungle","bulletin-board","whiteboard","cafe","sakura","galaxy","beach","art-room","library","newspaper","polaroid","retro-arcade","coding-lab","rainbow","brick-alley","school-fair","eco","dreamy-clouds","chalkboard","detective","appreciation","seasonal","neon-music","spiderman","filipino","poste","graffiti","vandal"]);
 const FREEDOM_WALL_COLORS = ["yellow","pink","blue","mint","orange","violet","peach","white"];
 let freedomWallUnsubscribe = null;
@@ -1771,6 +1775,10 @@ function getFreedomWallUiCopy(theme = freedomWallConfig?.freedomWallTheme) {
       notePlaceholder: "Sumulat ng mabait, totoo, masaya, taos-puso, o makabuluhang mensahe…",
       colorAria: "Kulay ng note",
       postButton: "Idikit ang Note",
+      mediaLabel: "Larawan / GIF (opsyonal)",
+      mediaHint: "Para sa Polaroid theme lamang.",
+      mediaChoose: "Pumili ng Larawan / GIF",
+      mediaRemove: "Alisin",
       closePromptAria: "Isara ang paksa",
       closeComposerAria: "Isara",
       statusEmpty: "Isulat muna ang iyong mensahe.",
@@ -1799,6 +1807,10 @@ function getFreedomWallUiCopy(theme = freedomWallConfig?.freedomWallTheme) {
     notePlaceholder: "Write something kind, honest, funny, thankful, or meaningful…",
     colorAria: "Sticky note color",
     postButton: "Post Note",
+    mediaLabel: "Photo / GIF (optional)",
+    mediaHint: "Available for the Polaroid theme.",
+    mediaChoose: "Choose Photo / GIF",
+    mediaRemove: "Remove",
     closePromptAria: "Close prompt",
     closeComposerAria: "Close",
     statusEmpty: "Write your note first.",
@@ -1832,6 +1844,11 @@ function applyFreedomWallThemeCopy(theme = freedomWallConfig?.freedomWallTheme) 
   const noteLabel = layer.querySelector('label[for="freedomWallNoteInput"]');
   const noteInput = layer.querySelector('#freedomWallNoteInput');
   const colorRow = layer.querySelector('.freedomWallColorRow');
+  const mediaField = layer.querySelector('#freedomWallMediaField');
+  const mediaLabel = layer.querySelector('#freedomWallMediaLabel');
+  const mediaHint = layer.querySelector('#freedomWallMediaHint');
+  const mediaChoose = layer.querySelector('#freedomWallMediaChooseText');
+  const mediaRemove = layer.querySelector('#freedomWallMediaRemove');
   const postBtn = layer.querySelector('#freedomWallPostBtn');
   if (brandStrong) brandStrong.textContent = copy.brand;
   if (brandSpan && !freedomWallLastRenderedCount) brandSpan.textContent = copy.live;
@@ -1847,6 +1864,13 @@ function applyFreedomWallThemeCopy(theme = freedomWallConfig?.freedomWallTheme) 
   if (noteLabel) noteLabel.textContent = copy.noteLabel;
   if (noteInput) noteInput.placeholder = copy.notePlaceholder;
   if (colorRow) colorRow.setAttribute('aria-label', copy.colorAria);
+  const isPolaroid = String(theme || '').trim().toLowerCase() === 'polaroid';
+  if (mediaField) mediaField.hidden = !isPolaroid;
+  if (mediaLabel) mediaLabel.textContent = copy.mediaLabel;
+  if (mediaHint) mediaHint.textContent = copy.mediaHint;
+  if (mediaChoose) mediaChoose.textContent = copy.mediaChoose;
+  if (mediaRemove) mediaRemove.textContent = copy.mediaRemove;
+  if (!isPolaroid) resetFreedomWallPendingMedia();
   if (postBtn) postBtn.textContent = copy.postButton;
 }
 
@@ -1876,6 +1900,8 @@ function applyFreedomWallThemeDecor(theme = freedomWallConfig?.freedomWallTheme)
 }
 let freedomWallPosting = false;
 let freedomWallSelectedColor = "yellow";
+let freedomWallPendingMedia = null;
+let freedomWallMediaPrepareToken = 0;
 let freedomWallLastRenderedCount = 0;
 let freedomWallNotesCache = [];
 let freedomWallLiveRetryTimer = 0;
@@ -2847,6 +2873,17 @@ function ensureHomepageEffectLayer() {
         <div class="freedomWallFlood"><span class="fwFloodWave wave-a"></span><span class="fwFloodWave wave-b"></span></div>
         <div class="freedomWallComicBurst burst-a">WOW!</div><div class="freedomWallComicBurst burst-b">SFK!</div>
         <div class="freedomWallVandalMark mark-a">#BEKIND</div><div class="freedomWallVandalMark mark-b">SFK</div><div class="freedomWallVandalMark mark-c">★</div>
+        <div class="freedomWallJungleEnvironment" aria-hidden="true">
+          <i class="fwJungleTree tree-a"></i><i class="fwJungleTree tree-b"></i><i class="fwJungleTree tree-c"></i>
+          <i class="fwJungleVine vine-a"></i><i class="fwJungleVine vine-b"></i><i class="fwJungleVine vine-c"></i>
+          <i class="fwJungleFoliage foliage-a"></i><i class="fwJungleFoliage foliage-b"></i><i class="fwJungleFoliage foliage-c"></i><i class="fwJungleFoliage foliage-d"></i>
+        </div>
+        <div class="freedomWallUtilityPole" aria-hidden="true">
+          <i class="fwUtilityPoleBody"></i><i class="fwUtilityCrossArm"></i>
+          <i class="fwUtilityInsulator ins-a"></i><i class="fwUtilityInsulator ins-b"></i><i class="fwUtilityInsulator ins-c"></i><i class="fwUtilityInsulator ins-d"></i>
+          <i class="fwUtilityWire wire-a"></i><i class="fwUtilityWire wire-b"></i><i class="fwUtilityWire wire-c"></i><i class="fwUtilityWire wire-d"></i>
+          <i class="fwUtilityJumper jumper-a"></i><i class="fwUtilityJumper jumper-b"></i><i class="fwUtilityNotice"></i>
+        </div>
       </div>
       <div class="freedomWallBrand"><strong>SFK #BeKind WALL</strong><span id="freedomWallCount">Live wall</span></div>
       <div id="freedomWallNotesStage" class="freedomWallNotesStage" aria-live="polite"></div>
@@ -2864,7 +2901,16 @@ function ensureHomepageEffectLayer() {
           <label for="freedomWallAuthorInput">Name / nickname</label>
           <input id="freedomWallAuthorInput" type="text" maxlength="42" autocomplete="name" placeholder="Your name" />
           <label for="freedomWallNoteInput">Your note</label>
-          <textarea id="freedomWallNoteInput" maxlength="240" rows="4" placeholder="Write something kind, honest, funny, thankful, or meaningful…" required></textarea>
+          <textarea id="freedomWallNoteInput" maxlength="240" rows="4" placeholder="Write something kind, honest, funny, thankful, or meaningful…"></textarea>
+          <div id="freedomWallMediaField" class="freedomWallMediaField" hidden>
+            <div class="freedomWallMediaFieldHead"><label id="freedomWallMediaLabel" for="freedomWallMediaInput">Photo / GIF (optional)</label><small id="freedomWallMediaHint">Available for the Polaroid theme.</small></div>
+            <div class="freedomWallMediaControls">
+              <label class="freedomWallMediaChoose" for="freedomWallMediaInput"><span aria-hidden="true">📷</span><b id="freedomWallMediaChooseText">Choose Photo / GIF</b></label>
+              <input id="freedomWallMediaInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp,.gif" />
+              <button id="freedomWallMediaRemove" type="button" hidden>Remove</button>
+            </div>
+            <div id="freedomWallMediaPreview" class="freedomWallMediaPreview" hidden></div>
+          </div>
           <div class="freedomWallColorRow" aria-label="Sticky note color">
             <button type="button" data-fw-color="yellow" class="is-selected" aria-label="Yellow"></button><button type="button" data-fw-color="pink" aria-label="Pink"></button><button type="button" data-fw-color="blue" aria-label="Blue"></button><button type="button" data-fw-color="mint" aria-label="Mint"></button><button type="button" data-fw-color="orange" aria-label="Orange"></button><button type="button" data-fw-color="violet" aria-label="Violet"></button><button type="button" data-fw-color="peach" aria-label="Peach"></button><button type="button" data-fw-color="white" aria-label="White"></button>
           </div>
@@ -2930,6 +2976,8 @@ function ensureHomepageEffectLayer() {
   layer.querySelector("#freedomWallPromptClose")?.addEventListener("click", dismissFreedomWallPromptForView);
   layer.querySelector("#freedomWallComposerForm")?.addEventListener("submit", submitFreedomWallNote);
   layer.querySelectorAll("[data-fw-color]").forEach((button) => button.addEventListener("click", () => selectFreedomWallColor(button.dataset.fwColor)));
+  layer.querySelector("#freedomWallMediaInput")?.addEventListener("change", handleFreedomWallMediaInput);
+  layer.querySelector("#freedomWallMediaRemove")?.addEventListener("click", (event) => { event.preventDefault(); resetFreedomWallPendingMedia(); });
   layer.querySelector("#freedomWallComposer")?.addEventListener("pointerdown", (event) => {
     if (event.target?.id === "freedomWallComposer") closeFreedomWallComposer();
   });
@@ -3627,6 +3675,7 @@ function getFreedomWallPlacement(note = {}, index = 0) {
 }
 
 function getFreedomWallNoteSizeClass(note = {}) {
+  if (note.mediaRef || note.MediaRef) return "medium";
   const length = String(note.text || note.Text || "").trim().length;
   const lines = String(note.text || note.Text || "").split(/\n/).length;
   const score = length + Math.max(0, lines - 1) * 18;
@@ -4139,16 +4188,196 @@ function setupFreedomWallNoteDragging(layer) {
   });
 }
 
+
+function freedomWallSplitDataUrl(dataUrl = "") {
+  const raw = String(dataUrl || "").trim();
+  const match = raw.match(/^data:([^;]+);base64,(.+)$/i);
+  if (!match) return null;
+  return { mimeType: String(match[1] || "").toLowerCase(), base64: match[2] || "" };
+}
+
+function freedomWallReadFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(reader.error || new Error("Unable to read image."));
+    reader.readAsDataURL(file);
+  });
+}
+
+function freedomWallLoadImageFromFile(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => { URL.revokeObjectURL(url); resolve(image); };
+    image.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Unable to open photo.")); };
+    image.src = url;
+  });
+}
+
+function freedomWallCanvasToBlob(canvas, type, quality) {
+  return new Promise((resolve) => canvas.toBlob(resolve, type, quality));
+}
+
+async function prepareFreedomWallStaticImage(file) {
+  if (!file || file.size <= 0) throw new Error("Choose a photo first.");
+  if (file.size > FREEDOM_WALL_MEDIA_MAX_STATIC_SOURCE_BYTES) throw new Error("Photo is too large. Please choose one under 8 MB.");
+  const image = await freedomWallLoadImageFromFile(file);
+  let maxDimension = 1280;
+  let quality = .86;
+  let bestBlob = null;
+  for (let attempt = 0; attempt < 9; attempt += 1) {
+    const naturalWidth = Math.max(1, image.naturalWidth || image.width || 1);
+    const naturalHeight = Math.max(1, image.naturalHeight || image.height || 1);
+    const scale = Math.min(1, maxDimension / Math.max(naturalWidth, naturalHeight));
+    const width = Math.max(1, Math.round(naturalWidth * scale));
+    const height = Math.max(1, Math.round(naturalHeight * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d", { alpha: false });
+    if (!ctx) throw new Error("Photo processing is not available on this browser.");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, width, height);
+    ctx.drawImage(image, 0, 0, width, height);
+    const blob = await freedomWallCanvasToBlob(canvas, "image/jpeg", quality);
+    if (!blob) throw new Error("Unable to prepare photo.");
+    bestBlob = blob;
+    if (blob.size <= FREEDOM_WALL_MEDIA_MAX_BYTES) break;
+    if (quality > .58) quality -= .09;
+    else maxDimension = Math.max(720, Math.round(maxDimension * .82));
+  }
+  if (!bestBlob || bestBlob.size > FREEDOM_WALL_MEDIA_MAX_BYTES) throw new Error("Photo could not be reduced enough. Please choose a smaller image.");
+  const dataUrl = await freedomWallReadFileAsDataUrl(bestBlob);
+  const parsed = freedomWallSplitDataUrl(dataUrl);
+  if (!parsed) throw new Error("Unable to prepare photo.");
+  return {
+    name: String(file.name || "polaroid-photo.jpg").slice(0, 120),
+    mimeType: "image/jpeg",
+    dataUrl,
+    base64: parsed.base64,
+    bytesApprox: bestBlob.size,
+    isGif: false
+  };
+}
+
+async function prepareFreedomWallMediaFile(file) {
+  if (!file) return null;
+  const type = String(file.type || "").toLowerCase();
+  const name = String(file.name || "").toLowerCase();
+  const isGif = type === "image/gif" || name.endsWith(".gif");
+  if (isGif) {
+    if (file.size > FREEDOM_WALL_MEDIA_MAX_GIF_BYTES) throw new Error("Animated GIF must be 500 KB or smaller so the wall stays fast on phones.");
+    const dataUrl = await freedomWallReadFileAsDataUrl(file);
+    const parsed = freedomWallSplitDataUrl(dataUrl);
+    if (!parsed || parsed.mimeType !== "image/gif") throw new Error("That GIF could not be read.");
+    return {
+      name: String(file.name || "polaroid.gif").slice(0, 120),
+      mimeType: "image/gif",
+      dataUrl,
+      base64: parsed.base64,
+      bytesApprox: file.size,
+      isGif: true
+    };
+  }
+  if (!["image/jpeg","image/jpg","image/png","image/webp"].includes(type) && !/\.(jpe?g|png|webp)$/i.test(name)) {
+    throw new Error("Use JPG, PNG, WEBP, or GIF only.");
+  }
+  return prepareFreedomWallStaticImage(file);
+}
+
+function resetFreedomWallPendingMedia() {
+  freedomWallMediaPrepareToken += 1;
+  freedomWallPendingMedia = null;
+  const layer = document.getElementById("homepageEffectLayer");
+  const input = layer?.querySelector("#freedomWallMediaInput");
+  const preview = layer?.querySelector("#freedomWallMediaPreview");
+  const remove = layer?.querySelector("#freedomWallMediaRemove");
+  if (input) input.value = "";
+  if (preview) {
+    preview.hidden = true;
+    preview.replaceChildren();
+  }
+  if (remove) remove.hidden = true;
+}
+
+async function handleFreedomWallMediaInput(event) {
+  const file = event?.target?.files?.[0] || null;
+  const layer = document.getElementById("homepageEffectLayer");
+  const status = layer?.querySelector("#freedomWallComposerStatus");
+  const preview = layer?.querySelector("#freedomWallMediaPreview");
+  const remove = layer?.querySelector("#freedomWallMediaRemove");
+  if (!file) { resetFreedomWallPendingMedia(); return; }
+  const token = ++freedomWallMediaPrepareToken;
+  freedomWallPendingMedia = null;
+  if (status) status.textContent = /gif$/i.test(file.name || "") ? "Preparing GIF…" : "Optimizing photo…";
+  try {
+    const prepared = await prepareFreedomWallMediaFile(file);
+    if (token !== freedomWallMediaPrepareToken) return;
+    freedomWallPendingMedia = prepared;
+    if (preview) {
+      preview.replaceChildren();
+      const image = document.createElement("img");
+      image.src = prepared.dataUrl;
+      image.alt = prepared.isGif ? "Selected animated GIF preview" : "Selected photo preview";
+      preview.appendChild(image);
+      preview.hidden = false;
+    }
+    if (remove) remove.hidden = false;
+    if (status) status.textContent = prepared.isGif ? "GIF ready." : "Photo ready.";
+  } catch (error) {
+    if (token !== freedomWallMediaPrepareToken) return;
+    resetFreedomWallPendingMedia();
+    if (status) status.textContent = error?.message || "Unable to prepare that image.";
+  }
+}
+
+async function hydrateFreedomWallNoteMedia(card, note) {
+  if (!card || !note?.mediaRef) return;
+  const media = card.querySelector(".freedomWallNoteMedia");
+  if (!media) return;
+  const expectedRef = String(note.mediaRef || "");
+  if (media.dataset.mediaLoaded === expectedRef && media.querySelector("img")) return;
+  media.dataset.mediaLoaded = expectedRef;
+  media.classList.add("is-loading");
+  try {
+    const dataUrl = await resolveClassBoardMediaDataUrl(expectedRef);
+    if (!dataUrl || !card.isConnected || media.dataset.mediaLoaded !== expectedRef) throw new Error("Photo unavailable");
+    const ref = parseClassBoardMediaRef(expectedRef);
+    const displayUrl = classBoardMediaDisplayUrl(dataUrl, ref ? `${ref.kind}/${ref.id}` : expectedRef);
+    media.replaceChildren();
+    const image = document.createElement("img");
+    image.src = displayUrl;
+    image.alt = note.mediaType === "image/gif" ? "Animated Polaroid memory" : "Polaroid memory photo";
+    image.loading = "lazy";
+    image.decoding = "async";
+    media.appendChild(image);
+    media.classList.remove("is-loading", "is-unavailable");
+  } catch (error) {
+    if (!card.isConnected || media.dataset.mediaLoaded !== expectedRef) return;
+    media.replaceChildren();
+    const label = document.createElement("span");
+    label.textContent = "Photo unavailable";
+    media.appendChild(label);
+    media.classList.remove("is-loading");
+    media.classList.add("is-unavailable");
+  }
+}
+
 function normalizeFreedomWallNote(doc, index = 0) {
   const data = typeof doc?.data === "function" ? (doc.data() || {}) : (doc || {});
   const id = String(doc?.id || data.ID || data.id || `note-${index}`);
   const text = String(data.Text || data.text || "").trim().slice(0, FREEDOM_WALL_NOTE_MAX_LENGTH);
-  if (!text) return null;
   const author = String(data.Name || data.Author || data.name || "").trim().slice(0, FREEDOM_WALL_AUTHOR_MAX_LENGTH);
   const rawColor = String(data.Color || data.color || "").trim().toLowerCase();
   const color = FREEDOM_WALL_COLORS.includes(rawColor) ? rawColor : FREEDOM_WALL_COLORS[freedomWallHash(id) % FREEDOM_WALL_COLORS.length];
   const createdAtMs = freedomWallSafeNumber(data.CreatedAtMs || data.createdAtMs, Date.now() - (100000 - index), 0, Number.MAX_SAFE_INTEGER);
-  return { id, text, author, color, createdAtMs, ...getFreedomWallPlacement({ ...data, id }, index) };
+  const rawMediaRef = String(data.MediaRef || data.mediaRef || "").trim();
+  const parsedMediaRef = parseClassBoardMediaRef(rawMediaRef);
+  const mediaRef = parsedMediaRef?.kind === "freedomWall" ? parsedMediaRef.raw : "";
+  const mediaType = mediaRef ? String(data.MediaType || data.mediaType || "image/jpeg").trim().toLowerCase().slice(0, 32) : "";
+  if (!text && !mediaRef) return null;
+  return { id, text, author, color, createdAtMs, mediaRef, mediaType, ...getFreedomWallPlacement({ ...data, id }, index) };
 }
 
 function renderFreedomWallNotes(notes = []) {
@@ -4192,9 +4421,27 @@ function renderFreedomWallNotes(notes = []) {
       card.append(pin, text);
     }
 
+    const showPolaroidMedia = String(freedomWallConfig?.freedomWallTheme || "") === "polaroid" && Boolean(note.mediaRef);
     const sizeClass = getFreedomWallNoteSizeClass(note);
     const isActivelyDragged = freedomWallDragState?.card === card;
-    card.className = `freedomWallNote is-${note.color} is-size-${sizeClass}${isNew ? " is-new" : ""}${isActivelyDragged ? " is-dragging" : ""}`;
+    card.className = `freedomWallNote is-${note.color} is-size-${sizeClass}${showPolaroidMedia ? " has-media" : ""}${isNew ? " is-new" : ""}${isActivelyDragged ? " is-dragging" : ""}`;
+
+    let mediaEl = card.querySelector(".freedomWallNoteMedia");
+    if (showPolaroidMedia) {
+      if (!mediaEl) {
+        mediaEl = document.createElement("div");
+        mediaEl.className = "freedomWallNoteMedia is-loading";
+        const loading = document.createElement("span");
+        loading.textContent = "Loading photo…";
+        mediaEl.appendChild(loading);
+        const textNode = card.querySelector("p");
+        card.insertBefore(mediaEl, textNode || null);
+      }
+      if (card.isConnected) hydrateFreedomWallNoteMedia(card, note);
+      else window.requestAnimationFrame(() => hydrateFreedomWallNoteMedia(card, note));
+    } else if (mediaEl) {
+      mediaEl.remove();
+    }
 
     const textEl = card.querySelector("p");
     if (textEl && textEl.textContent !== note.text) textEl.textContent = note.text;
@@ -4309,6 +4556,7 @@ function openFreedomWallComposer() {
   if (!composer) return;
   if (author && !author.value) author.value = getFreedomWallSavedAuthor();
   if (note) note.value = "";
+  resetFreedomWallPendingMedia();
   if (status) status.textContent = "";
   selectFreedomWallColor(FREEDOM_WALL_COLORS[Math.floor(Math.random() * FREEDOM_WALL_COLORS.length)]);
   composer.hidden = false;
@@ -4332,8 +4580,10 @@ async function submitFreedomWallNote(event) {
   const button = layer?.querySelector("#freedomWallPostBtn");
   const text = String(noteInput?.value || "").replace(/\r/g, "").replace(/\n{3,}/g, "\n\n").trim().slice(0, FREEDOM_WALL_NOTE_MAX_LENGTH);
   const author = String(authorInput?.value || "").trim().replace(/\s+/g, " ").slice(0, FREEDOM_WALL_AUTHOR_MAX_LENGTH);
-  if (!text) {
-    if (status) status.textContent = getFreedomWallUiCopy(freedomWallConfig?.freedomWallTheme).statusEmpty;
+  const isPolaroidTheme = String(freedomWallConfig?.freedomWallTheme || "") === "polaroid";
+  const pendingMedia = isPolaroidTheme ? freedomWallPendingMedia : null;
+  if (!text && !pendingMedia) {
+    if (status) status.textContent = isPolaroidTheme ? "Write a note or choose a photo / GIF first." : getFreedomWallUiCopy(freedomWallConfig?.freedomWallTheme).statusEmpty;
     noteInput?.focus();
     return;
   }
@@ -4364,9 +4614,25 @@ async function submitFreedomWallNote(event) {
       CreatedAtMs: now
     };
     try { payload.CreatedAt = firebase.firestore.FieldValue.serverTimestamp(); } catch (error) {}
-    // Give the document its final Firestore id first, then draw it immediately.
-    // The same id is used by the real-time snapshot, so there is no duplicate.
+    // Give the document its final Firestore id first. Polaroid media uses the same id.
     const noteRef = db.collection(FREEDOM_WALL_COLLECTION).doc();
+    let mediaDocRef = null;
+    let mediaPayload = null;
+    if (pendingMedia) {
+      payload.MediaRef = `${CLASSBOARD_MEDIA_REF_PREFIX}freedomWall/${noteRef.id}`;
+      payload.MediaType = pendingMedia.mimeType;
+      mediaDocRef = db.collection(FREEDOM_WALL_MEDIA_COLLECTION).doc(noteRef.id);
+      mediaPayload = {
+        NoteID: noteRef.id,
+        DeviceId: payload.DeviceId,
+        Name: pendingMedia.name,
+        MimeType: pendingMedia.mimeType,
+        Data: pendingMedia.base64,
+        BytesApprox: pendingMedia.bytesApprox
+      };
+      try { mediaPayload.CreatedAt = firebase.firestore.FieldValue.serverTimestamp(); } catch (error) {}
+      CLASSBOARD_MEDIA_DATA_CACHE.set(`freedomWall/${noteRef.id}`, pendingMedia.dataUrl);
+    }
     const optimisticNote = normalizeFreedomWallNote({ id: noteRef.id, ...payload }, freedomWallNotesCache.length);
     if (optimisticNote) {
       freedomWallNotesCache = freedomWallNotesCache.filter((item) => item.id !== optimisticNote.id);
@@ -4375,9 +4641,17 @@ async function submitFreedomWallNote(event) {
     }
 
     try {
-      await noteRef.set(payload);
+      if (mediaDocRef && mediaPayload) {
+        const batch = db.batch();
+        batch.set(mediaDocRef, mediaPayload);
+        batch.set(noteRef, payload);
+        await batch.commit();
+      } else {
+        await noteRef.set(payload);
+      }
     } catch (writeError) {
       freedomWallNotesCache = freedomWallNotesCache.filter((item) => item.id !== noteRef.id);
+      CLASSBOARD_MEDIA_DATA_CACHE.delete(`freedomWall/${noteRef.id}`);
       renderFreedomWallNotes(freedomWallNotesCache);
       throw writeError;
     }
@@ -4386,6 +4660,7 @@ async function submitFreedomWallNote(event) {
     try { localStorage.setItem("sfkFreedomWallLastPostAtV454", String(now)); } catch (error) {}
     if (status) status.textContent = getFreedomWallUiCopy(freedomWallConfig?.freedomWallTheme).statusDone;
     if (noteInput) noteInput.value = "";
+    resetFreedomWallPendingMedia();
     window.setTimeout(() => closeFreedomWallComposer(), 280);
   } catch (error) {
     console.warn("Freedom Wall post failed:", error);
@@ -7231,7 +7506,10 @@ function parseClassBoardMediaRef(value) {
     announcementMedia: "announcement",
     memory: "memory",
     memories: "memory",
-    memoryMedia: "memory"
+    memoryMedia: "memory",
+    freedomWall: "freedomWall",
+    freedomwall: "freedomWall",
+    freedomWallMedia: "freedomWall"
   };
   const kind = kindMap[rawKind];
   if (!kind) return null;
@@ -7240,7 +7518,7 @@ function parseClassBoardMediaRef(value) {
     raw: `${CLASSBOARD_MEDIA_REF_PREFIX}${kind}/${id}`,
     kind,
     id,
-    collectionName: kind === "announcement" ? ANNOUNCEMENT_MEDIA_COLLECTION : MEMORY_MEDIA_COLLECTION
+    collectionName: kind === "announcement" ? ANNOUNCEMENT_MEDIA_COLLECTION : kind === "freedomWall" ? FREEDOM_WALL_MEDIA_COLLECTION : MEMORY_MEDIA_COLLECTION
   };
 }
 
