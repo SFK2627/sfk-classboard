@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-main-pwa-v513-gif-tile-height-fix";
+const CACHE_NAME = "sfk-main-pwa-v533-admin-homepage-accordion";
 const CACHE_PREFIXES_TO_DELETE = ["sfk-main-pwa-", "sfk-sw.js-"];
 const NAVIGATION_FALLBACK_URL = "./index.html";
 const NAVIGATION_TIMEOUT_MS = 2500;
@@ -27,6 +27,7 @@ const APP_SHELL = [
   "./memories.css",
   "./memories.js",
   "./admin.html",
+  "./freedom-wall-exact-export.html",
   "./admin.css",
   "./admin.js",
   "./officer.html",

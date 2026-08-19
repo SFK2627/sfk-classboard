@@ -2028,7 +2028,86 @@ let freedomWallPromptReactionLastType = "";
 let freedomWallPromptReactionPending = null;
 let freedomWallPromptReactionTimer = 0;
 
+
+function getFreedomWallExactExportOptions() {
+  try {
+    const params = new URLSearchParams(window.location.search || "");
+    const enabled = params.get("fwExactExport") === "1";
+    const rawLayout = String(params.get("fwLayout") || "current").trim().toLowerCase();
+    const layout = ["current", "readable", "fit"].includes(rawLayout) ? rawLayout : "current";
+    return { enabled, layout };
+  } catch (error) {
+    return { enabled:false, layout:"current" };
+  }
+}
+
+const freedomWallExactExportOptions = getFreedomWallExactExportOptions();
+
+function isFreedomWallExactExportMode() {
+  return Boolean(freedomWallExactExportOptions.enabled);
+}
+
+function prepareFreedomWallExactExportDocument() {
+  if (!isFreedomWallExactExportMode()) return;
+  document.documentElement.classList.add("sfkFreedomWallExactExport");
+  document.body?.classList?.add("sfkFreedomWallExactExport");
+  const intro = document.getElementById("sfkIntroOverlay");
+  if (intro) {
+    intro.hidden = true;
+    intro.style.setProperty("display", "none", "important");
+    try { intro.remove(); } catch (error) {}
+  }
+}
+
+function applyFreedomWallExactExportMode() {
+  if (!isFreedomWallExactExportMode()) return;
+  prepareFreedomWallExactExportDocument();
+  const layer = document.getElementById("homepageEffectLayer");
+  if (!layer) return;
+  layer.classList.add("is-freedom-wall-exact-export");
+  layer.classList.remove("is-freedom-wall-exact-current", "is-freedom-wall-exact-readable", "is-freedom-wall-exact-fit");
+  layer.classList.add(`is-freedom-wall-exact-${freedomWallExactExportOptions.layout}`);
+  layer.dataset.exactExportLayout = freedomWallExactExportOptions.layout;
+  setHomepageEffectRealCloseVisible(false);
+  closeFreedomWallComposer();
+  closeFreedomWallMediaSearchModal();
+  closeFreedomWallReactionMenu();
+  stopHomepageEffectMusic();
+  stopHomepageAlertSound();
+
+  const scene = layer.querySelector(".homepageFreedomWallScene");
+  const stage = layer.querySelector("#freedomWallNotesStage");
+  if (!scene || !stage) return;
+  const cards = Array.from(layer.querySelectorAll(".freedomWallNote[data-note-id]"));
+  const layout = freedomWallExactExportOptions.layout;
+  if (layout === "fit") {
+    const count = Math.max(1, cards.length);
+    const portrait = window.innerHeight > window.innerWidth;
+    const columns = portrait ? Math.max(3, Math.min(6, Math.ceil(Math.sqrt(count * .66)))) : Math.max(4, Math.min(9, Math.ceil(Math.sqrt(count * 1.45))));
+    const rows = Math.ceil(count / columns);
+    stage.style.setProperty("--fw-exact-columns", String(columns));
+    stage.style.setProperty("--fw-exact-rows", String(rows));
+    const density = Math.max(.48, Math.min(1, 8 / Math.max(columns, rows)));
+    stage.style.setProperty("--fw-exact-density", String(density));
+  } else if (layout === "readable") {
+    const portrait = window.innerHeight > window.innerWidth;
+    const columns = portrait ? 2 : (window.innerWidth >= 1400 ? 4 : 3);
+    stage.style.setProperty("--fw-exact-columns", String(columns));
+    stage.style.setProperty("--fw-exact-density", "1");
+  }
+  window.requestAnimationFrame(() => {
+    document.documentElement.dataset.fwExactReady = "true";
+    window.parent?.postMessage?.({ type:"SFK_FREEDOM_WALL_EXACT_READY", layout }, window.location.origin === "null" ? "*" : window.location.origin);
+  });
+}
+
+if (isFreedomWallExactExportMode()) {
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", prepareFreedomWallExactExportDocument, { once:true });
+  else prepareFreedomWallExactExportDocument();
+}
+
 function isHomepageEffectStartupBlocked() {
+  if (isFreedomWallExactExportMode()) return false;
   const intro = document.getElementById("sfkIntroOverlay");
   if (!intro || intro.hidden) return false;
   try {
@@ -6649,6 +6728,7 @@ function renderFreedomWallNotes(notes = []) {
     count.textContent = getFreedomWallUiCopy(freedomWallConfig?.freedomWallTheme).formatCount(displayCount, "normal");
   }
   updateFreedomWallEmptyState();
+  if (isFreedomWallExactExportMode()) applyFreedomWallExactExportMode();
 }
 
 function updateFreedomWallPrompt(config) {
@@ -7427,7 +7507,20 @@ async function applyHomepageEffectSettings(settings = {}) {
   }
   homepageEffectPendingSettings = null;
 
-  const config = normalizeHomepageEffectConfig(settings);
+  let config = normalizeHomepageEffectConfig(settings);
+  if (isFreedomWallExactExportMode()) {
+    config = {
+      ...config,
+      enabled: true,
+      mode: "freedom-wall",
+      dismissible: false,
+      audioEnabled: false,
+      audioUrl: "",
+      freedomWallPlaylistEnabled: false,
+      freedomWallPlaylist: [],
+      signature: `${config.signature}|exact-export|${freedomWallExactExportOptions.layout}`
+    };
+  }
   const incomingUpdatedAt = Number(config.updatedAt || 0);
   if (incomingUpdatedAt && homepageEffectLatestUpdatedAt && incomingUpdatedAt < homepageEffectLatestUpdatedAt) return;
   if (incomingUpdatedAt > homepageEffectLatestUpdatedAt) homepageEffectLatestUpdatedAt = incomingUpdatedAt;
@@ -7562,6 +7655,7 @@ async function applyHomepageEffectSettings(settings = {}) {
 
   if (config.mode === "freedom-wall") {
     configureFreedomWall(config);
+    if (isFreedomWallExactExportMode()) window.setTimeout(applyFreedomWallExactExportMode, 40);
   } else {
     stopFreedomWallLive(true);
   }

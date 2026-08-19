@@ -45,7 +45,37 @@
     .freedomWallSessionCard{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px;border:1px solid #e3e5e8;border-radius:10px;background:#fafafa}.freedomWallSessionCard.is-active{border-color:#246b50;box-shadow:0 0 0 1px #246b50 inset;background:#f4fbf7}.freedomWallSessionInfo{min-width:0;display:flex;flex-direction:column;gap:3px}.freedomWallSessionInfo strong{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.freedomWallSessionInfo span{font-size:10px;color:#5f6770;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.freedomWallSessionInfo small{font-size:9px;color:#858b92}.freedomWallSessionActions{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}.freedomWallSessionActions button{border:0;border-radius:7px;padding:6px 7px;background:#24272b;color:#fff;font-size:9px;font-weight:900;cursor:pointer}.freedomWallSessionActions button[data-fw-session-delete]{background:#a82424}.freedomWallSessionActions button:disabled{opacity:.45;cursor:not-allowed}
 
     @media (max-width:700px){.freedomWallPlaylistRow{grid-template-columns:1fr}.freedomWallPlaylistRowActions{justify-content:flex-end}.freedomWallPlaylistOptions{grid-template-columns:1fr}.freedomWallSessionCard{grid-template-columns:1fr}.freedomWallSessionActions{justify-content:flex-start}}
+
+    .freedomWallExportAdmin{display:grid;gap:10px;margin-top:2px;padding:11px;border:1px solid rgba(0,0,0,.11);border-radius:12px;background:#fff}
+    .freedomWallExportAdminHead{display:flex;flex-direction:column;gap:3px}.freedomWallExportAdminHead strong{font-size:13px}.freedomWallExportAdminHead small{font-size:10px;line-height:1.4;color:#68707a}
+    .freedomWallExportAdminActions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+    .freedomWallExportAdminActions button{border:0;border-radius:10px;padding:10px 12px;font-weight:900;cursor:pointer;background:#111;color:#fff;text-align:left}
+    .freedomWallExportAdminActions button span{display:block;font-size:11px}.freedomWallExportAdminActions button small{display:block;margin-top:3px;font-size:9px;line-height:1.3;color:rgba(255,255,255,.76);font-weight:700}
+    .freedomWallExportAdminActions button:disabled{opacity:.55;cursor:wait}.freedomWallExportAdminStatus{min-height:16px;font-size:10px;line-height:1.4;color:#68707a}.freedomWallExportAdminStatus.is-error{color:#a82424}.freedomWallExportAdminStatus.is-success{color:#22633d}
+    @media(max-width:700px){.freedomWallExportAdminActions{grid-template-columns:1fr}}
   .freedomWallYoutubePlaybackSetting{display:grid;grid-template-columns:minmax(180px,1fr) minmax(150px,220px);gap:10px;align-items:center;padding:9px 11px;border:1px solid #e3e5e8;border-radius:10px;background:#fafafa}.freedomWallYoutubePlaybackSetting label{display:grid;gap:3px}.freedomWallYoutubePlaybackSetting strong{font-size:12px}.freedomWallYoutubePlaybackSetting small{font-size:10px;line-height:1.35;color:#68707a}.freedomWallYoutubePlaybackSetting select{width:100%;box-sizing:border-box;border:1px solid #cfd4db;border-radius:9px;padding:9px 10px;background:#fff;font-weight:800;color:#222}.freedomWallYoutubePlaybackSetting.is-disabled{opacity:.55}.freedomWallYoutubePlaybackSetting select:disabled{cursor:not-allowed}@media(max-width:700px){.freedomWallYoutubePlaybackSetting{grid-template-columns:1fr}}
+
+    /* v533 — Homepage Display / Effects accordion cleanup */
+    .homepageEffectAdminCard.is-accordionized{display:block}
+    .homepageEffectAccordion{margin:10px 0;border:1px solid rgba(0,0,0,.11);border-radius:14px;background:#fff;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.035)}
+    .homepageEffectAccordion[hidden]{display:none!important}
+    .homepageEffectAccordionToggle{width:100%;border:0;background:#f7f7f7;color:#17191d;padding:13px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;cursor:pointer}
+    .homepageEffectAccordionToggle:hover,.homepageEffectAccordionToggle:focus-visible{background:#f0f0f0;outline:none}
+    .homepageEffectAccordion.is-open>.homepageEffectAccordionToggle{background:#111;color:#fff}
+    .homepageEffectAccordionTitle{min-width:0;display:flex;align-items:center;gap:9px;font:900 13px/1.2 Arial,sans-serif}
+    .homepageEffectAccordionTitle i{font-style:normal;font-size:15px}
+    .homepageEffectAccordionMeta{display:block;margin-top:3px;font:600 10px/1.3 Arial,sans-serif;color:#747b84}
+    .homepageEffectAccordion.is-open>.homepageEffectAccordionToggle .homepageEffectAccordionMeta{color:rgba(255,255,255,.7)}
+    .homepageEffectAccordionChevron{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:rgba(0,0,0,.06);font:900 18px/1 Arial,sans-serif;transition:transform .18s ease}
+    .homepageEffectAccordion.is-open>.homepageEffectAccordionToggle .homepageEffectAccordionChevron{background:rgba(255,255,255,.13);transform:rotate(90deg)}
+    .homepageEffectAccordionBody{display:grid;gap:10px;padding:13px 14px;background:#fff}
+    .homepageEffectAccordionBody[hidden]{display:none!important}
+    .homepageEffectAccordion.is-nested{margin:8px 0;border-radius:12px;box-shadow:none;border-color:rgba(0,0,0,.09)}
+    .homepageEffectAccordion.is-nested>.homepageEffectAccordionToggle{padding:11px 12px;background:#fafafa}
+    .homepageEffectAccordion.is-nested.is-open>.homepageEffectAccordionToggle{background:#2a2d31;color:#fff}
+    .homepageEffectAccordion.is-nested>.homepageEffectAccordionBody{padding:11px 12px}
+    .homepageEffectAdminCard .homepageEffectActions{position:sticky;bottom:0;z-index:6;margin-top:12px;padding:10px 0 2px;background:linear-gradient(180deg,rgba(255,255,255,0),#fff 32%)}
+    @media(max-width:700px){.homepageEffectAccordionToggle{padding:12px}.homepageEffectAccordionBody{padding:11px}.homepageEffectAccordionTitle{font-size:12px}.homepageEffectAccordionMeta{font-size:9px}}
 </style>
 </head>
 
@@ -353,6 +383,24 @@
                 <button type="button" data-fw-session-new>＋ Save Current & Create New Wall</button>
               </div>
               <div id="freedomWallSessionList" class="freedomWallSessionList"><div class="freedomWallSessionEmpty">Loading saved walls…</div></div>
+            </div>
+
+
+
+            <div class="freedomWallExportAdmin" id="freedomWallExportAdmin">
+              <div class="freedomWallExportAdminHead">
+                <strong>🖼 Export Current Freedom Wall</strong>
+                <small>Admin-only direct PNG download. Builds a self-contained export copy from the active Firestore wall using the SAME live style.css, theme DOM classes, note variables, prompt styles, fonts, colors, transforms, shadows, pseudo-elements and effects. No hidden live-page boot, no screen-share, and no generic fallback.</small>
+              </div>
+              <div class="freedomWallExportAdminActions">
+                <button type="button" data-fw-snap-export="current-landscape"><span>Current View — Landscape</span><small>Smart exact-theme landscape: uses free space first and enlarges notes when safe.</small></button>
+                <button type="button" data-fw-snap-export="current-portrait"><span>Current View — Portrait</span><small>Smart phone-like portrait: uses free space first and enlarges notes when safe.</small></button>
+                <button type="button" data-fw-snap-export="readable-landscape"><span>Readable — Landscape</span><small>Exact-theme readable pages; every note grows to show its full text. Auto multi-page if needed.</small></button>
+                <button type="button" data-fw-snap-export="readable-portrait"><span>Readable — Portrait</span><small>Exact-theme portrait pages; every note grows to show its full text. Auto multi-page if needed.</small></button>
+                <button type="button" data-fw-snap-export="fit-landscape"><span>One-Page Fit — Landscape</span><small>One exact-theme landscape PNG. Long notes grow fully; the whole layout scales down if needed.</small></button>
+                <button type="button" data-fw-snap-export="fit-portrait"><span>One-Page Fit — Portrait</span><small>One exact-theme portrait PNG. Long notes grow fully; the whole layout scales down if needed.</small></button>
+              </div>
+              <div id="freedomWallExportAdminStatus" class="freedomWallExportAdminStatus" role="status">Ready for direct exact-theme export.</div>
             </div>
 
             <div class="freedomWallAdminActions">
@@ -2098,5 +2146,1502 @@
   })();
   </script>
 
+
+  <script>
+  (() => {
+    const $ = (id) => document.getElementById(id);
+    const LEGACY_ID = "legacy";
+    const COLOR_HEX = {
+      yellow:"#fff1a5",cream:"#fff6d9",white:"#fffdf5",peach:"#ffd6c9",coral:"#ffb9a8",
+      pink:"#ffc7df",rose:"#f6b4c9",lavender:"#e6d7ff",violet:"#d6c3ff",sky:"#c7eaff",
+      blue:"#acd3ff",mint:"#c9f2d9",sage:"#d5e3c1",green:"#bfe3b4",lime:"#e2f3a7",
+      orange:"#ffd0a1",tan:"#dfc69c",gray:"#d9dce1",navy:"#26334f",black:"#202124"
+    };
+    const REACTIONS = { heart:"❤️", haha:"😂", wow:"😮", sad:"😢", like:"👍" };
+    let busy = false;
+
+    function db(){ try { return window.firebase?.apps?.length ? firebase.firestore() : null; } catch(e){ return null; } }
+    function status(text="", error=false){ const el=$("freedomWallExportAdminStatus"); if(!el)return; el.textContent=text; el.classList.toggle("is-error",!!error&&!!text); el.classList.toggle("is-success",!error&&!!text); }
+    function safeId(v){ return String(v||LEGACY_ID).trim().replace(/[^A-Za-z0-9_-]/g,"").slice(0,80)||LEGACY_ID; }
+    function num(v,f=0){ const n=Number(v); return Number.isFinite(n)?n:f; }
+    function slug(v){ return String(v||"wall").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,48)||"wall"; }
+    function size(orientation){ return orientation==="portrait"?{w:1200,h:1800,m:48}:{w:1800,h:1080,m:48}; }
+    function roundRect(ctx,x,y,w,h,r,fill,stroke){ r=Math.max(4,Math.min(r,w/2,h/2));ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();if(fill){ctx.fillStyle=fill;ctx.fill();}if(stroke){ctx.strokeStyle=stroke;ctx.stroke();} }
+    function wrap(ctx,text,maxWidth,maxLines=999){ const out=[];String(text||"").trim().split(/\n+/).forEach(p=>{let line="";p.split(/\s+/).filter(Boolean).forEach(word=>{if(out.length>=maxLines)return;const test=line?line+" "+word:word;if(!line||ctx.measureText(test).width<=maxWidth)line=test;else{out.push(line);line=word;}});if(line&&out.length<maxLines)out.push(line);});return out; }
+    function drawLines(ctx,lines,x,y,lh,color){ctx.fillStyle=color;lines.forEach((line,i)=>ctx.fillText(line,x,y+i*lh));}
+    function fontFamily(style="theme-default", theme=""){
+      const s=String(style||"theme-default").toLowerCase(), t=String(theme||"").toLowerCase();
+      if(s==="rounded")return '"Arial Rounded MT Bold","Trebuchet MS",Arial,sans-serif';
+      if(s==="handwritten")return '"Segoe Print","Bradley Hand",cursive';
+      if(s==="marker")return '"Trebuchet MS","Arial Black",Arial,sans-serif';
+      if(s==="classic-serif"||s==="elegant")return 'Georgia,"Times New Roman",serif';
+      if(s==="typewriter")return '"Courier New",monospace';
+      if(s==="comic")return '"Comic Sans MS","Trebuchet MS",sans-serif';
+      if(s==="bold-poster")return 'Impact,"Arial Black",sans-serif';
+      if(s==="casual")return '"Gill Sans","Trebuchet MS",sans-serif';
+      if(s==="monospace")return 'Consolas,"Courier New",monospace';
+      if(["comic","comic-manga","comic-strip"].includes(t))return '"Comic Sans MS","Trebuchet MS",sans-serif';
+      if(t==="comic-noir")return 'Impact,"Arial Black",sans-serif';
+      if(["school-note","whiteboard"].includes(t))return '"Segoe Print","Trebuchet MS",sans-serif';
+      if(["newspaper","seasonal"].includes(t))return 'Georgia,"Times New Roman",serif';
+      if(["retro-arcade","coding-lab"].includes(t))return 'Consolas,"Courier New",monospace';
+      if(["graffiti","vandal"].includes(t))return 'Impact,"Arial Black",sans-serif';
+      return 'Arial,Helvetica,sans-serif';
+    }
+    function palette(theme){
+      const t=String(theme||"sticky-notes").toLowerCase();
+      const map={
+        "sticky-notes":{bg1:"#cda879",bg2:"#b78d5f",panel:"#fff6d8",text:"#26231f",muted:"#706653",accent:"#efbd32",line:"rgba(70,45,20,.22)",deco:"cork",note:"sticky"},
+        sunny:{bg1:"#7fd1ff",bg2:"#e7f7ff",panel:"#fff8d9",text:"#243143",muted:"#5f6c7b",accent:"#ffd54c",line:"rgba(36,49,67,.12)",deco:"sunny",note:"paper"},
+        rainy:{bg1:"#60788f",bg2:"#bcc9d4",panel:"#eef4f8",text:"#24313b",muted:"#596772",accent:"#6aa7c9",line:"rgba(36,49,59,.16)",deco:"rain",note:"paper"},
+        night:{bg1:"#0b1734",bg2:"#1e2d58",panel:"#182541",text:"#f6f8ff",muted:"#c7d1e9",accent:"#f4d36b",line:"rgba(255,255,255,.16)",deco:"night",note:"dark"},
+        flood:{bg1:"#53697d",bg2:"#98aab8",panel:"#eef3f6",text:"#25323a",muted:"#5f6e76",accent:"#70b9d6",line:"rgba(37,50,58,.16)",deco:"flood",note:"paper"},
+        comic:{bg1:"#ffe34f",bg2:"#ff8d63",panel:"#ffffff",text:"#161616",muted:"#4a4a4a",accent:"#e62f2f",line:"#181818",deco:"comic",note:"speech"},
+        "comic-noir":{bg1:"#101010",bg2:"#3b3b3b",panel:"#f3efe3",text:"#161616",muted:"#555555",accent:"#d2c5a3",line:"#151515",deco:"noir",note:"comic-panel"},
+        "comic-manga":{bg1:"#f4f4f1",bg2:"#d7d7d2",panel:"#ffffff",text:"#111111",muted:"#555555",accent:"#111111",line:"#111111",deco:"manga",note:"speech"},
+        "comic-strip":{bg1:"#f6e9be",bg2:"#e8d28f",panel:"#fffdf6",text:"#263756",muted:"#50617d",accent:"#e84f45",line:"#263756",deco:"comic-strip",note:"comic-panel"},
+        "school-note":{bg1:"#fefdf8",bg2:"#f6f3e8",panel:"#fffef8",text:"#2a3442",muted:"#687181",accent:"#ef6b6b",line:"rgba(51,92,142,.16)",deco:"notebook",note:"lined"},
+        jungle:{bg1:"#163f2b",bg2:"#6d8d4c",panel:"#eadba7",text:"#23462c",muted:"#526743",accent:"#c79c53",line:"rgba(47,65,35,.24)",deco:"jungle",note:"natural"},
+        "bulletin-board":{bg1:"#ba8550",bg2:"#d8aa78",panel:"#fff7df",text:"#33261b",muted:"#75604d",accent:"#e6b239",line:"rgba(73,47,24,.22)",deco:"cork",note:"taped"},
+        whiteboard:{bg1:"#f8fafb",bg2:"#e7edf1",panel:"#ffffff",text:"#203042",muted:"#617080",accent:"#3e74d8",line:"rgba(32,48,66,.16)",deco:"whiteboard",note:"whiteboard"},
+        cafe:{bg1:"#5d3b2d",bg2:"#b58464",panel:"#f8e6c7",text:"#382519",muted:"#79604f",accent:"#c88b4c",line:"rgba(56,37,25,.18)",deco:"cafe",note:"kraft"},
+        sakura:{bg1:"#f8dce6",bg2:"#fff5f8",panel:"#fffafc",text:"#553945",muted:"#8b6a77",accent:"#ed9fba",line:"rgba(85,57,69,.14)",deco:"sakura",note:"soft"},
+        galaxy:{bg1:"#090d24",bg2:"#382b68",panel:"#171b39",text:"#ffffff",muted:"#cdd1ee",accent:"#8bc6ff",line:"rgba(255,255,255,.16)",deco:"galaxy",note:"glass"},
+        beach:{bg1:"#62c7df",bg2:"#f1d59a",panel:"#fff5dc",text:"#24434b",muted:"#5c7378",accent:"#f4b74c",line:"rgba(36,67,75,.14)",deco:"beach",note:"postcard"},
+        "art-room":{bg1:"#f2e9dd",bg2:"#ddd0bd",panel:"#fffdf9",text:"#332f2c",muted:"#6f6965",accent:"#e85b64",line:"rgba(51,47,44,.12)",deco:"paint",note:"art"},
+        library:{bg1:"#4b2f25",bg2:"#8b6047",panel:"#f0dfbf",text:"#30241b",muted:"#705d4b",accent:"#b8874f",line:"rgba(48,36,27,.18)",deco:"library",note:"index"},
+        newspaper:{bg1:"#e8e3d7",bg2:"#f7f3e9",panel:"#fffdf7",text:"#232323",muted:"#5c5c5c",accent:"#9a2f2f",line:"rgba(35,35,35,.16)",deco:"newspaper",note:"news"},
+        polaroid:{bg1:"#d8d1c7",bg2:"#b9b0a4",panel:"#fffdf9",text:"#2f2d2a",muted:"#706c65",accent:"#d0a75d",line:"rgba(47,45,42,.13)",deco:"polaroid",note:"polaroid"},
+        "retro-arcade":{bg1:"#140b28",bg2:"#2b1550",panel:"#151323",text:"#fdf5ff",muted:"#d3c2df",accent:"#5df2ff",line:"rgba(93,242,255,.32)",deco:"arcade",note:"pixel"},
+        "coding-lab":{bg1:"#0a1520",bg2:"#162a36",panel:"#101d27",text:"#dcf8e8",muted:"#9cc6b0",accent:"#56d891",line:"rgba(86,216,145,.22)",deco:"code",note:"terminal"},
+        rainbow:{bg1:"#fff3f7",bg2:"#eef8ff",panel:"#ffffff",text:"#333746",muted:"#73798a",accent:"#f06f9b",line:"rgba(51,55,70,.10)",deco:"rainbow",note:"soft"},
+        "brick-alley":{bg1:"#7f4b43",bg2:"#4e302c",panel:"#f5e5ce",text:"#2d211d",muted:"#756054",accent:"#d9a55d",line:"rgba(45,33,29,.18)",deco:"brick",note:"poster"},
+        "school-fair":{bg1:"#fff1ca",bg2:"#ffd9dc",panel:"#ffffff",text:"#373347",muted:"#776f83",accent:"#ef6b68",line:"rgba(55,51,71,.12)",deco:"fair",note:"ticket"},
+        eco:{bg1:"#dcefd3",bg2:"#8bbb7d",panel:"#f7f2d7",text:"#29442c",muted:"#5c745d",accent:"#5b9e68",line:"rgba(41,68,44,.14)",deco:"eco",note:"natural"},
+        "dreamy-clouds":{bg1:"#c8e8ff",bg2:"#f2ddff",panel:"#ffffff",text:"#4b4c68",muted:"#777996",accent:"#a48ad5",line:"rgba(75,76,104,.12)",deco:"clouds",note:"cloud"},
+        chalkboard:{bg1:"#1e4a3a",bg2:"#153629",panel:"#274e40",text:"#f7f0dd",muted:"#d8cfb7",accent:"#f1d36a",line:"rgba(247,240,221,.18)",deco:"chalk",note:"chalk"},
+        detective:{bg1:"#c8aa75",bg2:"#9d7a4c",panel:"#f4e7c8",text:"#352919",muted:"#75644c",accent:"#ad3d3d",line:"rgba(53,41,25,.18)",deco:"detective",note:"evidence"},
+        appreciation:{bg1:"#ffd9e7",bg2:"#fff0f5",panel:"#ffffff",text:"#563744",muted:"#8d6878",accent:"#f06795",line:"rgba(86,55,68,.12)",deco:"hearts",note:"soft"},
+        seasonal:{bg1:"#1d2341",bg2:"#332a62",panel:"#f8f8ff",text:"#33436d",muted:"#667393",accent:"#e2bd55",line:"rgba(46,65,111,.15)",deco:"seasonal",note:"seasonal"},
+        "neon-music":{bg1:"#080816",bg2:"#24113e",panel:"#151326",text:"#ffffff",muted:"#d6c8e6",accent:"#ff4fc6",line:"rgba(255,79,198,.28)",deco:"neon",note:"neon"},
+        spiderman:{bg1:"#0a1731",bg2:"#152850",panel:"#101c38",text:"#ffffff",muted:"#c8d7ff",accent:"#ed3544",line:"rgba(255,255,255,.18)",deco:"spiderman",note:"web"},
+        filipino:{bg1:"#f7ecd0",bg2:"#e9d59d",panel:"#fffaf0",text:"#173b72",muted:"#7b522c",accent:"#d7aa2a",line:"rgba(23,59,114,.15)",deco:"filipino",note:"woven"},
+        poste:{bg1:"#b7b6ad",bg2:"#8d8c84",panel:"#f3ead4",text:"#3f372c",muted:"#756d62",accent:"#c08b41",line:"rgba(63,55,44,.18)",deco:"poste",note:"taped"},
+        graffiti:{bg1:"#696d73",bg2:"#3f4348",panel:"#efe7d6",text:"#242424",muted:"#646464",accent:"#ff6d4d",line:"rgba(36,36,36,.18)",deco:"graffiti",note:"tag"},
+        vandal:{bg1:"#a3a3a3",bg2:"#666666",panel:"#f0eadc",text:"#202020",muted:"#5c5c5c",accent:"#111111",line:"rgba(32,32,32,.18)",deco:"vandal",note:"tag"}
+      };
+      const p=map[t]||map["sticky-notes"];
+      return {...p,theme:t};
+    }
+    function circle(ctx,x,y,r,fill,alpha=1){ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle=fill;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();ctx.restore();}
+    function line(ctx,x1,y1,x2,y2,color,width=2,alpha=1){ctx.save();ctx.globalAlpha=alpha;ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.restore();}
+    function cloud(ctx,x,y,s,color="#fff",alpha=.75){ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle=color;[[0,10,28],[28,0,36],[64,10,30],[28,18,54]].forEach(([dx,dy,r])=>{ctx.beginPath();ctx.arc(x+dx*s,y+dy*s,r*s,0,Math.PI*2);ctx.fill();});ctx.restore();}
+    function leaf(ctx,x,y,rx,ry,rot,color,alpha=.8){ctx.save();ctx.translate(x,y);ctx.rotate(rot);ctx.globalAlpha=alpha;ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(0,0,rx,ry,0,0,Math.PI*2);ctx.fill();ctx.restore();}
+    function heart(ctx,x,y,s,color,alpha=.65){ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.globalAlpha=alpha;ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(0,10);ctx.bezierCurveTo(-22,-8,-38,10,0,44);ctx.bezierCurveTo(38,10,22,-8,0,10);ctx.fill();ctx.restore();}
+    function background(ctx,w,h,p){
+      const g=ctx.createLinearGradient(0,0,w,h);g.addColorStop(0,p.bg1);g.addColorStop(1,p.bg2);ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
+      const d=p.deco;
+      if(d==="cork"){
+        for(let y=18;y<h;y+=34)for(let x=16;x<w;x+=36){circle(ctx,x+((y/34)%2)*8,y,1.4,"#5d351f",.24);circle(ctx,x+9,y+7,1,"#fff2dc",.18);}
+      }else if(d==="sunny"){
+        circle(ctx,w*.86,h*.13,70,"#ffd84d",.95);cloud(ctx,w*.08,h*.16,1.15,"#fff",.72);cloud(ctx,w*.56,h*.28,.85,"#fff",.58);
+      }else if(d==="rain"||d==="flood"){
+        cloud(ctx,w*.12,h*.12,1.2,"#dce6ec",.62);cloud(ctx,w*.62,h*.17,1.0,"#e7edf1",.5);for(let x=20;x<w;x+=45)for(let y=80;y<h;y+=70)line(ctx,x,y,x-8,y+24,"#d7efff",2,.28);if(d==="flood"){ctx.fillStyle="rgba(72,155,190,.42)";ctx.fillRect(0,h*.78,w,h*.22);for(let y=h*.79;y<h;y+=35){ctx.beginPath();ctx.strokeStyle="rgba(255,255,255,.28)";ctx.lineWidth=3;for(let x=0;x<=w;x+=40){const yy=y+Math.sin(x/55)*7;x?ctx.lineTo(x,yy):ctx.moveTo(x,yy);}ctx.stroke();}}
+      }else if(d==="night"||d==="galaxy"||d==="seasonal"){
+        for(let i=0;i<140;i++){const x=(i*137)%w,y=(i*79)%h,r=(i%5===0?2.2:1.1);circle(ctx,x,y,r,"#fff",.35+(i%7)/12);}if(d==="night")circle(ctx,w*.84,h*.15,58,"#f8efbd",.9);if(d==="galaxy"){circle(ctx,w*.24,h*.32,140,"#9f6bff",.08);circle(ctx,w*.74,h*.62,190,"#41b5ff",.07);}if(d==="seasonal"){for(let i=0;i<36;i++)circle(ctx,(i*91)%w,(i*53)%h,4+(i%3),["#f7cf63","#7fa2ff","#ff87c7"][i%3],.36);}
+      }else if(d==="comic"||d==="comic-strip"){
+        for(let y=18;y<h;y+=28)for(let x=18;x<w;x+=28)circle(ctx,x,y,2.4,d==="comic"?"#d94a3a":"#637394",.16);if(d==="comic-strip"){ctx.strokeStyle="rgba(38,55,86,.16)";ctx.lineWidth=5;for(let x=0;x<w;x+=w/4)ctx.strokeRect(x+6,6,w/4-12,h-12);}
+      }else if(d==="noir"){
+        ctx.fillStyle="rgba(0,0,0,.28)";for(let x=0;x<w;x+=90){const bh=120+((x/90)%5)*55;ctx.fillRect(x,h-bh,70,bh);}for(let y=0;y<h;y+=18)line(ctx,0,y,w,y+180,"#ffffff",1,.025);
+      }else if(d==="manga"){
+        const cx=w*.5,cy=h*.36;for(let i=0;i<54;i++){const a=(Math.PI*2*i)/54;line(ctx,cx,cy,cx+Math.cos(a)*Math.max(w,h),cy+Math.sin(a)*Math.max(w,h),"#111",1,.11);}
+      }else if(d==="notebook"){
+        for(let y=76;y<h;y+=34)line(ctx,0,y,w,y,"#8fb6d8",1,.22);line(ctx,w*.10,0,w*.10,h,"#e56e6e",3,.35);
+      }else if(d==="jungle"||d==="eco"){
+        for(let i=0;i<26;i++){leaf(ctx,(i*151)%w,(i*83)%h,30+(i%4)*8,12+(i%3)*5,(i%7)*.5,d==="jungle"?"#2f6c42":"#5a9d68",.22);if(i%3===0)line(ctx,(i*151)%w,0,(i*151)%w+40,h*.3,"#254e31",3,.18);}
+      }else if(d==="whiteboard"){
+        ctx.strokeStyle="rgba(48,62,74,.12)";ctx.lineWidth=10;ctx.strokeRect(14,14,w-28,h-28);for(let i=0;i<8;i++)line(ctx,60+i*190,h-65,120+i*190,h-58,["#3e74d8","#e65c5c","#32a86a"][i%3],5,.22);
+      }else if(d==="cafe"){
+        for(let i=0;i<9;i++){ctx.save();ctx.strokeStyle="rgba(79,47,29,.16)";ctx.lineWidth=5;ctx.beginPath();ctx.arc((i*233)%w,90+(i*157)%Math.max(120,h-180),42+(i%3)*11,0,Math.PI*2);ctx.stroke();ctx.restore();}
+      }else if(d==="sakura"){
+        line(ctx,0,h*.18,w*.42,0,"#7c564e",7,.30);for(let i=0;i<48;i++){const x=(i*113)%w,y=(i*67)%h;leaf(ctx,x,y,8,4,(i%8)*.55,"#ed9fba",.55);}
+      }else if(d==="beach"){
+        ctx.fillStyle="rgba(242,211,145,.9)";ctx.fillRect(0,h*.72,w,h*.28);ctx.strokeStyle="rgba(255,255,255,.48)";ctx.lineWidth=8;for(let y=h*.68;y<h*.76;y+=22){ctx.beginPath();for(let x=0;x<=w;x+=40){const yy=y+Math.sin(x/48)*8;x?ctx.lineTo(x,yy):ctx.moveTo(x,yy);}ctx.stroke();}
+      }else if(d==="paint"){
+        const colors=["#e95b64","#4ba0e6","#f3bf3f","#62b879","#9a6ddb"];for(let i=0;i<24;i++){const c=colors[i%colors.length],x=(i*149)%w,y=(i*83)%h;circle(ctx,x,y,12+(i%5)*6,c,.18);for(let k=0;k<5;k++)circle(ctx,x+Math.cos(k)*35,y+Math.sin(k)*35,4,c,.15);}
+      }else if(d==="library"){
+        ctx.fillStyle="rgba(48,29,21,.3)";ctx.fillRect(0,h*.72,w,h*.28);for(let x=0;x<w;x+=32){ctx.fillStyle=["#6e3d31","#34566e","#827039","#5f7147"][Math.floor(x/32)%4];ctx.globalAlpha=.22;ctx.fillRect(x,h*.77,24,h*.23);ctx.globalAlpha=1;}
+      }else if(d==="newspaper"){
+        for(let x=40;x<w;x+=260){line(ctx,x,0,x,h,"#333",1,.08);for(let y=55;y<h;y+=28)line(ctx,x+18,y,Math.min(w-20,x+220),y,"#333",1,.08);}
+      }else if(d==="polaroid"){
+        for(let i=0;i<10;i++){const x=60+(i*173)%Math.max(100,w-140),y=45+(i*119)%Math.max(100,h-180);line(ctx,x,y,x+80,y+45,"#7e7469",2,.10);circle(ctx,x,y,5,"#d0a75d",.35);}
+      }else if(d==="arcade"){
+        for(let x=0;x<w;x+=42)line(ctx,x,0,x,h,"#5df2ff",1,.08);for(let y=0;y<h;y+=42)line(ctx,0,y,w,y,"#ff4fc6",1,.06);for(let i=0;i<22;i++){ctx.fillStyle=["#5df2ff","#ff4fc6","#f7d95c"][i%3];ctx.globalAlpha=.24;ctx.fillRect((i*137)%w,(i*71)%h,12,12);ctx.globalAlpha=1;}
+      }else if(d==="code"){
+        for(let x=0;x<w;x+=48)line(ctx,x,0,x,h,"#56d891",1,.05);for(let y=0;y<h;y+=48)line(ctx,0,y,w,y,"#56d891",1,.05);ctx.font="700 34px Consolas";ctx.fillStyle="rgba(86,216,145,.10)";["{ }","</>","0101","#SFK"].forEach((s,i)=>ctx.fillText(s,80+i*w*.22,120+(i%2)*120));
+      }else if(d==="rainbow"){
+        const cols=["#ef6f9b","#f4a95f","#f5dc68","#6acb86","#67bfe5","#9b82df"];cols.forEach((c,i)=>{ctx.save();ctx.strokeStyle=c;ctx.globalAlpha=.20;ctx.lineWidth=22;ctx.beginPath();ctx.arc(w*.2,h*.9,170+i*22,Math.PI,Math.PI*1.7);ctx.stroke();ctx.restore();});
+      }else if(d==="brick"){
+        ctx.strokeStyle="rgba(35,18,16,.20)";ctx.lineWidth=3;for(let y=0;y<h;y+=64){line(ctx,0,y,w,y,"#2d1917",3,.18);const off=(Math.floor(y/64)%2)*70;for(let x=-off;x<w;x+=140)line(ctx,x,y,x,y+64,"#2d1917",3,.18);}
+      }else if(d==="fair"){
+        const cols=["#ef6b68","#f1bf45","#5cb6d8","#7db46b"];for(let i=0;i<16;i++){ctx.fillStyle=cols[i%4];ctx.globalAlpha=.58;ctx.beginPath();ctx.moveTo(i*w/16,0);ctx.lineTo((i+.5)*w/16,50);ctx.lineTo((i+1)*w/16,0);ctx.closePath();ctx.fill();ctx.globalAlpha=1;}for(let i=0;i<36;i++)circle(ctx,(i*97)%w,70+(i*61)%Math.max(80,h-100),3+(i%3),cols[i%4],.30);
+      }else if(d==="clouds"){
+        cloud(ctx,w*.06,h*.18,1.0,"#fff",.62);cloud(ctx,w*.60,h*.22,1.2,"#fff",.72);cloud(ctx,w*.24,h*.70,.9,"#fff",.48);for(let i=0;i<30;i++)circle(ctx,(i*113)%w,(i*59)%h,1.7,"#fff",.45);
+      }else if(d==="chalk"){
+        for(let y=55;y<h;y+=46)line(ctx,0,y,w,y,"#f7f0dd",1,.05);for(let i=0;i<22;i++)line(ctx,(i*137)%w,(i*77)%h,(i*137)%w+40,(i*77)%h+10,"#f7f0dd",2,.05);
+      }else if(d==="detective"){
+        const pts=[[.12,.18],[.48,.28],[.78,.14],[.28,.68],[.72,.76]];ctx.strokeStyle="rgba(173,61,61,.38)";ctx.lineWidth=4;ctx.beginPath();pts.forEach(([px,py],i)=>i?ctx.lineTo(w*px,h*py):ctx.moveTo(w*px,h*py));ctx.stroke();pts.forEach(([px,py])=>circle(ctx,w*px,h*py,7,"#ad3d3d",.75));
+      }else if(d==="hearts"){
+        for(let i=0;i<24;i++)heart(ctx,(i*131)%w,60+(i*73)%Math.max(100,h-100),.35+(i%3)*.08,["#ef6b9a","#f4a0b9","#ffffff"][i%3],.32);
+      }else if(d==="neon"){
+        for(let i=0;i<18;i++){const x=(i*137)%w,y=(i*79)%h;circle(ctx,x,y,3,["#ff4fc6","#5df2ff","#b56cff"][i%3],.45);}ctx.font="900 46px Arial";ctx.fillStyle="rgba(93,242,255,.13)";ctx.fillText("♪",w*.12,h*.22);ctx.fillText("♫",w*.78,h*.62);
+      }else if(d==="spiderman"){
+        const cx=w*.08,cy=h*.06;for(let i=0;i<14;i++){const a=(Math.PI*2*i)/14;line(ctx,cx,cy,cx+Math.cos(a)*w,cy+Math.sin(a)*h,"#dbe7ff",2,.14);}for(let r=70;r<Math.max(w,h);r+=70){ctx.save();ctx.strokeStyle="rgba(219,231,255,.09)";ctx.lineWidth=2;ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();ctx.restore();}
+      }else if(d==="filipino"){
+        ctx.fillStyle="rgba(20,59,119,.12)";ctx.fillRect(0,0,w,34);ctx.fillStyle="rgba(210,40,48,.12)";ctx.fillRect(0,h-34,w,34);for(let x=0;x<w;x+=36){ctx.fillStyle=x%72===0?"rgba(215,170,42,.28)":"rgba(20,59,119,.10)";ctx.beginPath();ctx.moveTo(x,42);ctx.lineTo(x+18,58);ctx.lineTo(x+36,42);ctx.lineTo(x+18,26);ctx.closePath();ctx.fill();}
+      }else if(d==="poste"){
+        ctx.fillStyle="rgba(80,80,75,.34)";ctx.fillRect(w*.12,0,54,h);ctx.fillStyle="rgba(68,68,65,.45)";ctx.fillRect(w*.04,h*.18,w*.30,24);for(let i=0;i<4;i++)line(ctx,0,h*.15+i*28,w,h*.10+i*38,"#383838",3,.30);
+      }else if(d==="graffiti"||d==="vandal"){
+        ctx.font="900 66px Impact,Arial Black";ctx.fillStyle=d==="graffiti"?"rgba(255,109,77,.18)":"rgba(17,17,17,.15)";ctx.fillText("#BEKIND",w*.05,h*.22);ctx.fillText("SFK",w*.72,h*.74);for(let i=0;i<18;i++)line(ctx,(i*119)%w,(i*67)%h,(i*119)%w+80,(i*67)%h-35,d==="graffiti"?"#f5d04d":"#111",4,.10);
+      }
+    }
+    function reaction(note){const map=note.reactions||{};const counts={heart:0,haha:0,wow:0,sad:0,like:0};Object.values(map).forEach(t=>{if(t in counts)counts[t]++;});let best="",max=0;Object.entries(counts).forEach(([k,v])=>{if(v>max){max=v;best=k;}});return max?`${REACTIONS[best]||"❤️"} ${Object.keys(map).length}`:"";}
+    function getVideoId(url){const s=String(url||"");let m=s.match(/[?&]v=([A-Za-z0-9_-]{6,})/);if(m)return m[1];m=s.match(/youtu\.be\/([A-Za-z0-9_-]{6,})/);return m?m[1]:"";}
+    async function loadImg(src){if(!src)return null;return await new Promise(resolve=>{const im=new Image();if(!String(src).startsWith("data:"))im.crossOrigin="anonymous";im.onload=()=>resolve(im);im.onerror=()=>resolve(null);im.src=src;});}
+    async function activeId(){const d=db();if(!d)return LEGACY_ID;try{const s=await d.collection("settings").doc("FreedomWallActiveWallID").get();return safeId(s.exists?s.data()?.Value:LEGACY_ID);}catch(e){return LEGACY_ID;}}
+    async function loadNotes(id){const d=db();if(!d)throw new Error("Firebase is not ready yet.");let snaps;if(id===LEGACY_ID){snaps=await d.collection("freedomWallNotes").limit(1200).get();return snaps.docs.map(x=>({id:x.id,...(x.data()||{})})).filter(n=>safeId(n.WallID||LEGACY_ID)===LEGACY_ID);}snaps=await d.collection("freedomWallNotes").where("WallID","==",id).limit(1200).get();return snaps.docs.map(x=>({id:x.id,...(x.data()||{})}));}
+    function normalize(n){return{id:String(n.id||""),text:String(n.Text||"").trim(),author:String(n.Name||n.Author||"").trim(),color:String(n.Color||"yellow").toLowerCase(),textColor:String(n.TextColor||"").toLowerCase(),font:String(n.FontStyle||"theme-default"),created:num(n.CreatedAtMs,0),x:num(n.X,50),y:num(n.Y,50),rot:num(n.Rotation,0),scale:num(n.Scale,1),youtube:String(n.YouTubeUrl||""),youtubeTitle:String(n.YouTubeTitle||""),youtubeChannel:String(n.YouTubeChannel||""),youtubeThumb:String(n.YouTubeThumb||""),gif:String(n.GifUrl||""),gifPreview:String(n.GifPreviewUrl||""),gifTitle:String(n.GifTitle||""),mediaRef:String(n.MediaRef||""),mediaType:String(n.MediaType||""),reactions:n.Reactions||{}};}
+    async function media(note){if(note.youtube){const id=getVideoId(note.youtube);return{src:note.youtubeThumb||(id?`https://i.ytimg.com/vi/${id}/hqdefault.jpg`:""),kind:"youtube",title:note.youtubeTitle};}if(note.gif)return{src:note.gifPreview||note.gif,kind:"gif",title:note.gifTitle};if(note.mediaRef){const d=db();try{const snap=await d.collection("freedomWallMedia").doc(note.id).get();if(snap.exists){const x=snap.data()||{};const mime=String(x.MimeType||note.mediaType||"image/jpeg");const data=String(x.Data||x.Base64||"");if(data)return{src:`data:${mime};base64,${data}`,kind:mime==="image/gif"?"gif":"image",title:""};}}catch(e){}}return null;}
+    function currentAdminConfig(){return{title:String($("homepageEffectTitle")?.value||"SFK #BeKind Wall").trim()||"SFK #BeKind Wall",message:String($("homepageEffectMessage")?.value||"").trim(),theme:String($("freedomWallTheme")?.value||"sticky-notes"),showNames:$("freedomWallShowNames")?.checked!==false};}
+    async function drawMedia(ctx,info,x,y,w,h,p){roundRect(ctx,x,y,w,h,16,"rgba(255,255,255,.78)",p.line);if(!info?.src)return;let safeSrc=String(info.src||"");if(safeSrc&&!safeSrc.startsWith("data:")){try{safeSrc=await exactFetchDataUrl(safeSrc,2800);}catch(e){safeSrc="";}}const im=safeSrc?await loadImg(safeSrc):null;if(im){const sc=Math.max(w/im.width,h/im.height),dw=im.width*sc,dh=im.height*sc;ctx.save();roundRect(ctx,x,y,w,h,16,null,null);ctx.clip();ctx.drawImage(im,x+(w-dw)/2,y+(h-dh)/2,dw,dh);ctx.restore();}else{ctx.fillStyle=p.muted;ctx.font=`700 ${Math.max(10,Math.min(15,w*.045))}px Arial`;ctx.fillText(info?.kind==="youtube"?"YouTube preview":info?.kind==="gif"?"GIF preview":"Image",x+14,y+24);}if(info?.kind==="gif"){roundRect(ctx,x+10,y+10,42,22,11,"rgba(0,0,0,.7)",null);ctx.fillStyle="#fff";ctx.font="800 11px Arial";ctx.fillText("GIF",x+18,y+25);}if(info?.kind==="youtube"){ctx.fillStyle="rgba(0,0,0,.48)";ctx.beginPath();ctx.arc(x+w/2,y+h/2,28,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fff";ctx.beginPath();ctx.moveTo(x+w/2-6,y+h/2-10);ctx.lineTo(x+w/2-6,y+h/2+10);ctx.lineTo(x+w/2+12,y+h/2);ctx.closePath();ctx.fill();}}
+    const TEXT_HEX={black:"#171717",charcoal:"#34383d",white:"#ffffff",navy:"#183153",blue:"#165fbd",red:"#c62828",maroon:"#7f1d2d",green:"#237a3b",brown:"#70452f",purple:"#6d3dad",pink:"#b83280",orange:"#b45309",gold:"#8a6400"};
+    function readableTextColor(n,fill,p){
+      if(n.textColor&&TEXT_HEX[n.textColor])return TEXT_HEX[n.textColor];
+      if(["dark","glass","pixel","terminal","chalk","neon","web"].includes(p.note))return p.text;
+      const h=String(fill||"#ffffff").replace("#","");const r=parseInt(h.slice(0,2),16)||255,g=parseInt(h.slice(2,4),16)||255,b=parseInt(h.slice(4,6),16)||255;
+      return ((r*299+g*587+b*114)/1000)<145?"#ffffff":"#222222";
+    }
+    function drawThemeNoteShell(ctx,x,y,w,h,p,fill){
+      const kind=p.note;
+      ctx.save();
+      if(kind==="speech"){
+        roundRect(ctx,x,y,w,h-16,22,"#ffffff",p.line);ctx.fillStyle="#ffffff";ctx.strokeStyle=p.line;ctx.beginPath();ctx.moveTo(x+w*.22,y+h-17);ctx.lineTo(x+w*.31,y+h-17);ctx.lineTo(x+w*.25,y+h);ctx.closePath();ctx.fill();ctx.stroke();
+      }else if(kind==="comic-panel"){
+        roundRect(ctx,x,y,w,h,8,"#fffdf7",p.line);ctx.lineWidth=4;ctx.strokeStyle=p.line;ctx.strokeRect(x+5,y+5,w-10,h-10);
+      }else if(kind==="lined"){
+        roundRect(ctx,x,y,w,h,8,"#fffef9",p.line);for(let yy=y+42;yy<y+h-14;yy+=27)line(ctx,x+12,yy,x+w-12,yy,"#77a9d5",1,.20);line(ctx,x+34,y+8,x+34,y+h-8,"#df6464",2,.25);
+      }else if(kind==="natural"){
+        roundRect(ctx,x,y,w,h,20,fill,p.line);leaf(ctx,x+w-20,y+18,14,7,-.55,"#4d7b4d",.46);
+      }else if(kind==="taped"){
+        roundRect(ctx,x,y,w,h,7,fill,p.line);ctx.save();ctx.globalAlpha=.55;ctx.fillStyle="#e7d6ae";ctx.translate(x+w*.20,y+5);ctx.rotate(-.08);ctx.fillRect(-30,-9,60,18);ctx.restore();ctx.save();ctx.globalAlpha=.48;ctx.fillStyle="#e7d6ae";ctx.translate(x+w*.78,y+7);ctx.rotate(.08);ctx.fillRect(-28,-9,56,18);ctx.restore();
+      }else if(kind==="whiteboard"){
+        roundRect(ctx,x,y,w,h,16,"#ffffff","rgba(32,48,66,.24)");line(ctx,x+14,y+h-14,x+w-14,y+h-14,p.accent,4,.45);circle(ctx,x+w-20,y+18,5,p.accent,.7);
+      }else if(kind==="kraft"){
+        roundRect(ctx,x,y,w,h,12,"#ead1aa",p.line);for(let i=0;i<12;i++)circle(ctx,x+18+(i*47)%Math.max(20,w-36),y+18+(i*31)%Math.max(20,h-36),1.2,"#6f4d35",.12);
+      }else if(kind==="soft"){
+        roundRect(ctx,x,y,w,h,28,fill,p.line);circle(ctx,x+w-18,y+18,5,p.accent,.38);
+      }else if(kind==="dark"){
+        roundRect(ctx,x,y,w,h,18,"#233253",p.line);ctx.fillStyle=p.accent;ctx.fillRect(x+12,y+10,42,4);
+      }else if(kind==="glass"){
+        roundRect(ctx,x,y,w,h,24,"rgba(24,28,58,.92)","rgba(139,198,255,.35)");circle(ctx,x+w-22,y+20,5,p.accent,.75);
+      }else if(kind==="postcard"){
+        roundRect(ctx,x,y,w,h,14,"#fff4d5",p.line);ctx.strokeStyle="rgba(230,95,73,.28)";ctx.lineWidth=3;ctx.strokeRect(x+8,y+8,w-16,h-16);
+      }else if(kind==="art"){
+        roundRect(ctx,x,y,w,h,18,"#fffdfa",p.line);circle(ctx,x+18,y+18,8,"#e95b64",.55);circle(ctx,x+36,y+15,6,"#4ba0e6",.55);circle(ctx,x+51,y+21,7,"#f3bf3f",.55);
+      }else if(kind==="index"){
+        roundRect(ctx,x,y,w,h,10,"#f8e8c9",p.line);line(ctx,x+10,y+35,x+w-10,y+35,"#a85e4d",2,.28);
+      }else if(kind==="news"){
+        roundRect(ctx,x,y,w,h,3,"#fffdf7",p.line);ctx.strokeStyle="rgba(35,35,35,.16)";ctx.lineWidth=1;for(let yy=y+48;yy<y+h-12;yy+=20)ctx.strokeRect(x+12,yy,w-24,1);
+      }else if(kind==="polaroid"){
+        roundRect(ctx,x,y,w,h,5,"#fffdf9","rgba(47,45,42,.18)");ctx.fillStyle="rgba(0,0,0,.05)";ctx.fillRect(x+9,y+9,w-18,Math.max(70,h*.48));
+      }else if(kind==="pixel"){
+        roundRect(ctx,x,y,w,h,3,"#171426",p.line);ctx.strokeStyle=p.accent;ctx.lineWidth=3;ctx.strokeRect(x+4,y+4,w-8,h-8);for(let i=0;i<4;i++){ctx.fillStyle=["#5df2ff","#ff4fc6","#f7d95c"][i%3];ctx.globalAlpha=.5;ctx.fillRect(x+10+i*16,y+10,8,8);ctx.globalAlpha=1;}
+      }else if(kind==="terminal"){
+        roundRect(ctx,x,y,w,h,12,"#0d1a23",p.line);ctx.fillStyle="rgba(86,216,145,.18)";ctx.fillRect(x,y,w,30);circle(ctx,x+14,y+15,4,"#ff6b6b",.8);circle(ctx,x+28,y+15,4,"#f5c84c",.8);circle(ctx,x+42,y+15,4,"#56d891",.8);
+      }else if(kind==="poster"){
+        roundRect(ctx,x,y,w,h,4,"#f4e0c6",p.line);ctx.save();ctx.fillStyle="rgba(236,214,174,.78)";ctx.translate(x+w*.5,y+4);ctx.rotate(-.03);ctx.fillRect(-38,-7,76,14);ctx.restore();
+      }else if(kind==="ticket"){
+        roundRect(ctx,x,y,w,h,16,"#fffaf0",p.line);for(let yy=y+12;yy<y+h;yy+=24){circle(ctx,x,yy,5,p.bg1,1);circle(ctx,x+w,yy,5,p.bg1,1);}
+      }else if(kind==="cloud"){
+        roundRect(ctx,x,y,w,h,32,"rgba(255,255,255,.94)",p.line);cloud(ctx,x+w-64,y+18,.22,"#d8c9ef",.5);
+      }else if(kind==="chalk"){
+        roundRect(ctx,x,y,w,h,8,"#24493d","rgba(247,240,221,.20)");ctx.strokeStyle="rgba(247,240,221,.18)";ctx.setLineDash([7,5]);ctx.strokeRect(x+8,y+8,w-16,h-16);ctx.setLineDash([]);
+      }else if(kind==="evidence"){
+        roundRect(ctx,x,y,w,h,7,"#f4e7c8",p.line);circle(ctx,x+w*.5,y+8,7,"#ad3d3d",.8);line(ctx,x+w*.5,y+8,x+w*.78,y-10,"#ad3d3d",2,.5);
+      }else if(kind==="seasonal"){
+        roundRect(ctx,x,y,w,h,18,"#fffdf8",p.line);ctx.fillStyle=p.accent;ctx.fillRect(x,y,w,6);circle(ctx,x+w-18,y+19,5,"#ff87c7",.5);
+      }else if(kind==="neon"){
+        roundRect(ctx,x,y,w,h,20,"#151326",p.line);ctx.save();ctx.shadowBlur=14;ctx.shadowColor=p.accent;ctx.strokeStyle=p.accent;ctx.lineWidth=2;ctx.strokeRect(x+6,y+6,w-12,h-12);ctx.restore();
+      }else if(kind==="web"){
+        roundRect(ctx,x,y,w,h,18,"#122141",p.line);for(let i=0;i<5;i++)line(ctx,x+w-12,y+12,x+w-12-(i*18),y+12+(i*18),"#dbe7ff",1,.18);circle(ctx,x+18,y+18,6,p.accent,.8);
+      }else if(kind==="woven"){
+        roundRect(ctx,x,y,w,h,10,"#fff5dc",p.line);const colors=["#173b72","#c83239","#d7aa2a"];for(let i=0;i<12;i++){ctx.fillStyle=colors[i%3];ctx.globalAlpha=.28;ctx.fillRect(x+8+i*(w-16)/12,y+6,(w-16)/12,6);ctx.globalAlpha=1;}
+      }else if(kind==="tag"){
+        roundRect(ctx,x,y,w,h,5,"#efe5d4",p.line);ctx.fillStyle=p.accent;ctx.globalAlpha=.24;ctx.font=`900 ${Math.min(34,w*.12)}px Impact`;ctx.fillText("#SFK",x+w*.58,y+34);ctx.globalAlpha=1;
+      }else{
+        roundRect(ctx,x,y,w,h,14,fill,p.line);circle(ctx,x+w*.5,y+8,5,p.accent,.58);
+      }
+      ctx.restore();
+    }
+    function drawHeaderDecor(ctx,x,y,w,h,p){
+      if(["sticky-notes","bulletin-board"].includes(p.theme)){circle(ctx,x+22,y+18,6,"#d33f3f",.8);circle(ctx,x+w-22,y+18,6,"#3c6db0",.7);}
+      if(p.theme==="jungle"){leaf(ctx,x+22,y+18,18,8,-.6,"#4d7b4d",.6);leaf(ctx,x+w-22,y+18,18,8,.6,"#4d7b4d",.6);}
+      if(p.theme==="filipino"){const cs=["#173b72","#c83239","#d7aa2a"];for(let i=0;i<15;i++){ctx.fillStyle=cs[i%3];ctx.globalAlpha=.55;ctx.fillRect(x+12+i*(w-24)/15,y+5,(w-24)/15,5);ctx.globalAlpha=1;}}
+      if(p.theme==="poste"){ctx.fillStyle="rgba(220,205,165,.62)";ctx.save();ctx.translate(x+w*.22,y+4);ctx.rotate(-.04);ctx.fillRect(-45,-7,90,14);ctx.restore();}
+      if(["comic","comic-manga","comic-strip","comic-noir"].includes(p.theme)){ctx.strokeStyle=p.line;ctx.lineWidth=4;ctx.strokeRect(x+7,y+7,w-14,h-14);}
+      if(p.theme==="chalkboard"){ctx.setLineDash([8,5]);ctx.strokeStyle="rgba(247,240,221,.28)";ctx.strokeRect(x+10,y+10,w-20,h-20);ctx.setLineDash([]);}
+      if(p.theme==="neon-music"){ctx.save();ctx.shadowBlur=14;ctx.shadowColor=p.accent;ctx.strokeStyle=p.accent;ctx.strokeRect(x+7,y+7,w-14,h-14);ctx.restore();}
+    }
+    function themePromptKind(theme=""){
+      const t=String(theme||"").toLowerCase();
+      if(["jungle","eco"].includes(t)) return "wood-sign";
+      if(["polaroid"].includes(t)) return "placard";
+      if(["poste","utility-post"].includes(t)) return "notice";
+      if(["comic","comic-manga","comic-strip","comic-noir"].includes(t)) return "comic-panel";
+      if(["chalkboard"].includes(t)) return "chalk-area";
+      if(["newspaper"].includes(t)) return "headline";
+      if(["coding-lab","retro-arcade"].includes(t)) return "terminal";
+      if(["filipino"].includes(t)) return "woven-plaque";
+      if(["detective"].includes(t)) return "evidence-board";
+      if(["whiteboard"].includes(t)) return "whiteboard";
+      if(["school-note"].includes(t)) return "notebook";
+      if(["cafe"].includes(t)) return "menu-card";
+      if(["beach"].includes(t)) return "postcard";
+      if(["graffiti","vandal"].includes(t)) return "spray-panel";
+      if(["library"].includes(t)) return "index-card";
+      return "default";
+    }
+    function drawThemePromptShell(ctx,x,y,w,h,p){
+      const kind=themePromptKind(p.theme);
+      ctx.save();
+      if(kind==="wood-sign"){
+        roundRect(ctx,x,y,w,h,18,"#a87a46","rgba(68,43,20,.28)");
+        roundRect(ctx,x+10,y+10,w-20,h-20,14,"#e4c785","rgba(95,68,39,.18)");
+        line(ctx,x+w*.16,y+2,x+w*.16,y-24,"#6a4d2b",5,.9);line(ctx,x+w*.84,y+2,x+w*.84,y-24,"#6a4d2b",5,.9);
+        circle(ctx,x+w*.16,y-24,5,"#4e3620",.95);circle(ctx,x+w*.84,y-24,5,"#4e3620",.95);
+      }else if(kind==="placard"){
+        roundRect(ctx,x+10,y+18,w-20,h-28,18,"#e6dfd3","rgba(80,72,62,.18)");
+        roundRect(ctx,x,y,w,h-18,18,"#fffdf8","rgba(80,72,62,.16)");
+        drawHeaderDecor(ctx,x,y,w,h,p);
+      }else if(kind==="notice"){
+        roundRect(ctx,x,y,w,h,12,"#ece1c3","rgba(63,55,44,.24)");
+        ctx.save();ctx.translate(x+w*.2,y+12);ctx.rotate(-.05);ctx.fillStyle="rgba(224,205,164,.82)";ctx.fillRect(-62,-8,124,16);ctx.restore();
+        ctx.save();ctx.translate(x+w*.78,y+14);ctx.rotate(.04);ctx.fillStyle="rgba(224,205,164,.82)";ctx.fillRect(-46,-8,92,16);ctx.restore();
+      }else if(kind==="comic-panel"){
+        roundRect(ctx,x,y,w,h,p.theme==="comic-manga"?5:14,p.panel,p.line);
+        ctx.save();ctx.lineWidth=6;ctx.strokeStyle=p.line;ctx.strokeRect(x+6,y+6,w-12,h-12);ctx.restore();
+        if(p.theme==="comic"){ctx.fillStyle="rgba(255,255,255,.45)";for(let i=0;i<80;i++)circle(ctx,x+16+(i%10)*(w-32)/10,y+18+Math.floor(i/10)*(h-36)/8,1.6,"#fff",.35);}
+      }else if(kind==="chalk-area"){
+        roundRect(ctx,x,y,w,h,12,p.panel,p.line);
+        ctx.save();ctx.setLineDash([8,5]);ctx.strokeStyle="rgba(247,240,221,.30)";ctx.lineWidth=2;ctx.strokeRect(x+10,y+10,w-20,h-20);ctx.restore();
+        ctx.setLineDash([]);
+      }else if(kind==="headline"){
+        roundRect(ctx,x,y,w,h,8,"#fffdf7","rgba(35,35,35,.18)");
+        ctx.fillStyle="#232323";ctx.fillRect(x,y,w,34);
+        ctx.fillStyle="#e8e3d7";ctx.font='900 13px Georgia';ctx.fillText('SCHOOL PUBLICATION',x+16,y+22);
+      }else if(kind==="terminal"){
+        roundRect(ctx,x,y,w,h,16,"#101d27",p.line);
+        roundRect(ctx,x+1,y+1,w-2,32,14,"#0c161d",null);
+        circle(ctx,x+18,y+17,5,"#fb6058",.95);circle(ctx,x+34,y+17,5,"#fdbc40",.95);circle(ctx,x+50,y+17,5,"#34c749",.95);
+        if(p.theme==="retro-arcade"){ctx.save();ctx.strokeStyle='rgba(93,242,255,.18)';for(let gx=x;gx<x+w;gx+=18)line(ctx,gx,y,gx,y+h,'rgba(93,242,255,.12)',1,.45);for(let gy=y;gy<y+h;gy+=18)line(ctx,x,gy,x+w,gy,'rgba(93,242,255,.12)',1,.45);ctx.restore();}
+      }else if(kind==="woven-plaque"){
+        roundRect(ctx,x,y,w,h,18,"#fffaf0","rgba(23,59,114,.18)");
+        const cs=['#173b72','#c83239','#d7aa2a'];
+        for(let i=0;i<12;i++){ctx.fillStyle=cs[i%3];ctx.globalAlpha=.18;ctx.fillRect(x+12+i*(w-24)/12,y+8,(w-24)/24,h-16);ctx.fillRect(x+8,y+10+i*(h-20)/12,w-16,(h-20)/36);ctx.globalAlpha=1;}
+      }else if(kind==="evidence-board"){
+        roundRect(ctx,x,y,w,h,16,"#f4e7c8","rgba(53,41,25,.20)");
+        line(ctx,x+16,y+22,x+w-16,y+h-22,'rgba(173,61,61,.48)',2,.9);line(ctx,x+w*0.15,y+h*0.78,x+w*0.83,y+h*0.24,'rgba(173,61,61,.48)',2,.9);
+        circle(ctx,x+20,y+20,5,'#ad3d3d',.95);circle(ctx,x+w-20,y+h-20,5,'#ad3d3d',.95);
+      }else if(kind==="whiteboard"){
+        roundRect(ctx,x,y,w,h,16,'#ffffff','rgba(32,48,66,.18)');
+        ctx.fillStyle='rgba(62,116,216,.10)';ctx.fillRect(x+12,y+18,w-24,4);ctx.fillRect(x+12,y+40,w-24,4);
+      }else if(kind==="notebook"){
+        roundRect(ctx,x,y,w,h,16,'#fffef8','rgba(51,92,142,.16)');
+        for(let yy=y+28;yy<y+h-12;yy+=24)line(ctx,x+18,yy,x+w-18,yy,'rgba(88,134,192,.15)',1.4,.9);
+        line(ctx,x+42,y+12,x+42,y+h-12,'rgba(239,107,107,.25)',2,.95);
+      }else if(kind==="menu-card"){
+        roundRect(ctx,x,y,w,h,16,'#f8e6c7','rgba(56,37,25,.18)');
+        circle(ctx,x+w*.5,y+16,4,p.accent,.85);circle(ctx,x+w*.42,y+16,2,'#fff',.65);circle(ctx,x+w*.58,y+16,2,'#fff',.65);
+      }else if(kind==="postcard"){
+        roundRect(ctx,x,y,w,h,16,'#fff6df','rgba(36,67,75,.14)');
+        ctx.strokeStyle='rgba(36,67,75,.18)';ctx.lineWidth=2;ctx.strokeRect(x+12,y+12,w-24,h-24);line(ctx,x+w*.66,y+14,x+w*.66,y+h-14,'rgba(36,67,75,.18)',2,.9);
+      }else if(kind==="spray-panel"){
+        roundRect(ctx,x,y,w,h,16,'#efe7d6','rgba(36,36,36,.18)');
+        ctx.fillStyle='rgba(255,109,77,.16)';for(let i=0;i<26;i++)circle(ctx,x+18+(i*31)%Math.max(60,w-36),y+24+(i*41)%Math.max(60,h-48),4+(i%5),i%2?'#ff6d4d':'#111',.13);
+      }else if(kind==="index-card"){
+        roundRect(ctx,x,y,w,h,10,'#f0dfbf','rgba(48,36,27,.18)');
+        line(ctx,x+26,y+16,x+26,y+h-16,'rgba(176,135,79,.35)',2,.95);
+        for(let yy=y+38;yy<y+h-12;yy+=24)line(ctx,x+14,yy,x+w-14,yy,'rgba(112,93,75,.16)',1.4,.9);
+      }else{
+        roundRect(ctx,x,y,w,h,p.theme==="comic-manga"?5:24,p.panel,p.line);
+        drawHeaderDecor(ctx,x,y,w,h,p);
+      }
+      if(!["placard","default"].includes(kind)) drawHeaderDecor(ctx,x,y,w,h,p);
+      ctx.restore();
+    }
+    function themeAccentLabel(theme=""){
+      const t=String(theme||"").toLowerCase();
+      if(["chalkboard"].includes(t)) return "TODAY'S CHALK PROMPT";
+      if(["newspaper"].includes(t)) return 'WALL HEADLINE';
+      if(["coding-lab","retro-arcade"].includes(t)) return 'PROMPT.EXE';
+      if(["poste"].includes(t)) return 'POSTED NOTICE';
+      if(["comic","comic-manga","comic-strip","comic-noir"].includes(t)) return 'FEATURE PANEL';
+      if(["polaroid"].includes(t)) return 'MEMORY BOARD';
+      if(["jungle"].includes(t)) return 'FOREST SIGN';
+      return 'SFK #BeKind Wall';
+    }
+    function drawThemeAuthorLabel(ctx,name,x,y,w,p,compact=false){
+      if(!name) return;
+      ctx.save();
+      const fontSize=compact?Math.max(7,Math.min(12,w*.04)):15;
+      ctx.font=`700 ${fontSize}px ${fontFamily('theme-default',p.theme)}`;
+      const text='— '+String(name||'');
+      const tw=ctx.measureText(text).width;
+      const padX=compact?8:10,padY=compact?4:6,bh=fontSize+(padY*2),bw=tw+(padX*2);
+      const bx=x+w-bw-(compact?8:12),by=y-bh-(compact?6:8);
+      let fill='rgba(255,255,255,.74)', stroke=p.line, textColor=p.text;
+      if(['coding-lab','retro-arcade','night','galaxy','spiderman','neon-music'].includes(p.theme)){fill='rgba(10,16,22,.78)';stroke='rgba(255,255,255,.18)';textColor='#f6f8ff';}
+      if(['chalkboard'].includes(p.theme)){fill='rgba(255,248,223,.10)';stroke='rgba(247,240,221,.24)';textColor='#f7f0dd';}
+      if(['filipino'].includes(p.theme)){fill='rgba(23,59,114,.10)';stroke='rgba(23,59,114,.18)';textColor='#173b72';}
+      roundRect(ctx,bx,by,bw,bh,Math.max(7,bh/2),fill,stroke);
+      ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillStyle=textColor;ctx.fillText(text,bx+bw-padX,by+bh/2);ctx.restore();
+    }
+    function drawThemeReactionBadge(ctx,label,x,y,p,compact=false){
+      if(!label) return;
+      ctx.save();
+      ctx.font=`700 ${compact?Math.max(8,Math.min(11,compact?11:13)):13}px Arial`;
+      const rh=compact?18:24, pad=compact?10:16, rw=ctx.measureText(label).width+pad;
+      let fill='rgba(255,255,255,.92)', stroke=p.line, color='#222';
+      if(['comic','comic-manga','comic-strip','comic-noir'].includes(p.theme)){fill='#fffdf6';stroke=p.line;color='#161616';}
+      if(['coding-lab','retro-arcade','night','galaxy','spiderman','neon-music'].includes(p.theme)){fill='rgba(12,18,25,.92)';stroke='rgba(255,255,255,.22)';color='#f7f8fc';}
+      if(['chalkboard'].includes(p.theme)){fill='rgba(247,240,221,.12)';stroke='rgba(247,240,221,.24)';color='#f7f0dd';}
+      if(['poste','bulletin-board','sticky-notes','detective'].includes(p.theme)){fill='rgba(255,248,232,.94)';stroke='rgba(84,63,40,.18)';color='#2e251d';}
+      roundRect(ctx,x,y,rw,rh,compact?9:12,fill,stroke);
+      ctx.fillStyle=color;ctx.textBaseline='middle';ctx.fillText(label,x+(compact?5:8),y+rh/2);
+      ctx.restore();
+    }
+    async function drawCard(ctx,n,x,y,w,h,p,showNames,rotation=0,compact=false){
+      const fill=COLOR_HEX[n.color]||COLOR_HEX.yellow;
+      ctx.save();
+      if(rotation){ctx.translate(x+w/2,y+h/2);ctx.rotate(rotation*Math.PI/180);x=-w/2;y=-h/2;}
+      drawThemeNoteShell(ctx,x,y,w,h,p,fill);
+      const pad=compact?Math.max(8,Math.min(14,w*.06)):18;
+      let cy=y+pad+(p.note==="terminal"?(compact?14:22):0);
+      const info=await media(n);
+      if(info){let mh=compact?Math.min(Math.max(54,h*.24),120):Math.min(Math.max(110,h*.34),190);if(p.note==="polaroid")mh=compact?Math.min(Math.max(74,h*.32),132):Math.min(Math.max(130,h*.42),220);await drawMedia(ctx,info,x+pad,cy,w-pad*2,mh,p);cy+=mh+(compact?8:14);}
+      const tc=readableTextColor(n,fill,p);
+      ctx.fillStyle=tc;ctx.textBaseline="top";
+      const defaultThemeFont = (!n.font || String(n.font||'').toLowerCase()==='theme-default');
+      const fs=compact?Math.max(8,Math.min(18,w*.058)):Math.max(17,Math.min(26,w*.07));
+      const lineH=compact?Math.max(10,Math.round(fs*1.25)):24;
+      ctx.font=`700 ${fs}px ${fontFamily(defaultThemeFont?'theme-default':n.font,p.theme)}`;
+      const lines=wrap(ctx,n.text,w-pad*2,info?(compact?7:5):(compact?10:8));
+      drawLines(ctx,lines,x+pad,cy,lineH,tc);
+      if(showNames&&n.author){drawThemeAuthorLabel(ctx,n.author,x,y+h,w,p,compact);}
+      const r=reaction(n);if(r){drawThemeReactionBadge(ctx,r,x+(compact?8:12),y+h-(compact?26:35),p,compact);}
+      ctx.restore();
+    }
+    function headerLayout(w,m,cfg,p){const c=headerLayout._canvas||(headerLayout._canvas=document.createElement("canvas"));const x=c.getContext("2d");x.font=`900 36px ${fontFamily("theme-default",p.theme)}`;const titleLines=wrap(x,cfg.title,w-m*2-70,2);x.font=`600 17px ${fontFamily("theme-default",p.theme)}`;const msgLines=cfg.message?wrap(x,cfg.message,w-m*2-70,3):[];const ph=58+Math.max(1,titleLines.length)*42+(msgLines.length?msgLines.length*23+14:0)+(cfg.label?20:0);return{titleLines,msgLines,ph:Math.max(106,ph)};}
+    function header(ctx,p,w,m,cfg,label=""){
+      const layout=headerLayout(w,m,{...cfg,label},p),ph=layout.ph;drawThemePromptShell(ctx,m,m,w-m*2,ph,p);
+      const headX=m+28, titleY=m+58;
+      ctx.fillStyle=p.accent;ctx.font=`900 17px ${fontFamily("theme-default",p.theme)}`;ctx.fillText(themeAccentLabel(p.theme),headX,m+28);
+      ctx.fillStyle=p.text;ctx.font=`900 36px ${fontFamily("theme-default",p.theme)}`;drawLines(ctx,layout.titleLines,headX,titleY,42,p.text);
+      if(layout.msgLines.length){ctx.font=`600 17px ${fontFamily("theme-default",p.theme)}`;drawLines(ctx,layout.msgLines,headX,titleY+layout.titleLines.length*42+4,23,p.muted);}
+      if(label){ctx.textAlign="right";ctx.font=`700 14px ${fontFamily("theme-default",p.theme)}`;ctx.fillStyle=p.muted;ctx.fillText(label,w-m-26,m+ph-18);ctx.textAlign="left";}
+      return m+ph+18;
+    }
+    function estHeight(n,w,compact=false){const c=document.createElement("canvas").getContext("2d");let h=compact?22:42;const has=!!(n.youtube||n.gif||n.mediaRef);if(has)h+=compact?Math.min(Math.max(54,w*.30),120)+10:Math.min(Math.max(120,w*.45),190)+14;c.font=`700 ${compact?Math.max(8,Math.min(18,w*.058)):Math.max(17,Math.min(26,w*.07))}px Arial`;const lineH=compact?Math.max(10,Math.round((Math.max(8,Math.min(18,w*.058)))*1.25)):24;h+=Math.max(lineH,wrap(c,n.text,w-(compact?20:36),has?(compact?7:5):(compact?10:8)).length*lineH);h+=compact?18:36;return Math.max(compact?84:170,Math.ceil(h));}
+    async function readable(notes,cfg,orientation){const s=size(orientation),p=palette(cfg.theme),cols=orientation==="portrait"?2:3,g=22,top=s.m+headerLayout(s.w,s.m,cfg,p).ph+18,cw=Math.floor((s.w-s.m*2-g*(cols-1))/cols);const pages=[];let page={items:[],heights:Array(cols).fill(top)};for(const n of notes){const h=estHeight(n,cw);let col=page.heights.indexOf(Math.min(...page.heights));if(page.heights[col]+h>s.h-s.m&&page.items.length){pages.push(page);page={items:[],heights:Array(cols).fill(top)};col=0;}page.items.push({n,x:s.m+(cw+g)*col,y:page.heights[col],w:cw,h});page.heights[col]+=h+g;}if(page.items.length||!pages.length)pages.push(page);const outs=[];for(let pi=0;pi<pages.length;pi++){const canvas=document.createElement("canvas");canvas.width=s.w;canvas.height=s.h;const ctx=canvas.getContext("2d");background(ctx,s.w,s.h,p);header(ctx,p,s.w,s.m,cfg,pages.length>1?`Page ${pi+1} of ${pages.length}`:"");for(const item of pages[pi].items)await drawCard(ctx,item.n,item.x,item.y,item.w,item.h,p,cfg.showNames,0);outs.push(canvas);}return outs;}
+    async function current(notes,cfg,orientation){const s=size(orientation),p=palette(cfg.theme),canvas=document.createElement("canvas");canvas.width=s.w;canvas.height=s.h;const ctx=canvas.getContext("2d");background(ctx,s.w,s.h,p);const top=header(ctx,p,s.w,s.m,cfg,"");const contentH=s.h-top-s.m,contentW=s.w-s.m*2;for(const n of notes){const w=Math.max(180,Math.min(340,contentW*.19))*Math.max(.82,Math.min(1.18,n.scale));const h=estHeight(n,w);const x=s.m+(Math.max(0,Math.min(100,n.x))/100)*Math.max(0,contentW-w);const y=top+(Math.max(0,Math.min(100,n.y))/100)*Math.max(0,contentH-h);await drawCard(ctx,n,x,y,w,h,p,cfg.showNames,Math.max(-10,Math.min(10,n.rot)));}return canvas;}
+    async function fit(notes,cfg,orientation){const s=size(orientation),p=palette(cfg.theme),canvas=document.createElement("canvas");canvas.width=s.w;canvas.height=s.h;const ctx=canvas.getContext("2d");background(ctx,s.w,s.h,p);const top=header(ctx,p,s.w,s.m,cfg,"Single Page Fit");const cols=orientation==="portrait"?3:4,g=16,cw=Math.floor((s.w-s.m*2-g*(cols-1))/cols);let items=[],heights=Array(cols).fill(top);for(const n of notes){const h=estHeight(n,cw,true);let col=heights.indexOf(Math.min(...heights));items.push({n,col,x:s.m+(cw+g)*col,y:heights[col],w:cw,h});heights[col]+=h+g;}const contentBottom=Math.max(...heights)-g;const contentH=Math.max(1,contentBottom-top);const availH=Math.max(1,s.h-s.m-top);const scale=Math.min(1,availH/contentH);for(const item of items){const x=s.m+((item.x-s.m)*scale);const y=top+((item.y-top)*scale);const w=item.w*scale;const h=item.h*scale;await drawCard(ctx,item.n,x,y,w,h,p,cfg.showNames,0,true);}return canvas;}
+    function exactSizeClass(n){const len=String(n?.text||"").trim().length, lines=String(n?.text||"").split(/\n/).length, score=len+Math.max(0,lines-1)*18;if(n?.youtube||n?.gif||n?.mediaRef)return "medium";if(score<=26)return "compact";if(score<=72)return "small";if(score<=145)return "medium";return "large";}
+    function exactHexRgb(hex){const v=String(hex||"").replace("#","");if(!/^[0-9a-f]{6}$/i.test(v))return{r:255,g:255,b:255};return{r:parseInt(v.slice(0,2),16),g:parseInt(v.slice(2,4),16),b:parseInt(v.slice(4,6),16)};}
+    function exactLum(hex){const {r,g,b}=exactHexRgb(hex),f=c=>{c/=255;return c<=.03928?c/12.92:Math.pow((c+.055)/1.055,2.4)};return .2126*f(r)+.7152*f(g)+.0722*f(b);}
+    function exactContrast(a,b){const x=exactLum(a),y=exactLum(b);return(Math.max(x,y)+.05)/(Math.min(x,y)+.05);}
+    function exactMix(a,b,w=.5){const x=exactHexRgb(a),y=exactHexRgb(b),h=n=>Math.round(n).toString(16).padStart(2,"0");return`#${h(x.r*w+y.r*(1-w))}${h(x.g*w+y.g*(1-w))}${h(x.b*w+y.b*(1-w))}`;}
+    function exactThemeDefaultText(theme){const t=String(theme||"").toLowerCase();if(["night","rainy","flood","galaxy","retro-arcade","coding-lab","neon-music","spiderman","comic-noir"].includes(t))return"white";if(["jungle","eco","chalkboard"].includes(t))return"green";if(["cafe","library","brick-alley","detective","poste"].includes(t))return"brown";if(["filipino","comic-strip"].includes(t))return"navy";return"charcoal";}
+    function exactContrastBgs(color,theme){const base=COLOR_HEX[String(color||"").toLowerCase()]||COLOR_HEX.yellow,t=String(theme||"").toLowerCase();if(t==="polaroid")return[exactMix(base,"#ffffff",.18),"#fffdf9"];if(t==="newspaper")return[exactMix(base,"#fffef8",.42),exactMix(base,"#e9e4d5",.36)];if(t==="jungle")return[exactMix(base,"#fff5cf",.82),exactMix(base,"#bd9d62",.82)];if(t==="poste")return[exactMix(base,"#fff7e5",.84),exactMix(base,"#c8b792",.82)];if(t==="coding-lab")return[exactMix(base,"#ffffff",.88),exactMix(base,"#18232b",.80)];if(t==="chalkboard")return[exactMix(base,"#f7f0d8",.84),exactMix(base,"#4d654f",.78)];return[exactMix(base,"#ffffff",.94),exactMix(base,"#000000",.89)];}
+    function exactTextColorName(n,theme){const requested=TEXT_HEX[String(n?.textColor||"").toLowerCase()]?String(n.textColor).toLowerCase():exactThemeDefaultText(theme),bgs=exactContrastBgs(n?.color||"yellow",theme),hex=TEXT_HEX[requested]||TEXT_HEX.charcoal;if(Math.min(...bgs.map(bg=>exactContrast(hex,bg)))>=4.5)return requested;let best="black",score=-1;for(const c of ["black","charcoal","navy","brown","white"]){const ratio=Math.min(...bgs.map(bg=>exactContrast(TEXT_HEX[c],bg)));if(ratio>score){score=ratio;best=c;}}return best;}
+    function exactTextHex(n,theme){return TEXT_HEX[exactTextColorName(n,theme)]||TEXT_HEX.charcoal;}
+    function exactReactionParts(n){const raw=reaction(n);if(!raw)return null;const m=raw.match(/^(\S+)\s+(\d+)$/);return m?{emoji:m[1],total:m[2]}:{emoji:"❤️",total:String(Object.keys(n?.reactions||{}).length||1)};}
+    function exactPromptEyebrow(theme){return String(theme||"").toLowerCase()==="filipino"?"PAKSA NG ATING PADER":"TODAY'S WALL PROMPT";}
+    function exactSceneMarkup(theme){return `<div class="homepageEffectLayer is-freedom-wall is-visible"><div class="homepageThemeScene homepageFreedomWallScene" data-theme="${String(theme||"sticky-notes").replace(/[^a-z0-9-]/gi,"")}"><div class="freedomWallBg" aria-hidden="true"><div class="freedomWallSun"></div><div class="freedomWallMoon"></div><div class="freedomWallCloud fw-cloud-a"></div><div class="freedomWallCloud fw-cloud-b"></div><div class="freedomWallCloud fw-cloud-c"></div><div class="freedomWallRain"></div><div class="freedomWallFlood"><span class="fwFloodWave wave-a"></span><span class="fwFloodWave wave-b"></span></div><div class="freedomWallComicBurst burst-a">WOW!</div><div class="freedomWallComicBurst burst-b">SFK!</div><div class="freedomWallVandalMark mark-a">#BEKIND</div><div class="freedomWallVandalMark mark-b">SFK</div><div class="freedomWallVandalMark mark-c">★</div><div class="freedomWallJungleEnvironment" aria-hidden="true"><i class="fwJungleTree tree-a"></i><i class="fwJungleTree tree-b"></i><i class="fwJungleTree tree-c"></i><i class="fwJungleVine vine-a"></i><i class="fwJungleVine vine-b"></i><i class="fwJungleVine vine-c"></i><i class="fwJungleFoliage foliage-a"></i><i class="fwJungleFoliage foliage-b"></i><i class="fwJungleFoliage foliage-c"></i><i class="fwJungleFoliage foliage-d"></i></div><div class="freedomWallUtilityPole" aria-hidden="true"><i class="fwUtilityPoleBody"></i><i class="fwUtilityCrossArm"></i><i class="fwUtilityInsulator ins-a"></i><i class="fwUtilityInsulator ins-b"></i><i class="fwUtilityInsulator ins-c"></i><i class="fwUtilityInsulator ins-d"></i><i class="fwUtilityWire wire-a"></i><i class="fwUtilityWire wire-b"></i><i class="fwUtilityWire wire-c"></i><i class="fwUtilityWire wire-d"></i><i class="fwUtilityJumper jumper-a"></i><i class="fwUtilityJumper jumper-b"></i><i class="fwUtilityNotice"></i></div></div><div class="freedomWallBrand"><strong>SFK #BeKind WALL</strong><span>Live wall</span></div><div class="freedomWallNotesStage"></div><section class="freedomWallPromptCard"><span class="freedomWallPromptEyebrow"></span><h2></h2><p></p></section></div></div>`;}
+    async function exactCreateFrame(cfg,orientation,mode){
+      const s=size(orientation),frame=document.createElement("iframe");
+      frame.setAttribute("aria-hidden","true");
+      frame.tabIndex=-1;
+      Object.assign(frame.style,{position:"fixed",left:"-20000px",top:"0",width:s.w+"px",height:s.h+"px",border:"0",opacity:"0",pointerEvents:"none",zIndex:"-1"});
+      document.body.appendChild(frame);
+      const base=new URL("./",location.href).href;
+      const html=`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=${s.w},initial-scale=1"><base href="${base}"><link id="fwExactStyle" rel="stylesheet" href="style.css?v=v522-nonblocking-theme-export"><style>html,body{margin:0!important;width:${s.w}px!important;height:${s.h}px!important;overflow:hidden!important;background:transparent!important}.homepageEffectLayer{position:relative!important;inset:auto!important;width:${s.w}px!important;height:${s.h}px!important;display:block!important;opacity:1!important;visibility:visible!important;transform:none!important}.homepageFreedomWallScene{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;display:block!important;opacity:1!important;visibility:visible!important}.freedomWallPromptClose,.freedomWallAddBtn,.freedomWallComposer,.freedomWallReactionMenu{display:none!important}.homepageEffectLayer.is-freedom-wall *{animation:none!important;transition:none!important}.fw-exact-export-readable .freedomWallBrand,.fw-exact-export-fit .freedomWallBrand{display:none!important}.fw-exact-export-readable .freedomWallPromptCard,.fw-exact-export-fit .freedomWallPromptCard{left:32px!important;right:32px!important;top:30px!important;translate:none!important;width:auto!important;max-width:none!important;min-height:0!important;padding:22px 34px!important;position:absolute!important}.fw-exact-export-readable .freedomWallNotesStage,.fw-exact-export-fit .freedomWallNotesStage{left:32px!important;right:32px!important;top:190px!important;bottom:28px!important;display:grid!important;align-content:start!important;overflow:hidden!important;gap:16px!important}.fw-exact-export-readable .freedomWallNotesStage{grid-template-columns:repeat(var(--fw-export-cols,3),minmax(0,1fr))!important;grid-auto-rows:minmax(160px,1fr)!important}.fw-exact-export-readable .freedomWallNote,.fw-exact-export-fit .freedomWallNote{position:relative!important;left:auto!important;top:auto!important;transform:none!important;translate:none!important;inline-size:auto!important;width:100%!important;max-inline-size:none!important;min-inline-size:0!important;max-width:none!important;min-width:0!important;height:100%!important;max-height:none!important;box-sizing:border-box!important}.fw-exact-export-readable .freedomWallNote p{font-size:clamp(12px,1.15vw,18px)!important}.fw-exact-export-readable .freedomWallNote small{font-size:11px!important}.fw-exact-export-fit .freedomWallNotesStage{grid-template-columns:repeat(var(--fw-export-cols,4),minmax(0,1fr))!important;grid-template-rows:repeat(var(--fw-export-rows,4),minmax(0,1fr))!important}.fw-exact-export-fit .freedomWallNote{padding:var(--fw-fit-pad,8px)!important}.fw-exact-export-fit .freedomWallNote p{font-size:var(--fw-fit-font,10px)!important;line-height:1.15!important}.fw-exact-export-fit .freedomWallNote small{font-size:var(--fw-fit-small,7px)!important;line-height:1.05!important}.fw-exact-export-fit .freedomWallNoteMedia{max-height:var(--fw-fit-media,64px)!important;min-height:0!important}.fw-exact-export-fit .freedomWallNoteMedia img{max-height:var(--fw-fit-media,64px)!important}.fw-exact-export-fit .freedomWallReactionSummary{transform:scale(.72);transform-origin:left bottom}.fw-exact-export-current .freedomWallPromptCard{pointer-events:none!important}.fw-exact-export-current .freedomWallNote{pointer-events:none!important}</style></head><body>${exactSceneMarkup(cfg.theme)}</body></html>`;
+
+      const loaded=new Promise((resolve)=>{
+        let done=false;
+        const finish=()=>{if(done)return;done=true;resolve();};
+        frame.addEventListener("load",finish,{once:true});
+        setTimeout(finish,3500);
+      });
+      frame.srcdoc=html;
+      await loaded;
+
+      const doc=frame.contentDocument;
+      if(!doc){frame.remove();throw new Error("Export preview document could not be created. Please try again.");}
+      let scene=null;
+      const domStarted=Date.now();
+      while(!scene && Date.now()-domStarted<3500){
+        scene=doc.querySelector(".homepageFreedomWallScene");
+        if(!scene) await new Promise(r=>setTimeout(r,50));
+      }
+      if(!scene){frame.remove();throw new Error("Freedom Wall export scene did not load. Hard refresh the Admin page, then try again.");}
+
+      scene.classList.add(mode==="readable"?"fw-exact-export-readable":mode==="fit"?"fw-exact-export-fit":"fw-exact-export-current");
+      const prompt=scene.querySelector(".freedomWallPromptCard");
+      if(!prompt){frame.remove();throw new Error("Freedom Wall prompt template did not load correctly.");}
+      const eyebrow=prompt.querySelector(".freedomWallPromptEyebrow"),title=prompt.querySelector("h2"),message=prompt.querySelector("p");
+      if(eyebrow) eyebrow.textContent=exactPromptEyebrow(cfg.theme);
+      if(title) title.textContent=cfg.title||"SFK #BeKind Wall";
+      if(message){message.textContent=cfg.message||"";message.hidden=!cfg.message;}
+
+      await new Promise(resolve=>{const started=Date.now();const tick=()=>{const styleReady=!!doc.getElementById("fwExactStyle")?.sheet;if(styleReady||Date.now()-started>7000)return resolve();setTimeout(tick,80);};tick();});
+      if(!doc.getElementById("fwExactStyle")?.sheet){frame.remove();throw new Error("The live Freedom Wall stylesheet did not load. Hard refresh Admin and try again.");}
+      return {frame,doc,scene,s};
+    }
+    function exactResolvedNoteBackground(theme, baseHex){
+      const t=String(theme||"").toLowerCase(),base=/^#[0-9a-f]{6}$/i.test(String(baseHex||""))?String(baseHex):"#fff1a5";
+      if(t==="polaroid") return {card:"#ffffff",caption:exactMix(base,"#ffffff",.18)};
+      if(t==="jungle") return {card:`linear-gradient(180deg,${exactMix(base,"#fff5cf",.82)},${exactMix(base,"#bd9d62",.82)})`};
+      if(t==="poste") return {card:`linear-gradient(180deg,${exactMix(base,"#fff7e5",.84)},${exactMix(base,"#c8b792",.82)})`};
+      if(t==="newspaper") return {card:`linear-gradient(180deg,${exactMix(base,"#fffef8",.42)},${exactMix(base,"#e9e4d5",.36)})`};
+      if(t==="coding-lab") return {card:`linear-gradient(180deg,${exactMix(base,"#ffffff",.88)},${exactMix(base,"#18232b",.80)})`};
+      if(t==="chalkboard") return {card:`linear-gradient(165deg,${exactMix(base,"#f7f0d8",.84)},${exactMix(base,"#4d654f",.78)})`};
+      return {card:`linear-gradient(175deg,${exactMix(base,"#ffffff",.94)},${exactMix(base,"#000000",.89)})`};
+    }
+    function exactColorComponent(value){
+      const raw=String(value||"").trim();
+      if(raw.endsWith("%")){const n=parseFloat(raw);return Number.isFinite(n)?Math.round(Math.max(0,Math.min(100,n))*2.55):0;}
+      const n=parseFloat(raw);return Number.isFinite(n)?Math.round(Math.max(0,Math.min(1,n))*255):0;
+    }
+    function exactAlphaComponent(value){
+      const raw=String(value||"").trim();
+      if(!raw)return 1;
+      if(raw.endsWith("%")){const n=parseFloat(raw);return Number.isFinite(n)?Math.max(0,Math.min(1,n/100)):1;}
+      const n=parseFloat(raw);return Number.isFinite(n)?Math.max(0,Math.min(1,n)):1;
+    }
+    function exactNormalizeColorFunctions(value){
+      let out=String(value||"");
+      if(!/color\(/i.test(out))return out;
+      out=out.replace(/color\(\s*(?:srgb|display-p3)\s+([+-]?(?:\d*\.)?\d+%?)\s+([+-]?(?:\d*\.)?\d+%?)\s+([+-]?(?:\d*\.)?\d+%?)(?:\s*\/\s*([+-]?(?:\d*\.)?\d+%?))?\s*\)/gi,(_,r,g,b,a)=>`rgba(${exactColorComponent(r)}, ${exactColorComponent(g)}, ${exactColorComponent(b)}, ${exactAlphaComponent(a)})`);
+      return out;
+    }
+    function exactNormalizeModernComputedColors(doc,root){
+      const win=doc?.defaultView;if(!win||!root)return;
+      const props=["color","background-color","background-image","border-top-color","border-right-color","border-bottom-color","border-left-color","outline-color","text-decoration-color","box-shadow","text-shadow","fill","stroke"];
+      const nodes=[root,...Array.from(root.querySelectorAll("*"))];
+      nodes.forEach(el=>{
+        let cs;try{cs=win.getComputedStyle(el);}catch(e){return;}
+        props.forEach(prop=>{
+          const value=String(cs.getPropertyValue(prop)||"");
+          if(!/color\(/i.test(value))return;
+          const safe=exactNormalizeColorFunctions(value);
+          if(safe!==value&&!/color\(/i.test(safe)){try{el.style.setProperty(prop,safe,"important");}catch(e){}}
+        });
+      });
+    }
+    async function exactAddNote(doc,scene,n,cfg,mode){
+      const stage=scene.querySelector(".freedomWallNotesStage"),card=doc.createElement("article"),sizeClass=exactSizeClass(n);card.className=`freedomWallNote is-${String(n.color||"yellow").toLowerCase()} is-size-${sizeClass}`;const info=await media(n);if(info)card.classList.add("has-media");if(n.youtube)card.classList.add("has-video");if(n.gif)card.classList.add("has-gif");if(n.font&&n.font!=="theme-default")card.classList.add(`is-font-${String(n.font).replace(/[^a-z0-9-]/gi,"")}`);const exactBaseNoteColor=COLOR_HEX[String(n.color||"").toLowerCase()]||"#fff1a5";card.style.setProperty("--fw-note-bg",exactBaseNoteColor);const exactBg=exactResolvedNoteBackground(cfg.theme,exactBaseNoteColor);card.style.setProperty("background",exactBg.card,"important");card.style.setProperty("background-image",exactBg.card.startsWith("linear-gradient")?exactBg.card:"none","important");card.style.setProperty("--fw-x",String(Math.max(1,Math.min(99,num(n.x,50)))));card.style.setProperty("--fw-y",String(Math.max(1,Math.min(99,num(n.y,50)))));card.style.setProperty("--fw-rotation",`${Math.max(-14,Math.min(14,num(n.rot,0)))}deg`);card.style.setProperty("--fw-skew","0deg");card.style.setProperty("--fw-scale",String(Math.max(.7,Math.min(1.25,num(n.scale,1)))));card.style.setProperty("--fw-pin-x",`${38+(Math.abs(String(n.id||"").split("").reduce((a,c)=>a+c.charCodeAt(0),0))%25)}%`);const tx=exactTextHex(n,cfg.theme);if(tx){card.classList.add("has-safe-text");if(n.textColor)card.classList.add("has-custom-text");card.style.setProperty("--fw-note-text-color",tx);card.style.setProperty("--fw-note-text-shadow","none");}
+      const pin=doc.createElement("i");pin.className="freedomWallNotePin";card.appendChild(pin);
+      if(info?.src){const mediaEl=doc.createElement("div");mediaEl.className="freedomWallNoteMedia";const img=doc.createElement("img");img.src=info.src;img.alt=info.kind==="youtube"?"YouTube video thumbnail":info.kind==="gif"?"Animated GIF":"Freedom Wall image";img.crossOrigin=info.src.startsWith("data:")?"":"anonymous";mediaEl.appendChild(img);if(info.kind==="youtube"){const play=doc.createElement("span");play.className="freedomWallYoutubePlayBadge";play.innerHTML='<span class="freedomWallYoutubePlayTriangle"></span>';mediaEl.appendChild(play);}card.appendChild(mediaEl);}
+      const p=doc.createElement("p");p.textContent=n.text||"";if(String(cfg.theme||"").toLowerCase()==="polaroid"){const polaroidBg=exactResolvedNoteBackground(cfg.theme,exactBaseNoteColor);p.style.setProperty("background",polaroidBg.caption||"#fffaf0","important");p.style.setProperty("border-left",`4px solid ${exactBaseNoteColor}`,"important");}card.appendChild(p);if(cfg.showNames&&n.author){const small=doc.createElement("small");small.textContent="— "+n.author;card.appendChild(small);}const rp=exactReactionParts(n);if(rp){const sum=doc.createElement("div");sum.className="freedomWallReactionSummary is-note";const span=doc.createElement("span");span.className="freedomWallReactionCount is-dominant";span.innerHTML=`${rp.emoji} <b>${rp.total}</b>`;sum.appendChild(span);card.appendChild(sum);card.classList.add("has-reactions");}stage.appendChild(card);return card;
+    }
+    async function exactWaitImages(doc,timeout=5000){const imgs=Array.from(doc.images||[]);if(!imgs.length)return;await Promise.race([Promise.all(imgs.map(img=>img.complete?Promise.resolve():new Promise(r=>{img.addEventListener("load",r,{once:true});img.addEventListener("error",r,{once:true});}))),new Promise(r=>setTimeout(r,timeout))]);}
+    function exactTimeout(promise,ms,message){return Promise.race([promise,new Promise((_,reject)=>setTimeout(()=>reject(new Error(message||"Export capture timed out.")),ms))]);}
+    function exactXmlEscape(value){return String(value||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+    function exactCollectCssText(doc){
+      let css="";
+      for(const sheet of Array.from(doc?.styleSheets||[])){
+        try{
+          for(const rule of Array.from(sheet.cssRules||[])) css+=rule.cssText+"\n";
+        }catch(e){console.warn("SFK export skipped inaccessible stylesheet",e);}
+      }
+      return css;
+    }
+    async function exactFetchText(url,timeout=3500){
+      const controller=typeof AbortController!=="undefined"?new AbortController():null;
+      const timer=controller?setTimeout(()=>controller.abort(),timeout):0;
+      try{
+        const response=await fetch(url,{mode:"cors",cache:"force-cache",signal:controller?.signal});
+        if(!response.ok)throw new Error("CSS request failed.");
+        return await response.text();
+      }finally{if(timer)clearTimeout(timer);}
+    }
+    async function exactInlineCssAssets(cssText,baseUrl,depth=0){
+      let css=String(cssText||"");
+      if(depth>3)return css.replace(/@import[^;]+;/gi,"").replace(/url\((['\"]?)(https?:|\/\/|blob:)[^)]*\)/gi,'url("")');
+      const imports=[];
+      const importRe=/@import\s+(?:url\()?\s*(['\"]?)([^'\")\s;]+)\1\s*\)?\s*;/gi;
+      let match;
+      while((match=importRe.exec(css)))imports.push({full:match[0],url:match[2]});
+      for(const item of imports){
+        let replacement="";
+        try{
+          const abs=new URL(item.url,baseUrl).toString();
+          const imported=await exactFetchText(abs,3200);
+          replacement=await exactInlineCssAssets(imported,abs,depth+1);
+        }catch(e){replacement="";}
+        css=css.replace(item.full,replacement);
+      }
+      const refs=[];
+      const urlRe=/url\(\s*(['\"]?)([^'\")]+)\1\s*\)/gi;
+      while((match=urlRe.exec(css))){
+        const raw=String(match[2]||"").trim();
+        if(!raw||raw.startsWith("data:")||raw.startsWith("#")||raw.startsWith("about:"))continue;
+        refs.push({full:match[0],raw});
+      }
+      const cache=new Map();
+      for(const ref of refs){
+        let data=cache.get(ref.raw);
+        if(data===undefined){
+          try{const abs=new URL(ref.raw,baseUrl).toString();data=await exactFetchDataUrl(abs,3200);}catch(e){data="";}
+          cache.set(ref.raw,data);
+        }
+        css=css.split(ref.full).join(data?`url("${data}")`:'url("")');
+      }
+      css=css.replace(/@import[^;]+;/gi,"");
+      css=css.replace(/url\((['\"]?)(https?:|\/\/|blob:)[^)]*\)/gi,'url("")');
+      return css;
+    }
+    async function exactSelfContainedCss(doc){
+      const raw=exactCollectCssText(doc);
+      try{return await exactInlineCssAssets(raw,doc?.baseURI||location.href,0);}catch(e){console.warn("SFK export CSS self-containment fallback",e);return raw.replace(/@import[^;]+;/gi,"").replace(/url\((['\"]?)(https?:|\/\/|blob:)[^)]*\)/gi,'url("")');}
+    }
+    function exactBlobToDataUrl(blob){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||""));reader.onerror=()=>reject(reader.error||new Error("Unable to inline image."));reader.readAsDataURL(blob);});}
+    async function exactFetchDataUrl(url,timeout=3500){
+      const safe=String(url||"").trim();if(!safe||safe.startsWith("data:"))return safe;
+      const controller=typeof AbortController!=="undefined"?new AbortController():null;
+      const timer=controller?setTimeout(()=>controller.abort(),timeout):0;
+      try{
+        const response=await fetch(safe,{mode:"cors",cache:"force-cache",signal:controller?.signal});
+        if(!response.ok)throw new Error("Image request failed.");
+        return await exactBlobToDataUrl(await response.blob());
+      }finally{if(timer)clearTimeout(timer);}
+    }
+    async function exactInlineImagesForSvg(root){
+      const images=Array.from(root?.querySelectorAll?.("img")||[]);
+      const cache=new Map();
+      for(const img of images){
+        img.removeAttribute("srcset");
+        img.removeAttribute("sizes");
+        const src=String(img.currentSrc||img.src||"").trim();
+        if(!src||src.startsWith("data:"))continue;
+        try{
+          let data=cache.get(src);
+          if(!data){data=await exactFetchDataUrl(src,3200);cache.set(src,data);}
+          if(data){img.src=data;img.removeAttribute("crossorigin");}
+          else throw new Error("No safe image data.");
+        }catch(e){
+          img.removeAttribute("src");
+          img.removeAttribute("crossorigin");
+          img.style.background="rgba(255,255,255,.18)";
+        }
+      }
+    }
+    function exactStripExternalDomRefs(root){
+      if(!root)return;
+      root.querySelectorAll?.("[srcset]").forEach(el=>el.removeAttribute("srcset"));
+      root.querySelectorAll?.("[poster]").forEach(el=>el.removeAttribute("poster"));
+      root.querySelectorAll?.("[href]").forEach(el=>{
+        const value=String(el.getAttribute("href")||"").trim();
+        if(/^(https?:|\/\/|blob:)/i.test(value))el.removeAttribute("href");
+      });
+      root.querySelectorAll?.("[src]").forEach(el=>{
+        const value=String(el.getAttribute("src")||"").trim();
+        if(value&&!value.startsWith("data:")&&/^(https?:|\/\/|blob:)/i.test(value))el.removeAttribute("src");
+      });
+      root.querySelectorAll?.("[style]").forEach(el=>{
+        const raw=String(el.getAttribute("style")||"");
+        if(/url\(\s*['"]?(?:https?:|\/\/|blob:)/i.test(raw)){
+          el.setAttribute("style",raw.replace(/url\(\s*(['"]?)(?:https?:|\/\/|blob:)[^)]*\)/gi,'none'));
+        }
+      });
+    }
+    function exactStripInteractiveState(root){
+      root?.querySelectorAll?.("button,input,select,textarea,iframe,video,audio").forEach(el=>{
+        if(el.tagName==="IFRAME"||el.tagName==="VIDEO"||el.tagName==="AUDIO")el.remove();
+        else{el.setAttribute("tabindex","-1");el.style.pointerEvents="none";}
+      });
+      root?.querySelectorAll?.("[contenteditable]").forEach(el=>el.removeAttribute("contenteditable"));
+    }
+    async function exactSvgForeignObjectCanvas(doc,scene){
+      const root=scene.closest(".homepageEffectLayer")||scene;
+      const width=Math.max(1,Math.round(scene.clientWidth||root.clientWidth||1800));
+      const height=Math.max(1,Math.round(scene.clientHeight||root.clientHeight||1080));
+      const clone=root.cloneNode(true);
+      exactStripInteractiveState(clone);
+      await exactInlineImagesForSvg(clone);
+      exactStripExternalDomRefs(clone);
+      const css=await exactSelfContainedCss(doc);
+      const serializer=new XMLSerializer();
+      let html=serializer.serializeToString(clone);
+      if(!/xmlns=/.test(html))html=html.replace(/^<([A-Za-z0-9:-]+)/,'<$1 xmlns="http://www.w3.org/1999/xhtml"');
+      html=html.replace(/\s(?:src|href|poster|srcset)=(['"])(?:(?:https?:|\/\/|blob:)[^'"]*)/gi,"");
+      const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><foreignObject x="0" y="0" width="100%" height="100%"><div xmlns="http://www.w3.org/1999/xhtml" style="width:${width}px;height:${height}px;margin:0;padding:0;overflow:hidden;"><style>${exactXmlEscape(css)}</style>${html}</div></foreignObject></svg>`;
+      const svgBlob=new Blob([svg],{type:"image/svg+xml;charset=utf-8"});
+      const objectUrl=URL.createObjectURL(svgBlob);
+      try{
+        const image=await exactTimeout(new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error("Browser could not rasterize the live Freedom Wall theme."));im.src=objectUrl;}),9000,"Theme rasterization timed out.");
+        const canvas=document.createElement("canvas");canvas.width=width;canvas.height=height;
+        const ctx=canvas.getContext("2d",{alpha:true});if(!ctx)throw new Error("PNG canvas is unavailable in this browser.");
+        ctx.drawImage(image,0,0,width,height);
+        try{ctx.getImageData(0,0,1,1);}catch(e){throw new Error("Exact theme contained a protected external resource. Using the safe themed fallback instead.");}
+        return canvas;
+      }finally{URL.revokeObjectURL(objectUrl);}
+    }
+    async function exactCaptureScene(frame,scene){
+      const doc=frame.contentDocument,win=frame.contentWindow;
+      await exactWaitImages(doc,3600);
+      try{if(doc?.fonts?.ready)await exactTimeout(doc.fonts.ready,1800,"Font loading timed out.");}catch(e){}
+      await new Promise(r=>setTimeout(r,60));
+      if(win?.requestAnimationFrame)await new Promise(r=>win.requestAnimationFrame(()=>win.requestAnimationFrame(r)));
+      return await exactSvgForeignObjectCanvas(doc,scene);
+    }
+    async function exactCurrent(notes,cfg,orientation){let env=null;try{env=await exactCreateFrame(cfg,orientation,"current");for(const n of notes)await exactAddNote(env.doc,env.scene,n,cfg,"current");return await exactCaptureScene(env.frame,env.scene);}catch(e){console.warn("Exact current-view export fallback:",e);status("Exact capture could not finish; saving the safe themed version instead…");return await current(notes,cfg,orientation);}finally{env?.frame?.remove?.();}}
+    function exactReadableChunkSize(orientation){return orientation==="portrait"?8:9;}
+    async function exactReadable(notes,cfg,orientation){const pages=[],chunkSize=exactReadableChunkSize(orientation);try{for(let start=0;start<Math.max(1,notes.length);start+=chunkSize){const subset=notes.slice(start,start+chunkSize);let env=null;try{env=await exactCreateFrame(cfg,orientation,"readable");const cols=orientation==="portrait"?2:3;env.scene.style.setProperty("--fw-export-cols",String(cols));const prompt=env.scene.querySelector(".freedomWallPromptCard");if(prompt)prompt.dataset.page=`${Math.floor(start/chunkSize)+1}`;for(const n of subset)await exactAddNote(env.doc,env.scene,n,cfg,"readable");pages.push(await exactCaptureScene(env.frame,env.scene));}finally{env?.frame?.remove?.();}if(!notes.length)break;}return pages;}catch(e){console.warn("Exact readable export fallback:",e);status("Exact capture could not finish; saving the safe themed readable version instead…");return await readable(notes,cfg,orientation);}}
+    async function exactFit(notes,cfg,orientation){let env=null;try{env=await exactCreateFrame(cfg,orientation,"fit");const count=Math.max(1,notes.length),ratio=orientation==="portrait"?.72:1.55,cols=Math.max(1,Math.ceil(Math.sqrt(count*ratio))),rows=Math.max(1,Math.ceil(count/cols)),font=Math.max(4,Math.min(14,Math.floor((orientation==="portrait"?760:840)/Math.max(cols*7,rows*9)))),small=Math.max(3,Math.floor(font*.72)),mediaH=Math.max(28,Math.min(90,Math.floor((orientation==="portrait"?1050:650)/rows*.34)));env.scene.style.setProperty("--fw-export-cols",String(cols));env.scene.style.setProperty("--fw-export-rows",String(rows));env.scene.style.setProperty("--fw-fit-font",font+"px");env.scene.style.setProperty("--fw-fit-small",small+"px");env.scene.style.setProperty("--fw-fit-pad",Math.max(3,Math.min(10,Math.floor(font*.72)))+"px");env.scene.style.setProperty("--fw-fit-media",mediaH+"px");for(const n of notes)await exactAddNote(env.doc,env.scene,n,cfg,"fit");return await exactCaptureScene(env.frame,env.scene);}catch(e){console.warn("Exact one-page export fallback:",e);status("Exact capture could not finish; saving the safe themed one-page version instead…");return await fit(notes,cfg,orientation);}finally{env?.frame?.remove?.();}}
+    function blob(canvas){return new Promise(res=>canvas.toBlob(res,"image/png"));}
+    function download(b,name){const u=URL.createObjectURL(b),a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1500);}
+    async function run(kind){if(busy)return;busy=true;document.querySelectorAll("[data-fw-admin-export]").forEach(b=>b.disabled=true);try{const [mode,orientation]=kind.split("-");status("Loading current Freedom Wall notes…");const id=await activeId();const raw=await loadNotes(id);const notes=raw.map(normalize).filter(n=>n.text||n.youtube||n.gif||n.mediaRef).sort((a,b)=>a.created-b.created);const cfg=currentAdminConfig();if(!notes.length&&!cfg.title&&!cfg.message)throw new Error("Nothing to export yet.");const base=`sfk-bekind-wall-${slug(cfg.title)}-${mode}-${orientation}`;if(mode==="current"){status("Rendering the REAL Freedom Wall theme with the browser…");const c=await exactCurrent(notes,cfg,orientation);download(await blob(c),base+".png");status("Exact-theme current-view PNG saved.");}else if(mode==="readable"){status("Rendering readable pages with the REAL wall theme…");const cs=await exactReadable(notes,cfg,orientation);for(let i=0;i<cs.length;i++){download(await blob(cs[i]),base+(cs.length>1?`-page-${i+1}`:"")+".png");if(cs.length>1)await new Promise(r=>setTimeout(r,220));}status(cs.length>1?`Saved ${cs.length} exact-theme readable PNG pages.`:"Exact-theme readable PNG saved.");}else if(mode==="fit"){status("Rendering one-page fit with the REAL wall theme…");const c=await exactFit(notes,cfg,orientation);download(await blob(c),base+".png");status("Exact-theme one-page PNG saved.");}else{throw new Error("Unknown export type.");}}catch(e){console.error("Admin Freedom Wall exact export failed",e);status(e?.message||"Exact export failed.",true);}finally{busy=false;document.querySelectorAll("[data-fw-admin-export]").forEach(b=>b.disabled=false);}}
+
+    document.querySelectorAll("[data-fw-admin-export]").forEach(btn=>btn.addEventListener("click",()=>run(btn.dataset.fwAdminExport)));
+  })();
+  </script>
+<script>
+(() => {
+  const button = document.getElementById("freedomWallOpenExactExport");
+  button?.addEventListener("click", () => {
+    const url = new URL("./freedom-wall-exact-export.html", window.location.href);
+    window.open(url.href, "_blank", "noopener");
+  });
+})();
+</script>
+
+<script>
+(() => {
+  const buttons = Array.from(document.querySelectorAll('[data-fw-snap-export]'));
+  const statusEl = document.getElementById('freedomWallExportAdminStatus');
+  if (!buttons.length || !statusEl) return;
+
+  const SNAPDOM_SOURCES = [
+    'https://cdn.jsdelivr.net/npm/@zumer/snapdom@2.24.1/dist/snapdom.mjs',
+    'https://unpkg.com/@zumer/snapdom@2.24.1/dist/snapdom.mjs'
+  ];
+  const EXPORT_SIZES = {
+    landscape: { width: 1800, height: 1080, scale: 2 },
+    portrait: { width: 1200, height: 1800, scale: 2 }
+  };
+  // v531: Current View is rendered at realistic CSS viewport sizes, then
+  // captured at 2x. Landscape keeps desktop rules; portrait crosses the
+  // <=700px breakpoint so it behaves much closer to the real phone wall.
+  const CURRENT_VIEWPORTS = {
+    landscape: { width: 900, height: 540, scale: 2 },
+    portrait: { width: 600, height: 900, scale: 2 }
+  };
+  const COLORS = {
+    yellow:'#fff1a5', cream:'#fff6d9', white:'#fffdf5', peach:'#ffd6c9', coral:'#ffb9a8',
+    pink:'#ffc7df', rose:'#f6b4c9', lavender:'#e6d7ff', violet:'#d6c3ff', sky:'#c7eaff',
+    blue:'#acd3ff', mint:'#c9f2d9', sage:'#d5e3c1', green:'#bfe3b4', lime:'#e2f3a7',
+    orange:'#ffd0a1', tan:'#dfc69c', gray:'#d9dce1', navy:'#26334f', black:'#202124'
+  };
+  const TEXT_COLORS = {
+    black:'#171717', charcoal:'#34383d', white:'#ffffff', navy:'#183153', blue:'#165fbd',
+    red:'#c62828', maroon:'#7f1d2d', green:'#237a3b', brown:'#70452f', purple:'#6d3dad',
+    pink:'#b83280', orange:'#b45309', gold:'#8a6400'
+  };
+  const REACTIONS = { heart:'❤️', haha:'😂', wow:'😮', sad:'😢', like:'👍' };
+  const REACTION_TYPES = Object.keys(REACTIONS);
+  const LEGACY_ID = 'legacy';
+  let busy = false;
+
+  function setStatus(message = '', type = '') {
+    statusEl.textContent = String(message || '');
+    statusEl.classList.toggle('is-error', type === 'error');
+    statusEl.classList.toggle('is-success', type === 'success');
+  }
+  function setBusy(value) {
+    busy = Boolean(value);
+    buttons.forEach(button => { button.disabled = busy; });
+  }
+  function delay(ms = 0) { return new Promise(resolve => setTimeout(resolve, ms)); }
+  function withTimeout(promise, ms, message) {
+    let timer;
+    return Promise.race([
+      promise,
+      new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(message || 'Operation timed out.')), ms); })
+    ]).finally(() => clearTimeout(timer));
+  }
+  function db() {
+    try {
+      if (window.SFK_CLASSBOARD_FIREBASE_DB) return window.SFK_CLASSBOARD_FIREBASE_DB;
+      if (window.firebase?.apps?.length) return window.firebase.firestore();
+    } catch (error) {}
+    return null;
+  }
+  function safeId(value) {
+    return String(value || LEGACY_ID).trim().replace(/[^A-Za-z0-9_-]/g, '').slice(0, 80) || LEGACY_ID;
+  }
+  function hash(value) {
+    let out = 2166136261;
+    for (const ch of String(value || 'freedom-wall')) {
+      out ^= ch.charCodeAt(0);
+      out = Math.imul(out, 16777619);
+    }
+    return out >>> 0;
+  }
+  function safeNumber(value, fallback, min, max) {
+    const n = Number(value);
+    return Number.isFinite(n) ? Math.max(min, Math.min(max, n)) : fallback;
+  }
+  function fallbackPlacement(note, index) {
+    const seed = hash(note.id || `${note.text || 'note'}-${index}`);
+    const xFallback = 6 + ((seed % 8800) / 100);
+    const yFallback = 12 + (((seed >>> 7) % 7800) / 100);
+    const rotations = [-11.5,-8,-5.5,-3,-1.2,0,1.5,3.5,6,8.5,11.5];
+    return {
+      x: safeNumber(note.x, xFallback, 4, 96),
+      y: safeNumber(note.y, yFallback, 10, 92),
+      rotation: safeNumber(note.rotation, rotations[(seed >>> 13) % rotations.length], -13, 13),
+      scale: safeNumber(note.scale, .88 + (((seed >>> 19) % 230) / 1000), .84, 1.14),
+      skew: [-1.25,-.7,-.25,0,.35,.8,1.15][(seed + index * 3) % 7]
+    };
+  }
+  function sizeClass(note) {
+    if (note.mediaRef || note.youtubeUrl || note.gifUrl) return 'medium';
+    const text = String(note.text || '').trim();
+    const score = text.length + Math.max(0, text.split(/\n/).length - 1) * 18;
+    if (score <= 26) return 'compact';
+    if (score <= 72) return 'small';
+    if (score <= 145) return 'medium';
+    return 'large';
+  }
+  function hexRgb(hex) {
+    const s = String(hex || '').replace('#','');
+    if (!/^[0-9a-f]{6}$/i.test(s)) return {r:255,g:255,b:255};
+    return {r:parseInt(s.slice(0,2),16),g:parseInt(s.slice(2,4),16),b:parseInt(s.slice(4,6),16)};
+  }
+  function luminance(hex) {
+    const {r,g,b}=hexRgb(hex);
+    const cv=v=>{const c=v/255;return c<=.03928?c/12.92:Math.pow((c+.055)/1.055,2.4)};
+    return .2126*cv(r)+.7152*cv(g)+.0722*cv(b);
+  }
+  function contrast(a,b) {
+    const x=luminance(a),y=luminance(b),hi=Math.max(x,y),lo=Math.min(x,y);
+    return (hi+.05)/(lo+.05);
+  }
+  function mix(aHex,bHex,weight=.5) {
+    const a=hexRgb(aHex),b=hexRgb(bHex),w=Math.max(0,Math.min(1,Number(weight)||0));
+    const h=v=>Math.round(v).toString(16).padStart(2,'0');
+    return `#${h(a.r*w+b.r*(1-w))}${h(a.g*w+b.g*(1-w))}${h(a.b*w+b.b*(1-w))}`;
+  }
+  function themeDefaultText(theme) {
+    const t=String(theme||'').toLowerCase();
+    if (['night','rainy','flood','galaxy','retro-arcade','coding-lab','neon-music','spiderman','comic-noir'].includes(t)) return 'white';
+    if (['jungle','eco','chalkboard'].includes(t)) return 'green';
+    if (['cafe','library','brick-alley','detective','poste'].includes(t)) return 'brown';
+    if (['filipino','comic-strip'].includes(t)) return 'navy';
+    return 'charcoal';
+  }
+  function contrastBackgrounds(color, theme) {
+    const base=COLORS[color]||COLORS.yellow,t=String(theme||'').toLowerCase();
+    if(t==='polaroid')return [mix(base,'#ffffff',.18),'#fffdf9'];
+    if(t==='newspaper')return [mix(base,'#fffef8',.42),mix(base,'#e9e4d5',.36)];
+    if(t==='jungle')return [mix(base,'#fff5cf',.82),mix(base,'#bd9d62',.82)];
+    if(t==='poste')return [mix(base,'#fff7e5',.84),mix(base,'#c8b792',.82)];
+    if(t==='coding-lab')return [mix(base,'#ffffff',.88),mix(base,'#18232b',.80)];
+    if(t==='chalkboard')return [mix(base,'#f7f0d8',.84),mix(base,'#4d654f',.78)];
+    return [mix(base,'#ffffff',.94),mix(base,'#000000',.89)];
+  }
+  function effectiveTextColor(note, cfg) {
+    const requested = cfg.allowTextColor && TEXT_COLORS[note.textColor] ? note.textColor : themeDefaultText(cfg.theme);
+    const bgs=contrastBackgrounds(note.color,cfg.theme),requestedHex=TEXT_COLORS[requested]||TEXT_COLORS.charcoal;
+    if(Math.min(...bgs.map(bg=>contrast(requestedHex,bg)))>=4.5)return requested;
+    let best='black',bestRatio=-1;
+    for(const candidate of ['black','charcoal','navy','brown','white']){
+      const ratio=Math.min(...bgs.map(bg=>contrast(TEXT_COLORS[candidate],bg)));
+      if(ratio>bestRatio){best=candidate;bestRatio=ratio;}
+    }
+    return best;
+  }
+  function reactionStats(note) {
+    const counts=Object.fromEntries(REACTION_TYPES.map(type=>[type,0]));
+    const map=note.reactions&&typeof note.reactions==='object'?note.reactions:{};
+    Object.values(map).forEach(type=>{if(type in counts)counts[type]+=1;});
+    const total=Object.values(counts).reduce((a,b)=>a+b,0);
+    const max=Math.max(0,...Object.values(counts));
+    const tied=max?REACTION_TYPES.filter(type=>counts[type]===max):[];
+    const last=REACTION_TYPES.includes(note.reactionLastType)?note.reactionLastType:'';
+    return { total, dominant:tied.includes(last)?last:(tied[0]||'') };
+  }
+  function configFromAdmin() {
+    return {
+      title:String(document.getElementById('homepageEffectTitle')?.value || 'SFK #BeKind Wall').trim() || 'SFK #BeKind Wall',
+      message:String(document.getElementById('homepageEffectMessage')?.value || '').trim(),
+      theme:String(document.getElementById('freedomWallTheme')?.value || 'sticky-notes').trim().toLowerCase(),
+      showNames:document.getElementById('freedomWallShowNames')?.checked !== false,
+      allowTextColor:document.getElementById('freedomWallAllowTextColor')?.checked !== false,
+      allowFont:document.getElementById('freedomWallAllowFont')?.checked !== false
+    };
+  }
+  async function activeWallId() {
+    const database=db();
+    if(!database)throw new Error('Firebase is not ready in Admin yet. Refresh Admin, then try again.');
+    try{
+      const snap=await withTimeout(database.collection('settings').doc('FreedomWallActiveWallID').get(),8000,'Active wall took too long to load.');
+      return safeId(snap.exists?(snap.data()?.Value||LEGACY_ID):LEGACY_ID);
+    }catch(error){return LEGACY_ID;}
+  }
+  async function loadNotes(id) {
+    const database=db();
+    if(!database)throw new Error('Firebase is not ready in Admin yet.');
+    if(id===LEGACY_ID){
+      const snap=await withTimeout(database.collection('freedomWallNotes').limit(1200).get(),12000,'Freedom Wall notes took too long to load.');
+      return snap.docs.map(doc=>({id:doc.id,...(doc.data()||{})})).filter(item=>safeId(item.WallID||LEGACY_ID)===LEGACY_ID);
+    }
+    const snap=await withTimeout(database.collection('freedomWallNotes').where('WallID','==',id).limit(1200).get(),12000,'Freedom Wall notes took too long to load.');
+    return snap.docs.map(doc=>({id:doc.id,...(doc.data()||{})}));
+  }
+  function normalizeNote(raw,index) {
+    const id=String(raw.id||raw.ID||`note-${index}`);
+    const note={
+      id,
+      text:String(raw.Text||raw.text||'').trim().slice(0,240),
+      author:String(raw.Name||raw.Author||raw.name||'').trim().slice(0,42),
+      color:String(raw.Color||raw.color||'yellow').trim().toLowerCase(),
+      textColor:String(raw.TextColor||raw.textColor||'').trim().toLowerCase(),
+      font:String(raw.FontStyle||raw.fontStyle||'theme-default').trim().toLowerCase(),
+      created:Number(raw.CreatedAtMs||raw.createdAtMs||0)||0,
+      x:raw.X??raw.x,
+      y:raw.Y??raw.y,
+      rotation:raw.Rotation??raw.rotation,
+      scale:raw.Scale??raw.scale,
+      mediaRef:String(raw.MediaRef||raw.mediaRef||'').trim(),
+      mediaType:String(raw.MediaType||raw.mediaType||'').trim().toLowerCase(),
+      youtubeUrl:String(raw.YouTubeUrl||raw.youtubeUrl||'').trim(),
+      youtubeTitle:String(raw.YouTubeTitle||raw.youtubeTitle||'').trim(),
+      youtubeChannel:String(raw.YouTubeChannel||raw.youtubeChannel||'').trim(),
+      youtubeThumb:String(raw.YouTubeThumb||raw.youtubeThumb||'').trim(),
+      gifUrl:String(raw.GifUrl||raw.gifUrl||'').trim(),
+      gifPreview:String(raw.GifPreviewUrl||raw.gifPreviewUrl||'').trim(),
+      gifTitle:String(raw.GifTitle||raw.gifTitle||'').trim(),
+      reactions:raw.Reactions||raw.reactions||{},
+      reactionLastType:String(raw.ReactionLastType||raw.reactionLastType||'').trim().toLowerCase()
+    };
+    if(!COLORS[note.color])note.color=['yellow','pink','blue','mint','orange','violet','peach','white'][hash(id)%8];
+    Object.assign(note,fallbackPlacement(note,index));
+    return note;
+  }
+  function youtubeId(url) {
+    const s=String(url||'');
+    let m=s.match(/[?&]v=([A-Za-z0-9_-]{6,})/);if(m)return m[1];
+    m=s.match(/youtu\.be\/([A-Za-z0-9_-]{6,})/);if(m)return m[1];
+    m=s.match(/youtube\.com\/(?:embed|shorts)\/([A-Za-z0-9_-]{6,})/);return m?m[1]:'';
+  }
+  async function mediaInfo(note) {
+    if(note.youtubeUrl){
+      const id=youtubeId(note.youtubeUrl);
+      return {kind:'youtube',src:note.youtubeThumb||(id?`https://i.ytimg.com/vi/${id}/hqdefault.jpg`:''),title:note.youtubeTitle};
+    }
+    if(note.gifUrl)return {kind:'gif',src:note.gifPreview||note.gifUrl,title:note.gifTitle};
+    if(note.mediaRef){
+      const database=db();
+      try{
+        const snap=await withTimeout(database.collection('freedomWallMedia').doc(note.id).get(),8000,'Photo preview timed out.');
+        if(snap.exists){
+          const data=snap.data()||{},mime=String(data.MimeType||note.mediaType||'image/jpeg'),base64=String(data.Data||'');
+          if(base64)return {kind:mime==='image/gif'?'gif':'image',src:`data:${mime};base64,${base64}`,title:''};
+        }
+      }catch(error){}
+    }
+    return null;
+  }
+  function promptReactionDocId(sessionId) {
+    const signature=`session:${safeId(sessionId)}`;
+    const a=(hash(signature)>>>0).toString(36);
+    const b=(hash(signature.split('').reverse().join(''))>>>0).toString(36);
+    return `prompt_${a}_${b}`;
+  }
+  async function loadPromptReaction(sessionId) {
+    const database=db();
+    if(!database)return null;
+    try{
+      const snap=await withTimeout(database.collection('freedomWallPromptReactions').doc(promptReactionDocId(sessionId)).get(),5000,'Prompt reaction timeout.');
+      if(!snap.exists)return null;
+      const data=snap.data()||{};
+      return reactionStats({reactions:data.Reactions||{},reactionLastType:String(data.ReactionLastType||'').toLowerCase()});
+    }catch(error){return null;}
+  }
+  function appRoot() {
+    const url=new URL(window.location.href);
+    url.search='';url.hash='';
+    let path=url.pathname;
+    if(/\/admin\/index\.html$/i.test(path))path=path.replace(/\/admin\/index\.html$/i,'/');
+    else if(/\/admin\/$/i.test(path))path=path.replace(/\/admin\/$/i,'/');
+    else path=path.replace(/\/admin\.html$/i,'/');
+    if(!path.endsWith('/'))path=path.slice(0,path.lastIndexOf('/')+1);
+    url.pathname=path;
+    return url;
+  }
+  function sceneMarkup() {
+    return `<div id="homepageEffectLayer" class="homepageEffectLayer is-freedom-wall is-freedom-wall-exact-export"><div class="homepageThemeScene homepageFreedomWallScene"><div class="freedomWallBg" aria-hidden="true"><div class="freedomWallSun"></div><div class="freedomWallMoon"></div><div class="freedomWallCloud fw-cloud-a"></div><div class="freedomWallCloud fw-cloud-b"></div><div class="freedomWallCloud fw-cloud-c"></div><div class="freedomWallRain"></div><div class="freedomWallFlood"><span class="fwFloodWave wave-a"></span><span class="fwFloodWave wave-b"></span></div><div class="freedomWallComicBurst burst-a">WOW!</div><div class="freedomWallComicBurst burst-b">SFK!</div><div class="freedomWallVandalMark mark-a">#BEKIND</div><div class="freedomWallVandalMark mark-b">SFK</div><div class="freedomWallVandalMark mark-c">★</div><div class="freedomWallJungleEnvironment" aria-hidden="true"><i class="fwJungleTree tree-a"></i><i class="fwJungleTree tree-b"></i><i class="fwJungleTree tree-c"></i><i class="fwJungleVine vine-a"></i><i class="fwJungleVine vine-b"></i><i class="fwJungleVine vine-c"></i><i class="fwJungleFoliage foliage-a"></i><i class="fwJungleFoliage foliage-b"></i><i class="fwJungleFoliage foliage-c"></i><i class="fwJungleFoliage foliage-d"></i></div><div class="freedomWallUtilityPole" aria-hidden="true"><i class="fwUtilityPoleBody"></i><i class="fwUtilityCrossArm"></i><i class="fwUtilityInsulator ins-a"></i><i class="fwUtilityInsulator ins-b"></i><i class="fwUtilityInsulator ins-c"></i><i class="fwUtilityInsulator ins-d"></i><i class="fwUtilityWire wire-a"></i><i class="fwUtilityWire wire-b"></i><i class="fwUtilityWire wire-c"></i><i class="fwUtilityWire wire-d"></i><i class="fwUtilityJumper jumper-a"></i><i class="fwUtilityJumper jumper-b"></i><i class="fwUtilityNotice"></i></div></div><div class="freedomWallBrand"><strong>SFK #BeKind WALL</strong><span id="freedomWallCount">Live wall</span></div><div id="freedomWallNotesStage" class="freedomWallNotesStage"></div><div id="freedomWallDragOverlay" class="freedomWallDragOverlay"></div><section id="freedomWallPromptCard" class="freedomWallPromptCard"><button class="freedomWallPromptClose" type="button">×</button><span class="freedomWallPromptEyebrow">TODAY'S WALL PROMPT</span><h2 id="freedomWallPromptTitle"></h2><p id="freedomWallPromptMessage"></p><div id="freedomWallPromptReactionSummary" class="freedomWallReactionSummary is-prompt" hidden></div></section></div></div>`;
+  }
+  async function settleExactExportFrame(win) {
+    await delay(24);
+    if(win?.requestAnimationFrame){
+      await new Promise(resolve=>win.requestAnimationFrame(()=>win.requestAnimationFrame(resolve)));
+    }
+  }
+  async function waitExactExportMedia(doc) {
+    const images=Array.from(doc?.images||[]);
+    if(!images.length)return;
+    const waits=images.map(img=>{
+      if(img.complete)return Promise.resolve();
+      return new Promise(resolve=>{
+        let done=false;
+        const finish=()=>{if(done)return;done=true;resolve();};
+        img.addEventListener('load',finish,{once:true});
+        img.addEventListener('error',finish,{once:true});
+        setTimeout(finish,2200);
+      });
+    });
+    await Promise.all(waits);
+  }
+  function positionExactStageBelowPrompt(env) {
+    const prompt=env.scene.querySelector('#freedomWallPromptCard');
+    if(!prompt||prompt.hidden)return;
+    const sceneRect=env.scene.getBoundingClientRect(),promptRect=prompt.getBoundingClientRect();
+    const top=Math.max(150,Math.ceil(promptRect.bottom-sceneRect.top+18));
+    env.stage.style.setProperty('top',`${top}px`,'important');
+    env.stage.style.setProperty('bottom','3%','important');
+  }
+  async function fitExactExportStage(env,orientation,noteCount) {
+    const stage=env.stage,win=env.win;
+    stage.style.setProperty('transform','none','important');
+    stage.style.removeProperty('width');
+    stage.style.setProperty('right','3%','important');
+    stage.style.setProperty('overflow','visible','important');
+    const portrait=orientation==='portrait';
+    let cols=Number(stage.style.getPropertyValue('--fw-exact-columns'))||(portrait?3:4);
+    const maxCols=Math.max(cols,Math.min(Math.max(1,noteCount),portrait?12:18));
+    for(let candidate=cols;candidate<=maxCols;candidate+=1){
+      stage.style.setProperty('--fw-exact-columns',String(candidate));
+      await settleExactExportFrame(win);
+      if(stage.scrollHeight<=stage.clientHeight+2){cols=candidate;return;}
+      cols=candidate;
+    }
+    const baseWidth=Math.max(1,stage.clientWidth),availableHeight=Math.max(1,stage.clientHeight);
+    let low=.01,high=1;
+    const applyScale=async scale=>{
+      const safe=Math.max(.02,Math.min(1,scale));
+      stage.style.setProperty('right','auto','important');
+      stage.style.setProperty('width',`${baseWidth/safe}px`,'important');
+      stage.style.setProperty('transform-origin','top left','important');
+      stage.style.setProperty('transform',`scale(${safe})`,'important');
+      await settleExactExportFrame(win);
+      return stage.scrollHeight*safe;
+    };
+    if(await applyScale(1)<=availableHeight+2)return;
+    for(let i=0;i<11;i+=1){
+      const mid=(low+high)/2;
+      const visualHeight=await applyScale(mid);
+      if(visualHeight<=availableHeight+2)low=mid;else high=mid;
+    }
+    await applyScale(Math.max(.02,low*.985));
+  }
+
+  function smartCurrentOverlapArea(a,b) {
+    const w=Math.max(0,Math.min(a.right,b.right)-Math.max(a.left,b.left));
+    const h=Math.max(0,Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top));
+    return w*h;
+  }
+  function smartCurrentExpandRect(rect,pad=0) {
+    return {left:rect.left-pad,top:rect.top-pad,right:rect.right+pad,bottom:rect.bottom+pad,width:rect.width+pad*2,height:rect.height+pad*2};
+  }
+  function smartCurrentRotatedRect(stageRect,cx,cy,w,h,rotation,scale) {
+    const rad=Math.abs(Number(rotation)||0)*Math.PI/180;
+    const sw=w*scale,sh=h*scale;
+    const rw=Math.abs(sw*Math.cos(rad))+Math.abs(sh*Math.sin(rad));
+    const rh=Math.abs(sw*Math.sin(rad))+Math.abs(sh*Math.cos(rad));
+    const left=stageRect.left+cx-rw/2,top=stageRect.top+cy-rh/2;
+    return {left,top,right:left+rw,bottom:top+rh,width:rw,height:rh};
+  }
+  function smartCurrentReservedRects(env) {
+    const out=[];
+    const add=(el,pad)=>{
+      if(!el||el.hidden)return;
+      const r=el.getBoundingClientRect();
+      if(!r.width||!r.height)return;
+      out.push(smartCurrentExpandRect(r,pad));
+    };
+    add(env.scene.querySelector('#freedomWallPromptCard'),env.size.width<=700?12:14);
+    add(env.scene.querySelector('.freedomWallBrand'),env.size.width<=700?8:10);
+    return out;
+  }
+  function smartCurrentCandidatePoints(stageRect,preferredX,preferredY,seed,portrait,minX,maxX,minY,maxY) {
+    const points=[{x:preferredX,y:preferredY}];
+    // Nearby rings first: preserve the live-wall feel whenever the saved area is usable.
+    const ringStep=portrait?30:34;
+    for(let ring=1;ring<=6;ring++){
+      const radius=ring*ringStep;
+      const samples=ring*8;
+      for(let i=0;i<samples;i++){
+        const angle=(Math.PI*2*i)/samples;
+        points.push({
+          x:Math.max(minX,Math.min(maxX,preferredX+Math.cos(angle)*radius)),
+          y:Math.max(minY,Math.min(maxY,preferredY+Math.sin(angle)*radius))
+        });
+      }
+    }
+    // Whole-wall grid: empty space beats overlap, even if it means moving farther.
+    const cols=portrait?11:16,rows=portrait?17:11;
+    for(let row=0;row<rows;row++){
+      for(let col=0;col<cols;col++){
+        const xr=cols===1?.5:col/(cols-1),yr=rows===1?.5:row/(rows-1);
+        points.push({x:minX+xr*Math.max(0,maxX-minX),y:minY+yr*Math.max(0,maxY-minY)});
+      }
+    }
+    // Deterministic random fill for irregular gaps created by rotated cards.
+    let state=(seed||1)>>>0;
+    const random=()=>{state=(Math.imul(state,1664525)+1013904223)>>>0;return state/4294967296;};
+    const samples=portrait?340:460;
+    for(let i=0;i<samples;i++)points.push({x:minX+random()*Math.max(1,maxX-minX),y:minY+random()*Math.max(1,maxY-minY)});
+    return points;
+  }
+  async function smartCurrentPrepareCards(env,cards) {
+    // v532: force the note shell itself to grow around ALL text/name/reaction/media
+    // before measuring it. We never place using a truncated/fixed-height estimate.
+    for(const card of cards){
+      card.style.setProperty('height','auto','important');
+      card.style.setProperty('max-height','none','important');
+      card.style.setProperty('overflow','hidden','important');
+      const p=card.querySelector('p');
+      if(p){
+        p.style.setProperty('max-height','none','important');
+        p.style.setProperty('height','auto','important');
+        p.style.setProperty('overflow','visible','important');
+        p.style.setProperty('text-overflow','clip','important');
+        p.style.setProperty('-webkit-line-clamp','unset','important');
+      }
+      const author=card.querySelector('small');
+      if(author){
+        author.style.setProperty('max-height','none','important');
+        author.style.setProperty('height','auto','important');
+        author.style.setProperty('overflow','visible','important');
+        author.style.setProperty('text-overflow','clip','important');
+        author.style.setProperty('white-space','normal','important');
+      }
+    }
+    await settleExactExportFrame(env.win);
+    // If any theme child still visually needs more vertical space, expand the shell.
+    for(const card of cards){
+      let needed=Math.max(card.offsetHeight,card.scrollHeight);
+      for(const child of Array.from(card.children)){
+        if(child.classList.contains('freedomWallNotePin'))continue;
+        // offsetTop/offsetHeight are intrinsic (not affected by card rotation/scale),
+        // which is exactly what the note shell height must contain.
+        if(child.offsetHeight)needed=Math.max(needed,child.offsetTop+child.offsetHeight+8);
+      }
+      const current=card.offsetHeight;
+      if(needed>current+1)card.style.setProperty('height',`${Math.ceil(needed)}px`,'important');
+    }
+    await settleExactExportFrame(env.win);
+  }
+  async function smartCurrentLayout(env,orientation,notes,_pass=0) {
+    const stage=env.stage,win=env.win,portrait=orientation==='portrait';
+    const cards=Array.from(stage.querySelectorAll('.freedomWallNote[data-note-id]'));
+    if(!cards.length)return;
+    await smartCurrentPrepareCards(env,cards);
+    const stageRect=stage.getBoundingClientRect();
+    if(!stageRect.width||!stageRect.height)return;
+    const noteById=new Map(notes.map((n,i)=>[String(n.id||i),{note:n,index:i}]));
+    const reserved=smartCurrentReservedRects(env);
+    const measured=cards.map((card,domIndex)=>{
+      const info=noteById.get(String(card.dataset.noteId||''))||{note:notes[domIndex]||{},index:domIndex};
+      const note=info.note||{},placement=fallbackPlacement(note,info.index);
+      const width=Math.max(52,card.offsetWidth||card.getBoundingClientRect().width||110);
+      const height=Math.max(40,card.offsetHeight||card.scrollHeight||card.getBoundingClientRect().height||70);
+      return {card,note,index:info.index,width,height,placement,area:width*height};
+    });
+    const reservedArea=reserved.reduce((sum,r)=>sum+r.width*r.height,0);
+    const availableArea=Math.max(1,(stageRect.width*stageRect.height)-reservedArea);
+    const baseArea=measured.reduce((sum,item)=>sum+item.area,0);
+    const density=baseArea/availableArea;
+
+    // v532: keep Current View near real live-wall size. We no longer sacrifice
+    // readability by shrinking cards to ~0.5 just to force zero overlap.
+    const globalTarget=density<.34?1.18:density<.48?1.13:density<.64?1.08:density<.80?1.03:1.00;
+    const minimumScale=portrait?.74:.78;
+    const gap=portrait?6:7;
+    const edge=portrait?8:10;
+    const ordered=measured.slice().sort((a,b)=>{
+      const aMedia=a.note?.mediaRef||a.note?.youtubeUrl||a.note?.gifUrl?12000:0;
+      const bMedia=b.note?.mediaRef||b.note?.youtubeUrl||b.note?.gifUrl?12000:0;
+      const aHard=a.area+(String(a.note?.text||'').length*20)+aMedia;
+      const bHard=b.area+(String(b.note?.text||'').length*20)+bMedia;
+      return bHard-aHard||a.index-b.index;
+    });
+    const placed=[];
+
+    for(const item of ordered){
+      const {card,note,index,width,height,placement}=item;
+      const sizeName=sizeClass(note);
+      let cap=sizeName==='compact'?1.20:sizeName==='small'?1.16:sizeName==='medium'?1.11:1.05;
+      if(note.mediaRef||note.youtubeUrl||note.gifUrl)cap=Math.min(cap,1.07);
+      const savedScale=Math.max(.82,Math.min(1.14,Number(placement.scale)||1));
+      let target=Math.min(cap,Math.max(savedScale,globalTarget));
+      target=Math.max(minimumScale,Math.min(1.20,target));
+      // Long/tall cards stay straighter so their visual bounding box does not waste space.
+      const tallRatio=height/Math.max(1,width);
+      const rotationLimit=tallRatio>1.45?5:(sizeName==='large'?7:10);
+      const rotation=Math.max(-rotationLimit,Math.min(rotationLimit,Number(placement.rotation)||0));
+      const skew=Math.max(-.9,Math.min(.9,Number(placement.skew)||0));
+      const scales=[];
+      for(let s=target;s>=minimumScale;s-=.04)scales.push(+s.toFixed(3));
+      if(!scales.some(s=>Math.abs(s-minimumScale)<.005))scales.push(minimumScale);
+      let chosen=null,bestOverlap=null;
+
+      for(const scale of scales){
+        const rad=Math.abs(rotation)*Math.PI/180;
+        const rw=(Math.abs(width*Math.cos(rad))+Math.abs(height*Math.sin(rad)))*scale;
+        const rh=(Math.abs(width*Math.sin(rad))+Math.abs(height*Math.cos(rad)))*scale;
+        // If a single card is larger than available canvas, scale only enough to keep it inside.
+        const fitScale=Math.min(1,(stageRect.width-edge*2)/Math.max(1,rw),(stageRect.height-edge*2)/Math.max(1,rh));
+        const effectiveScale=Math.max(.42,scale*fitScale);
+        const erw=rw*fitScale,erh=rh*fitScale;
+        const minX=erw/2+edge,maxX=Math.max(minX,stageRect.width-erw/2-edge);
+        const minY=erh/2+edge,maxY=Math.max(minY,stageRect.height-erh/2-edge);
+        const prefX=Math.max(minX,Math.min(maxX,stageRect.width*(Number(placement.x)||50)/100));
+        const prefY=Math.max(minY,Math.min(maxY,stageRect.height*(Number(placement.y)||50)/100));
+        const candidates=smartCurrentCandidatePoints(stageRect,prefX,prefY,hash(`${note.id||index}-v532-${orientation}-${Math.round(effectiveScale*1000)}`),portrait,minX,maxX,minY,maxY);
+        let cleanBest=null,cleanScore=Infinity;
+        for(const pt of candidates){
+          const rect=smartCurrentRotatedRect(stageRect,pt.x,pt.y,width,height,rotation,effectiveScale);
+          const padded=smartCurrentExpandRect(rect,gap);
+          let overlap=0;
+          for(const other of placed)overlap+=smartCurrentOverlapArea(padded,other.rect);
+          let reservedOverlap=0;
+          for(const safe of reserved)reservedOverlap+=smartCurrentOverlapArea(smartCurrentExpandRect(rect,3),safe);
+          const distance=Math.hypot(pt.x-prefX,pt.y-prefY);
+          const edgeDistance=Math.min(pt.x,stageRect.width-pt.x,pt.y,stageRect.height-pt.y);
+          const edgePenalty=edgeDistance<18?(18-edgeDistance)*3:0;
+          const score=distance+edgePenalty;
+          if(overlap===0&&reservedOverlap===0&&score<cleanScore){
+            cleanBest={x:pt.x,y:pt.y,rect,scale:effectiveScale,score};
+            cleanScore=score;
+            if(distance<Math.max(stageRect.width,stageRect.height)*.055)break;
+          }
+          // Overlap is last resort. Normalize by card area so small unavoidable touches
+          // beat hiding a large portion of another note.
+          const overlapRatio=overlap/Math.max(1,rect.width*rect.height);
+          const penalty=(overlapRatio*100000)+(reservedOverlap*80)+score;
+          if(!bestOverlap||penalty<bestOverlap.penalty)bestOverlap={x:pt.x,y:pt.y,rect,scale:effectiveScale,penalty,score};
+        }
+        if(cleanBest){chosen=cleanBest;break;}
+      }
+      chosen=chosen||bestOverlap;
+      if(!chosen)continue;
+      card.style.setProperty('--fw-x',String(Math.max(0,Math.min(100,(chosen.x/stageRect.width)*100))));
+      card.style.setProperty('--fw-y',String(Math.max(0,Math.min(100,(chosen.y/stageRect.height)*100))));
+      card.style.setProperty('--fw-rotation',`${rotation}deg`);
+      card.style.setProperty('--fw-skew',`${skew}deg`);
+      card.style.setProperty('--fw-scale',String(chosen.scale));
+      placed.push({item,rect:smartCurrentExpandRect(chosen.rect,gap),scale:chosen.scale,x:chosen.x,y:chosen.y,rotation});
+    }
+
+    // Keep chronological stacking only; smart coordinates stay untouched.
+    measured.sort((a,b)=>a.index-b.index).forEach((item,i)=>{
+      stage.appendChild(item.card);
+      item.card.style.zIndex=String(40+Math.min(i,230));
+    });
+    await settleExactExportFrame(win);
+
+    // Final containment audit after fonts/transforms settle. If a text/name child somehow
+    // exceeds the shell, grow the shell and do one final re-layout rather than clipping it.
+    let grew=false;
+    for(const item of measured){
+      const card=item.card,rect=card.getBoundingClientRect();
+      let bottom=rect.bottom;
+      for(const child of Array.from(card.querySelectorAll('p,small'))){
+        const r=child.getBoundingClientRect();
+        bottom=Math.max(bottom,r.bottom);
+      }
+      const visualOverflow=bottom-rect.bottom;
+      if(visualOverflow>1){
+        const scale=Math.max(.42,Number(card.style.getPropertyValue('--fw-scale'))||1);
+        const add=Math.ceil(visualOverflow/scale)+8;
+        card.style.setProperty('height',`${Math.ceil(card.offsetHeight+add)}px`,'important');
+        grew=true;
+      }
+    }
+    if(grew){
+      await settleExactExportFrame(win);
+      if(_pass<1)return smartCurrentLayout(env,orientation,notes,_pass+1);
+    }
+  }
+
+  async function createRenderer(layout,orientation,cfg,notes,sessionId) {
+    const size=(layout==='current'?(CURRENT_VIEWPORTS[orientation]||CURRENT_VIEWPORTS.landscape):(EXPORT_SIZES[orientation]||EXPORT_SIZES.landscape));
+    const root=appRoot(),styleUrl=new URL('style.css?v=v532-balanced-current-view-export',root).href;
+    const frame=document.createElement('iframe');
+    frame.setAttribute('aria-hidden','true');frame.tabIndex=-1;
+    Object.assign(frame.style,{position:'fixed',left:'-12000px',top:'0',width:`${size.width}px`,height:`${size.height}px`,border:'0',margin:'0',padding:'0',opacity:'1',pointerEvents:'none',zIndex:'-2147483000'});
+    document.body.appendChild(frame);
+    const html=`<!doctype html><html class="sfkFreedomWallExactExport"><head><meta charset="utf-8"><meta name="viewport" content="width=${size.width},initial-scale=1"><base href="${root.href}"><link id="fwStyle" rel="stylesheet" href="${styleUrl}"><style>html,body{margin:0!important;width:${size.width}px!important;height:${size.height}px!important;overflow:hidden!important}#homepageEffectLayer{display:block!important;opacity:1!important;visibility:visible!important}#homepageEffectClose,.freedomWallPromptClose,#freedomWallAddBtn,.freedomWallAddBtn,.freedomWallActionDock,#freedomWallComposer,#freedomWallReactionMenu,#freedomWallMediaSearchModal{display:none!important}</style></head><body class="sfkFreedomWallExactExport">${sceneMarkup()}</body></html>`;
+    const loaded=new Promise(resolve=>{let done=false;const finish=()=>{if(done)return;done=true;resolve();};frame.onload=finish;setTimeout(finish,3000);});
+    frame.srcdoc=html;await loaded;
+    const doc=frame.contentDocument,win=frame.contentWindow;
+    if(!doc||!win){frame.remove();throw new Error('Export renderer could not be created.');}
+    const styleStart=Date.now();while(!doc.getElementById('fwStyle')?.sheet&&Date.now()-styleStart<6000)await delay(80);
+    if(!doc.getElementById('fwStyle')?.sheet){frame.remove();throw new Error('The real Freedom Wall style.css did not load.');}
+    const layer=doc.getElementById('homepageEffectLayer'),scene=doc.querySelector('.homepageFreedomWallScene'),stage=doc.getElementById('freedomWallNotesStage');
+    if(!layer||!scene||!stage){frame.remove();throw new Error('Freedom Wall export DOM could not be created.');}
+    scene.dataset.theme=cfg.theme;
+    layer.classList.add(`is-freedom-wall-exact-${layout}`);
+    const title=doc.getElementById('freedomWallPromptTitle'),message=doc.getElementById('freedomWallPromptMessage'),eyebrow=scene.querySelector('.freedomWallPromptEyebrow');
+    if(title)title.textContent=cfg.title;if(message){message.textContent=cfg.message;message.hidden=!cfg.message;}if(eyebrow)eyebrow.textContent=cfg.theme==='filipino'?'PAKSA NG ATING PADER':"TODAY'S WALL PROMPT";
+    const count=doc.getElementById('freedomWallCount');if(count)count.textContent=`${notes.length} ${notes.length===1?'note':'notes'}`;
+    const promptReaction=await loadPromptReaction(sessionId);
+    if(promptReaction?.total&&promptReaction.dominant){const sum=doc.getElementById('freedomWallPromptReactionSummary');if(sum){sum.hidden=false;sum.innerHTML=`<span class="freedomWallReactionCount is-dominant">${REACTIONS[promptReaction.dominant]} <b>${promptReaction.total}</b></span>`;}}
+    if(layout==='readable'){
+      const cols=orientation==='portrait'?2:3;
+      stage.style.setProperty('--fw-exact-columns',String(cols));
+      stage.style.setProperty('--fw-exact-density','1');
+    }else if(layout==='fit'){
+      const n=Math.max(1,notes.length),portrait=orientation==='portrait';
+      const cols=portrait?Math.max(3,Math.min(6,Math.ceil(Math.sqrt(n*.66)))):Math.max(4,Math.min(9,Math.ceil(Math.sqrt(n*1.45))));
+      stage.style.setProperty('--fw-exact-columns',String(cols));
+      stage.style.setProperty('--fw-exact-density','1');
+    }
+    for(let index=0;index<notes.length;index++){
+      const note=notes[index],media=await mediaInfo(note),card=doc.createElement('article'),placement=fallbackPlacement(note,index);
+      const classes=['freedomWallNote',`is-${note.color}`,`is-size-${sizeClass(note)}`,'has-safe-text'];
+      if(media)classes.push('has-media');if(note.youtubeUrl)classes.push('has-video');if(note.gifUrl)classes.push('has-gif');
+      if(cfg.allowFont&&note.font&&note.font!=='theme-default')classes.push(`is-font-${note.font.replace(/[^a-z0-9-]/gi,'')}`);
+      card.className=classes.join(' ');card.dataset.noteId=note.id;
+      card.style.setProperty('--fw-note-bg',COLORS[note.color]||COLORS.yellow);
+      const textName=effectiveTextColor(note,cfg);card.style.setProperty('--fw-note-text-color',TEXT_COLORS[textName]||TEXT_COLORS.charcoal);card.style.setProperty('--fw-note-text-shadow','none');
+      card.style.setProperty('--fw-x',String(placement.x));card.style.setProperty('--fw-y',String(placement.y));card.style.setProperty('--fw-rotation',`${placement.rotation}deg`);card.style.setProperty('--fw-skew',`${placement.skew}deg`);card.style.setProperty('--fw-scale',String(placement.scale));card.style.setProperty('--fw-pin-x',`${40+(hash(`${note.id}-pin`)%21)}%`);
+      const pin=doc.createElement('i');pin.className='freedomWallNotePin';card.appendChild(pin);
+      if(media?.src){
+        const mediaEl=doc.createElement('div');mediaEl.className='freedomWallNoteMedia';
+        if(media.kind==='youtube'){
+          const btn=doc.createElement('div');btn.className='freedomWallYoutubePlayCard';
+          const img=doc.createElement('img');img.src=media.src;img.alt='YouTube video thumbnail';img.loading='eager';
+          const badge=doc.createElement('span');badge.className='freedomWallYoutubePlayBadge';badge.innerHTML='<span class="freedomWallYoutubePlayTriangle"></span>';
+          btn.append(img,badge);mediaEl.appendChild(btn);
+        }else{
+          const img=doc.createElement('img');img.src=media.src;img.alt=media.kind==='gif'?'Animated Freedom Wall GIF':'Freedom Wall image';img.loading='eager';mediaEl.appendChild(img);
+        }
+        card.appendChild(mediaEl);
+      }
+      const p=doc.createElement('p');p.textContent=note.text;card.appendChild(p);
+      if(cfg.showNames&&note.author){const small=doc.createElement('small');small.textContent=`— ${note.author}`;card.appendChild(small);}
+      const rs=reactionStats(note);if(rs.total&&rs.dominant){const sum=doc.createElement('div');sum.className='freedomWallReactionSummary is-note';sum.innerHTML=`<span class="freedomWallReactionCount is-dominant">${REACTIONS[rs.dominant]} <b>${rs.total}</b></span>`;card.appendChild(sum);card.classList.add('has-reactions');}
+      stage.appendChild(card);
+    }
+    try{if(doc.fonts?.ready)await withTimeout(doc.fonts.ready,5000,'Theme fonts took too long to load.');}catch(error){}
+    await waitExactExportMedia(doc);
+    await settleExactExportFrame(win);
+    const env={frame,doc,win,layer,scene,stage,size};
+    if(layout==='current'){
+      await smartCurrentLayout(env,orientation,notes);
+      await settleExactExportFrame(win);
+    }
+    if(layout==='readable'||layout==='fit'){
+      positionExactStageBelowPrompt(env);
+      await settleExactExportFrame(win);
+    }
+    if(layout==='fit'){
+      await fitExactExportStage(env,orientation,notes.length);
+      await settleExactExportFrame(win);
+    }
+    return env;
+  }
+  async function ensureSnapdom(env) {
+    if(typeof env.win.__SFK_SNAPDOM==='function')return env.win.__SFK_SNAPDOM;
+    if(!env.win.__SFK_SNAPDOM_LOADING){
+      env.win.__SFK_SNAPDOM_LOADING=true;
+      const script=env.doc.createElement('script');script.type='module';script.textContent=`(async()=>{const sources=${JSON.stringify(SNAPDOM_SOURCES)};let last='';for(const source of sources){try{const mod=await import(source);if(typeof mod?.snapdom==='function'){window.__SFK_SNAPDOM=mod.snapdom;return;}}catch(error){last=String(error?.message||error);}}window.__SFK_SNAPDOM_ERROR=last||'Unable to load PNG engine.';})();`;
+      env.doc.head.appendChild(script);
+    }
+    const start=Date.now();while(Date.now()-start<15000){if(typeof env.win.__SFK_SNAPDOM==='function')return env.win.__SFK_SNAPDOM;if(env.win.__SFK_SNAPDOM_ERROR)throw new Error(env.win.__SFK_SNAPDOM_ERROR);await delay(100);}throw new Error('Exact PNG engine took too long to load.');
+  }
+  function fallbackImageDataUrl({width=320,height=180}={}) {
+    const w=Math.max(32,Math.min(1000,Math.round(Number(width)||320))),h=Math.max(24,Math.min(700,Math.round(Number(height)||180)));
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><rect width="100%" height="100%" rx="14" fill="#eee8dc"/><text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" font-family="Arial" font-size="18" fill="#666">Media preview unavailable</text></svg>`)}`;
+  }
+  async function capture(env) {
+    const snapdom=await ensureSnapdom(env);
+    if(typeof snapdom.toBlob!=='function')throw new Error('Exact PNG engine loaded without toBlob support.');
+    const blob=await withTimeout(snapdom.toBlob(env.scene,{type:'png',scale:env.size.scale,dpr:1,embedFonts:true,reconcile:true,compress:true,placeholders:true,fallbackURL:fallbackImageDataUrl,cache:'soft',outerTransforms:true,outerShadows:true,fast:true}),30000,'Exact-theme PNG capture took too long.');
+    if(!blob||blob.size<1000)throw new Error('PNG export was empty.');
+    return blob;
+  }
+  function download(blob,name) {const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1800);}
+  function slug(value) {return String(value||'wall').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,48)||'wall';}
+  function saveStyles(cards) {return cards.map(card=>({card,style:card.getAttribute('style'),display:card.style.getPropertyValue('display'),priority:card.style.getPropertyPriority('display')}));}
+  function restoreCards(saved) {saved.forEach(item=>{if(item.style==null)item.card.removeAttribute('style');else item.card.setAttribute('style',item.style);});}
+  async function readableExport(env,base) {
+    const cards=Array.from(env.stage.querySelectorAll('.freedomWallNote[data-note-id]'));
+    if(!cards.length){download(await capture(env),`${base}.png`);return 1;}
+    const original=saveStyles(cards),stageStyle=env.stage.getAttribute('style');let start=0,page=1;
+    try{
+      while(start<cards.length){
+        restoreCards(original);cards.forEach(card=>card.style.setProperty('display','none','important'));env.stage.style.setProperty('overflow','hidden','important');
+        let shown=0,next=start;
+        for(let i=start;i<cards.length;i++){
+          cards[i].style.removeProperty('display');await delay(0);
+          const overflow=env.stage.scrollHeight>env.stage.clientHeight+4;
+          if(overflow&&shown>0){cards[i].style.setProperty('display','none','important');next=i;break;}
+          shown++;next=i+1;if(overflow&&shown===1)break;
+        }
+        if(next<=start)next=start+1;
+        setStatus(`Capturing exact-theme readable page ${page}…`);
+        download(await capture(env),`${base}${cards.length>shown?`-page-${page}`:''}.png`);
+        start=next;page++;if(start<cards.length)await delay(220);
+      }
+    }finally{restoreCards(original);if(stageStyle==null)env.stage.removeAttribute('style');else env.stage.setAttribute('style',stageStyle);}
+    return page-1;
+  }
+  async function run(kind) {
+    if(busy)return;
+    setBusy(true);
+    let env=null;
+    try{
+      const [layoutRaw,orientationRaw]=String(kind||'current-landscape').split('-');
+      const layout=['current','readable','fit'].includes(layoutRaw)?layoutRaw:'current',orientation=orientationRaw==='portrait'?'portrait':'landscape';
+      setStatus('Loading the active Freedom Wall directly from Firestore…');
+      const sessionId=await activeWallId(),raw=await loadNotes(sessionId),notes=raw.map(normalizeNote).filter(n=>n.text||n.mediaRef||n.youtubeUrl||n.gifUrl).sort((a,b)=>a.created-b.created),cfg=configFromAdmin();
+      if(!notes.length&&!cfg.title&&!cfg.message)throw new Error('Nothing to export yet.');
+      setStatus('Building the exact wall DOM with the real style.css…');
+      env=await createRenderer(layout,orientation,cfg,notes,sessionId);
+      const base=`sfk-bekind-wall-${slug(cfg.title)}-${layout}-${orientation}`;
+      if(layout==='readable'){
+        const pages=await readableExport(env,base);
+        setStatus(pages>1?`Saved ${pages} exact-theme PNG pages.`:'Exact-theme PNG saved.','success');
+      }else{
+        setStatus(layout==='fit'?'Capturing all notes on one exact-theme page…':(layout==='current'?'Smart-positioning and capturing the exact Freedom Wall theme…':'Capturing the exact Freedom Wall theme…'));
+        download(await capture(env),`${base}.png`);
+        setStatus('Exact-theme PNG saved.','success');
+      }
+    }catch(error){console.error('SFK exact export v529 failed:',error);setStatus(String(error?.message||error||'Export failed.'),'error');}
+    finally{try{env?.frame?.remove();}catch(error){}setBusy(false);}
+  }
+  buttons.forEach(button=>button.addEventListener('click',()=>run(button.dataset.fwSnapExport)));
+  setStatus('Ready — balanced Current View keeps notes readable, contained, and uses free space before overlap.');
+})();
+</script>
+
+<script>
+/* v533: compact accordion UI for Homepage Display / Effects Admin only. */
+(() => {
+  function bootHomepageEffectAccordions(){
+    const card=document.querySelector('.homepageEffectAdminCard');
+    if(!card||card.dataset.accordionized==='YES')return;
+    card.dataset.accordionized='YES';
+    card.classList.add('is-accordionized');
+
+    const makeSection=({id,title,meta,icon='⚙️',nodes=[],nested=false,watchHidden=null})=>{
+      const valid=nodes.filter(Boolean);
+      if(!valid.length)return null;
+      const first=valid[0];
+      const section=document.createElement('section');
+      section.className='homepageEffectAccordion'+(nested?' is-nested':'');
+      section.id=id;
+      const toggle=document.createElement('button');
+      toggle.type='button';
+      toggle.className='homepageEffectAccordionToggle';
+      toggle.setAttribute('aria-expanded','false');
+      const body=document.createElement('div');
+      body.className='homepageEffectAccordionBody';
+      body.hidden=true;
+      toggle.innerHTML=`<span><span class="homepageEffectAccordionTitle"><i>${icon}</i><b>${title}</b></span><small class="homepageEffectAccordionMeta">${meta||''}</small></span><span class="homepageEffectAccordionChevron" aria-hidden="true">›</span>`;
+      first.parentNode.insertBefore(section,first);
+      section.append(toggle,body);
+      valid.forEach(node=>body.appendChild(node));
+      const close=()=>{section.classList.remove('is-open');toggle.setAttribute('aria-expanded','false');body.hidden=true;};
+      const open=()=>{
+        Array.from(section.parentElement?.children||[]).filter(el=>el!==section&&el.classList?.contains('homepageEffectAccordion')&&el.classList.contains('is-open')).forEach(el=>{
+          el.classList.remove('is-open');
+          const t=el.querySelector(':scope > .homepageEffectAccordionToggle');
+          const b=el.querySelector(':scope > .homepageEffectAccordionBody');
+          t?.setAttribute('aria-expanded','false');if(b)b.hidden=true;
+        });
+        section.classList.add('is-open');toggle.setAttribute('aria-expanded','true');body.hidden=false;
+      };
+      toggle.addEventListener('click',()=>section.classList.contains('is-open')?close():open());
+      section._fwAccordionClose=close;section._fwAccordionOpen=open;
+      if(watchHidden){
+        const sync=()=>{section.hidden=Boolean(watchHidden.hidden);if(section.hidden)close();};
+        new MutationObserver(sync).observe(watchHidden,{attributes:true,attributeFilter:['hidden']});
+        sync();
+      }
+      return section;
+    };
+
+    const enabled=document.getElementById('homepageEffectEnabled');
+    const enabledRow=enabled?.closest('label');
+    const modeLabel=card.querySelector('label[for="homepageEffectMode"]');
+    const mode=document.getElementById('homepageEffectMode');
+    makeSection({id:'homepageEffectAccordionSetup',title:'Display Setup',meta:'Turn the effect on/off and choose the display mode.',icon:'🌦️',nodes:[enabledRow,modeLabel,mode]});
+
+    const textFields=card.querySelector('.homepageEffectTextFields');
+    makeSection({id:'homepageEffectAccordionText',title:'Title & Message',meta:'Prompt title and optional message shown with the selected effect.',icon:'✏️',nodes:[textFields]});
+
+    const wall=document.getElementById('homepageEffectFreedomWallFields');
+    makeSection({id:'homepageEffectAccordionWall',title:'SFK #BeKind Wall Settings',meta:'Theme, student note options, music, saved walls, export and moderation.',icon:'📝',nodes:[wall],watchHidden:wall});
+    if(wall){
+      const intro=wall.querySelector('.freedomWallAdminIntro');
+      const themeLabel=wall.querySelector('label[for="freedomWallTheme"]');
+      const themeHelp=themeLabel?.nextElementSibling;
+      const themeSelect=document.getElementById('freedomWallTheme');
+      const postRow=document.getElementById('freedomWallAllowPosting')?.closest('label');
+      const namesRow=document.getElementById('freedomWallShowNames')?.closest('label');
+      makeSection({id:'fwAccordionAppearance',title:'Theme & Posting',meta:'Choose the wall look and basic posting/name controls.',icon:'🎨',nodes:[intro,themeLabel,themeHelp,themeSelect,postRow,namesRow],nested:true});
+      makeSection({id:'fwAccordionStudentOptions',title:'Student Note Options',meta:'Text color, fonts, GIFs, YouTube search and playback.',icon:'✨',nodes:[wall.querySelector('.freedomWallAdminCustomization')],nested:true});
+      makeSection({id:'fwAccordionMusic',title:'Background Music Playlist',meta:'Songs, shuffle and loop options.',icon:'🎵',nodes:[document.getElementById('freedomWallPlaylistAdmin')],nested:true});
+      makeSection({id:'fwAccordionSavedWalls',title:'Saved Freedom Walls',meta:'Save, create, rename, load or delete wall sessions.',icon:'🗂️',nodes:[document.getElementById('freedomWallSessionAdmin')],nested:true});
+      makeSection({id:'fwAccordionExport',title:'Export Current Wall',meta:'Landscape, portrait, readable and one-page PNG exports.',icon:'🖼️',nodes:[document.getElementById('freedomWallExportAdmin')],nested:true});
+      const moderationActions=wall.querySelector('.freedomWallAdminActions');
+      const noteManager=document.getElementById('freedomWallNoteManager');
+      const moderationStatus=document.getElementById('freedomWallAdminStatus');
+      makeSection({id:'fwAccordionModeration',title:'Notes & Moderation',meta:'Check note count, manage/delete notes or clear the active wall.',icon:'🛡️',nodes:[moderationActions,noteManager,moderationStatus],nested:true});
+    }
+
+    const picture=document.getElementById('homepageEffectPictureFields');
+    makeSection({id:'homepageEffectAccordionPicture',title:'Picture Gallery',meta:'Upload or paste images for Fullscreen Picture Gallery mode.',icon:'🖼️',nodes:[picture],watchHidden:picture});
+    const youtube=document.getElementById('homepageEffectYouTubeFields');
+    makeSection({id:'homepageEffectAccordionYoutube',title:'YouTube Video',meta:'Video link and autoplay/mute settings.',icon:'▶️',nodes:[youtube],watchHidden:youtube});
+    const rickroll=document.getElementById('homepageEffectRickrollFields');
+    makeSection({id:'homepageEffectAccordionRickroll',title:'Rickroll / Prank Video',meta:'Configure the fake Exit-button prank video.',icon:'😂',nodes:[rickroll],watchHidden:rickroll});
+    const dismiss=card.querySelector('.homepageEffectDismissRow');
+    const audio=document.getElementById('homepageEffectAudioFields');
+    const alertSound=document.getElementById('homepageEffectAlertSoundRow');
+    makeSection({id:'homepageEffectAccordionSound',title:'Dismiss & Sound Options',meta:'X/dismiss behavior, custom audio, loop and alert siren.',icon:'🔊',nodes:[dismiss,audio,alertSound]});
+
+    const syncModeSections=()=>{
+      [
+        ['homepageEffectAccordionWall',wall],
+        ['homepageEffectAccordionPicture',picture],
+        ['homepageEffectAccordionYoutube',youtube],
+        ['homepageEffectAccordionRickroll',rickroll]
+      ].forEach(([id,target])=>{const sec=document.getElementById(id);if(sec&&target){sec.hidden=Boolean(target.hidden);if(sec.hidden)sec._fwAccordionClose?.();}});
+    };
+    mode?.addEventListener('change',()=>setTimeout(syncModeSections,0));
+    setTimeout(syncModeSections,0);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bootHomepageEffectAccordions,{once:true});else bootHomepageEffectAccordions();
+})();
+
+</script>
 </body>
 </html>

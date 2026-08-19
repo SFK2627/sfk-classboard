@@ -34734,3 +34734,227 @@ html.sfkFreedomWallModalOpen body{
     border-radius:11px !important;
   }
 }
+
+/* =========================================================
+   v525 — Admin Exact Theme Export View
+   Uses the real Freedom Wall DOM/CSS. No canvas reconstruction.
+========================================================= */
+html.sfkFreedomWallExactExport,
+html.sfkFreedomWallExactExport body{
+  width:100%!important;
+  height:100%!important;
+  min-width:0!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  background:#111!important;
+}
+html.sfkFreedomWallExactExport body > *:not(#homepageEffectLayer){display:none!important}
+html.sfkFreedomWallExactExport #homepageEffectLayer{
+  position:fixed!important;
+  inset:0!important;
+  width:100vw!important;
+  height:100vh!important;
+  min-width:0!important;
+  min-height:0!important;
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  z-index:1!important;
+}
+html.sfkFreedomWallExactExport #homepageEffectLayer.is-freedom-wall .homepageFreedomWallScene{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  min-width:0!important;
+  min-height:0!important;
+}
+html.sfkFreedomWallExactExport #homepageEffectClose,
+html.sfkFreedomWallExactExport #freedomWallAddBtn,
+html.sfkFreedomWallExactExport .freedomWallAddBtn,
+html.sfkFreedomWallExactExport .freedomWallActionDock,
+html.sfkFreedomWallExactExport #freedomWallPromptClose,
+html.sfkFreedomWallExactExport .freedomWallPromptClose,
+html.sfkFreedomWallExactExport #freedomWallReactionMenu,
+html.sfkFreedomWallExactExport #freedomWallComposer,
+html.sfkFreedomWallExactExport #freedomWallMediaSearchModal,
+html.sfkFreedomWallExactExport .freedomWallYoutubeViewer,
+html.sfkFreedomWallExactExport .freedomWallYoutubeInlineClose{
+  display:none!important;
+  pointer-events:none!important;
+}
+html.sfkFreedomWallExactExport .freedomWallNote,
+html.sfkFreedomWallExactExport #freedomWallPromptCard{
+  animation:none!important;
+}
+html.sfkFreedomWallExactExport .freedomWallNote{
+  pointer-events:none!important;
+  height:auto!important;
+  max-height:none!important;
+  overflow:visible!important;
+}
+
+/* Readable layout: actual theme cards, but organized into a real grid. */
+html.sfkFreedomWallExactExport #homepageEffectLayer.is-freedom-wall-exact-readable #freedomWallPromptCard,
+html.sfkFreedomWallExactExport #homepageEffectLayer.is-freedom-wall-exact-fit #freedomWallPromptCard{
+  top:3.2%!important;
+  left:50%!important;
+  translate:-50% 0!important;
+  width:min(680px,88%)!important;
+  max-height:none!important;
+  overflow:visible!important;
+  z-index:340!important;
+}
+html.sfkFreedomWallExactExport #homepageEffectLayer.is-freedom-wall-exact-readable #freedomWallNotesStage,
+html.sfkFreedomWallExactExport #homepageEffectLayer.is-freedom-wall-exact-fit #freedomWallNotesStage{
+  position:absolute!important;
+  left:3%!important;
+  right:3%!important;
+  top:24%!important;
+  bottom:3%!important;
+  inset:auto 3% 3% 3%!important;
+  display:grid!important;
+  grid-template-columns:repeat(var(--fw-exact-columns,3),minmax(0,1fr))!important;
+  align-content:start!important;
+  align-items:start!important;
+  gap:clamp(7px,1vw,14px)!important;
+  overflow:auto!important;
+  padding:4px!important;
+  box-sizing:border-box!important;
+  pointer-events:none!important;
+}
+html.sfkFreedomWallExactExport #homepageEffectLayer.is-freedom-wall-exact-readable #freedomWallNotesStage .freedomWallNote,
+html.sfkFreedomWallExactExport #homepageEffectLayer.is-freedom-wall-exact-fit #freedomWallNotesStage .freedomWallNote{
+  position:relative!important;
+  inset:auto!important;
+  left:auto!important;
+  top:auto!important;
+  translate:none!important;
+  transform:none!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  box-sizing:border-box!important;
+  margin:0!important;
+  overflow:visible!important;
+  align-self:start!important;
+}
+/* v530: export text is NEVER clamped/truncated. Long notes grow naturally. */
+html.sfkFreedomWallExactExport .freedomWallNote p,
+html.sfkFreedomWallExactExport .freedomWallPromptCard p{
+  display:block!important;
+  -webkit-box-orient:initial!important;
+  -webkit-line-clamp:unset!important;
+  line-clamp:unset!important;
+  max-height:none!important;
+  height:auto!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere!important;
+  word-break:break-word!important;
+}
+html.sfkFreedomWallExactExport .freedomWallNote small{
+  max-height:none!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere!important;
+  word-break:break-word!important;
+}
+html.sfkFreedomWallExactExport #homepageEffectLayer.is-freedom-wall-exact-readable #freedomWallNotesStage{
+  grid-auto-rows:max-content!important;
+  align-items:start!important;
+}
+html.sfkFreedomWallExactExport #homepageEffectLayer.is-freedom-wall-exact-readable #freedomWallNotesStage .freedomWallNote p{
+  font-size:clamp(12px,1.05vw,17px)!important;
+}
+html.sfkFreedomWallExactExport #homepageEffectLayer.is-freedom-wall-exact-readable #freedomWallNotesStage .freedomWallNote small{
+  font-size:clamp(8px,.75vw,11px)!important;
+}
+
+/* One-page fit: variable-height notes. The WHOLE note grid scales down if needed; text is never cut. */
+html.sfkFreedomWallExactExport #homepageEffectLayer.is-freedom-wall-exact-fit #freedomWallNotesStage{
+  grid-template-rows:none!important;
+  grid-auto-rows:max-content!important;
+  align-content:start!important;
+  align-items:start!important;
+  overflow:visible!important;
+  gap:clamp(3px,.45vw,8px)!important;
+  transform-origin:top left!important;
+}
+html.sfkFreedomWallExactExport #homepageEffectLayer.is-freedom-wall-exact-fit #freedomWallNotesStage .freedomWallNote{
+  padding-top:calc(12px * var(--fw-exact-density,1))!important;
+  padding-right:calc(8px * var(--fw-exact-density,1))!important;
+  padding-bottom:calc(6px * var(--fw-exact-density,1))!important;
+  padding-left:calc(8px * var(--fw-exact-density,1))!important;
+  gap:calc(4px * var(--fw-exact-density,1))!important;
+}
+html.sfkFreedomWallExactExport #homepageEffectLayer.is-freedom-wall-exact-fit #freedomWallNotesStage .freedomWallNote p{
+  font-size:clamp(4px,calc(15px * var(--fw-exact-density,1)),15px)!important;
+  line-height:1.13!important;
+}
+html.sfkFreedomWallExactExport #homepageEffectLayer.is-freedom-wall-exact-fit #freedomWallNotesStage .freedomWallNote small{
+  font-size:clamp(4px,calc(9px * var(--fw-exact-density,1)),9px)!important;
+  line-height:1.05!important;
+}
+html.sfkFreedomWallExactExport #homepageEffectLayer.is-freedom-wall-exact-fit .freedomWallNoteMedia{
+  max-height:38%!important;
+  min-height:0!important;
+}
+html.sfkFreedomWallExactExport #homepageEffectLayer.is-freedom-wall-exact-fit .freedomWallReactionSummary{
+  transform:scale(var(--fw-exact-density,1));
+  transform-origin:left bottom;
+}
+
+@media print{
+  html.sfkFreedomWallExactExport,
+  html.sfkFreedomWallExactExport body{background:#fff!important}
+  html.sfkFreedomWallExactExport #homepageEffectLayer{position:fixed!important;inset:0!important}
+}
+
+/* =========================================================
+   v532 — Balanced Current View export containment
+   Current View keeps live-theme note shapes, but every note shell
+   must fully contain its message/name/reaction before smart placement.
+========================================================= */
+html.sfkFreedomWallExactExport #homepageEffectLayer.is-freedom-wall-exact-current .freedomWallNote{
+  height:auto!important;
+  min-height:var(--fw-note-min-height)!important;
+  max-height:none!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+}
+html.sfkFreedomWallExactExport #homepageEffectLayer.is-freedom-wall-exact-current .freedomWallNote>p{
+  display:block!important;
+  position:relative!important;
+  max-height:none!important;
+  height:auto!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  white-space:pre-wrap!important;
+  overflow-wrap:anywhere!important;
+  word-break:break-word!important;
+  -webkit-line-clamp:unset!important;
+  line-clamp:unset!important;
+}
+html.sfkFreedomWallExactExport #homepageEffectLayer.is-freedom-wall-exact-current .freedomWallNote>small{
+  display:block!important;
+  position:relative!important;
+  max-height:none!important;
+  height:auto!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere!important;
+  word-break:break-word!important;
+}
+html.sfkFreedomWallExactExport #homepageEffectLayer.is-freedom-wall-exact-current .freedomWallNote.has-reactions>p,
+html.sfkFreedomWallExactExport #homepageEffectLayer.is-freedom-wall-exact-current .freedomWallNote.has-reactions>small{
+  margin-bottom:20px!important;
+}
