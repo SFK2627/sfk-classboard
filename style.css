@@ -36147,3 +36147,116 @@ html.sfkFreedomWallReaderNoScroll body{
   .homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.is-size-medium{padding:19px 11px 9px!important}
   .homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.is-size-large{padding:21px 12px 10px!important}
 }
+
+
+/* =========================================================
+   v538 FREEDOM WALL — MOBILE PROMPT READABILITY + CENTERING
+   Phone prompt cards keep the same theme, but no longer become tall,
+   oversized, or visually off-center. This is live-wall UI only.
+========================================================= */
+@media(max-width:700px){
+  .homepageEffectLayer.is-freedom-wall .freedomWallPromptCard{
+    width:min(92vw,390px)!important;
+    max-width:calc(100vw - 28px)!important;
+    max-height:min(44dvh,410px)!important;
+    box-sizing:border-box!important;
+    padding:17px 29px 17px!important;
+    border-radius:18px!important;
+    text-align:center!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    overflow:visible!important;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallPromptEyebrow{
+    width:100%!important;
+    margin:0 0 5px!important;
+    text-align:center!important;
+    font-size:clamp(7px,1.9vw,9px)!important;
+    line-height:1!important;
+    letter-spacing:.12em!important;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallPromptCard h2{
+    width:100%!important;
+    max-width:100%!important;
+    margin:0 auto!important;
+    text-align:center!important;
+    text-wrap:balance!important;
+    overflow-wrap:normal!important;
+    word-break:normal!important;
+    hyphens:manual!important;
+    font-size:clamp(18px,5.15vw,24px)!important;
+    line-height:1.05!important;
+    letter-spacing:-.02em!important;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallPromptCard p{
+    width:100%!important;
+    max-width:100%!important;
+    margin:7px auto 0!important;
+    text-align:center!important;
+    text-wrap:balance!important;
+    overflow-wrap:normal!important;
+    word-break:normal!important;
+    font-size:clamp(10.5px,3vw,12.5px)!important;
+    line-height:1.24!important;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallPromptClose{
+    width:28px!important;
+    height:28px!important;
+    top:7px!important;
+    right:8px!important;
+    font-size:24px!important;
+    line-height:1!important;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallReactionSummary.is-prompt{
+    margin-top:7px!important;
+  }
+}
+@media(max-width:430px){
+  .homepageEffectLayer.is-freedom-wall .freedomWallPromptCard{
+    width:min(90vw,360px)!important;
+    max-height:min(40dvh,360px)!important;
+    padding:16px 26px 16px!important;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallPromptCard h2{
+    font-size:clamp(17px,5vw,22px)!important;
+    line-height:1.04!important;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallPromptCard p{
+    font-size:clamp(10px,2.85vw,12px)!important;
+    line-height:1.22!important;
+  }
+}
+@media(max-width:360px){
+  .homepageEffectLayer.is-freedom-wall .freedomWallPromptCard{
+    width:calc(100vw - 32px)!important;
+    padding:15px 24px!important;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallPromptCard h2{
+    font-size:clamp(16px,4.85vw,20px)!important;
+  }
+}
+
+/* v538: keep the Read Notes focus card visibly centered and contained on phone
+   while preserving the actual note theme. */
+@media(max-width:700px){
+  .homepageEffectLayer.is-freedom-wall .freedomWallReaderCardMount{
+    align-items:center!important;
+    justify-items:center!important;
+    place-items:center!important;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote{
+    margin:auto!important;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote>p{
+    text-align:center!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote>small{
+    width:100%!important;
+    box-sizing:border-box!important;
+    padding-inline:1px!important;
+  }
+}

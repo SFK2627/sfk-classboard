@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-main-pwa-v537-reader-fit-no-scroll";
+const CACHE_NAME = "sfk-main-pwa-v538-mobile-prompt-alignment";
 const CACHE_PREFIXES_TO_DELETE = ["sfk-main-pwa-", "sfk-sw.js-"];
 const NAVIGATION_FALLBACK_URL = "./index.html";
 const NAVIGATION_TIMEOUT_MS = 2500;
