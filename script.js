@@ -2058,6 +2058,8 @@ let freedomWallReaderRaf = 0;
 let freedomWallReaderPointer = null;
 let freedomWallReaderHoldTimer = 0;
 let freedomWallReaderHoveringNote = false;
+let freedomWallReaderFitRaf = 0;
+let freedomWallReaderFitTimers = [];
 
 
 function getFreedomWallExactExportOptions() {
@@ -3856,8 +3858,8 @@ function ensureHomepageEffectLayer() {
       </div>
 
       <div id="freedomWallGestureHint" class="freedomWallGestureHint" aria-hidden="true">
-        <span class="freedomWallGestureHintPhone">Hold a note to react &amp; reply</span>
-        <span class="freedomWallGestureHintDesktop">Long-press or right-click a note to react &amp; reply</span>
+        <span class="freedomWallGestureHintPhone">Hold: react/reply • drag notes to move</span>
+        <span class="freedomWallGestureHintDesktop">Right-click: react/reply • drag notes to move</span>
       </div>
 
       <section id="freedomWallReader" class="freedomWallReader" hidden aria-label="Read notes one at a time">
@@ -6262,6 +6264,58 @@ function makeFreedomWallReaderMediaFresh(card, note) {
   window.requestAnimationFrame(() => hydrateFreedomWallNoteMedia(card, note));
 }
 
+function clearFreedomWallReaderFitTimers() {
+  if (freedomWallReaderFitRaf) cancelAnimationFrame(freedomWallReaderFitRaf);
+  freedomWallReaderFitRaf = 0;
+  freedomWallReaderFitTimers.forEach((timerId) => window.clearTimeout(timerId));
+  freedomWallReaderFitTimers = [];
+}
+
+function fitFreedomWallReaderNote() {
+  if (!isFreedomWallReaderOpen()) return;
+  const layer = document.getElementById("homepageEffectLayer");
+  const reader = layer?.querySelector("#freedomWallReader");
+  const viewport = layer?.querySelector("#freedomWallReaderViewport");
+  const card = layer?.querySelector(".freedomWallReaderNote");
+  if (!reader || !viewport || !card || !card.isConnected) return;
+
+  const readerRect = reader.getBoundingClientRect();
+  const viewportRect = viewport.getBoundingClientRect();
+  const safeW = Math.max(120, Math.min(viewport.clientWidth || viewportRect.width || 0, viewportRect.width || 0) - 8);
+  const safeH = Math.max(120, Math.min(viewport.clientHeight || viewportRect.height || 0, viewportRect.height || 0) - 8);
+  card.style.setProperty("--fw-reader-fit-scale", "1");
+  card.style.removeProperty("max-height");
+  card.style.removeProperty("height");
+
+  // Use the actual rendered size, including pseudo-element decorations and media.
+  const rect = card.getBoundingClientRect();
+  const naturalW = Math.max(1, card.scrollWidth || card.offsetWidth || rect.width || 1);
+  const naturalH = Math.max(1, card.scrollHeight || card.offsetHeight || rect.height || 1);
+  const mobile = readerRect.width <= 700 || window.matchMedia?.("(max-width:700px)")?.matches;
+  const hasMedia = card.classList.contains("has-media") || card.classList.contains("has-video") || card.classList.contains("has-gif") || card.querySelector(".freedomWallNoteMedia");
+  const maxScale = mobile ? (hasMedia ? 1.46 : 1.72) : (hasMedia ? 1.82 : 2.15);
+  const minScale = mobile ? 0.10 : 0.12;
+  let scale = Math.min(maxScale, safeW / naturalW, safeH / naturalH);
+  if (!Number.isFinite(scale) || scale <= 0) scale = 1;
+  scale = Math.max(minScale, Math.min(maxScale, scale));
+  card.style.setProperty("--fw-reader-fit-scale", scale.toFixed(4));
+  viewport.classList.toggle("is-reader-scaled-down", scale < .985);
+  viewport.classList.toggle("is-reader-scaled-up", scale > 1.025);
+}
+
+function scheduleFreedomWallReaderFit() {
+  clearFreedomWallReaderFitTimers();
+  if (!isFreedomWallReaderOpen()) return;
+  const run = () => fitFreedomWallReaderNote();
+  freedomWallReaderFitRaf = requestAnimationFrame(() => {
+    freedomWallReaderFitRaf = 0;
+    run();
+    freedomWallReaderFitTimers.push(window.setTimeout(run, 70));
+    freedomWallReaderFitTimers.push(window.setTimeout(run, 220));
+    freedomWallReaderFitTimers.push(window.setTimeout(run, 650));
+  });
+}
+
 function renderFreedomWallReaderNote({ animateDirection = 0 } = {}) {
   const layer = document.getElementById("homepageEffectLayer");
   const reader = layer?.querySelector("#freedomWallReader");
@@ -6344,6 +6398,7 @@ function renderFreedomWallReaderNote({ animateDirection = 0 } = {}) {
   updateFreedomWallReactionSummary(card, note.reactions, "note", note.reactionLastType);
 
   mount.replaceChildren(card);
+  scheduleFreedomWallReaderFit();
   if (animateDirection) {
     mount.dataset.direction = animateDirection > 0 ? "next" : "prev";
     mount.classList.remove("is-reader-enter");
@@ -6364,6 +6419,12 @@ function renderFreedomWallReaderNote({ animateDirection = 0 } = {}) {
   });
 
   makeFreedomWallReaderMediaFresh(card, note);
+  card.addEventListener("load", scheduleFreedomWallReaderFit, true);
+  card.querySelectorAll("img, iframe").forEach((asset) => {
+    asset.addEventListener("load", scheduleFreedomWallReaderFit, { once:false });
+    asset.addEventListener("error", scheduleFreedomWallReaderFit, { once:false });
+  });
+  scheduleFreedomWallReaderFit();
 }
 
 function moveFreedomWallReader(direction, { resetTimer = true, source = "manual" } = {}) {
@@ -6416,6 +6477,8 @@ function openFreedomWallReader(event) {
   freedomWallReaderIndex = 0;
   freedomWallReaderNoteId = String(notes[0]?.id || "");
   reader.hidden = false;
+  document.documentElement.classList.add("sfkFreedomWallReaderNoScroll");
+  document.body?.classList?.add("sfkFreedomWallReaderNoScroll");
   layer.classList.add("is-freedom-wall-reader-open");
   syncFreedomWallReaderPauseButton();
   resetFreedomWallReaderClock();
@@ -6433,6 +6496,7 @@ function closeFreedomWallReader(event, { force = false } = {}) {
   if (!reader || (reader.hidden && !force)) return;
   stopFreedomWallReaderClock();
   clearFreedomWallReaderHoldTimer();
+  clearFreedomWallReaderFitTimers();
   freedomWallReaderPointer = null;
   freedomWallReaderHoveringNote = false;
   freedomWallReaderPaused = false;
@@ -6443,6 +6507,8 @@ function closeFreedomWallReader(event, { force = false } = {}) {
   const mount = layer?.querySelector("#freedomWallReaderCardMount");
   if (mount) mount.replaceChildren();
   reader.hidden = true;
+  document.documentElement.classList.remove("sfkFreedomWallReaderNoScroll");
+  document.body?.classList?.remove("sfkFreedomWallReaderNoScroll");
   layer?.classList?.remove("is-freedom-wall-reader-open");
   syncFreedomWallReaderPauseButton();
   updateFreedomWallReaderProgress();
@@ -6523,6 +6589,11 @@ function setupFreedomWallReaderInteractions(layer) {
   viewport.addEventListener("pointerup", (event) => finishPointer(event, false), { passive:true });
   viewport.addEventListener("pointercancel", (event) => finishPointer(event, true), { passive:true });
   viewport.addEventListener("lostpointercapture", (event) => finishPointer(event, true), { passive:true });
+  if (!window.__sfkFreedomWallReaderFitResizeReady) {
+    window.__sfkFreedomWallReaderFitResizeReady = true;
+    window.addEventListener("resize", scheduleFreedomWallReaderFit, { passive:true });
+    window.addEventListener("orientationchange", () => window.setTimeout(scheduleFreedomWallReaderFit, 180), { passive:true });
+  }
 }
 
 function setupFreedomWallNoteDragging(layer) {

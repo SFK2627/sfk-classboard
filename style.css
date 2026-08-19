@@ -35952,3 +35952,198 @@ html.sfkFreedomWallExactExport #freedomWallGestureHint,
 html.sfkFreedomWallExactExport #freedomWallReaderOpenBtn,
 html.sfkFreedomWallExactExport #freedomWallReader{display:none!important}
 
+
+/* =========================================================
+   v537 FREEDOM WALL — READ NOTES TRUE FIT / NO VERTICAL SCROLL
+   Keeps the real note design in Read Mode, then scales the whole note
+   so text + name + reactions + media stay inside the screen.
+========================================================= */
+html.sfkFreedomWallReaderNoScroll,
+html.sfkFreedomWallReaderNoScroll body{
+  overflow:hidden!important;
+  overscroll-behavior:none!important;
+  touch-action:none!important;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallGestureHintPhone{
+  white-space:normal!important;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallGestureHintDesktop{
+  white-space:normal!important;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderViewport{
+  overflow:hidden!important;
+  overscroll-behavior:none!important;
+  -webkit-overflow-scrolling:auto!important;
+  scrollbar-width:none!important;
+  display:grid!important;
+  place-items:center!important;
+  align-content:center!important;
+  justify-content:center!important;
+  padding:8px clamp(4px,1vw,12px)!important;
+  touch-action:pan-x!important;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderViewport::-webkit-scrollbar{display:none!important}
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderCardMount{
+  width:100%!important;
+  height:100%!important;
+  min-width:0!important;
+  min-height:0!important;
+  flex:none!important;
+  display:grid!important;
+  place-items:center!important;
+  align-content:center!important;
+  justify-content:center!important;
+  padding:0!important;
+  overflow:visible!important;
+  contain:layout style!important;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote,
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.has-video:not(.is-inline-video-active),
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.has-gif:not(.is-inline-video-active),
+.homepageEffectLayer.is-freedom-wall .homepageFreedomWallScene[data-theme="polaroid"] .freedomWallReaderNote.freedomWallNote.has-media:not(.is-inline-video-active){
+  position:relative!important;
+  left:auto!important;
+  top:auto!important;
+  right:auto!important;
+  bottom:auto!important;
+  inline-size:max-content!important;
+  width:max-content!important;
+  min-inline-size:var(--fw-note-min-width)!important;
+  max-inline-size:var(--fw-note-max-width)!important;
+  min-width:var(--fw-note-min-width)!important;
+  max-width:var(--fw-note-max-width)!important;
+  min-height:var(--fw-note-min-height)!important;
+  height:auto!important;
+  max-height:none!important;
+  box-sizing:border-box!important;
+  transform:scale(var(--fw-reader-fit-scale,1))!important;
+  transform-origin:center center!important;
+  visibility:visible!important;
+  z-index:1!important;
+  overflow:visible!important;
+  cursor:default!important;
+  touch-action:pan-x!important;
+  user-select:none!important;
+  -webkit-user-select:none!important;
+  -webkit-touch-callout:none!important;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote>p,
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.has-video:not(.is-inline-video-active)>p,
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.has-gif:not(.is-inline-video-active)>p{
+  display:block!important;
+  max-height:none!important;
+  height:auto!important;
+  overflow:visible!important;
+  -webkit-line-clamp:unset!important;
+  line-clamp:unset!important;
+  white-space:pre-wrap!important;
+  overflow-wrap:anywhere!important;
+  word-break:break-word!important;
+  font-size:clamp(13px,1.35vw,18px)!important;
+  line-height:1.28!important;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote>small,
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.has-video:not(.is-inline-video-active)>small,
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.has-gif:not(.is-inline-video-active)>small{
+  max-height:none!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere!important;
+  font-size:clamp(9px,.9vw,12px)!important;
+  line-height:1.15!important;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderNote .freedomWallNoteMedia,
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.has-video:not(.is-inline-video-active)>.freedomWallNoteMedia,
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.has-gif:not(.is-inline-video-active)>.freedomWallNoteMedia{
+  width:100%!important;
+  max-width:100%!important;
+  margin-bottom:8px!important;
+  overflow:hidden!important;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.has-gif:not(.is-inline-video-active)>.freedomWallNoteMedia{
+  aspect-ratio:1/1!important;
+  max-height:none!important;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderNote .freedomWallNoteMedia img{
+  max-height:none!important;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderNote .freedomWallReactionSummary.is-note{
+  left:7px!important;
+  bottom:6px!important;
+}
+@media(max-width:700px){
+  .homepageEffectLayer.is-freedom-wall .freedomWallGestureHint{
+    max-width:calc(100vw - 84px)!important;
+    padding:4px 7px!important;
+    font-size:7.4px!important;
+    line-height:1.12!important;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallReader{
+    grid-template-columns:34px minmax(0,1fr) 34px!important;
+    grid-template-rows:auto 3px minmax(0,1fr) auto!important;
+    padding:max(5px,env(safe-area-inset-top)) max(4px,env(safe-area-inset-right)) max(5px,env(safe-area-inset-bottom)) max(4px,env(safe-area-inset-left))!important;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallReaderToolbar{
+    padding:3px 4px 4px!important;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallReaderTitle>strong{font-size:11px!important}
+  .homepageEffectLayer.is-freedom-wall .freedomWallReaderToolbarActions>button{
+    min-width:29px!important;
+    width:29px!important;
+    height:29px!important;
+    padding:0!important;
+  }
+  .homepageEffectLayer.is-freedom-wall #freedomWallReaderCloseBtn{font-size:20px!important}
+  .homepageEffectLayer.is-freedom-wall .freedomWallReaderViewport{
+    padding:5px 0!important;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote,
+  .homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.has-video:not(.is-inline-video-active),
+  .homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.has-gif:not(.is-inline-video-active),
+  .homepageEffectLayer.is-freedom-wall .homepageFreedomWallScene[data-theme="polaroid"] .freedomWallReaderNote.freedomWallNote.has-media:not(.is-inline-video-active){
+    min-inline-size:var(--fw-note-min-width)!important;
+    max-inline-size:var(--fw-note-max-width)!important;
+    min-width:var(--fw-note-min-width)!important;
+    max-width:var(--fw-note-max-width)!important;
+    min-height:var(--fw-note-min-height)!important;
+    height:auto!important;
+    padding:inherit;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote>p,
+  .homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.has-video:not(.is-inline-video-active)>p,
+  .homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.has-gif:not(.is-inline-video-active)>p{
+    font-size:clamp(12px,3.6vw,15px)!important;
+    line-height:1.28!important;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote>small,
+  .homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.has-video:not(.is-inline-video-active)>small,
+  .homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.has-gif:not(.is-inline-video-active)>small{
+    font-size:9px!important;
+    line-height:1.15!important;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallReaderNav{
+    width:30px!important;
+    height:30px!important;
+    font-size:25px!important;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallReaderHelp{
+    padding:2px 3px 0!important;
+    font-size:7.2px!important;
+    line-height:1.15!important;
+    opacity:.74!important;
+  }
+}
+/* v537: restore the real sticky-note padding in Read Mode; the whole card scales instead. */
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote{padding:20px 12px 9px!important;overflow:hidden!important}
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.is-size-compact{padding:18px 10px 7px!important}
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.is-size-small{padding:20px 12px 9px!important}
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.is-size-medium{padding:21px 13px 10px!important}
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.is-size-large{padding:23px 15px 12px!important}
+@media(max-width:700px){
+  .homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote{padding:18px 10px 8px!important}
+  .homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.is-size-compact{padding:17px 9px 7px!important}
+  .homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.is-size-small{padding:18px 10px 8px!important}
+  .homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.is-size-medium{padding:19px 11px 9px!important}
+  .homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.is-size-large{padding:21px 12px 10px!important}
+}
