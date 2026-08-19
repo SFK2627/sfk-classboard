@@ -37905,3 +37905,517 @@ html.sfkFreedomWallExactExport #homepageEffectLayer.is-freedom-wall-exact-curren
     animation:none!important;
   }
 }
+
+
+/* =========================================================
+   v552 — Freedom Wall Retro Throwback / Analog Nostalgia
+   Warm late-80s/90s school-life nostalgia. This is deliberately
+   separate from Retro Arcade: analog paper, cassette/VHS, radio,
+   tickets and faded print rather than pixels/gaming.
+========================================================= */
+.homepageFreedomWallScene[data-theme="retro-throwback"]{
+  --fw-retro-ink:#3a271d;
+  --fw-retro-muted:#705a49;
+  --fw-retro-cream:#f4e2b8;
+  --fw-retro-paper:#ead2a0;
+  --fw-retro-red:#b84b3b;
+  --fw-retro-teal:#347b79;
+  --fw-retro-mustard:#c8952f;
+  --fw-retro-brown:#6a4530;
+  --fw-retro-shadow:0 18px 38px rgba(62,36,21,.23);
+}
+
+/* Hide unrelated scenery so the analog composition stays intentional. */
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallSun,
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallMoon,
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallCloud,
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallRain,
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallFlood,
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallComicBurst,
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallVandalMark,
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallJungleEnvironment,
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallUtilityPole{
+  display:none!important;
+  opacity:0!important;
+}
+
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallBg{
+  background:
+    radial-gradient(circle at 12% 18%,rgba(255,244,198,.44),transparent 24%),
+    radial-gradient(circle at 84% 14%,rgba(176,74,57,.19),transparent 25%),
+    radial-gradient(circle at 76% 84%,rgba(46,121,118,.18),transparent 27%),
+    repeating-linear-gradient(0deg,rgba(95,67,42,.024) 0 1px,transparent 1px 5px),
+    repeating-linear-gradient(90deg,rgba(255,255,255,.025) 0 1px,transparent 1px 7px),
+    linear-gradient(135deg,#dac494 0%,#e8d7aa 26%,#d9bf8c 52%,#ccac79 100%);
+  isolation:isolate;
+}
+/* Decorative cassette — large enough to read as a shape, quiet enough not to compete. */
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallBg::before{
+  content:"";
+  position:absolute;
+  left:4.5%;
+  bottom:8%;
+  width:clamp(170px,24vw,330px);
+  aspect-ratio:1.62/1;
+  border:clamp(5px,.65vw,9px) solid rgba(76,46,31,.62);
+  border-radius:clamp(10px,1.2vw,17px);
+  box-sizing:border-box;
+  background:
+    radial-gradient(circle at 31% 47%,#e6d6b1 0 8%,#4b3b31 8.8% 12.5%,#d7c39c 13% 17%,transparent 17.5%),
+    radial-gradient(circle at 69% 47%,#e6d6b1 0 8%,#4b3b31 8.8% 12.5%,#d7c39c 13% 17%,transparent 17.5%),
+    linear-gradient(90deg,transparent 23%,rgba(73,50,38,.70) 23% 77%,transparent 77%) 50% 72%/70% 13% no-repeat,
+    linear-gradient(180deg,#b74739 0 20%,#efe0b7 20% 72%,#327b78 72% 80%,#e4cea0 80% 100%);
+  box-shadow:0 20px 34px rgba(71,45,28,.21),inset 0 0 0 2px rgba(255,245,210,.45);
+  opacity:.47;
+  transform:rotate(-7deg);
+  filter:saturate(.83) contrast(.96);
+  pointer-events:none;
+  z-index:0;
+  animation:fwRetroCassetteFloat 13s ease-in-out infinite alternate;
+}
+/* Vinyl record / album corner. */
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallBg::after{
+  content:"";
+  position:absolute;
+  width:clamp(180px,28vw,380px);
+  aspect-ratio:1;
+  right:-5%;
+  top:10%;
+  border-radius:50%;
+  background:
+    radial-gradient(circle,#d1a13d 0 4%,#5e2f28 4.5% 11%,#d3b36e 11.5% 12.5%,#28211f 13% 21%,#3b312d 22% 24%,#25201e 25% 37%,#3b312d 38% 40%,#231e1c 41% 56%,#3a302c 57% 59%,#211c1b 60% 100%);
+  box-shadow:0 22px 44px rgba(57,34,22,.24),inset -12px -10px 28px rgba(0,0,0,.28),inset 10px 8px 22px rgba(255,240,203,.06);
+  opacity:.27;
+  transform:rotate(8deg);
+  pointer-events:none;
+  z-index:0;
+  animation:fwRetroVinylDrift 18s ease-in-out infinite alternate;
+}
+@keyframes fwRetroCassetteFloat{from{transform:rotate(-7deg) translate3d(0,0,0)}to{transform:rotate(-5.5deg) translate3d(5px,-7px,0)}}
+@keyframes fwRetroVinylDrift{from{transform:rotate(8deg) translate3d(0,0,0)}to{transform:rotate(14deg) translate3d(-5px,7px,0)}}
+
+/* Brand: old hi-fi / label-maker badge. */
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallBrand{
+  overflow:hidden;
+  color:var(--fw-retro-ink);
+  border:2px solid rgba(85,55,37,.28);
+  border-radius:13px;
+  background:
+    linear-gradient(90deg,var(--fw-retro-red) 0 22%,var(--fw-retro-mustard) 22% 40%,var(--fw-retro-teal) 40% 62%,transparent 62%) left top/100% 5px no-repeat,
+    linear-gradient(180deg,rgba(255,248,218,.96),rgba(231,210,169,.94));
+  box-shadow:0 12px 26px rgba(72,47,28,.21),inset 0 1px 0 rgba(255,255,255,.58),inset 0 0 0 1px rgba(111,78,49,.08);
+  text-shadow:none;
+}
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallBrand::after{
+  content:"STEREO • MEMORY MODE";
+  display:block;
+  margin-top:4px;
+  font:900 7px/1 "Courier New",monospace;
+  letter-spacing:.11em;
+  color:rgba(83,55,37,.56);
+}
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallBrand strong{
+  font-family:"Arial Black","Trebuchet MS",Arial,sans-serif;
+  font-weight:950;
+  letter-spacing:-.035em;
+  color:#3e2b21;
+}
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallBrand span{color:#725843}
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallReaderOpenBtn{
+  border:1px solid rgba(91,61,39,.23);
+  background:#e7d1a2;
+  color:#4c3428;
+  box-shadow:inset 0 1px rgba(255,255,255,.55),0 3px 0 rgba(91,61,39,.15);
+}
+
+/* Center prompt: premium old album/cassette sleeve, kept crisp and readable. */
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallPromptCard,
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallEmptyState{
+  color:var(--fw-retro-ink);
+  border:2px solid rgba(91,62,42,.22);
+  border-radius:18px 18px 16px 16px;
+  background:
+    linear-gradient(90deg,var(--fw-retro-red),var(--fw-retro-red)) 0 0/100% 7px no-repeat,
+    linear-gradient(90deg,var(--fw-retro-mustard) 0 33%,var(--fw-retro-teal) 33% 66%,#78523d 66% 100%) 0 7px/100% 4px no-repeat,
+    repeating-linear-gradient(0deg,rgba(91,61,38,.025) 0 1px,transparent 1px 5px),
+    linear-gradient(180deg,#fff2cf,#edd8ac 100%);
+  box-shadow:0 24px 48px rgba(65,39,24,.24),inset 0 1px 0 rgba(255,255,255,.70),inset 0 0 0 1px rgba(133,94,56,.06);
+  backdrop-filter:none;
+}
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallPromptCard::before{
+  content:"REC • SIDE A";
+  position:absolute;
+  left:18px;
+  top:15px;
+  padding:4px 7px 3px;
+  border:1px solid rgba(88,58,38,.20);
+  border-radius:4px;
+  background:rgba(244,226,184,.80);
+  color:#8d4339;
+  font:900 8px/1 "Courier New",monospace;
+  letter-spacing:.08em;
+  transform:rotate(-1deg);
+  pointer-events:none;
+}
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallPromptEyebrow{
+  margin-top:5px;
+  color:#a34b3e;
+  font:900 9px/1 "Courier New",monospace;
+  letter-spacing:.18em;
+}
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallPromptCard h2{
+  color:#3e2b21;
+  font-family:"Trebuchet MS",Arial,sans-serif;
+  font-weight:1000;
+  letter-spacing:-.035em;
+  text-shadow:0 1px 0 rgba(255,255,255,.55);
+}
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallPromptCard p,
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallEmptyState p{
+  color:#705744;
+  font-family:"Trebuchet MS",Arial,sans-serif;
+  font-weight:700;
+}
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallPromptClose{
+  color:#4b3226;
+  background:#e0c693;
+  border:1px solid rgba(88,58,38,.17);
+  box-shadow:inset 0 1px rgba(255,255,255,.50),0 3px 0 rgba(89,61,43,.10);
+}
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallEmptyState span{
+  background:#e0c58e;
+  border-color:rgba(88,58,38,.18);
+  color:#9c4c3f;
+}
+
+/* Notes: faded index/memo cards, with tape/label detail instead of thumbtacks. */
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallNote{
+  border:1px solid rgba(86,55,37,.18);
+  border-radius:7px 7px 10px 7px;
+  background:
+    repeating-linear-gradient(0deg,rgba(97,67,43,.024) 0 1px,transparent 1px 4px),
+    linear-gradient(150deg,rgba(255,246,215,.46),rgba(255,255,255,.08) 42%,rgba(92,59,36,.03)),
+    var(--fw-note-bg);
+  background:
+    repeating-linear-gradient(0deg,rgba(97,67,43,.024) 0 1px,transparent 1px 4px),
+    linear-gradient(150deg,rgba(255,246,215,.46),rgba(255,255,255,.08) 42%,rgba(92,59,36,.03)),
+    color-mix(in srgb,var(--fw-note-bg) 72%,#c79f69 28%);
+  box-shadow:0 13px 22px rgba(70,45,27,.21),inset 0 1px rgba(255,255,255,.46),inset 0 -1px rgba(102,68,42,.07);
+  filter:saturate(.74) sepia(.07);
+  overflow:visible;
+}
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallNote::before{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:-5px;
+  width:clamp(34px,36%,64px);
+  height:13px;
+  transform:translateX(-50%) rotate(var(--fw-tape-rotate,-2deg));
+  border:1px solid rgba(116,88,56,.12);
+  background:repeating-linear-gradient(90deg,rgba(255,245,193,.58) 0 5px,rgba(220,196,139,.62) 5px 10px);
+  opacity:.83;
+  box-shadow:0 1px 3px rgba(55,35,21,.09);
+  pointer-events:none;
+}
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallNote::after{
+  content:"";
+  position:absolute;
+  right:7px;
+  bottom:7px;
+  width:20px;
+  height:7px;
+  border:0;
+  border-radius:1px;
+  background:linear-gradient(90deg,var(--fw-retro-red) 0 33%,var(--fw-retro-mustard) 33% 66%,var(--fw-retro-teal) 66% 100%);
+  opacity:.48;
+}
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallNotePin{display:none!important}
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallNote p{
+  color:var(--fw-note-text-color,#3d2b22);
+  font-family:"Trebuchet MS",Arial,sans-serif;
+  font-weight:850;
+  letter-spacing:-.005em;
+  text-shadow:var(--fw-note-text-shadow,none);
+}
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallNote small{
+  color:color-mix(in srgb,var(--fw-note-text-color,#3d2b22) 82%,#6b4934 18%);
+  font-family:"Courier New",monospace;
+  font-weight:900;
+  letter-spacing:-.025em;
+  opacity:.78;
+}
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallNote.is-new{animation:fwRetroNoteDrop .38s cubic-bezier(.2,.82,.25,1.12) both}
+@keyframes fwRetroNoteDrop{0%{opacity:0;transform:translate(-50%,-58%) rotate(calc(var(--fw-rotation) - 2deg)) scale(.91)}100%{opacity:1;transform:translate(-50%,-50%) rotate(var(--fw-rotation)) scale(var(--fw-scale))}}
+
+/* Media: compact CRT/VHS viewing window. */
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallNoteMedia{
+  border:3px solid #5c4637;
+  border-radius:9px;
+  background:#241f1d;
+  box-shadow:inset 0 0 0 2px #a88760,0 7px 13px rgba(55,34,22,.18);
+  overflow:hidden;
+}
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallNoteMedia::after{
+  content:"PLAY ▶";
+  position:absolute;
+  right:5px;
+  bottom:4px;
+  z-index:5;
+  padding:2px 4px;
+  border-radius:2px;
+  background:rgba(33,29,27,.72);
+  color:#ebddb7;
+  font:900 7px/1 "Courier New",monospace;
+  pointer-events:none;
+}
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallNoteMedia.is-youtube-playing::after,
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallNoteMedia.is-spotify-playing::after{display:none}
+
+/* Reaction summaries / picker: small plastic stereo buttons. */
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"]{
+  --fw-react-bg:#e8d1a2;
+  --fw-react-fg:#3e2b21;
+  --fw-react-border:#8c6a4b;
+  --fw-react-chip:#f0ddb4;
+  --fw-react-accent:#aa4439;
+}
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallReactionCount,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallReactionSummary.is-note .freedomWallReactionCount.is-dominant{
+  border:1px solid rgba(91,62,42,.25)!important;
+  background:#ead3a5!important;
+  color:#432e23!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.52),0 3px 0 rgba(87,59,41,.13),0 5px 9px rgba(62,40,26,.10)!important;
+}
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallReactionMenu,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallReplyActionMenu{
+  border:2px solid rgba(91,62,42,.25);
+  background:linear-gradient(180deg,#f1ddb4,#ddc28f);
+  color:#402c22;
+  box-shadow:0 16px 32px rgba(59,37,23,.24),inset 0 1px rgba(255,255,255,.55);
+}
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallReactionChoices>button,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallNoteActionRow>button,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallReplyActionMenu button{
+  border:1px solid rgba(91,62,42,.22);
+  background:#efdbae;
+  color:#432e23;
+  box-shadow:inset 0 1px rgba(255,255,255,.52),0 3px 0 rgba(86,58,39,.12);
+}
+
+/* Add button: physical REC/POST control. */
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallAddBtn{
+  border:2px solid rgba(81,53,35,.28);
+  border-radius:14px;
+  background:linear-gradient(180deg,#e9d3a3,#cfaf76);
+  color:#412c22;
+  box-shadow:0 12px 24px rgba(63,39,24,.22),inset 0 1px rgba(255,255,255,.59),inset 0 -2px rgba(96,65,42,.12);
+}
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallAddBtn span{
+  color:#a84237;
+  text-shadow:0 1px rgba(255,255,255,.40);
+}
+.homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallAddBtn small{color:#493126;font-family:"Courier New",monospace;font-weight:900}
+
+/* Composer/search/reply panels: old portable stereo control panel, but modern usability. */
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallComposer,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallReplyThread,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallMediaSearchModal{
+  background:rgba(47,32,24,.58);
+  backdrop-filter:blur(5px);
+  -webkit-backdrop-filter:blur(5px);
+}
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallComposerCard,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallReplyDialog,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallMediaSearchDialog{
+  color:#3e2b21;
+  border:2px solid rgba(91,62,42,.25);
+  border-radius:16px;
+  background:
+    linear-gradient(90deg,#b44b3e 0 31%,#c8952f 31% 63%,#347b79 63% 100%) 0 0/100% 5px no-repeat,
+    repeating-linear-gradient(0deg,rgba(91,61,38,.02) 0 1px,transparent 1px 5px),
+    linear-gradient(180deg,#f7e5bd,#e0c38c);
+  box-shadow:0 24px 54px rgba(46,28,18,.32),inset 0 1px rgba(255,255,255,.58);
+}
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallComposerHead strong,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallReplyHead strong,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallMediaSearchDialogHead strong{
+  color:#3e2b21;
+  font-family:"Arial Black","Trebuchet MS",Arial,sans-serif;
+  letter-spacing:-.03em;
+}
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallComposerHead span,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallReplyHead span,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallMediaSearchDialogHead span,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallMediaSearchModalStatus{color:#735943}
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallComposerCard label,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallReplyIdentity label,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallMediaSearchWrap>label,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallMediaTypeWrap label,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallYouTubeWrap label{
+  color:#51392b;
+  font-family:"Courier New",monospace;
+  font-weight:900;
+}
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallComposerCard input,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallComposerCard textarea,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallComposerCard select,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallReplyForm input,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallReplyForm textarea,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallMediaSearchLine input,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallMediaSearchDialogBar input,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallMediaTypeWrap select,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallYouTubeWrap input{
+  color:#38281f;
+  border:1.5px solid rgba(91,62,42,.24);
+  border-radius:8px;
+  background:#f6e7c2;
+  box-shadow:inset 0 1px 2px rgba(85,55,36,.09),0 1px rgba(255,255,255,.56);
+}
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallComposerCard input::placeholder,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallComposerCard textarea::placeholder,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallReplyForm input::placeholder,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallReplyForm textarea::placeholder,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallMediaSearchLine input::placeholder,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallMediaSearchDialogBar input::placeholder{color:#9a7b5e}
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallComposerHead button,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallReplyHead button,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallMediaSearchDialogHead button{
+  border:1px solid rgba(91,62,42,.20);
+  background:#d7b982;
+  color:#4b3226;
+  box-shadow:inset 0 1px rgba(255,255,255,.45),0 3px 0 rgba(84,57,39,.10);
+}
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallComposerFooter button,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallReplySend,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallMediaSearchLine button,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallMediaSearchDialogBar button{
+  border:1px solid #6f332d;
+  border-radius:8px;
+  background:linear-gradient(180deg,#bd5548,#9f3e34);
+  color:#fff2d8;
+  box-shadow:inset 0 1px rgba(255,255,255,.24),0 4px 0 rgba(88,44,36,.18);
+  font-family:"Courier New",monospace;
+  font-weight:900;
+}
+
+/* Search result cards keep the vintage palette without hurting thumbnail clarity. */
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallMediaSearchResult,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallMediaSelected{
+  border-color:rgba(91,62,42,.20);
+  background:#f3dfb5;
+  color:#3e2b21;
+}
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallMediaSearchResult b,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallMediaSelected strong{color:#3f2b21}
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallMediaSearchResult small,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallMediaSelected small{color:#745b46}
+
+/* Read Notes mode: portable cassette/radio faceplate. */
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallReader{
+  background:
+    radial-gradient(circle at 18% 22%,rgba(255,232,177,.14),transparent 26%),
+    linear-gradient(145deg,rgba(56,39,31,.92),rgba(87,57,39,.92));
+}
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallReaderToolbar,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallReaderNav,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallReaderHelp,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallReaderEmpty{
+  border:1px solid rgba(245,220,168,.26);
+  background:linear-gradient(180deg,#e7cf9e,#caa873);
+  color:#3b281f;
+  box-shadow:0 13px 26px rgba(25,15,10,.24),inset 0 1px rgba(255,255,255,.45);
+}
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallReaderTitle strong{font-family:"Arial Black","Trebuchet MS",Arial,sans-serif;color:#3c291f}
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallReaderCounter,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallReaderHelp{color:#6a4e39}
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallReaderProgress{
+  border:1px solid rgba(230,210,162,.19);
+  background:#332821;
+  box-shadow:inset 0 2px 5px rgba(0,0,0,.26);
+}
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallReaderProgress i{
+  background:linear-gradient(90deg,#b94b3e 0 36%,#c8952f 36% 68%,#43817e 68% 100%);
+}
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallReaderPauseBtn,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallReaderCloseBtn{
+  background:#d4b47d;
+  color:#442f24;
+  border:1px solid rgba(91,62,42,.20);
+  box-shadow:inset 0 1px rgba(255,255,255,.44),0 3px 0 rgba(72,47,31,.12);
+}
+
+/* Koala/Sir JR remains distinctive but gets a restrained golden sticker treatment. */
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallSirJrBadge,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallKoalaBadge,
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] [data-sirjr-badge]{
+  border-color:#8c6a35!important;
+  background:linear-gradient(180deg,#f0d58d,#cfa64d)!important;
+  color:#533820!important;
+  box-shadow:0 5px 12px rgba(70,45,24,.18),inset 0 1px rgba(255,255,255,.52)!important;
+}
+
+.homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallGestureHint{
+  border:1px solid rgba(101,70,46,.24);
+  background:rgba(239,216,174,.93);
+  color:#5b402f;
+  box-shadow:0 8px 18px rgba(59,38,24,.14);
+  font-family:"Courier New",monospace;
+}
+
+/* Phone: tighter layout, fewer decorative distractions, no lost tap targets. */
+@media(max-width:700px){
+  .homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallBg::before{
+    width:132px;
+    left:-28px;
+    bottom:8%;
+    opacity:.20;
+    filter:saturate(.75);
+  }
+  .homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallBg::after{
+    width:154px;
+    right:-62px;
+    top:18%;
+    opacity:.15;
+  }
+  .homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallBrand{
+    border-radius:10px;
+    padding-top:8px;
+    padding-bottom:7px;
+  }
+  .homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallBrand::after{display:none}
+  .homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallPromptCard,
+  .homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallEmptyState{
+    width:min(90vw,440px);
+    padding:22px 38px 18px 18px;
+    border-radius:14px;
+  }
+  .homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallPromptCard::before{
+    left:11px;
+    top:12px;
+    padding:3px 5px 2px;
+    font-size:6.5px;
+  }
+  .homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallPromptEyebrow{margin-top:6px;font-size:7.5px}
+  .homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallNote{
+    border-radius:6px 6px 8px 6px;
+    filter:saturate(.78) sepia(.05);
+  }
+  .homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallNote::before{height:10px;top:-4px}
+  .homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallNote::after{width:16px;height:5px;right:5px;bottom:5px}
+  .homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallAddBtn{
+    border-radius:11px;
+  }
+  .homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallComposerCard,
+  .homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallReplyDialog,
+  .homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallMediaSearchDialog{
+    border-radius:13px;
+  }
+  .homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallReactionMenu{border-radius:14px}
+  .homepageEffectLayer[data-freedom-wall-theme="retro-throwback"] .freedomWallGestureHint{font-size:8px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallBg::before,
+  .homepageFreedomWallScene[data-theme="retro-throwback"] .freedomWallBg::after{animation:none!important}
+}

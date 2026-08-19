@@ -285,6 +285,7 @@
               <option value="cutout-pop">Cutout Pop / Magazine Collage</option>
               <option value="liquid-glass">Liquid Glass / iPhone Glass</option>
               <option value="polaroid">Polaroid Memory Wall</option>
+              <option value="retro-throwback">Retro Throwback / Analog Nostalgia</option>
               <option value="retro-arcade">Retro Arcade / Pixel Wall</option>
               <option value="coding-lab">Coding / Computer Lab</option>
               <option value="rainbow">Kindness Rainbow Wall</option>
@@ -2472,6 +2473,7 @@ https://audio.jukehost.co.uk/AAAhttps://audio.jukehost.co.uk/BBBhttps://audio.ju
       if(["school-note","whiteboard"].includes(t))return '"Segoe Print","Trebuchet MS",sans-serif';
       if(["newspaper","seasonal"].includes(t))return 'Georgia,"Times New Roman",serif';
       if(["retro-arcade","coding-lab"].includes(t))return 'Consolas,"Courier New",monospace';
+      if(t==="retro-throwback")return '"Trebuchet MS",Arial,sans-serif';
       if(["graffiti","vandal","cutout-pop"].includes(t))return 'Impact,"Arial Black",sans-serif';
       return 'Arial,Helvetica,sans-serif';
     }
@@ -2500,6 +2502,7 @@ https://audio.jukehost.co.uk/AAAhttps://audio.jukehost.co.uk/BBBhttps://audio.ju
         newspaper:{bg1:"#e8e3d7",bg2:"#f7f3e9",panel:"#fffdf7",text:"#232323",muted:"#5c5c5c",accent:"#9a2f2f",line:"rgba(35,35,35,.16)",deco:"newspaper",note:"news"},
         "cutout-pop":{bg1:"#f5f0e6",bg2:"#efe7d8",panel:"#fffdf8",text:"#1e1e1e",muted:"#5f574d",accent:"#ff5ea2",line:"rgba(30,30,30,.14)",deco:"cutout",note:"cutout"},
         polaroid:{bg1:"#d8d1c7",bg2:"#b9b0a4",panel:"#fffdf9",text:"#2f2d2a",muted:"#706c65",accent:"#d0a75d",line:"rgba(47,45,42,.13)",deco:"polaroid",note:"polaroid"},
+        "retro-throwback":{bg1:"#dbc594",bg2:"#c5a26f",panel:"#f3dfb4",text:"#3e2b21",muted:"#745b46",accent:"#b84b3b",line:"rgba(75,47,31,.20)",deco:"retro",note:"index"},
         "retro-arcade":{bg1:"#140b28",bg2:"#2b1550",panel:"#151323",text:"#fdf5ff",muted:"#d3c2df",accent:"#5df2ff",line:"rgba(93,242,255,.32)",deco:"arcade",note:"pixel"},
         "coding-lab":{bg1:"#0a1520",bg2:"#162a36",panel:"#101d27",text:"#dcf8e8",muted:"#9cc6b0",accent:"#56d891",line:"rgba(86,216,145,.22)",deco:"code",note:"terminal"},
         rainbow:{bg1:"#fff3f7",bg2:"#eef8ff",panel:"#ffffff",text:"#333746",muted:"#73798a",accent:"#f06f9b",line:"rgba(51,55,70,.10)",deco:"rainbow",note:"soft"},
@@ -2563,6 +2566,19 @@ https://audio.jukehost.co.uk/AAAhttps://audio.jukehost.co.uk/BBBhttps://audio.ju
         for(let x=40;x<w;x+=260){line(ctx,x,0,x,h,"#333",1,.08);for(let y=55;y<h;y+=28)line(ctx,x+18,y,Math.min(w-20,x+220),y,"#333",1,.08);}
       }else if(d==="polaroid"){
         for(let i=0;i<10;i++){const x=60+(i*173)%Math.max(100,w-140),y=45+(i*119)%Math.max(100,h-180);line(ctx,x,y,x+80,y+45,"#7e7469",2,.10);circle(ctx,x,y,5,"#d0a75d",.35);}
+      }else if(d==="retro"){
+        /* Analog throwback export fallback: vinyl + cassette + faded stripes. */
+        circle(ctx,w*.88,h*.18,Math.min(w,h)*.15,"#27211f",.22);
+        circle(ctx,w*.88,h*.18,Math.min(w,h)*.055,"#c8952f",.28);
+        ctx.save();ctx.translate(w*.10,h*.72);ctx.rotate(-.10);ctx.globalAlpha=.32;
+        roundRect(ctx,0,0,Math.min(w*.26,330),Math.min(h*.16,190),14,"#ead8ad","rgba(74,47,31,.42)");
+        const cw=Math.min(w*.26,330),ch=Math.min(h*.16,190);
+        ctx.fillStyle="#b84b3b";ctx.fillRect(0,0,cw,ch*.18);
+        circle(ctx,cw*.31,ch*.52,ch*.13,"#4d3d32",.72);circle(ctx,cw*.69,ch*.52,ch*.13,"#4d3d32",.72);
+        ctx.fillStyle="#347b79";ctx.fillRect(cw*.12,ch*.78,cw*.76,Math.max(4,ch*.05));ctx.restore();
+        ctx.fillStyle="rgba(184,75,59,.11)";ctx.fillRect(0,0,w,8);
+        ctx.fillStyle="rgba(200,149,47,.10)";ctx.fillRect(0,8,w,7);
+        ctx.fillStyle="rgba(52,123,121,.10)";ctx.fillRect(0,15,w,7);
       }else if(d==="arcade"){
         for(let x=0;x<w;x+=42)line(ctx,x,0,x,h,"#5df2ff",1,.08);for(let y=0;y<h;y+=42)line(ctx,0,y,w,y,"#ff4fc6",1,.06);for(let i=0;i<22;i++){ctx.fillStyle=["#5df2ff","#ff4fc6","#f7d95c"][i%3];ctx.globalAlpha=.24;ctx.fillRect((i*137)%w,(i*71)%h,12,12);ctx.globalAlpha=1;}
       }else if(d==="code"){
