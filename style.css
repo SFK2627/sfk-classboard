@@ -36350,3 +36350,143 @@ html.sfkFreedomWallReaderNoScroll body{
     margin-top:4px!important;
   }
 }
+
+/* =========================================================
+   v540 FREEDOM WALL — REACTION/REPLY FOOTER SAFE ZONE
+   Prevent reaction/reply chips from overlapping the nickname/author line.
+   The note keeps a compact look, but reserves a real footer lane for chips.
+========================================================= */
+.homepageEffectLayer.is-freedom-wall .freedomWallNote.has-reactions,
+.homepageEffectLayer.is-freedom-wall .freedomWallNote.has-replies,
+.homepageFreedomWallScene .freedomWallNote.has-reactions,
+.homepageFreedomWallScene .freedomWallNote.has-replies{
+  padding-bottom:clamp(26px,2.8vw,34px)!important;
+}
+
+.homepageEffectLayer.is-freedom-wall .freedomWallNote.has-reactions.has-media,
+.homepageEffectLayer.is-freedom-wall .freedomWallNote.has-replies.has-media,
+.homepageFreedomWallScene .freedomWallNote.has-reactions.has-media,
+.homepageFreedomWallScene .freedomWallNote.has-replies.has-media{
+  padding-bottom:clamp(28px,3vw,36px)!important;
+}
+
+/* Author/name must sit ABOVE the footer chips, never inside the chip lane. */
+.homepageEffectLayer.is-freedom-wall .freedomWallNote.has-reactions > small,
+.homepageEffectLayer.is-freedom-wall .freedomWallNote.has-replies > small,
+.homepageFreedomWallScene .freedomWallNote.has-reactions > small,
+.homepageFreedomWallScene .freedomWallNote.has-replies > small{
+  margin-top:4px!important;
+  margin-bottom:0!important;
+  position:relative!important;
+  z-index:14!important;
+  max-width:100%!important;
+  padding-left:0!important;
+  padding-right:2px!important;
+}
+
+/* Message/media should not create an extra fake gap; the safe zone is handled by padding. */
+.homepageEffectLayer.is-freedom-wall .freedomWallNote.has-reactions > p,
+.homepageEffectLayer.is-freedom-wall .freedomWallNote.has-replies > p,
+.homepageFreedomWallScene .freedomWallNote.has-reactions > p,
+.homepageFreedomWallScene .freedomWallNote.has-replies > p{
+  margin-bottom:0!important;
+}
+
+.homepageEffectLayer.is-freedom-wall .freedomWallNote.has-reactions.has-media > .freedomWallNoteMedia,
+.homepageEffectLayer.is-freedom-wall .freedomWallNote.has-replies.has-media > .freedomWallNoteMedia,
+.homepageFreedomWallScene .freedomWallNote.has-reactions.has-media > .freedomWallNoteMedia,
+.homepageFreedomWallScene .freedomWallNote.has-replies.has-media > .freedomWallNoteMedia{
+  margin-bottom:4px!important;
+}
+
+/* Keep chips inside the note and away from the name line. */
+.homepageEffectLayer.is-freedom-wall .freedomWallReactionSummary.is-note,
+.homepageFreedomWallScene .freedomWallReactionSummary.is-note{
+  left:7px!important;
+  right:auto!important;
+  bottom:7px!important;
+  max-width:calc(100% - 14px)!important;
+  z-index:16!important;
+  display:flex!important;
+  align-items:flex-end!important;
+  justify-content:flex-start!important;
+  gap:4px!important;
+  overflow:hidden!important;
+}
+
+.homepageEffectLayer.is-freedom-wall .freedomWallReactionSummary.is-note .freedomWallReactionCount,
+.homepageFreedomWallScene .freedomWallReactionSummary.is-note .freedomWallReactionCount{
+  flex:0 1 auto!important;
+  max-width:100%!important;
+}
+
+/* Tiny cards get a little more footer room because two chips can be wider than expected. */
+.homepageEffectLayer.is-freedom-wall .freedomWallNote.is-size-compact.has-reactions,
+.homepageEffectLayer.is-freedom-wall .freedomWallNote.is-size-compact.has-replies,
+.homepageFreedomWallScene .freedomWallNote.is-size-compact.has-reactions,
+.homepageFreedomWallScene .freedomWallNote.is-size-compact.has-replies,
+.homepageEffectLayer.is-freedom-wall .freedomWallNote.is-size-small.has-reactions,
+.homepageEffectLayer.is-freedom-wall .freedomWallNote.is-size-small.has-replies,
+.homepageFreedomWallScene .freedomWallNote.is-size-small.has-reactions,
+.homepageFreedomWallScene .freedomWallNote.is-size-small.has-replies{
+  padding-bottom:30px!important;
+}
+
+/* Read Notes mode uses larger chips, so reserve a slightly stronger footer lane. */
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.has-reactions,
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.has-replies{
+  padding-bottom:clamp(32px,4.2vw,44px)!important;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.has-reactions > small,
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.has-replies > small{
+  margin-top:5px!important;
+  margin-bottom:0!important;
+  z-index:14!important;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.has-reactions > p,
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.has-replies > p{
+  margin-bottom:0!important;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderNote .freedomWallReactionSummary.is-note{
+  bottom:8px!important;
+}
+
+@media(max-width:700px){
+  .homepageEffectLayer.is-freedom-wall .freedomWallNote.has-reactions,
+  .homepageEffectLayer.is-freedom-wall .freedomWallNote.has-replies,
+  .homepageFreedomWallScene .freedomWallNote.has-reactions,
+  .homepageFreedomWallScene .freedomWallNote.has-replies{
+    padding-bottom:28px!important;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallNote.has-reactions.has-media,
+  .homepageEffectLayer.is-freedom-wall .freedomWallNote.has-replies.has-media,
+  .homepageFreedomWallScene .freedomWallNote.has-reactions.has-media,
+  .homepageFreedomWallScene .freedomWallNote.has-replies.has-media{
+    padding-bottom:30px!important;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallNote.has-reactions > small,
+  .homepageEffectLayer.is-freedom-wall .freedomWallNote.has-replies > small,
+  .homepageFreedomWallScene .freedomWallNote.has-reactions > small,
+  .homepageFreedomWallScene .freedomWallNote.has-replies > small{
+    margin-top:3px!important;
+    margin-bottom:0!important;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallReactionSummary.is-note,
+  .homepageFreedomWallScene .freedomWallReactionSummary.is-note{
+    left:6px!important;
+    bottom:6px!important;
+    max-width:calc(100% - 12px)!important;
+    gap:3px!important;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallReactionSummary.is-note .freedomWallReactionCount.is-dominant,
+  .homepageFreedomWallScene .freedomWallReactionSummary.is-note .freedomWallReactionCount.is-dominant{
+    min-height:19px!important;
+    height:19px!important;
+    padding:2px 6px!important;
+    font-size:10px!important;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.has-reactions,
+  .homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.has-replies{
+    padding-bottom:34px!important;
+  }
+}

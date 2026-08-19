@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-main-pwa-v539-tighter-note-author-spacing";
+const CACHE_NAME = "sfk-main-pwa-v540-reaction-reply-footer-safe";
 const CACHE_PREFIXES_TO_DELETE = ["sfk-main-pwa-", "sfk-sw.js-"];
 const NAVIGATION_FALLBACK_URL = "./index.html";
 const NAVIGATION_TIMEOUT_MS = 2500;
