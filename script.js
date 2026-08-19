@@ -1771,6 +1771,7 @@ const HOMEPAGE_RICKROLL_DEFAULT_URL = "https://streamable.com/33rhw4";
 const FREEDOM_WALL_COLLECTION = "freedomWallNotes";
 const FREEDOM_WALL_SESSION_COLLECTION = "freedomWallSessions";
 const FREEDOM_WALL_PROMPT_REACTION_COLLECTION = "freedomWallPromptReactions";
+const FREEDOM_WALL_REPLY_COLLECTION = "freedomWallReplies";
 const FREEDOM_WALL_LEGACY_SESSION_ID = "legacy";
 const FREEDOM_WALL_MAX_RENDERED_NOTES = 400;
 const FREEDOM_WALL_NOTE_MAX_LENGTH = 240;
@@ -1808,6 +1809,9 @@ const FREEDOM_WALL_REACTIONS = Object.freeze({ heart:"❤️", haha:"😂", wow:
 const FREEDOM_WALL_REACTION_TYPES = Object.freeze(Object.keys(FREEDOM_WALL_REACTIONS));
 const FREEDOM_WALL_REACTION_HOLD_MS = 480;
 const FREEDOM_WALL_REACTION_MOVE_THRESHOLD = 11;
+const FREEDOM_WALL_REPLY_MAX_LENGTH = 240;
+const FREEDOM_WALL_REPLY_HOLD_MS = 430;
+const FREEDOM_WALL_REPLY_MOVE_THRESHOLD = 10;
 let freedomWallUnsubscribe = null;
 let freedomWallListenToken = 0;
 let freedomWallConfig = null;
@@ -2027,6 +2031,15 @@ let freedomWallPromptReactionsCache = {};
 let freedomWallPromptReactionLastType = "";
 let freedomWallPromptReactionPending = null;
 let freedomWallPromptReactionTimer = 0;
+let freedomWallReplyThreadNoteId = "";
+let freedomWallReplyThreadUnsubscribe = null;
+let freedomWallReplyThreadListenToken = 0;
+let freedomWallReplyThreadCache = [];
+let freedomWallReplyParentId = "";
+let freedomWallReplyParentName = "";
+let freedomWallReplyPosting = false;
+let freedomWallReplyHoldTimer = 0;
+let freedomWallReplyHoldPending = null;
 
 
 function getFreedomWallExactExportOptions() {
@@ -3794,7 +3807,30 @@ function ensureHomepageEffectLayer() {
           <button type="button" role="menuitem" data-fw-reaction="sad" aria-label="Sad"><span>😢</span><b>Sad</b><small data-fw-reaction-count="sad">0</small></button>
           <button type="button" role="menuitem" data-fw-reaction="like" aria-label="Like"><span>👍</span><b>Like</b><small data-fw-reaction-count="like">0</small></button>
         </div>
+        <div id="freedomWallNoteActionRow" class="freedomWallNoteActionRow" hidden>
+          <button id="freedomWallViewRepliesBtn" type="button"><span aria-hidden="true">💬</span><b>Replies</b><small id="freedomWallActionReplyCount">0</small></button>
+          <button id="freedomWallQuickReplyBtn" type="button"><span aria-hidden="true">↩</span><b>Reply</b></button>
+        </div>
         <small id="freedomWallReactionStatus" class="freedomWallReactionStatus" role="status"></small>
+      </div>
+      <div id="freedomWallReplyThread" class="freedomWallReplyThread" hidden>
+        <section class="freedomWallReplyDialog" role="dialog" aria-modal="true" aria-labelledby="freedomWallReplyTitle">
+          <div class="freedomWallReplyHead">
+            <div><strong id="freedomWallReplyTitle">Replies</strong><span id="freedomWallReplySubtitle">Conversation on this note</span></div>
+            <button id="freedomWallReplyClose" type="button" aria-label="Close replies">×</button>
+          </div>
+          <div id="freedomWallReplyOriginal" class="freedomWallReplyOriginal"></div>
+          <div id="freedomWallReplyList" class="freedomWallReplyList" role="feed" aria-live="polite"></div>
+          <form id="freedomWallReplyForm" class="freedomWallReplyForm">
+            <div id="freedomWallReplyingTo" class="freedomWallReplyingTo" hidden><span></span><button id="freedomWallReplyCancelParent" type="button">×</button></div>
+            <div class="freedomWallReplyIdentity"><label for="freedomWallReplyAuthor">Name / nickname</label><input id="freedomWallReplyAuthor" maxlength="42" autocomplete="name" placeholder="Your name" /></div>
+            <div class="freedomWallReplyComposerLine"><textarea id="freedomWallReplyInput" maxlength="240" rows="2" placeholder="Write a reply…"></textarea><button id="freedomWallReplySend" type="submit">Send</button></div>
+            <small id="freedomWallReplyStatus" role="status"></small>
+          </form>
+        </section>
+      </div>
+      <div id="freedomWallReplyActionMenu" class="freedomWallReplyActionMenu" hidden>
+        <button id="freedomWallReplyToReplyBtn" type="button">↩ <span>Reply</span></button>
       </div>
       <button id="freedomWallAddBtn" class="freedomWallAddBtn" type="button" aria-label="Add a note"><span>+</span><small>Add Note</small></button>
       <div id="freedomWallComposer" class="freedomWallComposer" hidden>
@@ -3980,6 +4016,22 @@ function ensureHomepageEffectLayer() {
   layer.querySelector("#freedomWallComposer")?.addEventListener("pointerdown", (event) => {
     if (event.target?.id === "freedomWallComposer") closeFreedomWallComposer();
   });
+  layer.querySelector("#freedomWallViewRepliesBtn")?.addEventListener("click", () => {
+    const target = freedomWallReactionMenuTarget ? { ...freedomWallReactionMenuTarget } : null;
+    if (target?.type === "note") openFreedomWallReplyThread(target.id, { focusComposer:false });
+  });
+  layer.querySelector("#freedomWallQuickReplyBtn")?.addEventListener("click", () => {
+    const target = freedomWallReactionMenuTarget ? { ...freedomWallReactionMenuTarget } : null;
+    if (target?.type === "note") openFreedomWallReplyThread(target.id, { focusComposer:true });
+  });
+  layer.querySelector("#freedomWallReplyClose")?.addEventListener("click", closeFreedomWallReplyThread);
+  layer.querySelector("#freedomWallReplyThread")?.addEventListener("pointerdown", (event) => {
+    if (event.target?.id === "freedomWallReplyThread") closeFreedomWallReplyThread();
+  });
+  layer.querySelector("#freedomWallReplyForm")?.addEventListener("submit", submitFreedomWallReply);
+  layer.querySelector("#freedomWallReplyCancelParent")?.addEventListener("click", (event) => { event.preventDefault(); clearFreedomWallReplyParent(); });
+  layer.querySelector("#freedomWallReplyToReplyBtn")?.addEventListener("click", (event) => { event.preventDefault(); applyFreedomWallReplyActionTarget(); });
+  setupFreedomWallReplyInteractions(layer);
   setupFreedomWallNoteDragging(layer);
   setupFreedomWallReactions(layer);
 
@@ -5159,16 +5211,21 @@ function updateFreedomWallReactionSummary(container, reactions = {}, targetType 
   }
   if (!summary) return;
   const { total, dominant, mine } = getFreedomWallReactionStats(reactions, lastType);
-  if (!total || !dominant) {
-    summary.innerHTML = "";
-    summary.hidden = true;
-    container.classList?.remove?.("has-reactions");
-    return;
+  const noteId = targetType === "note" ? String(container.dataset?.noteId || "") : "";
+  const note = noteId ? freedomWallNotesCache.find((item) => String(item?.id || "") === noteId) : null;
+  const replyCount = targetType === "note" ? Math.max(0, Math.floor(Number(note?.replyCount || 0) || 0)) : 0;
+  const parts = [];
+  if (total && dominant) {
+    const selected = mine === dominant ? " is-mine" : "";
+    parts.push(`<span class="freedomWallReactionCount is-dominant${selected}" data-reaction="${dominant}" aria-label="${total} reactions">${FREEDOM_WALL_REACTIONS[dominant]} <b>${total}</b></span>`);
   }
-  const selected = mine === dominant ? " is-mine" : "";
-  summary.innerHTML = `<span class="freedomWallReactionCount is-dominant${selected}" data-reaction="${dominant}" aria-label="${total} reactions">${FREEDOM_WALL_REACTIONS[dominant]} <b>${total}</b></span>`;
-  summary.hidden = false;
-  container.classList?.add?.("has-reactions");
+  if (replyCount > 0) {
+    parts.push(`<span class="freedomWallReplyCount" aria-label="${replyCount} ${replyCount === 1 ? "reply" : "replies"}">💬 <b>${replyCount}</b></span>`);
+  }
+  summary.innerHTML = parts.join("");
+  summary.hidden = parts.length === 0;
+  container.classList?.toggle?.("has-reactions", Boolean(total && dominant));
+  container.classList?.toggle?.("has-replies", replyCount > 0);
 }
 
 function getFreedomWallPromptReactionDocIdFromSignature(signature) {
@@ -5217,6 +5274,14 @@ function updateFreedomWallReactionMenuState() {
     const count = button.querySelector(`[data-fw-reaction-count="${type}"]`);
     if (count) count.textContent = String(counts[type] || 0);
   });
+  const actionRow = menu.querySelector("#freedomWallNoteActionRow");
+  const replyCountEl = menu.querySelector("#freedomWallActionReplyCount");
+  const isNote = freedomWallReactionMenuTarget.type === "note";
+  if (actionRow) actionRow.hidden = !isNote;
+  if (isNote && replyCountEl) {
+    const note = freedomWallNotesCache.find((item) => String(item?.id || "") === String(freedomWallReactionMenuTarget.id || ""));
+    replyCountEl.textContent = String(Math.max(0, Math.floor(Number(note?.replyCount || 0) || 0)));
+  }
 }
 
 function positionFreedomWallReactionMenu(clientX, clientY) {
@@ -5244,7 +5309,7 @@ function openFreedomWallReactionMenu(target, clientX, clientY, pointerType = "mo
   clearFreedomWallPromptReactionPending();
   closeFreedomWallCustomizerPanel();
   freedomWallReactionMenuTarget = { type: target.type, id: String(target.id) };
-  if (title) title.textContent = target.type === "prompt" ? "React to the prompt" : "React to this note";
+  if (title) title.textContent = target.type === "prompt" ? "React to the prompt" : "Note actions";
   if (status) status.textContent = "";
   menu.dataset.pointerType = pointerType || "mouse";
   menu.hidden = false;
@@ -5542,6 +5607,379 @@ function setupFreedomWallReactions(layer) {
     if (event.button === 2) return; // let contextmenu move/open the picker first
     closeFreedomWallReactionMenu();
   }, true);
+}
+
+
+function normalizeFreedomWallReply(doc, index = 0) {
+  const data = typeof doc?.data === "function" ? (doc.data() || {}) : (doc || {});
+  const id = String(doc?.id || data.ID || data.id || `reply-${index}`);
+  const noteId = String(data.NoteID || data.noteId || "").trim();
+  const parentReplyId = String(data.ParentReplyID || data.parentReplyId || "").trim();
+  const text = String(data.Text || data.text || "").trim().slice(0, FREEDOM_WALL_REPLY_MAX_LENGTH);
+  const author = String(data.Name || data.Author || data.name || "").trim().slice(0, FREEDOM_WALL_AUTHOR_MAX_LENGTH);
+  const deviceId = String(data.DeviceId || data.deviceId || "").trim();
+  const createdAtMs = freedomWallSafeNumber(data.CreatedAtMs || data.createdAtMs, Date.now() - (10000 - index), 0, Number.MAX_SAFE_INTEGER);
+  const wallId = normalizeFreedomWallSessionId(data.WallID || data.wallId || FREEDOM_WALL_LEGACY_SESSION_ID);
+  if (!id || !noteId || !text || !author) return null;
+  return { id, noteId, parentReplyId, text, author, deviceId, createdAtMs, wallId };
+}
+
+function getFreedomWallReplyNote(noteId = freedomWallReplyThreadNoteId) {
+  return freedomWallNotesCache.find((item) => String(item?.id || "") === String(noteId || "")) || null;
+}
+
+function formatFreedomWallReplyTime(ms) {
+  try {
+    const date = new Date(Number(ms) || Date.now());
+    return date.toLocaleTimeString([], { hour:"numeric", minute:"2-digit" });
+  } catch (error) {
+    return "";
+  }
+}
+
+function stopFreedomWallReplyThreadLive() {
+  freedomWallReplyThreadListenToken += 1;
+  try { freedomWallReplyThreadUnsubscribe?.(); } catch (error) {}
+  freedomWallReplyThreadUnsubscribe = null;
+}
+
+function clearFreedomWallReplyActionMenu() {
+  if (freedomWallReplyHoldTimer) window.clearTimeout(freedomWallReplyHoldTimer);
+  freedomWallReplyHoldTimer = 0;
+  freedomWallReplyHoldPending = null;
+  const menu = document.getElementById("homepageEffectLayer")?.querySelector("#freedomWallReplyActionMenu");
+  if (menu) {
+    menu.hidden = true;
+    menu.style.removeProperty("left");
+    menu.style.removeProperty("top");
+    menu.removeAttribute("data-reply-id");
+    menu.removeAttribute("data-reply-name");
+  }
+}
+
+function clearFreedomWallReplyParent() {
+  freedomWallReplyParentId = "";
+  freedomWallReplyParentName = "";
+  const box = document.getElementById("homepageEffectLayer")?.querySelector("#freedomWallReplyingTo");
+  const label = box?.querySelector("span");
+  if (label) label.textContent = "";
+  if (box) box.hidden = true;
+}
+
+function setFreedomWallReplyParent(replyId, author) {
+  freedomWallReplyParentId = String(replyId || "").trim();
+  freedomWallReplyParentName = String(author || "Someone").trim().slice(0, FREEDOM_WALL_AUTHOR_MAX_LENGTH) || "Someone";
+  const layer = document.getElementById("homepageEffectLayer");
+  const box = layer?.querySelector("#freedomWallReplyingTo");
+  const label = box?.querySelector("span");
+  if (label) label.textContent = `↩ Replying to ${freedomWallReplyParentName}`;
+  if (box) box.hidden = !freedomWallReplyParentId;
+  clearFreedomWallReplyActionMenu();
+  window.setTimeout(() => layer?.querySelector("#freedomWallReplyInput")?.focus(), 20);
+}
+
+function applyFreedomWallReplyActionTarget() {
+  const menu = document.getElementById("homepageEffectLayer")?.querySelector("#freedomWallReplyActionMenu");
+  if (!menu || menu.hidden) return;
+  const replyId = String(menu.dataset.replyId || "");
+  const replyName = String(menu.dataset.replyName || "Someone");
+  if (replyId) setFreedomWallReplyParent(replyId, replyName);
+}
+
+function positionFreedomWallReplyActionMenu(clientX, clientY) {
+  const menu = document.getElementById("homepageEffectLayer")?.querySelector("#freedomWallReplyActionMenu");
+  if (!menu || menu.hidden) return;
+  if (window.innerWidth <= 700) {
+    menu.style.left = "50%";
+    menu.style.top = "auto";
+    return;
+  }
+  menu.style.left = `${Math.max(10, Number(clientX) || 10)}px`;
+  menu.style.top = `${Math.max(10, Number(clientY) || 10)}px`;
+  const rect = menu.getBoundingClientRect();
+  menu.style.left = `${Math.max(10, Math.min(window.innerWidth - rect.width - 10, Number(clientX) || 10))}px`;
+  menu.style.top = `${Math.max(10, Math.min(window.innerHeight - rect.height - 10, Number(clientY) || 10))}px`;
+}
+
+function openFreedomWallReplyActionMenu(replyId, author, clientX, clientY) {
+  const layer = document.getElementById("homepageEffectLayer");
+  const menu = layer?.querySelector("#freedomWallReplyActionMenu");
+  if (!menu || !replyId) return;
+  menu.dataset.replyId = String(replyId);
+  menu.dataset.replyName = String(author || "Someone");
+  const label = menu.querySelector("#freedomWallReplyToReplyBtn span");
+  if (label) label.textContent = `Reply to ${String(author || "Someone").slice(0, 26)}`;
+  menu.hidden = false;
+  positionFreedomWallReplyActionMenu(clientX, clientY);
+  try { if (navigator.vibrate && window.innerWidth <= 700) navigator.vibrate(6); } catch (error) {}
+}
+
+function renderFreedomWallReplyOriginal(note) {
+  const layer = document.getElementById("homepageEffectLayer");
+  const box = layer?.querySelector("#freedomWallReplyOriginal");
+  if (!box) return;
+  box.replaceChildren();
+  if (!note) return;
+  const label = document.createElement("small");
+  label.textContent = "Original note";
+  const text = document.createElement("p");
+  text.textContent = note.text || (note.youtubeUrl ? "YouTube post" : (note.gif?.url || note.mediaRef ? "Media post" : "Note"));
+  box.append(label, text);
+  if (freedomWallConfig?.freedomWallShowNames && note.author) {
+    const author = document.createElement("b");
+    author.textContent = `— ${note.author}`;
+    box.appendChild(author);
+  }
+}
+
+function getFreedomWallReplyDepth(reply, byId) {
+  let depth = 0;
+  let parentId = String(reply?.parentReplyId || "");
+  const seen = new Set();
+  while (parentId && depth < 8 && !seen.has(parentId)) {
+    seen.add(parentId);
+    const parent = byId.get(parentId);
+    if (!parent) break;
+    depth += 1;
+    parentId = String(parent.parentReplyId || "");
+  }
+  return depth;
+}
+
+function renderFreedomWallReplyThread(replies = freedomWallReplyThreadCache) {
+  const layer = document.getElementById("homepageEffectLayer");
+  const list = layer?.querySelector("#freedomWallReplyList");
+  const subtitle = layer?.querySelector("#freedomWallReplySubtitle");
+  if (!list) return;
+  const sorted = (replies || []).filter(Boolean).slice().sort((a,b) => (a.createdAtMs - b.createdAtMs) || a.id.localeCompare(b.id));
+  const byId = new Map(sorted.map((reply) => [String(reply.id), reply]));
+  const totalCount = Math.max(sorted.length, Math.floor(Number(getFreedomWallReplyNote()?.replyCount || 0) || 0));
+  if (subtitle) subtitle.textContent = `${totalCount} ${totalCount === 1 ? "reply" : "replies"} • long-press/right-click a reply to answer it`;
+  list.replaceChildren();
+  if (!sorted.length) {
+    const empty = document.createElement("div");
+    empty.className = "freedomWallReplyEmpty";
+    empty.innerHTML = `<span>💬</span><strong>No replies yet</strong><small>Be the first to reply to this note.</small>`;
+    list.appendChild(empty);
+    return;
+  }
+  sorted.forEach((reply) => {
+    const item = document.createElement("article");
+    item.className = "freedomWallReplyItem";
+    item.dataset.replyId = reply.id;
+    const displayAuthor = freedomWallConfig?.freedomWallShowNames ? reply.author : "Anonymous";
+    item.dataset.replyName = displayAuthor;
+    const depth = getFreedomWallReplyDepth(reply, byId);
+    item.style.setProperty("--fw-reply-depth", String(Math.min(2, depth)));
+    const head = document.createElement("div");
+    head.className = "freedomWallReplyItemHead";
+    const author = document.createElement("strong");
+    author.textContent = displayAuthor;
+    const time = document.createElement("small");
+    time.textContent = formatFreedomWallReplyTime(reply.createdAtMs);
+    head.append(author, time);
+    item.appendChild(head);
+    if (reply.parentReplyId) {
+      const parent = byId.get(reply.parentReplyId);
+      const parentLabel = document.createElement("div");
+      parentLabel.className = "freedomWallReplyParentLabel";
+      const parentDisplayAuthor = freedomWallConfig?.freedomWallShowNames ? (parent?.author || "a reply") : "Anonymous";
+      parentLabel.textContent = `↳ Replying to ${parentDisplayAuthor}`;
+      item.appendChild(parentLabel);
+    }
+    const body = document.createElement("p");
+    body.textContent = reply.text;
+    item.appendChild(body);
+    list.appendChild(item);
+  });
+}
+
+async function startFreedomWallReplyThreadLive(noteId) {
+  stopFreedomWallReplyThreadLive();
+  const token = ++freedomWallReplyThreadListenToken;
+  const db = await waitForClassBoardFirestore(12000);
+  if (!db || token !== freedomWallReplyThreadListenToken || freedomWallReplyThreadNoteId !== noteId) return;
+  try {
+    freedomWallReplyThreadUnsubscribe = db.collection(FREEDOM_WALL_REPLY_COLLECTION)
+      .where("NoteID", "==", noteId)
+      .limit(500)
+      .onSnapshot((snapshot) => {
+        if (token !== freedomWallReplyThreadListenToken || freedomWallReplyThreadNoteId !== noteId) return;
+        freedomWallReplyThreadCache = snapshot.docs.map((doc, index) => normalizeFreedomWallReply(doc, index)).filter(Boolean);
+        renderFreedomWallReplyThread(freedomWallReplyThreadCache);
+      }, (error) => {
+        console.warn("Freedom Wall replies listener unavailable:", error);
+        const status = document.getElementById("homepageEffectLayer")?.querySelector("#freedomWallReplyStatus");
+        if (status) status.textContent = "Unable to load replies right now.";
+      });
+  } catch (error) {
+    console.warn("Freedom Wall replies setup failed:", error);
+  }
+}
+
+function openFreedomWallReplyThread(noteId, { focusComposer = false } = {}) {
+  const note = getFreedomWallReplyNote(noteId);
+  const layer = document.getElementById("homepageEffectLayer");
+  const modal = layer?.querySelector("#freedomWallReplyThread");
+  if (!note || !modal) return;
+  closeFreedomWallReactionMenu();
+  clearFreedomWallReplyActionMenu();
+  endFreedomWallNoteDrag(null, true);
+  freedomWallReplyThreadNoteId = String(noteId);
+  freedomWallReplyThreadCache = [];
+  clearFreedomWallReplyParent();
+  const authorInput = layer.querySelector("#freedomWallReplyAuthor");
+  if (authorInput && !authorInput.value) authorInput.value = getFreedomWallSavedAuthor();
+  const replyInput = layer.querySelector("#freedomWallReplyInput");
+  const status = layer.querySelector("#freedomWallReplyStatus");
+  if (replyInput) replyInput.value = "";
+  if (status) status.textContent = "";
+  renderFreedomWallReplyOriginal(note);
+  renderFreedomWallReplyThread([]);
+  modal.hidden = false;
+  layer.classList.add("is-reply-thread-open");
+  syncFreedomWallChildModalCloseSafety();
+  startFreedomWallReplyThreadLive(note.id);
+  if (focusComposer) window.setTimeout(() => replyInput?.focus(), 80);
+}
+
+function closeFreedomWallReplyThread(event) {
+  event?.preventDefault?.();
+  event?.stopPropagation?.();
+  const layer = document.getElementById("homepageEffectLayer");
+  const modal = layer?.querySelector("#freedomWallReplyThread");
+  stopFreedomWallReplyThreadLive();
+  clearFreedomWallReplyActionMenu();
+  clearFreedomWallReplyParent();
+  freedomWallReplyThreadNoteId = "";
+  freedomWallReplyThreadCache = [];
+  if (modal) modal.hidden = true;
+  layer?.classList?.remove("is-reply-thread-open");
+  syncFreedomWallChildModalCloseSafety();
+}
+
+async function submitFreedomWallReply(event) {
+  event?.preventDefault?.();
+  if (freedomWallReplyPosting || !freedomWallReplyThreadNoteId) return;
+  const layer = document.getElementById("homepageEffectLayer");
+  const authorInput = layer?.querySelector("#freedomWallReplyAuthor");
+  const replyInput = layer?.querySelector("#freedomWallReplyInput");
+  const send = layer?.querySelector("#freedomWallReplySend");
+  const status = layer?.querySelector("#freedomWallReplyStatus");
+  const author = String(authorInput?.value || "").trim().slice(0, FREEDOM_WALL_AUTHOR_MAX_LENGTH);
+  const text = String(replyInput?.value || "").trim().slice(0, FREEDOM_WALL_REPLY_MAX_LENGTH);
+  if (!author) { if (status) status.textContent = "Add your name or nickname first."; authorInput?.focus(); return; }
+  if (!text) { if (status) status.textContent = "Write a reply first."; replyInput?.focus(); return; }
+  const note = getFreedomWallReplyNote();
+  if (!note) { if (status) status.textContent = "This note is no longer available."; return; }
+  const priorReplyCount = Math.max(0, Math.floor(Number(note.replyCount || 0) || 0));
+  freedomWallReplyPosting = true;
+  if (send) send.disabled = true;
+  if (status) status.textContent = "Sending…";
+  try {
+    const db = await waitForClassBoardFirestore(12000);
+    if (!db) throw new Error("Replies are unavailable.");
+    const replyRef = db.collection(FREEDOM_WALL_REPLY_COLLECTION).doc();
+    const noteRef = db.collection(FREEDOM_WALL_COLLECTION).doc(note.id);
+    const deviceId = getFreedomWallDeviceId();
+    const serverTimestamp = firebase.firestore.FieldValue.serverTimestamp();
+    const payload = {
+      NoteID: note.id,
+      WallID: note.wallId || FREEDOM_WALL_LEGACY_SESSION_ID,
+      ParentReplyID: freedomWallReplyParentId || "",
+      Text: text,
+      Name: author,
+      DeviceId: deviceId,
+      CreatedAtMs: Date.now(),
+      CreatedAt: serverTimestamp
+    };
+    const batch = db.batch();
+    batch.set(replyRef, payload);
+    batch.update(noteRef, {
+      ReplyCount: firebase.firestore.FieldValue.increment(1),
+      ReplyLastId: replyRef.id,
+      ReplyDeviceId: deviceId,
+      ReplyUpdatedAt: serverTimestamp
+    });
+    await batch.commit();
+    saveFreedomWallAuthor(author);
+    if (replyInput) replyInput.value = "";
+    clearFreedomWallReplyParent();
+    if (status) status.textContent = "Reply sent.";
+    // Optimistic count so the chip/menu feels instant; Firestore live sync will reconcile it.
+    note.replyCount = Math.max(Math.max(0, Math.floor(Number(note.replyCount || 0) || 0)), priorReplyCount + 1);
+    const card = layer?.querySelector(`.freedomWallNote[data-note-id="${CSS.escape(note.id)}"]`);
+    updateFreedomWallReactionSummary(card, note.reactions, "note", note.reactionLastType);
+    updateFreedomWallReactionMenuState();
+  } catch (error) {
+    console.warn("Freedom Wall reply failed:", error);
+    if (status) status.textContent = isFreedomWallRulesCompatibilityError(error) ? "Publish the updated Firebase Rules to enable replies." : "Unable to send reply right now.";
+  } finally {
+    freedomWallReplyPosting = false;
+    if (send) send.disabled = false;
+  }
+}
+
+function setupFreedomWallReplyInteractions(layer) {
+  if (!layer || layer.dataset.replyInteractionsReady === "true") return;
+  layer.dataset.replyInteractionsReady = "true";
+  const list = layer.querySelector("#freedomWallReplyList");
+  if (!list) return;
+
+  list.addEventListener("contextmenu", (event) => {
+    const item = event.target?.closest?.(".freedomWallReplyItem");
+    if (!item) return;
+    event.preventDefault();
+    event.stopPropagation();
+    openFreedomWallReplyActionMenu(item.dataset.replyId, item.dataset.replyName, event.clientX, event.clientY);
+  });
+
+  list.addEventListener("pointerdown", (event) => {
+    if (event.pointerType === "mouse") return;
+    const item = event.target?.closest?.(".freedomWallReplyItem");
+    if (!item) return;
+    clearFreedomWallReplyActionMenu();
+    freedomWallReplyHoldPending = {
+      item,
+      pointerId:event.pointerId,
+      startX:event.clientX,
+      startY:event.clientY,
+      latestX:event.clientX,
+      latestY:event.clientY
+    };
+    freedomWallReplyHoldTimer = window.setTimeout(() => {
+      const pending = freedomWallReplyHoldPending;
+      freedomWallReplyHoldTimer = 0;
+      if (!pending || pending.pointerId !== event.pointerId || !pending.item.isConnected) return;
+      openFreedomWallReplyActionMenu(pending.item.dataset.replyId, pending.item.dataset.replyName, pending.latestX, pending.latestY);
+      freedomWallReplyHoldPending = null;
+    }, FREEDOM_WALL_REPLY_HOLD_MS);
+  }, { passive:true });
+
+  list.addEventListener("pointermove", (event) => {
+    const pending = freedomWallReplyHoldPending;
+    if (!pending || pending.pointerId !== event.pointerId) return;
+    pending.latestX = event.clientX;
+    pending.latestY = event.clientY;
+    if (Math.hypot(event.clientX - pending.startX, event.clientY - pending.startY) > FREEDOM_WALL_REPLY_MOVE_THRESHOLD) clearFreedomWallReplyActionMenu();
+  }, { passive:true });
+  list.addEventListener("pointerup", (event) => { if (freedomWallReplyHoldPending?.pointerId === event.pointerId) clearFreedomWallReplyActionMenu(); }, { passive:true });
+  list.addEventListener("pointercancel", (event) => { if (freedomWallReplyHoldPending?.pointerId === event.pointerId) clearFreedomWallReplyActionMenu(); }, { passive:true });
+
+  document.addEventListener("pointerdown", (event) => {
+    const menu = document.getElementById("homepageEffectLayer")?.querySelector("#freedomWallReplyActionMenu");
+    if (!menu || menu.hidden || menu.contains(event.target)) return;
+    if (event.button === 2) return;
+    clearFreedomWallReplyActionMenu();
+  }, true);
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    const wallLayer = document.getElementById("homepageEffectLayer");
+    const actionMenu = wallLayer?.querySelector("#freedomWallReplyActionMenu");
+    const thread = wallLayer?.querySelector("#freedomWallReplyThread");
+    if (actionMenu && !actionMenu.hidden) { clearFreedomWallReplyActionMenu(); return; }
+    if (thread && !thread.hidden) closeFreedomWallReplyThread(event);
+  });
 }
 
 function setupFreedomWallNoteDragging(layer) {
@@ -5934,9 +6372,11 @@ function syncFreedomWallChildModalCloseSafety() {
   if (!layer || !layer.classList.contains("is-freedom-wall")) return;
   const composer = layer.querySelector("#freedomWallComposer");
   const mediaModal = layer.querySelector("#freedomWallMediaSearchModal");
+  const replyThread = layer.querySelector("#freedomWallReplyThread");
   const childModalOpen = Boolean(
     (composer && !composer.hidden)
     || (mediaModal && !mediaModal.hidden)
+    || (replyThread && !replyThread.hidden)
   );
   layer.classList.toggle("has-freedom-wall-child-modal", childModalOpen);
   if (childModalOpen) {
@@ -6547,9 +6987,10 @@ function normalizeFreedomWallNote(doc, index = 0) {
   });
   const reactions = normalizeFreedomWallReactions(data.Reactions || data.reactions || {});
   const reactionLastType = normalizeFreedomWallReactionLastType(data.ReactionLastType || data.reactionLastType || "");
+  const replyCount = Math.max(0, Math.floor(Number(data.ReplyCount || data.replyCount || 0) || 0));
   const wallId = normalizeFreedomWallSessionId(data.WallID || data.wallId || FREEDOM_WALL_LEGACY_SESSION_ID);
   if (!text && !mediaRef && !youtubeUrl && !gif?.url && !spotify?.url) return null;
-  return { id, text, author, color, textColor, fontStyle, createdAtMs, mediaRef, mediaType, youtubeUrl, youtube, gif, spotify, reactions, reactionLastType, wallId, ...getFreedomWallPlacement({ ...data, id }, index) };
+  return { id, text, author, color, textColor, fontStyle, createdAtMs, mediaRef, mediaType, youtubeUrl, youtube, gif, spotify, reactions, reactionLastType, replyCount, wallId, ...getFreedomWallPlacement({ ...data, id }, index) };
 }
 
 function getFreedomWallNoteCoreSignature(note) {
@@ -6567,7 +7008,7 @@ function buildFreedomWallRenderSignature(notes = []) {
     allowFont: Boolean(freedomWallConfig?.freedomWallAllowFont),
     promptVisible: isFreedomWallPromptVisible(),
     viewport: window.innerWidth <= 700 ? "phone" : "wide",
-    notes: notes.map((note) => [getFreedomWallNoteCoreSignature(note), getFreedomWallReactionSignature(note?.reactions), note?.reactionLastType || ""])
+    notes: notes.map((note) => [getFreedomWallNoteCoreSignature(note), getFreedomWallReactionSignature(note?.reactions), note?.reactionLastType || "", Math.max(0, Math.floor(Number(note?.replyCount || 0) || 0))])
   });
 }
 
@@ -7279,9 +7720,17 @@ async function startFreedomWallLive() {
           pending.forEach(({ index, next }) => {
             freedomWallNotesCache[index].reactions = next.reactions;
             freedomWallNotesCache[index].reactionLastType = next.reactionLastType;
+            freedomWallNotesCache[index].replyCount = next.replyCount;
             const card = Array.from(layer?.querySelectorAll?.(".freedomWallNote[data-note-id]") || []).find((item) => String(item.dataset.noteId || "") === String(next.id));
             updateFreedomWallReactionSummary(card, next.reactions, "note", next.reactionLastType);
             if (freedomWallReactionMenuTarget?.type === "note" && freedomWallReactionMenuTarget.id === next.id) updateFreedomWallReactionMenuState();
+            if (freedomWallReplyThreadNoteId === next.id) {
+              const subtitle = layer?.querySelector("#freedomWallReplySubtitle");
+              if (subtitle) {
+                const total = Math.max(freedomWallReplyThreadCache.length, Math.max(0, Math.floor(Number(next.replyCount || 0) || 0)));
+                subtitle.textContent = `${total} ${total === 1 ? "reply" : "replies"} • long-press/right-click a reply to answer it`;
+              }
+            }
           });
           const sortedForSignature = freedomWallNotesCache.filter(Boolean).sort((a,b) => (a.createdAtMs - b.createdAtMs) || a.id.localeCompare(b.id)).slice(-FREEDOM_WALL_MAX_RENDERED_NOTES);
           freedomWallLastRenderSignature = buildFreedomWallRenderSignature(sortedForSignature);
@@ -7320,6 +7769,7 @@ function configureFreedomWall(config) {
     freedomWallUnsubscribe = null;
     stopFreedomWallPromptReactionLive();
     closeFreedomWallReactionMenu();
+    closeFreedomWallReplyThread();
     freedomWallNotesCache = [];
     freedomWallLastRenderSignature = "";
     freedomWallLastRenderedCount = 0;
@@ -7399,6 +7849,7 @@ function stopFreedomWallLive(clearStage = false) {
   stopFreedomWallPromptReactionLive();
   clearFreedomWallPromptReactionPending();
   closeFreedomWallReactionMenu();
+  closeFreedomWallReplyThread();
   const layer = document.getElementById("homepageEffectLayer");
   const scene = layer?.querySelector(".homepageFreedomWallScene");
   const composer = layer?.querySelector("#freedomWallComposer");
