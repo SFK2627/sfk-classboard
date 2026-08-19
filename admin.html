@@ -3393,11 +3393,24 @@
       }
       const author=card.querySelector('small');
       if(author){
+        // v547: Current View export keeps the complete nickname inside the
+        // physical note shell. Theme text-align/font stays intact; only the
+        // author line gets a tiny safe inset and real wrapping bounds.
+        author.style.setProperty('display','block','important');
+        author.style.setProperty('box-sizing','border-box','important');
+        author.style.setProperty('width','100%','important');
+        author.style.setProperty('max-width','100%','important');
+        author.style.setProperty('min-width','0','important');
+        author.style.setProperty('align-self','stretch','important');
+        author.style.setProperty('padding-left','3px','important');
+        author.style.setProperty('padding-right','3px','important');
         author.style.setProperty('max-height','none','important');
         author.style.setProperty('height','auto','important');
         author.style.setProperty('overflow','visible','important');
         author.style.setProperty('text-overflow','clip','important');
         author.style.setProperty('white-space','normal','important');
+        author.style.setProperty('overflow-wrap','anywhere','important');
+        author.style.setProperty('word-break','break-word','important');
       }
     }
     await settleExactExportFrame(env.win);
@@ -3524,11 +3537,23 @@
     });
     await settleExactExportFrame(win);
 
-    // Final containment audit after fonts/transforms settle. If a text/name child somehow
-    // exceeds the shell, grow the shell and do one final re-layout rather than clipping it.
+    // Final containment audit after fonts/transforms settle. The author is kept
+    // inside a safe inner lane; if wrapping makes it taller, grow the note and
+    // run one final placement pass instead of clipping any name/text.
     let grew=false;
     for(const item of measured){
       const card=item.card,rect=card.getBoundingClientRect();
+      const author=card.querySelector('small');
+      if(author){
+        author.style.setProperty('box-sizing','border-box','important');
+        author.style.setProperty('width','100%','important');
+        author.style.setProperty('max-width','100%','important');
+        author.style.setProperty('min-width','0','important');
+        author.style.setProperty('padding-inline','3px','important');
+        author.style.setProperty('white-space','normal','important');
+        author.style.setProperty('overflow-wrap','anywhere','important');
+        author.style.setProperty('word-break','break-word','important');
+      }
       let bottom=rect.bottom;
       for(const child of Array.from(card.querySelectorAll('p,small'))){
         const r=child.getBoundingClientRect();
@@ -3550,7 +3575,7 @@
 
   async function createRenderer(layout,orientation,cfg,notes,sessionId) {
     const size=(layout==='current'?(CURRENT_VIEWPORTS[orientation]||CURRENT_VIEWPORTS.landscape):(EXPORT_SIZES[orientation]||EXPORT_SIZES.landscape));
-    const root=appRoot(),styleUrl=new URL('style.css?v=v532-balanced-current-view-export',root).href;
+    const root=appRoot(),styleUrl=new URL('style.css?v=v547-export-author-safe-inset',root).href;
     const frame=document.createElement('iframe');
     frame.setAttribute('aria-hidden','true');frame.tabIndex=-1;
     Object.assign(frame.style,{position:'fixed',left:'-12000px',top:'0',width:`${size.width}px`,height:`${size.height}px`,border:'0',margin:'0',padding:'0',opacity:'1',pointerEvents:'none',zIndex:'-2147483000'});
@@ -3697,7 +3722,7 @@
     finally{try{env?.frame?.remove();}catch(error){}setBusy(false);}
   }
   buttons.forEach(button=>button.addEventListener('click',()=>run(button.dataset.fwSnapExport)));
-  setStatus('Ready — balanced Current View keeps notes readable, contained, and uses free space before overlap.');
+  setStatus('Ready — Current View keeps full nicknames safely inside each note.');
 })();
 </script>
 
