@@ -1812,6 +1812,9 @@ const FREEDOM_WALL_REACTION_MOVE_THRESHOLD = 11;
 const FREEDOM_WALL_REPLY_MAX_LENGTH = 240;
 const FREEDOM_WALL_REPLY_HOLD_MS = 430;
 const FREEDOM_WALL_REPLY_MOVE_THRESHOLD = 10;
+const FREEDOM_WALL_READER_DURATION_MS = 15000;
+const FREEDOM_WALL_READER_SWIPE_THRESHOLD = 46;
+const FREEDOM_WALL_READER_MOVE_THRESHOLD = 11;
 // v535: device-independent teacher identity trigger. The literal nickname is
 // intentionally never rendered publicly; it only selects the Koala / Sir JR UI.
 const FREEDOM_WALL_SIRJR_NICKNAME = "<sirjr>";
@@ -2044,6 +2047,17 @@ let freedomWallReplyParentName = "";
 let freedomWallReplyPosting = false;
 let freedomWallReplyHoldTimer = 0;
 let freedomWallReplyHoldPending = null;
+// v536: one-note-at-a-time Read Notes mode. Viewer-only; it never writes
+// positions or reply contents and is intentionally absent from exports.
+let freedomWallReaderIndex = 0;
+let freedomWallReaderNoteId = "";
+let freedomWallReaderPaused = false;
+let freedomWallReaderElapsedMs = 0;
+let freedomWallReaderLastTick = 0;
+let freedomWallReaderRaf = 0;
+let freedomWallReaderPointer = null;
+let freedomWallReaderHoldTimer = 0;
+let freedomWallReaderHoveringNote = false;
 
 
 function getFreedomWallExactExportOptions() {
@@ -3224,7 +3238,8 @@ function createFreedomWallYoutubePlayButton(media, videoId) {
     if (freedomWallActiveYoutubePlayback) closeFreedomWallActiveYoutube({ resumeMusic:false });
     pauseHomepageEffectMusicForFreedomWallVideo();
 
-    const mode = normalizeFreedomWallYouTubePlaybackMode(freedomWallConfig?.freedomWallYouTubePlaybackMode);
+    const readerPlayback = Boolean(media.closest?.(".freedomWallReaderNote"));
+    const mode = readerPlayback ? "viewer" : normalizeFreedomWallYouTubePlaybackMode(freedomWallConfig?.freedomWallYouTubePlaybackMode);
     const ui = mode === 'inline' ? createFreedomWallYoutubeInlinePlayer(media, videoId) : createFreedomWallYoutubeViewer(videoId);
     if (!ui) {
       resumeHomepageEffectMusicAfterFreedomWallVideo();
@@ -3787,7 +3802,10 @@ function ensureHomepageEffectLayer() {
           <i class="fwUtilityJumper jumper-a"></i><i class="fwUtilityJumper jumper-b"></i><i class="fwUtilityNotice"></i>
         </div>
       </div>
-      <div class="freedomWallBrand"><strong>SFK #BeKind WALL</strong><span id="freedomWallCount">Live wall</span></div>
+      <div class="freedomWallBrand">
+        <div class="freedomWallBrandLine"><strong>SFK #BeKind WALL</strong><button id="freedomWallReaderOpenBtn" class="freedomWallReaderOpenBtn" type="button" aria-label="Read notes one at a time" title="Read notes one at a time"><span aria-hidden="true">📖</span><small>Read</small></button></div>
+        <span id="freedomWallCount">Live wall</span>
+      </div>
       <div id="freedomWallNotesStage" class="freedomWallNotesStage" aria-live="polite"></div>
       <div id="freedomWallDragOverlay" class="freedomWallDragOverlay" aria-hidden="true"></div>
       <section id="freedomWallPromptCard" class="freedomWallPromptCard" hidden>
@@ -3836,6 +3854,30 @@ function ensureHomepageEffectLayer() {
       <div id="freedomWallReplyActionMenu" class="freedomWallReplyActionMenu" hidden>
         <button id="freedomWallReplyToReplyBtn" type="button">↩ <span>Reply</span></button>
       </div>
+
+      <div id="freedomWallGestureHint" class="freedomWallGestureHint" aria-hidden="true">
+        <span class="freedomWallGestureHintPhone">Hold a note to react &amp; reply</span>
+        <span class="freedomWallGestureHintDesktop">Long-press or right-click a note to react &amp; reply</span>
+      </div>
+
+      <section id="freedomWallReader" class="freedomWallReader" hidden aria-label="Read notes one at a time">
+        <div class="freedomWallReaderToolbar">
+          <div class="freedomWallReaderTitle"><strong>Read Notes</strong><span id="freedomWallReaderCounter">0 / 0</span></div>
+          <div class="freedomWallReaderToolbarActions">
+            <button id="freedomWallReaderPauseBtn" type="button" aria-label="Pause automatic note switching" title="Pause auto-switch"><span aria-hidden="true">⏸</span><small>Pause</small></button>
+            <button id="freedomWallReaderCloseBtn" type="button" aria-label="Close Read Notes mode" title="Close Read Notes mode">×</button>
+          </div>
+        </div>
+        <div id="freedomWallReaderProgress" class="freedomWallReaderProgress" aria-hidden="true"><i></i></div>
+        <button id="freedomWallReaderPrevBtn" class="freedomWallReaderNav is-prev" type="button" aria-label="Previous note">‹</button>
+        <div id="freedomWallReaderViewport" class="freedomWallReaderViewport">
+          <div id="freedomWallReaderCardMount" class="freedomWallReaderCardMount"></div>
+          <div id="freedomWallReaderEmpty" class="freedomWallReaderEmpty" hidden><span>📖</span><strong>No notes yet</strong><small>New notes will appear here automatically.</small></div>
+        </div>
+        <button id="freedomWallReaderNextBtn" class="freedomWallReaderNav is-next" type="button" aria-label="Next note">›</button>
+        <div class="freedomWallReaderHelp"><span>Swipe or use ‹ ›</span><b>•</b><span>Hold / right-click to react &amp; reply</span></div>
+      </section>
+
       <button id="freedomWallAddBtn" class="freedomWallAddBtn" type="button" aria-label="Add a note"><span>+</span><small>Add Note</small></button>
       <div id="freedomWallComposer" class="freedomWallComposer" hidden>
         <form id="freedomWallComposerForm" class="freedomWallComposerCard">
@@ -3980,6 +4022,12 @@ function ensureHomepageEffectLayer() {
   forceHomepageStoryBarViewportV453();
 
   layer.querySelector("#freedomWallAddBtn")?.addEventListener("click", openFreedomWallComposer);
+  layer.querySelector("#freedomWallReaderOpenBtn")?.addEventListener("click", openFreedomWallReader);
+  layer.querySelector("#freedomWallReaderCloseBtn")?.addEventListener("click", closeFreedomWallReader);
+  layer.querySelector("#freedomWallReaderPauseBtn")?.addEventListener("click", toggleFreedomWallReaderPause);
+  layer.querySelector("#freedomWallReaderPrevBtn")?.addEventListener("click", () => moveFreedomWallReader(-1, { resetTimer:true, source:"button" }));
+  layer.querySelector("#freedomWallReaderNextBtn")?.addEventListener("click", () => moveFreedomWallReader(1, { resetTimer:true, source:"button" }));
+  setupFreedomWallReaderInteractions(layer);
   layer.querySelector("#freedomWallComposerClose")?.addEventListener("click", closeFreedomWallComposer);
   layer.querySelector("#freedomWallPromptClose")?.addEventListener("click", dismissFreedomWallPromptForView);
   layer.querySelector("#freedomWallComposerForm")?.addEventListener("submit", submitFreedomWallNote);
@@ -4250,6 +4298,15 @@ function ensureHomepageEffectLayer() {
   koalaScene?.addEventListener("pointerleave", resetPetKoalaLook, { passive: true });
   document.addEventListener("keydown", (event) => {
     if (layer.hidden) return;
+    const replyThreadOpen = Boolean(layer.querySelector("#freedomWallReplyThread") && !layer.querySelector("#freedomWallReplyThread").hidden);
+    const reactionMenuOpen = Boolean(layer.querySelector("#freedomWallReactionMenu") && !layer.querySelector("#freedomWallReactionMenu").hidden);
+    const readerOpen = isFreedomWallReaderOpen();
+    if (readerOpen && !replyThreadOpen && !reactionMenuOpen) {
+      if (event.key === "Escape") { event.preventDefault(); closeFreedomWallReader(event); return; }
+      if (event.key === "ArrowLeft") { event.preventDefault(); moveFreedomWallReader(-1, { resetTimer:true, source:"keyboard" }); return; }
+      if (event.key === "ArrowRight") { event.preventDefault(); moveFreedomWallReader(1, { resetTimer:true, source:"keyboard" }); return; }
+      if (event.key === " " || event.key === "Spacebar") { event.preventDefault(); toggleFreedomWallReaderPause(); return; }
+    }
     if (event.key === "Escape") {
       if (!homepageEffectDismissAllowed) return;
       dismissHomepageEffectForView();
@@ -5252,7 +5309,7 @@ function updateFreedomWallReactionSummary(container, reactions = {}, targetType 
   }
   if (!summary) return;
   const { total, dominant, mine } = getFreedomWallReactionStats(reactions, lastType);
-  const noteId = targetType === "note" ? String(container.dataset?.noteId || "") : "";
+  const noteId = targetType === "note" ? String(container.dataset?.noteId || container.dataset?.readerNoteId || "") : "";
   const note = noteId ? freedomWallNotesCache.find((item) => String(item?.id || "") === noteId) : null;
   const replyCount = targetType === "note" ? Math.max(0, Math.floor(Number(note?.replyCount || 0) || 0)) : 0;
   const sirJRReacted = targetType === "note" && hasFreedomWallSirJRReaction(note);
@@ -5372,6 +5429,7 @@ function openFreedomWallReactionMenu(target, clientX, clientY, pointerType = "mo
   menu.dataset.pointerType = pointerType || "mouse";
   menu.hidden = false;
   layer.classList.add("is-reaction-menu-open");
+  freedomWallReaderLastTick = performance.now();
   updateFreedomWallReactionMenuState();
   positionFreedomWallReactionMenu(clientX, clientY);
   window.requestAnimationFrame(() => menu.classList.add("is-open"));
@@ -5389,6 +5447,7 @@ function closeFreedomWallReactionMenu() {
   menu.style.removeProperty("transform");
   layer?.classList?.remove("is-reaction-menu-open");
   freedomWallReactionMenuTarget = null;
+  freedomWallReaderLastTick = performance.now();
 }
 
 function applyFreedomWallOptimisticReaction(target, reactions, lastType = "", sirJRReactions = null) {
@@ -5406,8 +5465,11 @@ function applyFreedomWallOptimisticReaction(target, reactions, lastType = "", si
       note.reactionLastType = safeLast;
       if (sirJRReactions !== null) note.sirJRReactions = normalizeFreedomWallSirJRReactions(sirJRReactions);
     }
-    const card = document.getElementById("homepageEffectLayer")?.querySelector(`.freedomWallNote[data-note-id="${CSS.escape(String(target.id || ""))}"]`);
+    const wallLayer = document.getElementById("homepageEffectLayer");
+    const card = wallLayer?.querySelector(`.freedomWallNote[data-note-id="${CSS.escape(String(target.id || ""))}"]`);
+    const readerCard = wallLayer?.querySelector(`.freedomWallReaderNote[data-reader-note-id="${CSS.escape(String(target.id || ""))}"]`);
     updateFreedomWallReactionSummary(card, clean, "note", safeLast);
+    updateFreedomWallReactionSummary(readerCard, clean, "note", safeLast);
   }
   updateFreedomWallReactionMenuState();
   // Keep v483's paint fingerprint aligned with the optimistic reaction so an
@@ -5933,6 +5995,7 @@ function openFreedomWallReplyThread(noteId, { focusComposer = false } = {}) {
   renderFreedomWallReplyThread([]);
   modal.hidden = false;
   layer.classList.add("is-reply-thread-open");
+  freedomWallReaderLastTick = performance.now();
   syncFreedomWallChildModalCloseSafety();
   startFreedomWallReplyThreadLive(note.id);
   if (focusComposer) window.setTimeout(() => replyInput?.focus(), 80);
@@ -5950,6 +6013,7 @@ function closeFreedomWallReplyThread(event) {
   freedomWallReplyThreadCache = [];
   if (modal) modal.hidden = true;
   layer?.classList?.remove("is-reply-thread-open");
+  freedomWallReaderLastTick = performance.now();
   syncFreedomWallChildModalCloseSafety();
 }
 
@@ -6010,7 +6074,9 @@ async function submitFreedomWallReply(event) {
     note.replyCount = Math.max(Math.max(0, Math.floor(Number(note.replyCount || 0) || 0)), priorReplyCount + 1);
     if (isSirJR) note.sirJRReplied = true;
     const card = layer?.querySelector(`.freedomWallNote[data-note-id="${CSS.escape(note.id)}"]`);
+    const readerCard = layer?.querySelector(`.freedomWallReaderNote[data-reader-note-id="${CSS.escape(note.id)}"]`);
     updateFreedomWallReactionSummary(card, note.reactions, "note", note.reactionLastType);
+    updateFreedomWallReactionSummary(readerCard, note.reactions, "note", note.reactionLastType);
     updateFreedomWallReactionMenuState();
   } catch (error) {
     console.warn("Freedom Wall reply failed:", error);
@@ -6078,9 +6144,385 @@ function setupFreedomWallReplyInteractions(layer) {
     const wallLayer = document.getElementById("homepageEffectLayer");
     const actionMenu = wallLayer?.querySelector("#freedomWallReplyActionMenu");
     const thread = wallLayer?.querySelector("#freedomWallReplyThread");
-    if (actionMenu && !actionMenu.hidden) { clearFreedomWallReplyActionMenu(); return; }
-    if (thread && !thread.hidden) closeFreedomWallReplyThread(event);
+    if (actionMenu && !actionMenu.hidden) { event.preventDefault(); event.stopImmediatePropagation(); clearFreedomWallReplyActionMenu(); return; }
+    if (thread && !thread.hidden) { event.preventDefault(); event.stopImmediatePropagation(); closeFreedomWallReplyThread(event); }
   });
+}
+
+
+function getFreedomWallReaderNotes() {
+  return (freedomWallNotesCache || [])
+    .filter(Boolean)
+    .slice()
+    .sort((a,b) => (a.createdAtMs - b.createdAtMs) || String(a.id || "").localeCompare(String(b.id || "")))
+    .slice(-FREEDOM_WALL_MAX_RENDERED_NOTES);
+}
+
+function isFreedomWallReaderOpen() {
+  const reader = document.getElementById("homepageEffectLayer")?.querySelector("#freedomWallReader");
+  return Boolean(reader && !reader.hidden);
+}
+
+function clearFreedomWallReaderHoldTimer() {
+  if (freedomWallReaderHoldTimer) window.clearTimeout(freedomWallReaderHoldTimer);
+  freedomWallReaderHoldTimer = 0;
+}
+
+function stopFreedomWallReaderClock() {
+  if (freedomWallReaderRaf) cancelAnimationFrame(freedomWallReaderRaf);
+  freedomWallReaderRaf = 0;
+  freedomWallReaderLastTick = 0;
+}
+
+function resetFreedomWallReaderClock() {
+  freedomWallReaderElapsedMs = 0;
+  freedomWallReaderLastTick = performance.now();
+  updateFreedomWallReaderProgress();
+}
+
+function isFreedomWallReaderTemporarilyPaused() {
+  const layer = document.getElementById("homepageEffectLayer");
+  if (!layer || !isFreedomWallReaderOpen()) return true;
+  const reactionOpen = Boolean(layer.querySelector("#freedomWallReactionMenu") && !layer.querySelector("#freedomWallReactionMenu").hidden);
+  const replyOpen = Boolean(layer.querySelector("#freedomWallReplyThread") && !layer.querySelector("#freedomWallReplyThread").hidden);
+  return Boolean(
+    freedomWallReaderPaused
+    || freedomWallReaderHoveringNote
+    || freedomWallReaderPointer
+    || reactionOpen
+    || replyOpen
+    || Boolean(freedomWallActiveYoutubePlayback)
+    || Boolean(freedomWallActiveSpotifyPlayback)
+    || document.hidden
+  );
+}
+
+function updateFreedomWallReaderProgress() {
+  const layer = document.getElementById("homepageEffectLayer");
+  const bar = layer?.querySelector("#freedomWallReaderProgress i");
+  if (!bar) return;
+  const ratio = Math.max(0, Math.min(1, freedomWallReaderElapsedMs / FREEDOM_WALL_READER_DURATION_MS));
+  bar.style.width = `${(ratio * 100).toFixed(3)}%`;
+}
+
+function tickFreedomWallReader(now) {
+  if (!isFreedomWallReaderOpen()) { stopFreedomWallReaderClock(); return; }
+  if (!freedomWallReaderLastTick) freedomWallReaderLastTick = now;
+  const delta = Math.max(0, Math.min(250, now - freedomWallReaderLastTick));
+  freedomWallReaderLastTick = now;
+  if (!isFreedomWallReaderTemporarilyPaused() && getFreedomWallReaderNotes().length > 1) {
+    freedomWallReaderElapsedMs += delta;
+    if (freedomWallReaderElapsedMs >= FREEDOM_WALL_READER_DURATION_MS) {
+      moveFreedomWallReader(1, { resetTimer:true, source:"auto" });
+    } else {
+      updateFreedomWallReaderProgress();
+    }
+  }
+  freedomWallReaderRaf = requestAnimationFrame(tickFreedomWallReader);
+}
+
+function startFreedomWallReaderClock() {
+  stopFreedomWallReaderClock();
+  freedomWallReaderLastTick = performance.now();
+  freedomWallReaderRaf = requestAnimationFrame(tickFreedomWallReader);
+}
+
+function syncFreedomWallReaderPauseButton() {
+  const button = document.getElementById("homepageEffectLayer")?.querySelector("#freedomWallReaderPauseBtn");
+  if (!button) return;
+  const icon = button.querySelector("span");
+  const label = button.querySelector("small");
+  if (icon) icon.textContent = freedomWallReaderPaused ? "▶" : "⏸";
+  if (label) label.textContent = freedomWallReaderPaused ? "Resume" : "Pause";
+  button.setAttribute("aria-label", freedomWallReaderPaused ? "Resume automatic note switching" : "Pause automatic note switching");
+  button.title = freedomWallReaderPaused ? "Resume auto-switch" : "Pause auto-switch";
+  button.classList.toggle("is-paused", freedomWallReaderPaused);
+}
+
+function toggleFreedomWallReaderPause(event) {
+  event?.preventDefault?.();
+  event?.stopPropagation?.();
+  if (!isFreedomWallReaderOpen()) return;
+  freedomWallReaderPaused = !freedomWallReaderPaused;
+  freedomWallReaderLastTick = performance.now();
+  syncFreedomWallReaderPauseButton();
+}
+
+function makeFreedomWallReaderMediaFresh(card, note) {
+  if (!card || !note) return;
+  const media = card.querySelector(".freedomWallNoteMedia");
+  if (!media) return;
+  media.replaceChildren();
+  media.dataset.mediaLoaded = "";
+  media.classList.remove("is-unavailable", "is-youtube-playing", "is-spotify-playing");
+  media.classList.add("is-loading");
+  const loading = document.createElement("span");
+  loading.textContent = note.youtubeUrl ? "Loading video…" : (note.gif?.url ? "Loading GIF…" : "Loading media…");
+  media.appendChild(loading);
+  window.requestAnimationFrame(() => hydrateFreedomWallNoteMedia(card, note));
+}
+
+function renderFreedomWallReaderNote({ animateDirection = 0 } = {}) {
+  const layer = document.getElementById("homepageEffectLayer");
+  const reader = layer?.querySelector("#freedomWallReader");
+  const mount = layer?.querySelector("#freedomWallReaderCardMount");
+  const empty = layer?.querySelector("#freedomWallReaderEmpty");
+  const counter = layer?.querySelector("#freedomWallReaderCounter");
+  const prev = layer?.querySelector("#freedomWallReaderPrevBtn");
+  const next = layer?.querySelector("#freedomWallReaderNextBtn");
+  if (!reader || !mount) return;
+
+  const notes = getFreedomWallReaderNotes();
+  if (!notes.length) {
+    freedomWallReaderIndex = 0;
+    freedomWallReaderNoteId = "";
+    mount.replaceChildren();
+    if (empty) empty.hidden = false;
+    if (counter) counter.textContent = "0 / 0";
+    if (prev) prev.disabled = true;
+    if (next) next.disabled = true;
+    updateFreedomWallReaderProgress();
+    return;
+  }
+
+  if (freedomWallReaderNoteId) {
+    const keepIndex = notes.findIndex((note) => String(note.id) === String(freedomWallReaderNoteId));
+    if (keepIndex >= 0) freedomWallReaderIndex = keepIndex;
+    else freedomWallReaderIndex = Math.max(0, Math.min(notes.length - 1, freedomWallReaderIndex));
+  } else {
+    freedomWallReaderIndex = Math.max(0, Math.min(notes.length - 1, freedomWallReaderIndex));
+  }
+
+  const note = notes[freedomWallReaderIndex];
+  freedomWallReaderNoteId = String(note.id || "");
+  if (counter) counter.textContent = `${freedomWallReaderIndex + 1} / ${notes.length}`;
+  if (prev) prev.disabled = notes.length < 2;
+  if (next) next.disabled = notes.length < 2;
+  if (empty) empty.hidden = true;
+
+  const source = layer.querySelector(`.freedomWallNote[data-note-id="${CSS.escape(freedomWallReaderNoteId)}"]`);
+  let card = source?.cloneNode(true);
+  if (!card) {
+    const showMedia = Boolean(note.mediaRef || note.youtubeUrl || note.gif?.url || note.spotify?.url);
+    card = document.createElement("article");
+    card.className = `freedomWallNote is-${note.color || "yellow"} is-size-${getFreedomWallNoteSizeClass(note)}${showMedia ? " has-media" : ""}${note.youtubeUrl ? " has-video" : ""}${note.gif?.url ? " has-gif" : ""}${note.spotify?.url ? " has-spotify" : ""}`;
+    card.style.setProperty("--fw-note-bg", FREEDOM_WALL_COLOR_HEX[note.color] || FREEDOM_WALL_COLOR_HEX.yellow);
+    const requestedTextColor = freedomWallConfig?.freedomWallAllowTextColor && note.textColor ? note.textColor : getFreedomWallThemeDefaultTextColor(freedomWallConfig?.freedomWallTheme);
+    const effectiveTextColor = resolveFreedomWallTextColor(requestedTextColor, note.color, freedomWallConfig?.freedomWallTheme);
+    card.classList.add("has-safe-text");
+    card.style.setProperty("--fw-note-text-color", FREEDOM_WALL_TEXT_COLOR_HEX[effectiveTextColor] || FREEDOM_WALL_TEXT_COLOR_HEX.charcoal);
+    card.style.setProperty("--fw-note-text-shadow", getFreedomWallTextContrastAssist(effectiveTextColor, freedomWallConfig?.freedomWallTheme));
+    if (freedomWallConfig?.freedomWallAllowFont && note.fontStyle && note.fontStyle !== "theme-default") card.classList.add(`is-font-${note.fontStyle}`);
+    const pin = document.createElement("i");
+    pin.className = "freedomWallNotePin";
+    card.appendChild(pin);
+    if (showMedia) {
+      const media = document.createElement("div");
+      media.className = "freedomWallNoteMedia is-loading";
+      media.innerHTML = "<span>Loading media…</span>";
+      card.appendChild(media);
+    }
+    const text = document.createElement("p");
+    text.textContent = note.text || "";
+    card.appendChild(text);
+    if (freedomWallConfig?.freedomWallShowNames && note.author) {
+      const author = document.createElement("small");
+      author.textContent = `— ${note.author}`;
+      card.appendChild(author);
+    }
+  }
+
+  card.removeAttribute("data-note-id");
+  card.dataset.readerNoteId = freedomWallReaderNoteId;
+  card.classList.add("freedomWallReaderNote");
+  card.classList.remove("is-new", "is-dragging", "is-inline-video-active");
+  card.style.removeProperty("visibility");
+  card.style.removeProperty("z-index");
+  card.style.setProperty("--fw-rotation", "0deg");
+  card.style.setProperty("--fw-skew", "0deg");
+  card.style.setProperty("--fw-scale", "1");
+  updateFreedomWallReactionSummary(card, note.reactions, "note", note.reactionLastType);
+
+  mount.replaceChildren(card);
+  if (animateDirection) {
+    mount.dataset.direction = animateDirection > 0 ? "next" : "prev";
+    mount.classList.remove("is-reader-enter");
+    void mount.offsetWidth;
+    mount.classList.add("is-reader-enter");
+  } else {
+    mount.removeAttribute("data-direction");
+    mount.classList.remove("is-reader-enter");
+  }
+
+  card.addEventListener("mouseenter", () => {
+    freedomWallReaderHoveringNote = true;
+    freedomWallReaderLastTick = performance.now();
+  });
+  card.addEventListener("mouseleave", () => {
+    freedomWallReaderHoveringNote = false;
+    freedomWallReaderLastTick = performance.now();
+  });
+
+  makeFreedomWallReaderMediaFresh(card, note);
+}
+
+function moveFreedomWallReader(direction, { resetTimer = true, source = "manual" } = {}) {
+  if (!isFreedomWallReaderOpen()) return;
+  const notes = getFreedomWallReaderNotes();
+  if (!notes.length) { renderFreedomWallReaderNote(); return; }
+  if (notes.length > 1) {
+    const step = direction < 0 ? -1 : 1;
+    freedomWallReaderIndex = (freedomWallReaderIndex + step + notes.length) % notes.length;
+    freedomWallReaderNoteId = String(notes[freedomWallReaderIndex]?.id || "");
+  }
+  freedomWallReaderHoveringNote = false;
+  freedomWallReaderPointer = null;
+  clearFreedomWallReaderHoldTimer();
+  if (resetTimer) resetFreedomWallReaderClock();
+  renderFreedomWallReaderNote({ animateDirection:direction });
+  freedomWallReaderLastTick = performance.now();
+}
+
+function syncFreedomWallReaderFromNotes({ preserveProgress = true } = {}) {
+  if (!isFreedomWallReaderOpen()) return;
+  const currentId = freedomWallReaderNoteId;
+  const notes = getFreedomWallReaderNotes();
+  if (currentId) {
+    const index = notes.findIndex((note) => String(note.id) === String(currentId));
+    if (index >= 0) freedomWallReaderIndex = index;
+    else if (notes.length) freedomWallReaderIndex = Math.min(freedomWallReaderIndex, notes.length - 1);
+  }
+  renderFreedomWallReaderNote();
+  if (!preserveProgress) resetFreedomWallReaderClock();
+}
+
+function openFreedomWallReader(event) {
+  event?.preventDefault?.();
+  event?.stopPropagation?.();
+  const layer = document.getElementById("homepageEffectLayer");
+  const reader = layer?.querySelector("#freedomWallReader");
+  if (!layer || !reader || !layer.classList.contains("is-freedom-wall")) return;
+  closeFreedomWallReactionMenu();
+  clearFreedomWallReplyActionMenu();
+  closeFreedomWallActiveSpotify({ resumeMusic:true });
+  closeFreedomWallActiveYoutube({ resumeMusic:true });
+  endFreedomWallNoteDrag(null, true);
+  freedomWallReaderPaused = false;
+  freedomWallReaderHoveringNote = false;
+  freedomWallReaderPointer = null;
+  clearFreedomWallReaderHoldTimer();
+
+  const notes = getFreedomWallReaderNotes();
+  freedomWallReaderIndex = 0;
+  freedomWallReaderNoteId = String(notes[0]?.id || "");
+  reader.hidden = false;
+  layer.classList.add("is-freedom-wall-reader-open");
+  syncFreedomWallReaderPauseButton();
+  resetFreedomWallReaderClock();
+  renderFreedomWallReaderNote();
+  syncFreedomWallChildModalCloseSafety();
+  startFreedomWallReaderClock();
+  window.setTimeout(() => layer.querySelector("#freedomWallReaderNextBtn")?.focus({ preventScroll:true }), 30);
+}
+
+function closeFreedomWallReader(event, { force = false } = {}) {
+  event?.preventDefault?.();
+  event?.stopPropagation?.();
+  const layer = document.getElementById("homepageEffectLayer");
+  const reader = layer?.querySelector("#freedomWallReader");
+  if (!reader || (reader.hidden && !force)) return;
+  stopFreedomWallReaderClock();
+  clearFreedomWallReaderHoldTimer();
+  freedomWallReaderPointer = null;
+  freedomWallReaderHoveringNote = false;
+  freedomWallReaderPaused = false;
+  freedomWallReaderElapsedMs = 0;
+  freedomWallReaderLastTick = 0;
+  freedomWallReaderNoteId = "";
+  freedomWallReaderIndex = 0;
+  const mount = layer?.querySelector("#freedomWallReaderCardMount");
+  if (mount) mount.replaceChildren();
+  reader.hidden = true;
+  layer?.classList?.remove("is-freedom-wall-reader-open");
+  syncFreedomWallReaderPauseButton();
+  updateFreedomWallReaderProgress();
+  syncFreedomWallChildModalCloseSafety();
+}
+
+function setupFreedomWallReaderInteractions(layer) {
+  if (!layer || layer.dataset.readerInteractionsReady === "true") return;
+  layer.dataset.readerInteractionsReady = "true";
+  const viewport = layer.querySelector("#freedomWallReaderViewport");
+  if (!viewport) return;
+
+  viewport.addEventListener("contextmenu", (event) => {
+    const card = event.target?.closest?.(".freedomWallReaderNote");
+    if (!card || !isFreedomWallReaderOpen()) return;
+    event.preventDefault();
+    event.stopPropagation();
+    clearFreedomWallReaderHoldTimer();
+    freedomWallReaderPointer = null;
+    const noteId = String(card.dataset.readerNoteId || freedomWallReaderNoteId || "");
+    if (noteId) openFreedomWallReactionMenu({ type:"note", id:noteId }, event.clientX, event.clientY, "mouse");
+  }, true);
+
+  viewport.addEventListener("pointerdown", (event) => {
+    if (!isFreedomWallReaderOpen()) return;
+    const card = event.target?.closest?.(".freedomWallReaderNote");
+    if (!card) return;
+    if (event.target?.closest?.("button,a,input,textarea,select,iframe,.freedomWallYoutubeFrame,.freedomWallYoutubePlayCard,.freedomWallSpotifyFrame,.freedomWallSpotifyPlayCard")) return;
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    clearFreedomWallReaderHoldTimer();
+    freedomWallReaderPointer = {
+      pointerId:event.pointerId,
+      pointerType:event.pointerType,
+      startX:event.clientX,
+      startY:event.clientY,
+      latestX:event.clientX,
+      latestY:event.clientY,
+      card
+    };
+    freedomWallReaderLastTick = performance.now();
+    if (event.pointerType !== "mouse") {
+      freedomWallReaderHoldTimer = window.setTimeout(() => {
+        const pending = freedomWallReaderPointer;
+        freedomWallReaderHoldTimer = 0;
+        if (!pending || pending.pointerId !== event.pointerId || !pending.card?.isConnected) return;
+        const noteId = String(pending.card.dataset.readerNoteId || freedomWallReaderNoteId || "");
+        const x = pending.latestX, y = pending.latestY;
+        freedomWallReaderPointer = null;
+        if (noteId) openFreedomWallReactionMenu({ type:"note", id:noteId }, x, y, pending.pointerType || "touch");
+      }, FREEDOM_WALL_REACTION_HOLD_MS);
+    }
+  }, { passive:true });
+
+  viewport.addEventListener("pointermove", (event) => {
+    const pending = freedomWallReaderPointer;
+    if (!pending || pending.pointerId !== event.pointerId) return;
+    pending.latestX = event.clientX;
+    pending.latestY = event.clientY;
+    const dx = event.clientX - pending.startX;
+    const dy = event.clientY - pending.startY;
+    if (Math.hypot(dx, dy) > FREEDOM_WALL_READER_MOVE_THRESHOLD) clearFreedomWallReaderHoldTimer();
+    if (Math.abs(dx) > 22 && Math.abs(dx) > Math.abs(dy) * 1.08 && event.cancelable) event.preventDefault();
+  }, { passive:false });
+
+  const finishPointer = (event, cancelled = false) => {
+    const pending = freedomWallReaderPointer;
+    if (!pending || pending.pointerId !== event.pointerId) return;
+    clearFreedomWallReaderHoldTimer();
+    freedomWallReaderPointer = null;
+    freedomWallReaderLastTick = performance.now();
+    if (cancelled) return;
+    const dx = event.clientX - pending.startX;
+    const dy = event.clientY - pending.startY;
+    if (Math.abs(dx) >= FREEDOM_WALL_READER_SWIPE_THRESHOLD && Math.abs(dx) > Math.abs(dy) * 1.12) {
+      moveFreedomWallReader(dx < 0 ? 1 : -1, { resetTimer:true, source:"swipe" });
+    }
+  };
+  viewport.addEventListener("pointerup", (event) => finishPointer(event, false), { passive:true });
+  viewport.addEventListener("pointercancel", (event) => finishPointer(event, true), { passive:true });
+  viewport.addEventListener("lostpointercapture", (event) => finishPointer(event, true), { passive:true });
 }
 
 function setupFreedomWallNoteDragging(layer) {
@@ -6094,7 +6536,7 @@ function setupFreedomWallNoteDragging(layer) {
   // left-drag for movement and right-click for reactions.
   layer.addEventListener("pointerdown", (event) => {
     const card = event.target?.closest?.(".freedomWallNote");
-    if (!card || !layer.contains(card) || event.target?.closest?.("#freedomWallReactionMenu") || event.target?.closest?.("button,a,input,textarea,select,iframe,.freedomWallYoutubeFrame,.freedomWallYoutubePlayCard,.freedomWallSpotifyFrame,.freedomWallSpotifyPlayCard")) return;
+    if (!card || card.classList.contains("freedomWallReaderNote") || !layer.contains(card) || event.target?.closest?.("#freedomWallReactionMenu") || event.target?.closest?.("button,a,input,textarea,select,iframe,.freedomWallYoutubeFrame,.freedomWallYoutubePlayCard,.freedomWallSpotifyFrame,.freedomWallSpotifyPlayCard")) return;
     if (layer.classList.contains("is-reaction-menu-open")) return;
     closeFreedomWallReactionMenu();
 
@@ -6181,6 +6623,7 @@ function setupFreedomWallNoteDragging(layer) {
   layer.addEventListener("contextmenu", (event) => {
     const note = event.target?.closest?.(".freedomWallNote");
     const prompt = event.target?.closest?.("#freedomWallPromptCard");
+    if (note?.classList?.contains("freedomWallReaderNote")) return;
     if (!note && (!prompt || event.target?.closest?.("button,a,input,textarea,select,iframe,.freedomWallYoutubeFrame,.freedomWallYoutubePlayCard,.freedomWallSpotifyFrame,.freedomWallSpotifyPlayCard"))) return;
     event.preventDefault();
     event.stopPropagation();
@@ -6474,10 +6917,12 @@ function syncFreedomWallChildModalCloseSafety() {
   const composer = layer.querySelector("#freedomWallComposer");
   const mediaModal = layer.querySelector("#freedomWallMediaSearchModal");
   const replyThread = layer.querySelector("#freedomWallReplyThread");
+  const reader = layer.querySelector("#freedomWallReader");
   const childModalOpen = Boolean(
     (composer && !composer.hidden)
     || (mediaModal && !mediaModal.hidden)
     || (replyThread && !replyThread.hidden)
+    || (reader && !reader.hidden)
   );
   layer.classList.toggle("has-freedom-wall-child-modal", childModalOpen);
   if (childModalOpen) {
@@ -7143,6 +7588,7 @@ function renderFreedomWallNotes(notes = []) {
   if (renderSignature === freedomWallLastRenderSignature && stage.childElementCount) {
     if (count) count.textContent = getFreedomWallUiCopy(freedomWallConfig?.freedomWallTheme).formatCount(sorted.length, "normal");
     updateFreedomWallEmptyState();
+    syncFreedomWallReaderFromNotes({ preserveProgress:true });
     return;
   }
   freedomWallLastRenderSignature = renderSignature;
@@ -7279,6 +7725,7 @@ function renderFreedomWallNotes(notes = []) {
     count.textContent = getFreedomWallUiCopy(freedomWallConfig?.freedomWallTheme).formatCount(displayCount, "normal");
   }
   updateFreedomWallEmptyState();
+  syncFreedomWallReaderFromNotes({ preserveProgress:true });
   if (isFreedomWallExactExportMode()) applyFreedomWallExactExportMode();
 }
 
@@ -7830,9 +8277,13 @@ async function startFreedomWallLive() {
           pending.forEach(({ index, next }) => {
             freedomWallNotesCache[index].reactions = next.reactions;
             freedomWallNotesCache[index].reactionLastType = next.reactionLastType;
+            freedomWallNotesCache[index].sirJRReactions = next.sirJRReactions;
             freedomWallNotesCache[index].replyCount = next.replyCount;
+            freedomWallNotesCache[index].sirJRReplied = next.sirJRReplied;
             const card = Array.from(layer?.querySelectorAll?.(".freedomWallNote[data-note-id]") || []).find((item) => String(item.dataset.noteId || "") === String(next.id));
+            const readerCard = layer?.querySelector?.(`.freedomWallReaderNote[data-reader-note-id="${CSS.escape(String(next.id || ""))}"]`);
             updateFreedomWallReactionSummary(card, next.reactions, "note", next.reactionLastType);
+            updateFreedomWallReactionSummary(readerCard, next.reactions, "note", next.reactionLastType);
             if (freedomWallReactionMenuTarget?.type === "note" && freedomWallReactionMenuTarget.id === next.id) updateFreedomWallReactionMenuState();
             if (freedomWallReplyThreadNoteId === next.id) {
               const subtitle = layer?.querySelector("#freedomWallReplySubtitle");
@@ -7844,6 +8295,7 @@ async function startFreedomWallLive() {
           });
           const sortedForSignature = freedomWallNotesCache.filter(Boolean).sort((a,b) => (a.createdAtMs - b.createdAtMs) || a.id.localeCompare(b.id)).slice(-FREEDOM_WALL_MAX_RENDERED_NOTES);
           freedomWallLastRenderSignature = buildFreedomWallRenderSignature(sortedForSignature);
+          syncFreedomWallReaderFromNotes({ preserveProgress:true });
           return;
         }
       }
@@ -7954,6 +8406,7 @@ function stopFreedomWallLive(clearStage = false) {
   freedomWallLiveRetryTimer = 0;
   try { freedomWallUnsubscribe?.(); } catch (error) {}
   freedomWallUnsubscribe = null;
+  closeFreedomWallReader(null, { force:true });
   freedomWallConfig = null;
   freedomWallPosting = false;
   stopFreedomWallPromptReactionLive();
