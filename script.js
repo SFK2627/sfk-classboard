@@ -1812,6 +1812,10 @@ const FREEDOM_WALL_REACTION_MOVE_THRESHOLD = 11;
 const FREEDOM_WALL_REPLY_MAX_LENGTH = 240;
 const FREEDOM_WALL_REPLY_HOLD_MS = 430;
 const FREEDOM_WALL_REPLY_MOVE_THRESHOLD = 10;
+// v535: device-independent teacher identity trigger. The literal nickname is
+// intentionally never rendered publicly; it only selects the Koala / Sir JR UI.
+const FREEDOM_WALL_SIRJR_NICKNAME = "<sirjr>";
+const FREEDOM_WALL_SIRJR_DISPLAY_NAME = "Sir JR";
 let freedomWallUnsubscribe = null;
 let freedomWallListenToken = 0;
 let freedomWallConfig = null;
@@ -4029,6 +4033,11 @@ function ensureHomepageEffectLayer() {
     if (event.target?.id === "freedomWallReplyThread") closeFreedomWallReplyThread();
   });
   layer.querySelector("#freedomWallReplyForm")?.addEventListener("submit", submitFreedomWallReply);
+  // v535: remember the nickname as soon as it is typed. This lets <sirjr>
+  // activate Koala reactions on a fresh device without requiring a login or
+  // forcing the user to publish a note first.
+  layer.querySelector("#freedomWallAuthorInput")?.addEventListener("input", rememberFreedomWallNicknameInput);
+  layer.querySelector("#freedomWallReplyAuthor")?.addEventListener("input", rememberFreedomWallNicknameInput);
   layer.querySelector("#freedomWallReplyCancelParent")?.addEventListener("click", (event) => { event.preventDefault(); clearFreedomWallReplyParent(); });
   layer.querySelector("#freedomWallReplyToReplyBtn")?.addEventListener("click", (event) => { event.preventDefault(); applyFreedomWallReplyActionTarget(); });
   setupFreedomWallReplyInteractions(layer);
@@ -4740,6 +4749,38 @@ function saveFreedomWallAuthor(value) {
   try { localStorage.setItem("sfkFreedomWallAuthorV454", name); } catch (error) {}
 }
 
+function isFreedomWallSirJRNickname(value) {
+  return String(value || "").trim().toLowerCase() === FREEDOM_WALL_SIRJR_NICKNAME;
+}
+
+function isCurrentFreedomWallSirJR() {
+  return isFreedomWallSirJRNickname(getFreedomWallSavedAuthor());
+}
+
+function getFreedomWallPublicAuthor(value, isSirJR = isFreedomWallSirJRNickname(value)) {
+  return isSirJR ? FREEDOM_WALL_SIRJR_DISPLAY_NAME : String(value || "").trim().slice(0, FREEDOM_WALL_AUTHOR_MAX_LENGTH);
+}
+
+function normalizeFreedomWallSirJRReactions(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const out = {};
+  Object.entries(value).forEach(([deviceId, reaction]) => {
+    const id = String(deviceId || "").trim().slice(0, 80);
+    const type = String(reaction || "").trim().toLowerCase();
+    if (/^fw_[A-Za-z0-9_]+$/.test(id) && FREEDOM_WALL_REACTION_TYPES.includes(type)) out[id] = type;
+  });
+  return out;
+}
+
+function hasFreedomWallSirJRReaction(note) {
+  return Boolean(note && Object.keys(normalizeFreedomWallSirJRReactions(note.sirJRReactions || note.SirJRReactions || {})).length);
+}
+
+function rememberFreedomWallNicknameInput(event) {
+  const value = String(event?.target?.value || "").trim().slice(0, FREEDOM_WALL_AUTHOR_MAX_LENGTH);
+  if (value) saveFreedomWallAuthor(value);
+}
+
 function freedomWallHash(value) {
   let hash = 2166136261;
   const text = String(value || "freedom-wall");
@@ -5214,20 +5255,29 @@ function updateFreedomWallReactionSummary(container, reactions = {}, targetType 
   const noteId = targetType === "note" ? String(container.dataset?.noteId || "") : "";
   const note = noteId ? freedomWallNotesCache.find((item) => String(item?.id || "") === noteId) : null;
   const replyCount = targetType === "note" ? Math.max(0, Math.floor(Number(note?.replyCount || 0) || 0)) : 0;
+  const sirJRReacted = targetType === "note" && hasFreedomWallSirJRReaction(note);
+  const sirJRReplied = targetType === "note" && Boolean(note?.sirJRReplied);
   const parts = [];
   if (total && dominant) {
     const selected = mine === dominant ? " is-mine" : "";
-    parts.push(`<span class="freedomWallReactionCount is-dominant${selected}" data-reaction="${dominant}" aria-label="${total} reactions">${FREEDOM_WALL_REACTIONS[dominant]} <b>${total}</b></span>`);
+    const special = sirJRReacted ? " is-sirjr" : "";
+    const koala = sirJRReacted ? '<span class="freedomWallSirJRKoala" aria-hidden="true">🐨</span>' : "";
+    const extraLabel = sirJRReacted ? ", including Sir JR" : "";
+    parts.push(`<span class="freedomWallReactionCount is-dominant${selected}${special}" data-reaction="${dominant}" aria-label="${total} reactions${extraLabel}">${FREEDOM_WALL_REACTIONS[dominant]} <b>${total}</b>${koala}</span>`);
   }
   if (replyCount > 0) {
-    parts.push(`<span class="freedomWallReplyCount" aria-label="${replyCount} ${replyCount === 1 ? "reply" : "replies"}">💬 <b>${replyCount}</b></span>`);
+    const special = sirJRReplied ? " is-sirjr" : "";
+    const koala = sirJRReplied ? '<span class="freedomWallSirJRKoala" aria-hidden="true">🐨</span>' : "";
+    const extraLabel = sirJRReplied ? ", including a reply from Sir JR" : "";
+    parts.push(`<span class="freedomWallReplyCount${special}" aria-label="${replyCount} ${replyCount === 1 ? "reply" : "replies"}${extraLabel}">💬 <b>${replyCount}</b>${koala}</span>`);
   }
   summary.innerHTML = parts.join("");
   summary.hidden = parts.length === 0;
   container.classList?.toggle?.("has-reactions", Boolean(total && dominant));
   container.classList?.toggle?.("has-replies", replyCount > 0);
+  container.classList?.toggle?.("has-sirjr-reaction", sirJRReacted);
+  container.classList?.toggle?.("has-sirjr-reply", sirJRReplied);
 }
-
 function getFreedomWallPromptReactionDocIdFromSignature(signature) {
   const safe = String(signature || "").trim();
   if (!safe) return "";
@@ -5267,20 +5317,28 @@ function updateFreedomWallReactionMenuState() {
   const menu = layer?.querySelector("#freedomWallReactionMenu");
   if (!menu || menu.hidden || !freedomWallReactionMenuTarget) return;
   const { counts, mine } = getFreedomWallReactionStats(getFreedomWallReactionMapForTarget(), getFreedomWallReactionLastTypeForTarget());
+  const isNote = freedomWallReactionMenuTarget.type === "note";
+  const noteForMenu = isNote
+    ? freedomWallNotesCache.find((item) => String(item?.id || "") === String(freedomWallReactionMenuTarget.id || ""))
+    : null;
+  const sirJRTypes = new Set(Object.values(normalizeFreedomWallSirJRReactions(noteForMenu?.sirJRReactions || {})));
   menu.querySelectorAll("[data-fw-reaction]").forEach((button) => {
     const type = String(button.dataset.fwReaction || "");
     button.classList.toggle("is-selected", mine === type);
+    button.classList.toggle("has-sirjr", sirJRTypes.has(type));
     button.setAttribute("aria-pressed", mine === type ? "true" : "false");
     const count = button.querySelector(`[data-fw-reaction-count="${type}"]`);
     if (count) count.textContent = String(counts[type] || 0);
   });
   const actionRow = menu.querySelector("#freedomWallNoteActionRow");
   const replyCountEl = menu.querySelector("#freedomWallActionReplyCount");
-  const isNote = freedomWallReactionMenuTarget.type === "note";
+  const repliesButton = menu.querySelector("#freedomWallViewRepliesBtn");
+  const quickReplyButton = menu.querySelector("#freedomWallQuickReplyBtn");
   if (actionRow) actionRow.hidden = !isNote;
+  if (repliesButton) repliesButton.classList.toggle("has-sirjr", Boolean(noteForMenu?.sirJRReplied));
+  if (quickReplyButton) quickReplyButton.classList.toggle("has-sirjr", Boolean(noteForMenu?.sirJRReplied));
   if (isNote && replyCountEl) {
-    const note = freedomWallNotesCache.find((item) => String(item?.id || "") === String(freedomWallReactionMenuTarget.id || ""));
-    replyCountEl.textContent = String(Math.max(0, Math.floor(Number(note?.replyCount || 0) || 0)));
+    replyCountEl.textContent = String(Math.max(0, Math.floor(Number(noteForMenu?.replyCount || 0) || 0)));
   }
 }
 
@@ -5333,7 +5391,7 @@ function closeFreedomWallReactionMenu() {
   freedomWallReactionMenuTarget = null;
 }
 
-function applyFreedomWallOptimisticReaction(target, reactions, lastType = "") {
+function applyFreedomWallOptimisticReaction(target, reactions, lastType = "", sirJRReactions = null) {
   const clean = normalizeFreedomWallReactions(reactions);
   const safeLast = normalizeFreedomWallReactionLastType(lastType);
   if (target.type === "prompt") {
@@ -5346,6 +5404,7 @@ function applyFreedomWallOptimisticReaction(target, reactions, lastType = "") {
     if (note) {
       note.reactions = clean;
       note.reactionLastType = safeLast;
+      if (sirJRReactions !== null) note.sirJRReactions = normalizeFreedomWallSirJRReactions(sirJRReactions);
     }
     const card = document.getElementById("homepageEffectLayer")?.querySelector(`.freedomWallNote[data-note-id="${CSS.escape(String(target.id || ""))}"]`);
     updateFreedomWallReactionSummary(card, clean, "note", safeLast);
@@ -5360,7 +5419,7 @@ function applyFreedomWallOptimisticReaction(target, reactions, lastType = "") {
   }
 }
 
-async function writeFreedomWallReactionFast(db, target, deviceId, type, removing, lastType, includeLastType = true) {
+async function writeFreedomWallReactionFast(db, target, deviceId, type, removing, lastType, includeLastType = true, sirJRMode = "keep") {
   const serverTimestamp = firebase.firestore.FieldValue.serverTimestamp();
   const deleteField = firebase.firestore.FieldValue.delete();
   const common = {
@@ -5373,6 +5432,10 @@ async function writeFreedomWallReactionFast(db, target, deviceId, type, removing
     const ref = db.collection(FREEDOM_WALL_COLLECTION).doc(target.id);
     const update = { ...common };
     update[`Reactions.${deviceId}`] = removing ? deleteField : type;
+    // v535: Sir JR identity is nickname-triggered, not login-triggered. Keep a
+    // parallel per-device map so every viewer can show the Koala indicator.
+    if (sirJRMode === "set") update[`SirJRReactions.${deviceId}`] = removing ? deleteField : type;
+    else if (sirJRMode === "clear") update[`SirJRReactions.${deviceId}`] = deleteField;
     await ref.update(update);
     return;
   }
@@ -5410,33 +5473,55 @@ async function toggleFreedomWallReaction(type) {
     ? (previewStats.counts[previousLastType] > 0 ? previousLastType : previewStats.dominant)
     : type;
 
+  const note = target.type === "note"
+    ? freedomWallNotesCache.find((item) => String(item?.id || "") === String(target.id || ""))
+    : null;
+  const previousSirJR = normalizeFreedomWallSirJRReactions(note?.sirJRReactions || {});
+  const optimisticSirJR = { ...previousSirJR };
+  const sirJRNow = target.type === "note" && isCurrentFreedomWallSirJR();
+  const hadSirJROnDevice = Boolean(previousSirJR[deviceId]);
+  let sirJRMode = "keep";
+  if (target.type === "note") {
+    if (sirJRNow) {
+      if (removing) {
+        sirJRMode = hadSirJROnDevice ? "clear" : "keep";
+        delete optimisticSirJR[deviceId];
+      } else {
+        sirJRMode = "set";
+        optimisticSirJR[deviceId] = type;
+      }
+    } else if (hadSirJROnDevice) {
+      // If this browser stops using the secret nickname, its next reaction
+      // becomes ordinary and its old Koala marker is cleaned up.
+      sirJRMode = "clear";
+      delete optimisticSirJR[deviceId];
+    }
+  }
+
   freedomWallReactionWriting = true;
-  applyFreedomWallOptimisticReaction(target, optimistic, optimisticLastType);
+  applyFreedomWallOptimisticReaction(target, optimistic, optimisticLastType, target.type === "note" ? optimisticSirJR : null);
   if (status) status.textContent = "Saving…";
   try {
     const db = await waitForClassBoardFirestore(12000);
     if (!db) throw new Error("wall unavailable");
     try {
-      await writeFreedomWallReactionFast(db, target, deviceId, type, removing, optimisticLastType, true);
+      await writeFreedomWallReactionFast(db, target, deviceId, type, removing, optimisticLastType, true, sirJRMode);
     } catch (writeError) {
-      // v485 compatibility: if v484 reaction rules are still deployed, retry
-      // without ReactionLastType. The reaction still works; tie-last persistence
-      // becomes available as soon as the v485 rules are published.
-      if (!isFreedomWallRulesCompatibilityError(writeError)) throw writeError;
-      await writeFreedomWallReactionFast(db, target, deviceId, type, removing, optimisticLastType, false);
+      // Compatibility retry is safe only for ordinary reactions. v535 Koala
+      // identity needs the v535 Rules because SirJRReactions is a new field.
+      if (!isFreedomWallRulesCompatibilityError(writeError) || sirJRMode !== "keep") throw writeError;
+      await writeFreedomWallReactionFast(db, target, deviceId, type, removing, optimisticLastType, false, "keep");
     }
-    if (status) status.textContent = removing ? "Reaction removed" : "Reaction saved";
-    // Keep the picker open so users can immediately see all five live counts.
-    // It closes only with X, outside tap/click, or another wall action.
+    if (status) status.textContent = removing ? "Reaction removed" : (sirJRNow ? "🐨 Sir JR reaction saved" : "Reaction saved");
   } catch (error) {
     console.warn("Freedom Wall reaction failed:", error);
-    applyFreedomWallOptimisticReaction(target, previous, previousLastType);
-    if (status) status.textContent = isFreedomWallRulesCompatibilityError(error) ? "Update the Firebase Rules to enable reactions." : "Unable to react right now.";
+    if (note) note.sirJRReactions = previousSirJR;
+    applyFreedomWallOptimisticReaction(target, previous, previousLastType, target.type === "note" ? previousSirJR : null);
+    if (status) status.textContent = isFreedomWallRulesCompatibilityError(error) ? "Publish the v535 Firebase Rules to enable Koala interactions." : "Unable to react right now.";
   } finally {
     freedomWallReactionWriting = false;
   }
 }
-
 function stopFreedomWallPromptReactionLive() {
   freedomWallPromptReactionListenToken += 1;
   try { freedomWallPromptReactionUnsubscribe?.(); } catch (error) {}
@@ -5620,8 +5705,9 @@ function normalizeFreedomWallReply(doc, index = 0) {
   const deviceId = String(data.DeviceId || data.deviceId || "").trim();
   const createdAtMs = freedomWallSafeNumber(data.CreatedAtMs || data.createdAtMs, Date.now() - (10000 - index), 0, Number.MAX_SAFE_INTEGER);
   const wallId = normalizeFreedomWallSessionId(data.WallID || data.wallId || FREEDOM_WALL_LEGACY_SESSION_ID);
+  const isSirJR = data.IsSirJR === true || data.isSirJR === true;
   if (!id || !noteId || !text || !author) return null;
-  return { id, noteId, parentReplyId, text, author, deviceId, createdAtMs, wallId };
+  return { id, noteId, parentReplyId, text, author, deviceId, createdAtMs, wallId, isSirJR };
 }
 
 function getFreedomWallReplyNote(noteId = freedomWallReplyThreadNoteId) {
@@ -5765,16 +5851,23 @@ function renderFreedomWallReplyThread(replies = freedomWallReplyThreadCache) {
   }
   sorted.forEach((reply) => {
     const item = document.createElement("article");
-    item.className = "freedomWallReplyItem";
+    item.className = `freedomWallReplyItem${reply.isSirJR ? " is-sirjr" : ""}`;
     item.dataset.replyId = reply.id;
-    const displayAuthor = freedomWallConfig?.freedomWallShowNames ? reply.author : "Anonymous";
+    const displayAuthor = reply.isSirJR
+      ? FREEDOM_WALL_SIRJR_DISPLAY_NAME
+      : (freedomWallConfig?.freedomWallShowNames ? reply.author : "Anonymous");
     item.dataset.replyName = displayAuthor;
     const depth = getFreedomWallReplyDepth(reply, byId);
     item.style.setProperty("--fw-reply-depth", String(Math.min(2, depth)));
     const head = document.createElement("div");
     head.className = "freedomWallReplyItemHead";
     const author = document.createElement("strong");
-    author.textContent = displayAuthor;
+    if (reply.isSirJR) {
+      author.className = "freedomWallSirJRReplyIdentity";
+      author.innerHTML = `<span aria-hidden="true">🐨</span><b>${FREEDOM_WALL_SIRJR_DISPLAY_NAME}</b><em>Teacher</em>`;
+    } else {
+      author.textContent = displayAuthor;
+    }
     const time = document.createElement("small");
     time.textContent = formatFreedomWallReplyTime(reply.createdAtMs);
     head.append(author, time);
@@ -5783,7 +5876,9 @@ function renderFreedomWallReplyThread(replies = freedomWallReplyThreadCache) {
       const parent = byId.get(reply.parentReplyId);
       const parentLabel = document.createElement("div");
       parentLabel.className = "freedomWallReplyParentLabel";
-      const parentDisplayAuthor = freedomWallConfig?.freedomWallShowNames ? (parent?.author || "a reply") : "Anonymous";
+      const parentDisplayAuthor = parent?.isSirJR
+        ? `🐨 ${FREEDOM_WALL_SIRJR_DISPLAY_NAME}`
+        : (freedomWallConfig?.freedomWallShowNames ? (parent?.author || "a reply") : "Anonymous");
       parentLabel.textContent = `↳ Replying to ${parentDisplayAuthor}`;
       item.appendChild(parentLabel);
     }
@@ -5867,6 +5962,8 @@ async function submitFreedomWallReply(event) {
   const send = layer?.querySelector("#freedomWallReplySend");
   const status = layer?.querySelector("#freedomWallReplyStatus");
   const author = String(authorInput?.value || "").trim().slice(0, FREEDOM_WALL_AUTHOR_MAX_LENGTH);
+  const isSirJR = isFreedomWallSirJRNickname(author);
+  const publicAuthor = getFreedomWallPublicAuthor(author, isSirJR);
   const text = String(replyInput?.value || "").trim().slice(0, FREEDOM_WALL_REPLY_MAX_LENGTH);
   if (!author) { if (status) status.textContent = "Add your name or nickname first."; authorInput?.focus(); return; }
   if (!text) { if (status) status.textContent = "Write a reply first."; replyInput?.focus(); return; }
@@ -5888,32 +5985,36 @@ async function submitFreedomWallReply(event) {
       WallID: note.wallId || FREEDOM_WALL_LEGACY_SESSION_ID,
       ParentReplyID: freedomWallReplyParentId || "",
       Text: text,
-      Name: author,
+      Name: publicAuthor,
       DeviceId: deviceId,
       CreatedAtMs: Date.now(),
       CreatedAt: serverTimestamp
     };
+    if (isSirJR) payload.IsSirJR = true;
     const batch = db.batch();
     batch.set(replyRef, payload);
-    batch.update(noteRef, {
+    const noteUpdate = {
       ReplyCount: firebase.firestore.FieldValue.increment(1),
       ReplyLastId: replyRef.id,
       ReplyDeviceId: deviceId,
       ReplyUpdatedAt: serverTimestamp
-    });
+    };
+    if (isSirJR) noteUpdate.SirJRReplied = true;
+    batch.update(noteRef, noteUpdate);
     await batch.commit();
     saveFreedomWallAuthor(author);
     if (replyInput) replyInput.value = "";
     clearFreedomWallReplyParent();
-    if (status) status.textContent = "Reply sent.";
+    if (status) status.textContent = isSirJR ? "🐨 Sir JR reply sent." : "Reply sent.";
     // Optimistic count so the chip/menu feels instant; Firestore live sync will reconcile it.
     note.replyCount = Math.max(Math.max(0, Math.floor(Number(note.replyCount || 0) || 0)), priorReplyCount + 1);
+    if (isSirJR) note.sirJRReplied = true;
     const card = layer?.querySelector(`.freedomWallNote[data-note-id="${CSS.escape(note.id)}"]`);
     updateFreedomWallReactionSummary(card, note.reactions, "note", note.reactionLastType);
     updateFreedomWallReactionMenuState();
   } catch (error) {
     console.warn("Freedom Wall reply failed:", error);
-    if (status) status.textContent = isFreedomWallRulesCompatibilityError(error) ? "Publish the updated Firebase Rules to enable replies." : "Unable to send reply right now.";
+    if (status) status.textContent = isFreedomWallRulesCompatibilityError(error) ? "Publish the v535 Firebase Rules to enable replies and Koala identity." : "Unable to send reply right now.";
   } finally {
     freedomWallReplyPosting = false;
     if (send) send.disabled = false;
@@ -6987,10 +7088,12 @@ function normalizeFreedomWallNote(doc, index = 0) {
   });
   const reactions = normalizeFreedomWallReactions(data.Reactions || data.reactions || {});
   const reactionLastType = normalizeFreedomWallReactionLastType(data.ReactionLastType || data.reactionLastType || "");
+  const sirJRReactions = normalizeFreedomWallSirJRReactions(data.SirJRReactions || data.sirJRReactions || {});
   const replyCount = Math.max(0, Math.floor(Number(data.ReplyCount || data.replyCount || 0) || 0));
+  const sirJRReplied = data.SirJRReplied === true || data.sirJRReplied === true;
   const wallId = normalizeFreedomWallSessionId(data.WallID || data.wallId || FREEDOM_WALL_LEGACY_SESSION_ID);
   if (!text && !mediaRef && !youtubeUrl && !gif?.url && !spotify?.url) return null;
-  return { id, text, author, color, textColor, fontStyle, createdAtMs, mediaRef, mediaType, youtubeUrl, youtube, gif, spotify, reactions, reactionLastType, replyCount, wallId, ...getFreedomWallPlacement({ ...data, id }, index) };
+  return { id, text, author, color, textColor, fontStyle, createdAtMs, mediaRef, mediaType, youtubeUrl, youtube, gif, spotify, reactions, reactionLastType, sirJRReactions, replyCount, sirJRReplied, wallId, ...getFreedomWallPlacement({ ...data, id }, index) };
 }
 
 function getFreedomWallNoteCoreSignature(note) {
@@ -7008,7 +7111,14 @@ function buildFreedomWallRenderSignature(notes = []) {
     allowFont: Boolean(freedomWallConfig?.freedomWallAllowFont),
     promptVisible: isFreedomWallPromptVisible(),
     viewport: window.innerWidth <= 700 ? "phone" : "wide",
-    notes: notes.map((note) => [getFreedomWallNoteCoreSignature(note), getFreedomWallReactionSignature(note?.reactions), note?.reactionLastType || "", Math.max(0, Math.floor(Number(note?.replyCount || 0) || 0))])
+    notes: notes.map((note) => [
+      getFreedomWallNoteCoreSignature(note),
+      getFreedomWallReactionSignature(note?.reactions),
+      note?.reactionLastType || "",
+      JSON.stringify(Object.entries(normalizeFreedomWallSirJRReactions(note?.sirJRReactions || {})).sort((a,b) => a[0].localeCompare(b[0]))),
+      Math.max(0, Math.floor(Number(note?.replyCount || 0) || 0)),
+      Boolean(note?.sirJRReplied)
+    ])
   });
 }
 
