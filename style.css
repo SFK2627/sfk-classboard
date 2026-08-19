@@ -36260,3 +36260,93 @@ html.sfkFreedomWallReaderNoScroll body{
     padding-inline:1px!important;
   }
 }
+
+/* =========================================================
+   v539 FREEDOM WALL — TIGHTER NOTE NAME SPACING
+   Reduce the oversized empty gap between the note text/media and the
+   nickname/author line, while keeping a small readable breathing space.
+========================================================= */
+.homepageEffectLayer.is-freedom-wall .freedomWallNote > small,
+.homepageFreedomWallScene .freedomWallNote > small{
+  margin-top:clamp(3px,.55vw,7px)!important;
+}
+
+.homepageEffectLayer.is-freedom-wall .freedomWallNote.is-size-compact > small,
+.homepageFreedomWallScene .freedomWallNote.is-size-compact > small{
+  margin-top:2px!important;
+}
+
+.homepageEffectLayer.is-freedom-wall .freedomWallNote.is-size-small > small,
+.homepageFreedomWallScene .freedomWallNote.is-size-small > small{
+  margin-top:3px!important;
+}
+
+.homepageEffectLayer.is-freedom-wall .freedomWallNote.is-size-medium > small,
+.homepageFreedomWallScene .freedomWallNote.is-size-medium > small{
+  margin-top:4px!important;
+}
+
+.homepageEffectLayer.is-freedom-wall .freedomWallNote.is-size-large > small,
+.homepageFreedomWallScene .freedomWallNote.is-size-large > small{
+  margin-top:5px!important;
+}
+
+.homepageEffectLayer.is-freedom-wall .freedomWallNote.has-media > small,
+.homepageFreedomWallScene .freedomWallNote.has-media > small,
+.homepageFreedomWallScene[data-theme="polaroid"] .freedomWallNote.has-media > small{
+  margin-top:5px!important;
+}
+
+/* Keep enough room for reaction/reply chips, but do not add a huge blank lane
+   between the message and the nickname. */
+.homepageEffectLayer.is-freedom-wall .freedomWallNote.has-reactions > p,
+.homepageEffectLayer.is-freedom-wall .freedomWallNote.has-replies > p{
+  margin-bottom:12px!important;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallNote.has-reactions > small,
+.homepageEffectLayer.is-freedom-wall .freedomWallNote.has-replies > small{
+  margin-top:4px!important;
+  margin-bottom:14px!important;
+}
+
+/* Read Notes mode should use the same tighter author spacing. */
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote > small,
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.has-video:not(.is-inline-video-active) > small,
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.has-gif:not(.is-inline-video-active) > small{
+  margin-top:clamp(4px,.7vw,8px)!important;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.has-reactions > p,
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.has-replies > p{
+  margin-bottom:14px!important;
+}
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.has-reactions > small,
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.has-replies > small{
+  margin-top:5px!important;
+  margin-bottom:16px!important;
+}
+
+@media(max-width:700px){
+  .homepageEffectLayer.is-freedom-wall .freedomWallNote > small,
+  .homepageFreedomWallScene .freedomWallNote > small{
+    margin-top:3px!important;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallNote.has-media > small,
+  .homepageFreedomWallScene .freedomWallNote.has-media > small,
+  .homepageFreedomWallScene[data-theme="polaroid"] .freedomWallNote.has-media > small{
+    margin-top:4px!important;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallNote.has-reactions > p,
+  .homepageEffectLayer.is-freedom-wall .freedomWallNote.has-replies > p{
+    margin-bottom:10px!important;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallNote.has-reactions > small,
+  .homepageEffectLayer.is-freedom-wall .freedomWallNote.has-replies > small{
+    margin-top:3px!important;
+    margin-bottom:12px!important;
+  }
+  .homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote > small,
+  .homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.has-video:not(.is-inline-video-active) > small,
+  .homepageEffectLayer.is-freedom-wall .freedomWallReaderNote.freedomWallNote.has-gif:not(.is-inline-video-active) > small{
+    margin-top:4px!important;
+  }
+}
