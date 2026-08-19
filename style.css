@@ -36960,3 +36960,426 @@ html.sfkFreedomWallExactExport #homepageEffectLayer.is-freedom-wall-exact-curren
   padding-left:2px!important;
   padding-right:2px!important;
 }
+
+/* =========================================================
+   v548 — CUTOUT POP / Magazine Collage Freedom Wall theme
+========================================================= */
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallSun,
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallMoon,
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallCloud,
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallRain,
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallFlood{display:none!important;opacity:0!important}
+
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallBg{
+  background:
+    radial-gradient(circle at 16% 18%,rgba(255,219,108,.18) 0 6%,transparent 6.2%),
+    radial-gradient(circle at 83% 22%,rgba(255,129,172,.16) 0 4.5%,transparent 4.7%),
+    radial-gradient(circle at 70% 78%,rgba(82,165,255,.14) 0 5.5%,transparent 5.8%),
+    linear-gradient(180deg,#f5f0e6 0%,#efe7d8 100%) !important;
+}
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallBg::before{
+  inset:0 !important;
+  background:
+    repeating-linear-gradient(0deg,rgba(0,0,0,.020) 0 1px,transparent 1px 22px),
+    repeating-linear-gradient(90deg,rgba(0,0,0,.016) 0 1px,transparent 1px 22px),
+    linear-gradient(112deg,transparent 0 20%,rgba(255,255,255,.50) 20.3% 20.8%,transparent 21.1% 100%),
+    linear-gradient(158deg,transparent 0 63%,rgba(0,0,0,.045) 63.2% 63.8%,transparent 64% 100%) !important;
+  opacity:.82 !important;
+}
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallBg::after{
+  inset:auto 5% 4% 5% !important;
+  height:13% !important;
+  border-radius:22px !important;
+  background:
+    linear-gradient(92deg,rgba(255,214,94,.28),rgba(255,255,255,0) 16%),
+    linear-gradient(90deg,transparent 0 14%,rgba(249,104,156,.18) 14.5% 26%,transparent 26.5% 43%,rgba(71,165,255,.18) 43.5% 54.5%,transparent 55% 100%),
+    linear-gradient(180deg,rgba(255,255,255,.52),rgba(255,255,255,0)) !important;
+  opacity:.95 !important;
+}
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallComicBurst,
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallVandalMark{opacity:1!important}
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallComicBurst{
+  background:#111!important;color:#fff!important;border-radius:2px!important;border:2px solid #fff!important;
+  box-shadow:4px 4px 0 rgba(0,0,0,.18)!important;text-transform:uppercase!important;letter-spacing:.08em!important
+}
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallComicBurst.burst-a{top:16%;left:7%;transform:rotate(-7deg)!important}
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallComicBurst.burst-b{top:73%;right:9%;transform:rotate(5deg)!important}
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallVandalMark{
+  font-family:Impact,"Arial Black",sans-serif!important;
+  text-shadow:none!important;mix-blend-mode:normal!important;filter:none!important;opacity:.16!important
+}
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallVandalMark.mark-a{top:18%;left:9%;color:#ff5fa2!important;transform:rotate(-8deg)!important}
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallVandalMark.mark-b{bottom:10%;right:10%;color:#48c3ff!important;transform:rotate(8deg)!important}
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallVandalMark.mark-c{top:61%;left:49%;color:#ffd44f!important;transform:rotate(-4deg)!important}
+
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallBrand{
+  background:linear-gradient(180deg,rgba(255,255,252,.96),rgba(246,240,230,.96))!important;
+  border:3px solid #111!important;border-radius:8px!important;
+  box-shadow:6px 6px 0 rgba(0,0,0,.18)!important;color:#131313!important;
+}
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallBrand span{color:#635c53!important;font-family:"Trebuchet MS",Arial,sans-serif!important;font-weight:900!important}
+
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallPromptCard{
+  background:linear-gradient(180deg,rgba(255,255,252,.98),rgba(248,242,232,.98))!important;
+  border:4px solid #111!important;border-radius:22px!important;
+  box-shadow:10px 10px 0 rgba(0,0,0,.22)!important;color:#111!important;
+}
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallPromptCard::before{
+  background:linear-gradient(90deg,#ff5ea2 0 20%,#ffd44b 20% 42%,#4fc7ff 42% 64%,#b8ef72 64% 84%,#111 84% 100%)!important;
+  height:8px!important;border-radius:999px!important;left:18px!important;right:18px!important;top:10px!important
+}
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallPromptEyebrow{
+  color:#d43b53!important;font-family:"Arial Black",Arial,sans-serif!important;letter-spacing:.14em!important
+}
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallPromptCard p{
+  color:#524a41!important;font-family:"Trebuchet MS",Arial,sans-serif!important;font-weight:900!important
+}
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallPromptClose{
+  color:#111!important;background:rgba(0,0,0,.06)!important;border-radius:999px!important
+}
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallPromptClose:hover,
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallPromptClose:focus-visible{background:rgba(0,0,0,.12)!important}
+
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallNote{
+  background:linear-gradient(180deg,#fffaf0,#f5eddc)!important;
+  border:3px solid #181818!important;
+  border-radius:12px 18px 14px 16px!important;
+  box-shadow:7px 7px 0 rgba(0,0,0,.20)!important;
+  overflow:visible!important;
+}
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallNote::before{
+  content:""!important;position:absolute!important;left:16px!important;right:16px!important;top:-7px!important;height:15px!important;
+  background:linear-gradient(90deg,rgba(255,104,167,.84),rgba(255,212,75,.90) 34%,rgba(79,199,255,.86) 68%,rgba(176,236,104,.82))!important;
+  border:2px solid rgba(17,17,17,.12)!important;border-radius:3px!important;box-shadow:0 2px 4px rgba(0,0,0,.08)!important;
+  transform:rotate(-1.8deg)!important
+}
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallNote p{
+  color:#222!important;font-family:"Trebuchet MS",Arial,sans-serif!important;font-weight:1000!important;letter-spacing:-.01em!important;line-height:1.16!important;
+  text-shadow:none!important
+}
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallNote small{
+  display:inline-block!important;margin-top:4px!important;padding:2px 7px!important;border-radius:999px!important;
+  background:rgba(17,17,17,.06)!important;color:#5a5348!important;font:900 10px/1.1 "Trebuchet MS",Arial,sans-serif!important
+}
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallNote:nth-child(3n+1){border-radius:10px 18px 12px 20px!important;background:linear-gradient(180deg,#fff7cc,#f2e7b9)!important}
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallNote:nth-child(3n+2){border-radius:18px 12px 18px 14px!important;background:linear-gradient(180deg,#ffe3ef,#f7cadf)!important}
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallNote:nth-child(3n+3){border-radius:14px 18px 10px 18px!important;background:linear-gradient(180deg,#d9efff,#c6e2ff)!important}
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallNote:nth-child(4n+2) p{font-family:Georgia,"Times New Roman",serif!important}
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallNote:nth-child(4n+3) p{font-family:"Arial Black",Arial,sans-serif!important;letter-spacing:-.025em!important}
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallNote:nth-child(4n+4) p{font-family:"Courier New",monospace!important;font-weight:800!important}
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallNote .freedomWallNoteMedia{
+  border-radius:10px!important;border:3px solid rgba(17,17,17,.16)!important;box-shadow:0 5px 10px rgba(0,0,0,.10)!important;background:#f2eee7!important
+}
+.homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallReactionSummary.is-note .freedomWallReactionCount.is-dominant,
+.homepageEffectLayer.is-freedom-wall .homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallReplyCount{
+  background:#fff!important;border:2px solid rgba(17,17,17,.14)!important;box-shadow:2px 2px 0 rgba(0,0,0,.10)!important
+}
+
+.homepageEffectLayer.is-freedom-wall .homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallReaderNote,
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderOverlay[data-theme="cutout-pop"] .freedomWallReaderNote{
+  background:linear-gradient(180deg,#fffaf0,#f5eddc)!important;border:4px solid #181818!important;border-radius:24px!important;box-shadow:12px 12px 0 rgba(0,0,0,.24)!important
+}
+.homepageEffectLayer.is-freedom-wall .homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallReaderNote::before,
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderOverlay[data-theme="cutout-pop"] .freedomWallReaderNote::before{
+  content:""!important;position:absolute!important;left:24px!important;right:24px!important;top:-8px!important;height:16px!important;
+  background:linear-gradient(90deg,#ff5ea2 0 26%,#ffd44b 26% 50%,#4fc7ff 50% 76%,#b8ef72 76% 100%)!important;border-radius:3px!important;transform:rotate(-1deg)!important
+}
+.homepageEffectLayer.is-freedom-wall .homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallReaderNote p,
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderOverlay[data-theme="cutout-pop"] .freedomWallReaderNote p{
+  color:#222!important;text-align:center!important;font-family:"Trebuchet MS",Arial,sans-serif!important;font-weight:1000!important;line-height:1.18!important
+}
+.homepageEffectLayer.is-freedom-wall .homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallReaderNote small,
+.homepageEffectLayer.is-freedom-wall .freedomWallReaderOverlay[data-theme="cutout-pop"] .freedomWallReaderNote small{
+  background:rgba(17,17,17,.06)!important;border-radius:999px!important;padding:3px 8px!important
+}
+
+.freedomWallBrand strong.is-cutout-pop-brand,
+.freedomWallPromptCard h2.is-cutout-pop-title{
+  display:flex!important;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px;line-height:1.06!important
+}
+.freedomWallBrand strong.is-cutout-pop-brand{gap:5px;justify-content:flex-start}
+.fwCutoutWord{
+  display:inline-flex;align-items:center;justify-content:center;position:relative;
+  padding:.10em .26em .14em;border:2px solid rgba(17,17,17,.78);border-radius:2px;
+  box-shadow:2px 2px 0 rgba(0,0,0,.12);
+  transform:translateY(var(--fw-cutout-lift,0)) rotate(var(--fw-cutout-rotate,0));
+  color:#111;text-transform:none;white-space:nowrap
+}
+.freedomWallPromptCard h2 .fwCutoutWord{
+  font:1000 clamp(18px,2.4vw,34px)/1 "Arial Black",Impact,sans-serif;letter-spacing:-.03em
+}
+.freedomWallBrand strong .fwCutoutWord{
+  font:1000 clamp(10px,1vw,14px)/1 "Arial Black",Impact,sans-serif;letter-spacing:.02em
+}
+.fwCutout-0{background:#ffebb1;font-family:Georgia,"Times New Roman",serif!important}
+.fwCutout-1{background:#fdd3e4;font-family:"Arial Black",Arial,sans-serif!important}
+.fwCutout-2{background:#d6ecff;font-family:"Trebuchet MS",Arial,sans-serif!important}
+.fwCutout-3{background:#ecf2bf;font-family:"Courier New",monospace!important}
+.fwCutout-4{background:#fffaf0;font-family:Verdana,Arial,sans-serif!important}
+.fwCutout-5{background:#ffd3a9;font-family:Georgia,"Times New Roman",serif!important}
+.fwCutout-6{background:#e2d3ff;font-family:"Arial Black",Arial,sans-serif!important}
+.fwCutout-7{background:#d4f4e1;font-family:"Trebuchet MS",Arial,sans-serif!important}
+.fwCutout-8{background:#ffe4aa;font-family:"Courier New",monospace!important}
+.fwCutout-9{background:#ffd8d8;font-family:Tahoma,Arial,sans-serif!important}
+
+@media(max-width:700px){
+  .homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallBrand{border-width:2px!important;box-shadow:4px 4px 0 rgba(0,0,0,.16)!important}
+  .homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallPromptCard{width:min(calc(100vw - 36px),430px)!important;padding:18px 42px 17px 18px!important;border-width:3px!important;border-radius:18px!important;box-shadow:7px 8px 0 rgba(0,0,0,.18)!important}
+  .homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallPromptCard::before{left:16px!important;right:16px!important;top:8px!important;height:7px!important}
+  .homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallPromptCard h2.is-cutout-pop-title{gap:5px!important}
+  .homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallPromptCard h2 .fwCutoutWord{font-size:clamp(16px,5.2vw,26px)!important;padding:.09em .22em .13em!important}
+  .homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallNote{box-shadow:5px 6px 0 rgba(0,0,0,.18)!important}
+  .homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallNote::before{left:12px!important;right:12px!important;height:13px!important}
+  .homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallNote p{line-height:1.13!important}
+  .homepageEffectLayer.is-freedom-wall .homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallReaderNote,
+  .homepageEffectLayer.is-freedom-wall .freedomWallReaderOverlay[data-theme="cutout-pop"] .freedomWallReaderNote{border-width:3px!important;border-radius:20px!important;box-shadow:8px 8px 0 rgba(0,0,0,.20)!important}
+  .homepageEffectLayer.is-freedom-wall .homepageFreedomWallScene[data-theme="cutout-pop"] .freedomWallReaderNote::before,
+  .homepageEffectLayer.is-freedom-wall .freedomWallReaderOverlay[data-theme="cutout-pop"] .freedomWallReaderNote::before{left:18px!important;right:18px!important;top:-7px!important;height:14px!important}
+}
+
+
+/* =========================================================
+   v550 — Freedom Wall Liquid Glass theme
+   iPhone/iOS-inspired frosted glass look for the full wall.
+========================================================= */
+.homepageFreedomWallScene[data-theme="liquid-glass"]{
+  --fw-liquid-panel:rgba(238,246,255,.18);
+  --fw-liquid-panel-strong:rgba(248,252,255,.24);
+  --fw-liquid-panel-soft:rgba(255,255,255,.12);
+  --fw-liquid-border:rgba(255,255,255,.34);
+  --fw-liquid-line:rgba(255,255,255,.55);
+  --fw-liquid-shadow:0 24px 60px rgba(8,20,48,.30);
+  --fw-liquid-text:#0d2038;
+  --fw-liquid-muted:#27425d;
+  --fw-liquid-accent:#8fe0ff;
+}
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallSun,
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallMoon,
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallCloud,
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallRain,
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallFlood,
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallComicBurst,
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallVandalMark,
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallJungleEnvironment,
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallUtilityPole{opacity:0!important;display:none!important}
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallBg{
+  background:
+    radial-gradient(circle at 12% 18%, rgba(136,231,255,.90), rgba(136,231,255,0) 23%),
+    radial-gradient(circle at 83% 22%, rgba(195,166,255,.72), rgba(195,166,255,0) 24%),
+    radial-gradient(circle at 72% 78%, rgba(119,189,255,.56), rgba(119,189,255,0) 27%),
+    radial-gradient(circle at 28% 82%, rgba(144,255,214,.42), rgba(144,255,214,0) 20%),
+    linear-gradient(145deg,#16365c 0%,#214c8e 25%,#4260bc 54%,#8f68d2 78%,#c484d6 100%);
+}
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallBg::before,
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallBg::after{
+  content:"";
+  position:absolute;
+  inset:auto;
+  border-radius:50%;
+  pointer-events:none;
+  filter:blur(26px);
+  opacity:.95;
+}
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallBg::before{
+  width:min(36vw,420px);height:min(36vw,420px);
+  left:10%;top:16%;
+  background:radial-gradient(circle at 35% 35%, rgba(255,255,255,.88), rgba(255,255,255,.14) 44%, rgba(255,255,255,0) 70%);
+  box-shadow:inset 0 1px 1px rgba(255,255,255,.70), 0 0 0 1px rgba(255,255,255,.12);
+}
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallBg::after{
+  width:min(28vw,320px);height:min(28vw,320px);
+  right:8%;bottom:12%;
+  background:radial-gradient(circle at 40% 40%, rgba(255,255,255,.72), rgba(255,255,255,.12) 42%, rgba(255,255,255,0) 72%);
+}
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallBrand,
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallPromptCard,
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallEmptyState,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallComposerCard,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallReplyDialog,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallReaderToolbar,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallReaderNav,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallReaderHelp,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallReaderEmpty,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallReactionMenu,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallReplyActionMenu,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallMediaSearchDialog{
+  background:linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,.14));
+  color:var(--fw-liquid-text);
+  border:1px solid var(--fw-liquid-border);
+  box-shadow:var(--fw-liquid-shadow), inset 0 1px 0 rgba(255,255,255,.50), inset 0 -1px 0 rgba(255,255,255,.08);
+  backdrop-filter:blur(22px) saturate(175%);
+  -webkit-backdrop-filter:blur(22px) saturate(175%);
+}
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallBrand{
+  background:linear-gradient(180deg, rgba(255,255,255,.26), rgba(255,255,255,.13));
+  border-color:rgba(255,255,255,.30);
+  color:#f8fbff;
+  box-shadow:0 18px 40px rgba(8,18,42,.30), inset 0 1px 0 rgba(255,255,255,.56);
+}
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallBrand strong{font-family:"Segoe UI",Arial,sans-serif;font-weight:1000;letter-spacing:-.02em}
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallBrand span{color:rgba(246,251,255,.86)}
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallPromptCard,
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallEmptyState{
+  background:linear-gradient(180deg, rgba(253,254,255,.28), rgba(242,248,255,.18));
+  color:#08213c;
+  border-color:rgba(255,255,255,.40);
+}
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallPromptCard::before{
+  content:"";position:absolute;left:14px;right:14px;top:10px;height:24%;border-radius:18px;
+  background:linear-gradient(180deg, rgba(255,255,255,.60), rgba(255,255,255,0));opacity:.72;pointer-events:none;
+}
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallPromptEyebrow{color:#3b8fcb;font-family:"Segoe UI",Arial,sans-serif;letter-spacing:.18em}
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallPromptCard h2{font-family:"Segoe UI",Arial,sans-serif;font-weight:1000;color:#072242;letter-spacing:-.04em;text-shadow:0 1px 0 rgba(255,255,255,.22)}
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallPromptCard p,
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallEmptyState p{color:rgba(7,34,64,.82);font-family:"Segoe UI",Arial,sans-serif}
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallPromptClose,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallComposerHead button,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallReplyHead button,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallMediaSearchDialogHead button{
+  background:rgba(255,255,255,.18);
+  color:#0b2342;
+  border:1px solid rgba(255,255,255,.28);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.40);
+}
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallPromptClose:hover,
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallPromptClose:focus-visible{background:rgba(255,255,255,.32)}
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallEmptyState span{
+  background:linear-gradient(180deg, rgba(255,255,255,.54), rgba(255,255,255,.18));
+  border-color:rgba(255,255,255,.38);
+  color:#2e8bd0;
+}
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallAddBtn,
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallReaderOpenBtn,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallComposerFooter button,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallReplySend,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallMediaSearchDialogBar button{
+  background:linear-gradient(180deg, rgba(255,255,255,.34), rgba(255,255,255,.18));
+  color:#0a1f39;
+  border:1px solid rgba(255,255,255,.36);
+  box-shadow:0 14px 28px rgba(10,24,48,.22), inset 0 1px 0 rgba(255,255,255,.52);
+  backdrop-filter:blur(18px) saturate(165%);
+  -webkit-backdrop-filter:blur(18px) saturate(165%);
+}
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallAddBtn small,
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallReaderOpenBtn small{color:#0a2141}
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallAddBtn span,
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallReaderOpenBtn span{color:#1f7fe5}
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallNote{
+  background:linear-gradient(180deg, rgba(255,255,255,.58), rgba(255,255,255,.16) 42%, rgba(255,255,255,.10)), var(--fw-note-bg);
+  background:linear-gradient(180deg, rgba(255,255,255,.58), rgba(255,255,255,.16) 42%, rgba(255,255,255,.10)), color-mix(in srgb, var(--fw-note-bg) 54%, transparent);
+  border:1px solid rgba(255,255,255,.36);
+  border-radius:22px 18px 24px 18px;
+  box-shadow:0 18px 36px rgba(8,20,46,.24), inset 0 1px 0 rgba(255,255,255,.62), inset 0 -1px 0 rgba(255,255,255,.12);
+  backdrop-filter:blur(18px) saturate(170%);
+  -webkit-backdrop-filter:blur(18px) saturate(170%);
+}
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallNote::before{
+  content:"";position:absolute;left:10px;right:10px;top:8px;height:24%;border-radius:999px;
+  background:linear-gradient(180deg, rgba(255,255,255,.62), rgba(255,255,255,0));opacity:.74;pointer-events:none;
+}
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallNote::after{
+  right:10px;bottom:9px;width:26px;height:26px;border:0;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%, rgba(255,255,255,.88), rgba(255,255,255,.16) 48%, rgba(255,255,255,0) 68%);
+  opacity:.68;
+}
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallNotePin{
+  top:9px;width:12px;height:12px;background:radial-gradient(circle at 35% 35%, rgba(255,255,255,.96), rgba(176,225,255,.78) 50%, rgba(110,170,255,.56) 100%);
+  box-shadow:0 0 0 1px rgba(255,255,255,.34), 0 5px 14px rgba(10,32,62,.24);
+}
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallNote p{font-family:"Segoe UI",Arial,sans-serif;font-weight:900;letter-spacing:-.01em}
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallNote small{font-family:"Segoe UI",Arial,sans-serif;opacity:.72;color:rgba(8,24,46,.74)}
+.homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallNoteMedia,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallMediaPreview{
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.32);
+  background:linear-gradient(180deg, rgba(255,255,255,.30), rgba(255,255,255,.12));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.46), 0 10px 22px rgba(8,20,46,.16);
+  overflow:hidden;
+}
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"]{
+  --fw-react-bg:rgba(243,249,255,.20);
+  --fw-react-fg:#0b2342;
+  --fw-react-border:rgba(255,255,255,.32);
+  --fw-react-chip:rgba(255,255,255,.18);
+  --fw-react-accent:#2da7ff;
+}
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallReactionSummary.is-note .freedomWallReactionCount.is-dominant,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallReactionCount{
+  background:rgba(255,255,255,.26)!important;
+  border-color:rgba(255,255,255,.34)!important;
+  color:#0c2442!important;
+  box-shadow:0 10px 20px rgba(10,20,44,.12), inset 0 1px 0 rgba(255,255,255,.44)!important;
+  backdrop-filter:blur(16px) saturate(160%);
+  -webkit-backdrop-filter:blur(16px) saturate(160%);
+}
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallReactionChoices>button,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallReplyActionMenu button{
+  background:rgba(255,255,255,.18);
+  border-color:rgba(255,255,255,.28);
+}
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallComposer,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallReplyThread,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallMediaSearchModal{
+  background:rgba(5,11,24,.44);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+}
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallComposerHead strong,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallReplyHead strong,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallMediaSearchDialogHead strong,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallReaderTitle strong{color:#081f3f;letter-spacing:-.03em}
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallComposerHead span,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallReplyHead span,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallMediaSearchDialogHead span,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallReaderHelp,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallReaderCounter,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallReplyStatus,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallMediaSearchModalStatus{color:rgba(11,35,66,.76)}
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallComposerCard label,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallReplyIdentity label,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallMediaSearchWrap>label,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallMediaTypeWrap label,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallYouTubeWrap label{color:#113357}
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallComposerCard input,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallComposerCard textarea,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallComposerCard select,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallReplyForm input,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallReplyForm textarea,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallMediaSearchDialogBar input,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallMediaSearchLine input,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallMediaTypeWrap select,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallYouTubeWrap input{
+  background:rgba(255,255,255,.26);
+  border:1px solid rgba(255,255,255,.34);
+  color:#09213d;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.46);
+}
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallComposerCard input::placeholder,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallComposerCard textarea::placeholder,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallReplyForm input::placeholder,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallReplyForm textarea::placeholder,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallMediaSearchDialogBar input::placeholder,
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallMediaSearchLine input::placeholder{color:rgba(9,33,61,.52)}
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallReaderProgress{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28)}
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallReaderProgress i{background:linear-gradient(90deg,#9de4ff,#c6beff,#ffffff)}
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallGestureHint{
+  background:rgba(255,255,255,.16);
+  border-color:rgba(255,255,255,.28);
+  color:#f7fbff;
+  box-shadow:0 14px 28px rgba(8,18,44,.18), inset 0 1px 0 rgba(255,255,255,.40);
+  backdrop-filter:blur(16px) saturate(160%);
+  -webkit-backdrop-filter:blur(16px) saturate(160%);
+}
+.homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallReaderHelp b{color:rgba(255,255,255,.70)}
+@media(max-width:700px){
+  .homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallBg::before{width:58vw;height:58vw;left:-6%;top:12%;filter:blur(20px)}
+  .homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallBg::after{width:44vw;height:44vw;right:-4%;bottom:18%;filter:blur(18px)}
+  .homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallPromptCard,
+  .homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallEmptyState{width:min(94vw,500px)}
+  .homepageFreedomWallScene[data-theme="liquid-glass"] .freedomWallNote{border-radius:20px 16px 22px 18px}
+  .homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallComposerCard,
+  .homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallReplyDialog,
+  .homepageEffectLayer[data-freedom-wall-theme="liquid-glass"] .freedomWallMediaSearchDialog{
+    background:linear-gradient(180deg, rgba(255,255,255,.30), rgba(255,255,255,.18));
+  }
+}

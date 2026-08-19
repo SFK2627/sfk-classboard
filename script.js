@@ -1779,7 +1779,7 @@ const FREEDOM_WALL_AUTHOR_MAX_LENGTH = 42;
 const FREEDOM_WALL_MEDIA_MAX_STATIC_SOURCE_BYTES = 8 * 1024 * 1024;
 const FREEDOM_WALL_MEDIA_MAX_BYTES = 520 * 1024;
 const FREEDOM_WALL_MEDIA_MAX_GIF_BYTES = 500 * 1024;
-const FREEDOM_WALL_THEME_SET = new Set(["sunny","rainy","night","flood","comic","comic-noir","comic-manga","comic-strip","school-note","sticky-notes","jungle","bulletin-board","whiteboard","cafe","sakura","galaxy","beach","art-room","library","newspaper","polaroid","retro-arcade","coding-lab","rainbow","brick-alley","school-fair","eco","dreamy-clouds","chalkboard","detective","appreciation","seasonal","neon-music","spiderman","filipino","poste","graffiti","vandal"]);
+const FREEDOM_WALL_THEME_SET = new Set(["sunny","rainy","night","flood","comic","comic-noir","comic-manga","comic-strip","school-note","sticky-notes","jungle","bulletin-board","whiteboard","cafe","sakura","galaxy","beach","art-room","library","newspaper","liquid-glass","polaroid","retro-arcade","coding-lab","rainbow","brick-alley","school-fair","eco","dreamy-clouds","chalkboard","detective","cutout-pop","appreciation","seasonal","neon-music","spiderman","filipino","poste","graffiti","vandal"]);
 const FREEDOM_WALL_COLORS = ["yellow","cream","white","peach","coral","pink","rose","lavender","violet","sky","blue","mint","sage","green","lime","orange","tan","gray","navy","black"];
 const FREEDOM_WALL_COLOR_HEX = Object.freeze({
   yellow:"#fff1a5", cream:"#fff6d9", white:"#fffdf5", peach:"#ffd6c9", coral:"#ffb9a8",
@@ -1826,6 +1826,33 @@ let freedomWallPromptDismissedSignature = "";
 
 function isFreedomWallFilipinoTheme(theme = freedomWallConfig?.freedomWallTheme) {
   return String(theme || "").trim().toLowerCase() === "filipino";
+}
+
+function getFreedomWallAttachmentLabelState(theme = freedomWallConfig?.freedomWallTheme) {
+  const modes = getFreedomWallAllowedAttachmentModes().map((item) => item.value);
+  const isFilipino = isFreedomWallFilipinoTheme(theme);
+  const hasImage = modes.includes("image");
+  const hasGif = hasImage || modes.includes("gif") || modes.includes("gif-search");
+  const hasYouTube = modes.includes("youtube") || modes.includes("youtube-search");
+  let mediaLabel = isFilipino ? "Attachment (opsyonal)" : "Attachment (optional)";
+  let typeLabel = isFilipino ? "Uri ng attachment" : "Attachment Type";
+  if (hasImage && hasYouTube) {
+    mediaLabel = isFilipino ? "Larawan / GIF / YouTube (opsyonal)" : "Photo / GIF / YouTube (optional)";
+    typeLabel = isFilipino ? "Larawan, GIF, o YouTube" : "Photo, GIF, or YouTube";
+  } else if (hasImage && hasGif) {
+    mediaLabel = isFilipino ? "Larawan / GIF (opsyonal)" : "Photo / GIF (optional)";
+    typeLabel = isFilipino ? "Larawan o GIF" : "Photo or GIF";
+  } else if (hasGif && hasYouTube) {
+    mediaLabel = isFilipino ? "GIF / YouTube (opsyonal)" : "GIF / YouTube (optional)";
+    typeLabel = isFilipino ? "GIF o YouTube" : "GIF or YouTube";
+  } else if (hasYouTube) {
+    mediaLabel = isFilipino ? "YouTube (opsyonal)" : "YouTube (optional)";
+    typeLabel = isFilipino ? "YouTube option" : "YouTube Option";
+  } else if (hasGif) {
+    mediaLabel = isFilipino ? "GIF (opsyonal)" : "GIF (optional)";
+    typeLabel = isFilipino ? "GIF option" : "GIF Option";
+  }
+  return { mediaLabel, typeLabel };
 }
 
 function getFreedomWallUiCopy(theme = freedomWallConfig?.freedomWallTheme) {
@@ -1909,6 +1936,50 @@ function getFreedomWallUiCopy(theme = freedomWallConfig?.freedomWallTheme) {
   };
 }
 
+function buildFreedomWallCutoutMarkup(text = "", mode = "word") {
+  const source = String(text || "").trim();
+  if (!source) return "";
+  const tokens = mode === "letter"
+    ? Array.from(source)
+    : source.split(/\s+/).filter(Boolean);
+  let index = 0;
+  return tokens.map((token) => {
+    const palette = index % 10;
+    const rotate = ((index % 5) - 2) * 1.8;
+    const lift = index % 2 === 0 ? -1 : 1;
+    index += 1;
+    return `<span class="fwCutoutWord fwCutout-${palette}" style="--fw-cutout-rotate:${rotate}deg;--fw-cutout-lift:${lift}px">${escapeHtml(token)}</span>`;
+  }).join(mode === "letter" ? "" : " ");
+}
+
+function applyFreedomWallCutoutTitle(target, text) {
+  if (!target) return;
+  const safe = String(freedomWallConfig?.freedomWallTheme || "").trim().toLowerCase();
+  const source = String(text || "").trim();
+  target.dataset.rawText = source;
+  if (safe === "cutout-pop") {
+    target.classList.add("is-cutout-pop-title");
+    target.innerHTML = buildFreedomWallCutoutMarkup(source, source.length <= 18 ? "letter" : "word");
+  } else {
+    target.classList.remove("is-cutout-pop-title");
+    target.textContent = source;
+  }
+}
+
+function applyFreedomWallCutoutBrand(target, text) {
+  if (!target) return;
+  const safe = String(freedomWallConfig?.freedomWallTheme || "").trim().toLowerCase();
+  const source = String(text || "").trim();
+  target.dataset.rawText = source;
+  if (safe === "cutout-pop") {
+    target.classList.add("is-cutout-pop-brand");
+    target.innerHTML = buildFreedomWallCutoutMarkup(source, "word");
+  } else {
+    target.classList.remove("is-cutout-pop-brand");
+    target.textContent = source;
+  }
+}
+
 function applyFreedomWallThemeCopy(theme = freedomWallConfig?.freedomWallTheme) {
   const layer = document.getElementById("homepageEffectLayer");
   if (!layer) return;
@@ -1939,7 +2010,7 @@ function applyFreedomWallThemeCopy(theme = freedomWallConfig?.freedomWallTheme) 
   const mediaChoose = layer.querySelector('#freedomWallMediaChooseText');
   const mediaRemove = layer.querySelector('#freedomWallMediaRemove');
   const postBtn = layer.querySelector('#freedomWallPostBtn');
-  if (brandStrong) brandStrong.textContent = copy.brand;
+  if (brandStrong) applyFreedomWallCutoutBrand(brandStrong, copy.brand);
   if (brandSpan && !freedomWallLastRenderedCount) brandSpan.textContent = copy.live;
   if (eyebrow) eyebrow.textContent = copy.promptEyebrow;
   if (promptClose) promptClose.setAttribute('aria-label', copy.closePromptAria);
@@ -1966,8 +2037,10 @@ function applyFreedomWallThemeCopy(theme = freedomWallConfig?.freedomWallTheme) 
   const allowGifSearch = Boolean(freedomWallConfig?.freedomWallAllowGifSearch && searchEndpoint);
   const allowYouTubeSearch = Boolean(freedomWallConfig?.freedomWallAllowYouTubeSearch && searchEndpoint);
   const mediaAvailable = isPolaroid || allowGif || allowGifSearch || allowYouTube || allowYouTubeSearch;
+  const attachmentLabels = getFreedomWallAttachmentLabelState(theme);
   if (mediaField) mediaField.hidden = !mediaAvailable;
-  if (mediaLabel) mediaLabel.textContent = copy.mediaLabel;
+  if (mediaLabel) mediaLabel.textContent = attachmentLabels.mediaLabel || copy.mediaLabel;
+  if (mediaTypeLabel) mediaTypeLabel.textContent = attachmentLabels.typeLabel;
   if (mediaHint) mediaHint.textContent = copy.mediaHint;
   if (mediaChoose) mediaChoose.textContent = copy.mediaChoose;
   if (mediaRemove) mediaRemove.textContent = copy.mediaRemove;
@@ -1991,7 +2064,8 @@ function applyFreedomWallThemeDecor(theme = freedomWallConfig?.freedomWallTheme)
     'comic-manga': ['KIRA!','SPEED','MANGA','DOKI!',''],
     'comic-strip': ['PANEL 01','NEXT','STRIP','SFK',''],
     'spiderman': ['THWIP!','WEB','SPIDEY','SFK',''],
-    'filipino': ['MABUHAY!','KAPWA!','BAYANIHAN','#BEKIND','★']
+    'filipino': ['MABUHAY!','KAPWA!','BAYANIHAN','#BEKIND','★'],
+    'cutout-pop': ['SNIP!','CLIP!','CUTOUT','POP!','★']
   };
   const values = map[safe] || ['WOW!','SFK!','#BEKIND','SFK','★'];
   if (burstA) burstA.textContent = values[0];
@@ -2267,7 +2341,7 @@ function normalizeFreedomWallPlaylist(value, fallbackUrl = "") {
   const result = [];
   const seen = new Set();
   list.forEach((item) => {
-    if (result.length >= 20) return;
+    if (result.length >= 50) return;
     const source = typeof item === "string" ? { url:item } : (item || {});
     const url = String(source.url || source.URL || "").trim().slice(0,1200);
     if (!/^https:\/\//i.test(url) || seen.has(url)) return;
@@ -6908,6 +6982,7 @@ function updateFreedomWallMediaUi() {
   const youtubeSearchWrap = layer.querySelector("#freedomWallYouTubeSearchWrap");
   const gifSearchWrap = layer.querySelector("#freedomWallGifSearchWrap");
   const chooseText = layer.querySelector("#freedomWallMediaChooseText");
+  const typeLabel = layer.querySelector('label[for="freedomWallMediaType"]');
   const fileInput = layer.querySelector("#freedomWallMediaInput");
   const preview = layer.querySelector("#freedomWallMediaPreview");
   const remove = layer.querySelector("#freedomWallMediaRemove");
@@ -6919,7 +6994,9 @@ function updateFreedomWallMediaUi() {
   if (!modes.some((item) => item.value === freedomWallSelectedAttachmentMode)) {
     freedomWallSelectedAttachmentMode = modes.some((item) => item.value === "image") ? "image" : (modes[1]?.value || "none");
   }
+  const attachmentLabels = getFreedomWallAttachmentLabelState();
   if (typeWrap) typeWrap.hidden = modes.length <= 2;
+  if (typeLabel) typeLabel.textContent = attachmentLabels.typeLabel;
   if (typeSelect) {
     const current = Array.from(typeSelect.options).map((o) => o.value).join("|");
     const wanted = modes.map((item) => item.value).join("|");
@@ -7531,6 +7608,7 @@ function getFreedomWallThemeDefaultTextColor(theme = freedomWallConfig?.freedomW
   if (["jungle","eco","chalkboard"].includes(safeTheme)) return "green";
   if (["cafe","library","brick-alley","detective","poste"].includes(safeTheme)) return "brown";
   if (["filipino","comic-strip"].includes(safeTheme)) return "navy";
+  if (["cutout-pop"].includes(safeTheme)) return "charcoal";
   return "charcoal";
 }
 
@@ -7722,6 +7800,7 @@ function renderFreedomWallNotes(notes = []) {
     const isActivelyDragged = freedomWallDragState?.card === card;
     const inlineYoutubeActive = Boolean(freedomWallActiveYoutubePlayback?.mode === "inline" && freedomWallActiveYoutubePlayback?.card === card);
     card.className = `freedomWallNote is-${note.color} is-size-${sizeClass}${showThemeMedia ? " has-media" : ""}${note.youtubeUrl ? " has-video" : ""}${note.gif?.url ? " has-gif" : ""}${note.spotify?.url ? " has-spotify" : ""}${inlineYoutubeActive ? " is-inline-video-active" : ""}${isNew ? " is-new" : ""}${isActivelyDragged ? " is-dragging" : ""}`;
+    card.dataset.theme = String(freedomWallConfig?.freedomWallTheme || "sticky-notes").trim().toLowerCase();
     card.style.setProperty("--fw-note-bg", FREEDOM_WALL_COLOR_HEX[note.color] || FREEDOM_WALL_COLOR_HEX.yellow);
     const allowTextColor = Boolean(freedomWallConfig?.freedomWallAllowTextColor);
     const hasAllowedCustomText = Boolean(allowTextColor && note.textColor);
@@ -7853,7 +7932,7 @@ function updateFreedomWallPrompt(config) {
   card.dataset.promptSignature = promptSignature;
   card.dataset.promptLegacySignature = legacyPromptSignature;
   card.dataset.promptFallback = hasAdminPrompt ? "NO" : "YES";
-  title.textContent = rawTitle || fallbackTitle;
+  applyFreedomWallCutoutTitle(title, rawTitle || fallbackTitle);
   // v510: an intentionally blank Admin message stays blank.
   message.textContent = rawMessage;
   message.hidden = !rawMessage;
