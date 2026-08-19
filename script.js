@@ -1779,7 +1779,7 @@ const FREEDOM_WALL_AUTHOR_MAX_LENGTH = 42;
 const FREEDOM_WALL_MEDIA_MAX_STATIC_SOURCE_BYTES = 8 * 1024 * 1024;
 const FREEDOM_WALL_MEDIA_MAX_BYTES = 520 * 1024;
 const FREEDOM_WALL_MEDIA_MAX_GIF_BYTES = 500 * 1024;
-const FREEDOM_WALL_THEME_SET = new Set(["sunny","rainy","night","flood","comic","comic-noir","comic-manga","comic-strip","school-note","sticky-notes","jungle","bulletin-board","whiteboard","cafe","sakura","galaxy","beach","art-room","library","newspaper","liquid-glass","polaroid","retro-throwback","retro-arcade","coding-lab","rainbow","brick-alley","school-fair","eco","dreamy-clouds","chalkboard","detective","cutout-pop","appreciation","seasonal","neon-music","spiderman","filipino","poste","graffiti","vandal"]);
+const FREEDOM_WALL_THEME_SET = new Set(["sunny","rainy","night","flood","comic","comic-noir","comic-manga","comic-strip","school-note","sticky-notes","jungle","bulletin-board","whiteboard","cafe","sakura","galaxy","beach","art-room","library","newspaper","liquid-glass","polaroid","retro-throwback","windows-95","scrapbook","frutiger-aero","city-pop","film-roll","vintage-travel","bauhaus","aurora-crystal","clay-ui","y2k-chrome","holographic","retro-arcade","coding-lab","rainbow","brick-alley","school-fair","eco","dreamy-clouds","chalkboard","detective","cutout-pop","cutout-editorial","appreciation","seasonal","neon-music","spiderman","filipino","poste","graffiti","vandal"]);
 const FREEDOM_WALL_COLORS = ["yellow","cream","white","peach","coral","pink","rose","lavender","violet","sky","blue","mint","sage","green","lime","orange","tan","gray","navy","black"];
 const FREEDOM_WALL_COLOR_HEX = Object.freeze({
   yellow:"#fff1a5", cream:"#fff6d9", white:"#fffdf5", peach:"#ffd6c9", coral:"#ffb9a8",
@@ -1804,7 +1804,7 @@ const FREEDOM_WALL_LEGACY_COLOR_MAP = Object.freeze({
   blue:"blue", mint:"mint", sage:"mint", green:"mint", lime:"yellow",
   orange:"orange", tan:"orange", gray:"white", navy:"blue", black:"blue"
 });
-const FREEDOM_WALL_TEXTURED_TEXT_THEMES = new Set(["jungle","chalkboard","graffiti","vandal","poste","comic","comic-noir","comic-manga","comic-strip","spiderman"]);
+const FREEDOM_WALL_TEXTURED_TEXT_THEMES = new Set(["jungle","chalkboard","graffiti","vandal","poste","comic","comic-noir","comic-manga","comic-strip","spiderman","retro-throwback","scrapbook","city-pop","film-roll","vintage-travel","bauhaus","aurora-crystal","frutiger-aero","y2k-chrome","holographic"]);
 const FREEDOM_WALL_REACTIONS = Object.freeze({ heart:"❤️", haha:"😂", wow:"😮", sad:"😢", like:"👍" });
 const FREEDOM_WALL_REACTION_TYPES = Object.freeze(Object.keys(FREEDOM_WALL_REACTIONS));
 const FREEDOM_WALL_REACTION_HOLD_MS = 480;
@@ -1957,7 +1957,7 @@ function applyFreedomWallCutoutTitle(target, text) {
   const safe = String(freedomWallConfig?.freedomWallTheme || "").trim().toLowerCase();
   const source = String(text || "").trim();
   target.dataset.rawText = source;
-  if (safe === "cutout-pop") {
+  if (["cutout-pop","cutout-editorial"].includes(safe)) {
     target.classList.add("is-cutout-pop-title");
     target.innerHTML = buildFreedomWallCutoutMarkup(source, source.length <= 18 ? "letter" : "word");
   } else {
@@ -1971,7 +1971,7 @@ function applyFreedomWallCutoutBrand(target, text) {
   const safe = String(freedomWallConfig?.freedomWallTheme || "").trim().toLowerCase();
   const source = String(text || "").trim();
   target.dataset.rawText = source;
-  if (safe === "cutout-pop") {
+  if (["cutout-pop","cutout-editorial"].includes(safe)) {
     target.classList.add("is-cutout-pop-brand");
     target.innerHTML = buildFreedomWallCutoutMarkup(source, "word");
   } else {
@@ -2065,7 +2065,8 @@ function applyFreedomWallThemeDecor(theme = freedomWallConfig?.freedomWallTheme)
     'comic-strip': ['PANEL 01','NEXT','STRIP','SFK',''],
     'spiderman': ['THWIP!','WEB','SPIDEY','SFK',''],
     'filipino': ['MABUHAY!','KAPWA!','BAYANIHAN','#BEKIND','★'],
-    'cutout-pop': ['SNIP!','CLIP!','CUTOUT','POP!','★']
+    'cutout-pop': ['SNIP!','CLIP!','CUTOUT','POP!','★'],
+    'cutout-editorial': ['COVER!','ISSUE 02','HEADLINE','EDITORIAL','✦']
   };
   const values = map[safe] || ['WOW!','SFK!','#BEKIND','SFK','★'];
   if (burstA) burstA.textContent = values[0];
@@ -7595,21 +7596,43 @@ function getFreedomWallContrastBackgrounds(color, theme = freedomWallConfig?.fre
   // a theme change. The saved student preference is never overwritten here.
   if (safeTheme === "polaroid") return [freedomWallMixHex(base,"#ffffff",.18), "#fffdf9"];
   if (safeTheme === "retro-throwback") return [freedomWallMixHex(base,"#f3e3c0",.62), freedomWallMixHex(base,"#b78d60",.54)];
+  if (safeTheme === "windows-95") return ["#c0c0c0", "#e8e8e8"];
+  if (safeTheme === "scrapbook") return [freedomWallMixHex(base,"#fff5e9",.65), freedomWallMixHex(base,"#f8f1dd",.66)];
+  if (safeTheme === "frutiger-aero") return [freedomWallMixHex(base,"#eefcff",.72), freedomWallMixHex(base,"#b9ecff",.62)];
+  if (safeTheme === "liquid-glass") return [freedomWallMixHex(base,"#eef6ff",.58), freedomWallMixHex(base,"#c6dff0",.46)];
+  if (safeTheme === "city-pop") return [freedomWallMixHex(base,"#1a2455",.78), freedomWallMixHex(base,"#11193f",.72)];
+  if (safeTheme === "film-roll") return [freedomWallMixHex(base,"#f5efe4",.86), freedomWallMixHex(base,"#eee7da",.78)];
+  if (safeTheme === "vintage-travel") return [freedomWallMixHex(base,"#fff7e9",.72), freedomWallMixHex(base,"#efe0c9",.62)];
+  if (safeTheme === "bauhaus") return [freedomWallMixHex(base,"#fffdf8",.82), freedomWallMixHex(base,"#f1ede3",.72)];
+  if (safeTheme === "aurora-crystal") return [freedomWallMixHex(base,"#253f72",.74), freedomWallMixHex(base,"#192852",.70)];
+  if (safeTheme === "clay-ui") return [freedomWallMixHex(base,"#fff8fb",.78), freedomWallMixHex(base,"#f4e8f0",.68)];
+  if (safeTheme === "y2k-chrome") return [freedomWallMixHex(base,"#edf5fb",.78), freedomWallMixHex(base,"#cedfea",.68)];
+  if (safeTheme === "holographic") return [freedomWallMixHex(base,"#ffffff",.78), freedomWallMixHex(base,"#f2edff",.68)];
+  if (safeTheme === "cutout-editorial") return [freedomWallMixHex(base,"#fffdf7",.90), freedomWallMixHex(base,"#eee7da",.82)];
   if (safeTheme === "newspaper") return [freedomWallMixHex(base,"#fffef8",.42), freedomWallMixHex(base,"#e9e4d5",.36)];
   if (safeTheme === "jungle") return [freedomWallMixHex(base,"#fff5cf",.82), freedomWallMixHex(base,"#bd9d62",.82)];
   if (safeTheme === "poste") return [freedomWallMixHex(base,"#fff7e5",.84), freedomWallMixHex(base,"#c8b792",.82)];
-  if (safeTheme === "coding-lab") return [freedomWallMixHex(base,"#ffffff",.88), freedomWallMixHex(base,"#18232b",.80)];
-  if (safeTheme === "chalkboard") return [freedomWallMixHex(base,"#f7f0d8",.84), freedomWallMixHex(base,"#4d654f",.78)];
-  return [freedomWallMixHex(base,"#ffffff",.94), freedomWallMixHex(base,"#000000",.89)];
+  if (safeTheme === "coding-lab") return [freedomWallMixHex(base,"#18232b",.82), freedomWallMixHex(base,"#0d1a23",.78)];
+  if (["rainy","flood"].includes(safeTheme)) return [freedomWallMixHex(base,"#f5fbff",.42), freedomWallMixHex(base,"#d9edf7",.34)];
+  if (safeTheme === "chalkboard") return [freedomWallMixHex(base,"#f7f0d8",.84), freedomWallMixHex(base,"#dce8d4",.66)];
+  const darkNoteSurfaceThemes = new Set(["night","galaxy","retro-arcade","neon-music","spiderman","comic-noir"]);
+  if (darkNoteSurfaceThemes.has(safeTheme)) return [freedomWallMixHex(base,"#1d2949",.82), freedomWallMixHex(base,"#111827",.76)];
+  const lightNoteSurfaceThemes = new Set(["sunny","school-note","sticky-notes","bulletin-board","whiteboard","cafe","sakura","beach","art-room","library","rainbow","brick-alley","school-fair","eco","dreamy-clouds","detective","appreciation","filipino","graffiti","vandal","cutout-pop","cutout-editorial","comic","comic-manga","comic-strip"]);
+  if (lightNoteSurfaceThemes.has(safeTheme)) return [freedomWallMixHex(base,"#ffffff",.56), freedomWallMixHex(base,"#f1eee6",.44)];
+  return [freedomWallMixHex(base,"#ffffff",.62), freedomWallMixHex(base,"#e8e8e8",.50)];
 }
 
 function getFreedomWallThemeDefaultTextColor(theme = freedomWallConfig?.freedomWallTheme) {
   const safeTheme = String(theme || "").trim().toLowerCase();
-  if (["night","rainy","flood","galaxy","retro-arcade","coding-lab","neon-music","spiderman","comic-noir"].includes(safeTheme)) return "white";
+  if (["night","galaxy","retro-arcade","coding-lab","neon-music","spiderman","comic-noir","city-pop","aurora-crystal"].includes(safeTheme)) return "white";
+  if (["rainy","flood","frutiger-aero"].includes(safeTheme)) return "navy";
   if (["jungle","eco","chalkboard"].includes(safeTheme)) return "green";
-  if (["cafe","library","brick-alley","detective","poste","retro-throwback"].includes(safeTheme)) return "brown";
+  if (["cafe","library","brick-alley","detective","poste","retro-throwback","windows-95","scrapbook","film-roll","vintage-travel","clay-ui"].includes(safeTheme)) return "brown";
+  if (["y2k-chrome"].includes(safeTheme)) return "navy";
+  if (["holographic"].includes(safeTheme)) return "purple";
+  if (["bauhaus"].includes(safeTheme)) return "charcoal";
   if (["filipino","comic-strip"].includes(safeTheme)) return "navy";
-  if (["cutout-pop"].includes(safeTheme)) return "charcoal";
+  if (["cutout-pop","cutout-editorial"].includes(safeTheme)) return "charcoal";
   return "charcoal";
 }
 
@@ -7618,7 +7641,7 @@ function resolveFreedomWallTextColor(textColor, backgroundColor, theme = freedom
   const backgrounds = getFreedomWallContrastBackgrounds(backgroundColor, theme);
   const requestedHex = FREEDOM_WALL_TEXT_COLOR_HEX[requested] || FREEDOM_WALL_TEXT_COLOR_HEX.charcoal;
   const minRequestedRatio = Math.min(...backgrounds.map((bg) => freedomWallContrastRatio(requestedHex, bg)));
-  if (minRequestedRatio >= 4.5) return requested;
+  if (minRequestedRatio >= 5.0) return requested;
   const candidates = ["black","charcoal","navy","brown","white"];
   let best = "black";
   let bestRatio = -1;
