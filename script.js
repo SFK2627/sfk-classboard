@@ -4031,7 +4031,33 @@ function ensureHomepageEffectLayer() {
   layer.querySelector("#freedomWallReaderNextBtn")?.addEventListener("click", () => moveFreedomWallReader(1, { resetTimer:true, source:"button" }));
   setupFreedomWallReaderInteractions(layer);
   layer.querySelector("#freedomWallComposerClose")?.addEventListener("click", closeFreedomWallComposer);
-  layer.querySelector("#freedomWallPromptClose")?.addEventListener("click", dismissFreedomWallPromptForView);
+  const freedomWallPromptCloseButton = layer.querySelector("#freedomWallPromptClose");
+  if (freedomWallPromptCloseButton) {
+    // v544: close on the FIRST valid press. On phones the wall's drag/reaction
+    // layers can cancel or steal the later click/touchend after a touch begins.
+    // Pointer-down capture makes the prompt X deterministic without changing
+    // long-press/right-click behavior on the rest of the prompt or notes.
+    const closeFreedomWallPromptImmediately = (event) => {
+      if (event?.type === "pointerdown" && event.pointerType === "mouse" && event.button !== 0) return;
+      event?.preventDefault?.();
+      event?.stopPropagation?.();
+      event?.stopImmediatePropagation?.();
+      clearFreedomWallPromptReactionPending();
+      dismissFreedomWallPromptForView(event);
+    };
+    freedomWallPromptCloseButton.addEventListener("pointerdown", closeFreedomWallPromptImmediately, { capture:true, passive:false });
+    // Old touch-only WebViews that do not expose PointerEvent still get the
+    // same immediate close path. Modern phones use pointerdown only, avoiding
+    // duplicate touch + pointer handling.
+    if (!("PointerEvent" in window)) {
+      freedomWallPromptCloseButton.addEventListener("touchstart", closeFreedomWallPromptImmediately, { capture:true, passive:false });
+    }
+    // Keyboard activation still produces click with detail=0.
+    freedomWallPromptCloseButton.addEventListener("click", (event) => {
+      if (event.detail !== 0) return;
+      dismissFreedomWallPromptForView(event);
+    });
+  }
   layer.querySelector("#freedomWallComposerForm")?.addEventListener("submit", submitFreedomWallNote);
   layer.querySelector("#freedomWallCustomizeToggle")?.addEventListener("click", toggleFreedomWallCustomizePanel);
   layer.querySelectorAll("[data-fw-customizer-toggle]").forEach((button) => button.addEventListener("click", () => toggleFreedomWallCustomizerPanel(button.dataset.fwCustomizerToggle)));
@@ -7832,6 +7858,17 @@ function updateFreedomWallPrompt(config) {
   message.textContent = rawMessage;
   message.hidden = !rawMessage;
   card.hidden = freedomWallPromptDismissedSignature === promptSignature;
+  // v545: keep the visual state in lock-step with the hidden attribute.
+  // Some mobile prompt rules intentionally use display:flex!important; an
+  // inline important display:none prevents that styling from defeating a
+  // user dismissal, while removing it lets a new/undismissed prompt render.
+  if (card.hidden) {
+    card.style.setProperty("display", "none", "important");
+    card.setAttribute("aria-hidden", "true");
+  } else {
+    card.style.removeProperty("display");
+    card.setAttribute("aria-hidden", "false");
+  }
   if (!card.hidden) syncFreedomWallPromptReactionLive();
   else stopFreedomWallPromptReactionLive();
   updateFreedomWallEmptyState();
@@ -7856,6 +7893,10 @@ function dismissFreedomWallPromptForView(event) {
   if (!card) return;
   freedomWallPromptDismissedSignature = String(card.dataset.promptSignature || "");
   card.hidden = true;
+  // v545: force an immediate visual close too. This is necessary on mobile
+  // because older theme/mobile rules contain display:flex!important.
+  card.style.setProperty("display", "none", "important");
+  card.setAttribute("aria-hidden", "true");
   stopFreedomWallPromptReactionLive();
   closeFreedomWallReactionMenu();
   // Once the prompt is closed, notes are free to use their original full-wall
