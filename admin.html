@@ -27,9 +27,10 @@
     .freedomWallAdminCustomization{display:grid;gap:7px;margin-top:2px;padding:10px;border:1px solid rgba(0,0,0,.10);border-radius:11px;background:#fff}.freedomWallAdminCustomizationHead{display:flex;flex-direction:column;gap:3px}.freedomWallAdminCustomizationHead strong{font-size:12px}.freedomWallAdminCustomizationHead small{font-size:10px;line-height:1.35;color:#68707a}.freedomWallAdminActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}.freedomWallAdminActions button{border:0;border-radius:10px;padding:9px 12px;font-weight:800;cursor:pointer;background:#111;color:#fff}.freedomWallAdminActions button.is-danger{background:#a82424}
     .freedomWallNoteManager{display:grid;gap:9px;padding:11px;border:1px solid rgba(0,0,0,.12);border-radius:12px;background:#fff}.freedomWallNoteManager[hidden]{display:none!important}
     .freedomWallNoteManagerHead{display:flex;align-items:center;justify-content:space-between;gap:10px}.freedomWallNoteManagerHead strong{font-size:13px}.freedomWallNoteManagerHead span{font-size:10px;color:#777}
+    .freedomWallAdminNoteSearchWrap{display:grid;gap:5px}.freedomWallAdminNoteSearchWrap label{font-size:10px;font-weight:800;color:#30353b}.freedomWallAdminNoteSearchWrap input{width:100%;box-sizing:border-box;border:1px solid #cfd5dd;border-radius:10px;padding:10px 12px;background:#fff;color:#17191d;font-size:12px;font-weight:700}.freedomWallAdminNoteSearchWrap input::placeholder{color:#79828d}.freedomWallAdminNoteSearchHelp{font-size:10px;line-height:1.35;color:#66707b}
     .freedomWallAdminNoteList{display:grid;gap:8px;max-height:460px;overflow:auto;padding-right:2px}.freedomWallAdminNoteEmpty{padding:14px;text-align:center;border:1px dashed #ccc;border-radius:10px;color:#777;font-size:12px}
     .freedomWallAdminNote{display:grid;grid-template-columns:14px minmax(0,1fr) auto;gap:9px;align-items:center;padding:9px;border:1px solid #e5e5e5;border-radius:10px;background:#fafafa}.freedomWallAdminNoteColor{width:14px;height:34px;border-radius:5px;background:var(--fw-admin-note-color,#fff1a5)}
-    .freedomWallAdminNoteText{min-width:0;display:flex;flex-direction:column;gap:3px}.freedomWallAdminNoteText strong{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.freedomWallAdminNoteText span{font-size:11px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:#444}
+    .freedomWallAdminNoteText{min-width:0;display:flex;flex-direction:column;gap:3px}.freedomWallAdminNoteText strong{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.freedomWallAdminNoteText span{font-size:11px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:#444}.freedomWallAdminNoteMeta{font-size:9px;color:#6b7280;font-weight:700}
     .freedomWallAdminNoteActions{display:flex;align-items:center;gap:5px;flex-wrap:wrap;justify-content:flex-end}.freedomWallAdminReplyManage,.freedomWallAdminNoteDelete{border:0;border-radius:8px;color:#fff;padding:8px 9px;font-size:10px;font-weight:900;cursor:pointer}.freedomWallAdminReplyManage{background:#264d78}.freedomWallAdminReplyManage b{display:inline-grid;place-items:center;min-width:18px;height:18px;margin-left:3px;padding:0 4px;border-radius:999px;background:rgba(255,255,255,.18);font-size:9px}.freedomWallAdminNoteDelete{background:#a82424}.freedomWallAdminReplyManage:disabled,.freedomWallAdminNoteDelete:disabled{opacity:.5;cursor:wait}
     .freedomWallAdminReplyPanel{grid-column:1/-1;display:grid;gap:6px;margin-top:2px;padding:8px;border:1px solid #dfe4e9;border-radius:9px;background:#fff}.freedomWallAdminReplyPanel[hidden]{display:none!important}.freedomWallAdminReplyPanelHead{display:flex;align-items:center;justify-content:space-between;gap:8px}.freedomWallAdminReplyPanelHead strong{font-size:10px}.freedomWallAdminReplyPanelHead span{font-size:9px;color:#777}.freedomWallAdminReplyList{display:grid;gap:5px;max-height:230px;overflow:auto}.freedomWallAdminReplyEmpty{padding:9px;border:1px dashed #d7dce2;border-radius:8px;text-align:center;color:#777;font-size:10px}.freedomWallAdminReply{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;align-items:center;padding:7px 8px;border:1px solid #e7e9ec;border-radius:8px;background:#fbfbfb}.freedomWallAdminReplyMain{min-width:0;display:grid;gap:2px}.freedomWallAdminReplyMain strong{font-size:10px;overflow-wrap:anywhere}.freedomWallAdminReplyMain strong.is-sirjr{color:#276b55}.freedomWallAdminReplyMain span{font-size:10px;line-height:1.35;color:#444;white-space:pre-wrap;overflow-wrap:anywhere}.freedomWallAdminReplyMain small{font-size:8px;color:#8a8a8a}.freedomWallAdminReplyDelete{border:0;border-radius:7px;background:#a82424;color:#fff;padding:7px 8px;font-size:9px;font-weight:900;cursor:pointer}.freedomWallAdminReplyDelete:disabled{opacity:.5;cursor:wait}
     @media(max-width:700px){.freedomWallAdminNote{grid-template-columns:10px minmax(0,1fr)}.freedomWallAdminNoteColor{width:10px;height:30px}.freedomWallAdminNoteActions{grid-column:1/-1;justify-content:flex-end}.freedomWallAdminReplyPanel{grid-column:1/-1}.freedomWallAdminReply{grid-template-columns:minmax(0,1fr) auto}}
@@ -63,23 +64,84 @@
     .homepageEffectAdminCard.is-accordionized{display:block}
     .homepageEffectAccordion{margin:10px 0;border:1px solid rgba(0,0,0,.11);border-radius:14px;background:#fff;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.035)}
     .homepageEffectAccordion[hidden]{display:none!important}
-    .homepageEffectAccordionToggle{width:100%;border:0;background:#f7f7f7;color:#17191d;padding:13px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;cursor:pointer}
-    .homepageEffectAccordionToggle:hover,.homepageEffectAccordionToggle:focus-visible{background:#f0f0f0;outline:none}
+    .homepageEffectAccordionToggle{width:100%;border:0;background:#fff;color:#17191d;padding:13px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;cursor:pointer}
+    .homepageEffectAccordionToggle:hover,.homepageEffectAccordionToggle:focus-visible{background:#f7f7f7;outline:none}
     .homepageEffectAccordion.is-open>.homepageEffectAccordionToggle{background:#111;color:#fff}
-    .homepageEffectAccordionTitle{min-width:0;display:flex;align-items:center;gap:9px;font:900 13px/1.2 Arial,sans-serif}
+    .homepageEffectAccordionTitle{min-width:0;display:flex;align-items:center;gap:9px;font:900 13px/1.2 Arial,sans-serif;color:inherit}
     .homepageEffectAccordionTitle i{font-style:normal;font-size:15px}
-    .homepageEffectAccordionMeta{display:block;margin-top:3px;font:600 10px/1.3 Arial,sans-serif;color:#747b84}
-    .homepageEffectAccordion.is-open>.homepageEffectAccordionToggle .homepageEffectAccordionMeta{color:rgba(255,255,255,.7)}
-    .homepageEffectAccordionChevron{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:rgba(0,0,0,.06);font:900 18px/1 Arial,sans-serif;transition:transform .18s ease}
-    .homepageEffectAccordion.is-open>.homepageEffectAccordionToggle .homepageEffectAccordionChevron{background:rgba(255,255,255,.13);transform:rotate(90deg)}
+    .homepageEffectAccordionMeta{display:block;margin-top:3px;font:700 10px/1.35 Arial,sans-serif;color:#5f6975}
+    .homepageEffectAccordion.is-open>.homepageEffectAccordionToggle .homepageEffectAccordionMeta{color:rgba(255,255,255,.78)}
+    .homepageEffectAccordionChevron{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:rgba(0,0,0,.08);color:#17191d;font:900 18px/1 Arial,sans-serif;transition:transform .18s ease}
+    .homepageEffectAccordion.is-open>.homepageEffectAccordionToggle .homepageEffectAccordionChevron{background:rgba(255,255,255,.18);color:#fff;transform:rotate(90deg)}
     .homepageEffectAccordionBody{display:grid;gap:10px;padding:13px 14px;background:#fff}
     .homepageEffectAccordionBody[hidden]{display:none!important}
-    .homepageEffectAccordion.is-nested{margin:8px 0;border-radius:12px;box-shadow:none;border-color:rgba(0,0,0,.09)}
-    .homepageEffectAccordion.is-nested>.homepageEffectAccordionToggle{padding:11px 12px;background:#fafafa}
-    .homepageEffectAccordion.is-nested.is-open>.homepageEffectAccordionToggle{background:#2a2d31;color:#fff}
-    .homepageEffectAccordion.is-nested>.homepageEffectAccordionBody{padding:11px 12px}
+    .homepageEffectAccordion.is-nested{margin:8px 0;border-radius:16px;box-shadow:none;border:2px solid #111;background:#fffdf7}
+    .homepageEffectAccordion.is-nested>.homepageEffectAccordionToggle{padding:11px 12px;background:#f4f4f4;color:#17191d}
+    .homepageEffectAccordion.is-nested>.homepageEffectAccordionToggle .homepageEffectAccordionMeta{color:#68727d}
+    .homepageEffectAccordion.is-nested>.homepageEffectAccordionToggle .homepageEffectAccordionChevron{background:#e8e8e8;color:#17191d}
+    .homepageEffectAccordion.is-nested.is-open>.homepageEffectAccordionToggle{background:#ffe48a;color:#111}
+    .homepageEffectAccordion.is-nested.is-open>.homepageEffectAccordionToggle .homepageEffectAccordionMeta{color:#474029}
+    .homepageEffectAccordion.is-nested.is-open>.homepageEffectAccordionToggle .homepageEffectAccordionChevron{background:#fff4c8;color:#111}
+    .homepageEffectAccordion.is-nested>.homepageEffectAccordionBody{padding:11px 12px;background:#fffefa}
     .homepageEffectAdminCard .homepageEffectActions{position:sticky;bottom:0;z-index:6;margin-top:12px;padding:10px 0 2px;background:linear-gradient(180deg,rgba(255,255,255,0),#fff 32%)}
     @media(max-width:700px){.homepageEffectAccordionToggle{padding:12px}.homepageEffectAccordionBody{padding:11px}.homepageEffectAccordionTitle{font-size:12px}.homepageEffectAccordionMeta{font-size:9px}}
+
+/* admin-force-readability-v2 */
+.homepageEffectAccordionToggle,
+.homepageEffectAccordionTitle b,
+.homepageEffectAccordionMeta{color:#111!important;text-shadow:none!important;}
+.homepageEffectAccordion.is-open>.homepageEffectAccordionToggle,
+.homepageEffectAccordion.is-open>.homepageEffectAccordionToggle .homepageEffectAccordionTitle b{color:#fff!important;}
+.homepageEffectAccordion.is-nested>.homepageEffectAccordionToggle,
+.homepageEffectAccordion.is-nested>.homepageEffectAccordionToggle .homepageEffectAccordionTitle b{color:#111!important;background:#fff!important;}
+.homepageEffectAccordion.is-nested.is-open>.homepageEffectAccordionToggle,
+.homepageEffectAccordion.is-nested.is-open>.homepageEffectAccordionToggle .homepageEffectAccordionTitle b{color:#111!important;background:#ffd84d!important;}
+.homepageEffectAccordion.is-nested>.homepageEffectAccordionToggle .homepageEffectAccordionMeta{color:#555!important;}
+.freedomWallNoteManager,.freedomWallNoteManager *{color:#111!important;}
+.freedomWallAdminNoteSearchWrap input{color:#111!important;background:#fff!important;}
+.freedomWallAdminNoteDelete{color:#fff!important;background:#b42318!important;}
+.freedomWallAdminReplyManage{color:#fff!important;background:#1d4ed8!important;}
+.freedomWallAdminNoteMeta{color:#6b7280!important;}
+
+/* admin-force-readability-v3 */
+.homepageEffectAccordionToggle,
+.homepageEffectAccordionToggle *,
+.homepageEffectAccordionTitle,
+.homepageEffectAccordionTitle *,
+.homepageEffectAccordionMeta,
+.homepageEffectAccordionChevron{
+  text-shadow:none!important;
+}
+.homepageEffectAccordion:not(.is-open)>.homepageEffectAccordionToggle,
+.homepageEffectAccordion:not(.is-open)>.homepageEffectAccordionToggle *{
+  color:#111!important;
+  background:#fff!important;
+}
+.homepageEffectAccordion.is-open>.homepageEffectAccordionToggle,
+.homepageEffectAccordion.is-open>.homepageEffectAccordionToggle *{
+  color:#fff!important;
+  background:#111!important;
+}
+.homepageEffectAccordion.is-nested:not(.is-open)>.homepageEffectAccordionToggle,
+.homepageEffectAccordion.is-nested:not(.is-open)>.homepageEffectAccordionToggle *{
+  color:#111!important;
+  background:#fff!important;
+}
+.homepageEffectAccordion.is-nested.is-open>.homepageEffectAccordionToggle,
+.homepageEffectAccordion.is-nested.is-open>.homepageEffectAccordionToggle *{
+  color:#111!important;
+  background:#ffd84d!important;
+}
+.homepageEffectAccordionChevron{
+  opacity:1!important;
+  display:grid!important;
+  color:#111!important;
+  background:#e8e8e8!important;
+}
+.homepageEffectAccordion.is-open .homepageEffectAccordionChevron{
+  color:#fff!important;
+  background:#333!important;
+}
 </style>
 </head>
 
@@ -299,6 +361,7 @@
               <option value="y2k-chrome">Y2K Chrome / Aqua Tech</option>
               <option value="holographic">Holographic / Iridescent Wall</option>
               <option value="retro-arcade">Retro Arcade / Pixel Wall</option>
+              <option value="super-mario">Super Mario / Mushroom Kingdom</option>
               <option value="coding-lab">Coding / Computer Lab</option>
               <option value="rainbow">Kindness Rainbow Wall</option>
               <option value="brick-alley">Brick Alley / Street Poster Wall</option>
@@ -445,6 +508,11 @@ https://audio.jukehost.co.uk/AAAhttps://audio.jukehost.co.uk/BBBhttps://audio.ju
             </div>
             <div id="freedomWallNoteManager" class="freedomWallNoteManager" hidden>
               <div class="freedomWallNoteManagerHead"><strong>SFK #BeKind Wall Notes & Replies</strong><span>Live admin moderation</span></div>
+              <div class="freedomWallAdminNoteSearchWrap">
+                <label for="freedomWallAdminNoteSearch">Search student name or actual note</label>
+                <input id="freedomWallAdminNoteSearch" type="search" placeholder="Type a name or words from the note..." />
+                <small class="freedomWallAdminNoteSearchHelp">Newest notes appear first. Search updates instantly while you type.</small>
+              </div>
               <div id="freedomWallAdminNoteList" class="freedomWallAdminNoteList"><div class="freedomWallAdminNoteEmpty">Open the manager to load notes.</div></div>
             </div>
             <small id="freedomWallAdminStatus" class="fieldHint">Notes stay live on the SFK #BeKind Wall and use available space before overlapping older notes.</small>
@@ -1448,6 +1516,8 @@ https://audio.jukehost.co.uk/AAAhttps://audio.jukehost.co.uk/BBBhttps://audio.ju
     const audioFields = $("homepageEffectAudioFields");
     const status = $("freedomWallAdminStatus");
     let noteManagerUnsubscribe = null;
+    let freedomWallAdminNoteDocs = [];
+    let freedomWallAdminNoteSearch = "";
     const noteColorMap = {yellow:"#fff1a5",cream:"#fff6d9",white:"#fffdf5",peach:"#ffd6c9",coral:"#ffb9a8",pink:"#ffc7df",rose:"#f6b4c9",lavender:"#e6d7ff",violet:"#d6c3ff",sky:"#c7eaff",blue:"#acd3ff",mint:"#c9f2d9",sage:"#d5e3c1",green:"#bfe3b4",lime:"#e2f3a7",orange:"#ffd0a1",tan:"#dfc69c",gray:"#d9dce1",navy:"#26334f",black:"#202124"};
     const playlistList = $("freedomWallPlaylistList");
     const normalizePlaylistTrack = (track = {}) => {
@@ -1675,12 +1745,31 @@ https://audio.jukehost.co.uk/AAAhttps://audio.jukehost.co.uk/BBBhttps://audio.ju
       return String(value ?? "").replace(/[&<>"']/g, (char) => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[char] || char));
     }
 
+    function formatFreedomWallAdminNoteTime(value) {
+      try {
+        const ms = Number(value || 0);
+        if (!ms) return "";
+        return new Date(ms).toLocaleString([], { month:"short", day:"numeric", hour:"numeric", minute:"2-digit" });
+      } catch (error) { return ""; }
+    }
+
     function renderFreedomWallAdminNotes(snapshot) {
       const list = $("freedomWallAdminNoteList");
       if (!list) return;
-      const activeDocs = snapshot?.docs?.filter?.(isFreedomWallDocInActiveSession) || [];
+      if (snapshot?.docs) freedomWallAdminNoteDocs = snapshot.docs.slice();
+      const query = String(freedomWallAdminNoteSearch || "").trim().toLowerCase();
+      const activeDocs = (freedomWallAdminNoteDocs || []).filter(isFreedomWallDocInActiveSession).filter((doc) => {
+        if (!query) return true;
+        const data = doc.data() || {};
+        const haystack = [doc.id, data.Name, data.Text, data.Color].map((value) => String(value || "").toLowerCase()).join(" ");
+        return haystack.includes(query);
+      }).sort((a,b) => {
+        const ad = a.data() || {};
+        const bd = b.data() || {};
+        return (Number(bd.CreatedAtMs || 0) - Number(ad.CreatedAtMs || 0)) || String(b.id).localeCompare(String(a.id));
+      });
       if (!activeDocs.length) {
-        list.innerHTML = '<div class="freedomWallAdminNoteEmpty">No notes in this Freedom Wall yet.</div>';
+        list.innerHTML = `<div class="freedomWallAdminNoteEmpty">${query ? "No matching notes found for your search." : "No notes in this Freedom Wall yet."}</div>`;
         return;
       }
       list.innerHTML = activeDocs.map((doc) => {
@@ -1690,9 +1779,10 @@ https://audio.jukehost.co.uk/AAAhttps://audio.jukehost.co.uk/BBBhttps://audio.ju
         const color = noteColorMap[String(data.Color || "yellow").toLowerCase()] || noteColorMap.yellow;
         const mediaBadge = String(data.MediaRef || "").startsWith("sfk-media://freedomWall/") ? " 📷" : "";
         const replyCount = Math.max(0, Math.floor(Number(data.ReplyCount || 0) || 0));
+        const created = formatFreedomWallAdminNoteTime(data.CreatedAtMs);
         return `<article class="freedomWallAdminNote" data-fw-admin-note-id="${escapeWallAdminText(doc.id)}">
           <i class="freedomWallAdminNoteColor" style="--fw-admin-note-color:${color}"></i>
-          <div class="freedomWallAdminNoteText"><strong>${escapeWallAdminText(name)}${mediaBadge}</strong><span>${escapeWallAdminText(text || (mediaBadge ? "Photo / GIF note" : ""))}</span></div>
+          <div class="freedomWallAdminNoteText"><strong>${escapeWallAdminText(name)}${mediaBadge}</strong><span>${escapeWallAdminText(text || (mediaBadge ? "Photo / GIF note" : ""))}</span><small class="freedomWallAdminNoteMeta">${escapeWallAdminText(created || "No timestamp")}</small></div>
           <div class="freedomWallAdminNoteActions">
             <button class="freedomWallAdminReplyManage" type="button" data-fw-manage-replies="${escapeWallAdminText(doc.id)}">💬 Replies <b>${replyCount}</b></button>
             <button class="freedomWallAdminNoteDelete" type="button" data-fw-delete-note="${escapeWallAdminText(doc.id)}">Delete Note</button>
@@ -1704,8 +1794,6 @@ https://audio.jukehost.co.uk/AAAhttps://audio.jukehost.co.uk/BBBhttps://audio.ju
         </article>`;
       }).join("");
     }
-
-
     function formatFreedomWallAdminReplyTime(value) {
       try {
         const ms = Number(value || 0);
@@ -1855,7 +1943,10 @@ https://audio.jukehost.co.uk/AAAhttps://audio.jukehost.co.uk/BBBhttps://audio.ju
         noteManagerUnsubscribe = query.onSnapshot((snapshot) => {
           renderFreedomWallAdminNotes(snapshot);
           const visibleCount = snapshot.docs.filter(isFreedomWallDocInActiveSession).length;
-          if (status) status.textContent = `${visibleCount} ${visibleCount === 1 ? "note" : "notes"} in the current wall • open Replies to review/delete replies, or Delete Note to remove a whole note thread.`;
+          const searchCount = String(freedomWallAdminNoteSearch || "").trim() ? document.querySelectorAll("#freedomWallAdminNoteList .freedomWallAdminNote").length : visibleCount;
+          if (status) status.textContent = searchCount !== visibleCount
+            ? `${searchCount} matching note${searchCount === 1 ? "" : "s"} shown out of ${visibleCount} in the current wall.`
+            : `${visibleCount} ${visibleCount === 1 ? "note" : "notes"} in the current wall • open Replies to review/delete replies, or Delete Note to remove a whole note thread.`;
         }, (error) => {
           console.warn("Freedom Wall admin note manager failed", error);
           list.innerHTML = '<div class="freedomWallAdminNoteEmpty">Unable to load notes right now.</div>';
@@ -1952,6 +2043,13 @@ https://audio.jukehost.co.uk/AAAhttps://audio.jukehost.co.uk/BBBhttps://audio.ju
     mode?.addEventListener("change", () => window.setTimeout(syncFreedomWallAdminUi, 0));
     $("freedomWallRefreshCount")?.addEventListener("click", refreshFreedomWallCount);
     $("freedomWallManageNotes")?.addEventListener("click", toggleFreedomWallNoteManager);
+    // freedomWallAdminNoteSearch delegated
+    document.addEventListener("input", (event) => {
+      if (event.target?.id === "freedomWallAdminNoteSearch") {
+        freedomWallAdminNoteSearch = String(event.target.value || "");
+        renderFreedomWallAdminNotes();
+      }
+    });
     $("freedomWallAdminNoteList")?.addEventListener("click", (event) => {
       const deleteNoteButton = event.target.closest?.("[data-fw-delete-note]");
       if (deleteNoteButton) { deleteFreedomWallNote(deleteNoteButton.dataset.fwDeleteNote, deleteNoteButton); return; }
@@ -2485,6 +2583,7 @@ https://audio.jukehost.co.uk/AAAhttps://audio.jukehost.co.uk/BBBhttps://audio.ju
       if(["school-note","whiteboard"].includes(t))return '"Segoe Print","Trebuchet MS",sans-serif';
       if(["newspaper","seasonal"].includes(t))return 'Georgia,"Times New Roman",serif';
       if(["retro-arcade","coding-lab"].includes(t))return 'Consolas,"Courier New",monospace';
+      if(t==="super-mario")return '"Luckiest Guy","Fredoka",Arial,sans-serif';
       if(t==="retro-throwback")return '"Trebuchet MS",Arial,sans-serif';
       if(t==="windows-95")return 'Tahoma,"MS Sans Serif",Arial,sans-serif';
       if(t==="scrapbook")return '"Trebuchet MS","Segoe UI",Arial,sans-serif';
@@ -2539,6 +2638,7 @@ https://audio.jukehost.co.uk/AAAhttps://audio.jukehost.co.uk/BBBhttps://audio.ju
         "y2k-chrome":{bg1:"#7bcfff",bg2:"#dff6ff",panel:"#edf5fb",text:"#18375f",muted:"#687d9a",accent:"#43d2ff",line:"rgba(24,55,95,.16)",deco:"chrome",note:"chrome"},
         holographic:{bg1:"#f7efff",bg2:"#dffcff",panel:"#ffffff",text:"#453f6f",muted:"#7c79a2",accent:"#a07cff",line:"rgba(160,124,255,.18)",deco:"holo",note:"holo"},
         "retro-arcade":{bg1:"#140b28",bg2:"#2b1550",panel:"#151323",text:"#fdf5ff",muted:"#d3c2df",accent:"#5df2ff",line:"rgba(93,242,255,.32)",deco:"arcade",note:"pixel"},
+        "super-mario":{bg1:"#5fb7ff",bg2:"#d8f1ff",panel:"#fff4cf",text:"#173b72",muted:"#7b5c33",accent:"#e53935",line:"rgba(23,59,114,.18)",deco:"mario",note:"pixel"},
         "coding-lab":{bg1:"#0a1520",bg2:"#162a36",panel:"#101d27",text:"#dcf8e8",muted:"#9cc6b0",accent:"#56d891",line:"rgba(86,216,145,.22)",deco:"code",note:"terminal"},
         rainbow:{bg1:"#fff3f7",bg2:"#eef8ff",panel:"#ffffff",text:"#333746",muted:"#73798a",accent:"#f06f9b",line:"rgba(51,55,70,.10)",deco:"rainbow",note:"soft"},
         "brick-alley":{bg1:"#7f4b43",bg2:"#4e302c",panel:"#f5e5ce",text:"#2d211d",muted:"#756054",accent:"#d9a55d",line:"rgba(45,33,29,.18)",deco:"brick",note:"poster"},
@@ -2682,6 +2782,13 @@ https://audio.jukehost.co.uk/AAAhttps://audio.jukehost.co.uk/BBBhttps://audio.ju
         for(let i=0;i<18;i++){const x=(i*137)%w,y=(i*79)%h;circle(ctx,x,y,3,["#ff4fc6","#5df2ff","#b56cff"][i%3],.45);}ctx.font="900 46px Arial";ctx.fillStyle="rgba(93,242,255,.13)";ctx.fillText("♪",w*.12,h*.22);ctx.fillText("♫",w*.78,h*.62);
       }else if(d==="spiderman"){
         const cx=w*.08,cy=h*.06;for(let i=0;i<14;i++){const a=(Math.PI*2*i)/14;line(ctx,cx,cy,cx+Math.cos(a)*w,cy+Math.sin(a)*h,"#dbe7ff",2,.14);}for(let r=70;r<Math.max(w,h);r+=70){ctx.save();ctx.strokeStyle="rgba(219,231,255,.09)";ctx.lineWidth=2;ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();ctx.restore();}
+      }else if(d==="mario"){
+        cloud(ctx,w*.12,h*.16,.9,"#ffffff",.70);cloud(ctx,w*.62,h*.22,1.05,"#ffffff",.78);
+        ctx.fillStyle="rgba(82,176,82,.95)";ctx.fillRect(0,h-86,w,86);
+        ctx.fillStyle="rgba(190,103,46,.95)";for(let x=0;x<w;x+=42){ctx.fillRect(x,h-52,40,42);ctx.fillStyle="rgba(111,63,30,.38)";ctx.fillRect(x+5,h-47,30,3);ctx.fillRect(x+5,h-33,30,3);ctx.fillRect(x+5,h-19,30,3);ctx.fillStyle="rgba(190,103,46,.95)";}
+        ctx.fillStyle="rgba(59,181,74,.95)";ctx.fillRect(w*.10,h-152,34,66);ctx.fillRect(w*.72,h-138,34,52);
+        ctx.fillStyle="rgba(255,208,79,.98)";ctx.fillRect(w*.31,h-182,44,44);ctx.fillRect(w*.40,h-182,44,44);ctx.fillRect(w*.49,h-182,44,44);
+        ctx.fillStyle="rgba(147,87,33,.55)";ctx.fillRect(w*.31+9,h-171,26,6);ctx.fillRect(w*.40+9,h-171,26,6);ctx.fillRect(w*.49+9,h-171,26,6);
       }else if(d==="filipino"){
         ctx.fillStyle="rgba(20,59,119,.12)";ctx.fillRect(0,0,w,34);ctx.fillStyle="rgba(210,40,48,.12)";ctx.fillRect(0,h-34,w,34);for(let x=0;x<w;x+=36){ctx.fillStyle=x%72===0?"rgba(215,170,42,.28)":"rgba(20,59,119,.10)";ctx.beginPath();ctx.moveTo(x,42);ctx.lineTo(x+18,58);ctx.lineTo(x+36,42);ctx.lineTo(x+18,26);ctx.closePath();ctx.fill();}
       }else if(d==="poste"){
