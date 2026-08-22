@@ -17432,10 +17432,10 @@ if (document.readyState === "loading") {
       if (mobile && existingCards.length === 1) {
         const firstBand = existingBands[0] || 'top';
         const firstSide = existingSides[0] || 'left';
-        if (band !== firstBand) score += 260;
-        else score -= 220;
-        if (side !== firstSide) score += 180;
-        else score -= 120;
+        if (band !== firstBand) score += 700;
+        else score -= 650;
+        if (side !== firstSide) score += 600;
+        else score -= 500;
       }
       if (!mobile && existingCards.length) {
         const leftCount = existingSides.filter((value) => value === 'left').length;
@@ -17453,9 +17453,9 @@ if (document.readyState === "loading") {
     if (mobile) {
       const zones = {
         'top-left': { leftMin: minLeft, leftMax: Math.max(minLeft, hostRect.width * 0.28 - cardWidth), topMin: minTop, topMax: Math.max(minTop, topBandLimit) },
-        'top-right': { leftMin: Math.max(minLeft, hostRect.width * 0.68 - cardWidth * 0.1), leftMax: maxLeft, topMin: minTop, topMax: Math.max(minTop, topBandLimit) },
+        'top-right': { leftMin: Math.max(minLeft, hostRect.width * 0.55), leftMax: maxLeft, topMin: minTop, topMax: Math.max(minTop, topBandLimit) },
         'bottom-left': { leftMin: minLeft, leftMax: Math.max(minLeft, hostRect.width * 0.30 - cardWidth), topMin: bottomBandStart, topMax: maxTop },
-        'bottom-right': { leftMin: Math.max(minLeft, hostRect.width * 0.66 - cardWidth * 0.1), leftMax: maxLeft, topMin: bottomBandStart, topMax: maxTop }
+        'bottom-right': { leftMin: Math.max(minLeft, hostRect.width * 0.55), leftMax: maxLeft, topMin: bottomBandStart, topMax: maxTop }
       };
 
       let preferredZones = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
@@ -17497,7 +17497,7 @@ if (document.readyState === "loading") {
 
     if (candidates.length) {
       candidates.sort((a, b) => b.score - a.score);
-      const shortlist = candidates.slice(0, Math.min(14, candidates.length));
+      const shortlist = candidates.slice(0, Math.min(30, candidates.length));
       const chosen = shortlist[Math.floor(Math.random() * shortlist.length)] || candidates[0];
       return {
         zone: chosen.zone,
