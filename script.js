@@ -17261,17 +17261,11 @@ if (document.readyState === "loading") {
     if (loadingPoolPromise && !force) return loadingPoolPromise;
     loadingPoolPromise = (async () => {
       memoryPhotoPool = [];
-      // Cache is only a fallback. Do not let old localStorage order decide
-      // which memories appear first on the floating wall.
-      if (!force) {
-        await collectMemoryPhotosFromCache();
+      loadCachedPool();
+      await collectMemoryPhotosFromCache();
+      if (!memoryPhotoPool.length || force) {
+        try { await collectMemoryPhotosFromFirestore(); } catch (error) { console.warn("Unable to load memory photos from Firestore:", error); }
       }
-      try { await collectMemoryPhotosFromFirestore(); } catch (error) { console.warn("Unable to load memory photos from Firestore:", error); }
-
-      // Remove any remaining order bias from cache / Firestore retrieval.
-      // Also mix recent and older memories before creating the floating queue.
-      const mixed = shuffle(memoryPhotoPool);
-      memoryPhotoPool = mixed;
       saveCachedPool();
       return memoryPhotoPool;
     })();
@@ -17290,19 +17284,8 @@ if (document.readyState === "loading") {
   async function refillQueue() {
     await ensurePhotoPool();
     const remaining = memoryPhotoPool.filter((item) => !used.includes(item.url));
-    const source = remaining.length ? remaining : memoryPhotoPool;
+    queue = remaining.length ? shuffle(remaining) : shuffle(memoryPhotoPool);
     if (!remaining.length) used = [];
-
-    // Strong shuffle for floating photos. Prevent the first visible cards
-    // from following Firestore creation order.
-    queue = shuffle(source);
-
-    // Avoid starting every cycle with the same recently shown photo.
-    if (used.length && queue.length > 3) {
-      const recent = new Set(used.slice(-6));
-      const safe = queue.filter((item) => !recent.has(item.url));
-      if (safe.length) queue = safe.concat(queue.filter((item) => recent.has(item.url)));
-    }
   }
 
   function clearEmptyMemoryPhotos() {
