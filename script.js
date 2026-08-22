@@ -7775,6 +7775,72 @@ function buildFreedomWallRenderSignature(notes = []) {
   });
 }
 
+
+
+/* v490 Empty Freedom Wall Welcome Sparks
+   Shows temporary student-name sparks only while the wall has no notes.
+   It never writes data and keeps the center prompt protected. */
+let freedomWallWelcomeSparkTimer = 0;
+let freedomWallWelcomeSparkIndex = 0;
+const FREEDOM_WALL_WELCOME_NAMES_FALLBACK = ["Maria", "Juan", "Ana", "Sofia", "Carlos", "Liam", "Emma", "Noah"];
+function getFreedomWallWelcomeNames(){
+  try{
+    const source = window.SFK_CLASS_NAMES || JSON.parse(localStorage.getItem("sfkClassNames") || "null");
+    if(Array.isArray(source)){
+      const names = source.map(x => typeof x === "string" ? x : (x?.name || x?.Name || "")).filter(Boolean);
+      if(names.length) return names.slice(0,100);
+    }
+  }catch(e){}
+  return FREEDOM_WALL_WELCOME_NAMES_FALLBACK;
+}
+function ensureFreedomWallWelcomeLayer(){
+  const layer=document.getElementById("homepageEffectLayer");
+  const stage=layer?.querySelector("#freedomWallNotesStage");
+  if(!stage) return null;
+  let holder=layer.querySelector("#freedomWallWelcomeSparks");
+  if(!holder){
+    holder=document.createElement("div");
+    holder.id="freedomWallWelcomeSparks";
+    holder.className="freedomWallWelcomeSparks";
+    stage.parentElement?.appendChild(holder);
+  }
+  return holder;
+}
+function clearFreedomWallWelcomeSparks(){
+  const holder=document.getElementById("freedomWallWelcomeSparks");
+  if(holder) holder.innerHTML="";
+  if(freedomWallWelcomeSparkTimer){clearInterval(freedomWallWelcomeSparkTimer);freedomWallWelcomeSparkTimer=0;}
+}
+function spawnFreedomWallWelcomeSpark(){
+  const holder=ensureFreedomWallWelcomeLayer();
+  if(!holder) return;
+  const layer=document.getElementById("homepageEffectLayer");
+  const names=getFreedomWallWelcomeNames();
+  if(!names.length)return;
+  const item=document.createElement("div");
+  item.className="freedomWallWelcomeSpark";
+  item.textContent=`✨ ${names[freedomWallWelcomeSparkIndex++ % names.length]}`;
+  // safe zones: avoid center prompt area
+  const positions=[
+    [8,18],[78,16],[12,72],[82,70],[22,35],[72,42],[8,48],[88,38]
+  ];
+  const pos=positions[Math.floor(Math.random()*positions.length)];
+  item.style.left=pos[0]+"%";
+  item.style.top=pos[1]+"%";
+  item.style.setProperty("--fw-spark-delay",(Math.random()*1.5)+"s");
+  holder.appendChild(item);
+  setTimeout(()=>item.remove(),7000);
+}
+function updateFreedomWallWelcomeSparks(noteCount){
+  if(Number(noteCount)>0){clearFreedomWallWelcomeSparks();return;}
+  const holder=ensureFreedomWallWelcomeLayer();
+  if(!holder)return;
+  if(!holder.children.length) spawnFreedomWallWelcomeSpark();
+  if(!freedomWallWelcomeSparkTimer){
+    freedomWallWelcomeSparkTimer=setInterval(spawnFreedomWallWelcomeSpark,4200);
+  }
+}
+
 function renderFreedomWallNotes(notes = []) {
   const layer = document.getElementById("homepageEffectLayer");
   const stage = layer?.querySelector("#freedomWallNotesStage");
@@ -7934,6 +8000,7 @@ function renderFreedomWallNotes(notes = []) {
     count.textContent = getFreedomWallUiCopy(freedomWallConfig?.freedomWallTheme).formatCount(displayCount, "normal");
   }
   updateFreedomWallEmptyState();
+  updateFreedomWallWelcomeSparks(sorted.length);
   syncFreedomWallReaderFromNotes({ preserveProgress:true });
   if (isFreedomWallExactExportMode()) applyFreedomWallExactExportMode();
 }
@@ -16458,4 +16525,473 @@ if (document.readyState === "loading") {
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once:true });
   else boot();
+})();
+
+
+/* Empty Freedom Wall Kindness Sparks - uses existing ClassBoard student data */
+(() => {
+  const SPARK_CLASS = 'freedomWallKindnessSpark';
+  const SPARK_STYLE_ID = 'freedomWallKindnessSparkStyle';
+  let sparkTimer = null;
+  let watchTimer = null;
+  let sparkNameQueue = [];
+  let lastSparkName = '';
+  let activeTimeouts = [];
+
+  function cleanSparkName(v){
+    return String(v || '').replace(/\s+/g,' ').trim();
+  }
+
+  function uniqNames(list){
+    const out = [];
+    const seen = new Set();
+    (list || []).forEach((v) => {
+      const n = cleanSparkName(v);
+      const key = n.toLowerCase();
+      if (!n || n.length < 2 || seen.has(key)) return;
+      seen.add(key);
+      out.push(n);
+    });
+    return out;
+  }
+
+  function shuffle(arr){
+    const copy = arr.slice();
+    for(let i = copy.length - 1; i > 0; i -= 1){
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  }
+
+  function getExistingClassNames(){
+    const raw = [];
+    const add = (v) => {
+      if (Array.isArray(v)) return v.forEach(add);
+      if (v && typeof v === 'object') return add(v.name || v.Name || v.fullName || v.FullName || v.studentName || v.StudentName || v.label || v.Label);
+      const n = cleanSparkName(v);
+      if (n) raw.push(n);
+    };
+
+    try { if (typeof SFK_ROTATING_HEADING_NAMES !== 'undefined') add(SFK_ROTATING_HEADING_NAMES); } catch(error) {}
+    try { add(window.state?.classroom?.sections?.flatMap?.(s => s.students || [])); } catch(error) {}
+    try { add(window.classBoardState?.classroom?.sections?.flatMap?.(s => s.students || [])); } catch(error) {}
+    try { add(window.classroomState?.sections?.flatMap?.(s => s.students || [])); } catch(error) {}
+    [window.SFK_ROTATING_HEADING_NAMES, window.SFK_ROTATING_NAMES, window.SFK_CLASS_NAMES, window.CLASS_NAMES, window.studentNames].forEach(add);
+
+    if (!raw.length) {
+      document.querySelectorAll('.topbar.mobile-header-rotator, .profile-info h2, .student-name, .header-name').forEach((el) => add(el?.textContent));
+    }
+
+    return uniqNames(raw);
+  }
+
+  function getWall(){
+    return document.querySelector('.homepageFreedomWallScene') || document.querySelector('#homepageEffectLayer .homepageFreedomWallScene');
+  }
+
+  function getTheme(){
+    const wall = getWall();
+    const layer = document.querySelector('.homepageEffectLayer.is-freedom-wall');
+    return String(
+      wall?.dataset?.theme ||
+      layer?.dataset?.freedomWallTheme ||
+      document.body?.dataset?.freedomWallTheme ||
+      ''
+    ).trim().toLowerCase();
+  }
+
+  function isFreedomWallEmpty(){
+    const stage = document.querySelector('#freedomWallNotesStage');
+    if (!stage) return true;
+    return stage.querySelectorAll('.freedomWallNote').length === 0;
+  }
+
+  function getPromptRectWithinWall(){
+    const wall = getWall();
+    if (!wall) return null;
+    const prompt = wall.querySelector('.freedomWallPromptCard, .freedomWallPrompt, .freedomWallPromptWrap');
+    if (!prompt) return null;
+    const wallRect = wall.getBoundingClientRect();
+    const rect = prompt.getBoundingClientRect();
+    return {
+      left: rect.left - wallRect.left,
+      top: rect.top - wallRect.top,
+      right: rect.right - wallRect.left,
+      bottom: rect.bottom - wallRect.top,
+      width: rect.width,
+      height: rect.height
+    };
+  }
+
+  function getSparkTargetCount(){
+    const w = window.innerWidth;
+    if (w <= 420) return 3;
+    if (w <= 700) return 4;
+    if (w <= 1100) return 5;
+    return 6;
+  }
+
+  function getNextSparkName(names){
+    const pool = uniqNames(names || []);
+    if (!pool.length) return '';
+    if (!sparkNameQueue.length) {
+      sparkNameQueue = shuffle(pool);
+      if (pool.length > 1 && sparkNameQueue[0] === lastSparkName) {
+        sparkNameQueue.push(sparkNameQueue.shift());
+      }
+    }
+    const next = sparkNameQueue.shift() || pool[Math.floor(Math.random() * pool.length)] || '';
+    lastSparkName = next;
+    return next;
+  }
+
+  function getThemeGroup(theme){
+    const t = String(theme || '');
+    if (/(super-mario|retro-arcade|pixel|arcade)/.test(t)) return 'mario';
+    if (/(cutout|editorial|newspaper|scrapbook|polaroid|vintage-travel|poste)/.test(t)) return 'cutout';
+    if (/(galaxy|space|night|aurora|holographic|frutiger-aero|cyber|neon)/.test(t)) return 'galaxy';
+    if (/(sticky|school-note|bulletin|whiteboard|chalkboard|school-fair|library|art-room)/.test(t)) return 'school';
+    if (/(beach|eco|jungle|nature|rainbow|sunny|dreamy-clouds|sakura)/.test(t)) return 'nature';
+    if (/(comic|graffiti|vandal|comic-noir|comic-manga|comic-strip)/.test(t)) return 'comic';
+    if (/(filipino)/.test(t)) return 'filipino';
+    return 'default';
+  }
+
+  const SPARK_THEMES = {
+    mario: {
+      font: '"Luckiest Guy","Fredoka",Arial,sans-serif',
+      weight: '700',
+      radius: '14px',
+      borderWidth: '4px',
+      shadow: '0 6px 0 rgba(111,63,30,.9), 0 12px 18px rgba(20,44,115,.22)',
+      palettes: [
+        { bg:'#ffe16b', text:'#1f4199', border:'#7d4a21' },
+        { bg:'#ffffff', text:'#d73333', border:'#1f4199' },
+        { bg:'#aee4ff', text:'#d73333', border:'#7d4a21' },
+        { bg:'#ffd3d1', text:'#1f4199', border:'#7d4a21' }
+      ]
+    },
+    cutout: {
+      font: '"Trebuchet MS","Arial Narrow",Arial,sans-serif',
+      weight: '700',
+      radius: '4px',
+      borderWidth: '4px',
+      shadow: '5px 5px 0 rgba(0,0,0,.78)',
+      palettes: [
+        { bg:'#fffdf8', text:'#111111', border:'#171717' },
+        { bg:'#fff8cf', text:'#111111', border:'#171717' },
+        { bg:'#ffe5ea', text:'#111111', border:'#171717' },
+        { bg:'#e6f3ff', text:'#111111', border:'#171717' },
+        { bg:'#e7f7e7', text:'#111111', border:'#171717' }
+      ],
+      rotations: [-4, -2, 2, 4, -3, 3]
+    },
+    galaxy: {
+      font: '"Montserrat",Arial,sans-serif',
+      weight: '700',
+      radius: '18px',
+      borderWidth: '2px',
+      shadow: '0 0 20px rgba(96,165,250,.22), 0 10px 20px rgba(0,0,0,.28)',
+      palettes: [
+        { bg:'rgba(19,24,50,.82)', text:'#f8fbff', border:'#8b5cf6' },
+        { bg:'rgba(16,40,73,.84)', text:'#d8f4ff', border:'#22d3ee' },
+        { bg:'rgba(42,17,81,.84)', text:'#f6e7ff', border:'#f472b6' }
+      ]
+    },
+    school: {
+      font: '"Fredoka",Arial,sans-serif',
+      weight: '600',
+      radius: '12px',
+      borderWidth: '2px',
+      shadow: '0 8px 16px rgba(0,0,0,.14)',
+      palettes: [
+        { bg:'#fff8a7', text:'#374151', border:'#d4b106' },
+        { bg:'#ffd7e8', text:'#374151', border:'#d86796' },
+        { bg:'#dff6ff', text:'#1f4b61', border:'#6ab8da' },
+        { bg:'#e7ffd8', text:'#355b34', border:'#87c76f' }
+      ]
+    },
+    nature: {
+      font: '"Nunito","Fredoka",Arial,sans-serif',
+      weight: '700',
+      radius: '999px',
+      borderWidth: '3px',
+      shadow: '0 8px 16px rgba(34,94,44,.18)',
+      palettes: [
+        { bg:'#ecffe7', text:'#2f6d3b', border:'#7bc77a' },
+        { bg:'#fff6dc', text:'#8a5a18', border:'#f0c56b' },
+        { bg:'#e1f7ff', text:'#256179', border:'#6ec6df' }
+      ]
+    },
+    comic: {
+      font: '"Bangers","Trebuchet MS",Arial,sans-serif',
+      weight: '400',
+      radius: '10px',
+      borderWidth: '4px',
+      shadow: '4px 4px 0 rgba(0,0,0,.78)',
+      palettes: [
+        { bg:'#fff582', text:'#111111', border:'#111111' },
+        { bg:'#9ee3ff', text:'#111111', border:'#111111' },
+        { bg:'#ffb5cb', text:'#111111', border:'#111111' },
+        { bg:'#c8ffa9', text:'#111111', border:'#111111' }
+      ],
+      rotations: [-3, 0, 3]
+    },
+    filipino: {
+      font: '"Trebuchet MS",Arial,sans-serif',
+      weight: '700',
+      radius: '14px',
+      borderWidth: '3px',
+      shadow: '0 8px 18px rgba(0,0,0,.16)',
+      palettes: [
+        { bg:'#fff6d8', text:'#8b1d1d', border:'#f0c233' },
+        { bg:'#e7f0ff', text:'#173b72', border:'#2f6de0' },
+        { bg:'#ffe1e1', text:'#8b1d1d', border:'#d64545' }
+      ]
+    },
+    default: {
+      font: '"Fredoka",Arial,sans-serif',
+      weight: '700',
+      radius: '999px',
+      borderWidth: '3px',
+      shadow: '0 8px 16px rgba(0,0,0,.16)',
+      palettes: [
+        { bg:'#ffffff', text:'#5b21b6', border:'#c084fc' },
+        { bg:'#ffffff', text:'#1d4ed8', border:'#60a5fa' },
+        { bg:'#fffdf8', text:'#ea580c', border:'#fdba74' },
+        { bg:'#f7fff7', text:'#16a34a', border:'#86efac' }
+      ]
+    }
+  };
+
+  function buildSparkLook(){
+    const group = getThemeGroup(getTheme());
+    const conf = SPARK_THEMES[group] || SPARK_THEMES.default;
+    const palette = conf.palettes[Math.floor(Math.random() * conf.palettes.length)];
+    const rotationPool = conf.rotations || [0];
+    const rotation = rotationPool[Math.floor(Math.random() * rotationPool.length)] || 0;
+    return { group, conf, palette, rotation };
+  }
+
+  function ensureSparkStyles(){
+    if (document.getElementById(SPARK_STYLE_ID)) return;
+    const style = document.createElement('style');
+    style.id = SPARK_STYLE_ID;
+    style.textContent = `
+      .${SPARK_CLASS}{
+        position:absolute;
+        z-index:9;
+        transform:translate(-50%,-50%) rotate(var(--spark-rotation,0deg));
+        display:inline-flex;
+        align-items:center;
+        gap:.5rem;
+        min-height:42px;
+        max-width:min(34vw,320px);
+        padding:.7rem 1rem;
+        border-radius:var(--spark-radius,16px);
+        background:var(--spark-bg,#fff);
+        color:var(--spark-text,#1f2937);
+        border:var(--spark-border-width,3px) solid var(--spark-border,#ddd);
+        box-shadow:var(--spark-shadow,0 8px 18px rgba(0,0,0,.15));
+        font-family:var(--spark-font,"Fredoka",Arial,sans-serif);
+        font-weight:var(--spark-weight,700);
+        font-size:clamp(14px,1.2vw,21px);
+        line-height:1.05;
+        letter-spacing:.01em;
+        white-space:nowrap;
+        pointer-events:none;
+        user-select:none;
+        opacity:0;
+        animation:fwSparkFloat var(--spark-duration,8s) ease-in-out forwards;
+      }
+      .${SPARK_CLASS}::before{
+        content:'✨';
+        flex:none;
+        font-size:1.1em;
+        line-height:1;
+        filter:drop-shadow(0 0 4px rgba(255,205,80,.55));
+      }
+      .${SPARK_CLASS}.is-cutout::after,
+      .${SPARK_CLASS}.is-school::after{
+        content:'';
+        position:absolute;
+        inset:auto 16px -7px 16px;
+        height:8px;
+        background:rgba(255,255,255,.22);
+        filter:blur(7px);
+        z-index:-1;
+      }
+      .${SPARK_CLASS}.is-galaxy{backdrop-filter:blur(6px);}
+      .${SPARK_CLASS}.is-comic{letter-spacing:.02em; text-transform:none;}
+      .${SPARK_CLASS}.is-mario{ text-shadow:0 1px 0 rgba(255,255,255,.25); }
+      @keyframes fwSparkFloat{
+        0%{opacity:0;transform:translate(-50%,20px) rotate(var(--spark-rotation,0deg)) scale(.88)}
+        12%{opacity:1;transform:translate(-50%,0) rotate(var(--spark-rotation,0deg)) scale(1)}
+        84%{opacity:1;transform:translate(calc(-50% + var(--spark-drift,0px)),-10px) rotate(var(--spark-rotation,0deg)) scale(1.02)}
+        100%{opacity:0;transform:translate(calc(-50% + var(--spark-drift,0px)),-26px) rotate(var(--spark-rotation,0deg)) scale(1.04)}
+      }
+      @media (max-width:700px){
+        .${SPARK_CLASS}{ max-width:42vw; padding:.62rem .88rem; font-size:clamp(12px,3.2vw,17px); }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function rectsOverlap(a, b, gap){
+    return !(a.right + gap < b.left || a.left - gap > b.right || a.bottom + gap < b.top || a.top - gap > b.bottom);
+  }
+
+  function getCandidateRect(wallRect, xPct, yPct, width, height){
+    const left = wallRect.width * (xPct / 100) - width / 2;
+    const top = wallRect.height * (yPct / 100) - height / 2;
+    return { left, top, right:left + width, bottom: top + height, width, height };
+  }
+
+  function getRandomPlacement(width, height){
+    const wall = getWall();
+    if (!wall) return null;
+    const wallRect = wall.getBoundingClientRect();
+    const promptRect = getPromptRectWithinWall();
+    const existing = Array.from(wall.querySelectorAll('.' + SPARK_CLASS)).map((node) => {
+      const rect = node.getBoundingClientRect();
+      return {
+        left: rect.left - wallRect.left,
+        top: rect.top - wallRect.top,
+        right: rect.right - wallRect.left,
+        bottom: rect.bottom - wallRect.top,
+        width: rect.width,
+        height: rect.height
+      };
+    });
+
+    const xMin = Math.max(6, (width / wallRect.width) * 50 + 1);
+    const xMax = Math.min(94, 100 - (width / wallRect.width) * 50 - 1);
+    const yMin = Math.max(9, (height / wallRect.height) * 50 + 1);
+    const yMax = Math.min(88, 100 - (height / wallRect.height) * 50 - 1);
+    const promptGap = window.innerWidth <= 700 ? 20 : 14;
+    const sparkGap = window.innerWidth <= 700 ? 18 : 12;
+
+    for (let i = 0; i < 60; i += 1) {
+      const x = xMin + Math.random() * Math.max(1, xMax - xMin);
+      const y = yMin + Math.random() * Math.max(1, yMax - yMin);
+      const rect = getCandidateRect(wallRect, x, y, width, height);
+      if (promptRect && rectsOverlap(rect, promptRect, promptGap)) continue;
+      if (existing.some((item) => rectsOverlap(rect, item, sparkGap))) continue;
+      return { x, y };
+    }
+
+    // fallback outer-ring areas
+    const rings = window.innerWidth <= 700
+      ? [{x:22,y:16},{x:78,y:18},{x:18,y:34},{x:82,y:36},{x:18,y:68},{x:80,y:72}]
+      : [{x:14,y:16},{x:28,y:16},{x:74,y:18},{x:86,y:32},{x:15,y:52},{x:18,y:78},{x:78,y:68},{x:88,y:78}];
+    for (const pos of shuffle(rings)) {
+      const rect = getCandidateRect(wallRect, pos.x, pos.y, width, height);
+      if (promptRect && rectsOverlap(rect, promptRect, promptGap)) continue;
+      if (existing.some((item) => rectsOverlap(rect, item, sparkGap))) continue;
+      return pos;
+    }
+    return null;
+  }
+
+  function spawnSpark(name){
+    const wall = getWall();
+    if (!wall || !name) return;
+    ensureSparkStyles();
+
+    const look = buildSparkLook();
+    const probe = document.createElement('div');
+    probe.className = SPARK_CLASS + ' is-' + look.group;
+    probe.textContent = name;
+    probe.style.visibility = 'hidden';
+    probe.style.setProperty('--spark-font', look.conf.font);
+    probe.style.setProperty('--spark-weight', look.conf.weight);
+    probe.style.setProperty('--spark-radius', look.conf.radius);
+    probe.style.setProperty('--spark-border-width', look.conf.borderWidth);
+    wall.appendChild(probe);
+    const width = Math.min(probe.offsetWidth || 170, Math.max(120, wall.clientWidth * 0.42));
+    const height = probe.offsetHeight || 48;
+    probe.remove();
+
+    const point = getRandomPlacement(width, height);
+    if (!point) return;
+
+    const el = document.createElement('div');
+    el.className = SPARK_CLASS + ' is-' + look.group;
+    el.textContent = name;
+    el.style.left = point.x + '%';
+    el.style.top = point.y + '%';
+    el.style.setProperty('--spark-bg', look.palette.bg);
+    el.style.setProperty('--spark-text', look.palette.text);
+    el.style.setProperty('--spark-border', look.palette.border);
+    el.style.setProperty('--spark-font', look.conf.font);
+    el.style.setProperty('--spark-weight', look.conf.weight);
+    el.style.setProperty('--spark-radius', look.conf.radius);
+    el.style.setProperty('--spark-border-width', look.conf.borderWidth);
+    el.style.setProperty('--spark-shadow', look.conf.shadow);
+    el.style.setProperty('--spark-rotation', look.rotation + 'deg');
+    el.style.setProperty('--spark-drift', ((Math.random() * 14) - 7).toFixed(1) + 'px');
+    el.style.setProperty('--spark-duration', (7 + Math.random() * 2.4).toFixed(2) + 's');
+    wall.appendChild(el);
+
+    const t = window.setTimeout(() => el.remove(), 8600);
+    activeTimeouts.push(t);
+  }
+
+  function topUpSparks(){
+    if (!isFreedomWallEmpty()) {
+      stopSparks();
+      return;
+    }
+    const wall = getWall();
+    if (!wall) return;
+    const names = getExistingClassNames();
+    if (!names.length) return;
+    const current = wall.querySelectorAll('.' + SPARK_CLASS).length;
+    const target = getSparkTargetCount();
+    if (current >= target) return;
+    const missing = target - current;
+    for(let i = 0; i < missing; i += 1){
+      const name = getNextSparkName(names);
+      if (!name) continue;
+      const t = window.setTimeout(() => spawnSpark(name), i * (180 + Math.random() * 280));
+      activeTimeouts.push(t);
+    }
+  }
+
+  function startSparks(){
+    if (sparkTimer || !isFreedomWallEmpty()) return;
+    topUpSparks();
+    sparkTimer = window.setInterval(topUpSparks, 2400);
+  }
+
+  function stopSparks(){
+    if (sparkTimer) {
+      clearInterval(sparkTimer);
+      sparkTimer = null;
+    }
+    activeTimeouts.forEach((id) => clearTimeout(id));
+    activeTimeouts = [];
+    sparkNameQueue = [];
+    lastSparkName = '';
+    document.querySelectorAll('.' + SPARK_CLASS).forEach((node) => node.remove());
+  }
+
+  function tick(){
+    if (isFreedomWallEmpty()) startSparks();
+    else stopSparks();
+  }
+
+  window.addEventListener('resize', () => {
+    stopSparks();
+    window.setTimeout(tick, 100);
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) stopSparks();
+    else tick();
+  });
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', tick, { once: true });
+  else tick();
+  watchTimer = window.setInterval(tick, 1200);
 })();
