@@ -17402,33 +17402,15 @@ if (document.readyState === "loading") {
     const topBandLimit = Math.max(minTop + 4, (hostRect.height * 0.34) - cardHeight);
     const bottomBandStart = Math.min(maxTop - 4, hostRect.height * 0.62);
 
-    const candidates = [];
-    const attempts = mobile ? 220 : 320;
-    for (let i = 0; i < attempts; i += 1) {
-      let leftPx = minLeft + Math.random() * Math.max(1, maxLeft - minLeft);
-      let topPx = minTop + Math.random() * Math.max(1, maxTop - minTop);
-
-      if (mobile) {
-        if (!existingCards.length) {
-          const wantTop = Math.random() < 0.5;
-          if (wantTop) topPx = minTop + Math.random() * Math.max(1, topBandLimit - minTop);
-          else topPx = bottomBandStart + Math.random() * Math.max(1, maxTop - bottomBandStart);
-        } else if (existingCards.length === 1) {
-          const firstBand = existingBands[0] || 'top';
-          const oppositeBand = firstBand === 'top' ? 'bottom' : 'top';
-          if (oppositeBand === 'top') topPx = minTop + Math.random() * Math.max(1, topBandLimit - minTop);
-          else topPx = bottomBandStart + Math.random() * Math.max(1, maxTop - bottomBandStart);
-        }
-      }
-
+    const testCandidate = (leftPx, topPx) => {
       const candidate = {
         left: hostRect.left + leftPx,
         top: hostRect.top + topPx,
         right: hostRect.left + leftPx + cardWidth,
         bottom: hostRect.top + topPx + cardHeight
       };
-      if (blockedRects.some((rect) => intersectsRect(candidate, rect, 12))) continue;
-      if (existingRects.some((rect) => intersectsRect(candidate, rect, 16))) continue;
+      if (blockedRects.some((rect) => intersectsRect(candidate, rect, 12))) return null;
+      if (existingRects.some((rect) => intersectsRect(candidate, rect, 16))) return null;
       const zone = getCandidateZone(hostRect, candidate);
       const side = zone.endsWith('left') ? 'left' : 'right';
       const band = zone.startsWith('top') ? 'top' : 'bottom';
@@ -17449,10 +17431,11 @@ if (document.readyState === "loading") {
       score += Math.max(0, 120 - bandCount * 55);
       if (mobile && existingCards.length === 1) {
         const firstBand = existingBands[0] || 'top';
-        if (band !== firstBand) score += 240;
-        else score -= 220;
         const firstSide = existingSides[0] || 'left';
-        if (side !== firstSide) score += 80;
+        if (band !== firstBand) score += 260;
+        else score -= 220;
+        if (side !== firstSide) score += 180;
+        else score -= 120;
       }
       if (!mobile && existingCards.length) {
         const leftCount = existingSides.filter((value) => value === 'left').length;
@@ -17462,12 +17445,59 @@ if (document.readyState === "loading") {
         if ((leftCount > rightCount && side === 'right') || (rightCount > leftCount && side === 'left')) score += 140;
         if ((topCount > bottomCount && band === 'bottom') || (bottomCount > topCount && band === 'top')) score += 110;
       }
-      candidates.push({ zone, leftPx, topPx, score });
+      return { zone, leftPx, topPx, score };
+    };
+
+    const candidates = [];
+
+    if (mobile) {
+      const zones = {
+        'top-left': { leftMin: minLeft, leftMax: Math.max(minLeft, hostRect.width * 0.28 - cardWidth), topMin: minTop, topMax: Math.max(minTop, topBandLimit) },
+        'top-right': { leftMin: Math.max(minLeft, hostRect.width * 0.68 - cardWidth * 0.1), leftMax: maxLeft, topMin: minTop, topMax: Math.max(minTop, topBandLimit) },
+        'bottom-left': { leftMin: minLeft, leftMax: Math.max(minLeft, hostRect.width * 0.30 - cardWidth), topMin: bottomBandStart, topMax: maxTop },
+        'bottom-right': { leftMin: Math.max(minLeft, hostRect.width * 0.66 - cardWidth * 0.1), leftMax: maxLeft, topMin: bottomBandStart, topMax: maxTop }
+      };
+
+      let preferredZones = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+      if (existingZones.length === 1) {
+        const first = existingZones[0];
+        const oppositeMap = {
+          'top-left': ['bottom-right', 'bottom-left', 'top-right'],
+          'top-right': ['bottom-left', 'bottom-right', 'top-left'],
+          'bottom-left': ['top-right', 'top-left', 'bottom-right'],
+          'bottom-right': ['top-left', 'top-right', 'bottom-left']
+        };
+        preferredZones = oppositeMap[first] || preferredZones;
+      } else {
+        preferredZones = preferredZones.sort(() => Math.random() - 0.5);
+      }
+
+      for (const zoneName of preferredZones) {
+        const zone = zones[zoneName];
+        if (!zone) continue;
+        for (let i = 0; i < 80; i += 1) {
+          const leftPx = zone.leftMin + Math.random() * Math.max(1, zone.leftMax - zone.leftMin);
+          const topPx = zone.topMin + Math.random() * Math.max(1, zone.topMax - zone.topMin);
+          const tested = testCandidate(leftPx, topPx);
+          if (tested) {
+            tested.zone = zoneName;
+            candidates.push(tested);
+          }
+        }
+      }
+    } else {
+      const attempts = 320;
+      for (let i = 0; i < attempts; i += 1) {
+        const leftPx = minLeft + Math.random() * Math.max(1, maxLeft - minLeft);
+        const topPx = minTop + Math.random() * Math.max(1, maxTop - minTop);
+        const tested = testCandidate(leftPx, topPx);
+        if (tested) candidates.push(tested);
+      }
     }
 
     if (candidates.length) {
       candidates.sort((a, b) => b.score - a.score);
-      const shortlist = candidates.slice(0, Math.min(12, candidates.length));
+      const shortlist = candidates.slice(0, Math.min(14, candidates.length));
       const chosen = shortlist[Math.floor(Math.random() * shortlist.length)] || candidates[0];
       return {
         zone: chosen.zone,
@@ -17477,12 +17507,15 @@ if (document.readyState === "loading") {
     }
 
     if (mobile) {
-      const fallbackTop = !existingCards.length || (existingBands[0] === 'bottom');
-      return {
-        zone: fallbackTop ? 'top-left' : 'bottom-right',
-        left: fallbackTop ? '8%' : '64%',
-        top: fallbackTop ? '14%' : '72%'
+      if (!existingCards.length) return { zone:'top-left', left:'8%', top:'14%' };
+      const first = existingZones[0] || 'top-left';
+      const fallbackMap = {
+        'top-left': { zone:'bottom-right', left:'62%', top:'72%' },
+        'top-right': { zone:'bottom-left', left:'8%', top:'72%' },
+        'bottom-left': { zone:'top-right', left:'62%', top:'14%' },
+        'bottom-right': { zone:'top-left', left:'8%', top:'14%' }
       };
+      return fallbackMap[first] || { zone:'bottom-right', left:'62%', top:'72%' };
     }
     return { zone:'top-left', left:'8%', top:'12%' };
   }
@@ -17523,8 +17556,8 @@ if (document.readyState === "loading") {
     const card = buildPhotoCard(photo);
     host.appendChild(card);
     const width = Math.min(
-      window.innerWidth <= 700 ? 120 : 158,
-      Math.max(window.innerWidth <= 700 ? 106 : 126, Math.round(host.clientWidth * (window.innerWidth <= 700 ? 0.215 : 0.118)))
+      window.innerWidth <= 700 ? 135 : 175,
+      Math.max(window.innerWidth <= 700 ? 125 : 160, Math.round(host.clientWidth * (window.innerWidth <= 700 ? 0.24 : 0.13)))
     );
     const height = width + 34;
     const pos = safePosition(host, width, height);
