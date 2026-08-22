@@ -17351,46 +17351,92 @@ if (document.readyState === "loading") {
   }
 
   function getVisibleLimit() {
-    if (window.innerWidth <= 700) return 1;
-    return 2;
+    if (window.innerWidth <= 700) return 2;
+    return 3;
   }
 
   function getZoneMap() {
     if (window.innerWidth <= 700) {
       return {
-        top: { left:[0.10, 0.72], top:[0.10, 0.23], side:'top' },
-        bottom: { left:[0.12, 0.70], top:[0.69, 0.79], side:'bottom' }
+        tl: { left:[0.06, 0.28], top:[0.09, 0.24], side:'left', band:'top' },
+        tr: { left:[0.68, 0.90], top:[0.09, 0.24], side:'right', band:'top' },
+        bl: { left:[0.08, 0.30], top:[0.70, 0.82], side:'left', band:'bottom' },
+        br: { left:[0.66, 0.88], top:[0.70, 0.82], side:'right', band:'bottom' }
       };
     }
     return {
-      lt: { left:[0.06, 0.24], top:[0.10, 0.25], side:'left' },
-      lm: { left:[0.05, 0.21], top:[0.40, 0.56], side:'left' },
-      lb: { left:[0.08, 0.26], top:[0.69, 0.82], side:'left' },
-      rt: { left:[0.72, 0.88], top:[0.10, 0.25], side:'right' },
-      rm: { left:[0.77, 0.90], top:[0.41, 0.57], side:'right' },
-      rb: { left:[0.71, 0.87], top:[0.69, 0.82], side:'right' }
+      tl: { left:[0.05, 0.22], top:[0.10, 0.24], side:'left', band:'top' },
+      tc: { left:[0.40, 0.56], top:[0.09, 0.22], side:'center', band:'top' },
+      tr: { left:[0.74, 0.90], top:[0.10, 0.24], side:'right', band:'top' },
+      bl: { left:[0.06, 0.23], top:[0.70, 0.82], side:'left', band:'bottom' },
+      bc: { left:[0.39, 0.57], top:[0.72, 0.84], side:'center', band:'bottom' },
+      br: { left:[0.73, 0.89], top:[0.70, 0.82], side:'right', band:'bottom' }
     };
   }
 
   function choosePreferredZones(existingCards) {
     const zoneMap = getZoneMap();
     const zoneNames = Object.keys(zoneMap);
-    if (window.innerWidth <= 700) {
-      if (!existingCards.length) return shuffle(zoneNames);
-      const occupied = new Set(existingCards.map((node) => node.dataset.zone).filter(Boolean));
-      return shuffle(zoneNames.filter((name) => !occupied.has(name)).length ? zoneNames.filter((name) => !occupied.has(name)) : zoneNames);
+    const mobile = window.innerWidth <= 700;
+    const pickOne = (list = []) => {
+      const filtered = list.filter((name) => zoneMap[name]);
+      if (!filtered.length) return "";
+      return filtered[Math.floor(Math.random() * filtered.length)] || filtered[0] || "";
+    };
+    const finishOrder = (preferred = []) => {
+      const deduped = [];
+      preferred.forEach((name) => {
+        if (name && zoneMap[name] && !deduped.includes(name)) deduped.push(name);
+      });
+      const rest = shuffle(zoneNames.filter((name) => !deduped.includes(name)));
+      return deduped.concat(rest);
+    };
+
+    const occupiedZones = existingCards.map((node) => node.dataset.zone).filter(Boolean);
+    const occupiedSet = new Set(occupiedZones);
+    const occupiedSides = new Set(occupiedZones.map((name) => zoneMap[name]?.side).filter(Boolean));
+    const occupiedBands = new Set(occupiedZones.map((name) => zoneMap[name]?.band).filter(Boolean));
+
+    if (mobile) {
+      if (!occupiedZones.length) {
+        const firstTop = pickOne(['tl', 'tr']);
+        const oppositeBottom = firstTop === 'tl' ? 'br' : 'bl';
+        return finishOrder([firstTop, oppositeBottom]);
+      }
+      if (occupiedZones.length === 1) {
+        const first = zoneMap[occupiedZones[0]] || {};
+        const oppositeBand = first.band === 'top' ? 'bottom' : 'top';
+        const oppositeSide = first.side === 'left' ? 'right' : 'left';
+        const ideal = zoneNames.find((name) => zoneMap[name].band === oppositeBand && zoneMap[name].side === oppositeSide);
+        const sameBandOppositeSide = zoneNames.find((name) => zoneMap[name].band === first.band && zoneMap[name].side === oppositeSide);
+        return finishOrder([ideal, sameBandOppositeSide]);
+      }
+      const unused = zoneNames.filter((name) => !occupiedSet.has(name));
+      return finishOrder(unused);
     }
-    if (!existingCards.length) return shuffle(["lt", "rt", "lb", "rb", "lm", "rm"]);
-    const occupiedSides = new Set(existingCards.map((node) => zoneMap[node.dataset.zone]?.side).filter(Boolean));
-    let preferred = zoneNames;
-    if (occupiedSides.size === 1) {
-      const takenSide = Array.from(occupiedSides)[0];
-      preferred = zoneNames.filter((name) => zoneMap[name].side !== takenSide);
-    } else {
-      const occupiedZones = new Set(existingCards.map((node) => node.dataset.zone).filter(Boolean));
-      preferred = zoneNames.filter((name) => !occupiedZones.has(name));
+
+    if (!occupiedZones.length) {
+      const left = pickOne(['tl', 'bl']);
+      const right = pickOne(['tr', 'br']);
+      const third = pickOne(['tc', 'bc', left === 'tl' ? 'bl' : 'tl', right === 'tr' ? 'br' : 'tr']);
+      return finishOrder([left, right, third]);
     }
-    return shuffle(preferred.length ? preferred : zoneNames);
+
+    if (occupiedZones.length === 1) {
+      const first = zoneMap[occupiedZones[0]] || {};
+      if (first.side === 'left') return finishOrder([pickOne(['tr','br']), pickOne(['tc','bc']), pickOne(['tl','bl'])]);
+      if (first.side === 'right') return finishOrder([pickOne(['tl','bl']), pickOne(['tc','bc']), pickOne(['tr','br'])]);
+      return finishOrder([pickOne(['tl','bl']), pickOne(['tr','br']), pickOne(['bc','tc'])]);
+    }
+
+    if (!occupiedSides.has('left')) return finishOrder([pickOne(['tl','bl']), pickOne(['tr','br','tc','bc'])]);
+    if (!occupiedSides.has('right')) return finishOrder([pickOne(['tr','br']), pickOne(['tl','bl','tc','bc'])]);
+    if (!occupiedBands.has('bottom')) return finishOrder([pickOne(['bl','bc','br']), pickOne(['tl','tr'])]);
+    if (!occupiedBands.has('top')) return finishOrder([pickOne(['tl','tc','tr']), pickOne(['bl','br'])]);
+    if (!occupiedSides.has('center')) return finishOrder([pickOne(['tc','bc'])]);
+
+    const unused = zoneNames.filter((name) => !occupiedSet.has(name));
+    return finishOrder(unused);
   }
 
   function safePosition(host, cardWidth, cardHeight) {
@@ -17426,7 +17472,7 @@ if (document.readyState === "loading") {
         };
       }
     }
-    const fallback = window.innerWidth <= 700 ? { zone:'top', left:'12%', top:'12%' } : { zone:'lt', left:'8%', top:'12%' };
+    const fallback = window.innerWidth <= 700 ? { zone:'tl', left:'10%', top:'12%' } : { zone:'tl', left:'8%', top:'12%' };
     return fallback;
   }
 
@@ -17465,7 +17511,7 @@ if (document.readyState === "loading") {
 
     const card = buildPhotoCard(photo);
     host.appendChild(card);
-    const width = Math.min(window.innerWidth <= 700 ? 142 : 190, Math.max(window.innerWidth <= 700 ? 124 : 150, Math.round(host.clientWidth * (window.innerWidth <= 700 ? 0.28 : 0.16))));
+    const width = Math.min(window.innerWidth <= 700 ? 128 : 174, Math.max(window.innerWidth <= 700 ? 112 : 138, Math.round(host.clientWidth * (window.innerWidth <= 700 ? 0.23 : 0.135))));
     const height = width + 34;
     const pos = safePosition(host, width, height);
     card.dataset.zone = pos.zone || "";
@@ -17485,7 +17531,7 @@ if (document.readyState === "loading") {
     const visible = document.querySelectorAll(`.${CARD_CLASS}`).length;
     const missing = Math.max(0, getVisibleLimit() - visible);
     for (let i = 0; i < missing; i += 1) {
-      window.setTimeout(() => { showEmptyMemoryPhoto().catch?.(() => {}); }, i * (window.innerWidth <= 700 ? 0 : 420));
+      window.setTimeout(() => { showEmptyMemoryPhoto().catch?.(() => {}); }, i * (window.innerWidth <= 700 ? 260 : 320));
     }
   }
 

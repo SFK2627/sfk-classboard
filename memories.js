@@ -4,9 +4,9 @@ const HEARTED_MEMORY_KEY = "sfkHeartedMemoriesV1";
 const MEMORIES_SEEN_IDS_KEY = "sfkMemoriesSeenPostIdsV1";
 const MEMORY_POSTED_BY_KEY = "sfkMemoryPostedByV1";
 const MEMORY_MUSIC_AUTOPLAY_KEY = "sfkMemoryMusicAutoplayV1";
-const MAX_MEDIA_FILES = 6;
+const MAX_MEDIA_FILES = 50;
 const MAX_VIDEO_BYTES = 12 * 1024 * 1024;
-const MAX_TOTAL_UPLOAD_BYTES = 4 * 1024 * 1024;
+const MAX_TOTAL_UPLOAD_BYTES = 25 * 1024 * 1024;
 const TARGET_IMAGE_BYTES = 380 * 1024;
 const NO_BILLING_MEDIA_REF_PREFIX = "sfk-media://";
 const NO_BILLING_MEMORY_MEDIA_COLLECTION = "memoryMedia";
@@ -88,6 +88,9 @@ const memoryState = {
   auth: null,
   selectedFiles: [],
   coverIndex: 0,
+  uploadProgress: 0,
+  uploadStatus: "",
+
   viewerMedia: [],
   viewerIndex: 0,
   viewerAnimating: false,
@@ -4932,7 +4935,10 @@ function renderSelectedMediaPreview() {
     return;
   }
 
-  container.innerHTML = memoryState.selectedFiles.map((file, index) => {
+  const uploadStatus = memoryState.uploadStatus
+    ? `<div class="mediaUploadStatus" style="margin:8px 0;padding:8px 10px;border-radius:10px;background:#eef6ff;color:#164e63;font-weight:700;font-size:13px">${escapeHtml(memoryState.uploadStatus)}</div>`
+    : "";
+  container.innerHTML = `<div class="mediaSelectionCounter">${memoryState.selectedFiles.length}/${MAX_MEDIA_FILES} photos selected</div>${uploadStatus}` + memoryState.selectedFiles.map((file, index) => {
     const url = URL.createObjectURL(file);
     const preview = file.type.startsWith("video/")
       ? `<video src="${escapeAttr(url)}" muted></video>`
@@ -4951,6 +4957,13 @@ function renderSelectedMediaPreview() {
       </div>
     `;
   }).join("");
+}
+
+function updateMemoryUploadProgress(done, total, label = "Uploading photos...") {
+  const percent = total ? Math.round((done / total) * 100) : 0;
+  memoryState.uploadProgress = percent;
+  memoryState.uploadStatus = `${label} ${done}/${total} (${percent}%)`;
+  renderSelectedMediaPreview();
 }
 
 function handleMediaPreviewAction(event) {
@@ -5116,6 +5129,10 @@ async function submitMemoryPost(event) {
     const mediaFiles = [];
     let uploadBytes = 0;
 
+    let preparedIndex = 0;
+    memoryState.uploadStatus = "Preparing photos...";
+    renderSelectedMediaPreview();
+
     for (const file of memoryState.selectedFiles) {
       if (file.type.startsWith("video/")) {
         throw new Error(`${file.name}: no-billing upload supports photos only. Paste a Drive, YouTube, or direct video link instead.`);
@@ -5127,6 +5144,8 @@ async function submitMemoryPost(event) {
         throw new Error("The selected media is too large for one post. Use fewer files or use a Drive/YouTube link for videos.");
       }
       mediaFiles.push(prepared);
+      preparedIndex += 1;
+      updateMemoryUploadProgress(preparedIndex, memoryState.selectedFiles.length, "Preparing photos...");
     }
 
     button.textContent = "Sharing...";
@@ -5170,6 +5189,7 @@ async function submitMemoryPost(event) {
       message.textContent = "Uploading photo attachment first...";
 
       try {
+        updateMemoryUploadProgress(0, mediaFiles.length, "Uploading photos...");
         const uploadResult = await postMemoryApi("memoryUploadAssets", {
           Role: memoryState.auth.role,
           MemoryID: memoryId,
@@ -5316,6 +5336,8 @@ function resetMemoryForm() {
   if (youtubeMessage) youtubeMessage.textContent = "";
   memoryState.selectedFiles = [];
   memoryState.coverIndex = 0;
+  memoryState.uploadProgress = 0;
+  memoryState.uploadStatus = "";
   document.getElementById("mediaPreview").innerHTML = "";
   document.getElementById("postMessage").textContent = "";
   const musicTestMessage = document.getElementById("musicTestMessage");
@@ -6548,3 +6570,4 @@ heartMemory = function heartMemoryFastV4(id) {
 
   return false;
 };
+
