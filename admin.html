@@ -323,6 +323,13 @@
 
             <label for="freedomWallTheme">SFK #BeKind Wall Theme</label>
             <small style="display:block; margin:-4px 0 8px; color:#5b6472; font-size:12px; line-height:1.45;">Choose the complete look of the wall — background, center prompt, fonts, and sticky-note style all follow this theme.</small>
+            <label for="freedomWallEmptyDisplayMode">Empty Wall Display</label>
+            <small style="display:block; margin:-4px 0 8px; color:#5b6472; font-size:12px; line-height:1.45;">Choose what appears before the first note is posted.</small>
+            <select id="freedomWallEmptyDisplayMode">
+              <option value="names">Student Names</option>
+              <option value="photos">Memories Photos</option>
+            </select>
+
             <select id="freedomWallTheme">
               <option value="sticky-notes">Classic Sticky Note Board</option>
               <option value="sunny">Sunny Day</option>
@@ -1427,6 +1434,7 @@ https://audio.jukehost.co.uk/AAAhttps://audio.jukehost.co.uk/BBBhttps://audio.ju
         HomepageEffectAudioUrl: wallMode ? String(wallPlaylist[0]?.url || "").slice(0,1200) : String(byId("homepageEffectAudioUrl")?.value || "").trim().slice(0,1200),
         HomepageEffectAudioLoop: wallMode ? "NO" : (byId("homepageEffectAudioLoop")?.checked === false ? "NO" : "YES"),
         FreedomWallTheme: String(byId("freedomWallTheme")?.value || "sticky-notes").trim().toLowerCase(),
+        FreedomWallEmptyDisplayMode: String(byId("freedomWallEmptyDisplayMode")?.value || "names").trim().toLowerCase(),
         FreedomWallAllowPosting: byId("freedomWallAllowPosting")?.checked === false ? "NO" : "YES",
         FreedomWallShowNames: byId("freedomWallShowNames")?.checked === false ? "NO" : "YES",
         FreedomWallAllowTextColor: byId("freedomWallAllowTextColor")?.checked === false ? "NO" : "YES",

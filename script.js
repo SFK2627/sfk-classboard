@@ -1687,6 +1687,7 @@ const HOMEPAGE_EFFECT_KEYS = new Set([
   "HomepageEffectRickrollUrl",
   "HomepageEffectUpdatedAt",
   "FreedomWallTheme",
+  "FreedomWallEmptyDisplayMode",
   "FreedomWallAllowPosting",
   "FreedomWallShowNames",
   "FreedomWallAllowTextColor",
@@ -2405,6 +2406,7 @@ function normalizeHomepageEffectConfig(settings = {}) {
   const updatedAt = String(settings.HomepageEffectUpdatedAt || "").trim();
   const rawFreedomWallTheme = String(settings.FreedomWallTheme || "sticky-notes").trim().toLowerCase();
   const freedomWallTheme = FREEDOM_WALL_THEME_SET.has(rawFreedomWallTheme) ? rawFreedomWallTheme : "sticky-notes";
+  const freedomWallEmptyDisplayMode = String(settings.FreedomWallEmptyDisplayMode || "names").trim().toLowerCase() === "photos" ? "photos" : "names";
   const freedomWallAllowPosting = String(settings.FreedomWallAllowPosting || "YES").trim().toUpperCase() !== "NO";
   const freedomWallShowNames = String(settings.FreedomWallShowNames || "YES").trim().toUpperCase() !== "NO";
   const freedomWallAllowTextColor = String(settings.FreedomWallAllowTextColor || "YES").trim().toUpperCase() !== "NO";
@@ -2426,7 +2428,7 @@ function normalizeHomepageEffectConfig(settings = {}) {
   const freedomWallActiveWallId = normalizeFreedomWallSessionId(settings.FreedomWallActiveWallID || FREEDOM_WALL_LEGACY_SESSION_ID);
   const playlistSignature = freedomWallPlaylist.map((track) => `${track.title}~${track.url}`).join("~~");
   const signature = updatedAt || [enabled ? "1" : "0", mode, title, message, images.join("~"), dismissible ? "1" : "0", alertSound ? "1" : "0", audioEnabled ? "1" : "0", audioUrl, audioLoop ? "1" : "0", youtubeUrl, youtubeMuted ? "1" : "0", rickrollUrl, freedomWallTheme, freedomWallAllowPosting ? "1" : "0", freedomWallShowNames ? "1" : "0", freedomWallAllowTextColor ? "1" : "0", freedomWallAllowFont ? "1" : "0", freedomWallAllowGif ? "1" : "0", freedomWallAllowGifSearch ? "1" : "0", freedomWallAllowYouTube ? "1" : "0", freedomWallAllowYouTubeSearch ? "1" : "0", freedomWallYouTubePlaybackMode, freedomWallMediaSearchUrl, freedomWallGiphyApiKey ? "giphy-key" : "", freedomWallPlaylistEnabled ? "1" : "0", freedomWallPlaylistShuffle ? "1" : "0", freedomWallPlaylistLoop ? "1" : "0", playlistSignature, freedomWallActiveWallId].join("|");
-  return { enabled, mode, title, message, image: images[0] || "", images, dismissible, alertSound, spiderSound, audioEnabled, audioUrl, audioLoop, youtubeUrl, youtubeMuted, rickrollUrl, updatedAt, signature, freedomWallTheme, freedomWallAllowPosting, freedomWallShowNames, freedomWallAllowTextColor, freedomWallAllowFont, freedomWallAllowGif, freedomWallAllowGifSearch, freedomWallAllowYouTube, freedomWallAllowYouTubeSearch, freedomWallYouTubePlaybackMode, freedomWallMediaSearchUrl, freedomWallGiphyApiKey, freedomWallPlaylistEnabled, freedomWallPlaylist, freedomWallPlaylistShuffle, freedomWallPlaylistLoop, freedomWallActiveWallId };
+  return { enabled, mode, title, message, image: images[0] || "", images, dismissible, alertSound, spiderSound, audioEnabled, audioUrl, audioLoop, youtubeUrl, youtubeMuted, rickrollUrl, updatedAt, signature, freedomWallTheme, freedomWallEmptyDisplayMode, freedomWallAllowPosting, freedomWallAllowTextColor, freedomWallAllowFont, freedomWallAllowGif, freedomWallAllowGifSearch, freedomWallAllowYouTube, freedomWallAllowYouTubeSearch, freedomWallYouTubePlaybackMode, freedomWallMediaSearchUrl, freedomWallGiphyApiKey, freedomWallPlaylistEnabled, freedomWallPlaylist, freedomWallPlaylistShuffle, freedomWallPlaylistLoop, freedomWallActiveWallId };
 }
 
 function normalizeHomepageEffectYouTubeUrl(value) {
@@ -7847,6 +7849,10 @@ function spawnFreedomWallWelcomeSpark(){
   setTimeout(()=>item.remove(),7000);
 }
 function updateFreedomWallWelcomeSparks(noteCount){
+  if (String(freedomWallConfig?.freedomWallEmptyDisplayMode || "names").toLowerCase() !== "names") {
+    clearFreedomWallWelcomeSparks();
+    return;
+  }
   if(Number(noteCount)>0){clearFreedomWallWelcomeSparks();return;}
   const holder=ensureFreedomWallWelcomeLayer();
   if(!holder)return;
@@ -16662,14 +16668,16 @@ if (document.readyState === "loading") {
   }
 
   function getThemeGroup(theme){
-    const t = String(theme || '');
-    if (/(super-mario|retro-arcade|pixel|arcade)/.test(t)) return 'mario';
-    if (/(cutout|editorial|newspaper|scrapbook|polaroid|vintage-travel|poste)/.test(t)) return 'cutout';
-    if (/(galaxy|space|night|aurora|holographic|frutiger-aero|cyber|neon)/.test(t)) return 'galaxy';
-    if (/(sticky|school-note|bulletin|whiteboard|chalkboard|school-fair|library|art-room)/.test(t)) return 'school';
-    if (/(beach|eco|jungle|nature|rainbow|sunny|dreamy-clouds|sakura)/.test(t)) return 'nature';
-    if (/(comic|graffiti|vandal|comic-noir|comic-manga|comic-strip)/.test(t)) return 'comic';
-    if (/(filipino)/.test(t)) return 'filipino';
+    const t = String(theme || '').toLowerCase();
+    if (/(super-mario|retro-arcade|pixel|arcade|crt|pixel-storm)/.test(t)) return 'mario';
+    if (/(cutout|editorial|newspaper|scrapbook|polaroid|vintage-travel|poste|film-roll|bauhaus)/.test(t)) return 'cutout';
+    if (/(galaxy|space|night|aurora|holographic|frutiger-aero|cyber|neon|city-pop|laser|prism)/.test(t)) return 'galaxy';
+    if (/(sticky|school-note|bulletin|whiteboard|chalkboard|school-fair|library|art-room|coding-lab|windows-95|detective)/.test(t)) return 'school';
+    if (/(beach|eco|jungle|nature|rainbow|sunny|dreamy-clouds|sakura|petals|fireflies)/.test(t)) return 'nature';
+    if (/(comic|graffiti|vandal|comic-noir|comic-manga|comic-strip|spiderman)/.test(t)) return 'comic';
+    if (/(filipino|buwan-wika|fiesta)/.test(t)) return 'filipino';
+    if (/(liquid-glass|clay|glass|chrome|y2k)/.test(t)) return 'glass';
+    if (/(cafe|coffee)/.test(t)) return 'cafe';
     return 'default';
   }
 
@@ -16763,6 +16771,28 @@ if (document.readyState === "loading") {
         { bg:'#fff6d8', text:'#8b1d1d', border:'#f0c233' },
         { bg:'#e7f0ff', text:'#173b72', border:'#2f6de0' },
         { bg:'#ffe1e1', text:'#8b1d1d', border:'#d64545' }
+      ]
+    },
+    glass: {
+      font: '"Montserrat",Arial,sans-serif',
+      weight: '700',
+      radius: '22px',
+      borderWidth: '2px',
+      shadow: '0 10px 25px rgba(0,0,0,.16)',
+      palettes: [
+        { bg:'rgba(255,255,255,.65)', text:'#1e293b', border:'#93c5fd' },
+        { bg:'rgba(224,242,254,.75)', text:'#0f172a', border:'#67e8f9' }
+      ]
+    },
+    cafe: {
+      font: '"Georgia",serif',
+      weight: '700',
+      radius: '14px',
+      borderWidth: '2px',
+      shadow: '0 8px 18px rgba(80,45,20,.22)',
+      palettes: [
+        { bg:'#fff3dc', text:'#5b3718', border:'#c58b45' },
+        { bg:'#f7e7d0', text:'#3f2815', border:'#a66b2c' }
       ]
     },
     default: {
@@ -16975,6 +17005,12 @@ if (document.readyState === "loading") {
   }
 
   function startSparks(){
+    // v501: respect Admin Empty Wall Display selection.
+    // Photos mode has its own renderer and must not spawn name sparks.
+    if (String(freedomWallConfig?.freedomWallEmptyDisplayMode || "names").toLowerCase() === "photos") {
+      stopSparks();
+      return;
+    }
     if (sparkTimer || !isFreedomWallEmpty()) return;
     topUpSparks();
     sparkTimer = window.setInterval(topUpSparks, 2400);
@@ -16993,8 +17029,15 @@ if (document.readyState === "loading") {
   }
 
   function tick(){
-    if (isFreedomWallEmpty()) startSparks();
-    else stopSparks();
+    if (!isFreedomWallEmpty()) {
+      stopSparks();
+      return;
+    }
+    if (String(freedomWallConfig?.freedomWallEmptyDisplayMode || "names").toLowerCase() === "photos") {
+      stopSparks();
+      return;
+    }
+    startSparks();
   }
 
   window.addEventListener('resize', () => {
@@ -17067,3 +17110,538 @@ if (document.readyState === "loading") {
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',start,{once:true});
   else start();
 })();
+
+
+/* Empty Wall Memories Photo Mode - theme aware + scattered placement */
+(() => {
+  let timer = null;
+  let queue = [];
+  let used = [];
+  let memoryPhotoPool = [];
+  let loadingPoolPromise = null;
+  const MEMORY_POOL_CACHE_KEY = "sfkFreedomWallEmptyMemoryPoolV2";
+  const LEGACY_MEMORY_POOL_CACHE_KEY = "sfkFreedomWallEmptyMemoryPoolV1";
+  const MEMORY_MEDIA_COLLECTION = "memoryMedia";
+  const MEMORY_POSTS_COLLECTION = "memories";
+  const CARD_CLASS = "freedomWallEmptyMemoryPhotoCard";
+
+  function parseMemoryMediaRef(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return null;
+    const match = raw.match(/^sfk-media:\/\/(?:memory|memories|memoryMedia)\/([A-Za-z0-9_-]{1,240})$/i);
+    return match ? match[1] : "";
+  }
+
+  async function resolveMemoryMediaRefToUrl(refValue) {
+    const mediaId = parseMemoryMediaRef(refValue);
+    if (!mediaId) return "";
+    try {
+      const db = await waitForClassBoardFirestore(8000);
+      if (!db) return "";
+      const doc = await db.collection(MEMORY_MEDIA_COLLECTION).doc(mediaId).get();
+      if (!doc.exists) return "";
+      const data = doc.data() || {};
+      const directDataUrl = String(data.DataURL || data.dataUrl || data.Url || data.url || data.PreviewURL || data.previewUrl || "").trim();
+      if (/^(https?:\/\/|data:image\/)/i.test(directDataUrl)) return directDataUrl;
+      const base64 = String(data.Data || data.data || data.Base64 || data.base64 || data.Content || data.content || "").trim();
+      const mimeType = String(data.MimeType || data.mimeType || data.Type || "image/jpeg").trim();
+      if (base64 && /^image\//i.test(mimeType)) return `data:${mimeType};base64,${base64}`;
+    } catch (error) {
+      console.warn("Unable to resolve memory media ref:", error);
+    }
+    return "";
+  }
+
+  function rememberPhoto(entry) {
+    const url = String(entry?.url || "").trim();
+    if (!/^(https?:\/\/|data:image\/)/i.test(url)) return;
+    const caption = String(entry?.caption || "").trim();
+    const title = String(entry?.title || "").trim();
+    const key = `${url}|${caption}|${title}`;
+    if (memoryPhotoPool.some((item) => `${item.url}|${item.caption}|${item.title}` === key)) return;
+    memoryPhotoPool.push({
+      url,
+      caption,
+      title,
+      date: String(entry?.date || "").trim()
+    });
+  }
+
+  async function addPhotoSource(value, meta = {}) {
+    if (!value) return;
+    if (Array.isArray(value)) {
+      for (const item of value) await addPhotoSource(item, meta);
+      return;
+    }
+    if (typeof value === "string") {
+      const raw = value.trim();
+      if (!raw) return;
+      if (/^(https?:\/\/|data:image\/)/i.test(raw)) {
+        rememberPhoto({ url: raw, ...meta });
+        return;
+      }
+      const resolved = await resolveMemoryMediaRefToUrl(raw);
+      if (resolved) rememberPhoto({ url: resolved, ...meta });
+      return;
+    }
+    if (typeof value !== "object") return;
+
+    const kind = String(value.kind || value.Kind || "").trim().toLowerCase();
+    const caption = meta.caption || value.caption || value.Caption || value.postedBy || value.PostedBy || "";
+    const title = meta.title || value.title || value.Title || value.name || value.Name || "";
+    const date = meta.date || value.date || value.Date || value.createdAt || value.CreatedAt || "";
+
+    const candidateUrls = [
+      value.url, value.viewerUrl, value.fullUrl, value.downloadUrl,
+      value.previewUrl, value.thumbnailUrl, value.thumbUrl,
+      value.ImageURL, value.imageUrl, value.PhotoURL, value.photoUrl,
+      value.MediaURL, value.mediaUrl, value.Image, value.image,
+      value.DataURL, value.dataUrl
+    ];
+
+    const shouldTreatAsImage = !kind || kind === "image" || /image/i.test(String(value.mimeType || value.MimeType || ""));
+    if (shouldTreatAsImage) {
+      for (const candidate of candidateUrls) {
+        if (typeof candidate === "string" && /^(https?:\/\/|data:image\/)/i.test(candidate.trim())) {
+          rememberPhoto({ url: candidate.trim(), caption, title, date });
+          break;
+        }
+      }
+      const firestoreRef = value.firestoreRef || value.mediaRef || value.MediaRef || value.ref || value.Ref || value.raw;
+      if (typeof firestoreRef === "string") {
+        const resolved = await resolveMemoryMediaRefToUrl(firestoreRef);
+        if (resolved) rememberPhoto({ url: resolved, caption, title, date });
+      }
+    }
+
+    const nestedKeys = ["media", "Media", "files", "Files", "items", "Items", "photos", "Photos", "uploadedMedia", "UploadedMedia"];
+    for (const key of nestedKeys) {
+      if (value[key]) await addPhotoSource(value[key], { caption, title, date });
+    }
+  }
+
+  function loadCachedPool() {
+    try {
+      const legacy = JSON.parse(localStorage.getItem(LEGACY_MEMORY_POOL_CACHE_KEY) || "[]");
+      if (Array.isArray(legacy)) legacy.forEach((item) => rememberPhoto(item));
+    } catch (error) {}
+    try {
+      const cached = JSON.parse(localStorage.getItem(MEMORY_POOL_CACHE_KEY) || "[]");
+      if (Array.isArray(cached)) cached.forEach((item) => rememberPhoto(item));
+    } catch (error) {}
+  }
+
+  function saveCachedPool() {
+    try {
+      localStorage.setItem(MEMORY_POOL_CACHE_KEY, JSON.stringify(memoryPhotoPool.slice(0, 180)));
+    } catch (error) {}
+  }
+
+  async function collectMemoryPhotosFromCache() {
+    try { await addPhotoSource(JSON.parse(localStorage.getItem("sfkMemoriesCacheV4") || "[]")); } catch (error) {}
+    try { await addPhotoSource(window.memoryState?.posts || window.memoriesState?.posts || []); } catch (error) {}
+  }
+
+  async function collectMemoryPhotosFromFirestore() {
+    const db = await waitForClassBoardFirestore(9000);
+    if (!db) return;
+    const snap = await db.collection(MEMORY_POSTS_COLLECTION).limit(150).get();
+    for (const doc of snap.docs) {
+      const data = doc.data() || {};
+      await addPhotoSource(data, {
+        caption: data.Caption || data.caption || data.PostedBy || data.postedBy || "",
+        title: data.Title || data.title || "SFK Memory",
+        date: data.Date || data.date || data.CreatedAt || data.createdAt || ""
+      });
+    }
+  }
+
+  async function ensurePhotoPool(force = false) {
+    if (memoryPhotoPool.length && !force) return memoryPhotoPool;
+    if (loadingPoolPromise && !force) return loadingPoolPromise;
+    loadingPoolPromise = (async () => {
+      memoryPhotoPool = [];
+      loadCachedPool();
+      await collectMemoryPhotosFromCache();
+      if (!memoryPhotoPool.length || force) {
+        try { await collectMemoryPhotosFromFirestore(); } catch (error) { console.warn("Unable to load memory photos from Firestore:", error); }
+      }
+      saveCachedPool();
+      return memoryPhotoPool;
+    })();
+    try { return await loadingPoolPromise; } finally { loadingPoolPromise = null; }
+  }
+
+  function shuffle(list) {
+    const copy = list.slice();
+    for (let i = copy.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  }
+
+  async function refillQueue() {
+    await ensurePhotoPool();
+    const remaining = memoryPhotoPool.filter((item) => !used.includes(item.url));
+    queue = remaining.length ? shuffle(remaining) : shuffle(memoryPhotoPool);
+    if (!remaining.length) used = [];
+  }
+
+  function clearEmptyMemoryPhotos() {
+    document.querySelectorAll(`.${CARD_CLASS}`).forEach((node) => node.remove());
+    if (timer) {
+      clearInterval(timer);
+      timer = null;
+    }
+  }
+
+  function getPhotoHost() {
+    const layer = document.getElementById("homepageEffectLayer");
+    const stage = layer?.querySelector("#freedomWallNotesStage");
+    return stage?.parentElement || layer?.querySelector(".homepageFreedomWallScene") || layer || null;
+  }
+
+  function hasRealNotes() {
+    return Boolean(document.querySelector('.freedomWallNote[data-note-id]'));
+  }
+
+  function currentTheme() {
+    return String(freedomWallConfig?.freedomWallTheme || "sticky-notes").trim().toLowerCase();
+  }
+
+  function getThemeGroup(themeName = currentTheme()) {
+    const theme = String(themeName || "").trim().toLowerCase();
+    if (/^(super-mario|retro-arcade|spiderman)$/.test(theme)) return "pixel";
+    if (/^(comic|comic-noir|comic-manga|comic-strip)$/.test(theme)) return "comic";
+    if (/^(newspaper|cutout-pop|cutout-editorial|film-roll|vintage-travel|scrapbook|poste)$/.test(theme)) return "editorial";
+    if (/^(polaroid)$/.test(theme)) return "polaroid";
+    if (/^(galaxy|aurora-crystal|holographic|city-pop|neon-music)$/.test(theme)) return "cosmic";
+    if (/^(liquid-glass|frutiger-aero|clay-ui|y2k-chrome)$/.test(theme)) return "glass";
+    if (/^(windows-95|retro-throwback|bauhaus|coding-lab)$/.test(theme)) return "retro-tech";
+    if (/^(sticky-notes|school-note|bulletin-board|whiteboard|chalkboard|library|school-fair|detective)$/.test(theme)) return "school";
+    if (/^(sunny|rainy|night|flood|seasonal|dreamy-clouds)$/.test(theme)) return "weather";
+    if (/^(jungle|beach|sakura|eco|rainbow|appreciation|art-room|cafe)$/.test(theme)) return "nature";
+    if (/^(brick-alley|graffiti|vandal)$/.test(theme)) return "street";
+    if (/^(filipino)$/.test(theme)) return "filipino";
+    return "default";
+  }
+
+  function getPromptRect(host) {
+    return host?.querySelector("#freedomWallPromptCard:not([hidden])")?.getBoundingClientRect?.() || null;
+  }
+
+  function getBlockedRects(host) {
+    const list = [];
+    const addRect = (rect) => { if (rect && Number.isFinite(rect.left)) list.push(rect); };
+    addRect(getPromptRect(host));
+    addRect(host.querySelector('#freedomWallAddButton, .freedomWallAddButton')?.getBoundingClientRect?.());
+    addRect(host.querySelector('.freedomWallHeader, .freedomWallHud, .freedomWallBrand, .freedomWallHeaderBox')?.getBoundingClientRect?.());
+    return list;
+  }
+
+  function intersectsRect(a, b, padding = 0) {
+    if (!a || !b) return false;
+    return !(
+      a.right + padding < b.left ||
+      a.left - padding > b.right ||
+      a.bottom + padding < b.top ||
+      a.top - padding > b.bottom
+    );
+  }
+
+  function getVisibleLimit() {
+    if (window.innerWidth <= 700) return 1;
+    return 2;
+  }
+
+  function getZoneMap() {
+    if (window.innerWidth <= 700) {
+      return {
+        top: { left:[0.10, 0.72], top:[0.10, 0.23], side:'top' },
+        bottom: { left:[0.12, 0.70], top:[0.69, 0.79], side:'bottom' }
+      };
+    }
+    return {
+      lt: { left:[0.06, 0.24], top:[0.10, 0.25], side:'left' },
+      lm: { left:[0.05, 0.21], top:[0.40, 0.56], side:'left' },
+      lb: { left:[0.08, 0.26], top:[0.69, 0.82], side:'left' },
+      rt: { left:[0.72, 0.88], top:[0.10, 0.25], side:'right' },
+      rm: { left:[0.77, 0.90], top:[0.41, 0.57], side:'right' },
+      rb: { left:[0.71, 0.87], top:[0.69, 0.82], side:'right' }
+    };
+  }
+
+  function choosePreferredZones(existingCards) {
+    const zoneMap = getZoneMap();
+    const zoneNames = Object.keys(zoneMap);
+    if (window.innerWidth <= 700) {
+      if (!existingCards.length) return shuffle(zoneNames);
+      const occupied = new Set(existingCards.map((node) => node.dataset.zone).filter(Boolean));
+      return shuffle(zoneNames.filter((name) => !occupied.has(name)).length ? zoneNames.filter((name) => !occupied.has(name)) : zoneNames);
+    }
+    if (!existingCards.length) return shuffle(["lt", "rt", "lb", "rb", "lm", "rm"]);
+    const occupiedSides = new Set(existingCards.map((node) => zoneMap[node.dataset.zone]?.side).filter(Boolean));
+    let preferred = zoneNames;
+    if (occupiedSides.size === 1) {
+      const takenSide = Array.from(occupiedSides)[0];
+      preferred = zoneNames.filter((name) => zoneMap[name].side !== takenSide);
+    } else {
+      const occupiedZones = new Set(existingCards.map((node) => node.dataset.zone).filter(Boolean));
+      preferred = zoneNames.filter((name) => !occupiedZones.has(name));
+    }
+    return shuffle(preferred.length ? preferred : zoneNames);
+  }
+
+  function safePosition(host, cardWidth, cardHeight) {
+    const hostRect = host.getBoundingClientRect();
+    const blockedRects = getBlockedRects(host);
+    const existingCards = Array.from(host.querySelectorAll(`.${CARD_CLASS}`));
+    const existingRects = existingCards.map((node) => node.getBoundingClientRect());
+    const zoneMap = getZoneMap();
+    const zoneOrder = choosePreferredZones(existingCards);
+
+    for (const zoneName of zoneOrder) {
+      const zone = zoneMap[zoneName];
+      if (!zone) continue;
+      const leftMin = zone.left[0] * hostRect.width;
+      const leftMax = Math.max(leftMin, zone.left[1] * hostRect.width - cardWidth);
+      const topMin = zone.top[0] * hostRect.height;
+      const topMax = Math.max(topMin, zone.top[1] * hostRect.height - cardHeight);
+      for (let i = 0; i < 48; i += 1) {
+        const leftPx = leftMin + Math.random() * Math.max(1, leftMax - leftMin);
+        const topPx = topMin + Math.random() * Math.max(1, topMax - topMin);
+        const candidate = {
+          left: hostRect.left + leftPx,
+          top: hostRect.top + topPx,
+          right: hostRect.left + leftPx + cardWidth,
+          bottom: hostRect.top + topPx + cardHeight
+        };
+        if (blockedRects.some((rect) => intersectsRect(candidate, rect, 16))) continue;
+        if (existingRects.some((rect) => intersectsRect(candidate, rect, 18))) continue;
+        return {
+          zone: zoneName,
+          left: `${(leftPx / hostRect.width) * 100}%`,
+          top: `${(topPx / hostRect.height) * 100}%`
+        };
+      }
+    }
+    const fallback = window.innerWidth <= 700 ? { zone:'top', left:'12%', top:'12%' } : { zone:'lt', left:'8%', top:'12%' };
+    return fallback;
+  }
+
+  function buildPhotoCard(photo) {
+    const themeName = currentTheme();
+    const card = document.createElement("figure");
+    card.className = CARD_CLASS;
+    card.dataset.theme = themeName;
+    card.dataset.themeGroup = getThemeGroup(themeName);
+
+    const image = document.createElement("img");
+    image.className = "freedomWallEmptyMemoryPhoto";
+    image.src = photo.url;
+    image.alt = photo.title || photo.caption || "SFK Memory";
+    image.loading = 'lazy';
+
+    const caption = document.createElement("figcaption");
+    caption.className = "freedomWallEmptyMemoryCaption";
+    caption.textContent = photo.title || photo.caption || "SFK Memory";
+
+    card.appendChild(image);
+    card.appendChild(caption);
+    return card;
+  }
+
+  async function showEmptyMemoryPhoto() {
+    const host = getPhotoHost();
+    if (!host) return;
+    if (String(freedomWallConfig?.freedomWallEmptyDisplayMode || "names").toLowerCase() !== "photos") return;
+    if (hasRealNotes()) return;
+    if (host.querySelectorAll(`.${CARD_CLASS}`).length >= getVisibleLimit()) return;
+    if (!queue.length) await refillQueue();
+    const photo = queue.shift();
+    if (!photo?.url) return;
+    used.push(photo.url);
+
+    const card = buildPhotoCard(photo);
+    host.appendChild(card);
+    const width = Math.min(window.innerWidth <= 700 ? 142 : 190, Math.max(window.innerWidth <= 700 ? 124 : 150, Math.round(host.clientWidth * (window.innerWidth <= 700 ? 0.28 : 0.16))));
+    const height = width + 34;
+    const pos = safePosition(host, width, height);
+    card.dataset.zone = pos.zone || "";
+    card.style.left = pos.left;
+    card.style.top = pos.top;
+    card.style.width = `${width}px`;
+    window.setTimeout(() => card.remove(), 6200);
+  }
+
+  async function topUpVisiblePhotos() {
+    if (String(freedomWallConfig?.freedomWallEmptyDisplayMode || "names").toLowerCase() !== "photos" || hasRealNotes()) {
+      clearEmptyMemoryPhotos();
+      return;
+    }
+    await ensurePhotoPool();
+    if (!memoryPhotoPool.length) return;
+    const visible = document.querySelectorAll(`.${CARD_CLASS}`).length;
+    const missing = Math.max(0, getVisibleLimit() - visible);
+    for (let i = 0; i < missing; i += 1) {
+      window.setTimeout(() => { showEmptyMemoryPhoto().catch?.(() => {}); }, i * (window.innerWidth <= 700 ? 0 : 420));
+    }
+  }
+
+  async function update() {
+    if (String(freedomWallConfig?.freedomWallEmptyDisplayMode || "names").toLowerCase() !== "photos" || hasRealNotes()) {
+      clearEmptyMemoryPhotos();
+      return;
+    }
+    await ensurePhotoPool();
+    if (!memoryPhotoPool.length) return;
+    if (!timer) {
+      topUpVisiblePhotos().catch?.(() => {});
+      timer = setInterval(() => { topUpVisiblePhotos().catch?.(() => {}); }, 1400);
+    }
+  }
+
+  const style = document.createElement("style");
+  style.textContent = `
+  .${CARD_CLASS}{
+    position:absolute;
+    z-index:7;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    padding:8px;
+    width:168px;
+    border-radius:14px;
+    background:rgba(255,255,255,.95);
+    border:2px solid rgba(255,255,255,.66);
+    box-shadow:0 12px 24px rgba(0,0,0,.18);
+    animation:fwMemoryCardFloat 6.2s ease forwards;
+    pointer-events:none;
+    transform:rotate(var(--fw-memory-rotate, -2deg));
+    transform-origin:center;
+    overflow:hidden;
+  }
+  .${CARD_CLASS}:nth-of-type(odd){ --fw-memory-rotate: -3deg; }
+  .${CARD_CLASS}:nth-of-type(even){ --fw-memory-rotate: 2deg; }
+  .freedomWallEmptyMemoryPhoto{
+    width:100%;
+    aspect-ratio:1/1;
+    object-fit:cover;
+    border-radius:10px;
+    display:block;
+    background:#ececec;
+  }
+  .freedomWallEmptyMemoryCaption{
+    margin:0;
+    font:700 12px/1.2 Arial,sans-serif;
+    color:#1f2937;
+    text-align:center;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .${CARD_CLASS}[data-theme-group="school"]{
+    background:#fff7a9;
+    border-color:#ebd458;
+    box-shadow:0 12px 20px rgba(0,0,0,.14);
+    border-radius:10px;
+  }
+  .${CARD_CLASS}[data-theme-group="school"]::before{
+    content:'';
+    position:absolute; top:0; left:0; right:0; height:16px;
+    background:linear-gradient(90deg, rgba(255,255,255,.2) 0 10%, rgba(0,0,0,0) 10% 100%);
+  }
+  .${CARD_CLASS}[data-theme-group="weather"]{
+    background:linear-gradient(180deg, rgba(255,255,255,.96), rgba(233,246,255,.96));
+    border-color:#93c5fd;
+    border-radius:18px;
+  }
+  .${CARD_CLASS}[data-theme-group="comic"]{
+    background:#fffef8;
+    border:4px solid #111;
+    box-shadow:6px 6px 0 #111;
+    border-radius:10px;
+  }
+  .${CARD_CLASS}[data-theme-group="comic"] .freedomWallEmptyMemoryCaption{
+    font-family:"Bangers", "Comic Sans MS", cursive; letter-spacing:.04em; color:#111;
+  }
+  .${CARD_CLASS}[data-theme-group="editorial"]{
+    background:#fffef8;
+    border:3px solid #111;
+    border-radius:2px;
+    box-shadow:7px 7px 0 rgba(17,17,17,.92);
+  }
+  .${CARD_CLASS}[data-theme-group="editorial"] .freedomWallEmptyMemoryCaption{
+    font-family:"Trebuchet MS", Arial, sans-serif; text-transform:uppercase; letter-spacing:.05em;
+  }
+  .${CARD_CLASS}[data-theme-group="polaroid"]{
+    border-radius:0;
+    padding:10px 10px 18px;
+    background:#fff;
+    border-color:#f5f5f5;
+  }
+  .${CARD_CLASS}[data-theme-group="cosmic"]{
+    background:rgba(15,23,42,.92);
+    border:1px solid rgba(125,211,252,.75);
+    box-shadow:0 0 24px rgba(56,189,248,.35), 0 12px 24px rgba(0,0,0,.22);
+  }
+  .${CARD_CLASS}[data-theme-group="cosmic"] .freedomWallEmptyMemoryCaption{ color:#e0f2fe; }
+  .${CARD_CLASS}[data-theme-group="glass"]{
+    background:rgba(255,255,255,.35);
+    backdrop-filter:blur(9px);
+    border-color:rgba(255,255,255,.5);
+    box-shadow:0 10px 28px rgba(31,41,55,.18);
+  }
+  .${CARD_CLASS}[data-theme-group="glass"] .freedomWallEmptyMemoryCaption{ color:#0f172a; }
+  .${CARD_CLASS}[data-theme-group="retro-tech"]{
+    background:#f7f7fb;
+    border:3px solid #4c5a88;
+    box-shadow:4px 4px 0 #b5bfd8;
+    border-radius:4px;
+  }
+  .${CARD_CLASS}[data-theme-group="pixel"]{
+    background:#fffbe7;
+    border:4px solid #5d3a1a;
+    box-shadow:0 0 0 3px #ffd54a inset, 6px 6px 0 rgba(48,90,170,.9);
+    border-radius:6px;
+  }
+  .${CARD_CLASS}[data-theme-group="pixel"] .freedomWallEmptyMemoryCaption{ color:#1f4199; font-family:"Luckiest Guy", Arial, sans-serif; }
+  .${CARD_CLASS}[data-theme-group="nature"]{
+    background:#f7fff4;
+    border-color:#9ad8a2;
+    border-radius:16px;
+    box-shadow:0 12px 22px rgba(34,94,44,.16);
+  }
+  .${CARD_CLASS}[data-theme-group="street"]{
+    background:#fff;
+    border:2px dashed #111;
+    box-shadow:0 12px 20px rgba(0,0,0,.22);
+    border-radius:8px;
+  }
+  .${CARD_CLASS}[data-theme-group="filipino"]{
+    background:linear-gradient(180deg, #fff8df, #ffffff);
+    border-color:#f2c94c;
+    box-shadow:0 12px 24px rgba(139,29,29,.16);
+  }
+  @keyframes fwMemoryCardFloat{
+    0%{opacity:0;transform:translateY(14px) scale(.94) rotate(var(--fw-memory-rotate, 0deg));}
+    12%,84%{opacity:1;}
+    100%{opacity:0;transform:translateY(-22px) scale(1) rotate(var(--fw-memory-rotate, 0deg));}
+  }
+  @media (max-width:700px){
+    .${CARD_CLASS}{ width:142px; padding:7px; }
+    .freedomWallEmptyMemoryCaption{ font-size:11px; }
+  }`;
+  document.head.appendChild(style);
+
+  setInterval(() => { update().catch?.(() => {}); }, 1200);
+  window.addEventListener('storage', (event) => {
+    if (event.key === 'sfkMemoriesCacheV4' || event.key === MEMORY_POOL_CACHE_KEY || event.key === LEGACY_MEMORY_POOL_CACHE_KEY) {
+      memoryPhotoPool = [];
+      queue = [];
+      used = [];
+      ensurePhotoPool(true).catch(() => {});
+    }
+  });
+})();;;
