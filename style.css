@@ -40038,3 +40038,229 @@ html.sfkFreedomWallExactExport #homepageEffectLayer.is-freedom-wall-exact-curren
   .homepageEffectLayer[data-freedom-wall-theme="cutout-editorial"] :is(.freedomWallReactionMenu,.freedomWallReplyActionMenu){max-width:calc(100vw - 18px)!important;box-shadow:5px 5px 0 rgba(17,17,17,.14)!important}
   .homepageEffectLayer[data-freedom-wall-theme="cutout-editorial"] .freedomWallReaderNote{max-width:calc(100vw - 20px)!important;box-shadow:8px 8px 0 rgba(17,17,17,.14)!important}
 }
+
+
+/* ===== Super Mario themed SFK #BeKind Wall ===== */
+.homepageFreedomWallScene[data-theme="super-mario"]{
+  --fw-ui-bg:linear-gradient(180deg,#183f9c 0%,#0e2c73 100%);
+  --fw-ui-fg:#fff7de;
+  --fw-ui-muted:#ffe37a;
+  --fw-ui-border:#6f3f1e;
+  --fw-ui-border-width:3px;
+  --fw-ui-accent:#e53935;
+  --fw-ui-accent-fg:#fff7de;
+  --fw-ui-shadow:0 4px 0 #6f3f1e,0 12px 24px rgba(9,28,74,.34);
+  --fw-ui-radius:14px;
+  --fw-ui-font:"Luckiest Guy","Fredoka",Arial,sans-serif;
+}
+.homepageFreedomWallScene[data-theme="super-mario"] .freedomWallBg{
+  background:linear-gradient(180deg,#67c5ff 0%,#9fe8ff 58%,#dff6ff 100%);
+}
+.homepageFreedomWallScene[data-theme="super-mario"] .freedomWallBg::before,
+.homepageFreedomWallScene[data-theme="super-mario"] .freedomWallBg::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+}
+.homepageFreedomWallScene[data-theme="super-mario"] .freedomWallBg::before{
+  background:
+    radial-gradient(circle at 12% 16%, rgba(255,255,255,.95) 0 4%, transparent 4.2%),
+    radial-gradient(circle at 16% 15%, rgba(255,255,255,.95) 0 5.4%, transparent 5.6%),
+    radial-gradient(circle at 20% 16%, rgba(255,255,255,.95) 0 4%, transparent 4.2%),
+    radial-gradient(circle at 70% 22%, rgba(255,255,255,.92) 0 4.4%, transparent 4.6%),
+    radial-gradient(circle at 74% 21%, rgba(255,255,255,.92) 0 5.7%, transparent 5.9%),
+    radial-gradient(circle at 78% 22%, rgba(255,255,255,.92) 0 4.4%, transparent 4.6%),
+    linear-gradient(180deg, transparent 0 67%, #4caf50 67% 78%, #c56a2d 78% 100%);
+}
+.homepageFreedomWallScene[data-theme="super-mario"] .freedomWallBg::after{
+  background:
+    radial-gradient(circle at 14% 79%, #7ed26b 0 7.5%, transparent 7.7%),
+    radial-gradient(circle at 20% 80%, #65bb57 0 9%, transparent 9.2%),
+    radial-gradient(circle at 80% 77%, #7ed26b 0 8%, transparent 8.2%),
+    radial-gradient(circle at 87% 79%, #65bb57 0 10%, transparent 10.2%),
+    linear-gradient(90deg, rgba(0,0,0,0) 0 6%, rgba(111,63,30,.18) 6% 6.7%, rgba(0,0,0,0) 6.7% 12.4%),
+    linear-gradient(0deg, rgba(111,63,30,.32) 0 3px, transparent 3px 100%);
+  background-size:auto,auto,auto,auto,44px 100%,100% 18px;
+  background-position:center center,center center,center center,center center,0 0,0 calc(100% - 54px);
+}
+.homepageFreedomWallScene[data-theme="super-mario"] .freedomWallPromptCard{
+  background:linear-gradient(180deg,#fff7db 0%,#ffe79d 100%)!important;
+  border:4px solid #6f3f1e!important;
+  border-radius:26px!important;
+  box-shadow:0 0 0 4px rgba(255,255,255,.38) inset,0 8px 0 #6f3f1e,0 18px 30px rgba(13,47,117,.24)!important;
+}
+.homepageFreedomWallScene[data-theme="super-mario"] .freedomWallPromptCard::before{
+  background:linear-gradient(90deg,#e53935 0 24%,#ffd54f 24% 48%,#48bb4b 48% 72%,#2e6de0 72% 100%)!important;
+  height:10px!important;
+}
+.homepageFreedomWallScene[data-theme="super-mario"] .freedomWallPromptEyebrow{
+  color:#d64538!important;
+  font-family:"Luckiest Guy","Fredoka",Arial,sans-serif!important;
+  letter-spacing:.12em!important;
+}
+.homepageFreedomWallScene[data-theme="super-mario"] .freedomWallPromptCard h2{
+  color:#173b72!important;
+  font-family:"Luckiest Guy","Fredoka",Arial,sans-serif!important;
+  letter-spacing:.03em!important;
+  text-shadow:2px 2px 0 rgba(255,255,255,.72)!important;
+}
+.homepageFreedomWallScene[data-theme="super-mario"] .freedomWallPromptCard p{
+  color:#7b5c33!important;
+  font-family:"Fredoka",Arial,sans-serif!important;
+  font-weight:800!important;
+}
+.homepageFreedomWallScene[data-theme="super-mario"] .freedomWallNote{
+  border:3px solid #6f3f1e!important;
+  border-radius:18px!important;
+  box-shadow:0 4px 0 rgba(111,63,30,.88),0 12px 22px rgba(11,46,122,.20)!important;
+}
+.homepageFreedomWallScene[data-theme="super-mario"] .freedomWallNote::before{
+  content:"";
+  position:absolute;
+  left:14px;
+  right:14px;
+  top:-7px;
+  height:14px;
+  border-radius:10px;
+  background:linear-gradient(90deg,#ffd54f 0%,#ffe98d 100%);
+  border:3px solid #6f3f1e;
+  box-shadow:0 2px 0 rgba(111,63,30,.65);
+}
+.homepageFreedomWallScene[data-theme="super-mario"] .freedomWallNote p,
+.homepageFreedomWallScene[data-theme="super-mario"] .freedomWallNote small{
+  font-family:"Fredoka",Arial,sans-serif!important;
+}
+.homepageFreedomWallScene[data-theme="super-mario"] .freedomWallNotePin{
+  background:#e53935!important;
+  border:3px solid #fff7de!important;
+  box-shadow:0 0 0 3px #6f3f1e!important;
+}
+.homepageFreedomWallScene[data-theme="super-mario"] .freedomWallAddBtn,
+.homepageFreedomWallScene[data-theme="super-mario"] #freedomWallReaderOpenBtn,
+.homepageFreedomWallScene[data-theme="super-mario"] #freedomWallPromptClose{
+  text-transform:uppercase!important;
+  letter-spacing:.05em!important;
+}
+.homepageEffectLayer.is-freedom-wall[data-freedom-wall-theme="super-mario"]{
+  --fw-close-bg:linear-gradient(180deg,#ffd54f,#ffbf36);
+  --fw-close-fg:#173b72;
+  --fw-close-border:#6f3f1e;
+  --fw-close-shadow:0 4px 0 #6f3f1e,0 10px 20px rgba(11,46,122,.26);
+  --fw-close-radius:14px;
+  --fw-react-bg:#173b72;
+  --fw-react-fg:#fff7de;
+  --fw-react-border:#6f3f1e;
+  --fw-react-chip:#214a9a;
+  --fw-react-accent:#ffd54f;
+}
+.homepageEffectLayer.is-freedom-wall[data-freedom-wall-theme="super-mario"] :is(.freedomWallComposerCard,.freedomWallReplyDialog,.freedomWallReaderToolbar,.freedomWallReaderNav,.freedomWallReaderHelp,.freedomWallReaderEmpty,.freedomWallReactionMenu,.freedomWallReplyActionMenu,.freedomWallMediaSearchDialog){
+  background:linear-gradient(180deg,#fff8dc 0%,#ffe69d 100%)!important;
+  color:#173b72!important;
+  border:3px solid #6f3f1e!important;
+  border-radius:20px!important;
+  box-shadow:0 4px 0 #6f3f1e,0 14px 28px rgba(11,46,122,.24)!important;
+}
+.homepageEffectLayer.is-freedom-wall[data-freedom-wall-theme="super-mario"] :is(.freedomWallComposerHead strong,.freedomWallReaderTitle strong,.freedomWallMediaSearchHead strong,.freedomWallReplyHead strong,.freedomWallReactionMenuTitle,strong#freedomWallReplyTitle){
+  color:#e53935!important;
+  font-family:"Luckiest Guy","Fredoka",Arial,sans-serif!important;
+  letter-spacing:.03em!important;
+}
+.homepageEffectLayer.is-freedom-wall[data-freedom-wall-theme="super-mario"] :is(.freedomWallComposerHead span,.freedomWallReaderTitle span,.freedomWallReaderEmpty>small,.freedomWallReplyHead span,.freedomWallMediaSearchHead span,.freedomWallReactionMenuHint,.freedomWallComposerField small,.freedomWallContrastHint,.freedomWallMediaSelected small,.freedomWallMediaSearchResult small){
+  color:#7b5c33!important;
+  font-family:"Fredoka",Arial,sans-serif!important;
+}
+.homepageEffectLayer.is-freedom-wall[data-freedom-wall-theme="super-mario"] :is(.freedomWallComposerCard label,.freedomWallTextColorField label,.freedomWallFontField label,.freedomWallMediaField label,.freedomWallReplyComposer label,.freedomWallReactionCount b,.freedomWallMediaSearchResult b,.freedomWallMediaSelected strong){
+  color:#173b72!important;
+  font-family:"Luckiest Guy","Fredoka",Arial,sans-serif!important;
+}
+.homepageEffectLayer.is-freedom-wall[data-freedom-wall-theme="super-mario"] :is(.freedomWallComposerCard textarea,.freedomWallComposerCard input,.freedomWallReplyComposer textarea,.freedomWallMediaSearchInput,.freedomWallFontField select){
+  background:#ffffff!important;
+  color:#173b72!important;
+  border:3px solid #2e6de0!important;
+  border-radius:14px!important;
+  box-shadow:inset 0 0 0 2px rgba(255,213,79,.45)!important;
+  font-family:"Fredoka",Arial,sans-serif!important;
+  font-weight:800!important;
+}
+.homepageEffectLayer.is-freedom-wall[data-freedom-wall-theme="super-mario"] :is(.freedomWallComposerCard button,#freedomWallPostBtn,#freedomWallReplyPostBtn,.freedomWallMediaSearchActions button,.freedomWallReactionOption,.freedomWallReplyActionButton,.freedomWallReplyComposer button,.freedomWallReaderToolbar button,.freedomWallReaderNav,.freedomWallMediaSearchResult button){
+  border:3px solid #6f3f1e!important;
+  border-radius:14px!important;
+  font-family:"Luckiest Guy","Fredoka",Arial,sans-serif!important;
+  letter-spacing:.03em!important;
+  box-shadow:0 3px 0 rgba(111,63,30,.82)!important;
+}
+.homepageEffectLayer.is-freedom-wall[data-freedom-wall-theme="super-mario"] :is(#freedomWallPostBtn,#freedomWallReplyPostBtn,.freedomWallMediaSearchActions button:last-child,.freedomWallReaderToolbar button,.freedomWallReaderNav){
+  background:linear-gradient(180deg,#e53935,#c62828)!important;
+  color:#fff7de!important;
+}
+.homepageEffectLayer.is-freedom-wall[data-freedom-wall-theme="super-mario"] :is(.freedomWallComposerHead button,#freedomWallMediaRemove,.freedomWallReactionOption,.freedomWallReplyActionButton,.freedomWallMediaSearchResult button){
+  background:linear-gradient(180deg,#ffd54f,#ffbf36)!important;
+  color:#173b72!important;
+}
+.homepageEffectLayer.is-freedom-wall[data-freedom-wall-theme="super-mario"] :is(.freedomWallColorChip,.freedomWallTextColorChip){
+  border:3px solid #6f3f1e!important;
+  box-shadow:0 2px 0 rgba(111,63,30,.55)!important;
+}
+.homepageEffectLayer.is-freedom-wall[data-freedom-wall-theme="super-mario"] :is(.freedomWallCustomizeToggle,.freedomWallComposerMeta,.freedomWallReplyItem,.freedomWallMediaSelected,.freedomWallMediaSearchResult){
+  border:3px solid rgba(111,63,30,.38)!important;
+  background:rgba(255,255,255,.72)!important;
+  border-radius:16px!important;
+}
+
+
+/* ===== Super Mario readability fix: reaction menu + note readability ===== */
+.homepageEffectLayer[data-freedom-wall-theme="super-mario"] .freedomWallReactionMenu,
+.homepageEffectLayer[data-freedom-wall-theme="super-mario"] .freedomWallReplyActionMenu{
+  background:linear-gradient(180deg,#fff8dc 0%,#ffe69d 100%)!important;
+  color:#173b72!important;
+  border:3px solid #6f3f1e!important;
+  box-shadow:0 4px 0 #6f3f1e,0 14px 28px rgba(11,46,122,.24)!important;
+}
+.homepageEffectLayer[data-freedom-wall-theme="super-mario"] .freedomWallReactionMenuHead strong,
+.homepageEffectLayer[data-freedom-wall-theme="super-mario"] .freedomWallReactionStatus,
+.homepageEffectLayer[data-freedom-wall-theme="super-mario"] .freedomWallNoteActionRow>button>b,
+.homepageEffectLayer[data-freedom-wall-theme="super-mario"] .freedomWallReactionChoices>button>b,
+.homepageEffectLayer[data-freedom-wall-theme="super-mario"] .freedomWallNoteActionRow>button,
+.homepageEffectLayer[data-freedom-wall-theme="super-mario"] .freedomWallReactionChoices>button{
+  color:#173b72!important;
+  font-family:"Luckiest Guy","Fredoka",Arial,sans-serif!important;
+}
+.homepageEffectLayer[data-freedom-wall-theme="super-mario"] .freedomWallReactionMenuHead button,
+.homepageEffectLayer[data-freedom-wall-theme="super-mario"] #freedomWallReactionMenuClose{
+  background:linear-gradient(180deg,#ffd54f,#ffbf36)!important;
+  color:#173b72!important;
+  border:3px solid #6f3f1e!important;
+  box-shadow:0 3px 0 rgba(111,63,30,.82)!important;
+}
+.homepageEffectLayer[data-freedom-wall-theme="super-mario"] .freedomWallReactionChoices>button,
+.homepageEffectLayer[data-freedom-wall-theme="super-mario"] .freedomWallNoteActionRow>button{
+  background:linear-gradient(180deg,#ffd54f,#ffbf36)!important;
+  color:#173b72!important;
+  border:3px solid #6f3f1e!important;
+  box-shadow:0 3px 0 rgba(111,63,30,.82)!important;
+}
+.homepageEffectLayer[data-freedom-wall-theme="super-mario"] .freedomWallReactionChoices>button.is-selected,
+.homepageEffectLayer[data-freedom-wall-theme="super-mario"] .freedomWallNoteActionRow>button:focus-visible,
+.homepageEffectLayer[data-freedom-wall-theme="super-mario"] .freedomWallReactionChoices>button:focus-visible{
+  outline:2px solid #2e6de0!important;
+  outline-offset:2px!important;
+  box-shadow:0 0 0 3px rgba(46,109,224,.22),0 3px 0 rgba(111,63,30,.82)!important;
+}
+.homepageEffectLayer[data-freedom-wall-theme="super-mario"] .freedomWallReactionChoices>button>small,
+.homepageEffectLayer[data-freedom-wall-theme="super-mario"] .freedomWallNoteActionRow>button>small{
+  background:rgba(23,59,114,.12)!important;
+  color:#173b72!important;
+  font-family:"Fredoka",Arial,sans-serif!important;
+  font-weight:900!important;
+}
+.homepageEffectLayer[data-freedom-wall-theme="super-mario"] .freedomWallReactionStatus{
+  color:#7b5c33!important;
+  font-family:"Fredoka",Arial,sans-serif!important;
+  font-weight:800!important;
+}
+.homepageFreedomWallScene[data-theme="super-mario"] .freedomWallNote.has-safe-text p,
+.homepageFreedomWallScene[data-theme="super-mario"] .freedomWallNote.has-safe-text small{
+  color:var(--fw-note-text-color,#173b72)!important;
+  text-shadow:var(--fw-note-text-shadow,0 1px 0 rgba(255,255,255,.35))!important;
+}
