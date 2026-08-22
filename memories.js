@@ -87,6 +87,7 @@ const memoryState = {
   carousel: new Map(),
   auth: null,
   selectedFiles: [],
+  previewObjectUrls: [],
   coverIndex: 0,
   uploadProgress: 0,
   uploadStatus: "",
@@ -4915,13 +4916,23 @@ function restoreMemoryAuth() {
 }
 
 function handleMemoryFiles(event) {
-  const files = Array.from(event.target.files || []).slice(0, MAX_MEDIA_FILES);
+  const incoming = Array.from(event.target.files || []);
+  const seen = new Set();
+  const files = incoming.filter((file) => {
+    const key = `${file.name}|${file.size}|${file.lastModified}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).slice(0, MAX_MEDIA_FILES);
+
   memoryState.selectedFiles = files;
   memoryState.coverIndex = 0;
+  memoryState.previewObjectUrls.forEach((url) => URL.revokeObjectURL(url));
+  memoryState.previewObjectUrls = [];
   renderSelectedMediaPreview();
   renderComposePreview();
 
-  if ((event.target.files || []).length > MAX_MEDIA_FILES) {
+  if (incoming.length > MAX_MEDIA_FILES) {
     showMemoryToast(`Only the first ${MAX_MEDIA_FILES} files will be uploaded.`);
   }
 }
@@ -4938,11 +4949,16 @@ function renderSelectedMediaPreview() {
   const uploadStatus = memoryState.uploadStatus
     ? `<div class="mediaUploadStatus" style="margin:8px 0;padding:8px 10px;border-radius:10px;background:#eef6ff;color:#164e63;font-weight:700;font-size:13px">${escapeHtml(memoryState.uploadStatus)}</div>`
     : "";
+  if (memoryState.previewObjectUrls.length !== memoryState.selectedFiles.length) {
+    memoryState.previewObjectUrls.forEach((url) => URL.revokeObjectURL(url));
+    memoryState.previewObjectUrls = memoryState.selectedFiles.map((file) => URL.createObjectURL(file));
+  }
+
   container.innerHTML = `<div class="mediaSelectionCounter">${memoryState.selectedFiles.length}/${MAX_MEDIA_FILES} photos selected</div>${uploadStatus}` + memoryState.selectedFiles.map((file, index) => {
-    const url = URL.createObjectURL(file);
+    const url = memoryState.previewObjectUrls[index];
     const preview = file.type.startsWith("video/")
       ? `<video src="${escapeAttr(url)}" muted></video>`
-      : `<img src="${escapeAttr(url)}" alt="" />`;
+      : `<img loading="lazy" decoding="async" src="${escapeAttr(url)}" alt="" />`;
 
     return `
       <div class="previewItem ${index === memoryState.coverIndex ? "isCover" : ""}" data-preview-index="${index}">
@@ -5190,22 +5206,41 @@ async function submitMemoryPost(event) {
 
       try {
         updateMemoryUploadProgress(0, mediaFiles.length, "Uploading photos...");
-        const uploadResult = await postMemoryApi("memoryUploadAssets", {
-          Role: memoryState.auth.role,
-          MemoryID: memoryId,
-          MediaFiles: mediaFiles,
-          ...(uploadSessionId ? { UploadSessionID: uploadSessionId } : {})
-        });
+        // Upload in small controlled batches instead of sending 50 photos at once.
+        // This keeps the browser responsive and avoids large single requests.
+        const uploadBatchSize = 5;
+        const uploadedParts = [];
+        for (let start = 0; start < mediaFiles.length; start += uploadBatchSize) {
+          const batch = mediaFiles.slice(start, start + uploadBatchSize);
+          const batchNumber = Math.floor(start / uploadBatchSize) + 1;
+          const totalBatches = Math.ceil(mediaFiles.length / uploadBatchSize);
+          message.textContent = `Uploading photo batch ${batchNumber}/${totalBatches}...`;
+          updateMemoryUploadProgress(start, mediaFiles.length, "Uploading photos...");
 
-        if (!uploadResult.success) {
-          if (isUnsupportedMemoryApiType(uploadResult.message)) {
-            canUseSplitPhotoUpload = false;
-            uploadedMedia = [];
-          } else {
+          const uploadResult = await postMemoryApi("memoryUploadAssets", {
+            Role: memoryState.auth.role,
+            MemoryID: memoryId,
+            MediaFiles: batch,
+            ...(uploadSessionId ? { UploadSessionID: uploadSessionId } : {})
+          });
+
+          if (!uploadResult.success) {
+            if (isUnsupportedMemoryApiType(uploadResult.message)) {
+              canUseSplitPhotoUpload = false;
+              uploadedMedia = [];
+              break;
+            }
             throw new Error(uploadResult.message || "Photo attachment could not be uploaded.");
           }
-        } else {
-          uploadedMedia = Array.isArray(uploadResult.media) ? uploadResult.media : [];
+
+          if (Array.isArray(uploadResult.media)) {
+            uploadedParts.push(...uploadResult.media);
+          }
+          updateMemoryUploadProgress(Math.min(start + batch.length, mediaFiles.length), mediaFiles.length, "Uploading photos...");
+        }
+
+        if (canUseSplitPhotoUpload) {
+          uploadedMedia = uploadedParts;
         }
       } catch (uploadError) {
         if (isUnsupportedMemoryApiType(uploadError.message)) {
@@ -5254,7 +5289,15 @@ async function submitMemoryPost(event) {
   }
 }
 
+const memoryPreparedMediaCache = new Map();
+
 async function prepareMediaFile(file) {
+  const cacheKey = `${file.name}|${file.size}|${file.lastModified}`;
+  if (memoryPreparedMediaCache.has(cacheKey)) {
+    return memoryPreparedMediaCache.get(cacheKey);
+  }
+
+  const task = (async () => {
   if (!file.type.startsWith("image/") || file.type === "image/gif") {
     return fileToPayload(file);
   }
@@ -5270,6 +5313,15 @@ async function prepareMediaFile(file) {
     mimeType: "image/jpeg",
     data: dataUrl.split(",")[1]
   };
+  })();
+
+  memoryPreparedMediaCache.set(cacheKey, task);
+  try {
+    return await task;
+  } catch (error) {
+    memoryPreparedMediaCache.delete(cacheKey);
+    throw error;
+  }
 }
 
 async function compressImageForFirestore(image) {
@@ -5335,6 +5387,8 @@ function resetMemoryForm() {
   const youtubeMessage = document.getElementById("youtubeSongSearchMessage");
   if (youtubeMessage) youtubeMessage.textContent = "";
   memoryState.selectedFiles = [];
+  memoryState.previewObjectUrls.forEach((url) => URL.revokeObjectURL(url));
+  memoryState.previewObjectUrls = [];
   memoryState.coverIndex = 0;
   memoryState.uploadProgress = 0;
   memoryState.uploadStatus = "";
