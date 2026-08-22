@@ -1936,6 +1936,20 @@ function getFreedomWallUiCopy(theme = freedomWallConfig?.freedomWallTheme) {
   };
 }
 
+function formatFreedomWallCountInline(noteCount = freedomWallLastRenderedCount, mode = "normal") {
+  const safeCount = Math.max(0, Number(noteCount) || 0);
+  const safeActive = Math.max(1, Number(freedomWallOnlineActiveCount) || 1);
+  const notesLabel = `💌 ${safeCount} ${safeCount === 1 ? "Note" : "Notes"}`;
+  const activeLabel = `🟢 ${safeActive} Active`;
+  return `${notesLabel} | ${activeLabel}`;
+}
+
+function updateFreedomWallCountLabel(noteCount = freedomWallLastRenderedCount, mode = "normal") {
+  const layer = document.getElementById("homepageEffectLayer");
+  const count = layer?.querySelector?.("#freedomWallCount");
+  if (count) count.textContent = formatFreedomWallCountInline(noteCount, mode);
+}
+
 function buildFreedomWallCutoutMarkup(text = "", mode = "word") {
   const source = String(text || "").trim();
   if (!source) return "";
@@ -2011,7 +2025,7 @@ function applyFreedomWallThemeCopy(theme = freedomWallConfig?.freedomWallTheme) 
   const mediaRemove = layer.querySelector('#freedomWallMediaRemove');
   const postBtn = layer.querySelector('#freedomWallPostBtn');
   if (brandStrong) applyFreedomWallCutoutBrand(brandStrong, copy.brand);
-  if (brandSpan && !freedomWallLastRenderedCount) brandSpan.textContent = copy.live;
+  if (brandSpan) updateFreedomWallCountLabel(freedomWallLastRenderedCount, 'normal');
   if (eyebrow) eyebrow.textContent = copy.promptEyebrow;
   if (promptClose) promptClose.setAttribute('aria-label', copy.closePromptAria);
   if (addBtn) addBtn.setAttribute('aria-label', copy.addButtonAria);
@@ -2091,6 +2105,7 @@ let freedomWallSpotifySearchBusy = false;
 let freedomWallActiveSpotifyPlayback = null;
 let freedomWallMediaPrepareToken = 0;
 let freedomWallLastRenderedCount = 0;
+let freedomWallOnlineActiveCount = 1;
 let freedomWallNotesCache = [];
 // v483: fingerprint the last painted wall so Firestore/cache callbacks that
 // contain the same notes do not repaint the entire phone viewport.
@@ -7860,7 +7875,7 @@ function renderFreedomWallNotes(notes = []) {
   // Do not touch card classes/styles/layout unless something visible changed.
   const renderSignature = buildFreedomWallRenderSignature(sorted);
   if (renderSignature === freedomWallLastRenderSignature && stage.childElementCount) {
-    if (count) count.textContent = getFreedomWallUiCopy(freedomWallConfig?.freedomWallTheme).formatCount(sorted.length, "normal");
+    if (count) updateFreedomWallCountLabel(sorted.length, "normal");
     updateFreedomWallEmptyState();
     syncFreedomWallReaderFromNotes({ preserveProgress:true });
     return;
@@ -7997,7 +8012,7 @@ function renderFreedomWallNotes(notes = []) {
 
   if (count) {
     const displayCount = sorted.length >= FREEDOM_WALL_MAX_RENDERED_NOTES ? sorted.length : sorted.length;
-    count.textContent = getFreedomWallUiCopy(freedomWallConfig?.freedomWallTheme).formatCount(displayCount, "normal");
+    updateFreedomWallCountLabel(displayCount, "normal");
   }
   updateFreedomWallEmptyState();
   updateFreedomWallWelcomeSparks(sorted.length);
@@ -8531,7 +8546,7 @@ async function startFreedomWallLive() {
   if (token !== freedomWallListenToken || !freedomWallConfig) return;
   if (!db) {
     const count = document.getElementById("homepageEffectLayer")?.querySelector("#freedomWallCount");
-    if (count) count.textContent = getFreedomWallUiCopy(freedomWallConfig?.freedomWallTheme).formatCount(freedomWallLastRenderedCount, "initial");
+    if (count) updateFreedomWallCountLabel(freedomWallLastRenderedCount, "initial");
     scheduleFreedomWallLiveRetry();
     return;
   }
@@ -8601,7 +8616,7 @@ async function startFreedomWallLive() {
       try { freedomWallUnsubscribe?.(); } catch (unsubscribeError) {}
       freedomWallUnsubscribe = null;
       const count = document.getElementById("homepageEffectLayer")?.querySelector("#freedomWallCount");
-      if (count) count.textContent = getFreedomWallUiCopy(freedomWallConfig?.freedomWallTheme).formatCount(freedomWallLastRenderedCount, "connecting");
+      if (count) updateFreedomWallCountLabel(freedomWallLastRenderedCount, "connecting");
       scheduleFreedomWallLiveRetry();
     });
   } catch (error) {
@@ -16994,4 +17009,61 @@ if (document.readyState === "loading") {
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', tick, { once: true });
   else tick();
   watchTimer = window.setInterval(tick, 1200);
+})();
+
+
+/* ACTIVE USER COUNT ONLY - PRESERVE EXISTING SPARK LOGIC */
+(() => {
+  const COLLECTION = 'freedomWallOnlineUsers';
+  let heartbeatTimer = null;
+  let presenceUnsubscribe = null;
+
+  function getVisitorId(){
+    let id='';
+    try { id=localStorage.getItem('sfkFreedomWallVisitorId') || ''; } catch(e){}
+    if(!id){
+      id='fw-'+Math.random().toString(36).slice(2)+'-'+Date.now();
+      try { localStorage.setItem('sfkFreedomWallVisitorId',id); } catch(e){}
+    }
+    return id;
+  }
+
+  async function start(){
+    const db=await waitForClassBoardFirestore(10000);
+    if(!db){
+      freedomWallOnlineActiveCount = 1;
+      updateFreedomWallCountLabel();
+      return;
+    }
+
+    const ref=db.collection(COLLECTION).doc(getVisitorId());
+    const beat=()=>ref.set({
+      LastSeen: firebase.firestore.FieldValue.serverTimestamp(),
+      Page:'FreedomWall'
+    },{merge:true}).catch(()=>{});
+
+    await beat();
+    heartbeatTimer=setInterval(beat,15000);
+    updateFreedomWallCountLabel();
+
+    presenceUnsubscribe=db.collection(COLLECTION).onSnapshot((snap)=>{
+      const now=Date.now();
+      const active=snap.docs.filter(doc=>{
+        const t=doc.data()?.LastSeen?.toMillis?.() || 0;
+        return !t || now-t < 45000;
+      }).length;
+      freedomWallOnlineActiveCount = Math.max(active,1);
+      updateFreedomWallCountLabel();
+    },()=>{
+      freedomWallOnlineActiveCount = 1;
+      updateFreedomWallCountLabel();
+    });
+
+    window.addEventListener('beforeunload', () => {
+      try { ref.delete(); } catch(e){}
+    }, { once:true });
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',start,{once:true});
+  else start();
 })();
