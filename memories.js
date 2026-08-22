@@ -5240,7 +5240,19 @@ async function submitMemoryPost(event) {
         }
 
         if (canUseSplitPhotoUpload) {
-          uploadedMedia = uploadedParts;
+          const seenMediaKeys = new Set();
+          uploadedMedia = uploadedParts.filter((item) => {
+            const key = String(
+              item?.fileId ||
+              item?.id ||
+              item?.url ||
+              item?.viewerUrl ||
+              JSON.stringify(item)
+            );
+            if (!key || seenMediaKeys.has(key)) return false;
+            seenMediaKeys.add(key);
+            return true;
+          });
         }
       } catch (uploadError) {
         if (isUnsupportedMemoryApiType(uploadError.message)) {
@@ -5256,6 +5268,14 @@ async function submitMemoryPost(event) {
     message.textContent = mediaFiles.length > 0 && !canUseSplitPhotoUpload
       ? "Saving this memory using compatibility upload..."
       : "Saving this memory...";
+
+    const finalUploadedMediaKeys = new Set();
+    uploadedMedia = (Array.isArray(uploadedMedia) ? uploadedMedia : []).filter((item) => {
+      const key = String(item?.fileId || item?.id || item?.url || item?.viewerUrl || JSON.stringify(item));
+      if (!key || finalUploadedMediaKeys.has(key)) return false;
+      finalUploadedMediaKeys.add(key);
+      return true;
+    });
 
     const payload = {
       Role: memoryState.auth.role,
@@ -6069,7 +6089,7 @@ async function directCreateMemory(db, payload, role) {
     uploadedMedia = Array.isArray(uploaded.media) ? uploaded.media : [];
   }
 
-  const media = suppliedMedia.concat(uploadedMedia).filter(Boolean).slice(0, MAX_MEDIA_FILES);
+  const media = dedupeMemoryMediaClient(suppliedMedia.concat(uploadedMedia).filter(Boolean)).slice(0, MAX_MEDIA_FILES);
   const music = directBuildMemoryMusic(payload);
   const now = new Date();
   const postedBy = String(payload.PostedBy || "SFK").trim() || "SFK";
@@ -6102,6 +6122,20 @@ async function directCreateMemory(db, payload, role) {
 
   await db.collection("memories").doc(id).set(doc, { merge: true });
   return { success: true, id, memoryId: id, message: "Memory shared.", mode: "firestore-direct-no-billing" };
+}
+
+function dedupeMemoryMediaClient(items) {
+  const seen = new Set();
+  return (Array.isArray(items) ? items : []).filter((item) => {
+    if (!item) return false;
+    const key = [item.fileId, item.id, item.url, item.viewerUrl, item.name]
+      .map((v) => String(v || "").trim())
+      .filter(Boolean)
+      .join("|");
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 async function directSaveMemoryMediaFile(db, memoryId, file, index) {
