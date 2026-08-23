@@ -17351,7 +17351,7 @@ if (document.readyState === "loading") {
   }
 
   function getVisibleLimit() {
-    if (window.innerWidth <= 700) return 2;
+    if (window.innerWidth <= 700) return 3;
     return 4;
   }
 
@@ -17458,7 +17458,8 @@ if (document.readyState === "loading") {
         'bottom-right': { leftMin: Math.max(minLeft, hostRect.width * 0.55), leftMax: maxLeft, topMin: bottomBandStart, topMax: maxTop }
       };
 
-      let preferredZones = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+      let preferredZones = ['top-left', 'top-right', 'bottom-left', 'bottom-right']
+        .sort(() => Math.random() - 0.5);
       if (existingZones.length === 1) {
         const first = existingZones[0];
         const oppositeMap = {
