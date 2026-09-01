@@ -28842,6 +28842,15 @@ html.sfkHomepageBlackSymbioteActive body > *:not(script):not(style):not(#homepag
  .ninjaMoon{right:4%;top:10%;scale:.8}.ninjaLeap{scale:.72}.roof-b{left:28%}
 }
 
+/* v550: absolute empty-wall guard. Names, memories and the empty card can
+   never remain visible once the active Freedom Wall contains a real note. */
+.homepageEffectLayer.is-freedom-wall.has-freedom-wall-notes :is(
+  #freedomWallWelcomeSparks,
+  .freedomWallKindnessSpark,
+  .freedomWallEmptyMemoryPhotoCard,
+  #freedomWallEmptyState
+){display:none!important;visibility:hidden!important;opacity:0!important;pointer-events:none!important}
+
 
 /* SOLAR SYSTEM: all planets, orbiting, interactive parallax */
 .homepageEffectLayer.is-solar-system{--solar-pointer-x:0px;--solar-pointer-y:0px}
@@ -40263,4 +40272,383 @@ html.sfkFreedomWallExactExport #homepageEffectLayer.is-freedom-wall-exact-curren
 .homepageFreedomWallScene[data-theme="super-mario"] .freedomWallNote.has-safe-text small{
   color:var(--fw-note-text-color,#173b72)!important;
   text-shadow:var(--fw-note-text-shadow,0 1px 0 rgba(255,255,255,.35))!important;
+}
+
+/* ===== v548 Ocean Aquarium / Underwater Freedom Wall ===== */
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallBg{
+  background:
+    radial-gradient(ellipse at 50% -8%,rgba(230,255,255,.58),transparent 34%),
+    linear-gradient(180deg,#52dbe7 0%,#1599bb 43%,#075985 73%,#043b60 100%);
+}
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallBg::before{
+  background:
+    linear-gradient(105deg,transparent 8%,rgba(224,255,255,.12) 18%,transparent 29%),
+    linear-gradient(76deg,transparent 37%,rgba(224,255,255,.09) 47%,transparent 58%),
+    radial-gradient(circle,rgba(226,255,255,.7) 0 2px,transparent 2.8px) 12px 18px/76px 91px,
+    radial-gradient(circle,rgba(226,255,255,.45) 0 4px,transparent 4.8px) 35px 51px/133px 147px;
+  animation:fwOceanLight 9s ease-in-out infinite alternate;
+}
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallBg::after{
+  inset:auto 0 0;height:20%;
+  background:
+    radial-gradient(ellipse at 7% 100%,#2f9c73 0 8%,transparent 8.5%),
+    radial-gradient(ellipse at 19% 107%,#ff8f70 0 7%,transparent 7.5%),
+    radial-gradient(ellipse at 84% 106%,#38a87a 0 11%,transparent 11.5%),
+    radial-gradient(ellipse at 94% 103%,#f4b663 0 7%,transparent 7.5%),
+    linear-gradient(180deg,transparent 0 45%,rgba(226,197,128,.55) 46% 100%);
+}
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallCloud{
+  display:block;opacity:.42;width:28px;height:28px;border:2px solid rgba(235,255,255,.75);
+  background:rgba(209,249,255,.18);filter:none;box-shadow:22px -34px 0 -7px rgba(213,250,255,.24),44px -73px 0 -10px rgba(228,255,255,.20);
+  animation:fwOceanBubble 8s ease-in-out infinite;
+}
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallCloud::before,
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallCloud::after{display:none}
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .fw-cloud-a{left:8%;top:70%}
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .fw-cloud-b{left:48%;top:78%;animation-delay:-3s}
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .fw-cloud-c{right:10%;top:64%;animation-delay:-5.5s}
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallBrand{
+  background:rgba(5,70,101,.78);color:#f0feff;border-color:rgba(194,250,255,.34);box-shadow:0 10px 26px rgba(1,38,67,.28);backdrop-filter:blur(10px);
+}
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallBrand span{color:#bfeff5}
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallPromptCard{
+  background:linear-gradient(160deg,rgba(239,253,255,.96),rgba(202,241,246,.94));
+  border:2px solid rgba(106,206,219,.72);border-radius:30px;
+  box-shadow:0 18px 42px rgba(0,48,81,.30),inset 0 0 0 1px rgba(255,255,255,.72);
+}
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallPromptCard::before{background:linear-gradient(90deg,#22b8cf,#6ee7d5,#ff8f70)}
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallPromptEyebrow{color:#087a91;font-family:"Trebuchet MS",Arial,sans-serif;letter-spacing:.15em}
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallPromptCard h2,
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallNote p{font-family:"Trebuchet MS",Arial,sans-serif;color:#083c5a;font-weight:900}
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallPromptCard p,
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallNote small{font-family:"Trebuchet MS",Arial,sans-serif;color:#39738a;font-weight:800}
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallNote{
+  border:2px solid rgba(43,163,185,.36);border-radius:22px 22px 16px 22px;
+  box-shadow:0 13px 28px rgba(0,52,84,.24),inset 0 2px 0 rgba(255,255,255,.58);
+}
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallNote::after{border-width:0 0 24px 24px;border-color:transparent transparent rgba(20,142,170,.14) transparent}
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallNotePin{background:#ff8067;box-shadow:0 0 0 3px rgba(255,255,255,.5),0 3px 7px rgba(0,64,92,.28)}
+.homepageEffectLayer.is-freedom-wall[data-freedom-wall-theme="ocean-aquarium"]{
+  --fw-close-bg:linear-gradient(180deg,#e9fdff,#bcecf2);--fw-close-fg:#07536f;--fw-close-border:#4fb8ca;--fw-close-shadow:0 9px 22px rgba(1,55,83,.28);
+  --fw-react-bg:#eafcff;--fw-react-fg:#083c5a;--fw-react-border:#5bb8c9;--fw-react-chip:#d9f6f8;--fw-react-accent:#ff8067;
+}
+.homepageEffectLayer.is-freedom-wall[data-freedom-wall-theme="ocean-aquarium"] :is(.freedomWallComposerCard,.freedomWallReplyDialog,.freedomWallMediaSearchDialog,.freedomWallReaderToolbar,.freedomWallReaderHelp,.freedomWallReaderEmpty){
+  background:linear-gradient(165deg,rgba(241,254,255,.98),rgba(210,243,247,.97))!important;color:#083c5a!important;border-color:#66becd!important;
+}
+.homepageEffectLayer.is-freedom-wall[data-freedom-wall-theme="ocean-aquarium"] :is(#freedomWallPostBtn,#freedomWallReplyPostBtn,.freedomWallReaderToolbar button,.freedomWallReaderNav){
+  background:linear-gradient(180deg,#ff987f,#ef6f59)!important;color:#fff!important;border-color:#ca5848!important;
+}
+@keyframes fwOceanBubble{0%{transform:translateY(32px) scale(.72);opacity:.12}45%{opacity:.46}100%{transform:translateY(-210px) scale(1.08);opacity:0}}
+@keyframes fwOceanLight{from{transform:translateX(-1.5%);opacity:.72}to{transform:translateX(1.5%);opacity:1}}
+@media (prefers-reduced-motion:reduce){.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallBg::before,.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallCloud{animation:none!important}}
+
+/* ===== v549 Complete Ocean Aquarium UI system ===== */
+.homepageFreedomWallScene[data-theme="ocean-aquarium"]{
+  --fw-ui-bg:linear-gradient(165deg,rgba(236,253,255,.96),rgba(190,237,244,.94));
+  --fw-ui-fg:#073b59;
+  --fw-ui-muted:#39758b;
+  --fw-ui-border:rgba(70,177,196,.72);
+  --fw-ui-accent:#ff876f;
+  --fw-ui-accent-fg:#fff;
+  --fw-ui-shadow:0 12px 28px rgba(1,55,83,.27),inset 0 1px 0 rgba(255,255,255,.78);
+  --fw-ui-radius:20px;
+  --fw-ui-border-width:2px;
+  --fw-ui-font:"Trebuchet MS","Segoe UI",Arial,sans-serif;
+}
+.homepageEffectLayer.is-freedom-wall[data-freedom-wall-theme="ocean-aquarium"]{
+  --fw-ocean-deep:#063f63;
+  --fw-ocean-mid:#087c9d;
+  --fw-ocean-teal:#21b7c8;
+  --fw-ocean-light:#eafcff;
+  --fw-ocean-panel:#d7f5f8;
+  --fw-ocean-line:#5ab9c9;
+  --fw-ocean-coral:#ff8068;
+  --fw-ocean-coral-dark:#d85f4c;
+  --fw-ocean-sand:#ffe5b0;
+  --fw-react-bg:linear-gradient(165deg,#effdff,#cceff3);
+  --fw-react-fg:#073b59;
+  --fw-react-border:#59b8c8;
+  --fw-react-chip:#ddf7f9;
+  --fw-react-accent:#ff8068;
+  font-family:"Trebuchet MS","Segoe UI",Arial,sans-serif!important;
+}
+
+/* Complete note card: shell shape, watery surface, coral pin and bubbles. */
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallNote{
+  overflow:visible!important;
+  padding-top:25px!important;
+  background:
+    radial-gradient(circle at 14% 13%,rgba(255,255,255,.86) 0 3px,transparent 4px),
+    radial-gradient(circle at 22% 7%,rgba(255,255,255,.58) 0 2px,transparent 3px),
+    linear-gradient(160deg,rgba(255,255,255,.72),rgba(205,246,250,.30) 44%,rgba(113,213,225,.20)),
+    color-mix(in srgb,var(--fw-note-bg,#c7eaff) 58%,#dff9fb 42%)!important;
+  border:2px solid color-mix(in srgb,var(--fw-note-bg,#7ddbe7) 35%,#319eb3 65%)!important;
+  border-radius:28px 28px 20px 28px!important;
+  box-shadow:0 15px 28px rgba(0,55,87,.24),inset 0 2px 0 rgba(255,255,255,.82),inset 0 -8px 18px rgba(20,150,174,.11)!important;
+}
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallNote::before{
+  content:""!important;display:block!important;position:absolute!important;right:15px!important;top:10px!important;
+  width:9px!important;height:9px!important;border:2px solid rgba(255,255,255,.78)!important;border-radius:50%!important;
+  background:rgba(188,241,247,.34)!important;box-shadow:13px -5px 0 -3px rgba(255,255,255,.60),-12px 7px 0 -3px rgba(255,255,255,.54)!important;
+  opacity:1!important;transform:none!important;
+}
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallNote::after{
+  content:""!important;right:-2px!important;bottom:-2px!important;width:28px!important;height:24px!important;
+  border:0!important;border-radius:80% 0 75% 0!important;
+  background:color-mix(in srgb,var(--fw-note-bg,#83d9e3) 46%,#3aaec1 54%)!important;
+  clip-path:polygon(0 0,100% 0,100% 100%,45% 63%)!important;opacity:.70!important;
+}
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallNotePin{
+  width:13px!important;height:9px!important;top:8px!important;border-radius:65% 35% 65% 35%!important;
+  background:linear-gradient(135deg,#ffad8e,#f26958)!important;border:1px solid rgba(169,64,49,.38)!important;
+  box-shadow:0 0 0 3px rgba(255,255,255,.48),0 4px 8px rgba(0,67,92,.25)!important;
+  transform:rotate(-12deg)!important;
+}
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallNote.has-safe-text>p,
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallNote.has-safe-text>small{
+  color:var(--fw-note-text-color,#083c5a)!important;
+  text-shadow:var(--fw-note-text-shadow,0 1px 0 rgba(255,255,255,.48))!important;
+  font-family:inherit;
+}
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallNoteMedia{
+  border:2px solid rgba(51,155,177,.34)!important;border-radius:16px!important;
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.52),0 8px 16px rgba(0,65,93,.14)!important;
+}
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallReactionSummary.is-note .freedomWallReactionCount,
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] .freedomWallReplyCount{
+  background:linear-gradient(180deg,#f0fdff,#c9eff3)!important;color:#073b59!important;
+  border:1px solid #65bccb!important;border-radius:999px!important;box-shadow:0 5px 12px rgba(0,75,101,.13)!important;
+}
+
+/* Prompt, empty state, badge and primary wall controls. */
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallPromptCard,
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallEmptyState{
+  background:
+    radial-gradient(circle at 9% 16%,rgba(255,255,255,.62) 0 4px,transparent 5px),
+    linear-gradient(160deg,rgba(242,254,255,.97),rgba(201,241,246,.95))!important;
+  color:#073b59!important;border:2px solid #63bdcc!important;border-radius:30px!important;
+  box-shadow:0 20px 44px rgba(0,50,82,.28),inset 0 2px 0 rgba(255,255,255,.84)!important;
+}
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallEmptyState span{
+  background:linear-gradient(145deg,#7de1e9,#2bb1c4)!important;color:#fff!important;border:2px solid #fff!important;border-radius:50%!important;
+}
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallEmptyState :is(strong,p){color:#073b59!important;font-family:var(--fw-ui-font)!important}
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallPromptClose,
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallReaderOpenBtn{
+  background:linear-gradient(180deg,#effdff,#bfeaf0)!important;color:#07506c!important;border:1px solid #58afbf!important;
+}
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallAddBtn{
+  background:linear-gradient(165deg,rgba(240,254,255,.97),rgba(197,240,245,.96))!important;
+  color:#073b59!important;border:2px solid #57b8c8!important;border-radius:999px!important;
+  box-shadow:0 12px 26px rgba(0,57,84,.27),inset 0 2px 0 #fff!important;
+}
+.homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallAddBtn span{
+  background:linear-gradient(180deg,#ff9c83,#f16d58)!important;color:#fff!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 4px 9px rgba(182,69,52,.25)!important;
+}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] .freedomWallGestureHint{
+  background:rgba(4,63,95,.84)!important;color:#dffbff!important;border:1px solid rgba(137,229,238,.40)!important;
+  box-shadow:0 8px 20px rgba(0,39,66,.24)!important;backdrop-filter:blur(9px)!important;
+}
+
+/* All modal backdrops. */
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] :is(.freedomWallComposer,.freedomWallReplyThread,.freedomWallMediaSearchModal){
+  background:radial-gradient(circle at 50% 12%,rgba(77,211,226,.20),transparent 38%),rgba(1,40,67,.74)!important;
+  backdrop-filter:blur(8px) saturate(120%)!important;-webkit-backdrop-filter:blur(8px) saturate(120%)!important;
+}
+
+/* Composer, replies, reaction popup, media popup and reader panels. */
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] :is(
+  .freedomWallComposerCard,.freedomWallReplyDialog,.freedomWallReactionMenu,.freedomWallReplyActionMenu,
+  .freedomWallMediaSearchDialog,.freedomWallReaderToolbar,.freedomWallReaderHelp,.freedomWallReaderEmpty
+){
+  background:
+    radial-gradient(circle at 92% 8%,rgba(255,255,255,.62) 0 4px,transparent 5px),
+    linear-gradient(165deg,#effdff,#d3f3f6)!important;
+  color:#073b59!important;border:2px solid #58b6c6!important;border-radius:22px!important;
+  box-shadow:0 22px 54px rgba(0,37,63,.34),inset 0 2px 0 rgba(255,255,255,.88)!important;
+  font-family:"Trebuchet MS","Segoe UI",Arial,sans-serif!important;
+}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] :is(
+  .freedomWallComposerHead,.freedomWallReplyHead,.freedomWallMediaSearchDialogHead
+){
+  border-bottom-color:rgba(69,167,184,.30)!important;
+}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] :is(
+  .freedomWallComposerHead strong,.freedomWallReplyHead strong,.freedomWallMediaSearchDialogHead strong,
+  .freedomWallReaderTitle strong,.freedomWallReactionMenuHead strong
+){color:#063f63!important;font-family:"Trebuchet MS","Segoe UI",Arial,sans-serif!important;letter-spacing:-.025em}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] :is(
+  .freedomWallComposerHead span,.freedomWallReplyHead span,.freedomWallMediaSearchDialogHead span,
+  .freedomWallReaderCounter,.freedomWallReaderHelp,.freedomWallReplyStatus,.freedomWallReactionStatus,
+  .freedomWallCustomizationHint,.freedomWallMediaFieldHead small,.freedomWallCustomizeToggleText small
+){color:#39758b!important;font-family:"Trebuchet MS","Segoe UI",Arial,sans-serif!important}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] :is(
+  .freedomWallComposerCard label,.freedomWallReplyIdentity label,.freedomWallMediaSearchWrap>label,
+  .freedomWallMediaTypeWrap label,.freedomWallYouTubeWrap label,.freedomWallSpotifyWrap>label,
+  .freedomWallCustomizeToggleText strong,.freedomWallCustomizerTrigger>span:first-child
+){color:#07506c!important;font-family:"Trebuchet MS","Segoe UI",Arial,sans-serif!important}
+
+/* Inputs, selects, search bars and text areas. */
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] :is(
+  .freedomWallComposerCard input,.freedomWallComposerCard textarea,.freedomWallComposerCard select,
+  .freedomWallReplyForm input,.freedomWallReplyForm textarea,.freedomWallMediaSearchLine input,
+  .freedomWallMediaSearchDialogBar input,.freedomWallYouTubeWrap input,.freedomWallSpotifySearchLine input
+){
+  background:rgba(247,254,255,.94)!important;color:#073b59!important;border:2px solid #8bcdd7!important;
+  border-radius:13px!important;box-shadow:inset 0 2px 5px rgba(0,77,105,.06)!important;
+  font-family:"Trebuchet MS","Segoe UI",Arial,sans-serif!important;
+}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] :is(
+  .freedomWallComposerCard input,.freedomWallComposerCard textarea,.freedomWallReplyForm input,
+  .freedomWallReplyForm textarea,.freedomWallMediaSearchLine input,.freedomWallMediaSearchDialogBar input
+)::placeholder{color:#6d9cac!important}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] :is(input,textarea,select):focus{
+  outline:none!important;border-color:#20aabe!important;box-shadow:0 0 0 3px rgba(31,174,193,.18),inset 0 2px 5px rgba(0,77,105,.05)!important;
+}
+
+/* Close, secondary and primary action buttons. */
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] :is(
+  .freedomWallComposerHead button,.freedomWallReplyHead>button,.freedomWallMediaSearchDialogHead button,
+  #freedomWallReactionMenuClose,#freedomWallReplyCancelParent,.freedomWallYoutubeViewerClose
+){
+  background:linear-gradient(180deg,#effdff,#bfeaf0)!important;color:#07506c!important;
+  border:1px solid #59afbe!important;border-radius:50%!important;box-shadow:0 5px 12px rgba(0,73,98,.14)!important;
+}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] :is(
+  #freedomWallPostBtn,#freedomWallReplySend,.freedomWallMediaSearchDialogBar button,
+  .freedomWallMediaSearchLine button,.freedomWallSpotifySearchLine button,.freedomWallReaderToolbarActions>button,
+  .freedomWallReaderNav
+){
+  background:linear-gradient(180deg,#ff9a80,#ef6e59)!important;color:#fff!important;
+  border:2px solid #d45f4e!important;border-radius:14px!important;
+  box-shadow:0 5px 0 #bd5849,0 9px 17px rgba(174,66,50,.18)!important;
+  font-family:"Trebuchet MS","Segoe UI",Arial,sans-serif!important;font-weight:900!important;
+}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] :is(
+  #freedomWallPostBtn,#freedomWallReplySend,.freedomWallMediaSearchDialogBar button,
+  .freedomWallMediaSearchLine button,.freedomWallReaderToolbarActions>button,.freedomWallReaderNav
+):active{transform:translateY(2px)!important;box-shadow:0 2px 0 #bd5849,0 5px 10px rgba(174,66,50,.16)!important}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] .freedomWallComposerFooter{
+  background:linear-gradient(180deg,#e8fafc,#d3f2f5)!important;border-top:1px solid rgba(70,171,188,.30)!important;
+}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] .freedomWallComposerFooter span{color:#39758b!important}
+
+/* Note customization becomes an underwater control panel. */
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] :is(.freedomWallCustomizePanel,.freedomWallMediaField){
+  background:rgba(209,243,247,.72)!important;border:1px solid #83c8d3!important;border-radius:17px!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.72)!important;
+}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] .freedomWallCustomizeToggle{
+  background:linear-gradient(180deg,rgba(245,254,255,.90),rgba(214,243,246,.88))!important;
+  border-color:transparent!important;border-radius:16px!important;color:#073b59!important;
+}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] .freedomWallCustomizeIcon{
+  background:linear-gradient(145deg,#68d7df,#24aabd)!important;color:#fff!important;border-radius:50%!important;box-shadow:0 4px 10px rgba(0,105,130,.18)!important;
+}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] :is(.freedomWallCustomizerTrigger,.freedomWallCustomizerOptions){
+  background:rgba(242,253,254,.92)!important;color:#073b59!important;border-color:rgba(84,179,195,.30)!important;
+}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] .freedomWallCustomizerOptions{
+  border:1px solid #7fc4cf!important;border-radius:15px!important;box-shadow:0 14px 30px rgba(0,62,87,.20)!important;
+}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] .freedomWallCustomizerOptionsHead strong{color:#07506c!important}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] .freedomWallCustomizerOptionsHead button{
+  background:#d7f3f6!important;color:#07506c!important;border:1px solid #83c5d0!important;border-radius:50%!important;
+}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] :is(.freedomWallSwatchRow button,.freedomWallFontGrid button){
+  border:2px solid rgba(40,135,154,.40)!important;box-shadow:0 3px 8px rgba(0,66,92,.10)!important;
+}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] :is(.freedomWallSwatchRow button,.freedomWallFontGrid button).is-selected{
+  outline:3px solid #ff8068!important;outline-offset:2px!important;border-color:#fff!important;
+}
+
+/* Reaction and reply popups. */
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] :is(.freedomWallReactionChoices>button,.freedomWallNoteActionRow>button,.freedomWallReplyActionMenu button){
+  background:linear-gradient(180deg,#f6feff,#d5f3f6)!important;color:#073b59!important;
+  border:1px solid #74c2ce!important;border-radius:14px!important;box-shadow:0 5px 11px rgba(0,70,94,.11)!important;
+  font-family:"Trebuchet MS","Segoe UI",Arial,sans-serif!important;
+}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] :is(.freedomWallReactionChoices>button,.freedomWallNoteActionRow>button):hover{
+  background:linear-gradient(180deg,#fff7f3,#ffd8ce)!important;border-color:#ff8b73!important;transform:translateY(-1px)!important;
+}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] .freedomWallReactionChoices>button.is-selected{
+  background:linear-gradient(180deg,#ffe7df,#ffc0b0)!important;border-color:#ef6f59!important;
+}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] :is(.freedomWallReactionChoices>button>b,.freedomWallNoteActionRow>button>b){color:#073b59!important}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] :is(.freedomWallReactionChoices>button>small,.freedomWallNoteActionRow>button>small){
+  background:#82d3de!important;color:#063f63!important;border-radius:999px!important;
+}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] .freedomWallReplyOriginal{
+  background:linear-gradient(155deg,#e5fafc,#cceff3)!important;color:#073b59!important;border:1px solid #74bdca!important;border-radius:18px!important;
+}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] .freedomWallReplyItem{
+  background:rgba(244,253,254,.94)!important;color:#073b59!important;border:1px solid #9ad3dc!important;border-radius:16px 16px 16px 5px!important;
+  box-shadow:0 6px 13px rgba(0,72,97,.09)!important;
+}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] .freedomWallReplyItem:nth-child(even){
+  background:rgba(224,247,249,.96)!important;border-radius:16px 16px 5px 16px!important;
+}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] :is(.freedomWallReplyItemHead strong,.freedomWallReplyItem>p,.freedomWallReplyOriginal>p){color:#073b59!important}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] .freedomWallReplyingTo{
+  background:#d8f4f6!important;color:#07506c!important;border-color:#80c6d1!important;
+}
+
+/* Media results and preview cards. */
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] :is(
+  .freedomWallMediaSelected,.freedomWallMediaSearchResult,.freedomWallGifResult,.freedomWallSpotifySelected,.freedomWallSpotifyResult
+){
+  background:rgba(243,253,254,.96)!important;color:#073b59!important;border:1px solid #86cbd5!important;border-radius:14px!important;
+  box-shadow:0 6px 13px rgba(0,69,94,.09)!important;
+}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] :is(
+  .freedomWallMediaSearchResult b,.freedomWallMediaSelected strong,.freedomWallSpotifyResult b,.freedomWallSpotifySelected strong
+){color:#073b59!important}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] :is(
+  .freedomWallMediaSearchResult small,.freedomWallMediaSelected small,.freedomWallSpotifyResult small,.freedomWallSpotifySelected small
+){color:#4f8293!important}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] .freedomWallMediaPreview{
+  background:#d7f3f6!important;border:2px solid #79c3cf!important;border-radius:16px!important;
+}
+
+/* Read mode is a glass aquarium rather than the generic dark reader. */
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] .freedomWallReader{
+  background:
+    radial-gradient(circle at 16% 24%,rgba(218,255,255,.30) 0 5px,transparent 6px),
+    radial-gradient(circle at 82% 35%,rgba(218,255,255,.24) 0 8px,transparent 9px),
+    linear-gradient(180deg,rgba(7,120,151,.78),rgba(3,58,91,.90))!important;
+}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] .freedomWallReader::before{
+  background:linear-gradient(105deg,transparent 12%,rgba(218,255,255,.11) 24%,transparent 36%,rgba(218,255,255,.08) 52%,transparent 64%)!important;
+}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] .freedomWallReaderProgress{
+  background:rgba(229,253,255,.20)!important;border:1px solid rgba(185,242,247,.40)!important;
+}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] .freedomWallReaderProgress>i{background:linear-gradient(90deg,#67e4e9,#ffe29d,#ff8068)!important}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] .freedomWallReaderNote.freedomWallNote{
+  border-width:3px!important;box-shadow:0 25px 55px rgba(0,34,58,.36),inset 0 2px 0 rgba(255,255,255,.84)!important;
+}
+
+/* YouTube viewer chrome follows the same aquarium language. */
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] .freedomWallYoutubeViewer{
+  background:rgba(1,38,63,.82)!important;backdrop-filter:blur(8px)!important;
+}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] .freedomWallYoutubeViewerPanel{
+  border:2px solid #5ab8c8!important;border-radius:20px!important;box-shadow:0 24px 60px rgba(0,24,45,.52)!important;
+}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] .freedomWallYoutubeViewerHead{
+  background:linear-gradient(180deg,#0b7997,#07506f)!important;color:#e9fdff!important;font-family:"Trebuchet MS","Segoe UI",Arial,sans-serif!important;
+}
+
+/* Ocean-colored scrollbars on all wall panels. */
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] :is(.freedomWallComposerScroll,.freedomWallReplyList,.freedomWallMediaSearchResults,.freedomWallMediaSearchModalResults){scrollbar-color:#65bfcc #d9f3f6}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] :is(.freedomWallComposerScroll,.freedomWallReplyList,.freedomWallMediaSearchResults,.freedomWallMediaSearchModalResults)::-webkit-scrollbar{width:8px}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] :is(.freedomWallComposerScroll,.freedomWallReplyList,.freedomWallMediaSearchResults,.freedomWallMediaSearchModalResults)::-webkit-scrollbar-track{background:#d9f3f6;border-radius:999px}
+.homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] :is(.freedomWallComposerScroll,.freedomWallReplyList,.freedomWallMediaSearchResults,.freedomWallMediaSearchModalResults)::-webkit-scrollbar-thumb{background:#65bfcc;border-radius:999px}
+
+@media(max-width:700px){
+  .homepageEffectLayer[data-freedom-wall-theme="ocean-aquarium"] :is(.freedomWallComposerCard,.freedomWallReplyDialog,.freedomWallMediaSearchDialog){
+    border-radius:22px 22px 0 0!important;border-bottom:0!important;
+  }
+  .homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallNote{border-radius:23px 23px 16px 23px!important}
 }

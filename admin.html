@@ -348,6 +348,7 @@
               <option value="sakura">Sakura / Japanese Garden</option>
               <option value="galaxy">Galaxy / Space Wall</option>
               <option value="beach">Beach / Summer Wall</option>
+              <option value="ocean-aquarium">Ocean Aquarium / Underwater</option>
               <option value="art-room">Art Room / Paint Studio</option>
               <option value="library">Library / Study Corner</option>
               <option value="newspaper">Newspaper / School Publication</option>
@@ -1367,6 +1368,7 @@ https://audio.jukehost.co.uk/AAAhttps://audio.jukehost.co.uk/BBBhttps://audio.ju
   <script src="firebase-config.js?v=2-secure-auth"></script>
   <script src="auth.js?v=admin-officer-rescue-v2"></script>
   <script src="firebase-adapter.js?v=v456-freedom-wall-layout-admin-delete"></script>
+  <script src="app-presence.js?v=v551-whole-app-active"></script>
   <script src="pwa.js?v=v456-freedom-wall-layout-admin-delete"></script>
   <script src="class-chat-admin.js?v=v456-freedom-wall-layout-admin-delete"></script>
   <script src="admin.js?v=v456-freedom-wall-layout-admin-delete"></script>
@@ -2627,6 +2629,7 @@ https://audio.jukehost.co.uk/AAAhttps://audio.jukehost.co.uk/BBBhttps://audio.ju
         sakura:{bg1:"#f8dce6",bg2:"#fff5f8",panel:"#fffafc",text:"#553945",muted:"#8b6a77",accent:"#ed9fba",line:"rgba(85,57,69,.14)",deco:"sakura",note:"soft"},
         galaxy:{bg1:"#090d24",bg2:"#382b68",panel:"#171b39",text:"#ffffff",muted:"#cdd1ee",accent:"#8bc6ff",line:"rgba(255,255,255,.16)",deco:"galaxy",note:"glass"},
         beach:{bg1:"#62c7df",bg2:"#f1d59a",panel:"#fff5dc",text:"#24434b",muted:"#5c7378",accent:"#f4b74c",line:"rgba(36,67,75,.14)",deco:"beach",note:"postcard"},
+        "ocean-aquarium":{bg1:"#39c6df",bg2:"#075985",panel:"#e9fbff",text:"#083c5a",muted:"#39738a",accent:"#ff8f70",line:"rgba(8,60,90,.18)",deco:"ocean",note:"coral"},
         "art-room":{bg1:"#f2e9dd",bg2:"#ddd0bd",panel:"#fffdf9",text:"#332f2c",muted:"#6f6965",accent:"#e85b64",line:"rgba(51,47,44,.12)",deco:"paint",note:"art"},
         library:{bg1:"#4b2f25",bg2:"#8b6047",panel:"#f0dfbf",text:"#30241b",muted:"#705d4b",accent:"#b8874f",line:"rgba(48,36,27,.18)",deco:"library",note:"index"},
         newspaper:{bg1:"#e8e3d7",bg2:"#f7f3e9",panel:"#fffdf7",text:"#232323",muted:"#5c5c5c",accent:"#9a2f2f",line:"rgba(35,35,35,.16)",deco:"newspaper",note:"news"},
@@ -2701,6 +2704,11 @@ https://audio.jukehost.co.uk/AAAhttps://audio.jukehost.co.uk/BBBhttps://audio.ju
         line(ctx,0,h*.18,w*.42,0,"#7c564e",7,.30);for(let i=0;i<48;i++){const x=(i*113)%w,y=(i*67)%h;leaf(ctx,x,y,8,4,(i%8)*.55,"#ed9fba",.55);}
       }else if(d==="beach"){
         ctx.fillStyle="rgba(242,211,145,.9)";ctx.fillRect(0,h*.72,w,h*.28);ctx.strokeStyle="rgba(255,255,255,.48)";ctx.lineWidth=8;for(let y=h*.68;y<h*.76;y+=22){ctx.beginPath();for(let x=0;x<=w;x+=40){const yy=y+Math.sin(x/48)*8;x?ctx.lineTo(x,yy):ctx.moveTo(x,yy);}ctx.stroke();}
+      }else if(d==="ocean"){
+        const og=ctx.createLinearGradient(0,0,0,h);og.addColorStop(0,"#4ad7e8");og.addColorStop(.46,"#118aae");og.addColorStop(1,"#06466e");ctx.fillStyle=og;ctx.fillRect(0,0,w,h);
+        for(let i=0;i<11;i++){ctx.save();ctx.translate((i+.5)*w/11,-20);ctx.rotate((i%2?.08:-.08));ctx.fillStyle="rgba(226,255,255,.075)";ctx.beginPath();ctx.moveTo(-20,0);ctx.lineTo(34,h*.72);ctx.lineTo(98,h*.72);ctx.lineTo(24,0);ctx.closePath();ctx.fill();ctx.restore();}
+        for(let i=0;i<34;i++){const bx=(i*137)%w,by=35+((i*79)%Math.max(90,h-130)),br=3+(i%5)*2;circle(ctx,bx,by,br,"#dffcff",.25);circle(ctx,bx-2,by-2,Math.max(1,br*.22),"#ffffff",.7);}
+        ctx.fillStyle="rgba(238,210,139,.32)";ctx.fillRect(0,h*.88,w,h*.12);for(let i=0;i<18;i++){const x=(i*97)%w;line(ctx,x,h,x+((i%3)-1)*24,h*.78,["#36a273","#63bf78","#ff8f70"][i%3],5,.34);}
       }else if(d==="paint"){
         const colors=["#e95b64","#4ba0e6","#f3bf3f","#62b879","#9a6ddb"];for(let i=0;i<24;i++){const c=colors[i%colors.length],x=(i*149)%w,y=(i*83)%h;circle(ctx,x,y,12+(i%5)*6,c,.18);for(let k=0;k<5;k++)circle(ctx,x+Math.cos(k)*35,y+Math.sin(k)*35,4,c,.15);}
       }else if(d==="library"){
@@ -3132,8 +3140,8 @@ https://audio.jukehost.co.uk/AAAhttps://audio.jukehost.co.uk/BBBhttps://audio.ju
     function exactLum(hex){const {r,g,b}=exactHexRgb(hex),f=c=>{c/=255;return c<=.03928?c/12.92:Math.pow((c+.055)/1.055,2.4)};return .2126*f(r)+.7152*f(g)+.0722*f(b);}
     function exactContrast(a,b){const x=exactLum(a),y=exactLum(b);return(Math.max(x,y)+.05)/(Math.min(x,y)+.05);}
     function exactMix(a,b,w=.5){const x=exactHexRgb(a),y=exactHexRgb(b),h=n=>Math.round(n).toString(16).padStart(2,"0");return`#${h(x.r*w+y.r*(1-w))}${h(x.g*w+y.g*(1-w))}${h(x.b*w+y.b*(1-w))}`;}
-    function exactThemeDefaultText(theme){const t=String(theme||"").toLowerCase();if(["night","rainy","flood","galaxy","retro-arcade","coding-lab","neon-music","spiderman","comic-noir"].includes(t))return"white";if(["jungle","eco","chalkboard"].includes(t))return"green";if(["cafe","library","brick-alley","detective","poste","cutout-pop"].includes(t))return"brown";if(["cutout-editorial"].includes(t))return"charcoal";if(["filipino","comic-strip"].includes(t))return"navy";return"charcoal";}
-    function exactContrastBgs(color,theme){const base=COLOR_HEX[String(color||"").toLowerCase()]||COLOR_HEX.yellow,t=String(theme||"").toLowerCase();if(t==="polaroid")return[exactMix(base,"#ffffff",.18),"#fffdf9"];if(t==="newspaper")return[exactMix(base,"#fffef8",.42),exactMix(base,"#e9e4d5",.36)];if(t==="jungle")return[exactMix(base,"#fff5cf",.82),exactMix(base,"#bd9d62",.82)];if(t==="poste")return[exactMix(base,"#fff7e5",.84),exactMix(base,"#c8b792",.82)];if(t==="coding-lab")return[exactMix(base,"#ffffff",.88),exactMix(base,"#18232b",.80)];if(t==="chalkboard")return[exactMix(base,"#f7f0d8",.84),exactMix(base,"#4d654f",.78)];if(t==="cutout-pop")return[exactMix(base,"#fff7e8",.88),exactMix(base,"#564d45",.86)];if(t==="cutout-editorial")return[exactMix(base,"#fffdf7",.90),exactMix(base,"#272727",.86)];return[exactMix(base,"#ffffff",.94),exactMix(base,"#000000",.89)];}
+    function exactThemeDefaultText(theme){const t=String(theme||"").toLowerCase();if(["night","rainy","flood","galaxy","retro-arcade","coding-lab","neon-music","spiderman","comic-noir"].includes(t))return"white";if(["jungle","eco","chalkboard"].includes(t))return"green";if(["cafe","library","brick-alley","detective","poste","cutout-pop"].includes(t))return"brown";if(["cutout-editorial"].includes(t))return"charcoal";if(["filipino","comic-strip","ocean-aquarium"].includes(t))return"navy";return"charcoal";}
+    function exactContrastBgs(color,theme){const base=COLOR_HEX[String(color||"").toLowerCase()]||COLOR_HEX.yellow,t=String(theme||"").toLowerCase();if(t==="polaroid")return[exactMix(base,"#ffffff",.18),"#fffdf9"];if(t==="newspaper")return[exactMix(base,"#fffef8",.42),exactMix(base,"#e9e4d5",.36)];if(t==="jungle")return[exactMix(base,"#fff5cf",.82),exactMix(base,"#bd9d62",.82)];if(t==="poste")return[exactMix(base,"#fff7e5",.84),exactMix(base,"#c8b792",.82)];if(t==="coding-lab")return[exactMix(base,"#ffffff",.88),exactMix(base,"#18232b",.80)];if(t==="chalkboard")return[exactMix(base,"#f7f0d8",.84),exactMix(base,"#4d654f",.78)];if(t==="ocean-aquarium")return[exactMix(base,"#effcff",.76),exactMix(base,"#bfeaf2",.62)];if(t==="cutout-pop")return[exactMix(base,"#fff7e8",.88),exactMix(base,"#564d45",.86)];if(t==="cutout-editorial")return[exactMix(base,"#fffdf7",.90),exactMix(base,"#272727",.86)];return[exactMix(base,"#ffffff",.94),exactMix(base,"#000000",.89)];}
     function exactTextColorName(n,theme){const requested=TEXT_HEX[String(n?.textColor||"").toLowerCase()]?String(n.textColor).toLowerCase():exactThemeDefaultText(theme),bgs=exactContrastBgs(n?.color||"yellow",theme),hex=TEXT_HEX[requested]||TEXT_HEX.charcoal;if(Math.min(...bgs.map(bg=>exactContrast(hex,bg)))>=4.5)return requested;let best="black",score=-1;for(const c of ["black","charcoal","navy","brown","white"]){const ratio=Math.min(...bgs.map(bg=>exactContrast(TEXT_HEX[c],bg)));if(ratio>score){score=ratio;best=c;}}return best;}
     function exactTextHex(n,theme){return TEXT_HEX[exactTextColorName(n,theme)]||TEXT_HEX.charcoal;}
     function exactReactionParts(n){const raw=reaction(n);if(!raw)return null;const m=raw.match(/^(\S+)\s+(\d+)$/);return m?{emoji:m[1],total:m[2]}:{emoji:"❤️",total:String(Object.keys(n?.reactions||{}).length||1)};}
@@ -3987,7 +3995,7 @@ https://audio.jukehost.co.uk/AAAhttps://audio.jukehost.co.uk/BBBhttps://audio.ju
 
   async function createRenderer(layout,orientation,cfg,notes,sessionId) {
     const size=(layout==='current'?(CURRENT_VIEWPORTS[orientation]||CURRENT_VIEWPORTS.landscape):(EXPORT_SIZES[orientation]||EXPORT_SIZES.landscape));
-    const root=appRoot(),styleUrl=new URL('style.css?v=v547-export-author-safe-inset',root).href;
+    const root=appRoot(),styleUrl=new URL('style.css?v=v549-complete-ocean-theme',root).href;
     const frame=document.createElement('iframe');
     frame.setAttribute('aria-hidden','true');frame.tabIndex=-1;
     Object.assign(frame.style,{position:'fixed',left:'-12000px',top:'0',width:`${size.width}px`,height:`${size.height}px`,border:'0',margin:'0',padding:'0',opacity:'1',pointerEvents:'none',zIndex:'-2147483000'});

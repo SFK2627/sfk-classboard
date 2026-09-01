@@ -1780,7 +1780,7 @@ const FREEDOM_WALL_AUTHOR_MAX_LENGTH = 42;
 const FREEDOM_WALL_MEDIA_MAX_STATIC_SOURCE_BYTES = 8 * 1024 * 1024;
 const FREEDOM_WALL_MEDIA_MAX_BYTES = 520 * 1024;
 const FREEDOM_WALL_MEDIA_MAX_GIF_BYTES = 500 * 1024;
-const FREEDOM_WALL_THEME_SET = new Set(["sunny","rainy","night","flood","comic","comic-noir","comic-manga","comic-strip","school-note","sticky-notes","jungle","bulletin-board","whiteboard","cafe","sakura","galaxy","beach","art-room","library","newspaper","liquid-glass","polaroid","retro-throwback","windows-95","scrapbook","frutiger-aero","city-pop","film-roll","vintage-travel","bauhaus","aurora-crystal","clay-ui","y2k-chrome","holographic","retro-arcade","coding-lab","rainbow","brick-alley","school-fair","eco","dreamy-clouds","chalkboard","detective","cutout-pop","cutout-editorial","appreciation","seasonal","neon-music","spiderman","super-mario","filipino","poste","graffiti","vandal"]);
+const FREEDOM_WALL_THEME_SET = new Set(["sunny","rainy","night","flood","comic","comic-noir","comic-manga","comic-strip","school-note","sticky-notes","jungle","bulletin-board","whiteboard","cafe","sakura","galaxy","beach","ocean-aquarium","art-room","library","newspaper","liquid-glass","polaroid","retro-throwback","windows-95","scrapbook","frutiger-aero","city-pop","film-roll","vintage-travel","bauhaus","aurora-crystal","clay-ui","y2k-chrome","holographic","retro-arcade","coding-lab","rainbow","brick-alley","school-fair","eco","dreamy-clouds","chalkboard","detective","cutout-pop","cutout-editorial","appreciation","seasonal","neon-music","spiderman","super-mario","filipino","poste","graffiti","vandal"]);
 const FREEDOM_WALL_COLORS = ["yellow","cream","white","peach","coral","pink","rose","lavender","violet","sky","blue","mint","sage","green","lime","orange","tan","gray","navy","black"];
 const FREEDOM_WALL_COLOR_HEX = Object.freeze({
   yellow:"#fff1a5", cream:"#fff6d9", white:"#fffdf5", peach:"#ffd6c9", coral:"#ffb9a8",
@@ -1832,6 +1832,7 @@ function isFreedomWallFilipinoTheme(theme = freedomWallConfig?.freedomWallTheme)
 function getFreedomWallAttachmentLabelState(theme = freedomWallConfig?.freedomWallTheme) {
   const modes = getFreedomWallAllowedAttachmentModes().map((item) => item.value);
   const isFilipino = isFreedomWallFilipinoTheme(theme);
+  const isOceanAquarium = String(theme || "").trim().toLowerCase() === "ocean-aquarium";
   const hasImage = modes.includes("image");
   const hasGif = hasImage || modes.includes("gif") || modes.includes("gif-search");
   const hasYouTube = modes.includes("youtube") || modes.includes("youtube-search");
@@ -1852,6 +1853,20 @@ function getFreedomWallAttachmentLabelState(theme = freedomWallConfig?.freedomWa
   } else if (hasGif) {
     mediaLabel = isFilipino ? "GIF (opsyonal)" : "GIF (optional)";
     typeLabel = isFilipino ? "GIF option" : "GIF Option";
+  }
+  if (isOceanAquarium) {
+    mediaLabel = hasImage && hasYouTube
+      ? "Ocean Photo / GIF / YouTube (optional)"
+      : hasImage && hasGif
+        ? "Ocean Photo / GIF (optional)"
+        : hasGif && hasYouTube
+          ? "Ocean GIF / YouTube (optional)"
+          : hasYouTube
+            ? "Ocean YouTube (optional)"
+            : hasGif
+              ? "Ocean GIF (optional)"
+              : "Ocean Memory (optional)";
+    typeLabel = hasYouTube ? "Choose Ocean Media" : "Choose Ocean Memory";
   }
   return { mediaLabel, typeLabel };
 }
@@ -1894,6 +1909,46 @@ function getFreedomWallUiCopy(theme = freedomWallConfig?.freedomWallTheme) {
         if (mode === "connecting") return count ? `${count} mensahe • muling kumokonekta…` : "Muling kumokonekta…";
         if (mode === "initial") return count ? `${count} mensahe` : "Kumokonekta nang live…";
         return count ? `${count} mensahe` : "Buhay na pader";
+      }
+    };
+  }
+  if (String(theme || "").trim().toLowerCase() === "ocean-aquarium") {
+    return {
+      brand: "SFK OCEAN OF KINDNESS",
+      live: "Kindness reef live",
+      promptEyebrow: "TODAY'S OCEAN PROMPT",
+      addButton: "Add Bubble",
+      addButtonAria: "Add a kindness bubble",
+      composerTitle: "Add to the Kindness Reef",
+      composerSubtitle: "Release a kind thought into the SFK ocean.",
+      nameLabel: "Diver name / nickname",
+      namePlaceholder: "Your diver name",
+      noteLabel: "Your kindness bubble",
+      notePlaceholder: "Share something kind, thankful, honest, funny, or meaningful…",
+      colorAria: "Bubble card color",
+      noteBackgroundLabel: "Bubble Color",
+      textColorLabel: "Message Color",
+      fontLabel: "Ocean Font",
+      contrastHint: "Colors are adjusted automatically to stay clear underwater.",
+      customizeLabel: "Style Your Bubble",
+      customizeClosedHint: "Bubble color, message and font",
+      customizeOpenHint: "Choose your underwater note style",
+      postButton: "Release Bubble",
+      mediaLabel: "Ocean memory / GIF (optional)",
+      mediaHint: "Add a photo, GIF, video, or song when enabled by Admin.",
+      mediaChoose: "Choose Ocean Memory",
+      mediaRemove: "Remove",
+      closePromptAria: "Close ocean prompt",
+      closeComposerAria: "Close kindness bubble composer",
+      statusEmpty: "Write your kindness bubble first.",
+      statusWait: "Let the current settle before releasing another bubble.",
+      statusPosting: "Releasing bubble…",
+      statusDone: "Your kindness bubble is live!",
+      statusFail: "The current could not carry your bubble. Please try again.",
+      formatCount(count, mode = "normal") {
+        if (mode === "connecting") return count ? `${count} bubbles • reconnecting…` : "Reconnecting to the reef…";
+        if (mode === "initial") return count ? `${count} bubbles` : "Connecting to the kindness reef…";
+        return count ? `${count} ${count === 1 ? "bubble" : "bubbles"}` : "Kindness reef live";
       }
     };
   }
@@ -1999,6 +2054,7 @@ function applyFreedomWallThemeCopy(theme = freedomWallConfig?.freedomWallTheme) 
   const layer = document.getElementById("homepageEffectLayer");
   if (!layer) return;
   const copy = getFreedomWallUiCopy(theme);
+  const isOceanAquarium = String(theme || "").trim().toLowerCase() === "ocean-aquarium";
   const brandStrong = layer.querySelector('.freedomWallBrand strong');
   const brandSpan = layer.querySelector('#freedomWallCount');
   const eyebrow = layer.querySelector('.freedomWallPromptEyebrow');
@@ -2025,6 +2081,14 @@ function applyFreedomWallThemeCopy(theme = freedomWallConfig?.freedomWallTheme) 
   const mediaChoose = layer.querySelector('#freedomWallMediaChooseText');
   const mediaRemove = layer.querySelector('#freedomWallMediaRemove');
   const postBtn = layer.querySelector('#freedomWallPostBtn');
+  const readerOpenLabel = layer.querySelector('#freedomWallReaderOpenBtn small');
+  const readerTitle = layer.querySelector('.freedomWallReaderTitle strong');
+  const readerEmptyTitle = layer.querySelector('#freedomWallReaderEmpty strong');
+  const readerEmptyMessage = layer.querySelector('#freedomWallReaderEmpty small');
+  const emptyTitle = layer.querySelector('#freedomWallEmptyState strong');
+  const emptyMessage = layer.querySelector('#freedomWallEmptyState p');
+  const replyTitle = layer.querySelector('#freedomWallReplyTitle');
+  const replySubtitle = layer.querySelector('#freedomWallReplySubtitle');
   if (brandStrong) applyFreedomWallCutoutBrand(brandStrong, copy.brand);
   if (brandSpan) updateFreedomWallCountLabel(freedomWallLastRenderedCount, 'normal');
   if (eyebrow) eyebrow.textContent = copy.promptEyebrow;
@@ -2059,6 +2123,14 @@ function applyFreedomWallThemeCopy(theme = freedomWallConfig?.freedomWallTheme) 
   if (mediaHint) mediaHint.textContent = copy.mediaHint;
   if (mediaChoose) mediaChoose.textContent = copy.mediaChoose;
   if (mediaRemove) mediaRemove.textContent = copy.mediaRemove;
+  if (readerOpenLabel) readerOpenLabel.textContent = isOceanAquarium ? 'Dive' : 'Read';
+  if (readerTitle) readerTitle.textContent = isOceanAquarium ? 'Dive Through Bubbles' : 'Read Notes';
+  if (readerEmptyTitle) readerEmptyTitle.textContent = isOceanAquarium ? 'No bubbles yet' : 'No notes yet';
+  if (readerEmptyMessage) readerEmptyMessage.textContent = isOceanAquarium ? 'New kindness bubbles will float in here.' : 'New notes will appear here automatically.';
+  if (emptyTitle) emptyTitle.textContent = isOceanAquarium ? 'The kindness reef is ready' : 'SFK #BeKind Wall is ready';
+  if (emptyMessage) emptyMessage.textContent = isOceanAquarium ? 'Press Add Bubble and release the first kind message into the ocean.' : 'Press Add Note to start sharing. If old notes are missing, check the active saved wall in Admin.';
+  if (replyTitle) replyTitle.textContent = isOceanAquarium ? 'Reef Replies' : 'Replies';
+  if (replySubtitle) replySubtitle.textContent = isOceanAquarium ? 'Conversation around this kindness bubble' : 'Conversation on this note';
   if (!mediaAvailable) resetFreedomWallPendingMedia();
   updateFreedomWallMediaUi();
   if (postBtn) postBtn.textContent = copy.postButton;
@@ -7625,6 +7697,7 @@ function getFreedomWallContrastBackgrounds(color, theme = freedomWallConfig?.fre
   if (safeTheme === "windows-95") return ["#c0c0c0", "#e8e8e8"];
   if (safeTheme === "scrapbook") return [freedomWallMixHex(base,"#fff5e9",.65), freedomWallMixHex(base,"#f8f1dd",.66)];
   if (safeTheme === "frutiger-aero") return [freedomWallMixHex(base,"#eefcff",.72), freedomWallMixHex(base,"#b9ecff",.62)];
+  if (safeTheme === "ocean-aquarium") return [freedomWallMixHex(base,"#effcff",.76), freedomWallMixHex(base,"#bfeaf2",.62)];
   if (safeTheme === "liquid-glass") return [freedomWallMixHex(base,"#eef6ff",.58), freedomWallMixHex(base,"#c6dff0",.46)];
   if (safeTheme === "city-pop") return [freedomWallMixHex(base,"#1a2455",.78), freedomWallMixHex(base,"#11193f",.72)];
   if (safeTheme === "film-roll") return [freedomWallMixHex(base,"#f5efe4",.86), freedomWallMixHex(base,"#eee7da",.78)];
@@ -7643,7 +7716,7 @@ function getFreedomWallContrastBackgrounds(color, theme = freedomWallConfig?.fre
   if (safeTheme === "chalkboard") return [freedomWallMixHex(base,"#f7f0d8",.84), freedomWallMixHex(base,"#dce8d4",.66)];
   const darkNoteSurfaceThemes = new Set(["night","galaxy","retro-arcade","neon-music","spiderman","comic-noir"]);
   if (darkNoteSurfaceThemes.has(safeTheme)) return [freedomWallMixHex(base,"#1d2949",.82), freedomWallMixHex(base,"#111827",.76)];
-  const lightNoteSurfaceThemes = new Set(["sunny","school-note","sticky-notes","bulletin-board","whiteboard","cafe","sakura","beach","art-room","library","rainbow","brick-alley","school-fair","eco","dreamy-clouds","detective","appreciation","filipino","graffiti","vandal","cutout-pop","cutout-editorial","comic","comic-manga","comic-strip"]);
+  const lightNoteSurfaceThemes = new Set(["sunny","school-note","sticky-notes","bulletin-board","whiteboard","cafe","sakura","beach","ocean-aquarium","art-room","library","rainbow","brick-alley","school-fair","eco","dreamy-clouds","detective","appreciation","filipino","graffiti","vandal","cutout-pop","cutout-editorial","comic","comic-manga","comic-strip"]);
   if (lightNoteSurfaceThemes.has(safeTheme)) return getFreedomWallGenericNoteContrastBackgrounds(base);
   return getFreedomWallGenericNoteContrastBackgrounds(base);
 }
@@ -7651,7 +7724,7 @@ function getFreedomWallContrastBackgrounds(color, theme = freedomWallConfig?.fre
 function getFreedomWallThemeDefaultTextColor(theme = freedomWallConfig?.freedomWallTheme) {
   const safeTheme = String(theme || "").trim().toLowerCase();
   if (["night","galaxy","retro-arcade","coding-lab","neon-music","spiderman","comic-noir","city-pop","aurora-crystal"].includes(safeTheme)) return "white";
-  if (["rainy","flood","frutiger-aero","super-mario"].includes(safeTheme)) return "navy";
+  if (["rainy","flood","frutiger-aero","super-mario","ocean-aquarium"].includes(safeTheme)) return "navy";
   if (["jungle","eco","chalkboard"].includes(safeTheme)) return "green";
   if (["cafe","library","brick-alley","detective","poste","retro-throwback","windows-95","scrapbook","film-roll","vintage-travel","clay-ui"].includes(safeTheme)) return "brown";
   if (["y2k-chrome"].includes(safeTheme)) return "navy";
@@ -7828,6 +7901,30 @@ function clearFreedomWallWelcomeSparks(){
   if(holder) holder.innerHTML="";
   if(freedomWallWelcomeSparkTimer){clearInterval(freedomWallWelcomeSparkTimer);freedomWallWelcomeSparkTimer=0;}
 }
+function getFreedomWallLiveNoteCount(){
+  const cachedCount = Array.isArray(freedomWallNotesCache) ? freedomWallNotesCache.filter(Boolean).length : 0;
+  const renderedCount = Math.max(0, Number(freedomWallLastRenderedCount) || 0);
+  const domCount = document.querySelectorAll('#homepageEffectLayer .freedomWallNote[data-note-id]').length;
+  return Math.max(cachedCount, renderedCount, domCount);
+}
+function hasFreedomWallLiveNotes(){
+  return getFreedomWallLiveNoteCount() > 0;
+}
+function syncFreedomWallEmptyDecorVisibility(noteCount = getFreedomWallLiveNoteCount()){
+  const layer = document.getElementById("homepageEffectLayer");
+  const scene = layer?.querySelector?.(".homepageFreedomWallScene");
+  const count = Math.max(0, Number(noteCount) || 0);
+  const hasNotes = count > 0;
+  layer?.classList?.toggle("has-freedom-wall-notes", hasNotes);
+  scene?.classList?.toggle("has-freedom-wall-notes", hasNotes);
+  if (hasNotes) {
+    clearFreedomWallWelcomeSparks();
+    document.querySelectorAll('.freedomWallKindnessSpark,.freedomWallEmptyMemoryPhotoCard').forEach((node) => node.remove());
+  }
+  try {
+    window.dispatchEvent(new CustomEvent("sfkFreedomWallNoteStateChanged", { detail:{ count, hasNotes } }));
+  } catch (error) {}
+}
 function spawnFreedomWallWelcomeSpark(){
   const holder=ensureFreedomWallWelcomeLayer();
   if(!holder) return;
@@ -7875,6 +7972,9 @@ function renderFreedomWallNotes(notes = []) {
     .sort((a,b) => (a.createdAtMs - b.createdAtMs) || a.id.localeCompare(b.id))
     .slice(-FREEDOM_WALL_MAX_RENDERED_NOTES);
   freedomWallLastRenderedCount = sorted.length;
+  // v550: names/photos are strictly an empty-wall feature. Shut every empty
+  // renderer down before cards are laid out so there is no one-frame overlap.
+  syncFreedomWallEmptyDecorVisibility(sorted.length);
 
   // v483 mobile anti-flicker: realtime listeners can legitimately deliver the
   // same document set more than once (cache/server state, reconnects, etc.).
@@ -8022,6 +8122,7 @@ function renderFreedomWallNotes(notes = []) {
   }
   updateFreedomWallEmptyState();
   updateFreedomWallWelcomeSparks(sorted.length);
+  syncFreedomWallEmptyDecorVisibility(sorted.length);
   syncFreedomWallReaderFromNotes({ preserveProgress:true });
   if (isFreedomWallExactExportMode()) applyFreedomWallExactExportMode();
 }
@@ -8078,9 +8179,8 @@ function updateFreedomWallEmptyState() {
   const layer = document.getElementById("homepageEffectLayer");
   const empty = layer?.querySelector("#freedomWallEmptyState");
   if (!empty) return;
-  const stage = layer.querySelector("#freedomWallNotesStage");
   const prompt = layer.querySelector("#freedomWallPromptCard");
-  const hasNotes = Boolean((freedomWallNotesCache || []).length || stage?.querySelector?.(".freedomWallNote[data-note-id]"));
+  const hasNotes = hasFreedomWallLiveNotes();
   const promptVisible = Boolean(prompt && !prompt.hidden);
   empty.hidden = hasNotes || promptVisible || !freedomWallConfig;
 }
@@ -8707,6 +8807,7 @@ function configureFreedomWall(config) {
   updateFreedomWallPrompt(config);
   if (freedomWallNotesCache.length) renderFreedomWallNotes(freedomWallNotesCache);
   updateFreedomWallEmptyState();
+  syncFreedomWallEmptyDecorVisibility(freedomWallNotesCache.length);
   startFreedomWallLive();
 }
 
@@ -8740,6 +8841,7 @@ function stopFreedomWallLive(clearStage = false) {
     freedomWallLastRenderedCount = 0;
     freedomWallNotesCache = [];
     freedomWallLastRenderSignature = "";
+    syncFreedomWallEmptyDecorVisibility(0);
   }
 }
 
@@ -16623,9 +16725,7 @@ if (document.readyState === "loading") {
   }
 
   function isFreedomWallEmpty(){
-    const stage = document.querySelector('#freedomWallNotesStage');
-    if (!stage) return true;
-    return stage.querySelectorAll('.freedomWallNote').length === 0;
+    return !hasFreedomWallLiveNotes();
   }
 
   function getPromptRectWithinWall(){
@@ -17055,7 +17155,7 @@ if (document.readyState === "loading") {
 })();
 
 
-/* ACTIVE USER COUNT ONLY - PRESERVE EXISTING SPARK LOGIC */
+/* v551 WHOLE-APP ACTIVE USER COUNT - PRESERVE EXISTING SPARK LOGIC */
 (() => {
   const COLLECTION = 'freedomWallOnlineUsers';
   let heartbeatTimer = null;
@@ -17072,6 +17172,16 @@ if (document.readyState === "loading") {
   }
 
   async function start(){
+    const sharedPresence = window.SFK_APP_PRESENCE;
+    if (sharedPresence?.subscribeActiveCount) {
+      await sharedPresence.start?.();
+      presenceUnsubscribe = await sharedPresence.subscribeActiveCount((active) => {
+        freedomWallOnlineActiveCount = Math.max(1, Number(active) || 1);
+        updateFreedomWallCountLabel();
+      });
+      updateFreedomWallCountLabel();
+      return;
+    }
     const db=await waitForClassBoardFirestore(10000);
     if(!db){
       freedomWallOnlineActiveCount = 1;
@@ -17303,7 +17413,7 @@ if (document.readyState === "loading") {
   }
 
   function hasRealNotes() {
-    return Boolean(document.querySelector('.freedomWallNote[data-note-id]'));
+    return hasFreedomWallLiveNotes();
   }
 
   function currentTheme() {
