@@ -4,6 +4,9 @@ const HEARTED_MEMORY_KEY = "sfkHeartedMemoriesV1";
 const MEMORIES_SEEN_IDS_KEY = "sfkMemoriesSeenPostIdsV1";
 const MEMORY_POSTED_BY_KEY = "sfkMemoryPostedByV1";
 const MEMORY_MUSIC_AUTOPLAY_KEY = "sfkMemoryMusicAutoplayV1";
+const PHOTOBOOTH_FAVORITES_KEY = "sfkPhotoboothFavoritesV1";
+const PHOTOBOOTH_DEFAULT_FILTER_KEY = "sfkPhotoboothDefaultFilterV1";
+const PHOTOBOOTH_FILTER_STRENGTHS_KEY = "sfkPhotoboothFilterStrengthsV1";
 const MAX_MEDIA_FILES = 50;
 const MAX_VIDEO_BYTES = 12 * 1024 * 1024;
 const MAX_TOTAL_UPLOAD_BYTES = 25 * 1024 * 1024;
@@ -118,6 +121,27 @@ let postMusicObserver = null;
 let pageMediaResumeState = null;
 let pageMediaResumeTimer = null;
 
+const photoBoothState = {
+  stream: null,
+  devices: [],
+  deviceId: "",
+  facingMode: "user",
+  layout: "single",
+  filter: loadPhotoboothDefaultFilter(),
+  filterCategory: "all",
+  favoriteFilters: loadPhotoboothFavorites(),
+  defaultFilter: loadPhotoboothDefaultFilter(),
+  filterStrengths: loadPhotoboothFilterStrengths(),
+  timer: 3,
+  mirror: true,
+  sound: true,
+  shots: [],
+  resultBlob: null,
+  resultUrl: "",
+  busy: false,
+  audioContext: null
+};
+
 document.addEventListener("DOMContentLoaded", () => {
   setDefaultMemoryDate();
   restoreMemoryAuth();
@@ -131,6 +155,26 @@ function bindMemoryEvents() {
   ["topPostButton", "sidePostButton"].forEach((id) => {
     document.getElementById(id)?.addEventListener("click", openComposeModal);
   });
+  ["topPhotoboothButton", "sidePhotoboothButton", "mobilePhotoboothButton"].forEach((id) => {
+    document.getElementById(id)?.addEventListener("click", openPhotobooth);
+  });
+  document.getElementById("closePhotoboothButton")?.addEventListener("click", closePhotobooth);
+  document.querySelectorAll("[data-close-photobooth]").forEach((element) => element.addEventListener("click", closePhotobooth));
+  document.getElementById("photoboothLayoutOptions")?.addEventListener("click", handlePhotoboothLayoutClick);
+  document.getElementById("photoboothFilterOptions")?.addEventListener("click", handlePhotoboothFilterClick);
+  document.getElementById("photoboothFilterCategories")?.addEventListener("click", handlePhotoboothFilterCategoryClick);
+  document.getElementById("photoboothFavoriteToggle")?.addEventListener("click", togglePhotoboothFavoriteFilter);
+  document.getElementById("photoboothSetDefaultButton")?.addEventListener("click", setPhotoboothDefaultFilterFromCurrent);
+  document.getElementById("photoboothFilterStrength")?.addEventListener("input", handlePhotoboothStrengthInput);
+  document.getElementById("photoboothTimer")?.addEventListener("change", syncPhotoboothSettingsFromUi);
+  document.getElementById("photoboothCameraSelect")?.addEventListener("change", handlePhotoboothCameraSelect);
+  document.getElementById("photoboothMirror")?.addEventListener("change", syncPhotoboothSettingsFromUi);
+  document.getElementById("photoboothSound")?.addEventListener("change", syncPhotoboothSettingsFromUi);
+  document.getElementById("photoboothSwitchCamera")?.addEventListener("click", switchPhotoboothCamera);
+  document.getElementById("photoboothCaptureButton")?.addEventListener("click", startPhotoboothCaptureSequence);
+  document.getElementById("photoboothRetakeButton")?.addEventListener("click", resetPhotoboothResult);
+  document.getElementById("photoboothDownloadButton")?.addEventListener("click", downloadPhotoboothResult);
+  document.getElementById("photoboothPostButton")?.addEventListener("click", sendPhotoboothToMemories);
 
   document.querySelectorAll("[data-close-modal]").forEach((element) => {
     element.addEventListener("click", () => closeModal(element.dataset.closeModal));
@@ -195,6 +239,7 @@ function bindMemoryEvents() {
     if (event.key === "Escape") {
       closeViewer();
       closeModal("composeModal");
+      closePhotobooth();
     }
 
     if (!document.getElementById("viewerModal")?.hidden) {
@@ -6659,3 +6704,665 @@ heartMemory = function heartMemoryFastV4(id) {
   return false;
 };
 
+
+
+/* v74: SFK Memories live photobooth */
+const PHOTOBOOTH_LAYOUTS = {
+  single: { shots: 1, label: "Single" },
+  strip2: { shots: 2, label: "2-photo strip" },
+  strip3: { shots: 3, label: "3-photo strip" },
+  grid4: { shots: 4, label: "2 × 2 collage" },
+  strip4: { shots: 4, label: "4-photo strip" }
+};
+
+function clampNumber(value, min, max) {
+  return Math.min(max, Math.max(min, Number(value) || 0));
+}
+
+function loadPhotoboothFavorites() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(PHOTOBOOTH_FAVORITES_KEY) || "[]");
+    if (!Array.isArray(parsed)) return [];
+    return Array.from(new Set(parsed.map((item) => String(item || "").trim()).filter(Boolean)));
+  } catch (error) {
+    return [];
+  }
+}
+
+function savePhotoboothFavorites() {
+  try { localStorage.setItem(PHOTOBOOTH_FAVORITES_KEY, JSON.stringify(photoBoothState.favoriteFilters)); } catch (error) {}
+}
+
+function loadPhotoboothDefaultFilter() {
+  try {
+    const saved = String(localStorage.getItem(PHOTOBOOTH_DEFAULT_FILTER_KEY) || "normal").trim();
+    return saved || "normal";
+  } catch (error) {
+    return "normal";
+  }
+}
+
+function savePhotoboothDefaultFilter() {
+  try { localStorage.setItem(PHOTOBOOTH_DEFAULT_FILTER_KEY, String(photoBoothState.defaultFilter || "normal")); } catch (error) {}
+}
+
+function loadPhotoboothFilterStrengths() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(PHOTOBOOTH_FILTER_STRENGTHS_KEY) || "{}");
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch (error) {
+    return {};
+  }
+}
+
+function savePhotoboothFilterStrengths() {
+  try { localStorage.setItem(PHOTOBOOTH_FILTER_STRENGTHS_KEY, JSON.stringify(photoBoothState.filterStrengths || {})); } catch (error) {}
+}
+
+function neutralMix(target, amount, neutral = 1) {
+  const value = neutral + (target - neutral) * amount;
+  return Math.round(value * 1000) / 1000;
+}
+
+function zeroMix(target, amount) {
+  const value = target * amount;
+  return Math.round(value * 1000) / 1000;
+}
+
+const PHOTOBOOTH_FILTER_META = {
+  normal: { label:"Normal", category:"aesthetic" },
+  clean: { label:"Clean", category:"aesthetic" },
+  warm: { label:"Warm", category:"aesthetic" },
+  cool: { label:"Cool", category:"aesthetic" },
+  mono: { label:"B&W", category:"dramatic" },
+  noir: { label:"Noir", category:"dramatic" },
+  vintage: { label:"Vintage", category:"film" },
+  retro: { label:"Retro", category:"film" },
+  matte: { label:"Matte", category:"film" },
+  kodak: { label:"Kodak-ish", category:"film" },
+  fuji: { label:"Fuji-ish", category:"film" },
+  soft: { label:"Soft", category:"cute" },
+  peachy: { label:"Peachy", category:"cute" },
+  creamy: { label:"Creamy", category:"cute" },
+  dreamy: { label:"Dreamy", category:"cute" },
+  sunset: { label:"Sunset", category:"cute" },
+  cyber: { label:"Cyber", category:"dramatic" },
+  contrast: { label:"Pop", category:"dramatic" },
+  dramatic: { label:"Dramatic", category:"dramatic" },
+  faded: { label:"Faded", category:"aesthetic" }
+};
+
+const PHOTOBOOTH_FILTER_CATEGORY_LABELS = {
+  all: "All",
+  aesthetic: "Aesthetic",
+  film: "Film",
+  cute: "Cute",
+  dramatic: "Dramatic",
+  favorites: "Favorites"
+};
+
+const PHOTOBOOTH_FILTERS = {
+  normal: () => "none",
+  clean: (t) => `contrast(${neutralMix(1.05,t)}) saturate(${neutralMix(1.04,t)}) brightness(${neutralMix(1.05,t)})`,
+  warm: (t) => `sepia(${zeroMix(0.18,t)}) saturate(${neutralMix(1.22,t)}) brightness(${neutralMix(1.04,t)})`,
+  cool: (t) => `saturate(${neutralMix(0.92,t)}) hue-rotate(${zeroMix(12,t)}deg) brightness(${neutralMix(1.04,t)})`,
+  mono: (t) => `grayscale(${zeroMix(1,t)}) contrast(${neutralMix(1.08,t)})`,
+  noir: (t) => `grayscale(${zeroMix(1,t)}) contrast(${neutralMix(1.35,t)}) brightness(${neutralMix(0.95,t)})`,
+  vintage: (t) => `sepia(${zeroMix(0.5,t)}) saturate(${neutralMix(0.86,t)}) contrast(${neutralMix(0.95,t)})`,
+  retro: (t) => `sepia(${zeroMix(0.28,t)}) saturate(${neutralMix(0.82,t)}) contrast(${neutralMix(0.88,t)}) brightness(${neutralMix(1.06,t)})`,
+  matte: (t) => `contrast(${neutralMix(0.88,t)}) saturate(${neutralMix(0.92,t)}) brightness(${neutralMix(1.06,t)})`,
+  kodak: (t) => `sepia(${zeroMix(0.16,t)}) saturate(${neutralMix(1.18,t)}) contrast(${neutralMix(1.08,t)}) brightness(${neutralMix(1.05,t)})`,
+  fuji: (t) => `saturate(${neutralMix(1.12,t)}) hue-rotate(${zeroMix(-8,t)}deg) contrast(${neutralMix(1.04,t)}) brightness(${neutralMix(1.03,t)})`,
+  soft: (t) => `brightness(${neutralMix(1.08,t)}) saturate(${neutralMix(0.9,t)}) contrast(${neutralMix(0.9,t)})`,
+  peachy: (t) => `sepia(${zeroMix(0.14,t)}) saturate(${neutralMix(1.08,t)}) hue-rotate(${zeroMix(-8,t)}deg) brightness(${neutralMix(1.08,t)})`,
+  creamy: (t) => `sepia(${zeroMix(0.12,t)}) saturate(${neutralMix(0.9,t)}) contrast(${neutralMix(0.9,t)}) brightness(${neutralMix(1.12,t)})`,
+  dreamy: (t) => `brightness(${neutralMix(1.1,t)}) saturate(${neutralMix(0.95,t)}) contrast(${neutralMix(0.84,t)})`,
+  sunset: (t) => `sepia(${zeroMix(0.28,t)}) saturate(${neutralMix(1.28,t)}) hue-rotate(${zeroMix(-12,t)}deg) contrast(${neutralMix(1.04,t)}) brightness(${neutralMix(1.02,t)})`,
+  cyber: (t) => `hue-rotate(${zeroMix(165,t)}deg) saturate(${neutralMix(1.45,t)}) contrast(${neutralMix(1.15,t)}) brightness(${neutralMix(1.04,t)})`,
+  contrast: (t) => `contrast(${neutralMix(1.22,t)}) saturate(${neutralMix(1.18,t)})`,
+  dramatic: (t) => `contrast(${neutralMix(1.32,t)}) saturate(${neutralMix(0.96,t)}) brightness(${neutralMix(0.95,t)})`,
+  faded: (t) => `contrast(${neutralMix(0.86,t)}) saturate(${neutralMix(0.78,t)}) brightness(${neutralMix(1.08,t)})`
+};
+
+function getPhotoboothStrength(filter = photoBoothState.filter) {
+  const saved = Number(photoBoothState.filterStrengths?.[filter]);
+  return Number.isFinite(saved) ? clampNumber(saved, 0, 100) : 100;
+}
+
+function getPhotoboothFilterString(filter = photoBoothState.filter, strength = getPhotoboothStrength(filter)) {
+  const resolver = PHOTOBOOTH_FILTERS[filter] || PHOTOBOOTH_FILTERS.normal;
+  const amount = clampNumber(strength, 0, 100) / 100;
+  return resolver(amount) || "none";
+}
+
+function renderPhotoboothFilterButtons() {
+  const selected = photoBoothState.filter;
+  const category = photoBoothState.filterCategory || "all";
+  const favorites = new Set(photoBoothState.favoriteFilters || []);
+  let visibleCount = 0;
+  document.querySelectorAll("[data-booth-filter]").forEach((button) => {
+    const filter = String(button.dataset.boothFilter || "normal");
+    const meta = PHOTOBOOTH_FILTER_META[filter] || {};
+    const visible = category === "all"
+      ? true
+      : category === "favorites"
+        ? favorites.has(filter)
+        : meta.category === category;
+    button.hidden = !visible;
+    button.classList.toggle("is-active", filter === selected);
+    button.classList.toggle("is-favorite", favorites.has(filter));
+    button.classList.toggle("is-default", filter === photoBoothState.defaultFilter);
+    if (visible) visibleCount += 1;
+  });
+  document.querySelectorAll("[data-filter-category]").forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.filterCategory === category);
+  });
+  const emptyState = document.getElementById("photoboothFilterEmptyState");
+  if (emptyState) emptyState.hidden = !(category === "favorites" && visibleCount === 0);
+}
+
+function updatePhotoboothFilterUi() {
+  renderPhotoboothFilterButtons();
+  const selectedName = document.getElementById("photoboothSelectedFilterName");
+  const selectedInfo = document.getElementById("photoboothSelectedFilterInfo");
+  const strength = getPhotoboothStrength();
+  const meta = PHOTOBOOTH_FILTER_META[photoBoothState.filter] || { label:"Normal", category:"all" };
+  if (selectedName) selectedName.textContent = meta.label;
+  if (selectedInfo) selectedInfo.textContent = `${PHOTOBOOTH_FILTER_CATEGORY_LABELS[meta.category] || "All"} • ${strength}%${photoBoothState.filter === photoBoothState.defaultFilter ? " • Default" : ""}`;
+  const favoriteBtn = document.getElementById("photoboothFavoriteToggle");
+  if (favoriteBtn) {
+    const isFavorite = (photoBoothState.favoriteFilters || []).includes(photoBoothState.filter);
+    favoriteBtn.textContent = isFavorite ? "★ Favorited" : "☆ Favorite";
+    favoriteBtn.classList.toggle("is-active", isFavorite);
+  }
+  const defaultBtn = document.getElementById("photoboothSetDefaultButton");
+  if (defaultBtn) {
+    const isDefault = photoBoothState.filter === photoBoothState.defaultFilter;
+    defaultBtn.textContent = isDefault ? "Default Filter ✓" : "Set as Default";
+    defaultBtn.classList.toggle("is-active", isDefault);
+  }
+  const slider = document.getElementById("photoboothFilterStrength");
+  const sliderValue = document.getElementById("photoboothFilterStrengthValue");
+  if (slider) slider.value = String(strength);
+  if (sliderValue) sliderValue.textContent = `${strength}%`;
+}
+
+function applyPhotoboothFilterSelection(filter, { reset = true } = {}) {
+  const nextFilter = String(filter || "normal");
+  if (!PHOTOBOOTH_FILTERS[nextFilter]) return;
+  photoBoothState.filter = nextFilter;
+  updatePhotoboothFilterUi();
+  applyPhotoboothLiveFilter();
+  if (reset) resetPhotoboothResult({ keepCamera:true, quiet:true });
+}
+
+function handlePhotoboothFilterCategoryClick(event) {
+  const button = event.target.closest("[data-filter-category]");
+  if (!button || photoBoothState.busy) return;
+  photoBoothState.filterCategory = String(button.dataset.filterCategory || "all");
+  const currentMeta = PHOTOBOOTH_FILTER_META[photoBoothState.filter] || {};
+  const favorites = new Set(photoBoothState.favoriteFilters || []);
+  const selectedVisible = photoBoothState.filterCategory === "all"
+    || (photoBoothState.filterCategory === "favorites" ? favorites.has(photoBoothState.filter) : currentMeta.category === photoBoothState.filterCategory);
+  if (!selectedVisible) {
+    const firstMatch = Object.keys(PHOTOBOOTH_FILTER_META).find((filter) => photoBoothState.filterCategory === "favorites"
+      ? favorites.has(filter)
+      : photoBoothState.filterCategory === "all" || PHOTOBOOTH_FILTER_META[filter]?.category === photoBoothState.filterCategory);
+    if (firstMatch) photoBoothState.filter = firstMatch;
+  }
+  updatePhotoboothFilterUi();
+  applyPhotoboothLiveFilter();
+}
+
+function togglePhotoboothFavoriteFilter() {
+  const filter = photoBoothState.filter;
+  const favorites = new Set(photoBoothState.favoriteFilters || []);
+  if (favorites.has(filter)) favorites.delete(filter); else favorites.add(filter);
+  photoBoothState.favoriteFilters = Array.from(favorites);
+  savePhotoboothFavorites();
+  if (photoBoothState.filterCategory === "favorites" && !favorites.has(filter)) {
+    const nextFavorite = photoBoothState.favoriteFilters[0];
+    if (nextFavorite) photoBoothState.filter = nextFavorite;
+  }
+  updatePhotoboothFilterUi();
+}
+
+function setPhotoboothDefaultFilterFromCurrent() {
+  photoBoothState.defaultFilter = photoBoothState.filter;
+  savePhotoboothDefaultFilter();
+  updatePhotoboothFilterUi();
+  setPhotoboothStatus(`${(PHOTOBOOTH_FILTER_META[photoBoothState.filter] || {}).label || "Selected"} is now your default filter.`);
+}
+
+function handlePhotoboothStrengthInput(event) {
+  const value = clampNumber(event?.target?.value, 0, 100);
+  photoBoothState.filterStrengths ||= {};
+  photoBoothState.filterStrengths[photoBoothState.filter] = value;
+  savePhotoboothFilterStrengths();
+  updatePhotoboothFilterUi();
+  applyPhotoboothLiveFilter();
+  resetPhotoboothResult({ keepCamera:true, quiet:true });
+}
+
+function setPhotoboothStatus(message, error = false) {
+  const status = document.getElementById("photoboothStatus");
+  if (!status) return;
+  status.textContent = String(message || "");
+  status.classList.toggle("is-error", Boolean(error));
+}
+
+function syncPhotoboothSettingsFromUi() {
+  const timer = Number(document.getElementById("photoboothTimer")?.value || 0);
+  photoBoothState.timer = [0,3,5,10].includes(timer) ? timer : 3;
+  photoBoothState.mirror = document.getElementById("photoboothMirror")?.checked !== false;
+  photoBoothState.sound = document.getElementById("photoboothSound")?.checked !== false;
+  const stage = document.getElementById("photoboothStage");
+  stage?.classList.toggle("no-mirror", !photoBoothState.mirror);
+}
+
+function handlePhotoboothLayoutClick(event) {
+  const button = event.target.closest("[data-booth-layout]");
+  if (!button || photoBoothState.busy) return;
+  const layout = String(button.dataset.boothLayout || "single");
+  if (!PHOTOBOOTH_LAYOUTS[layout]) return;
+  photoBoothState.layout = layout;
+  document.querySelectorAll("[data-booth-layout]").forEach((item) => item.classList.toggle("is-active", item === button));
+  const guide = document.getElementById("photoboothGuide");
+  if (guide) guide.className = `photoboothGuide layout-${layout}`;
+  resetPhotoboothResult({ keepCamera:true, quiet:true });
+  syncPhotoboothCaptureButton();
+}
+
+function handlePhotoboothFilterClick(event) {
+  const button = event.target.closest("[data-booth-filter]");
+  if (!button || photoBoothState.busy) return;
+  const filter = String(button.dataset.boothFilter || "normal");
+  if (!PHOTOBOOTH_FILTERS[filter]) return;
+  applyPhotoboothFilterSelection(filter);
+}
+
+function applyPhotoboothLiveFilter() {
+  const video = document.getElementById("photoboothVideo");
+  if (video) video.style.filter = getPhotoboothFilterString();
+}
+
+function syncPhotoboothCaptureButton() {
+  const button = document.getElementById("photoboothCaptureButton");
+  if (!button) return;
+  const layout = PHOTOBOOTH_LAYOUTS[photoBoothState.layout] || PHOTOBOOTH_LAYOUTS.single;
+  button.innerHTML = `<span aria-hidden="true">&#128247;</span> ${layout.shots > 1 ? `Start ${layout.shots}-Photo Session` : "Take Photo"}`;
+}
+
+async function openPhotobooth() {
+  const modal = document.getElementById("photoboothModal");
+  if (!modal) return;
+  modal.hidden = false;
+  document.body.style.overflow = "hidden";
+  photoBoothState.filter = photoBoothState.defaultFilter || "normal";
+  syncPhotoboothSettingsFromUi();
+  syncPhotoboothCaptureButton();
+  updatePhotoboothFilterUi();
+  resetPhotoboothResult({ keepCamera:true, quiet:true });
+  setPhotoboothStatus("Starting camera...");
+  await startPhotoboothCamera();
+}
+
+function closePhotobooth() {
+  const modal = document.getElementById("photoboothModal");
+  if (!modal || modal.hidden) return;
+  modal.hidden = true;
+  stopPhotoboothCamera();
+  photoBoothState.busy = false;
+  hidePhotoboothCountdown();
+  document.body.style.overflow = "";
+}
+
+function stopPhotoboothCamera() {
+  if (photoBoothState.stream) {
+    photoBoothState.stream.getTracks().forEach((track) => { try { track.stop(); } catch (error) {} });
+  }
+  photoBoothState.stream = null;
+  const video = document.getElementById("photoboothVideo");
+  if (video) video.srcObject = null;
+}
+
+async function startPhotoboothCamera({ deviceId = photoBoothState.deviceId, facingMode = photoBoothState.facingMode } = {}) {
+  const video = document.getElementById("photoboothVideo");
+  const liveLabel = document.getElementById("photoboothLiveLabel");
+  if (!video) return false;
+  if (!navigator.mediaDevices?.getUserMedia) {
+    setPhotoboothStatus("Camera access is not supported here. Open the site through HTTPS or localhost, or use photo upload instead.", true);
+    if (liveLabel) liveLabel.textContent = "Camera unavailable";
+    return false;
+  }
+  stopPhotoboothCamera();
+  try {
+    const videoConstraints = deviceId
+      ? { deviceId: { exact: deviceId }, width:{ideal:1920}, height:{ideal:1080} }
+      : { facingMode: { ideal: facingMode || "user" }, width:{ideal:1920}, height:{ideal:1080} };
+    const stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio:false });
+    if (document.getElementById("photoboothModal")?.hidden) {
+      stream.getTracks().forEach((track) => { try { track.stop(); } catch (error) {} });
+      return false;
+    }
+    photoBoothState.stream = stream;
+    video.srcObject = stream;
+    await video.play().catch(() => {});
+    const activeTrack = stream.getVideoTracks()[0];
+    const settings = activeTrack?.getSettings?.() || {};
+    photoBoothState.deviceId = String(settings.deviceId || deviceId || "");
+    photoBoothState.facingMode = String(settings.facingMode || facingMode || "user");
+    applyPhotoboothLiveFilter();
+    await refreshPhotoboothDevices();
+    if (liveLabel) liveLabel.textContent = "Live camera";
+    setPhotoboothStatus("Camera ready. Choose your layout, filter, and timer, then capture.");
+    return true;
+  } catch (error) {
+    console.warn("Photobooth camera failed", error);
+    if (liveLabel) liveLabel.textContent = "Camera blocked";
+    const reason = error?.name === "NotAllowedError"
+      ? "Camera permission was blocked. Allow camera access in your browser, then open the photobooth again."
+      : "Unable to start the camera. Check that another app is not using it, then try again.";
+    setPhotoboothStatus(reason, true);
+    return false;
+  }
+}
+
+async function refreshPhotoboothDevices() {
+  if (!navigator.mediaDevices?.enumerateDevices) return;
+  try {
+    const devices = (await navigator.mediaDevices.enumerateDevices()).filter((item) => item.kind === "videoinput");
+    photoBoothState.devices = devices;
+    const select = document.getElementById("photoboothCameraSelect");
+    if (!select) return;
+    const previous = photoBoothState.deviceId;
+    select.innerHTML = devices.length
+      ? devices.map((item,index) => `<option value="${escapeAttr(item.deviceId)}">${escapeHtml(item.label || `Camera ${index+1}`)}</option>`).join("")
+      : '<option value="">Default camera</option>';
+    if (devices.some((item) => item.deviceId === previous)) select.value = previous;
+  } catch (error) {}
+}
+
+async function handlePhotoboothCameraSelect() {
+  if (photoBoothState.busy) return;
+  const select = document.getElementById("photoboothCameraSelect");
+  const deviceId = String(select?.value || "");
+  if (!deviceId) return;
+  photoBoothState.deviceId = deviceId;
+  setPhotoboothStatus("Switching camera...");
+  await startPhotoboothCamera({ deviceId });
+}
+
+async function switchPhotoboothCamera() {
+  if (photoBoothState.busy) return;
+  const devices = photoBoothState.devices || [];
+  if (devices.length > 1) {
+    const currentIndex = Math.max(0, devices.findIndex((item) => item.deviceId === photoBoothState.deviceId));
+    const next = devices[(currentIndex + 1) % devices.length];
+    photoBoothState.deviceId = next.deviceId;
+    document.getElementById("photoboothCameraSelect").value = next.deviceId;
+    setPhotoboothStatus("Switching camera...");
+    await startPhotoboothCamera({ deviceId: next.deviceId });
+    return;
+  }
+  photoBoothState.deviceId = "";
+  photoBoothState.facingMode = photoBoothState.facingMode === "environment" ? "user" : "environment";
+  setPhotoboothStatus("Switching camera...");
+  await startPhotoboothCamera({ deviceId:"", facingMode:photoBoothState.facingMode });
+}
+
+function getPhotoboothAudioContext() {
+  if (!photoBoothState.sound) return null;
+  try {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return null;
+    photoBoothState.audioContext ||= new AudioContextClass();
+    if (photoBoothState.audioContext.state === "suspended") photoBoothState.audioContext.resume().catch(() => {});
+    return photoBoothState.audioContext;
+  } catch (error) { return null; }
+}
+
+function playPhotoboothTone(kind = "beep") {
+  const context = getPhotoboothAudioContext();
+  if (!context) return;
+  try {
+    const now = context.currentTime;
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    oscillator.type = kind === "shutter" ? "triangle" : "sine";
+    oscillator.frequency.setValueAtTime(kind === "shutter" ? 880 : 660, now);
+    if (kind === "shutter") oscillator.frequency.exponentialRampToValueAtTime(180, now + .09);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(kind === "shutter" ? .18 : .08, now + .01);
+    gain.gain.exponentialRampToValueAtTime(.0001, now + (kind === "shutter" ? .13 : .09));
+    oscillator.connect(gain).connect(context.destination);
+    oscillator.start(now); oscillator.stop(now + .15);
+  } catch (error) {}
+}
+
+function waitMs(ms) { return new Promise((resolve) => window.setTimeout(resolve, ms)); }
+
+function showPhotoboothCountdown(value, caption) {
+  const overlay = document.getElementById("photoboothCountdown");
+  if (!overlay) return;
+  overlay.hidden = false;
+  const strong = overlay.querySelector("strong");
+  const small = overlay.querySelector("small");
+  if (strong) strong.textContent = String(value);
+  if (small) small.textContent = caption || "Get ready!";
+}
+function hidePhotoboothCountdown() { const overlay=document.getElementById("photoboothCountdown"); if(overlay) overlay.hidden=true; }
+
+async function runPhotoboothCountdown(seconds, shotIndex, totalShots) {
+  if (seconds <= 0) {
+    showPhotoboothCountdown("•", totalShots > 1 ? `Photo ${shotIndex}/${totalShots}` : "Smile!");
+    await waitMs(520);
+    hidePhotoboothCountdown();
+    return;
+  }
+  for (let remaining = seconds; remaining > 0; remaining -= 1) {
+    showPhotoboothCountdown(remaining, totalShots > 1 ? `Photo ${shotIndex}/${totalShots}` : "Get ready!");
+    playPhotoboothTone("beep");
+    await waitMs(860);
+  }
+  showPhotoboothCountdown("SMILE", totalShots > 1 ? `Photo ${shotIndex}/${totalShots}` : "Ready!");
+  await waitMs(300);
+  hidePhotoboothCountdown();
+}
+
+function flashPhotobooth() {
+  const flash = document.getElementById("photoboothFlash");
+  if (!flash) return;
+  flash.classList.remove("is-flashing");
+  void flash.offsetWidth;
+  flash.classList.add("is-flashing");
+}
+
+function capturePhotoboothFrame() {
+  const video = document.getElementById("photoboothVideo");
+  if (!video || !video.videoWidth || !video.videoHeight) throw new Error("Camera image is not ready yet.");
+  const width = video.videoWidth;
+  const height = video.videoHeight;
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  ctx.save();
+  ctx.filter = getPhotoboothFilterString();
+  if (photoBoothState.mirror) {
+    ctx.translate(width,0);
+    ctx.scale(-1,1);
+  }
+  ctx.drawImage(video,0,0,width,height);
+  ctx.restore();
+  return canvas;
+}
+
+async function startPhotoboothCaptureSequence() {
+  if (photoBoothState.busy) return;
+  const video = document.getElementById("photoboothVideo");
+  if (!photoBoothState.stream || !video?.videoWidth) {
+    setPhotoboothStatus("Camera is not ready yet. Try again after the live preview appears.", true);
+    return;
+  }
+  syncPhotoboothSettingsFromUi();
+  const layout = PHOTOBOOTH_LAYOUTS[photoBoothState.layout] || PHOTOBOOTH_LAYOUTS.single;
+  photoBoothState.busy = true;
+  photoBoothState.shots = [];
+  const captureButton = document.getElementById("photoboothCaptureButton");
+  const switchButton = document.getElementById("photoboothSwitchCamera");
+  if (captureButton) captureButton.disabled = true;
+  if (switchButton) switchButton.disabled = true;
+  document.getElementById("photoboothShotProgress").hidden = false;
+  try {
+    for (let index = 0; index < layout.shots; index += 1) {
+      const progress = document.getElementById("photoboothShotProgress");
+      if (progress) progress.textContent = `Photo ${index+1} / ${layout.shots}`;
+      setPhotoboothStatus(layout.shots > 1 ? `Get ready for photo ${index+1} of ${layout.shots}.` : "Get ready...");
+      await runPhotoboothCountdown(photoBoothState.timer, index+1, layout.shots);
+      if (document.getElementById("photoboothModal")?.hidden) return;
+      flashPhotobooth();
+      playPhotoboothTone("shutter");
+      photoBoothState.shots.push(capturePhotoboothFrame());
+      if (index < layout.shots - 1) await waitMs(650);
+    }
+    await renderPhotoboothCollage();
+  } catch (error) {
+    console.error("Photobooth capture failed", error);
+    setPhotoboothStatus(error.message || "Unable to capture the photo.", true);
+  } finally {
+    photoBoothState.busy = false;
+    if (captureButton) captureButton.disabled = false;
+    if (switchButton) switchButton.disabled = false;
+    const progress = document.getElementById("photoboothShotProgress");
+    if (progress) progress.hidden = true;
+    hidePhotoboothCountdown();
+  }
+}
+
+function drawPhotoboothCover(ctx, source, x, y, width, height) {
+  const sw = source.width, sh = source.height;
+  const sourceRatio = sw / sh;
+  const targetRatio = width / height;
+  let sx=0, sy=0, sWidth=sw, sHeight=sh;
+  if (sourceRatio > targetRatio) {
+    sWidth = sh * targetRatio;
+    sx = (sw - sWidth) / 2;
+  } else {
+    sHeight = sw / targetRatio;
+    sy = (sh - sHeight) / 2;
+  }
+  ctx.drawImage(source, sx, sy, sWidth, sHeight, x, y, width, height);
+}
+
+function getPhotoboothCanvasPlan(layout) {
+  const gap = 26, outer = 38, footer = 112;
+  if (layout === "grid4") {
+    const width=1400, height=1400, innerW=width-outer*2, innerH=height-footer-outer*2, cellW=(innerW-gap)/2, cellH=(innerH-gap)/2;
+    return { width,height,footer,slots:[
+      {x:outer,y:outer,w:cellW,h:cellH},{x:outer+cellW+gap,y:outer,w:cellW,h:cellH},
+      {x:outer,y:outer+cellH+gap,w:cellW,h:cellH},{x:outer+cellW+gap,y:outer+cellH+gap,w:cellW,h:cellH}
+    ]};
+  }
+  if (layout === "single") {
+    const width=1200,height=1500;
+    return {width,height,footer,slots:[{x:outer,y:outer,w:width-outer*2,h:height-footer-outer*2}]};
+  }
+  const count = layout === "strip2" ? 2 : layout === "strip3" ? 3 : 4;
+  const width=900, photoH=layout === "strip4" ? 430 : layout === "strip3" ? 510 : 620;
+  const height=outer*2 + footer + count*photoH + (count-1)*gap;
+  const slots=Array.from({length:count},(_,i)=>({x:outer,y:outer+i*(photoH+gap),w:width-outer*2,h:photoH}));
+  return {width,height,footer,slots};
+}
+
+async function renderPhotoboothCollage() {
+  const canvas = document.getElementById("photoboothResultCanvas");
+  const stage = document.getElementById("photoboothStage");
+  if (!canvas || !stage || !photoBoothState.shots.length) return;
+  const plan = getPhotoboothCanvasPlan(photoBoothState.layout);
+  canvas.width = plan.width; canvas.height = plan.height;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle="#fffdf5"; ctx.fillRect(0,0,plan.width,plan.height);
+  ctx.fillStyle="#111"; ctx.fillRect(0,0,plan.width,18);
+  ctx.fillStyle="#f7c600"; ctx.fillRect(0,18,plan.width,12);
+  plan.slots.forEach((slot,index)=>{
+    ctx.save();
+    ctx.fillStyle="#111"; ctx.fillRect(slot.x-5,slot.y-5,slot.w+10,slot.h+10);
+    drawPhotoboothCover(ctx, photoBoothState.shots[index] || photoBoothState.shots[photoBoothState.shots.length-1], slot.x,slot.y,slot.w,slot.h);
+    ctx.restore();
+  });
+  const footerY=plan.height-plan.footer+22;
+  ctx.fillStyle="#111"; ctx.font="900 34px Arial"; ctx.textAlign="left"; ctx.fillText("SFK MEMORIES",38,footerY);
+  ctx.fillStyle="#7a6500"; ctx.font="800 22px Arial"; ctx.fillText("LIVE PHOTOBOOTH  •  #BeKind",38,footerY+36);
+  ctx.textAlign="right"; ctx.fillStyle="#555148"; ctx.font="700 20px Arial";
+  ctx.fillText(new Date().toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}),plan.width-38,footerY+20);
+  photoBoothState.resultBlob = await new Promise((resolve)=>canvas.toBlob(resolve,"image/jpeg",.91));
+  if (!photoBoothState.resultBlob) throw new Error("Unable to prepare the final photobooth image.");
+  if (photoBoothState.resultUrl) URL.revokeObjectURL(photoBoothState.resultUrl);
+  photoBoothState.resultUrl = URL.createObjectURL(photoBoothState.resultBlob);
+  stage.classList.remove("is-live"); stage.classList.add("is-result");
+  document.querySelector(".photoboothModal")?.classList.add("is-result-mode");
+  canvas.hidden=false;
+  document.getElementById("photoboothCaptureButton").hidden=true;
+  document.getElementById("photoboothSwitchCamera").hidden=true;
+  document.getElementById("photoboothRetakeButton").hidden=false;
+  document.getElementById("photoboothDownloadButton").hidden=false;
+  document.getElementById("photoboothPostButton").hidden=false;
+  const liveLabel=document.getElementById("photoboothLiveLabel"); if(liveLabel) liveLabel.textContent="Preview ready";
+  setPhotoboothStatus("Looks good? Download it, post it to Memories, or retake the session.");
+}
+
+function resetPhotoboothResult({ keepCamera=true, quiet=false } = {}) {
+  photoBoothState.shots=[];
+  photoBoothState.resultBlob=null;
+  if (photoBoothState.resultUrl) { URL.revokeObjectURL(photoBoothState.resultUrl); photoBoothState.resultUrl=""; }
+  const stage=document.getElementById("photoboothStage");
+  stage?.classList.add("is-live"); stage?.classList.remove("is-result");
+  document.querySelector(".photoboothModal")?.classList.remove("is-result-mode");
+  const canvas=document.getElementById("photoboothResultCanvas"); if(canvas) canvas.hidden=true;
+  const capture=document.getElementById("photoboothCaptureButton"); if(capture) capture.hidden=false;
+  const switcher=document.getElementById("photoboothSwitchCamera"); if(switcher) switcher.hidden=false;
+  const retake=document.getElementById("photoboothRetakeButton"); if(retake) retake.hidden=true;
+  const download=document.getElementById("photoboothDownloadButton"); if(download) download.hidden=true;
+  const post=document.getElementById("photoboothPostButton"); if(post) post.hidden=true;
+  const liveLabel=document.getElementById("photoboothLiveLabel"); if(liveLabel) liveLabel.textContent=photoBoothState.stream?"Live camera":"Camera ready";
+  if (!quiet) setPhotoboothStatus(photoBoothState.stream ? "Camera ready for another session." : "Starting camera...");
+  if (!keepCamera && photoBoothState.stream) stopPhotoboothCamera();
+  syncPhotoboothCaptureButton();
+}
+
+function makePhotoboothFilename() {
+  const stamp = new Date().toISOString().replace(/[:.]/g,"-").slice(0,19);
+  return `SFK-Photobooth-${stamp}.jpg`;
+}
+
+function downloadPhotoboothResult() {
+  if (!photoBoothState.resultBlob) return;
+  const url = photoBoothState.resultUrl || URL.createObjectURL(photoBoothState.resultBlob);
+  const link=document.createElement("a"); link.href=url; link.download=makePhotoboothFilename(); document.body.appendChild(link); link.click(); link.remove();
+  showMemoryToast("Photobooth photo downloaded.");
+}
+
+function photoboothBlobToFile(blob) {
+  return new File([blob], makePhotoboothFilename(), { type:"image/jpeg", lastModified:Date.now() });
+}
+
+function sendPhotoboothToMemories() {
+  if (!photoBoothState.resultBlob) return;
+  const file=photoboothBlobToFile(photoBoothState.resultBlob);
+  const existing=memoryState.selectedFiles.filter((item)=>item instanceof File);
+  memoryState.selectedFiles=[file,...existing].slice(0,MAX_MEDIA_FILES);
+  memoryState.coverIndex=0;
+  memoryState.previewObjectUrls.forEach((url)=>URL.revokeObjectURL(url));
+  memoryState.previewObjectUrls=[];
+  syncMemoryFileInput();
+  renderSelectedMediaPreview();
+  const title=document.getElementById("memoryTitle");
+  if (title && !title.value.trim()) title.value="Photobooth Memory";
+  renderComposePreview();
+  closePhotobooth();
+  openComposeModal();
+  showMemoryToast(memoryState.auth ? "Photobooth photo added to your Memory post." : "Photobooth photo is ready. Unlock posting to share it.");
+}
+
+window.addEventListener("pagehide", stopPhotoboothCamera);

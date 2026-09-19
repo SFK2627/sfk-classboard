@@ -14,7 +14,7 @@
   <link rel="manifest" href="manifest.webmanifest?v=portrait-reminder-v1" />
   <link rel="icon" href="icons/icon-192.png?v=14" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=14" />
-  <link rel="stylesheet" href="memories.css?v=73-media-fix-v8" />
+  <link rel="stylesheet" href="memories.css?v=76-photobooth-cats-strength-v3" />
   <script src="orientation-lock.js?v=appwide-v6" defer></script>
 </head>
 <body>
@@ -29,6 +29,7 @@
         <button id="musicAutoplayToggle" class="musicAutoplayToggle" type="button" aria-pressed="false" title="Automatically play music on visible posts">
           <span class="autoplayIcon" aria-hidden="true">&#9835;</span>
         </button>
+        <button id="topPhotoboothButton" class="headerPhotoboothButton" type="button" aria-label="Open live photobooth" title="Open live photobooth">&#128247;</button>
         <button
           id="topPostButton"
           class="headerAddButton"
@@ -61,6 +62,7 @@
       </nav>
 
       <button id="sidePostButton" class="primaryButton wideButton" type="button">+ Add a Memory</button>
+      <button id="sidePhotoboothButton" class="secondaryButton wideButton photoboothSideButton" type="button"><span aria-hidden="true">&#128247;</span> Live Photobooth</button>
       <a class="dashboardLink" href="index.html">Back to ClassBoard</a>
     </aside>
 
@@ -77,6 +79,7 @@
         <button class="highlight active" data-filter="all" type="button"><span class="highlightRing"><b>SFK</b></span><small>Latest</small></button>
         <button class="highlight" data-filter="photos" type="button"><span class="highlightRing"><b>&#9673;</b></span><small>Photos</small></button>
         <button class="highlight" data-filter="videos" type="button"><span class="highlightRing"><b>&#9654;</b></span><small>Videos</small></button>
+        <button id="mobilePhotoboothButton" class="highlight photoboothHighlight" type="button"><span class="highlightRing"><b>&#128247;</b></span><small>Booth</small></button>
       </div>
 
       <div id="feedStatus" class="feedStatus" role="status">Loading memories...</div>
@@ -230,6 +233,129 @@
     </section>
   </div>
 
+  <div id="photoboothModal" class="modalLayer photoboothModalLayer" hidden>
+    <div class="modalBackdrop" data-close-photobooth></div>
+    <section class="photoboothModal" role="dialog" aria-modal="true" aria-labelledby="photoboothTitle">
+      <header class="photoboothHeader">
+        <div>
+          <p class="eyebrow">SFK MEMORIES</p>
+          <h2 id="photoboothTitle">Live Photobooth</h2>
+          <small>Pose, capture, collage, then save or post your memory.</small>
+        </div>
+        <button id="closePhotoboothButton" class="iconButton photoboothClose" type="button" aria-label="Close photobooth">&#215;</button>
+      </header>
+
+      <div class="photoboothBody">
+        <section class="photoboothStageWrap" aria-label="Photobooth camera and preview">
+          <div id="photoboothStage" class="photoboothStage is-live">
+            <video id="photoboothVideo" autoplay muted playsinline></video>
+            <canvas id="photoboothResultCanvas" hidden></canvas>
+            <div id="photoboothGuide" class="photoboothGuide layout-single" aria-hidden="true"></div>
+            <div id="photoboothCountdown" class="photoboothCountdown" hidden><strong>3</strong><small>Get ready!</small></div>
+            <div id="photoboothFlash" class="photoboothFlash" aria-hidden="true"></div>
+            <div class="photoboothLiveBadge"><i></i><span id="photoboothLiveLabel">Camera ready</span></div>
+            <div id="photoboothShotProgress" class="photoboothShotProgress" hidden></div>
+          </div>
+          <p id="photoboothStatus" class="photoboothStatus" role="status" aria-live="polite">Open the photobooth to start your camera.</p>
+        </section>
+
+        <aside class="photoboothControls" aria-label="Photobooth settings">
+          <section class="photoboothControlGroup">
+            <div class="photoboothControlHeading"><strong>Layout</strong><small>Choose how many photos to capture.</small></div>
+            <div id="photoboothLayoutOptions" class="photoboothOptionGrid photoboothLayoutOptions">
+              <button type="button" data-booth-layout="single" class="is-active"><span class="boothLayoutIcon one"><i></i></span><b>Single</b><small>1 photo</small></button>
+              <button type="button" data-booth-layout="strip2"><span class="boothLayoutIcon strip2"><i></i><i></i></span><b>Strip 2</b><small>2 photos</small></button>
+              <button type="button" data-booth-layout="strip3"><span class="boothLayoutIcon strip3"><i></i><i></i><i></i></span><b>Strip 3</b><small>3 photos</small></button>
+              <button type="button" data-booth-layout="grid4"><span class="boothLayoutIcon grid4"><i></i><i></i><i></i><i></i></span><b>2 × 2</b><small>4 photos</small></button>
+              <button type="button" data-booth-layout="strip4"><span class="boothLayoutIcon strip4"><i></i><i></i><i></i><i></i></span><b>Strip 4</b><small>4 photos</small></button>
+            </div>
+          </section>
+
+          <section class="photoboothControlGroup">
+            <div class="photoboothControlHeading"><strong>Filter</strong><small>Previewed live and applied to the final collage.</small></div>
+            <div id="photoboothFilterCategories" class="photoboothFilterCategories" aria-label="Filter categories">
+              <button type="button" data-filter-category="all" class="is-active">All</button>
+              <button type="button" data-filter-category="aesthetic">Aesthetic</button>
+              <button type="button" data-filter-category="film">Film</button>
+              <button type="button" data-filter-category="cute">Cute</button>
+              <button type="button" data-filter-category="dramatic">Dramatic</button>
+              <button type="button" data-filter-category="favorites">Favorites</button>
+            </div>
+            <div id="photoboothFilterOptions" class="photoboothFilterOptions">
+              <button type="button" data-booth-filter="normal" class="is-active"><span class="boothFilterSwatch filter-normal"></span><b>Normal</b></button>
+              <button type="button" data-booth-filter="clean"><span class="boothFilterSwatch filter-clean"></span><b>Clean</b></button>
+              <button type="button" data-booth-filter="warm"><span class="boothFilterSwatch filter-warm"></span><b>Warm</b></button>
+              <button type="button" data-booth-filter="cool"><span class="boothFilterSwatch filter-cool"></span><b>Cool</b></button>
+              <button type="button" data-booth-filter="mono"><span class="boothFilterSwatch filter-mono"></span><b>B&amp;W</b></button>
+              <button type="button" data-booth-filter="noir"><span class="boothFilterSwatch filter-noir"></span><b>Noir</b></button>
+              <button type="button" data-booth-filter="vintage"><span class="boothFilterSwatch filter-vintage"></span><b>Vintage</b></button>
+              <button type="button" data-booth-filter="retro"><span class="boothFilterSwatch filter-retro"></span><b>Retro</b></button>
+              <button type="button" data-booth-filter="matte"><span class="boothFilterSwatch filter-matte"></span><b>Matte</b></button>
+              <button type="button" data-booth-filter="kodak"><span class="boothFilterSwatch filter-kodak"></span><b>Kodak-ish</b></button>
+              <button type="button" data-booth-filter="fuji"><span class="boothFilterSwatch filter-fuji"></span><b>Fuji-ish</b></button>
+              <button type="button" data-booth-filter="soft"><span class="boothFilterSwatch filter-soft"></span><b>Soft</b></button>
+              <button type="button" data-booth-filter="peachy"><span class="boothFilterSwatch filter-peachy"></span><b>Peachy</b></button>
+              <button type="button" data-booth-filter="creamy"><span class="boothFilterSwatch filter-creamy"></span><b>Creamy</b></button>
+              <button type="button" data-booth-filter="dreamy"><span class="boothFilterSwatch filter-dreamy"></span><b>Dreamy</b></button>
+              <button type="button" data-booth-filter="sunset"><span class="boothFilterSwatch filter-sunset"></span><b>Sunset</b></button>
+              <button type="button" data-booth-filter="cyber"><span class="boothFilterSwatch filter-cyber"></span><b>Cyber</b></button>
+              <button type="button" data-booth-filter="contrast"><span class="boothFilterSwatch filter-contrast"></span><b>Pop</b></button>
+              <button type="button" data-booth-filter="dramatic"><span class="boothFilterSwatch filter-dramatic"></span><b>Dramatic</b></button>
+              <button type="button" data-booth-filter="faded"><span class="boothFilterSwatch filter-faded"></span><b>Faded</b></button>
+            </div>
+            <small id="photoboothFilterEmptyState" class="photoboothFilterEmptyState" hidden>No favorite filters yet. Tap the star button below to save favorites.</small>
+            <div class="photoboothFilterUtility">
+              <div class="photoboothFilterMeta">
+                <strong id="photoboothSelectedFilterName">Normal</strong>
+                <small id="photoboothSelectedFilterInfo">All • 100%</small>
+              </div>
+              <div class="photoboothFilterQuickActions">
+                <button id="photoboothFavoriteToggle" class="secondaryButton photoboothMiniButton" type="button">☆ Favorite</button>
+                <button id="photoboothSetDefaultButton" class="secondaryButton photoboothMiniButton" type="button">Set as Default</button>
+              </div>
+            </div>
+            <label class="photoboothStrengthControl">Filter strength
+              <div class="photoboothStrengthRow">
+                <input id="photoboothFilterStrength" type="range" min="0" max="100" step="5" value="100" />
+                <strong id="photoboothFilterStrengthValue">100%</strong>
+              </div>
+              <small>Saved per filter. Lower for subtle, higher for stronger effect.</small>
+            </label>
+          </section>
+
+          <section class="photoboothControlGroup photoboothCompactSettings">
+            <label>Timer
+              <select id="photoboothTimer">
+                <option value="0">Off</option>
+                <option value="3" selected>3 seconds</option>
+                <option value="5">5 seconds</option>
+                <option value="10">10 seconds</option>
+              </select>
+            </label>
+            <label>Camera
+              <select id="photoboothCameraSelect" aria-label="Choose camera">
+                <option value="">Default camera</option>
+              </select>
+            </label>
+          </section>
+
+          <div class="photoboothToggleGrid">
+            <label class="photoboothToggle"><input id="photoboothMirror" type="checkbox" checked /><span><strong>Mirror preview</strong><small>Natural selfie view.</small></span></label>
+            <label class="photoboothToggle"><input id="photoboothSound" type="checkbox" checked /><span><strong>Countdown sound</strong><small>Beep + shutter.</small></span></label>
+          </div>
+
+          <div class="photoboothActions">
+            <button id="photoboothSwitchCamera" class="secondaryButton" type="button">&#8635; Switch Camera</button>
+            <button id="photoboothCaptureButton" class="primaryButton photoboothCaptureButton" type="button"><span aria-hidden="true">&#128247;</span> Start Photo</button>
+            <button id="photoboothRetakeButton" class="secondaryButton" type="button" hidden>Retake</button>
+            <button id="photoboothDownloadButton" class="secondaryButton" type="button" hidden>Download</button>
+            <button id="photoboothPostButton" class="primaryButton" type="button" hidden>Post to Memories</button>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </div>
+
   <div id="musicLibraryModal" class="modalLayer musicLibraryModal" hidden>
     <div class="modalBackdrop" data-close-music-library></div>
     <section class="musicLibraryManager" role="dialog" aria-modal="true" aria-labelledby="musicLibraryManagerTitle">
@@ -325,6 +451,6 @@
   <script src="firebase-adapter.js?v=media-fix-v8"></script>
   <script src="app-presence.js?v=v551-whole-app-active"></script>
   <script src="pwa.js?v=media-fix-v8"></script>
-  <script src="memories.js?v=media-fix-v8"></script>
+  <script src="memories.js?v=photobooth-cats-strength-v3"></script>
 </body>
 </html>

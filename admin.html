@@ -16,7 +16,7 @@
   <link rel="manifest" href="admin.webmanifest?v=portrait-reminder-v1" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
-  <link rel="stylesheet" href="admin.css?v=v563-merit-polish" />
+  <link rel="stylesheet" href="admin.css?v=v564-admin-theme" />
   <script src="orientation-lock.js?v=appwide-v6" defer></script>
 
   <style>
@@ -143,6 +143,11 @@
   background:#333!important;
 }
 </style>
+
+  <!-- Admin appearance layer: loaded last so it can normalize legacy one-off colors. -->
+  <script src="admin-theme.js?v=v564-admin-theme"></script>
+  <link rel="stylesheet" href="admin-theme.css?v=v564-admin-theme" />
+
 </head>
 
 <body>
@@ -181,6 +186,14 @@
         <div class="panelNavActions">
           <a class="panelNavBtn" href="index.html">🏠 Homepage</a>
           <a class="panelNavBtn" href="officer.html">👥 Officers</a>
+          <div class="adminThemeControl" title="Choose how the Admin panel looks on this device">
+            <label for="adminThemeMode">Appearance</label>
+            <select id="adminThemeMode" aria-label="Admin appearance">
+              <option value="system">System</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </div>
           <button class="logoutBtn" onclick="logoutAdmin()">Logout</button>
         </div>
       </header>

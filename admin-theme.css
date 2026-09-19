@@ -1,0 +1,590 @@
+/* =========================================================
+   SFK ADMIN APPEARANCE SYSTEM v1
+   Loaded AFTER legacy Admin CSS/inline fixes so the whole
+   Admin remains readable in both Light and Dark appearance.
+========================================================= */
+html[data-admin-theme="light"] {
+  --admin-page-a:#f7c600;
+  --admin-page-b:#ffdf3a;
+  --admin-page-glow:rgba(255,255,255,.28);
+  --admin-surface:#ffffff;
+  --admin-surface-2:#fffdf4;
+  --admin-surface-3:#f5f6f8;
+  --admin-surface-invert:#151515;
+  --admin-text:#17191d;
+  --admin-text-soft:#434952;
+  --admin-muted:#606975;
+  --admin-muted-2:#7b8490;
+  --admin-invert-text:#ffffff;
+  --admin-border:#1d1f22;
+  --admin-border-soft:#d7dbe0;
+  --admin-border-faint:#e8eaed;
+  --admin-accent:#f7c600;
+  --admin-accent-2:#ffd84d;
+  --admin-accent-text:#151515;
+  --admin-focus:rgba(247,198,0,.30);
+  --admin-shadow:rgba(17,17,17,.22);
+  --admin-shadow-soft:rgba(17,17,17,.08);
+  --admin-input:#ffffff;
+  --admin-input-text:#16181c;
+  --admin-input-placeholder:#737c87;
+  --admin-row-hover:#fff7c7;
+  --admin-row-selected:#ffef9f;
+  --admin-danger-bg:#fff1f2;
+  --admin-danger-border:#e5a1a8;
+  --admin-danger-text:#8d1829;
+  --admin-info-bg:#edf7ff;
+  --admin-info-border:#a8d5f1;
+  --admin-info-text:#174f72;
+  --admin-success:#17633d;
+  --admin-warning:#8a5700;
+}
+
+html[data-admin-theme="dark"] {
+  --admin-page-a:#0b0d10;
+  --admin-page-b:#17130a;
+  --admin-page-glow:rgba(247,198,0,.09);
+  --admin-surface:#181b20;
+  --admin-surface-2:#1f2329;
+  --admin-surface-3:#252a31;
+  --admin-surface-invert:#f5f1df;
+  --admin-text:#f3f5f7;
+  --admin-text-soft:#d3d8de;
+  --admin-muted:#b5bdc7;
+  --admin-muted-2:#909aa7;
+  --admin-invert-text:#17191d;
+  --admin-border:#f7c600;
+  --admin-border-soft:#444b55;
+  --admin-border-faint:#333943;
+  --admin-accent:#f7c600;
+  --admin-accent-2:#ffe06a;
+  --admin-accent-text:#111315;
+  --admin-focus:rgba(247,198,0,.24);
+  --admin-shadow:rgba(0,0,0,.52);
+  --admin-shadow-soft:rgba(0,0,0,.28);
+  --admin-input:#111419;
+  --admin-input-text:#f5f7f8;
+  --admin-input-placeholder:#98a2ae;
+  --admin-row-hover:#302b17;
+  --admin-row-selected:#403716;
+  --admin-danger-bg:#32171c;
+  --admin-danger-border:#7d303d;
+  --admin-danger-text:#ffd3d9;
+  --admin-info-bg:#142630;
+  --admin-info-border:#2c6e91;
+  --admin-info-text:#c9ecff;
+  --admin-success:#8ae0ae;
+  --admin-warning:#ffd180;
+}
+
+html[data-admin-theme] body {
+  background:
+    radial-gradient(circle at 12% 0%, var(--admin-page-glow), transparent 34%),
+    linear-gradient(135deg,var(--admin-page-a),var(--admin-page-b)) !important;
+  color:var(--admin-text) !important;
+}
+
+html[data-admin-theme] body,
+html[data-admin-theme] .adminApp,
+html[data-admin-theme] .adminPanel,
+html[data-admin-theme] .toolModalContent {
+  color:var(--admin-text);
+}
+
+/* Login + top navigation */
+html[data-admin-theme] .loginCard,
+html[data-admin-theme] .adminTopbar {
+  background:var(--admin-surface-2) !important;
+  color:var(--admin-text) !important;
+  border-color:var(--admin-border) !important;
+  box-shadow:6px 6px 0 var(--admin-shadow) !important;
+}
+html[data-admin-theme="dark"] .adminTopbar,
+html[data-admin-theme="dark"] .loginCard {
+  background:#121419 !important;
+}
+html[data-admin-theme] .adminTopbar p,
+html[data-admin-theme] .loginCard p { color:var(--admin-warning) !important; }
+html[data-admin-theme="dark"] .adminTopbar p,
+html[data-admin-theme="dark"] .loginCard p { color:var(--admin-accent-2) !important; }
+
+html[data-admin-theme] .panelNavBtn,
+html[data-admin-theme] .logoutBtn {
+  border-color:var(--admin-border-soft) !important;
+}
+html[data-admin-theme] .panelNavBtn {
+  background:var(--admin-surface) !important;
+  color:var(--admin-text) !important;
+}
+html[data-admin-theme] .panelNavBtn:hover { background:var(--admin-accent) !important;color:var(--admin-accent-text) !important; }
+html[data-admin-theme] .logoutBtn { background:var(--admin-accent) !important;color:var(--admin-accent-text) !important; }
+
+.adminThemeControl {
+  display:grid;
+  grid-template-columns:auto minmax(96px,auto);
+  align-items:center;
+  gap:7px;
+  min-height:40px;
+  padding:5px 7px 5px 10px;
+  border:1px solid var(--admin-border-soft);
+  border-radius:999px;
+  background:var(--admin-surface);
+  color:var(--admin-text);
+}
+.adminThemeControl label {
+  margin:0!important;
+  font-size:.68rem!important;
+  letter-spacing:.02em!important;
+  text-transform:none!important;
+  color:var(--admin-muted)!important;
+  white-space:nowrap;
+}
+.adminThemeControl select {
+  width:auto!important;
+  min-width:100px;
+  min-height:30px!important;
+  margin:0!important;
+  padding:4px 26px 4px 9px!important;
+  border:1px solid var(--admin-border-soft)!important;
+  border-radius:999px!important;
+  background:var(--admin-input)!important;
+  color:var(--admin-input-text)!important;
+  font-size:.76rem!important;
+  font-weight:900!important;
+}
+
+/* Core surfaces */
+html[data-admin-theme] .formCard,
+html[data-admin-theme] .toolLauncher,
+html[data-admin-theme] .managePanel,
+html[data-admin-theme] .toolModalCard,
+html[data-admin-theme] .editModalCard,
+html[data-admin-theme] .homepageEffectAccordion,
+html[data-admin-theme] .homepageEffectAccordionBody,
+html[data-admin-theme] .richComposer {
+  background:var(--admin-surface) !important;
+  color:var(--admin-text) !important;
+  border-color:var(--admin-border-soft) !important;
+  box-shadow:0 12px 28px var(--admin-shadow-soft) !important;
+}
+html[data-admin-theme] .formCard,
+html[data-admin-theme] .toolLauncher,
+html[data-admin-theme] .managePanel { border-left-color:var(--admin-accent) !important; }
+html[data-admin-theme] .formCard h2,
+html[data-admin-theme] .toolLauncherHeader,
+html[data-admin-theme] .manageHeader,
+html[data-admin-theme] .editModalHeader,
+html[data-admin-theme] .toolModalHeader { border-color:var(--admin-accent) !important; }
+
+/* Page lock: deliberately high contrast in BOTH modes. */
+html[data-admin-theme] .pageLockCard.highlightCard {
+  background:#17191d !important;
+  color:#f8fafc !important;
+  border-color:#545b66 !important;
+  border-left-color:var(--admin-accent) !important;
+}
+html[data-admin-theme] .pageLockCard.highlightCard h2,
+html[data-admin-theme] .pageLockCard.highlightCard label { color:#ffe071 !important; }
+html[data-admin-theme] .pageLockCard.highlightCard .fieldHint,
+html[data-admin-theme] .pageLockCard.highlightCard p,
+html[data-admin-theme] .pageLockCard.highlightCard small { color:#e1e6ec !important; }
+html[data-admin-theme] .pageLockCard.highlightCard textarea,
+html[data-admin-theme] .pageLockCard.highlightCard input,
+html[data-admin-theme] .pageLockCard.highlightCard select { background:#fff !important;color:#151515 !important;border-color:#ffe071 !important; }
+
+/* General text */
+html[data-admin-theme] label,
+html[data-admin-theme] .formCard label,
+html[data-admin-theme] .manageFilters label,
+html[data-admin-theme] .homepageEffectFreedomWallFields label { color:var(--admin-text-soft) !important; }
+html[data-admin-theme] .fieldHint,
+html[data-admin-theme] .manageHeader p,
+html[data-admin-theme] .editModalHeader p,
+html[data-admin-theme] .toolLaunchButton small,
+html[data-admin-theme] .toolLauncherHeader span,
+html[data-admin-theme] .toolEyebrow,
+html[data-admin-theme] .freedomWallAdminCustomizationHead small,
+html[data-admin-theme] .freedomWallPlaylistHead small,
+html[data-admin-theme] .freedomWallSessionHead small,
+html[data-admin-theme] .freedomWallPlaylistHint,
+html[data-admin-theme] .freedomWallPlaylistBulkHead small,
+html[data-admin-theme] .freedomWallPlaylistBulkStatus,
+html[data-admin-theme] .freedomWallAdminNoteSearchHelp,
+html[data-admin-theme] .freedomWallAdminNoteMeta,
+html[data-admin-theme] .homepageEffectFreedomWallFields small[style*="color"] {
+  color:var(--admin-muted) !important;
+}
+
+/* Inputs and native controls */
+html[data-admin-theme] input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),
+html[data-admin-theme] textarea,
+html[data-admin-theme] select,
+html[data-admin-theme] .manageFilters input,
+html[data-admin-theme] .manageFilters select,
+html[data-admin-theme] .freedomWallAdminNoteSearchWrap input,
+html[data-admin-theme] .freedomWallPlaylistBulkPanel textarea {
+  background:var(--admin-input) !important;
+  color:var(--admin-input-text) !important;
+  border-color:var(--admin-border-soft) !important;
+  caret-color:var(--admin-text) !important;
+  box-shadow:none !important;
+}
+html[data-admin-theme] input::placeholder,
+html[data-admin-theme] textarea::placeholder,
+html[data-admin-theme] .richEditor:empty::before { color:var(--admin-input-placeholder) !important; opacity:1; }
+html[data-admin-theme] input:focus,
+html[data-admin-theme] textarea:focus,
+html[data-admin-theme] select:focus,
+html[data-admin-theme] .richEditor:focus {
+  border-color:var(--admin-accent) !important;
+  box-shadow:0 0 0 3px var(--admin-focus) !important;
+}
+html[data-admin-theme] select option { background:var(--admin-input);color:var(--admin-input-text); }
+html[data-admin-theme] input[type="checkbox"],
+html[data-admin-theme] input[type="radio"] { accent-color:var(--admin-accent); }
+
+/* Tool launcher */
+html[data-admin-theme] .toolLaunchButton {
+  background:var(--admin-surface-2) !important;
+  color:var(--admin-text) !important;
+  border-color:var(--admin-border-soft) !important;
+  box-shadow:0 6px 14px var(--admin-shadow-soft) !important;
+}
+html[data-admin-theme] .toolLaunchButton:hover,
+html[data-admin-theme] .toolLaunchButton:focus-visible { background:var(--admin-accent) !important;color:var(--admin-accent-text) !important; }
+html[data-admin-theme] .toolLaunchButton:hover small,
+html[data-admin-theme] .toolLaunchButton:focus-visible small { color:#282000 !important; }
+html[data-admin-theme] .manageLaunchButton { background:#16181c !important;color:#ffe071 !important;border-color:#555c66 !important; }
+html[data-admin-theme] .manageLaunchButton small { color:#eef1f4 !important; }
+
+/* Student / GC member list */
+html[data-admin-theme] .chatRosterCard {
+  background:var(--admin-surface) !important;
+  color:var(--admin-text) !important;
+  border-color:var(--admin-border-soft) !important;
+  box-shadow:0 14px 32px var(--admin-shadow-soft) !important;
+}
+html[data-admin-theme] .chatRosterCard::before { background:linear-gradient(180deg,var(--admin-accent),#ffae00) !important; }
+html[data-admin-theme] .chatRosterCard h2,
+html[data-admin-theme] .chatRosterRow strong { color:var(--admin-text) !important; }
+html[data-admin-theme] .chatRosterCard .fieldHint,
+html[data-admin-theme] .chatRosterRow small { color:var(--admin-muted) !important; }
+html[data-admin-theme] .chatRosterCard textarea { background:var(--admin-input) !important;color:var(--admin-input-text) !important;border-color:var(--admin-border-soft) !important; }
+html[data-admin-theme] .chatRosterRow {
+  background:var(--admin-surface-2) !important;
+  color:var(--admin-text) !important;
+  border-color:var(--admin-border-soft) !important;
+  box-shadow:0 6px 15px var(--admin-shadow-soft) !important;
+}
+html[data-admin-theme] .chatRosterList::-webkit-scrollbar-thumb { background:var(--admin-border-soft) !important; }
+html[data-admin-theme] .chatDangerZone {
+  background:var(--admin-danger-bg) !important;
+  border-color:var(--admin-danger-border) !important;
+  color:var(--admin-danger-text) !important;
+}
+html[data-admin-theme] .chatDangerZone strong,
+html[data-admin-theme] .chatDangerZone small { color:var(--admin-danger-text) !important; }
+
+/* Manage Existing Data / student-style lists */
+html[data-admin-theme] .managePanel { color:var(--admin-text) !important; }
+html[data-admin-theme] .manageTabs button,
+html[data-admin-theme] .batchActions button {
+  background:var(--admin-surface-2) !important;
+  color:var(--admin-text) !important;
+  border-color:var(--admin-border-soft) !important;
+  box-shadow:none !important;
+}
+html[data-admin-theme] .manageTabs button:hover,
+html[data-admin-theme] .manageTabs button.active,
+html[data-admin-theme] .batchActions button:hover { background:var(--admin-accent) !important;color:var(--admin-accent-text) !important;border-color:var(--admin-accent) !important; }
+html[data-admin-theme] .batchActions .dangerBatchBtn { background:#b42332 !important;color:#fff !important;border-color:#e15b68 !important; }
+html[data-admin-theme] .manageStatus { background:#14161a !important;color:#ffe071 !important;border-color:var(--admin-accent) !important; }
+html[data-admin-theme] .tableWrap { background:var(--admin-surface) !important;border-color:var(--admin-border-soft) !important;box-shadow:none !important; }
+html[data-admin-theme] #adminDataTable th { background:#15171b !important;color:#ffe071 !important;border-color:#464c55 !important; }
+html[data-admin-theme] #adminDataTable td {
+  background:var(--admin-surface) !important;
+  color:var(--admin-text) !important;
+  border-bottom-color:var(--admin-border-faint) !important;
+  border-right-color:var(--admin-border-faint) !important;
+}
+html[data-admin-theme] #adminDataTable tbody tr:hover td { background:var(--admin-row-hover) !important; }
+html[data-admin-theme] #adminDataTable tbody tr.selectedRow td { background:var(--admin-row-selected) !important;outline-color:var(--admin-border-soft) !important; }
+html[data-admin-theme] #adminDataTable .rowNumberCell { background:var(--admin-surface-3) !important;color:var(--admin-muted) !important; }
+html[data-admin-theme] #adminDataTable .emptyCell { color:var(--admin-muted-2) !important; }
+html[data-admin-theme] .rowSelectInput { accent-color:var(--admin-accent) !important; }
+html[data-admin-theme] .tableActionBtn { border-color:var(--admin-border-soft) !important;box-shadow:none !important; }
+html[data-admin-theme] .editBtn { background:var(--admin-accent) !important;color:var(--admin-accent-text) !important; }
+html[data-admin-theme] .hideBtn { background:#202329 !important;color:#ffe071 !important;border-color:#545b65 !important; }
+html[data-admin-theme] .deleteBtn { background:#b42332 !important;color:#fff !important;border-color:#e15b68 !important; }
+
+/* Modals + rich composer */
+html[data-admin-theme] .toolModalBackdrop,
+html[data-admin-theme] .editModal { background:rgba(0,0,0,.72) !important; }
+html[data-admin-theme] .toolModalCard,
+html[data-admin-theme] .editModalCard { border-color:var(--admin-border-soft) !important; }
+html[data-admin-theme] .toolModalHeader,
+html[data-admin-theme] .editModalHeader { background:var(--admin-surface) !important;color:var(--admin-text) !important; }
+html[data-admin-theme] .toolModalClose,
+html[data-admin-theme] .modalCloseBtn { background:#16181c !important;color:#ffe071 !important;border-color:#555c66 !important; }
+html[data-admin-theme] .richToolbar,
+html[data-admin-theme] .richToolbarGroup {
+  background:var(--admin-surface-3) !important;
+  color:var(--admin-text) !important;
+  border-color:var(--admin-border-soft) !important;
+}
+html[data-admin-theme] .richToolbar button,
+html[data-admin-theme] .richColorPickerLabel {
+  background:var(--admin-surface) !important;
+  color:var(--admin-text) !important;
+  border-color:var(--admin-border-soft) !important;
+}
+html[data-admin-theme] .richToolbar button:hover { background:var(--admin-accent) !important;color:var(--admin-accent-text) !important; }
+html[data-admin-theme] .richEditor { background:var(--admin-input) !important;color:var(--admin-input-text) !important;border-color:var(--admin-border-soft) !important; }
+
+/* Homepage Display / Effects accordions */
+html[data-admin-theme] .homepageEffectAccordion { border-color:var(--admin-border-soft) !important; }
+html[data-admin-theme] .homepageEffectAccordion:not(.is-open) > .homepageEffectAccordionToggle,
+html[data-admin-theme] .homepageEffectAccordion:not(.is-open) > .homepageEffectAccordionToggle * {
+  background:var(--admin-surface-2) !important;
+  color:var(--admin-text) !important;
+}
+html[data-admin-theme] .homepageEffectAccordion.is-open > .homepageEffectAccordionToggle,
+html[data-admin-theme] .homepageEffectAccordion.is-open > .homepageEffectAccordionToggle * {
+  background:#17191d !important;
+  color:#f8fafc !important;
+}
+html[data-admin-theme] .homepageEffectAccordion.is-nested:not(.is-open) > .homepageEffectAccordionToggle,
+html[data-admin-theme] .homepageEffectAccordion.is-nested:not(.is-open) > .homepageEffectAccordionToggle * {
+  background:var(--admin-surface-3) !important;
+  color:var(--admin-text) !important;
+}
+html[data-admin-theme] .homepageEffectAccordion.is-nested.is-open > .homepageEffectAccordionToggle,
+html[data-admin-theme] .homepageEffectAccordion.is-nested.is-open > .homepageEffectAccordionToggle * {
+  background:var(--admin-accent) !important;
+  color:var(--admin-accent-text) !important;
+}
+html[data-admin-theme] .homepageEffectAccordionChevron { background:var(--admin-surface-3) !important;color:var(--admin-text) !important; }
+html[data-admin-theme] .homepageEffectAccordion.is-open .homepageEffectAccordionChevron { background:#30343a !important;color:#fff !important; }
+
+/* Freedom Wall admin internals */
+html[data-admin-theme] .homepageEffectFreedomWallFields,
+html[data-admin-theme] .freedomWallAdminCustomization,
+html[data-admin-theme] .freedomWallNoteManager,
+html[data-admin-theme] .freedomWallAdminReplyPanel,
+html[data-admin-theme] .freedomWallPlaylistAdmin,
+html[data-admin-theme] .freedomWallSessionAdmin,
+html[data-admin-theme] .freedomWallPlaylistBulkPanel,
+html[data-admin-theme] .freedomWallAdminNote,
+html[data-admin-theme] .freedomWallAdminReply,
+html[data-admin-theme] .freedomWallPlaylistRow,
+html[data-admin-theme] .freedomWallCurrentSession {
+  background:var(--admin-surface-2) !important;
+  color:var(--admin-text) !important;
+  border-color:var(--admin-border-soft) !important;
+}
+html[data-admin-theme] .freedomWallAdminIntro { background:#16181c !important;color:#fff !important; }
+html[data-admin-theme] .freedomWallAdminIntro span { color:#e4e8ed !important; }
+html[data-admin-theme] .freedomWallAdminNoteText span,
+html[data-admin-theme] .freedomWallAdminReplyMain span,
+html[data-admin-theme] .freedomWallAdminReplyMain small,
+html[data-admin-theme] .freedomWallAdminNoteManagerHead span,
+html[data-admin-theme] .freedomWallAdminReplyPanelHead span { color:var(--admin-muted) !important; }
+html[data-admin-theme] .freedomWallAdminNoteEmpty,
+html[data-admin-theme] .freedomWallAdminReplyEmpty,
+html[data-admin-theme] .freedomWallPlaylistEmpty { color:var(--admin-muted) !important;border-color:var(--admin-border-soft) !important; }
+
+/* Merit admin rows */
+html[data-admin-theme] .meritAwardAdminRow {
+  background:var(--admin-surface-2) !important;
+  color:var(--admin-text) !important;
+  border-color:var(--admin-border-soft) !important;
+  box-shadow:none !important;
+}
+html[data-admin-theme] .meritAwardAdminRow label > span { color:var(--admin-muted) !important; }
+html[data-admin-theme] .meritAwardConductField { background:var(--admin-info-bg) !important;border-color:var(--admin-info-border) !important; }
+html[data-admin-theme] .meritAwardConductField span { color:var(--admin-info-text) !important; }
+
+/* Homepage Design Studio: theme the admin shell, not the actual preview colors. */
+html[data-admin-theme] .homepageDesignStudio { color:var(--admin-text) !important; }
+html[data-admin-theme] .homepageDesignStudio .designGroup { background:var(--admin-surface-2) !important;border-color:var(--admin-border-soft) !important; }
+html[data-admin-theme] .homepageDesignStudio .designGroup summary { background:#17191d !important;color:#ffe071 !important; }
+html[data-admin-theme] .homepageDesignStudio .designSettingGrid label {
+  background:var(--admin-surface) !important;
+  color:var(--admin-text) !important;
+  border-color:var(--admin-border-soft) !important;
+  box-shadow:0 6px 15px var(--admin-shadow-soft) !important;
+}
+html[data-admin-theme] .homepageDesignStudio .designSettingGrid input[type="text"],
+html[data-admin-theme] .homepageDesignStudio .designSettingGrid select {
+  background:var(--admin-input) !important;
+  color:var(--admin-input-text) !important;
+  border-color:var(--admin-border-soft) !important;
+}
+html[data-admin-theme] .homepageDesignStudio .designCheckRow {
+  background:var(--admin-surface-2) !important;
+  color:var(--admin-text) !important;
+  border-color:var(--admin-accent) !important;
+}
+html[data-admin-theme] .homepageDesignStudio .themePresetPickerV107,
+html[data-admin-theme] .homepageDesignStudio .themePresetTop,
+html[data-admin-theme] .homepageDesignStudio .themePresetFilters { background:var(--admin-surface-2) !important;color:var(--admin-text) !important;border-color:var(--admin-border-soft) !important; }
+
+/* Status colors */
+html[data-admin-theme] .is-success,
+html[data-admin-theme] .successText { color:var(--admin-success) !important; }
+html[data-admin-theme] .is-warn,
+html[data-admin-theme] .warningText { color:var(--admin-warning) !important; }
+
+/* Scrollbars */
+html[data-admin-theme] .toolModalContent,
+html[data-admin-theme] .tableWrap,
+html[data-admin-theme] .chatRosterList,
+html[data-admin-theme] .freedomWallAdminNoteList,
+html[data-admin-theme] .freedomWallAdminReplyList,
+html[data-admin-theme] .richEditor {
+  scrollbar-color:var(--admin-border-soft) transparent;
+}
+
+/* Phone usability: the large header should not permanently cover the admin. */
+@media (max-width:760px) {
+  html[data-admin-theme] .adminTopbar { position:static !important; }
+  html[data-admin-theme] .panelNavActions { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
+  html[data-admin-theme] .adminThemeControl { grid-column:1/-1;grid-template-columns:1fr minmax(120px,auto);border-radius:14px;min-height:44px;padding:6px 8px 6px 10px; }
+  html[data-admin-theme] .adminThemeControl select { width:100% !important;min-height:34px!important; }
+  html[data-admin-theme] .panelNavActions .logoutBtn { grid-column:1/-1 !important; }
+  html[data-admin-theme] .chatRosterRow { display:grid !important;grid-template-columns:minmax(0,1fr) auto !important;align-items:center !important; }
+  html[data-admin-theme] .chatRosterRow button { min-width:78px !important; }
+}
+
+@media (max-width:430px) {
+  html[data-admin-theme] .panelNavActions { grid-template-columns:1fr !important; }
+  html[data-admin-theme] .adminThemeControl,
+  html[data-admin-theme] .panelNavActions .logoutBtn { grid-column:1 !important; }
+  html[data-admin-theme] .chatRosterRow { grid-template-columns:1fr !important; }
+  html[data-admin-theme] .chatRosterRow button { width:100% !important; }
+}
+
+/* Additional nested panels discovered in the full Admin audit. */
+html[data-admin-theme] .loadingSoundCard,
+html[data-admin-theme] .loadingSoundOption,
+html[data-admin-theme] .themePresetPickerV107,
+html[data-admin-theme] .presetCardV107,
+html[data-admin-theme] .presetEmptyV107,
+html[data-admin-theme] .scheduleColorFamilyTool,
+html[data-admin-theme] .scheduleEditCascade,
+html[data-admin-theme] .homepageEffectPictureFields,
+html[data-admin-theme] .homepageEffectImagePreview,
+html[data-admin-theme] .homepageEffectImagePreviewItem,
+html[data-admin-theme] .homepageEffectAudioFields,
+html[data-admin-theme] .homepageEffectYouTubeFields,
+html[data-admin-theme] .homepageEffectMeritFields,
+html[data-admin-theme] .meritAwardPlaylistAdmin {
+  background:var(--admin-surface-2) !important;
+  color:var(--admin-text) !important;
+  border-color:var(--admin-border-soft) !important;
+}
+html[data-admin-theme] .loadingSoundOption {
+  box-shadow:0 6px 16px var(--admin-shadow-soft) !important;
+}
+html[data-admin-theme] .loadingSoundOption.is-selected {
+  background:#15171b !important;
+  color:#ffe071 !important;
+  border-color:var(--admin-accent) !important;
+}
+html[data-admin-theme] .loadingSoundOption.is-selected small { color:#e9edf1 !important;opacity:.9!important; }
+html[data-admin-theme] .loadingSoundOption.is-selected .loadingSoundPreview { background:var(--admin-surface) !important;color:var(--admin-text) !important;border-color:var(--admin-border-soft) !important; }
+
+html[data-admin-theme] .themePresetPickerV107 .themePresetFilters input,
+html[data-admin-theme] .themePresetPickerV107 .themePresetFilters select { background:var(--admin-input)!important;color:var(--admin-input-text)!important;border-color:var(--admin-border-soft)!important; }
+html[data-admin-theme] .presetCardV107 { color:var(--admin-text)!important;border-color:var(--admin-border-soft)!important;box-shadow:0 7px 18px var(--admin-shadow-soft)!important; }
+html[data-admin-theme] .presetCardV107:hover { box-shadow:0 10px 22px var(--admin-shadow-soft)!important; }
+html[data-admin-theme] .presetCardV107.isActive { border-color:#22c55e!important; }
+html[data-admin-theme] .presetCardV107.isPreview { border-color:#4f8cff!important; }
+
+html[data-admin-theme] .scheduleColorPicker { background:var(--admin-input)!important;border-color:var(--admin-border-soft)!important; }
+html[data-admin-theme] .scheduleColorFamilyCheck strong,
+html[data-admin-theme] .scheduleEditCascade strong { color:var(--admin-text)!important; }
+html[data-admin-theme] .scheduleColorFamilyCheck small,
+html[data-admin-theme] .scheduleEditCascade small,
+html[data-admin-theme] .scheduleColorMatchStatus { color:var(--admin-muted)!important; }
+html[data-admin-theme] .scheduleColorFamilyCheck input,
+html[data-admin-theme] .scheduleEditCascade input { accent-color:var(--admin-accent)!important; }
+
+html[data-admin-theme] .homepageEffectToggleRow,
+html[data-admin-theme] .pageLockSwitch,
+html[data-admin-theme] .meritAwardWaveRow,
+html[data-admin-theme] .homepageEffectYouTubeFields .homepageEffectToggleRow {
+  background:var(--admin-surface-3) !important;
+  color:var(--admin-text) !important;
+  border-color:var(--admin-border-soft) !important;
+}
+html[data-admin-theme] .homepageEffectToggleRow small,
+html[data-admin-theme] .homepageEffectOptional { color:var(--admin-muted)!important; }
+html[data-admin-theme] .homepageEffectToggleRow input[type="checkbox"] { accent-color:var(--admin-accent)!important; }
+
+html[data-admin-theme] .homepageEffectImagePreviewItem small { color:var(--admin-muted)!important; }
+html[data-admin-theme] .homepageEffectSavedMediaPlaceholder { background:var(--admin-surface-3)!important;border-color:var(--admin-border-soft)!important;color:var(--admin-muted)!important; }
+html[data-admin-theme] .formCard .homepageEffectImagePreview button,
+html[data-admin-theme] .formCard .homepageEffectActions .homepageEffectNormalBtn {
+  background:var(--admin-surface)!important;
+  color:var(--admin-text)!important;
+  border-color:var(--admin-border-soft)!important;
+}
+html[data-admin-theme] .formCard .homepageEffectImagePreview button:hover,
+html[data-admin-theme] .formCard .homepageEffectActions .homepageEffectNormalBtn:hover { background:var(--admin-accent)!important;color:var(--admin-accent-text)!important; }
+
+html[data-admin-theme] .homepageEffectMeritFields .meritAwardAdminHead small,
+html[data-admin-theme] .meritAwardPlaylistAdmin > label:not(.homepageEffectToggleRow) { color:var(--admin-muted)!important; }
+html[data-admin-theme] .meritAwardPlaylistAdmin textarea { background:var(--admin-input)!important;color:var(--admin-input-text)!important;border-color:var(--admin-border-soft)!important; }
+
+html[data-admin-theme] .dangerSoftBtn { background:var(--admin-danger-bg)!important;color:var(--admin-danger-text)!important;border-color:var(--admin-danger-border)!important; }
+html[data-admin-theme] .cancelEditBtn,
+html[data-admin-theme] .editModalActions,
+html[data-admin-theme] .adminToast {
+  background:var(--admin-surface-2)!important;
+  color:var(--admin-text)!important;
+  border-color:var(--admin-border-soft)!important;
+}
+html[data-admin-theme] .adminToast button { background:var(--admin-surface)!important;color:var(--admin-text)!important;border-color:var(--admin-accent)!important; }
+
+/* Keep regular Admin action buttons distinct on dark surfaces. */
+html[data-admin-theme="dark"] .formCard button:not(.deleteBtn):not(.dangerBatchBtn):not(.meritAwardRemove):not(.freedomWallAdminNoteDelete):not(.freedomWallAdminReplyDelete),
+html[data-admin-theme="dark"] .refreshBtn {
+  border-color:#4a515b !important;
+}
+
+/* Freedom Wall session/export/video controls from the inline Admin stylesheet. */
+html[data-admin-theme] .freedomWallSessionCard,
+html[data-admin-theme] .freedomWallExportAdmin,
+html[data-admin-theme] .freedomWallYoutubePlaybackSetting {
+  background:var(--admin-surface-2) !important;
+  color:var(--admin-text) !important;
+  border-color:var(--admin-border-soft) !important;
+}
+html[data-admin-theme] .freedomWallSessionCard.is-active {
+  background:var(--admin-info-bg) !important;
+  border-color:var(--admin-info-border) !important;
+  box-shadow:0 0 0 1px var(--admin-info-border) inset !important;
+}
+html[data-admin-theme] .freedomWallSessionInfo span,
+html[data-admin-theme] .freedomWallSessionInfo small,
+html[data-admin-theme] .freedomWallExportAdminHead small,
+html[data-admin-theme] .freedomWallExportAdminStatus,
+html[data-admin-theme] .freedomWallYoutubePlaybackSetting small { color:var(--admin-muted)!important; }
+html[data-admin-theme] .freedomWallYoutubePlaybackSetting select { background:var(--admin-input)!important;color:var(--admin-input-text)!important;border-color:var(--admin-border-soft)!important; }
+html[data-admin-theme] .freedomWallExportAdminActions button,
+html[data-admin-theme] .freedomWallSessionActions button { background:#17191d!important;color:#fff!important;border-color:#4b525d!important; }
+html[data-admin-theme] .freedomWallSessionActions button[data-fw-session-delete] { background:#b42332!important;color:#fff!important; }
+
+/* Override old blanket readability hacks with theme-aware colors. */
+html[data-admin-theme] .freedomWallNoteManager,
+html[data-admin-theme] .freedomWallNoteManager * { color:var(--admin-text)!important; }
+html[data-admin-theme] .freedomWallAdminNoteText span,
+html[data-admin-theme] .freedomWallAdminNoteMeta,
+html[data-admin-theme] .freedomWallAdminReplyMain span,
+html[data-admin-theme] .freedomWallAdminReplyMain small,
+html[data-admin-theme] .freedomWallAdminReplyPanelHead span { color:var(--admin-muted)!important; }
+html[data-admin-theme] .freedomWallAdminNoteDelete,
+html[data-admin-theme] .freedomWallAdminReplyDelete { color:#fff!important;background:#b42332!important; }
+html[data-admin-theme] .freedomWallAdminReplyManage { color:#fff!important;background:#1d4ed8!important; }
+html[data-admin-theme] .freedomWallCurrentSession code { color:var(--admin-text)!important;background:var(--admin-surface-3)!important;border-color:var(--admin-border-soft)!important; }

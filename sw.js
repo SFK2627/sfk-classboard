@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-main-pwa-v563-merit-polish";
+const CACHE_NAME = "sfk-main-pwa-v565-memories-photobooth";
 const CACHE_PREFIXES_TO_DELETE = ["sfk-main-pwa-", "sfk-sw.js-"];
 const NAVIGATION_FALLBACK_URL = "./index.html";
 const NAVIGATION_TIMEOUT_MS = 2500;
@@ -29,6 +29,8 @@ const APP_SHELL = [
   "./admin.html",
   "./freedom-wall-exact-export.html",
   "./admin.css",
+  "./admin-theme.css",
+  "./admin-theme.js",
   "./admin.js",
   "./officer.html",
   "./officer.css",
