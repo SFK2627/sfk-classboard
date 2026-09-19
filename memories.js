@@ -172,6 +172,23 @@ function bindMemoryEvents() {
   document.getElementById("photoboothSound")?.addEventListener("change", syncPhotoboothSettingsFromUi);
   document.getElementById("photoboothSwitchCamera")?.addEventListener("click", switchPhotoboothCamera);
   document.getElementById("photoboothCaptureButton")?.addEventListener("click", startPhotoboothCaptureSequence);
+  document.getElementById("mobilePhotoboothClose")?.addEventListener("click", closePhotobooth);
+  document.getElementById("mobilePhotoboothTimer")?.addEventListener("click", () => togglePhotoboothMobileTray("timer"));
+  document.getElementById("mobilePhotoboothSound")?.addEventListener("click", togglePhotoboothMobileSound);
+  document.getElementById("mobilePhotoboothSwitch")?.addEventListener("click", switchPhotoboothCamera);
+  document.getElementById("mobilePhotoboothFilter")?.addEventListener("click", () => togglePhotoboothMobileTray("filters"));
+  document.getElementById("mobilePhotoboothLayout")?.addEventListener("click", () => togglePhotoboothMobileTray("layout"));
+  document.getElementById("mobilePhotoboothStrengthButton")?.addEventListener("click", () => togglePhotoboothMobileTray("strength"));
+  document.getElementById("mobilePhotoboothMirror")?.addEventListener("click", togglePhotoboothMobileMirror);
+  document.getElementById("mobilePhotoboothCapture")?.addEventListener("click", startPhotoboothCaptureSequence);
+  document.getElementById("photoboothMobileFilterOptions")?.addEventListener("click", handlePhotoboothMobileFilterClick);
+  document.getElementById("photoboothMobileFilterCategories")?.addEventListener("click", handlePhotoboothMobileCategoryClick);
+  document.getElementById("mobilePhotoboothFavorite")?.addEventListener("click", togglePhotoboothFavoriteFilter);
+  document.getElementById("mobilePhotoboothDefault")?.addEventListener("click", setPhotoboothDefaultFilterFromCurrent);
+  document.getElementById("mobilePhotoboothStrength")?.addEventListener("input", handlePhotoboothStrengthInput);
+  document.querySelector(".photoboothMobileLayoutOptions")?.addEventListener("click", handlePhotoboothMobileLayoutClick);
+  document.querySelector(".photoboothMobileTimerOptions")?.addEventListener("click", handlePhotoboothMobileTimerClick);
+  document.getElementById("photoboothVideo")?.addEventListener("click", closePhotoboothMobileTray);
   document.getElementById("photoboothRetakeButton")?.addEventListener("click", resetPhotoboothResult);
   document.getElementById("photoboothDownloadButton")?.addEventListener("click", downloadPhotoboothResult);
   document.getElementById("photoboothPostButton")?.addEventListener("click", sendPhotoboothToMemories);
@@ -6835,6 +6852,204 @@ function getPhotoboothFilterString(filter = photoBoothState.filter, strength = g
   return resolver(amount) || "none";
 }
 
+function initPhotoboothMobileFilters() {
+  const host = document.getElementById("photoboothMobileFilterOptions");
+  if (!host || host.children.length) return;
+  const fragment = document.createDocumentFragment();
+  Object.entries(PHOTOBOOTH_FILTER_META).forEach(([filter, meta]) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "photoboothMobileFilterCard";
+    button.dataset.mobileFilter = filter;
+    button.innerHTML = `<span class="boothFilterSwatch filter-${filter}"></span><b>${escapeHtml(meta.label || filter)}</b>`;
+    fragment.appendChild(button);
+  });
+  host.appendChild(fragment);
+}
+
+function syncPhotoboothMobileUi() {
+  initPhotoboothMobileFilters();
+  const filter = photoBoothState.filter || "normal";
+  const meta = PHOTOBOOTH_FILTER_META[filter] || { label:"Normal", category:"aesthetic" };
+  const strength = getPhotoboothStrength(filter);
+  const favorites = new Set(photoBoothState.favoriteFilters || []);
+  const category = photoBoothState.filterCategory || "all";
+  const filterLabel = document.getElementById("mobilePhotoboothFilterLabel");
+  const strengthLabel = document.getElementById("mobilePhotoboothStrengthLabel");
+  const timerLabel = document.getElementById("mobilePhotoboothTimerLabel");
+  const layoutLabel = document.getElementById("mobilePhotoboothLayoutLabel");
+  const filterMeta = document.getElementById("mobilePhotoboothFilterMeta");
+  const strengthMeta = document.getElementById("mobilePhotoboothStrengthMeta");
+  if (filterLabel) filterLabel.textContent = meta.label;
+  if (strengthLabel) strengthLabel.textContent = `${strength}%`;
+  if (timerLabel) timerLabel.textContent = photoBoothState.timer ? `${photoBoothState.timer}s` : "Off";
+  if (layoutLabel) {
+    const labels = { single:"Single", strip2:"Strip 2", strip3:"Strip 3", grid4:"2×2", strip4:"Strip 4" };
+    layoutLabel.textContent = labels[photoBoothState.layout] || "Single";
+  }
+  if (filterMeta) filterMeta.textContent = `${meta.label} • ${strength}%`;
+  if (strengthMeta) strengthMeta.textContent = `${meta.label} • ${strength}%`;
+
+  document.querySelectorAll("[data-mobile-filter]").forEach((button) => {
+    const key = String(button.dataset.mobileFilter || "normal");
+    const itemMeta = PHOTOBOOTH_FILTER_META[key] || {};
+    const visible = category === "all"
+      ? true
+      : category === "favorites"
+        ? favorites.has(key)
+        : itemMeta.category === category;
+    button.hidden = !visible;
+    button.classList.toggle("is-active", key === filter);
+    button.classList.toggle("is-favorite", favorites.has(key));
+    button.classList.toggle("is-default", key === photoBoothState.defaultFilter);
+  });
+  document.querySelectorAll("[data-mobile-filter-category]").forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.mobileFilterCategory === category);
+  });
+  document.querySelectorAll("[data-mobile-layout]").forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.mobileLayout === photoBoothState.layout);
+  });
+  document.querySelectorAll("[data-mobile-timer]").forEach((button) => {
+    button.classList.toggle("is-active", Number(button.dataset.mobileTimer) === Number(photoBoothState.timer));
+  });
+
+  const soundButton = document.getElementById("mobilePhotoboothSound");
+  if (soundButton) {
+    soundButton.classList.toggle("is-active", Boolean(photoBoothState.sound));
+    soundButton.setAttribute("aria-pressed", photoBoothState.sound ? "true" : "false");
+    const icon = soundButton.querySelector("span");
+    if (icon) icon.textContent = photoBoothState.sound ? "🔊" : "🔇";
+  }
+  const mirrorButton = document.getElementById("mobilePhotoboothMirror");
+  if (mirrorButton) {
+    mirrorButton.classList.toggle("is-active", Boolean(photoBoothState.mirror));
+    mirrorButton.setAttribute("aria-pressed", photoBoothState.mirror ? "true" : "false");
+  }
+  const mobileFavorite = document.getElementById("mobilePhotoboothFavorite");
+  if (mobileFavorite) {
+    const active = favorites.has(filter);
+    mobileFavorite.textContent = active ? "★ Favorited" : "☆ Favorite";
+    mobileFavorite.classList.toggle("is-active", active);
+  }
+  const mobileDefault = document.getElementById("mobilePhotoboothDefault");
+  if (mobileDefault) {
+    const active = filter === photoBoothState.defaultFilter;
+    mobileDefault.textContent = active ? "Default ✓" : "Set Default";
+    mobileDefault.classList.toggle("is-active", active);
+  }
+  const mobileStrength = document.getElementById("mobilePhotoboothStrength");
+  const mobileStrengthValue = document.getElementById("mobilePhotoboothStrengthValue");
+  if (mobileStrength) mobileStrength.value = String(strength);
+  if (mobileStrengthValue) mobileStrengthValue.textContent = `${strength}%`;
+}
+
+function closePhotoboothMobileTray() {
+  const tray = document.getElementById("photoboothMobileTray");
+  if (!tray) return;
+  tray.hidden = true;
+  tray.dataset.activePanel = "";
+  tray.querySelectorAll("[data-mobile-panel]").forEach((panel) => { panel.hidden = true; });
+  ["mobilePhotoboothFilter","mobilePhotoboothLayout","mobilePhotoboothStrengthButton","mobilePhotoboothTimer"].forEach((id) => {
+    document.getElementById(id)?.classList.remove("is-open");
+  });
+}
+
+function togglePhotoboothMobileTray(panelName) {
+  if (photoBoothState.busy || document.querySelector(".photoboothModal")?.classList.contains("is-result-mode")) return;
+  const tray = document.getElementById("photoboothMobileTray");
+  if (!tray) return;
+  const next = String(panelName || "");
+  if (!tray.hidden && tray.dataset.activePanel === next) {
+    closePhotoboothMobileTray();
+    return;
+  }
+  tray.hidden = false;
+  tray.dataset.activePanel = next;
+  tray.querySelectorAll("[data-mobile-panel]").forEach((panel) => {
+    panel.hidden = panel.dataset.mobilePanel !== next;
+  });
+  const map = { filters:"mobilePhotoboothFilter", layout:"mobilePhotoboothLayout", strength:"mobilePhotoboothStrengthButton", timer:"mobilePhotoboothTimer" };
+  Object.values(map).forEach((id) => document.getElementById(id)?.classList.remove("is-open"));
+  document.getElementById(map[next])?.classList.add("is-open");
+  syncPhotoboothMobileUi();
+}
+
+function handlePhotoboothMobileFilterClick(event) {
+  const button = event.target.closest("[data-mobile-filter]");
+  if (!button || photoBoothState.busy) return;
+  applyPhotoboothFilterSelection(String(button.dataset.mobileFilter || "normal"));
+}
+
+function setPhotoboothFilterCategory(category) {
+  photoBoothState.filterCategory = String(category || "all");
+  const currentMeta = PHOTOBOOTH_FILTER_META[photoBoothState.filter] || {};
+  const favorites = new Set(photoBoothState.favoriteFilters || []);
+  const selectedVisible = photoBoothState.filterCategory === "all"
+    || (photoBoothState.filterCategory === "favorites" ? favorites.has(photoBoothState.filter) : currentMeta.category === photoBoothState.filterCategory);
+  if (!selectedVisible) {
+    const firstMatch = Object.keys(PHOTOBOOTH_FILTER_META).find((filter) => photoBoothState.filterCategory === "favorites"
+      ? favorites.has(filter)
+      : photoBoothState.filterCategory === "all" || PHOTOBOOTH_FILTER_META[filter]?.category === photoBoothState.filterCategory);
+    if (firstMatch) photoBoothState.filter = firstMatch;
+  }
+  updatePhotoboothFilterUi();
+  applyPhotoboothLiveFilter();
+}
+
+function handlePhotoboothMobileCategoryClick(event) {
+  const button = event.target.closest("[data-mobile-filter-category]");
+  if (!button || photoBoothState.busy) return;
+  setPhotoboothFilterCategory(button.dataset.mobileFilterCategory || "all");
+}
+
+function handlePhotoboothMobileLayoutClick(event) {
+  const button = event.target.closest("[data-mobile-layout]");
+  if (!button || photoBoothState.busy) return;
+  const layout = String(button.dataset.mobileLayout || "single");
+  if (!PHOTOBOOTH_LAYOUTS[layout]) return;
+  photoBoothState.layout = layout;
+  document.querySelectorAll("[data-booth-layout]").forEach((item) => item.classList.toggle("is-active", item.dataset.boothLayout === layout));
+  const guide = document.getElementById("photoboothGuide");
+  if (guide) guide.className = `photoboothGuide layout-${layout}`;
+  resetPhotoboothResult({ keepCamera:true, quiet:true });
+  syncPhotoboothCaptureButton();
+  syncPhotoboothMobileUi();
+  closePhotoboothMobileTray();
+}
+
+function handlePhotoboothMobileTimerClick(event) {
+  const button = event.target.closest("[data-mobile-timer]");
+  if (!button || photoBoothState.busy) return;
+  const value = Number(button.dataset.mobileTimer || 0);
+  const select = document.getElementById("photoboothTimer");
+  if (select) select.value = String(value);
+  syncPhotoboothSettingsFromUi();
+  closePhotoboothMobileTray();
+}
+
+function togglePhotoboothMobileSound() {
+  if (photoBoothState.busy) return;
+  const checkbox = document.getElementById("photoboothSound");
+  if (checkbox) checkbox.checked = !checkbox.checked;
+  syncPhotoboothSettingsFromUi();
+}
+
+function togglePhotoboothMobileMirror() {
+  if (photoBoothState.busy) return;
+  const checkbox = document.getElementById("photoboothMirror");
+  if (checkbox) checkbox.checked = !checkbox.checked;
+  syncPhotoboothSettingsFromUi();
+}
+
+function setPhotoboothMobileBusy(busy) {
+  const disabled = Boolean(busy);
+  ["mobilePhotoboothCapture","mobilePhotoboothSwitch","mobilePhotoboothTimer","mobilePhotoboothSound","mobilePhotoboothFilter","mobilePhotoboothLayout","mobilePhotoboothStrengthButton","mobilePhotoboothMirror"].forEach((id) => {
+    const button = document.getElementById(id);
+    if (button) button.disabled = disabled;
+  });
+  if (disabled) closePhotoboothMobileTray();
+}
+
 function renderPhotoboothFilterButtons() {
   const selected = photoBoothState.filter;
   const category = photoBoothState.filterCategory || "all";
@@ -6859,6 +7074,7 @@ function renderPhotoboothFilterButtons() {
   });
   const emptyState = document.getElementById("photoboothFilterEmptyState");
   if (emptyState) emptyState.hidden = !(category === "favorites" && visibleCount === 0);
+  syncPhotoboothMobileUi();
 }
 
 function updatePhotoboothFilterUi() {
@@ -6899,19 +7115,7 @@ function applyPhotoboothFilterSelection(filter, { reset = true } = {}) {
 function handlePhotoboothFilterCategoryClick(event) {
   const button = event.target.closest("[data-filter-category]");
   if (!button || photoBoothState.busy) return;
-  photoBoothState.filterCategory = String(button.dataset.filterCategory || "all");
-  const currentMeta = PHOTOBOOTH_FILTER_META[photoBoothState.filter] || {};
-  const favorites = new Set(photoBoothState.favoriteFilters || []);
-  const selectedVisible = photoBoothState.filterCategory === "all"
-    || (photoBoothState.filterCategory === "favorites" ? favorites.has(photoBoothState.filter) : currentMeta.category === photoBoothState.filterCategory);
-  if (!selectedVisible) {
-    const firstMatch = Object.keys(PHOTOBOOTH_FILTER_META).find((filter) => photoBoothState.filterCategory === "favorites"
-      ? favorites.has(filter)
-      : photoBoothState.filterCategory === "all" || PHOTOBOOTH_FILTER_META[filter]?.category === photoBoothState.filterCategory);
-    if (firstMatch) photoBoothState.filter = firstMatch;
-  }
-  updatePhotoboothFilterUi();
-  applyPhotoboothLiveFilter();
+  setPhotoboothFilterCategory(button.dataset.filterCategory || "all");
 }
 
 function togglePhotoboothFavoriteFilter() {
@@ -6925,6 +7129,7 @@ function togglePhotoboothFavoriteFilter() {
     if (nextFavorite) photoBoothState.filter = nextFavorite;
   }
   updatePhotoboothFilterUi();
+  applyPhotoboothLiveFilter();
 }
 
 function setPhotoboothDefaultFilterFromCurrent() {
@@ -6958,6 +7163,7 @@ function syncPhotoboothSettingsFromUi() {
   photoBoothState.sound = document.getElementById("photoboothSound")?.checked !== false;
   const stage = document.getElementById("photoboothStage");
   stage?.classList.toggle("no-mirror", !photoBoothState.mirror);
+  syncPhotoboothMobileUi();
 }
 
 function handlePhotoboothLayoutClick(event) {
@@ -6971,6 +7177,7 @@ function handlePhotoboothLayoutClick(event) {
   if (guide) guide.className = `photoboothGuide layout-${layout}`;
   resetPhotoboothResult({ keepCamera:true, quiet:true });
   syncPhotoboothCaptureButton();
+  syncPhotoboothMobileUi();
 }
 
 function handlePhotoboothFilterClick(event) {
@@ -6999,9 +7206,11 @@ async function openPhotobooth() {
   modal.hidden = false;
   document.body.style.overflow = "hidden";
   photoBoothState.filter = photoBoothState.defaultFilter || "normal";
+  closePhotoboothMobileTray();
   syncPhotoboothSettingsFromUi();
   syncPhotoboothCaptureButton();
   updatePhotoboothFilterUi();
+  syncPhotoboothMobileUi();
   resetPhotoboothResult({ keepCamera:true, quiet:true });
   setPhotoboothStatus("Starting camera...");
   await startPhotoboothCamera();
@@ -7013,6 +7222,8 @@ function closePhotobooth() {
   modal.hidden = true;
   stopPhotoboothCamera();
   photoBoothState.busy = false;
+  setPhotoboothMobileBusy(false);
+  closePhotoboothMobileTray();
   hidePhotoboothCountdown();
   document.body.style.overflow = "";
 }
@@ -7208,6 +7419,7 @@ async function startPhotoboothCaptureSequence() {
   syncPhotoboothSettingsFromUi();
   const layout = PHOTOBOOTH_LAYOUTS[photoBoothState.layout] || PHOTOBOOTH_LAYOUTS.single;
   photoBoothState.busy = true;
+  setPhotoboothMobileBusy(true);
   photoBoothState.shots = [];
   const captureButton = document.getElementById("photoboothCaptureButton");
   const switchButton = document.getElementById("photoboothSwitchCamera");
@@ -7232,6 +7444,7 @@ async function startPhotoboothCaptureSequence() {
     setPhotoboothStatus(error.message || "Unable to capture the photo.", true);
   } finally {
     photoBoothState.busy = false;
+    setPhotoboothMobileBusy(false);
     if (captureButton) captureButton.disabled = false;
     if (switchButton) switchButton.disabled = false;
     const progress = document.getElementById("photoboothShotProgress");
@@ -7301,6 +7514,7 @@ async function renderPhotoboothCollage() {
   if (photoBoothState.resultUrl) URL.revokeObjectURL(photoBoothState.resultUrl);
   photoBoothState.resultUrl = URL.createObjectURL(photoBoothState.resultBlob);
   stage.classList.remove("is-live"); stage.classList.add("is-result");
+  closePhotoboothMobileTray();
   document.querySelector(".photoboothModal")?.classList.add("is-result-mode");
   canvas.hidden=false;
   document.getElementById("photoboothCaptureButton").hidden=true;
@@ -7329,6 +7543,7 @@ function resetPhotoboothResult({ keepCamera=true, quiet=false } = {}) {
   if (!quiet) setPhotoboothStatus(photoBoothState.stream ? "Camera ready for another session." : "Starting camera...");
   if (!keepCamera && photoBoothState.stream) stopPhotoboothCamera();
   syncPhotoboothCaptureButton();
+  syncPhotoboothMobileUi();
 }
 
 function makePhotoboothFilename() {
