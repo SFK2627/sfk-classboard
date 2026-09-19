@@ -16,7 +16,7 @@
   <link rel="manifest" href="admin.webmanifest?v=portrait-reminder-v1" />
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=3" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=3" />
-  <link rel="stylesheet" href="admin.css?v=youtube-effect-v400" />
+  <link rel="stylesheet" href="admin.css?v=v563-merit-polish" />
   <script src="orientation-lock.js?v=appwide-v6" defer></script>
 
   <style>
@@ -261,6 +261,7 @@
             <option value="fog">Fog / Mist</option>
             <option value="snow">Snowfall</option>
             <option value="confetti">Celebration Confetti</option>
+            <option value="merit-awardees">🏅 Merit & Conduct Awardees</option>
             <option value="hearts">Kindness Hearts</option>
             <option value="koala-family">Koala Family Walk + Heart Pose</option>
             <option value="stars">Starry Night</option>
@@ -313,6 +314,59 @@
 
             <label for="homepageEffectMessage">Message <span class="homepageEffectOptional">optional</span></label>
             <textarea id="homepageEffectMessage" maxlength="700" rows="4" placeholder="Example: Stay safe and dry. Please wait for further announcements."></textarea>
+          </div>
+
+          <div id="homepageEffectMeritFields" class="homepageEffectMeritFields" hidden>
+            <div class="meritAwardAdminIntro">
+              <strong>🏅 Merit & Conduct Recognition</strong>
+              <span>Add the students you want to recognize. A student may have Yellow, Green, or White Merit, Conduct only, or Merit + Conduct.</span>
+            </div>
+
+            <label for="homepageEffectMeritTerm">Term</label>
+            <select id="homepageEffectMeritTerm">
+              <option value="1st Term">1st Term</option>
+              <option value="2nd Term">2nd Term</option>
+              <option value="3rd Term">3rd Term</option>
+            </select>
+
+            <div class="meritAwardAdminHead">
+              <div>
+                <strong>Awardees</strong>
+                <small>Name, Merit color, and optional Conduct recognition.</small>
+              </div>
+              <button id="homepageEffectMeritAdd" type="button">＋ Add Awardee</button>
+            </div>
+            <div id="homepageEffectMeritList" class="meritAwardAdminList"></div>
+            <small class="fieldHint">The live recognition screen automatically adapts to the number of awardees and stays readable on phones, tablets, TVs, and projectors.</small>
+
+            <div class="meritAwardDisplayOptions">
+              <label class="homepageEffectToggleRow meritAwardWaveRow">
+                <input id="homepageEffectMeritCardWave" type="checkbox" checked />
+                <span><strong>Wave the student cards</strong><small>Smooth flag-like wave across the name cards. Turn OFF for a completely still recognition board.</small></span>
+              </label>
+
+              <div class="meritAwardPlaylistAdmin">
+                <label class="homepageEffectToggleRow meritAwardPlaylistEnableRow">
+                  <input id="homepageEffectMeritPlaylistEnabled" type="checkbox" />
+                  <span><strong>Background music playlist</strong><small>Play several direct MP3 / audio links while Merit Awardees mode is open.</small></span>
+                </label>
+
+                <label for="homepageEffectMeritPlaylistUrls">Song links <span class="homepageEffectOptional">optional</span></label>
+                <textarea id="homepageEffectMeritPlaylistUrls" rows="5" maxlength="60000" placeholder="https://...song-1.mp3&#10;https://...song-2.mp3&#10;https://...song-3.mp3"></textarea>
+                <small class="fieldHint">Paste up to 50 direct public HTTPS audio links. One link per line is easiest, but bulk-pasted HTTPS links are also detected.</small>
+
+                <div class="meritAwardPlaylistToggles">
+                  <label class="homepageEffectToggleRow">
+                    <input id="homepageEffectMeritPlaylistShuffle" type="checkbox" />
+                    <span><strong>Shuffle songs</strong><small>ON: every song plays once in a randomized cycle before reshuffling, without immediately repeating the previous song.</small></span>
+                  </label>
+                  <label class="homepageEffectToggleRow">
+                    <input id="homepageEffectMeritPlaylistLoop" type="checkbox" checked />
+                    <span><strong>Loop playlist</strong><small>OFF + Shuffle OFF starts with Song 1 and stops after the last song. Ordered mode always begins with the first link.</small></span>
+                  </label>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div id="homepageEffectFreedomWallFields" class="homepageEffectFreedomWallFields" hidden>
@@ -1367,11 +1421,11 @@ https://audio.jukehost.co.uk/AAAhttps://audio.jukehost.co.uk/BBBhttps://audio.ju
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js?v=2-secure-auth"></script>
   <script src="auth.js?v=admin-officer-rescue-v2"></script>
-  <script src="firebase-adapter.js?v=v456-freedom-wall-layout-admin-delete"></script>
+  <script src="firebase-adapter.js?v=v563-merit-polish"></script>
   <script src="app-presence.js?v=v551-whole-app-active"></script>
   <script src="pwa.js?v=v456-freedom-wall-layout-admin-delete"></script>
-  <script src="class-chat-admin.js?v=v456-freedom-wall-layout-admin-delete"></script>
-  <script src="admin.js?v=v456-freedom-wall-layout-admin-delete"></script>
+  <script src="class-chat-admin.js?v=v560-conduct-skyblue"></script>
+  <script src="admin.js?v=v563-merit-polish"></script>
 
 
   <script>
@@ -4200,7 +4254,10 @@ https://audio.jukehost.co.uk/AAAhttps://audio.jukehost.co.uk/BBBhttps://audio.ju
     makeSection({id:'homepageEffectAccordionSetup',title:'Display Setup',meta:'Turn the effect on/off and choose the display mode.',icon:'🌦️',nodes:[enabledRow,modeLabel,mode]});
 
     const textFields=card.querySelector('.homepageEffectTextFields');
-    makeSection({id:'homepageEffectAccordionText',title:'Title & Message',meta:'Prompt title and optional message shown with the selected effect.',icon:'✏️',nodes:[textFields]});
+    makeSection({id:'homepageEffectAccordionText',title:'Title & Message',meta:'Prompt title and optional message shown with the selected effect.',icon:'✏️',nodes:[textFields],watchHidden:textFields});
+
+    const merit=document.getElementById('homepageEffectMeritFields');
+    makeSection({id:'homepageEffectAccordionMerit',title:'Merit & Conduct Awardees',meta:'Choose the term and manually add recognized students.',icon:'🏅',nodes:[merit],watchHidden:merit});
 
     const wall=document.getElementById('homepageEffectFreedomWallFields');
     makeSection({id:'homepageEffectAccordionWall',title:'SFK #BeKind Wall Settings',meta:'Theme, student note options, music, saved walls, export and moderation.',icon:'📝',nodes:[wall],watchHidden:wall});
@@ -4235,6 +4292,8 @@ https://audio.jukehost.co.uk/AAAhttps://audio.jukehost.co.uk/BBBhttps://audio.ju
 
     const syncModeSections=()=>{
       [
+        ['homepageEffectAccordionText',textFields],
+        ['homepageEffectAccordionMerit',merit],
         ['homepageEffectAccordionWall',wall],
         ['homepageEffectAccordionPicture',picture],
         ['homepageEffectAccordionYoutube',youtube],

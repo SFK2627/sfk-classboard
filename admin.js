@@ -2870,6 +2870,13 @@ const HOMEPAGE_EFFECT_DEFAULTS = {
   HomepageEffectYouTubeUrl: "",
   HomepageEffectYouTubeMuted: "YES",
   HomepageEffectRickrollUrl: "https://streamable.com/33rhw4",
+  HomepageEffectMeritTerm: "2nd Term",
+  HomepageEffectMeritAwardees: "[]",
+  HomepageEffectMeritCardWave: "YES",
+  HomepageEffectMeritPlaylistEnabled: "NO",
+  HomepageEffectMeritPlaylist: "[]",
+  HomepageEffectMeritPlaylistShuffle: "NO",
+  HomepageEffectMeritPlaylistLoop: "YES",
   HomepageEffectUpdatedAt: ""
 };
 
@@ -2947,6 +2954,7 @@ const HOMEPAGE_EFFECT_MODE_NAMES = {
   fog: "Fog / Mist",
   snow: "Snowfall",
   confetti: "Celebration Confetti",
+  "merit-awardees": "Merit & Conduct Awardees",
   hearts: "Kindness Hearts",
   "koala-family": "Koala Family Walk + Heart Pose",
   stars: "Starry Night",
@@ -3030,6 +3038,135 @@ function clearHomepageEffectPreviewUrls() {
   homepageEffectPreviewObjectUrls = [];
 }
 
+const HOMEPAGE_MERIT_MAX_AWARDEES = 80;
+const HOMEPAGE_MERIT_TYPES = new Set(["none", "yellow", "green", "white"]);
+
+function normalizeHomepageMeritTerm(value) {
+  const term = String(value || "").trim();
+  return ["1st Term", "2nd Term", "3rd Term"].includes(term) ? term : "2nd Term";
+}
+
+function parseHomepageMeritAwardees(value) {
+  let list = [];
+  if (Array.isArray(value)) list = value;
+  else {
+    const raw = String(value || "").trim();
+    if (raw) {
+      try { const parsed = JSON.parse(raw); if (Array.isArray(parsed)) list = parsed; }
+      catch (error) { list = []; }
+    }
+  }
+  return list.slice(0, HOMEPAGE_MERIT_MAX_AWARDEES).map((item) => {
+    const source = item && typeof item === "object" ? item : { name: item };
+    const name = String(source.name || source.Name || "").trim().slice(0, 80);
+    const rawMerit = String(source.merit || source.Merit || "none").trim().toLowerCase();
+    const merit = HOMEPAGE_MERIT_TYPES.has(rawMerit) ? rawMerit : "none";
+    const conduct = source.conduct === true || String(source.conduct || source.Conduct || "").trim().toUpperCase() === "YES";
+    return { name, merit, conduct };
+  }).filter((item) => item.name && (item.merit !== "none" || item.conduct));
+}
+
+
+const HOMEPAGE_MERIT_PLAYLIST_MAX = 50;
+
+function normalizeHomepageMeritPlaylistTrack(item) {
+  const source = item && typeof item === "object" ? item : { url:item };
+  const url = String(source.url || source.Url || source.URL || "").trim().replace(/[),;.!]+$/g, "").slice(0, 1200);
+  if (!/^https:\/\//i.test(url)) return null;
+  const title = String(source.title || source.Title || "").trim().slice(0, 80);
+  return { title, url };
+}
+
+function parseHomepageMeritPlaylist(value, fallbackUrl = "") {
+  let list = [];
+  if (Array.isArray(value)) list = value;
+  else {
+    const raw = String(value || "").trim();
+    if (raw) {
+      try { const parsed = JSON.parse(raw); if (Array.isArray(parsed)) list = parsed; }
+      catch (error) { list = []; }
+    }
+  }
+  if (!list.length && /^https:\/\//i.test(String(fallbackUrl || "").trim())) list = [{ url:String(fallbackUrl).trim() }];
+  const seen = new Set();
+  const tracks = [];
+  list.forEach((item) => {
+    if (tracks.length >= HOMEPAGE_MERIT_PLAYLIST_MAX) return;
+    const track = normalizeHomepageMeritPlaylistTrack(item);
+    if (!track || seen.has(track.url)) return;
+    seen.add(track.url);
+    tracks.push(track);
+  });
+  return tracks;
+}
+
+function readHomepageMeritPlaylistAdmin() {
+  const raw = String(document.getElementById("homepageEffectMeritPlaylistUrls")?.value || "")
+    .replace(/&amp;/gi, "&")
+    .replace(/[\u200B-\u200D\uFEFF]/g, " ");
+  const matches = raw.match(/https:\/\/[^\s<>"']+/gi) || [];
+  const seen = new Set();
+  const tracks = [];
+  matches.forEach((value) => {
+    if (tracks.length >= HOMEPAGE_MERIT_PLAYLIST_MAX) return;
+    const track = normalizeHomepageMeritPlaylistTrack({ url:value });
+    if (!track || seen.has(track.url)) return;
+    seen.add(track.url);
+    tracks.push(track);
+  });
+  return tracks;
+}
+
+function getHomepageMeritDraftRows() {
+  const list = document.getElementById("homepageEffectMeritList");
+  if (!list) return [];
+  return Array.from(list.querySelectorAll(".meritAwardAdminRow")).slice(0, HOMEPAGE_MERIT_MAX_AWARDEES).map((row) => {
+    const name = String(row.querySelector('[data-merit-name]')?.value || "").trim().slice(0, 80);
+    const rawMerit = String(row.querySelector('[data-merit-type]')?.value || "none").trim().toLowerCase();
+    const merit = HOMEPAGE_MERIT_TYPES.has(rawMerit) ? rawMerit : "none";
+    const conduct = Boolean(row.querySelector('[data-merit-conduct]')?.checked);
+    return { name, merit, conduct };
+  }).filter((item) => item.name && (item.merit !== "none" || item.conduct));
+}
+
+function createHomepageMeritAdminRow(item = {}) {
+  const row = document.createElement("div");
+  row.className = "meritAwardAdminRow";
+  const merit = HOMEPAGE_MERIT_TYPES.has(String(item.merit || "").toLowerCase()) ? String(item.merit).toLowerCase() : "yellow";
+  row.innerHTML = `
+    <label class="meritAwardNameField"><span>Student name</span><input type="text" maxlength="80" data-merit-name placeholder="Student name" /></label>
+    <label class="meritAwardTypeField"><span>Merit</span><select data-merit-type>
+      <option value="none">No Merit</option>
+      <option value="yellow">Yellow Merit</option>
+      <option value="green">Green Merit</option>
+      <option value="white">White Merit</option>
+    </select></label>
+    <label class="meritAwardConductField"><input type="checkbox" data-merit-conduct /><span>Conduct</span></label>
+    <button class="meritAwardRemove" type="button" aria-label="Remove awardee">×</button>`;
+  row.querySelector('[data-merit-name]').value = String(item.name || "").slice(0, 80);
+  row.querySelector('[data-merit-type]').value = merit;
+  row.querySelector('[data-merit-conduct]').checked = Boolean(item.conduct);
+  row.querySelector('.meritAwardRemove').addEventListener('click', () => {
+    row.remove();
+    ensureHomepageMeritAdminRow();
+  });
+  return row;
+}
+
+function ensureHomepageMeritAdminRow() {
+  const list = document.getElementById("homepageEffectMeritList");
+  if (!list || list.children.length) return;
+  list.appendChild(createHomepageMeritAdminRow({ merit: "yellow", conduct: false }));
+}
+
+function renderHomepageMeritAdminRows(items = []) {
+  const list = document.getElementById("homepageEffectMeritList");
+  if (!list) return;
+  list.innerHTML = "";
+  const rows = Array.isArray(items) ? items.slice(0, HOMEPAGE_MERIT_MAX_AWARDEES) : [];
+  (rows.length ? rows : [{ merit: "yellow", conduct: false }]).forEach((item) => list.appendChild(createHomepageMeritAdminRow(item)));
+}
+
 function initHomepageEffectAdmin() {
   if (homepageEffectAdminReady) return;
   const mode = document.getElementById("homepageEffectMode");
@@ -3039,8 +3176,17 @@ function initHomepageEffectAdmin() {
   homepageEffectAdminLastMode = String(mode.value || "normal");
   mode.addEventListener("change", handleHomepageEffectModeChange);
   document.getElementById("homepageEffectEnabled")?.addEventListener("change", syncHomepageEffectAdminFields);
+  document.getElementById("homepageEffectMeritPlaylistEnabled")?.addEventListener("change", syncHomepageEffectAdminFields);
   document.getElementById("homepageEffectImageFile")?.addEventListener("change", handleHomepageEffectImageFileChange);
   document.getElementById("homepageEffectImageUrls")?.addEventListener("input", renderHomepageEffectAdminImagePreview);
+  document.getElementById("homepageEffectMeritAdd")?.addEventListener("click", () => {
+    const list = document.getElementById("homepageEffectMeritList");
+    if (!list) return;
+    if (list.children.length >= HOMEPAGE_MERIT_MAX_AWARDEES) { showToast(`Up to ${HOMEPAGE_MERIT_MAX_AWARDEES} awardees can be displayed.`); return; }
+    list.appendChild(createHomepageMeritAdminRow({ merit: "yellow", conduct: false }));
+    list.lastElementChild?.querySelector('[data-merit-name]')?.focus();
+  });
+  ensureHomepageMeritAdminRow();
   document.getElementById("homepageEffectRemoveImage")?.addEventListener("click", () => {
     homepageEffectSavedImages = [];
     homepageEffectPendingFiles = [];
@@ -3088,6 +3234,10 @@ function handleHomepageEffectModeChange() {
 function syncHomepageEffectAdminFields() {
   const mode = String(document.getElementById("homepageEffectMode")?.value || "normal");
   const enabled = Boolean(document.getElementById("homepageEffectEnabled")?.checked);
+  const meritFields = document.getElementById("homepageEffectMeritFields");
+  if (meritFields) meritFields.hidden = mode !== "merit-awardees";
+  const textFields = document.querySelector(".homepageEffectTextFields");
+  if (textFields) textFields.hidden = mode === "merit-awardees";
   const pictureFields = document.getElementById("homepageEffectPictureFields");
   if (pictureFields) pictureFields.hidden = mode !== "picture";
   const youtubeFields = document.getElementById("homepageEffectYouTubeFields");
@@ -3095,7 +3245,7 @@ function syncHomepageEffectAdminFields() {
   const rickrollFields = document.getElementById("homepageEffectRickrollFields");
   if (rickrollFields) rickrollFields.hidden = mode !== "rickroll";
   const audioFields = document.getElementById("homepageEffectAudioFields");
-  const genericAudioUnavailable = mode === "normal" || mode === "youtube" || mode === "rickroll";
+  const genericAudioUnavailable = mode === "normal" || mode === "youtube" || mode === "rickroll" || mode === "merit-awardees";
   if (audioFields) audioFields.hidden = genericAudioUnavailable;
   const audioEnabledEl = document.getElementById("homepageEffectAudioEnabled");
   const audioUrlEl = document.getElementById("homepageEffectAudioUrl");
@@ -3105,6 +3255,15 @@ function syncHomepageEffectAdminFields() {
   if (audioLoopEl) audioLoopEl.disabled = genericAudioUnavailable;
   const alertSoundRow = document.getElementById("homepageEffectAlertSoundRow");
   if (alertSoundRow) alertSoundRow.hidden = mode !== "alert";
+
+  const meritPlaylistEnabled = document.getElementById("homepageEffectMeritPlaylistEnabled");
+  const meritPlaylistUrls = document.getElementById("homepageEffectMeritPlaylistUrls");
+  const meritPlaylistShuffle = document.getElementById("homepageEffectMeritPlaylistShuffle");
+  const meritPlaylistLoop = document.getElementById("homepageEffectMeritPlaylistLoop");
+  const meritAudioActive = mode === "merit-awardees" && Boolean(meritPlaylistEnabled?.checked);
+  if (meritPlaylistUrls) meritPlaylistUrls.disabled = mode !== "merit-awardees" || !meritAudioActive;
+  if (meritPlaylistShuffle) meritPlaylistShuffle.disabled = mode !== "merit-awardees" || !meritAudioActive;
+  if (meritPlaylistLoop) meritPlaylistLoop.disabled = mode !== "merit-awardees" || !meritAudioActive;
 
   const status = document.getElementById("homepageEffectStatus");
   if (!status) return;
@@ -3142,6 +3301,12 @@ function fillHomepageEffectSettings(settings = {}) {
   const youtubeUrl = document.getElementById("homepageEffectYouTubeUrl");
   const youtubeMuted = document.getElementById("homepageEffectYouTubeMuted");
   const rickrollUrl = document.getElementById("homepageEffectRickrollUrl");
+  const meritTerm = document.getElementById("homepageEffectMeritTerm");
+  const meritCardWave = document.getElementById("homepageEffectMeritCardWave");
+  const meritPlaylistEnabled = document.getElementById("homepageEffectMeritPlaylistEnabled");
+  const meritPlaylistUrls = document.getElementById("homepageEffectMeritPlaylistUrls");
+  const meritPlaylistShuffle = document.getElementById("homepageEffectMeritPlaylistShuffle");
+  const meritPlaylistLoop = document.getElementById("homepageEffectMeritPlaylistLoop");
   const urls = document.getElementById("homepageEffectImageUrls");
   if (enabled) enabled.checked = String(merged.HomepageEffectEnabled || "").toUpperCase() === "YES";
   if (mode) mode.value = merged.HomepageEffectMode || "normal";
@@ -3166,6 +3331,20 @@ function fillHomepageEffectSettings(settings = {}) {
   if (youtubeUrl) youtubeUrl.value = normalizeHomepageEffectAdminYouTubeUrl(merged.HomepageEffectYouTubeUrl);
   if (youtubeMuted) youtubeMuted.checked = String(merged.HomepageEffectYouTubeMuted || "YES").toUpperCase() !== "NO";
   if (rickrollUrl) rickrollUrl.value = normalizeHomepageEffectAdminRickrollUrl(merged.HomepageEffectRickrollUrl) || "https://streamable.com/33rhw4";
+  if (meritTerm) meritTerm.value = normalizeHomepageMeritTerm(merged.HomepageEffectMeritTerm);
+  renderHomepageMeritAdminRows(parseHomepageMeritAwardees(merged.HomepageEffectMeritAwardees));
+  const hasMeritPlaylistSetting = Object.prototype.hasOwnProperty.call(settings || {}, "HomepageEffectMeritPlaylistEnabled");
+  const meritTracks = parseHomepageMeritPlaylist(
+    merged.HomepageEffectMeritPlaylist,
+    (!hasMeritPlaylistSetting && selectedMode === "merit-awardees" && audioEnabled?.checked) ? (savedAudioUrl || fallbackAudioUrl) : ""
+  );
+  if (meritCardWave) meritCardWave.checked = String(merged.HomepageEffectMeritCardWave || "YES").toUpperCase() !== "NO";
+  if (meritPlaylistEnabled) meritPlaylistEnabled.checked = hasMeritPlaylistSetting
+    ? String(merged.HomepageEffectMeritPlaylistEnabled || "NO").toUpperCase() === "YES"
+    : (selectedMode === "merit-awardees" && Boolean(audioEnabled?.checked) && meritTracks.length > 0);
+  if (meritPlaylistUrls) meritPlaylistUrls.value = meritTracks.map((track) => track.url).join("\n");
+  if (meritPlaylistShuffle) meritPlaylistShuffle.checked = String(merged.HomepageEffectMeritPlaylistShuffle || "NO").toUpperCase() === "YES";
+  if (meritPlaylistLoop) meritPlaylistLoop.checked = String(merged.HomepageEffectMeritPlaylistLoop || "YES").toUpperCase() !== "NO";
   homepageEffectAdminLastMode = selectedMode;
 
   homepageEffectSavedImages = parseHomepageEffectImageList(merged.HomepageEffectImages, merged.HomepageEffectImage);
@@ -3188,6 +3367,10 @@ function describeHomepageEffectAdminState(settings = {}) {
   }
   if (mode === "youtube") return "Published state: YouTube Video / Autoplay.";
   if (mode === "rickroll") return "Published state: Exit Button Prank / Rickroll.";
+  if (mode === "merit-awardees") {
+    const awardees = parseHomepageMeritAwardees(settings.HomepageEffectMeritAwardees);
+    return `Published state: Merit & Conduct Awardees — ${normalizeHomepageMeritTerm(settings.HomepageEffectMeritTerm)} (${awardees.length} student${awardees.length === 1 ? "" : "s"}).`;
+  }
   return `Published state: ${HOMEPAGE_EFFECT_MODE_NAMES[mode] || mode}.`;
 }
 
@@ -3328,12 +3511,27 @@ async function saveHomepageEffectSettings() {
 
     const requestedAudioEnabled = Boolean(document.getElementById("homepageEffectAudioEnabled")?.checked);
     const effectAudioUrl = normalizeHomepageEffectAdminAudioUrl(document.getElementById("homepageEffectAudioUrl")?.value);
-    const usesGenericEffectAudio = mode !== "normal" && mode !== "youtube" && mode !== "rickroll";
+    const usesGenericEffectAudio = mode !== "normal" && mode !== "youtube" && mode !== "rickroll" && mode !== "merit-awardees";
     if (requestedAudioEnabled && usesGenericEffectAudio && !effectAudioUrl) {
       throw new Error("Sound/music is enabled. Paste a direct public HTTPS audio link, or turn the sound option off.");
     }
     const effectAudioEnabled = requestedAudioEnabled && usesGenericEffectAudio && Boolean(effectAudioUrl);
     const effectAudioLoop = document.getElementById("homepageEffectAudioLoop")?.checked !== false;
+
+    const meritTerm = normalizeHomepageMeritTerm(document.getElementById("homepageEffectMeritTerm")?.value);
+    const meritAwardees = getHomepageMeritDraftRows();
+    if (mode === "merit-awardees" && enabledEl?.checked && !meritAwardees.length) {
+      throw new Error("Merit & Conduct Awardees mode needs at least one student with a Merit or Conduct award.");
+    }
+    const meritCardWave = document.getElementById("homepageEffectMeritCardWave")?.checked !== false;
+    const meritPlaylist = readHomepageMeritPlaylistAdmin();
+    const meritPlaylistRequested = Boolean(document.getElementById("homepageEffectMeritPlaylistEnabled")?.checked);
+    if (mode === "merit-awardees" && enabledEl?.checked && meritPlaylistRequested && !meritPlaylist.length) {
+      throw new Error("Merit background playlist is ON, but no valid direct HTTPS audio link was found.");
+    }
+    const meritPlaylistEnabled = meritPlaylistRequested && meritPlaylist.length > 0;
+    const meritPlaylistShuffle = Boolean(document.getElementById("homepageEffectMeritPlaylistShuffle")?.checked);
+    const meritPlaylistLoop = document.getElementById("homepageEffectMeritPlaylistLoop")?.checked !== false;
 
     const payload = {
       HomepageEffectEnabled: enabledEl?.checked ? "YES" : "NO",
@@ -3350,6 +3548,13 @@ async function saveHomepageEffectSettings() {
       HomepageEffectYouTubeUrl: effectYouTubeUrl,
       HomepageEffectYouTubeMuted: effectYouTubeMuted ? "YES" : "NO",
       HomepageEffectRickrollUrl: effectRickrollUrl,
+      HomepageEffectMeritTerm: meritTerm,
+      HomepageEffectMeritAwardees: JSON.stringify(meritAwardees),
+      HomepageEffectMeritCardWave: meritCardWave ? "YES" : "NO",
+      HomepageEffectMeritPlaylistEnabled: meritPlaylistEnabled ? "YES" : "NO",
+      HomepageEffectMeritPlaylist: JSON.stringify(meritPlaylist),
+      HomepageEffectMeritPlaylistShuffle: meritPlaylistShuffle ? "YES" : "NO",
+      HomepageEffectMeritPlaylistLoop: meritPlaylistLoop ? "YES" : "NO",
       // Legacy compatibility for older ClassBoard clients that only know the Spider sound switch.
       HomepageEffectSpiderSound: (["spider-glitch", "comic-web", "black-symbiote"].includes(mode) && effectAudioEnabled) ? "YES" : "NO"
     };
@@ -3369,7 +3574,9 @@ async function saveHomepageEffectSettings() {
       ? "Published: Normal / Current ClassBoard."
       : (mode === "picture"
         ? `Published picture gallery with ${imageValues.length} picture${imageValues.length === 1 ? "" : "s"}. Open ClassBoard devices will update automatically.`
-        : "Published. Open ClassBoard devices will update automatically.");
+        : (mode === "merit-awardees"
+          ? `Published ${meritTerm} recognition with ${meritAwardees.length} awardee${meritAwardees.length === 1 ? "" : "s"}. Open ClassBoard devices will update automatically.`
+          : "Published. Open ClassBoard devices will update automatically."));
 
     try {
       localStorage.setItem("sfkClassBoardHomepageEffectUpdatedAt", String(Date.now()));

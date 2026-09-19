@@ -40652,3 +40652,182 @@ html.sfkFreedomWallExactExport #homepageEffectLayer.is-freedom-wall-exact-curren
   }
   .homepageFreedomWallScene[data-theme="ocean-aquarium"] .freedomWallNote{border-radius:23px 23px 16px 23px!important}
 }
+
+
+/* =========================================================
+   Merit & Conduct Awardees — prestigious recognition display
+========================================================= */
+.homepageMeritPanel{display:none}
+.homepageEffectLayer.is-merit-awardees{pointer-events:auto;background:#090806;color:#fff}
+.homepageEffectLayer.is-merit-awardees .homepageEffectBackdrop{background:
+  radial-gradient(circle at 50% -12%,rgba(255,221,119,.24),transparent 34%),
+  radial-gradient(circle at 14% 24%,rgba(221,177,68,.12),transparent 27%),
+  radial-gradient(circle at 86% 72%,rgba(255,240,184,.09),transparent 25%),
+  linear-gradient(145deg,#080704 0%,#18130a 47%,#090806 100%)}
+.homepageEffectLayer.is-merit-awardees .homepageEffectBackdrop::before,.homepageEffectLayer.is-merit-awardees .homepageEffectBackdrop::after{content:"";position:absolute;inset:0;pointer-events:none}
+.homepageEffectLayer.is-merit-awardees .homepageEffectBackdrop::before{opacity:.34;background-image:linear-gradient(115deg,transparent 0 43%,rgba(255,229,145,.08) 49%,transparent 55%),radial-gradient(circle,rgba(255,224,127,.55) 0 1px,transparent 1.5px);background-size:auto,54px 54px;animation:sfkMeritShimmer 8s ease-in-out infinite alternate}
+.homepageEffectLayer.is-merit-awardees .homepageEffectBackdrop::after{inset:18px;border:1px solid rgba(232,200,116,.28);box-shadow:inset 0 0 0 5px rgba(255,255,255,.018),inset 0 0 80px rgba(207,160,50,.07)}
+@keyframes sfkMeritShimmer{from{transform:translate3d(-2%,0,0);opacity:.23}to{transform:translate3d(2%,0,0);opacity:.42}}
+.homepageEffectLayer.is-merit-awardees .homepageEffectContent{display:block;overflow-y:auto;overflow-x:hidden;padding:max(34px,env(safe-area-inset-top)) max(28px,env(safe-area-inset-right)) max(30px,env(safe-area-inset-bottom)) max(28px,env(safe-area-inset-left));pointer-events:auto;scrollbar-width:thin}
+.homepageEffectLayer.is-merit-awardees .homepageMeritPanel{position:relative;z-index:12;display:grid;width:min(1500px,100%);min-height:calc(100vh - 64px);margin:0 auto;align-content:center;gap:clamp(16px,2.4vh,30px);padding:clamp(18px,2.5vw,36px) clamp(8px,1.5vw,22px);box-sizing:border-box;text-align:center}
+.homepageMeritOrnament{display:grid;grid-template-columns:minmax(38px,140px) auto minmax(38px,140px);justify-content:center;align-items:center;gap:12px;color:#e9c35f}.homepageMeritOrnament span{height:1px;background:linear-gradient(90deg,transparent,#dcb34c)}.homepageMeritOrnament span:last-child{background:linear-gradient(90deg,#dcb34c,transparent)}.homepageMeritOrnament b{font-size:18px;text-shadow:0 0 18px rgba(255,218,99,.55)}
+.homepageMeritHeader{display:grid;justify-items:center;gap:7px}.homepageMeritEyebrow{font-size:clamp(.66rem,1vw,.9rem);font-weight:900;letter-spacing:.28em;color:#d9bc6d;text-transform:uppercase}.homepageMeritHeader h2{margin:0;max-width:1100px;font-family:Georgia,'Times New Roman',serif;font-size:clamp(2.15rem,5vw,5.4rem);line-height:.96;font-weight:700;letter-spacing:-.035em;color:#fff7db;text-shadow:0 2px 20px rgba(226,184,76,.18)}.homepageMeritHeader>p{margin:2px 0 0;padding:7px 17px;border-top:1px solid rgba(227,192,99,.38);border-bottom:1px solid rgba(227,192,99,.38);font-size:clamp(.84rem,1.25vw,1.12rem);font-weight:900;letter-spacing:.2em;text-transform:uppercase;color:#f1d98b}
+.homepageMeritSummary{display:flex;justify-content:center;flex-wrap:wrap;gap:7px;margin-top:5px}.homepageMeritSummary span{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border:1px solid rgba(255,255,255,.14);border-radius:999px;background:rgba(255,255,255,.045);font-size:clamp(.58rem,.8vw,.72rem);font-weight:850;letter-spacing:.04em;color:#e9e4d7}.homepageMeritSummary i{width:8px;height:8px;border-radius:50%;box-shadow:0 0 9px currentColor}.homepageMeritSummary .is-yellow i{background:#f2d442;color:#f2d442}.homepageMeritSummary .is-green i{background:#7fbd6d;color:#7fbd6d}.homepageMeritSummary .is-white i{background:#fff;color:#fff}.homepageMeritSummary .is-conduct i{width:auto;height:auto;background:none;color:#67c7f5;font-style:normal;box-shadow:none;text-shadow:0 0 10px rgba(103,199,245,.38)}.homepageMeritSummary b{color:#fff}
+.homepageMeritAwardees{--merit-cols:4;display:grid;grid-template-columns:repeat(var(--merit-cols),minmax(0,1fr));gap:clamp(9px,1.15vw,15px);width:100%;align-items:stretch}.homepageMeritAwardees[data-count="1"],.homepageMeritAwardees[data-count="2"]{--merit-cols:2;max-width:850px;margin-inline:auto}.homepageMeritAwardees[data-count="3"]{--merit-cols:3;max-width:1120px;margin-inline:auto}.homepageMeritAwardees[data-count="4"]{--merit-cols:4}.homepageMeritAwardees[data-count="5"],.homepageMeritAwardees[data-count="6"]{--merit-cols:3;max-width:1180px;margin-inline:auto}.homepageMeritAwardees[data-count="7"],.homepageMeritAwardees[data-count="8"]{--merit-cols:4}.homepageMeritAwardees[data-count="9"],.homepageMeritAwardees[data-count="10"],.homepageMeritAwardees[data-count="11"],.homepageMeritAwardees[data-count="12"]{--merit-cols:4}
+.homepageMeritCard{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"med text" "badges badges";align-items:center;gap:9px 12px;min-width:0;padding:clamp(12px,1.2vw,18px);border:1px solid rgba(222,190,106,.28);border-radius:15px;background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.025));box-shadow:0 15px 40px rgba(0,0,0,.26),inset 0 1px rgba(255,255,255,.06);text-align:left;overflow:hidden;animation:sfkMeritCardIn .6s cubic-bezier(.2,.75,.25,1) both;animation-delay:calc(var(--merit-order) * 34ms)}
+.homepageMeritCard::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:#b79b5b}.homepageMeritCard.merit-yellow::before{background:linear-gradient(#ffe56a,#cfa91d)}.homepageMeritCard.merit-green::before{background:linear-gradient(#a4d98c,#3d8045)}.homepageMeritCard.merit-white::before{background:linear-gradient(#fff,#c9c9c9)}.homepageMeritCard.merit-none::before{background:linear-gradient(#9ee3ff,#49aee6)}
+.homepageMeritCard.has-conduct{border-color:rgba(103,199,245,.58);box-shadow:0 15px 44px rgba(0,0,0,.3),0 0 27px rgba(103,199,245,.11),inset 0 1px rgba(255,255,255,.08)}
+.homepageMeritMedallion{grid-area:med;width:clamp(42px,4vw,57px);aspect-ratio:1;border-radius:50%;display:grid;place-items:center;border:1px solid rgba(237,204,112,.5);background:radial-gradient(circle at 35% 30%,#fff2bd 0 4%,#d7ad45 25%,#7c5c1b 72%,#4b3510 100%);box-shadow:inset 0 0 0 4px rgba(33,24,7,.52),0 5px 16px rgba(0,0,0,.28);color:#fff4c4;font-size:clamp(17px,2vw,25px);text-shadow:0 2px 4px rgba(0,0,0,.4)}
+.homepageMeritCardText{grid-area:text;min-width:0}.homepageMeritCardText h3{margin:0;color:#fffdf6;font-family:Georgia,'Times New Roman',serif;font-size:clamp(1rem,1.65vw,1.55rem);line-height:1.06;font-weight:700;overflow-wrap:anywhere}.homepageMeritCardText p{margin:5px 0 0;color:#cfc5a8;font-size:clamp(.57rem,.72vw,.72rem);font-weight:800;letter-spacing:.04em;text-transform:uppercase;line-height:1.25}.homepageMeritBadges{grid-area:badges;display:flex;flex-wrap:wrap;gap:5px;margin-left:calc(clamp(42px,4vw,57px) + 12px)}.homepageMeritBadge{display:inline-flex;align-items:center;min-height:22px;padding:3px 8px;border-radius:999px;border:1px solid transparent;font-size:clamp(.54rem,.68vw,.66rem);line-height:1;font-weight:900;letter-spacing:.035em;white-space:nowrap}.homepageMeritBadge.is-yellow{background:#e3c639;color:#1d1905;border-color:#ffe977}.homepageMeritBadge.is-green{background:#4f8b50;color:#fff;border-color:#80bd7c}.homepageMeritBadge.is-white{background:#f5f5f2;color:#292929;border-color:#fff}.homepageMeritBadge.is-conduct{background:linear-gradient(135deg,#6cccf6,#9ee3ff);color:#07324a;border-color:#bcecff;box-shadow:0 0 12px rgba(103,199,245,.16)}
+.homepageMeritFooter{display:flex;align-items:center;justify-content:center;gap:10px;color:#a99562;font-size:clamp(.58rem,.82vw,.78rem);font-weight:850;letter-spacing:.15em;text-transform:uppercase}.homepageMeritFooter b{color:#e6c35e}.homepageMeritEmpty{grid-column:1/-1;display:grid;gap:6px;padding:35px;border:1px dashed rgba(232,198,105,.35);border-radius:16px;color:#ddc98f}.homepageMeritEmpty strong{font-size:1.2rem}.homepageMeritEmpty span{font-size:.8rem;color:#a99a74}
+@keyframes sfkMeritCardIn{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
+@media(max-width:1100px){.homepageMeritAwardees{--merit-cols:3!important}.homepageMeritAwardees[data-count="1"],.homepageMeritAwardees[data-count="2"]{--merit-cols:2!important}}
+@media(max-width:760px){.homepageEffectLayer.is-merit-awardees .homepageEffectContent{padding:max(25px,env(safe-area-inset-top)) max(13px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(13px,env(safe-area-inset-left))}.homepageEffectLayer.is-merit-awardees .homepageEffectBackdrop::after{inset:8px}.homepageEffectLayer.is-merit-awardees .homepageMeritPanel{min-height:calc(100svh - 49px);align-content:start;gap:14px;padding:14px 1px 22px}.homepageMeritEyebrow{font-size:.58rem;letter-spacing:.2em}.homepageMeritHeader h2{font-size:clamp(2rem,10vw,3.35rem);line-height:.96}.homepageMeritHeader>p{font-size:.72rem;letter-spacing:.16em;padding:6px 11px}.homepageMeritAwardees{--merit-cols:2!important;gap:8px}.homepageMeritCard{grid-template-columns:38px minmax(0,1fr);gap:7px 9px;padding:11px 10px;border-radius:12px}.homepageMeritMedallion{width:38px}.homepageMeritCardText h3{font-size:clamp(.92rem,4vw,1.12rem)}.homepageMeritCardText p{font-size:.52rem}.homepageMeritBadges{margin-left:47px;gap:4px}.homepageMeritBadge{min-height:19px;padding:3px 6px;font-size:.5rem}.homepageMeritFooter{font-size:.52rem;letter-spacing:.09em;gap:6px}}
+@media(max-width:480px){.homepageEffectLayer.is-merit-awardees .homepageEffectContent{padding-left:10px;padding-right:10px}.homepageMeritSummary{gap:4px}.homepageMeritSummary span{font-size:.52rem;padding:4px 7px}.homepageMeritAwardees{--merit-cols:1!important}.homepageMeritAwardees[data-count="2"]{--merit-cols:1!important}.homepageMeritCard{grid-template-columns:42px minmax(0,1fr);padding:11px 12px}.homepageMeritMedallion{width:42px}.homepageMeritCardText h3{font-size:1.04rem}.homepageMeritBadges{margin-left:51px}.homepageMeritFooter{flex-wrap:wrap;line-height:1.35}.homepageEffectClose{top:max(7px,env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));width:36px;height:36px;min-width:36px;min-height:36px;font-size:32px}}
+@media(prefers-reduced-motion:reduce){.homepageEffectLayer.is-merit-awardees .homepageEffectBackdrop::before,.homepageMeritCard{animation:none!important}}
+
+
+/* v561 merit awardees: fit-all, no-scroll layout */
+.homepageEffectLayer.is-merit-awardees .homepageEffectContent{
+  height:100vh;height:100dvh;min-height:0!important;box-sizing:border-box;
+  overflow:hidden!important;padding:max(14px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))!important;
+}
+.homepageEffectLayer.is-merit-awardees .homepageMeritPanel{
+  width:min(1560px,100%);height:100%;min-height:0!important;max-height:100%;
+  display:grid;grid-template-rows:auto auto minmax(0,1fr) auto;align-content:stretch;
+  gap:var(--merit-panel-gap,clamp(7px,1.3vh,14px));padding:var(--merit-panel-pad,clamp(5px,1vh,10px)) clamp(2px,.9vw,12px)!important;
+  overflow:hidden;box-sizing:border-box;
+}
+.homepageEffectLayer.is-merit-awardees .homepageMeritOrnament{min-height:0}
+.homepageEffectLayer.is-merit-awardees .homepageMeritHeader{gap:var(--merit-header-gap,4px);min-height:0}
+.homepageEffectLayer.is-merit-awardees .homepageMeritHeader h2{font-size:var(--merit-title-size,clamp(1.7rem,4.2vw,4.4rem));line-height:.9}
+.homepageEffectLayer.is-merit-awardees .homepageMeritHeader>p{font-size:var(--merit-term-size,clamp(.64rem,1vw,.92rem));padding:4px 12px;margin-top:0}
+.homepageEffectLayer.is-merit-awardees .homepageMeritEyebrow{font-size:var(--merit-eyebrow-size,clamp(.52rem,.8vw,.72rem));letter-spacing:.22em}
+.homepageEffectLayer.is-merit-awardees .homepageMeritSummary{gap:4px;margin-top:1px}
+.homepageEffectLayer.is-merit-awardees .homepageMeritSummary span{padding:3px 7px;font-size:var(--merit-summary-size,clamp(.48rem,.66vw,.62rem))}
+.homepageEffectLayer.is-merit-awardees .homepageMeritAwardees{
+  --merit-cols:4;--merit-rows:1;min-height:0;height:100%;max-width:none!important;margin:0!important;
+  grid-template-columns:repeat(var(--merit-cols),minmax(0,1fr))!important;
+  grid-template-rows:repeat(var(--merit-rows),minmax(0,1fr));
+  grid-auto-rows:minmax(0,1fr);gap:var(--merit-grid-gap,7px)!important;overflow:hidden;
+}
+.homepageEffectLayer.is-merit-awardees .homepageMeritCard{
+  min-height:0;height:100%;box-sizing:border-box;align-content:center;
+  grid-template-columns:var(--merit-medal-size,38px) minmax(0,1fr);
+  gap:var(--merit-card-gap-y,5px) var(--merit-card-gap-x,8px);
+  padding:var(--merit-card-pad-y,8px) var(--merit-card-pad-x,9px)!important;
+  border-radius:var(--merit-card-radius,12px);overflow:hidden;
+}
+.homepageEffectLayer.is-merit-awardees .homepageMeritMedallion{width:var(--merit-medal-size,38px)!important;font-size:var(--merit-medal-font,17px)}
+.homepageEffectLayer.is-merit-awardees .homepageMeritCardText h3{
+  font-size:var(--merit-name-size,1rem)!important;line-height:1.02;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  text-wrap:balance;
+}
+.homepageEffectLayer.is-merit-awardees .homepageMeritCardText p{font-size:var(--merit-meta-size,.52rem)!important;margin-top:var(--merit-meta-gap,3px);line-height:1.05}
+.homepageEffectLayer.is-merit-awardees .homepageMeritBadges{
+  margin-left:calc(var(--merit-medal-size,38px) + var(--merit-card-gap-x,8px))!important;
+  gap:3px;flex-wrap:nowrap;min-width:0;overflow:hidden;
+}
+.homepageEffectLayer.is-merit-awardees .homepageMeritBadge{
+  min-height:var(--merit-badge-height,17px)!important;padding:2px var(--merit-badge-pad-x,6px)!important;
+  font-size:var(--merit-badge-size,.48rem)!important;letter-spacing:.02em;min-width:0;
+}
+.homepageEffectLayer.is-merit-awardees .homepageMeritFooter{font-size:var(--merit-footer-size,clamp(.48rem,.66vw,.62rem));line-height:1;min-height:0;white-space:nowrap}
+.homepageEffectLayer.is-merit-awardees .homepageMeritEmpty{height:100%;box-sizing:border-box;place-content:center;padding:16px}
+
+.homepageEffectLayer.is-merit-awardees .homepageMeritPanel[data-density="compact"]{
+  --merit-panel-gap:6px;--merit-panel-pad:4px;--merit-header-gap:2px;
+  --merit-title-size:clamp(1.35rem,3.3vw,3rem);--merit-term-size:.58rem;--merit-eyebrow-size:.48rem;
+  --merit-summary-size:.46rem;--merit-footer-size:.48rem;
+}
+.homepageEffectLayer.is-merit-awardees .homepageMeritPanel[data-density="compact"]{grid-template-rows:auto minmax(0,1fr) auto}
+.homepageEffectLayer.is-merit-awardees .homepageMeritPanel[data-density="compact"] .homepageMeritOrnament{display:none}
+.homepageEffectLayer.is-merit-awardees .homepageMeritPanel[data-density="compact"] .homepageMeritCardText p{display:none}
+.homepageEffectLayer.is-merit-awardees .homepageMeritPanel[data-density="ultra"]{
+  --merit-panel-gap:4px;--merit-panel-pad:2px;--merit-header-gap:1px;
+  --merit-title-size:clamp(1.08rem,2.8vw,2.2rem);--merit-term-size:.5rem;--merit-eyebrow-size:.42rem;
+  --merit-summary-size:.41rem;--merit-footer-size:.42rem;
+}
+.homepageEffectLayer.is-merit-awardees .homepageMeritPanel[data-density="ultra"]{grid-template-rows:auto minmax(0,1fr) auto}
+.homepageEffectLayer.is-merit-awardees .homepageMeritPanel[data-density="ultra"] .homepageMeritOrnament{display:none}
+.homepageEffectLayer.is-merit-awardees .homepageMeritPanel[data-density="ultra"] .homepageMeritCardText p{display:none}
+.homepageEffectLayer.is-merit-awardees .homepageMeritPanel[data-density="ultra"] .homepageMeritFooter{display:none}
+
+@media(max-width:760px){
+  .homepageEffectLayer.is-merit-awardees .homepageEffectContent{padding:max(9px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))!important}
+  .homepageEffectLayer.is-merit-awardees .homepageMeritPanel{align-content:stretch!important;padding:2px!important}
+  .homepageEffectLayer.is-merit-awardees .homepageMeritHeader h2{font-size:var(--merit-title-size,clamp(1.45rem,7.5vw,2.65rem))!important}
+  .homepageEffectLayer.is-merit-awardees .homepageMeritFooter{flex-wrap:nowrap!important}
+}
+@media(max-width:480px){
+  .homepageEffectLayer.is-merit-awardees .homepageEffectContent{padding-left:7px!important;padding-right:7px!important}
+  .homepageEffectLayer.is-merit-awardees .homepageMeritHeader>p{padding:3px 8px}
+  .homepageEffectLayer.is-merit-awardees .homepageMeritSummary span{padding:2px 5px}
+  .homepageEffectLayer.is-merit-awardees .homepageMeritFooter{letter-spacing:.055em;gap:4px}
+}
+
+
+/* v562 merit awardees: fill available screen space without scroll.
+   Compact/ultra hide the ornament, so their grid must use three rows
+   (header / awardees / footer) instead of leaving the flexible track on the footer. */
+.homepageEffectLayer.is-merit-awardees .homepageMeritAwardees{align-content:stretch}
+.homepageEffectLayer.is-merit-awardees .homepageMeritCard{align-self:stretch}
+
+
+/* =========================================================
+   v563 Merit Awardees polish
+   - full names (never ellipsis)
+   - Merit + Conduct badges stay on one line
+   - incomplete final row is centered
+   - intro runs only when JS adds .is-intro
+   - optional smooth flag-like card wave
+========================================================= */
+.homepageEffectLayer.is-merit-awardees .homepageMeritAwardees{
+  display:flex!important;flex-wrap:wrap!important;justify-content:center!important;align-content:center!important;align-items:stretch!important;
+  gap:var(--merit-grid-gap,7px)!important;overflow:hidden!important;perspective:1100px;
+}
+.homepageEffectLayer.is-merit-awardees .homepageMeritCard{
+  flex:0 0 var(--merit-card-width,calc(25% - 7px));width:var(--merit-card-width,auto);height:var(--merit-card-height,auto)!important;
+  min-width:0;max-width:100%;align-self:auto!important;animation:none!important;transform:none;transform-origin:50% 55%;will-change:transform;
+}
+.homepageEffectLayer.is-merit-awardees .homepageMeritCardText{min-width:0;overflow:visible}
+.homepageEffectLayer.is-merit-awardees .homepageMeritCardText h3{
+  display:block!important;-webkit-line-clamp:unset!important;-webkit-box-orient:initial!important;
+  margin:0!important;font-size:var(--merit-card-name-size,var(--merit-name-size,1rem))!important;line-height:1.03!important;
+  white-space:normal!important;overflow:visible!important;text-overflow:clip!important;overflow-wrap:break-word!important;word-break:normal!important;text-wrap:balance;
+}
+.homepageEffectLayer.is-merit-awardees .homepageMeritCardText p{display:none!important}
+.homepageEffectLayer.is-merit-awardees .homepageMeritBadges{
+  display:flex!important;flex-wrap:nowrap!important;align-items:center!important;justify-content:flex-start!important;
+  gap:3px!important;min-width:0;max-width:100%;overflow:visible!important;white-space:nowrap!important;
+}
+.homepageEffectLayer.is-merit-awardees .homepageMeritBadge{
+  flex:0 0 auto!important;min-width:0;max-width:none!important;white-space:nowrap!important;overflow:visible!important;text-overflow:clip!important;
+  font-size:var(--merit-card-badge-size,var(--merit-badge-size,.48rem))!important;
+  padding:2px var(--merit-card-badge-pad-x,var(--merit-badge-pad-x,6px))!important;
+}
+.homepageEffectLayer.is-merit-awardees .homepageMeritPanel.is-intro .homepageMeritCard{
+  animation:sfkMeritCardIntroOnce .72s cubic-bezier(.16,.78,.25,1) both!important;
+  animation-delay:var(--merit-intro-delay,0ms)!important;
+}
+.homepageEffectLayer.is-merit-awardees .homepageMeritPanel.is-wave-enabled:not(.is-intro) .homepageMeritCard{
+  animation:sfkMeritCardFlagWave 5.8s ease-in-out infinite!important;
+  animation-delay:var(--merit-wave-delay,0s)!important;
+}
+@keyframes sfkMeritCardIntroOnce{
+  0%{opacity:0;transform:translate3d(0,12px,0) scale(.985);filter:blur(1px)}
+  60%{opacity:1;transform:translate3d(0,-1px,0) scale(1.003);filter:blur(0)}
+  100%{opacity:1;transform:none;filter:none}
+}
+@keyframes sfkMeritCardFlagWave{
+  0%,100%{transform:perspective(900px) translate3d(0,0,0) rotateX(0deg) rotateY(0deg) rotateZ(0deg)}
+  20%{transform:perspective(900px) translate3d(0,-1.5px,0) rotateX(.20deg) rotateY(.45deg) rotateZ(.12deg)}
+  40%{transform:perspective(900px) translate3d(0,-3px,0) rotateX(.35deg) rotateY(.75deg) rotateZ(.22deg)}
+  60%{transform:perspective(900px) translate3d(0,-1px,0) rotateX(-.10deg) rotateY(-.35deg) rotateZ(-.10deg)}
+  80%{transform:perspective(900px) translate3d(0,1px,0) rotateX(-.25deg) rotateY(-.62deg) rotateZ(-.18deg)}
+}
+@media(prefers-reduced-motion:reduce){
+  .homepageEffectLayer.is-merit-awardees .homepageMeritPanel.is-intro .homepageMeritCard,
+  .homepageEffectLayer.is-merit-awardees .homepageMeritPanel.is-wave-enabled .homepageMeritCard{animation:none!important;transform:none!important}
+}

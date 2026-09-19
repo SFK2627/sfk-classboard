@@ -1685,6 +1685,13 @@ const HOMEPAGE_EFFECT_KEYS = new Set([
   "HomepageEffectYouTubeUrl",
   "HomepageEffectYouTubeMuted",
   "HomepageEffectRickrollUrl",
+  "HomepageEffectMeritTerm",
+  "HomepageEffectMeritAwardees",
+  "HomepageEffectMeritCardWave",
+  "HomepageEffectMeritPlaylistEnabled",
+  "HomepageEffectMeritPlaylist",
+  "HomepageEffectMeritPlaylistShuffle",
+  "HomepageEffectMeritPlaylistLoop",
   "HomepageEffectUpdatedAt",
   "FreedomWallTheme",
   "FreedomWallEmptyDisplayMode",
@@ -1712,6 +1719,8 @@ let homepageEffectCurrentSignature = "";
 let homepageEffectDismissedSignature = "";
 let homepageEffectDismissAllowed = true;
 let homepageEffectRenderToken = 0;
+let homepageMeritModeSessionActive = false;
+let homepageMeritIntroTimer = null;
 let homepageEffectParticleMode = "";
 let homepageEffectAmbientMode = "";
 let homepageEffectLatestUpdatedAt = 0;
@@ -2444,9 +2453,35 @@ function normalizeFreedomWallPlaylist(value, fallbackUrl = "") {
   return result;
 }
 
+function normalizeHomepageMeritTerm(value) {
+  const term = String(value || "").trim();
+  return ["1st Term", "2nd Term", "3rd Term"].includes(term) ? term : "2nd Term";
+}
+
+function normalizeHomepageMeritAwardees(value) {
+  let list = [];
+  if (Array.isArray(value)) list = value;
+  else {
+    const raw = String(value || "").trim();
+    if (raw) {
+      try { const parsed = JSON.parse(raw); if (Array.isArray(parsed)) list = parsed; }
+      catch (error) { list = []; }
+    }
+  }
+  const allowed = new Set(["none", "yellow", "green", "white"]);
+  return list.slice(0, 80).map((item) => {
+    const source = item && typeof item === "object" ? item : { name: item };
+    const name = String(source.name || source.Name || "").trim().slice(0, 80);
+    const rawMerit = String(source.merit || source.Merit || "none").trim().toLowerCase();
+    const merit = allowed.has(rawMerit) ? rawMerit : "none";
+    const conduct = source.conduct === true || String(source.conduct || source.Conduct || "").trim().toUpperCase() === "YES";
+    return { name, merit, conduct };
+  }).filter((item) => item.name && (item.merit !== "none" || item.conduct));
+}
+
 function normalizeHomepageEffectConfig(settings = {}) {
   const allowedModes = new Set([
-    "normal", "drizzle", "heavy-rain", "thunderstorm", "flood-rain", "multiverse", "picture", "youtube", "rickroll", "alert",
+    "normal", "drizzle", "heavy-rain", "thunderstorm", "flood-rain", "multiverse", "picture", "youtube", "rickroll", "alert", "merit-awardees",
     "spider-glitch", "comic-web", "black-symbiote", "portal-rift",
     "fog", "snow", "confetti", "hearts", "koala-family", "stars", "matrix", "bubbles", "fireflies", "minions", "spongebob", "naruto", "akatsuki", "ninja-night", "neon-pulse",
     "aurora", "galaxy", "solar-system", "pet-dog", "pet-koala", "buwan-wika", "meteors", "laser-grid", "crt", "pixel-storm", "prism", "petals", "gold-sparkle",
@@ -2475,6 +2510,19 @@ function normalizeHomepageEffectConfig(settings = {}) {
   const youtubeUrl = normalizeHomepageEffectYouTubeUrl(settings.HomepageEffectYouTubeUrl);
   const youtubeMuted = String(settings.HomepageEffectYouTubeMuted || "YES").trim().toUpperCase() !== "NO";
   const rickrollUrl = normalizeHomepageEffectRickrollUrl(settings.HomepageEffectRickrollUrl) || HOMEPAGE_RICKROLL_DEFAULT_URL;
+  const meritTerm = normalizeHomepageMeritTerm(settings.HomepageEffectMeritTerm);
+  const meritAwardees = normalizeHomepageMeritAwardees(settings.HomepageEffectMeritAwardees);
+  const meritCardWave = String(settings.HomepageEffectMeritCardWave || "YES").trim().toUpperCase() !== "NO";
+  const hasMeritPlaylistSetting = Object.prototype.hasOwnProperty.call(settings || {}, "HomepageEffectMeritPlaylistEnabled");
+  const meritPlaylist = normalizeFreedomWallPlaylist(
+    settings.HomepageEffectMeritPlaylist,
+    (!hasMeritPlaylistSetting && mode === "merit-awardees" && audioEnabled) ? audioUrl : ""
+  );
+  const meritPlaylistEnabled = mode === "merit-awardees" && meritPlaylist.length > 0 && (hasMeritPlaylistSetting
+    ? String(settings.HomepageEffectMeritPlaylistEnabled || "NO").trim().toUpperCase() === "YES"
+    : audioEnabled);
+  const meritPlaylistShuffle = String(settings.HomepageEffectMeritPlaylistShuffle || "NO").trim().toUpperCase() === "YES";
+  const meritPlaylistLoop = String(settings.HomepageEffectMeritPlaylistLoop || "YES").trim().toUpperCase() !== "NO";
   const updatedAt = String(settings.HomepageEffectUpdatedAt || "").trim();
   const rawFreedomWallTheme = String(settings.FreedomWallTheme || "sticky-notes").trim().toLowerCase();
   const freedomWallTheme = FREEDOM_WALL_THEME_SET.has(rawFreedomWallTheme) ? rawFreedomWallTheme : "sticky-notes";
@@ -2499,8 +2547,8 @@ function normalizeHomepageEffectConfig(settings = {}) {
   const freedomWallPlaylistLoop = String(settings.FreedomWallPlaylistLoop || "YES").trim().toUpperCase() !== "NO";
   const freedomWallActiveWallId = normalizeFreedomWallSessionId(settings.FreedomWallActiveWallID || FREEDOM_WALL_LEGACY_SESSION_ID);
   const playlistSignature = freedomWallPlaylist.map((track) => `${track.title}~${track.url}`).join("~~");
-  const signature = updatedAt || [enabled ? "1" : "0", mode, title, message, images.join("~"), dismissible ? "1" : "0", alertSound ? "1" : "0", audioEnabled ? "1" : "0", audioUrl, audioLoop ? "1" : "0", youtubeUrl, youtubeMuted ? "1" : "0", rickrollUrl, freedomWallTheme, freedomWallAllowPosting ? "1" : "0", freedomWallShowNames ? "1" : "0", freedomWallAllowTextColor ? "1" : "0", freedomWallAllowFont ? "1" : "0", freedomWallAllowGif ? "1" : "0", freedomWallAllowGifSearch ? "1" : "0", freedomWallAllowYouTube ? "1" : "0", freedomWallAllowYouTubeSearch ? "1" : "0", freedomWallYouTubePlaybackMode, freedomWallMediaSearchUrl, freedomWallGiphyApiKey ? "giphy-key" : "", freedomWallPlaylistEnabled ? "1" : "0", freedomWallPlaylistShuffle ? "1" : "0", freedomWallPlaylistLoop ? "1" : "0", playlistSignature, freedomWallActiveWallId].join("|");
-  return { enabled, mode, title, message, image: images[0] || "", images, dismissible, alertSound, spiderSound, audioEnabled, audioUrl, audioLoop, youtubeUrl, youtubeMuted, rickrollUrl, updatedAt, signature, freedomWallTheme, freedomWallEmptyDisplayMode, freedomWallAllowPosting, freedomWallAllowTextColor, freedomWallAllowFont, freedomWallAllowGif, freedomWallAllowGifSearch, freedomWallAllowYouTube, freedomWallAllowYouTubeSearch, freedomWallYouTubePlaybackMode, freedomWallMediaSearchUrl, freedomWallGiphyApiKey, freedomWallPlaylistEnabled, freedomWallPlaylist, freedomWallPlaylistShuffle, freedomWallPlaylistLoop, freedomWallActiveWallId };
+  const signature = updatedAt || [enabled ? "1" : "0", mode, title, message, images.join("~"), dismissible ? "1" : "0", alertSound ? "1" : "0", audioEnabled ? "1" : "0", audioUrl, audioLoop ? "1" : "0", youtubeUrl, youtubeMuted ? "1" : "0", rickrollUrl, meritTerm, meritAwardees.map((item) => `${item.name}~${item.merit}~${item.conduct ? "1" : "0"}`).join("~~"), meritCardWave ? "wave" : "still", meritPlaylistEnabled ? "merit-music" : "merit-silent", meritPlaylistShuffle ? "merit-shuffle" : "merit-ordered", meritPlaylistLoop ? "merit-loop" : "merit-once", meritPlaylist.map((track) => `${track.title}~${track.url}`).join("~~"), freedomWallTheme, freedomWallAllowPosting ? "1" : "0", freedomWallShowNames ? "1" : "0", freedomWallAllowTextColor ? "1" : "0", freedomWallAllowFont ? "1" : "0", freedomWallAllowGif ? "1" : "0", freedomWallAllowGifSearch ? "1" : "0", freedomWallAllowYouTube ? "1" : "0", freedomWallAllowYouTubeSearch ? "1" : "0", freedomWallYouTubePlaybackMode, freedomWallMediaSearchUrl, freedomWallGiphyApiKey ? "giphy-key" : "", freedomWallPlaylistEnabled ? "1" : "0", freedomWallPlaylistShuffle ? "1" : "0", freedomWallPlaylistLoop ? "1" : "0", playlistSignature, freedomWallActiveWallId].join("|");
+  return { enabled, mode, title, message, image: images[0] || "", images, dismissible, alertSound, spiderSound, audioEnabled, audioUrl, audioLoop, youtubeUrl, youtubeMuted, rickrollUrl, meritTerm, meritAwardees, meritCardWave, meritPlaylistEnabled, meritPlaylist, meritPlaylistShuffle, meritPlaylistLoop, updatedAt, signature, freedomWallTheme, freedomWallEmptyDisplayMode, freedomWallAllowPosting, freedomWallAllowTextColor, freedomWallAllowFont, freedomWallAllowGif, freedomWallAllowGifSearch, freedomWallAllowYouTube, freedomWallAllowYouTubeSearch, freedomWallYouTubePlaybackMode, freedomWallMediaSearchUrl, freedomWallGiphyApiKey, freedomWallPlaylistEnabled, freedomWallPlaylist, freedomWallPlaylistShuffle, freedomWallPlaylistLoop, freedomWallActiveWallId };
 }
 
 function normalizeHomepageEffectYouTubeUrl(value) {
@@ -3468,7 +3516,7 @@ function advanceHomepageEffectPlaylist(reason = "ended") {
   if (!homepageEffectMusicPlaylistActive || !homepageEffectMusicPlaylistTracks.length) return;
   if (reason === "error") homepageEffectMusicPlaylistFailures += 1;
   if (homepageEffectMusicPlaylistFailures >= homepageEffectMusicPlaylistTracks.length) {
-    console.warn("Freedom Wall playlist stopped because no playable track was available.");
+    console.warn("Homepage display playlist stopped because no playable track was available.");
     stopHomepageEffectMusic();
     return;
   }
@@ -4175,6 +4223,17 @@ function ensureHomepageEffectLayer() {
           <video id="homepageRickrollVideo" title="ClassBoard prank video" controls playsinline preload="metadata" hidden></video>
         </div>
       </section>
+      <section class="homepageMeritPanel" aria-label="Merit and Conduct Awardees">
+        <div class="homepageMeritOrnament" aria-hidden="true"><span></span><b>✦</b><span></span></div>
+        <header class="homepageMeritHeader">
+          <span class="homepageMeritEyebrow">SFK CLASSBOARD RECOGNITION</span>
+          <h2 id="homepageMeritTitle">Merit &amp; Conduct Awardees</h2>
+          <p id="homepageMeritTerm">2nd Term</p>
+          <div id="homepageMeritSummary" class="homepageMeritSummary" aria-label="Award summary"></div>
+        </header>
+        <div id="homepageMeritAwardees" class="homepageMeritAwardees"></div>
+        <footer class="homepageMeritFooter"><span>Excellence in learning</span><b>•</b><span>Character in action</span></footer>
+      </section>
       <section class="homepageEffectAlertPanel" role="alert">
         <div class="homepageEffectAlertIcon">⚠</div>
         <p class="homepageEffectAlertEyebrow">SFK CLASSBOARD ALERT</p>
@@ -4187,6 +4246,8 @@ function ensureHomepageEffectLayer() {
   document.body.appendChild(layer);
   window.addEventListener("resize", forceHomepageStoryBarViewportV453, { passive: true });
   forceHomepageStoryBarViewportV453();
+  window.addEventListener("resize", scheduleHomepageMeritFit, { passive: true });
+  if (window.visualViewport) window.visualViewport.addEventListener("resize", scheduleHomepageMeritFit, { passive: true });
 
   layer.querySelector("#freedomWallAddBtn")?.addEventListener("click", openFreedomWallComposer);
   layer.querySelector("#freedomWallReaderOpenBtn")?.addEventListener("click", openFreedomWallReader);
@@ -4953,13 +5014,203 @@ function renderHomepageEffectText(config) {
 
   if (weatherTitle) weatherTitle.textContent = config.title;
   if (weatherMessage) weatherMessage.textContent = config.message;
-  if (weatherBox) weatherBox.hidden = config.mode === "alert" || config.mode === "picture" || config.mode === "youtube" || config.mode === "rickroll" || config.mode === "freedom-wall" || !(config.title || config.message);
+  if (weatherBox) weatherBox.hidden = config.mode === "alert" || config.mode === "picture" || config.mode === "youtube" || config.mode === "rickroll" || config.mode === "freedom-wall" || config.mode === "merit-awardees" || !(config.title || config.message);
   if (pictureCaption) {
     pictureCaption.textContent = [config.title, config.message].filter(Boolean).join(" — ");
     pictureCaption.hidden = !(config.title || config.message);
   }
   if (alertTitle) alertTitle.textContent = config.title || "Important Notice";
   if (alertMessage) alertMessage.textContent = config.message || "Please check the latest ClassBoard advisory.";
+}
+
+function scheduleHomepageMeritFit() {
+  if (scheduleHomepageMeritFit._raf) cancelAnimationFrame(scheduleHomepageMeritFit._raf);
+  scheduleHomepageMeritFit._raf = requestAnimationFrame(() => {
+    scheduleHomepageMeritFit._raf = 0;
+    fitHomepageMeritAwardeesToViewport();
+  });
+}
+
+function fitHomepageMeritCardContents(panel) {
+  if (!panel) return;
+  const viewportWidth = Math.max(280, window.visualViewport?.width || window.innerWidth || 360);
+  panel.querySelectorAll('.homepageMeritCard').forEach((card) => {
+    const name = card.querySelector('.homepageMeritCardText h3');
+    const badges = card.querySelector('.homepageMeritBadges');
+    if (!name || !badges) return;
+
+    const baseName = Number.parseFloat(getComputedStyle(panel).getPropertyValue('--merit-name-size')) || 16;
+    const baseBadge = Number.parseFloat(getComputedStyle(panel).getPropertyValue('--merit-badge-size')) || 9;
+    const basePad = Number.parseFloat(getComputedStyle(panel).getPropertyValue('--merit-badge-pad-x')) || 6;
+    const minName = viewportWidth <= 480 ? 5.8 : 7.2;
+    const minBadge = viewportWidth <= 480 ? 5.2 : 6;
+
+    let badgeSize = baseBadge;
+    let badgePad = basePad;
+    card.style.setProperty('--merit-card-badge-size', `${badgeSize}px`);
+    card.style.setProperty('--merit-card-badge-pad-x', `${badgePad}px`);
+    for (let i = 0; i < 20 && badges.scrollWidth > badges.clientWidth + 1 && badgeSize > minBadge; i += 1) {
+      badgeSize = Math.max(minBadge, badgeSize - .35);
+      badgePad = Math.max(2.5, badgePad - .22);
+      card.style.setProperty('--merit-card-badge-size', `${badgeSize.toFixed(2)}px`);
+      card.style.setProperty('--merit-card-badge-pad-x', `${badgePad.toFixed(2)}px`);
+    }
+
+    let nameSize = baseName;
+    card.style.setProperty('--merit-card-name-size', `${nameSize}px`);
+    for (let i = 0; i < 30 && card.scrollHeight > card.clientHeight + 1 && nameSize > minName; i += 1) {
+      nameSize = Math.max(minName, nameSize - .35);
+      card.style.setProperty('--merit-card-name-size', `${nameSize.toFixed(2)}px`);
+    }
+  });
+}
+
+function fitHomepageMeritAwardeesToViewport() {
+  const layer = document.getElementById('homepageEffectLayer');
+  if (!layer || !layer.classList.contains('is-merit-awardees') || layer.hidden) return;
+  const panel = layer.querySelector('.homepageMeritPanel');
+  const grid = layer.querySelector('#homepageMeritAwardees');
+  if (!panel || !grid) return;
+
+  const count = Math.max(0, Number(grid.dataset.count || 0));
+  const viewportWidth = Math.max(280, window.visualViewport?.width || window.innerWidth || document.documentElement.clientWidth || 360);
+  const viewportHeight = Math.max(360, window.visualViewport?.height || window.innerHeight || document.documentElement.clientHeight || 640);
+
+  let density = 'normal';
+  if (viewportWidth <= 480) {
+    density = count > 18 || viewportHeight < 620 ? 'ultra' : count > 8 || viewportHeight < 720 ? 'compact' : 'normal';
+  } else if (viewportWidth <= 760) {
+    density = count > 20 || viewportHeight < 650 ? 'ultra' : count > 10 || viewportHeight < 760 ? 'compact' : 'normal';
+  } else {
+    density = count > 34 || viewportHeight < 470 ? 'ultra' : count > 20 || viewportHeight < 560 ? 'compact' : 'normal';
+  }
+  panel.dataset.density = density;
+
+  let cols = 1;
+  let maxCols = 1;
+  if (viewportWidth <= 420) {
+    maxCols = 3;
+    cols = count <= 5 ? 1 : count <= 20 ? 2 : 3;
+  } else if (viewportWidth <= 600) {
+    maxCols = 3;
+    cols = count <= 4 ? 1 : count <= 15 ? 2 : 3;
+  } else if (viewportWidth <= 760) {
+    maxCols = 4;
+    cols = count <= 6 ? 2 : count <= 15 ? 3 : 4;
+  } else if (viewportWidth <= 1100) {
+    maxCols = 5;
+    cols = count <= 3 ? Math.max(1, count) : count <= 8 ? 3 : count <= 16 ? 4 : 5;
+  } else {
+    maxCols = 6;
+    cols = count <= 2 ? Math.max(1, count) : count <= 6 ? 3 : count <= 12 ? 4 : count <= 20 ? 5 : 6;
+  }
+  cols = Math.max(1, Math.min(maxCols, Math.max(1, count), cols));
+  grid.style.setProperty('--merit-cols', String(cols), 'important');
+  grid.style.setProperty('--merit-rows', String(Math.max(1, Math.ceil(Math.max(1, count) / cols))), 'important');
+
+  requestAnimationFrame(() => {
+    if (!layer.classList.contains('is-merit-awardees')) return;
+    const gap = density === 'ultra' ? 4 : density === 'compact' ? 6 : 7;
+    let gridRect = grid.getBoundingClientRect();
+    let rows = Math.max(1, Math.ceil(Math.max(1, count) / cols));
+    let cardH = (gridRect.height - gap * Math.max(0, rows - 1)) / rows;
+
+    const minCardHeight = viewportHeight < 600 ? 30 : viewportWidth <= 480 ? 38 : 44;
+    while (count > 0 && cardH < minCardHeight && cols < maxCols) {
+      cols += 1;
+      rows = Math.max(1, Math.ceil(count / cols));
+      grid.style.setProperty('--merit-cols', String(cols), 'important');
+      grid.style.setProperty('--merit-rows', String(rows), 'important');
+      gridRect = grid.getBoundingClientRect();
+      cardH = (gridRect.height - gap * Math.max(0, rows - 1)) / rows;
+    }
+
+    const cardW = (gridRect.width - gap * Math.max(0, cols - 1)) / cols;
+    const medal = Math.max(22, Math.min(54, cardH * .50, cardW * .20));
+    const nameSize = Math.max(8, Math.min(24, cardH * .22, cardW / 10.5));
+    const badgeSize = Math.max(6, Math.min(10.5, nameSize * .50));
+    const padY = Math.max(3, Math.min(11, cardH * .105));
+    const padX = Math.max(4, Math.min(13, cardW * .045));
+    const gapX = Math.max(4, Math.min(10, cardW * .035));
+    const gapY = Math.max(2, Math.min(6, cardH * .055));
+    const badgeHeight = Math.max(14, Math.min(21, cardH * .23));
+
+    panel.style.setProperty('--merit-grid-gap', `${gap}px`);
+    panel.style.setProperty('--merit-card-width', `${Math.max(1, cardW).toFixed(2)}px`);
+    panel.style.setProperty('--merit-card-height', `${Math.max(1, cardH).toFixed(2)}px`);
+    panel.style.setProperty('--merit-medal-size', `${medal.toFixed(1)}px`);
+    panel.style.setProperty('--merit-medal-font', `${Math.max(11, medal * .42).toFixed(1)}px`);
+    panel.style.setProperty('--merit-name-size', `${nameSize.toFixed(1)}px`);
+    panel.style.setProperty('--merit-badge-size', `${badgeSize.toFixed(1)}px`);
+    panel.style.setProperty('--merit-card-pad-y', `${padY.toFixed(1)}px`);
+    panel.style.setProperty('--merit-card-pad-x', `${padX.toFixed(1)}px`);
+    panel.style.setProperty('--merit-card-gap-x', `${gapX.toFixed(1)}px`);
+    panel.style.setProperty('--merit-card-gap-y', `${gapY.toFixed(1)}px`);
+    panel.style.setProperty('--merit-badge-height', `${badgeHeight.toFixed(1)}px`);
+    panel.style.setProperty('--merit-badge-pad-x', `${Math.max(4, Math.min(7, cardW * .022)).toFixed(1)}px`);
+    panel.style.setProperty('--merit-card-radius', `${Math.max(7, Math.min(15, Math.min(cardH, cardW) * .10)).toFixed(1)}px`);
+    fitHomepageMeritCardContents(panel);
+  });
+}
+
+function renderHomepageMeritAwardees(config, { playIntro = false } = {}) {
+  const layer = ensureHomepageEffectLayer();
+  const panel = layer.querySelector('.homepageMeritPanel');
+  const title = layer.querySelector('#homepageMeritTitle');
+  const term = layer.querySelector('#homepageMeritTerm');
+  const summary = layer.querySelector('#homepageMeritSummary');
+  const grid = layer.querySelector('#homepageMeritAwardees');
+  if (!panel || !grid) return;
+
+  const awardees = Array.isArray(config?.meritAwardees) ? config.meritAwardees : [];
+  panel.classList.toggle('is-wave-enabled', config?.meritCardWave !== false);
+  if (homepageMeritIntroTimer) { clearTimeout(homepageMeritIntroTimer); homepageMeritIntroTimer = null; }
+  panel.classList.toggle('is-intro', Boolean(playIntro));
+  if (playIntro) {
+    const introMs = Math.min(1600, 720 + Math.min(awardees.length, 24) * 34);
+    homepageMeritIntroTimer = window.setTimeout(() => {
+      panel.classList.remove('is-intro');
+      homepageMeritIntroTimer = null;
+    }, introMs);
+  }
+
+  if (title) title.textContent = 'Merit & Conduct Awardees';
+  if (term) term.textContent = normalizeHomepageMeritTerm(config?.meritTerm);
+
+  const counts = awardees.reduce((acc, item) => {
+    if (item.merit && item.merit !== 'none') acc[item.merit] = (acc[item.merit] || 0) + 1;
+    if (item.conduct) acc.conduct += 1;
+    return acc;
+  }, { yellow:0, green:0, white:0, conduct:0 });
+  if (summary) {
+    summary.innerHTML = [
+      counts.yellow ? `<span class="is-yellow"><i></i>Yellow <b>${counts.yellow}</b></span>` : '',
+      counts.green ? `<span class="is-green"><i></i>Green <b>${counts.green}</b></span>` : '',
+      counts.white ? `<span class="is-white"><i></i>White <b>${counts.white}</b></span>` : '',
+      counts.conduct ? `<span class="is-conduct"><i>★</i>Conduct <b>${counts.conduct}</b></span>` : ''
+    ].filter(Boolean).join('');
+  }
+
+  grid.dataset.count = String(awardees.length);
+  grid.innerHTML = awardees.map((item, index) => {
+    const merit = ['yellow','green','white'].includes(item.merit) ? item.merit : 'none';
+    const meritLabel = merit === 'yellow' ? 'Yellow Merit' : merit === 'green' ? 'Green Merit' : merit === 'white' ? 'White Merit' : '';
+    const waveDelay = -(index * .22).toFixed(2);
+    const introDelay = Math.min(680, index * 34);
+    return `<article class="homepageMeritCard merit-${merit}${item.conduct ? ' has-conduct' : ''}" style="--merit-order:${index};--merit-wave-delay:${waveDelay}s;--merit-intro-delay:${introDelay}ms">
+      <div class="homepageMeritMedallion" aria-hidden="true"><span>${item.conduct ? '★' : '✦'}</span></div>
+      <div class="homepageMeritCardText"><h3>${escapeHtml(item.name)}</h3></div>
+      <div class="homepageMeritBadges" aria-label="${escapeHtml([meritLabel, item.conduct ? 'Conduct' : ''].filter(Boolean).join(' and '))}">
+        ${meritLabel ? `<span class="homepageMeritBadge is-${merit}">${escapeHtml(meritLabel)}</span>` : ''}
+        ${item.conduct ? '<span class="homepageMeritBadge is-conduct">★ Conduct</span>' : ''}
+      </div>
+    </article>`;
+  }).join('');
+
+  if (!awardees.length) {
+    grid.innerHTML = '<div class="homepageMeritEmpty"><strong>No awardees published yet.</strong><span>Add students from Admin → Homepage Display / Effects.</span></div>';
+  }
+  scheduleHomepageMeritFit();
 }
 
 async function resolveHomepageEffectImageSource(value) {
@@ -8964,6 +9215,19 @@ async function applyHomepageEffectSettings(settings = {}) {
     && !existingLayer.hidden
     && existingLayer.classList.contains("is-freedom-wall")
   );
+  const meritModeActive = Boolean(config.enabled && config.mode === "merit-awardees");
+  const playMeritIntro = meritModeActive && !homepageMeritModeSessionActive;
+  const unchangedActiveMerit = Boolean(
+    meritModeActive
+    && previousEffectSignature === config.signature
+    && existingLayer
+    && !existingLayer.hidden
+    && existingLayer.classList.contains("is-merit-awardees")
+  );
+  if (!meritModeActive) {
+    homepageMeritModeSessionActive = false;
+    if (homepageMeritIntroTimer) { clearTimeout(homepageMeritIntroTimer); homepageMeritIntroTimer = null; }
+  }
 
   homepageEffectCurrentSignature = config.signature;
   homepageEffectDismissAllowed = Boolean(config.dismissible);
@@ -8974,6 +9238,10 @@ async function applyHomepageEffectSettings(settings = {}) {
   // The independent Firestore listener still updates notes in real time.
   if (unchangedActiveFreedomWall) {
     setFreedomWallPageLock(true);
+    return;
+  }
+  if (unchangedActiveMerit) {
+    scheduleHomepageMeritFit();
     return;
   }
 
@@ -9023,6 +9291,10 @@ async function applyHomepageEffectSettings(settings = {}) {
   // clicks and the ClassBoard underneath cannot scroll until the wall closes.
   setFreedomWallPageLock(config.mode === "freedom-wall");
   renderHomepageEffectText(config);
+  if (config.mode === "merit-awardees") {
+    renderHomepageMeritAwardees(config, { playIntro: playMeritIntro });
+    homepageMeritModeSessionActive = true;
+  }
 
   const hasFreedomWallPlaylist = Boolean(
     config.mode === "freedom-wall"
@@ -9030,7 +9302,13 @@ async function applyHomepageEffectSettings(settings = {}) {
     && Array.isArray(config.freedomWallPlaylist)
     && config.freedomWallPlaylist.length
   );
-  const hasCustomEffectAudio = Boolean(!["youtube", "rickroll"].includes(config.mode) && !hasFreedomWallPlaylist && config.audioEnabled && config.audioUrl);
+  const hasMeritPlaylist = Boolean(
+    config.mode === "merit-awardees"
+    && config.meritPlaylistEnabled
+    && Array.isArray(config.meritPlaylist)
+    && config.meritPlaylist.length
+  );
+  const hasCustomEffectAudio = Boolean(!["youtube", "rickroll"].includes(config.mode) && !hasFreedomWallPlaylist && !hasMeritPlaylist && config.audioEnabled && config.audioUrl);
   if (config.mode === "alert" && config.alertSound && !hasCustomEffectAudio) {
     startHomepageAlertSound(config.signature);
   } else {
@@ -9038,10 +9316,6 @@ async function applyHomepageEffectSettings(settings = {}) {
   }
 
   if (hasFreedomWallPlaylist) {
-    // v489: the playlist owns its own playback signature. Prompt edits, saved-wall
-    // loads, reactions, or unrelated HomepageEffectUpdatedAt changes must NOT
-    // restart the shuffled cycle and accidentally repeat a song before every
-    // track in the current cycle has played once.
     const playlistPlaybackSignature = [
       "freedom-wall-playlist-v489",
       config.freedomWallPlaylist.map((track) => String(track?.url || "").trim()).join("|"),
@@ -9053,6 +9327,19 @@ async function applyHomepageEffectSettings(settings = {}) {
       config.freedomWallPlaylistShuffle,
       config.freedomWallPlaylistLoop,
       playlistPlaybackSignature
+    );
+  } else if (hasMeritPlaylist) {
+    const meritPlaylistPlaybackSignature = [
+      "merit-awardees-playlist-v563",
+      config.meritPlaylist.map((track) => String(track?.url || "").trim()).join("|"),
+      config.meritPlaylistShuffle ? "shuffle" : "ordered",
+      config.meritPlaylistLoop ? "loop" : "once"
+    ].join("::");
+    startHomepageEffectPlaylist(
+      config.meritPlaylist,
+      config.meritPlaylistShuffle,
+      config.meritPlaylistLoop,
+      meritPlaylistPlaybackSignature
     );
   } else if (hasCustomEffectAudio) {
     startHomepageEffectMusic(config.audioUrl, config.audioLoop, config.signature);

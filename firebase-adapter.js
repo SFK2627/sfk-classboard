@@ -284,6 +284,7 @@
       "fog",
       "snow",
       "confetti",
+      "merit-awardees",
       "hearts",
       "koala-family",
       "stars",
@@ -390,6 +391,40 @@
     };
     const safeRickrollUrl = sanitizeRickrollUrl(payload?.HomepageEffectRickrollUrl) || "https://streamable.com/33rhw4";
 
+    const safeMeritTerm = ["1st Term", "2nd Term", "3rd Term"].includes(String(payload?.HomepageEffectMeritTerm || "").trim())
+      ? String(payload.HomepageEffectMeritTerm).trim()
+      : "2nd Term";
+    let meritAwardees = [];
+    try {
+      const parsed = JSON.parse(String(payload?.HomepageEffectMeritAwardees || "[]"));
+      if (Array.isArray(parsed)) meritAwardees = parsed;
+    } catch (error) {}
+    const meritTypes = new Set(["none", "yellow", "green", "white"]);
+    const safeMeritAwardees = meritAwardees.slice(0, 80).map((item) => {
+      const source = item && typeof item === "object" ? item : { name: item };
+      const name = String(source.name || source.Name || "").trim().slice(0, 80);
+      const rawMerit = String(source.merit || source.Merit || "none").trim().toLowerCase();
+      const merit = meritTypes.has(rawMerit) ? rawMerit : "none";
+      const conduct = source.conduct === true || String(source.conduct || source.Conduct || "").trim().toUpperCase() === "YES";
+      return { name, merit, conduct };
+    }).filter((item) => item.name && (item.merit !== "none" || item.conduct));
+
+    let rawMeritPlaylist = [];
+    try {
+      const parsed = JSON.parse(String(payload?.HomepageEffectMeritPlaylist || "[]"));
+      if (Array.isArray(parsed)) rawMeritPlaylist = parsed;
+    } catch (error) {}
+    const safeMeritPlaylist = [];
+    const seenMeritAudio = new Set();
+    rawMeritPlaylist.slice(0, 50).forEach((item) => {
+      const source = item && typeof item === "object" ? item : { url:item };
+      const url = String(source.url || source.Url || source.URL || "").trim().slice(0, 1200);
+      if (!/^https:\/\//i.test(url) || seenMeritAudio.has(url)) return;
+      seenMeritAudio.add(url);
+      safeMeritPlaylist.push({ title:String(source.title || source.Title || "").trim().slice(0, 80), url });
+    });
+    const meritPlaylistEnabled = String(payload?.HomepageEffectMeritPlaylistEnabled || "").trim().toUpperCase() === "YES" && safeMeritPlaylist.length > 0;
+
     const values = {
       HomepageEffectEnabled: String(payload?.HomepageEffectEnabled || "").trim().toUpperCase() === "YES" ? "YES" : "NO",
       HomepageEffectMode: mode,
@@ -406,6 +441,13 @@
       HomepageEffectYouTubeUrl: safeYouTubeUrl,
       HomepageEffectYouTubeMuted: String(payload?.HomepageEffectYouTubeMuted || "").trim().toUpperCase() === "NO" ? "NO" : "YES",
       HomepageEffectRickrollUrl: safeRickrollUrl,
+      HomepageEffectMeritTerm: safeMeritTerm,
+      HomepageEffectMeritAwardees: JSON.stringify(safeMeritAwardees),
+      HomepageEffectMeritCardWave: String(payload?.HomepageEffectMeritCardWave || "YES").trim().toUpperCase() === "NO" ? "NO" : "YES",
+      HomepageEffectMeritPlaylistEnabled: meritPlaylistEnabled ? "YES" : "NO",
+      HomepageEffectMeritPlaylist: JSON.stringify(safeMeritPlaylist),
+      HomepageEffectMeritPlaylistShuffle: String(payload?.HomepageEffectMeritPlaylistShuffle || "NO").trim().toUpperCase() === "YES" ? "YES" : "NO",
+      HomepageEffectMeritPlaylistLoop: String(payload?.HomepageEffectMeritPlaylistLoop || "YES").trim().toUpperCase() === "NO" ? "NO" : "YES",
       HomepageEffectUpdatedAt: String(Date.now())
     };
 
