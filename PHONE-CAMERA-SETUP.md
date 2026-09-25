@@ -1,0 +1,10 @@
+# Pair a phone as the photobooth camera
+
+1. Host the updated ClassBoard on HTTPS. Open `memories.html` on the booth computer and tap the photobooth button.
+2. In **Camera**, select **Phone camera**. Scan the QR with the phone, open the link, then tap **Allow Camera & Connect**. Keep the phone page open and awake. The booth computer controls the countdown and collage; each high resolution still comes directly from the phone.
+3. Publish the **complete** `firestore.rules` included in this ZIP in Firebase Console → Firestore Database → Rules. This is your supplied 969-line rules file with the `photoboothPairs` match block added; all existing rules were preserved. This ZIP does not change the deployed Firebase rules automatically. Check for newer changes to your live rules before publishing if they have been edited since you sent this file.
+4. If a QR cannot be scanned, use **Copy link** to open it on the phone. If the code expires or the phone disconnects, tap **New QR code**. QR codes are private one-use links valid for 15 minutes until the phone connects; do not post them publicly.
+
+Video and full-resolution photos go directly through WebRTC. Firestore stores only a short-lived SDP offer and answer under `photoboothPairs`; it does not store the images. The app deletes the pairing document once the phone connects. Enable Firestore TTL for the `expiresAt` field on `photoboothPairs` to clean up abandoned room documents. Camera permissions require HTTPS (or localhost for local testing). On networks where direct WebRTC fails, provide your own TURN servers via `window.SFK_PHOTOBOOTH_ICE_SERVERS` on **both** pages before the WebRTC scripts load. Public demo STUN alone does not guarantee pairing across every network; phones and booth on the same Wi-Fi are easiest to pair.
+
+The phone's **Flip Camera** button swaps front and rear cameras. The desktop's filter, mirror setting, timer, Feast Day photocard, download, and post actions continue to apply. A QR library is loaded from cdnjs; if it cannot load, the pairing link stays available.

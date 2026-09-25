@@ -1,4 +1,4 @@
-const CACHE_NAME = "sfk-main-pwa-v566-mobile-photobooth-ui";
+const CACHE_NAME = "sfk-main-pwa-v572-phone-camera";
 const CACHE_PREFIXES_TO_DELETE = ["sfk-main-pwa-", "sfk-sw.js-"];
 const NAVIGATION_FALLBACK_URL = "./index.html";
 const NAVIGATION_TIMEOUT_MS = 2500;
@@ -26,6 +26,10 @@ const APP_SHELL = [
   "./memories.html",
   "./memories.css",
   "./memories.js",
+  "./photobooth-remote.js",
+  "./phone-camera.html",
+  "./phone-camera.css",
+  "./phone-camera.js",
   "./admin.html",
   "./freedom-wall-exact-export.html",
   "./admin.css",
@@ -39,6 +43,10 @@ const APP_SHELL = [
   "./class-photo.jpg",
   "./page-lock-kindness-poster.jpg",
   "./st-faustina-portrait.png",
+  "./assets/photobooth/feastday/st-faustina-feast.webp",
+  "./assets/photobooth/feastday/feast-hearts.svg",
+  "./assets/photobooth/feastday/feast-sparkles.svg",
+  "./assets/photobooth/feastday/party-koala.svg",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/icon-maskable-512.png",

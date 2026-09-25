@@ -14,7 +14,7 @@
   <link rel="manifest" href="manifest.webmanifest?v=portrait-reminder-v1" />
   <link rel="icon" href="icons/icon-192.png?v=14" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=14" />
-  <link rel="stylesheet" href="memories.css?v=77-mobile-camera-ui" />
+  <link rel="stylesheet" href="memories.css?v=80-phone-camera" />
   <script src="orientation-lock.js?v=appwide-v6" defer></script>
 </head>
 <body>
@@ -250,6 +250,9 @@
           <div id="photoboothStage" class="photoboothStage is-live">
             <video id="photoboothVideo" autoplay muted playsinline></video>
             <canvas id="photoboothResultCanvas" hidden></canvas>
+            <div id="photoboothPairOverlay" class="photoboothPairOverlay" hidden>
+              <div class="photoboothPairCard"><span aria-hidden="true">✦ ♥ ✦</span><strong>Use your phone as the camera</strong><p>Scan the code, allow camera access on your phone, then leave that page open.</p><div id="photoboothPairQr" class="photoboothPairQr" aria-label="QR code to pair your phone"></div><a id="photoboothPairLink" href="#" target="_blank" rel="noopener noreferrer" hidden>Open pairing link</a><small>Keep this link private. Code expires after 15 minutes.</small></div>
+            </div>
             <div id="photoboothGuide" class="photoboothGuide layout-single" aria-hidden="true"></div>
             <div id="photoboothCountdown" class="photoboothCountdown" hidden><strong>3</strong><small>Get ready!</small></div>
             <div id="photoboothFlash" class="photoboothFlash" aria-hidden="true"></div>
@@ -259,6 +262,7 @@
             <div id="photoboothMobileTop" class="photoboothMobileTop" aria-label="Mobile photobooth controls">
               <button id="mobilePhotoboothClose" class="photoboothMobileIconButton" type="button" aria-label="Close photobooth">&#215;</button>
               <button id="mobilePhotoboothTimer" class="photoboothMobilePillButton" type="button" aria-label="Timer"><span aria-hidden="true">&#9202;</span><b id="mobilePhotoboothTimerLabel">3s</b></button>
+              <button id="mobilePhotoboothPalette" class="photoboothMobilePillButton" type="button" aria-label="Choose Feast Day color palette"><span aria-hidden="true">✦</span><b id="mobilePhotoboothPaletteLabel">Pink</b></button>
               <button id="mobilePhotoboothSound" class="photoboothMobileIconButton is-active" type="button" aria-label="Toggle countdown sound"><span aria-hidden="true">&#128266;</span></button>
               <button id="mobilePhotoboothSwitch" class="photoboothMobileIconButton" type="button" aria-label="Switch camera"><span aria-hidden="true">&#8635;</span></button>
             </div>
@@ -302,6 +306,18 @@
                 </div>
               </section>
 
+              <section id="photoboothMobilePalettePanel" class="photoboothMobilePanel" data-mobile-panel="palette" hidden>
+                <div class="photoboothMobilePanelHead"><strong>Feast Day colors</strong><small>Pick your photocard palette.</small></div>
+                <div id="photoboothMobilePaletteOptions" class="photoboothPaletteOptions photoboothMobilePaletteOptions" aria-label="Mobile Feast Day color palettes">
+                  <button type="button" data-feast-palette="pink"><span class="photoboothPaletteSwatch palette-pink"></span><b>Pink Celebration</b></button>
+                  <button type="button" data-feast-palette="gold"><span class="photoboothPaletteSwatch palette-gold"></span><b>Gold • Black • Yellow</b></button>
+                  <button type="button" data-feast-palette="champagne"><span class="photoboothPaletteSwatch palette-champagne"></span><b>Champagne Glow</b></button>
+                  <button type="button" data-feast-palette="royal"><span class="photoboothPaletteSwatch palette-royal"></span><b>Royal Blue</b></button>
+                  <button type="button" data-feast-palette="lavender"><span class="photoboothPaletteSwatch palette-lavender"></span><b>Lavender Lights</b></button>
+                  <button type="button" data-feast-palette="coral"><span class="photoboothPaletteSwatch palette-coral"></span><b>Coral Fiesta</b></button>
+                </div>
+              </section>
+
               <section id="photoboothMobileStrengthPanel" class="photoboothMobilePanel" data-mobile-panel="strength" hidden>
                 <div class="photoboothMobilePanelHead"><strong>Filter strength</strong><small id="mobilePhotoboothStrengthMeta">Normal • 100%</small></div>
                 <div class="photoboothMobileStrengthControl">
@@ -323,8 +339,14 @@
         </section>
 
         <aside class="photoboothControls" aria-label="Photobooth settings">
-          <section class="photoboothControlGroup">
-            <div class="photoboothControlHeading"><strong>Layout</strong><small>Choose how many photos to capture.</small></div>
+          <nav id="photoboothSetupTabs" class="photoboothSetupTabs" aria-label="Photobooth setup">
+            <button type="button" class="is-active" data-booth-step="layout" aria-pressed="true"><span>1</span>Layout</button>
+            <button type="button" data-booth-step="design" aria-pressed="false"><span>2</span>Design</button>
+            <button type="button" data-booth-step="filter" aria-pressed="false"><span>3</span>Filter</button>
+            <button type="button" data-booth-step="camera" aria-pressed="false"><span>4</span>Camera</button>
+          </nav>
+          <section class="photoboothControlGroup photoboothSettingsPanel is-active" data-booth-panel="layout">
+            <div class="photoboothControlHeading"><strong>Choose a photo layout</strong><small>How many pictures will appear on your card?</small></div>
             <div id="photoboothLayoutOptions" class="photoboothOptionGrid photoboothLayoutOptions">
               <button type="button" data-booth-layout="single" class="is-active"><span class="boothLayoutIcon one"><i></i></span><b>Single</b><small>1 photo</small></button>
               <button type="button" data-booth-layout="strip2"><span class="boothLayoutIcon strip2"><i></i><i></i></span><b>Strip 2</b><small>2 photos</small></button>
@@ -332,10 +354,40 @@
               <button type="button" data-booth-layout="grid4"><span class="boothLayoutIcon grid4"><i></i><i></i><i></i><i></i></span><b>2 × 2</b><small>4 photos</small></button>
               <button type="button" data-booth-layout="strip4"><span class="boothLayoutIcon strip4"><i></i><i></i><i></i><i></i></span><b>Strip 4</b><small>4 photos</small></button>
             </div>
+            <button class="photoboothNextStep" data-next-step="design" type="button">Next: Design →</button>
           </section>
 
-          <section class="photoboothControlGroup">
-            <div class="photoboothControlHeading"><strong>Filter</strong><small>Previewed live and applied to the final collage.</small></div>
+          <section class="photoboothControlGroup photoboothSettingsPanel" data-booth-panel="design">
+            <div class="photoboothControlHeading"><strong>Design your photocard</strong><small>Pick a theme, style, and color palette.</small></div>
+            <div id="photoboothThemeOptions" class="photoboothThemeOptions" aria-label="Photobooth themes">
+              <button type="button" data-booth-theme="classic"><b>Classic</b></button>
+              <button type="button" data-booth-theme="feast-faustina" class="is-active"><b>Feast Day</b></button>
+            </div>
+            <div id="photoboothFeastTemplateGroup" class="photoboothSubtemplateGroup" aria-label="Feast Day sub-templates">
+              <div class="photoboothSubtemplateHead">
+                <strong>Feast Day style</strong>
+                <small>Choose the amount of decoration.</small>
+              </div>
+              <div id="photoboothFeastTemplateOptions" class="photoboothSubtemplateOptions">
+                <button type="button" data-feast-template="formal"><b>Formal</b></button>
+                <button type="button" data-feast-template="cute"><b>Cute</b></button>
+                <button type="button" data-feast-template="premium" class="is-active"><b>Premium</b></button>
+              </div>
+              <div class="photoboothSubtemplateHead"><strong>Color palette</strong><small>Colors for the frame and decorations.</small></div>
+              <div id="photoboothFeastPaletteOptions" class="photoboothPaletteOptions" aria-label="Feast Day color palettes">
+                <button type="button" data-feast-palette="pink"><span class="photoboothPaletteSwatch palette-pink"></span><b>Pink Celebration</b></button>
+                <button type="button" data-feast-palette="gold"><span class="photoboothPaletteSwatch palette-gold"></span><b>Gold • Black • Yellow</b></button>
+                <button type="button" data-feast-palette="champagne"><span class="photoboothPaletteSwatch palette-champagne"></span><b>Champagne Glow</b></button>
+                <button type="button" data-feast-palette="royal"><span class="photoboothPaletteSwatch palette-royal"></span><b>Royal Blue</b></button>
+                <button type="button" data-feast-palette="lavender"><span class="photoboothPaletteSwatch palette-lavender"></span><b>Lavender Lights</b></button>
+                <button type="button" data-feast-palette="coral"><span class="photoboothPaletteSwatch palette-coral"></span><b>Coral Fiesta</b></button>
+              </div>
+            </div>
+            <button class="photoboothNextStep" data-next-step="filter" type="button">Next: Filter →</button>
+          </section>
+
+          <section class="photoboothControlGroup photoboothSettingsPanel" data-booth-panel="filter">
+            <div class="photoboothControlHeading"><strong>Choose a photo filter</strong><small>Tap a category, then choose a look.</small></div>
             <div id="photoboothFilterCategories" class="photoboothFilterCategories" aria-label="Filter categories">
               <button type="button" data-filter-category="all" class="is-active">All</button>
               <button type="button" data-filter-category="aesthetic">Aesthetic</button>
@@ -384,8 +436,13 @@
               </div>
               <small>Saved per filter. Lower for subtle, higher for stronger effect.</small>
             </label>
+            <button class="photoboothNextStep" data-next-step="camera" type="button">Next: Camera →</button>
           </section>
 
+          <section class="photoboothSettingsPanel photoboothCameraPanel" data-booth-panel="camera">
+            <div class="photoboothControlHeading"><strong>Camera settings</strong><small>Set the timer and your preview preferences.</small></div>
+          <div class="photoboothSourcePicker" role="group" aria-label="Camera source"><button id="photoboothUseWebcam" type="button" class="is-active" aria-pressed="true">▣ This device</button><button id="photoboothUsePhone" type="button" aria-pressed="false">▣ Phone camera</button></div>
+          <div id="photoboothPhoneSettings" class="photoboothPhoneSettings" hidden><p id="photoboothPairStatus" role="status" aria-live="polite">Select Phone camera to pair.</p><div class="photoboothPhoneActions"><button id="photoboothCopyPairLink" type="button" disabled>Copy link</button><button id="photoboothNewPairCode" type="button">New QR code</button></div><small>Both devices need internet and HTTPS. If connection stalls, try the same Wi-Fi.</small></div>
           <section class="photoboothControlGroup photoboothCompactSettings">
             <label>Timer
               <select id="photoboothTimer">
@@ -395,7 +452,7 @@
                 <option value="10">10 seconds</option>
               </select>
             </label>
-            <label>Camera
+            <label id="photoboothDeviceField">Camera
               <select id="photoboothCameraSelect" aria-label="Choose camera">
                 <option value="">Default camera</option>
               </select>
@@ -406,6 +463,7 @@
             <label class="photoboothToggle"><input id="photoboothMirror" type="checkbox" checked /><span><strong>Mirror preview</strong><small>Natural selfie view.</small></span></label>
             <label class="photoboothToggle"><input id="photoboothSound" type="checkbox" checked /><span><strong>Countdown sound</strong><small>Beep + shutter.</small></span></label>
           </div>
+          </section>
 
           <div class="photoboothActions">
             <button id="photoboothSwitchCamera" class="secondaryButton" type="button">&#8635; Switch Camera</button>
@@ -514,6 +572,8 @@
   <script src="firebase-adapter.js?v=media-fix-v8"></script>
   <script src="app-presence.js?v=v551-whole-app-active"></script>
   <script src="pwa.js?v=media-fix-v8"></script>
-  <script src="memories.js?v=mobile-camera-ui"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+  <script src="photobooth-remote.js?v=1"></script>
+  <script src="memories.js?v=feast-photocard-v7"></script>
 </body>
 </html>

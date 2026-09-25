@@ -3630,6 +3630,11 @@ body.shareFormatOpen {
   .photoboothBody{max-height:calc(96dvh - 58px)}
 }
 
+/* v7: desktop phone camera pairing. The overlay uses the live area, never the printable card. */
+.photoboothSourcePicker{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:4px 0 10px}.photoboothSourcePicker button{min-height:44px;min-width:0;border:1px solid #d7cbb2;border-radius:12px;background:#fff;color:#342718;font:800 .73rem/1.2 Arial,sans-serif;cursor:pointer}.photoboothSourcePicker button.is-active{background:#ffedaa;border-color:#aa7e20;box-shadow:inset 0 0 0 2px #edc55c}.photoboothSourcePicker button:disabled{opacity:.55;cursor:wait}.photoboothPhoneSettings{padding:12px;margin:0 0 12px;background:#fff5d9;border:1px solid #e3c777;border-radius:12px}.photoboothPhoneSettings[hidden],.photoboothPairOverlay[hidden],#photoboothDeviceField[hidden]{display:none!important}.photoboothPhoneSettings p{font-size:.73rem;line-height:1.4;font-weight:800;margin:0 0 10px;color:#4d3615;overflow-wrap:anywhere}.photoboothPhoneSettings small{display:block;font-size:.64rem;line-height:1.4;color:#61503a}.photoboothPhoneActions{display:flex;gap:7px;margin-bottom:10px}.photoboothPhoneActions button{flex:1;min-height:36px;border:1px solid #c39a43;border-radius:9px;background:#fffefa;color:#493210;font:800 .67rem Arial,sans-serif;cursor:pointer}.photoboothPhoneActions button:disabled{opacity:.5}.photoboothPairOverlay{position:absolute;z-index:12;inset:0;display:grid;place-items:center;padding:12px;background:rgba(17,13,14,.88);overflow:auto}.photoboothPairCard{display:flex;flex-direction:column;align-items:center;gap:7px;max-width:100%;width:min(300px,100%);padding:16px 12px;text-align:center;border:2px solid #dec16b;border-radius:20px;background:#fff8dd;color:#3d2910;box-shadow:0 12px 36px #0008}.photoboothPairCard>span{color:#be8a27}.photoboothPairCard strong{font:700 1.15rem/1.15 Georgia,serif}.photoboothPairCard p{font-size:.72rem;line-height:1.35;margin:0}.photoboothPairCard small{font-size:.62rem;color:#645138}.photoboothPairQr{min-height:132px;width:132px;display:grid;place-items:center;background:white;padding:5px;border-radius:8px}.photoboothPairQr img,.photoboothPairQr canvas{max-width:100%;height:auto}.photoboothPairCard a{max-width:100%;overflow-wrap:anywhere;font-size:.66rem;color:#69430b}
+.photoboothModal.is-result-mode .photoboothPairOverlay{display:none!important}
+.photoboothPairQr{width:200px;min-height:200px}
+
 .photoboothModal.is-result-mode .photoboothControlGroup,
 .photoboothModal.is-result-mode .photoboothToggleGrid{display:none}
 .photoboothModal.is-result-mode .photoboothControls{display:flex;flex-direction:column;justify-content:center;gap:12px}
@@ -3734,3 +3739,76 @@ body.shareFormatOpen {
   .photoboothShotProgress{top:calc(60px + env(safe-area-inset-top))!important;right:10px!important}
   .photoboothStatus{max-width:min(72vw,360px)!important}
 }
+
+.photoboothThemeOptions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.photoboothThemeOptions button{min-height:54px;border:1px solid #d7d1c0;border-radius:10px;background:#fff;color:#111;font-weight:900}.photoboothThemeOptions button.is-active{background:#fff5bc;box-shadow:0 0 0 2px #d4af37 inset}.photoboothThemeOptions small{font-size:.55rem}
+
+.photoboothSubtemplateGroup{display:grid;gap:8px;margin-top:10px;padding:10px;border:1px solid #eadfb8;border-radius:14px;background:linear-gradient(180deg,#fffef9 0%,#fff7da 100%)}
+.photoboothSubtemplateHead{display:grid;gap:2px}.photoboothSubtemplateHead strong{font-size:.75rem;line-height:1.05}.photoboothSubtemplateHead small{color:#726646;font-size:.6rem;font-weight:800}
+.photoboothSubtemplateOptions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.photoboothSubtemplateOptions button{min-height:64px;padding:8px 8px 7px;border:1px solid #d7d1c0;border-radius:12px;background:#fff;color:#111;display:grid;justify-items:center;align-content:center;gap:4px;cursor:pointer;transition:border-color .13s ease,background .13s ease,transform .13s ease,box-shadow .13s ease}.photoboothSubtemplateOptions button b{font-size:.68rem}.photoboothSubtemplateOptions button small{font-size:.55rem;color:#7a766b;text-align:center;line-height:1.15}.photoboothSubtemplateOptions button.is-active{border-color:#111;background:#fff5bc;box-shadow:0 0 0 2px #d4af37 inset}.photoboothSubtemplateOptions button:active{transform:scale(.97)}
+@media(max-width:900px){.photoboothSubtemplateOptions{grid-template-columns:repeat(3,minmax(70px,1fr))}}
+@media(max-width:640px){.photoboothSubtemplateGroup{padding:8px}.photoboothSubtemplateOptions{grid-template-columns:1fr;gap:6px}.photoboothSubtemplateOptions button{min-height:56px}}
+
+/* v6: one setup step at a time, with one scroll area inside the selected step. */
+.photoboothControls{display:flex;flex-direction:column;gap:10px;overflow:hidden;padding:12px;min-width:0}
+.photoboothSetupTabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;flex:none}
+.photoboothSetupTabs button{min-width:0;min-height:44px;display:flex;align-items:center;justify-content:center;gap:4px;padding:5px 2px;border:1px solid #d3ccb9;border-radius:10px;background:#fff;color:#302b24;font:800 .68rem/1.1 Arial,sans-serif;cursor:pointer;white-space:nowrap}
+.photoboothSetupTabs button span{display:grid;place-items:center;flex:none;width:18px;height:18px;border-radius:50%;background:#eee8d6;font-size:.59rem}
+.photoboothSetupTabs button.is-active{border-color:#b98b24;background:#fff0b8;box-shadow:0 0 0 1px #ecc55c inset}
+.photoboothSetupTabs button.is-active span{background:#272017;color:#fff}
+.photoboothSettingsPanel[data-booth-panel]{display:none;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;margin:0;padding:4px 3px 12px;border:0;scrollbar-width:thin}
+.photoboothSettingsPanel[data-booth-panel].is-active{display:block}
+.photoboothSettingsPanel .photoboothControlHeading{margin:3px 0 12px}
+.photoboothSettingsPanel .photoboothControlHeading strong{font-size:1rem;line-height:1.2}
+.photoboothSettingsPanel .photoboothControlHeading small{font-size:.7rem;line-height:1.35}
+.photoboothActions{flex:none;margin-top:auto}
+.photoboothNextStep{display:block;width:100%;min-height:42px;margin:14px 0 2px;border:1px solid #b58c32;border-radius:10px;background:#fff2c5;color:#302216;font:800 .76rem Arial,sans-serif;cursor:pointer}
+.photoboothNextStep:hover{background:#ffe89d}
+.photoboothLayoutOptions{grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
+.photoboothLayoutOptions button{min-width:0;overflow:hidden;padding:6px 1px}
+.photoboothLayoutOptions button b{font-size:.57rem;white-space:nowrap}
+.photoboothLayoutOptions button small{font-size:.49rem;white-space:nowrap}
+.photoboothThemeOptions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.photoboothThemeOptions button{display:grid;place-items:center;min-width:0;min-height:46px;padding:7px;overflow-wrap:anywhere;text-align:center;font-size:.78rem;line-height:1.2}
+.photoboothThemeOptions button b{display:block;min-width:0}
+.photoboothSubtemplateGroup{display:grid;gap:9px;margin-top:10px;padding:11px;border:1px solid #ead8aa;border-radius:14px;background:#fffaf0}
+.photoboothSubtemplateGroup[hidden]{display:none!important}
+.photoboothSubtemplateHead{margin-top:4px;min-width:0}
+.photoboothSubtemplateHead strong{font-size:.76rem;line-height:1.2}
+.photoboothSubtemplateHead small{font-size:.61rem;line-height:1.3}
+.photoboothSubtemplateOptions{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+.photoboothSubtemplateOptions button{min-width:0;min-height:45px;padding:5px 2px;text-align:center}
+.photoboothSubtemplateOptions button b{font-size:.68rem}
+.photoboothPaletteOptions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;min-width:0}
+.photoboothPaletteOptions button{min-width:0;min-height:60px;display:flex;align-items:center;gap:7px;padding:6px;border:1px solid #d7ceb8;border-radius:10px;background:#fff;color:#272119;text-align:left;cursor:pointer;font:800 .64rem/1.2 Arial,sans-serif;overflow-wrap:anywhere}
+.photoboothPaletteOptions button b{min-width:0;font:inherit}
+.photoboothPaletteOptions button.is-active{border-color:#ad821e;background:#fff2c5;box-shadow:0 0 0 1px #edc866 inset}
+.photoboothPaletteSwatch{display:block;flex:0 0 34px;width:34px;height:34px;border:2px solid white;border-radius:50%;box-shadow:0 0 0 1px #8d8170,0 2px 5px #0002}
+.palette-pink{background:conic-gradient(#6b315e 0 36%,#e4b954 36% 65%,#ddc0cd 65%)}
+.palette-gold{background:conic-gradient(#111217 0 36%,#ffdb4f 36% 68%,#fff4d0 68%)}
+.palette-champagne{background:conic-gradient(#846449 0 36%,#e8c68a 36% 68%,#fff6e7 68%)}
+.palette-royal{background:conic-gradient(#112446 0 36%,#f1d575 36% 68%,#b6d4e3 68%)}
+.palette-lavender{background:conic-gradient(#77518f 0 36%,#e7c674 36% 68%,#e7d4ef 68%)}
+.palette-coral{background:conic-gradient(#ad5b4d 0 36%,#f5cf73 36% 68%,#ffccad 68%)}
+.photoboothFilterCategories{gap:5px}
+.photoboothFilterCategories button{min-height:31px;padding:0 8px;font-size:.62rem}
+.photoboothFilterOptions{grid-template-columns:repeat(2,minmax(0,1fr));max-height:none;overflow:visible;gap:7px;padding:0}
+.photoboothFilterOptions button{min-width:0;min-height:54px;padding:7px 9px;font-size:.68rem;line-height:1.25;overflow-wrap:anywhere}
+.photoboothFilterOptions button b{min-width:0;white-space:normal}
+.photoboothFilterOptions button .boothFilterSwatch{flex:0 0 28px;width:28px;height:32px}
+.photoboothFilterOptions button.is-default::before{bottom:1px;left:auto;right:5px;font-size:.37rem}
+.photoboothCameraPanel .photoboothCompactSettings{grid-template-columns:1fr;gap:12px}
+.photoboothCameraPanel .photoboothToggleGrid{grid-template-columns:1fr;margin-top:15px}
+.photoboothModal.is-result-mode .photoboothSetupTabs,.photoboothModal.is-result-mode .photoboothSettingsPanel{display:none!important}
+@media(min-width:621px) and (max-width:900px){.photoboothControls{height:min(500px,55dvh);flex:none}}
+@media(max-width:620px){
+  .photoboothControls{display:none!important}
+  .photoboothMobileTop{display:flex;align-items:center;justify-content:space-between;gap:4px;padding-left:7px;padding-right:7px}
+  .photoboothMobilePillButton{min-width:51px;padding:0 7px}
+  #mobilePhotoboothPalette{max-width:100px;min-width:61px;padding:0 6px;overflow:hidden;white-space:nowrap}
+  #mobilePhotoboothPalette[hidden]{display:none!important}
+  .photoboothMobilePaletteOptions{grid-template-columns:repeat(3,minmax(0,1fr));max-height:30dvh;overflow-y:auto}
+  .photoboothMobilePaletteOptions button{display:grid;align-content:center;justify-items:center;min-height:81px;padding:5px 3px;background:#ffffff1c;color:#fff;text-align:center;border-color:#ffffff45;font-size:.56rem}
+  .photoboothMobilePaletteOptions button.is-active{border-color:#ffd461;background:#f7c60038}
+  .photoboothModal.is-result-mode .photoboothControls{display:block!important}
+}
+@media(max-width:390px){.photoboothMobileTop{gap:2px}.photoboothMobileIconButton{width:36px;height:36px}.photoboothMobilePillButton{height:36px;font-size:.65rem}#mobilePhotoboothPalette{min-width:54px;padding:0 4px}}

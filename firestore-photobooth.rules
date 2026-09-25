@@ -1,0 +1,33 @@
+// Add THIS MATCH BLOCK inside your existing `match /databases/{database}/documents`.
+// Do not overwrite the other ClassBoard rules with this file.
+match /photoboothPairs/{pairId} {
+  function pairIdOkay() {
+    return pairId.matches('^[a-f0-9]{48}$');
+  }
+  function active() {
+    return resource.data.expiresAt is timestamp && request.time < resource.data.expiresAt;
+  }
+  allow list: if false;
+  allow get: if pairIdOkay() && active();
+  allow create: if pairIdOkay()
+    && request.resource.data.keys().hasAll(['offer', 'createdAt', 'expiresAt'])
+    && request.resource.data.keys().hasOnly(['offer', 'createdAt', 'expiresAt'])
+    && request.resource.data.createdAt == request.time
+    && request.resource.data.expiresAt is timestamp
+    && request.resource.data.expiresAt > request.time
+    && request.resource.data.expiresAt <= request.time + duration.value(16, 'm')
+    && request.resource.data.offer is map
+    && request.resource.data.offer.keys().hasOnly(['type', 'sdp'])
+    && request.resource.data.offer.type == 'offer'
+    && request.resource.data.offer.sdp is string
+    && request.resource.data.offer.sdp.size() < 50000;
+  allow update: if pairIdOkay() && active()
+    && !('answer' in resource.data)
+    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['answer'])
+    && request.resource.data.answer is map
+    && request.resource.data.answer.keys().hasOnly(['type', 'sdp'])
+    && request.resource.data.answer.type == 'answer'
+    && request.resource.data.answer.sdp is string
+    && request.resource.data.answer.sdp.size() < 50000;
+  allow delete: if pairIdOkay() && active();
+}

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#171310" />
+  <meta name="referrer" content="no-referrer" />
+  <title>Phone Camera • St. Faustina Feast Day</title>
+  <link rel="icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="phone-camera.css?v=1" />
+</head>
+<body>
+  <main class="phoneApp">
+    <header><div class="brand">✦ <span>Grade 8 • St. Faustina Kowalska</span> ✦</div><h1>Phone Camera</h1><p>Photobooth camera for Happy Feast Day, St. Faustina!</p></header>
+    <section class="cameraArea" aria-label="Phone camera preview"><video id="phonePreview" autoplay playsinline muted></video><div class="cameraDecor" aria-hidden="true"><span>✧ ♥ ✧</span><span>✦</span></div><div id="phonePlaceholder">✦<small>Your live camera will appear here</small></div></section>
+    <p id="phoneStatus" role="status" aria-live="polite">Checking your pairing code…</p>
+    <div class="phoneActions"><button id="phoneStart" type="button" disabled>Allow Camera &amp; Connect</button><button id="phoneFlip" type="button" hidden>↻ Flip Camera</button><button id="phoneStop" type="button" hidden>Disconnect</button></div>
+    <p class="phoneHint">Keep this page open and your phone awake. Start the photo session on the photobooth screen; each shot is sent directly from this camera.</p>
+  </main>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js?v=phone-login-v8"></script>
+  <script src="phone-camera.js?v=1"></script>
+</body>
+</html>
