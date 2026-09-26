@@ -14,7 +14,7 @@
   <link rel="manifest" href="manifest.webmanifest?v=portrait-reminder-v1" />
   <link rel="icon" href="icons/icon-192.png?v=14" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=14" />
-  <link rel="stylesheet" href="memories.css?v=80-phone-camera" />
+  <link rel="stylesheet" href="memories.css?v=81-phone-zoom" />
   <script src="orientation-lock.js?v=appwide-v6" defer></script>
 </head>
 <body>
@@ -251,7 +251,7 @@
             <video id="photoboothVideo" autoplay muted playsinline></video>
             <canvas id="photoboothResultCanvas" hidden></canvas>
             <div id="photoboothPairOverlay" class="photoboothPairOverlay" hidden>
-              <div class="photoboothPairCard"><span aria-hidden="true">✦ ♥ ✦</span><strong>Use your phone as the camera</strong><p>Scan the code, allow camera access on your phone, then leave that page open.</p><div id="photoboothPairQr" class="photoboothPairQr" aria-label="QR code to pair your phone"></div><a id="photoboothPairLink" href="#" target="_blank" rel="noopener noreferrer" hidden>Open pairing link</a><small>Keep this link private. Code expires after 15 minutes.</small></div>
+              <div class="photoboothPairCard"><span aria-hidden="true">✦ ♥ ✦</span><strong>Use your phone as the camera</strong><p>Use your phone’s Camera or Google Lens. Tap the link to open it in Chrome or Safari, then allow camera access.</p><div id="photoboothPairQr" class="photoboothPairQr" aria-label="QR code to pair your phone"></div><a id="photoboothPairLink" href="#" target="_blank" rel="noopener noreferrer" hidden>Open pairing link</a><small>If a scanner app returns to scanning, use Copy link. Code expires after 15 minutes.</small></div>
             </div>
             <div id="photoboothGuide" class="photoboothGuide layout-single" aria-hidden="true"></div>
             <div id="photoboothCountdown" class="photoboothCountdown" hidden><strong>3</strong><small>Get ready!</small></div>
@@ -459,6 +459,7 @@
             </label>
           </section>
 
+          <label class="photoboothZoomControl" for="photoboothZoom">Camera zoom <b id="photoboothZoomValue">1.0×</b><input id="photoboothZoom" type="range" min="1" max="3" value="1" step="0.1" aria-label="Camera zoom" /><small>Zoom applies to the preview and the captured photo.</small></label>
           <div class="photoboothToggleGrid">
             <label class="photoboothToggle"><input id="photoboothMirror" type="checkbox" checked /><span><strong>Mirror preview</strong><small>Natural selfie view.</small></span></label>
             <label class="photoboothToggle"><input id="photoboothSound" type="checkbox" checked /><span><strong>Countdown sound</strong><small>Beep + shutter.</small></span></label>
@@ -573,7 +574,7 @@
   <script src="app-presence.js?v=v551-whole-app-active"></script>
   <script src="pwa.js?v=media-fix-v8"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
-  <script src="photobooth-remote.js?v=1"></script>
-  <script src="memories.js?v=feast-photocard-v7"></script>
+  <script src="photobooth-remote.js?v=2"></script>
+  <script src="memories.js?v=feast-photocard-v8"></script>
 </body>
 </html>

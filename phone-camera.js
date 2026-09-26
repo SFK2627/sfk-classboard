@@ -7,17 +7,64 @@
   const stop = document.getElementById("phoneStop");
   const area = document.querySelector(".cameraArea");
   const status = document.getElementById("phoneStatus");
+  const zoomInput = document.getElementById("phoneZoom");
+  const zoomLabel = document.getElementById("phoneZoomValue");
+  const countdown = document.getElementById("phoneCountdown");
   const id = new URLSearchParams(location.hash.slice(1)).get("pair");
-  let ref, stream, peer, channel, mode = "environment", busy = false;
+  let ref, stream, peer, channel, mode = "environment", busy = false, zoom = 1, zoomTimer;
 
   function say(message, error = false) { status.textContent = message; status.classList.toggle("error", error); }
+  function showCountdown(value, caption) {
+    countdown.hidden = false;
+    document.getElementById("phoneCountdownNumber").textContent = String(value);
+    document.getElementById("phoneCountdownCaption").textContent = caption || "Get ready!";
+  }
+  function sendState(message) { if (channel?.readyState === "open") channel.send(JSON.stringify(message)); }
+  async function applyZoom(value = zoom) {
+    zoom = Math.max(1, Math.min(Number(zoomInput.max) || 3, Number(value) || 1));
+    zoomInput.value = String(zoom);
+    zoomLabel.textContent = `${zoom.toFixed(1)}×`;
+    const track = stream?.getVideoTracks()[0];
+    if (!track) return;
+    const range = track.getCapabilities?.().zoom;
+    let digital = zoom;
+    if (range && Number.isFinite(range.min) && Number.isFinite(range.max) && track.applyConstraints) {
+      try { await track.applyConstraints({ advanced:[{ zoom:Math.max(range.min, Math.min(range.max, zoom)) }] }); digital = 1; }
+      catch { digital = zoom; }
+    }
+    area.style.setProperty("--camera-digital-zoom", String(digital));
+    sendState({ type:"zoom-state", zoom, digital, max:Number(zoomInput.max) });
+  }
+  function configureZoom() {
+    const track = stream?.getVideoTracks()[0];
+    const range = track?.getCapabilities?.().zoom;
+    zoomInput.min = "1";
+    zoomInput.max = String(range && range.max > 1 ? Math.min(6, range.max) : 3);
+    zoom = 1;
+    applyZoom(1).catch(() => {});
+  }
+  async function tunePreview(sender) {
+    try {
+      const parameters = sender?.getParameters?.();
+      if (!parameters?.encodings?.length) return;
+      parameters.encodings[0].scaleResolutionDownBy = 1.5;
+      parameters.encodings[0].maxBitrate = 1200000;
+      parameters.encodings[0].maxFramerate = 24;
+      await sender.setParameters(parameters);
+    } catch {} // The camera track remains full resolution for still capture.
+  }
   function cleanup(message = "Disconnected.") {
+    clearTimeout(zoomTimer);
     try { channel?.close(); } catch {}
     try { peer?.close(); } catch {}
     stream?.getTracks().forEach((track) => track.stop());
     channel = peer = stream = null;
     preview.srcObject = null;
     area.classList.remove("is-live", "is-front");
+    area.style.removeProperty("--camera-digital-zoom");
+    countdown.hidden = true;
+    document.getElementById("phoneZoomControl").hidden = true;
+    zoomInput.disabled = false;
     flip.hidden = stop.hidden = true;
     start.hidden = false;
     start.disabled = false;
@@ -38,39 +85,71 @@
     const track = stream?.getVideoTracks()[0];
     if (!track || track.readyState !== "live") throw new Error("Camera is off.");
     if (window.ImageCapture) {
-      try { const blob = await new ImageCapture(track).takePhoto(); if (blob.size > 0 && blob.size < 10 * 1024 * 1024) return blob; } catch {}
+      try {
+        const camera = new ImageCapture(track);
+        const size = camera.getPhotoCapabilities ? await camera.getPhotoCapabilities().catch(() => null) : null;
+        let blob;
+        if (size?.imageWidth?.max && size?.imageHeight?.max) {
+          try { blob = await camera.takePhoto({ imageWidth:size.imageWidth.max, imageHeight:size.imageHeight.max }); } catch {}
+        }
+        blob ||= await camera.takePhoto();
+        if (blob.size > 0) return blob;
+      } catch {}
     }
     if (!preview.videoWidth) throw new Error("Camera image not ready.");
-    const canvas = document.createElement("canvas");
-    canvas.width = preview.videoWidth;
-    canvas.height = preview.videoHeight;
-    canvas.getContext("2d").drawImage(preview, 0, 0);
-    return new Promise((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("Unable to save image.")), "image/jpeg", .92));
+    // Browsers without ImageCapture can temporarily request a larger video frame
+    // for the still; the WebRTC preview's bitrate limit remains in place.
+    const prior = track.getConstraints?.();
+    let changed = false;
+    try {
+      if (prior && track.applyConstraints) {
+        try {
+          const oldWidth = preview.videoWidth;
+          await track.applyConstraints({ ...prior, width:{ideal:3840}, height:{ideal:2160}, frameRate:{ideal:15} });
+          changed = true;
+          const deadline = Date.now() + 650;
+          while (preview.videoWidth === oldWidth && Date.now() < deadline) await new Promise((resolve) => setTimeout(resolve, 70));
+        } catch {} // Keep the original track if the camera cannot offer a larger frame.
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = preview.videoWidth;
+      canvas.height = preview.videoHeight;
+      canvas.getContext("2d").drawImage(preview, 0, 0);
+      return await new Promise((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("Unable to save image.")), "image/jpeg", .97));
+    } finally {
+      if (changed) await track.applyConstraints(prior).catch(() => {});
+    }
   }
   async function sendPhoto(id) {
     if (busy || !channel || channel.readyState !== "open") return;
     busy = true;
     try {
+      showCountdown("✦", "Taking a high-quality photo…");
       say("Taking photo… ✦");
       const blob = await takePhoto();
-      if (blob.size > 12 * 1024 * 1024) throw new Error("Photo is too large.");
+      if (blob.size > 64 * 1024 * 1024) throw new Error("This photo exceeds the browser transfer limit. Choose another camera resolution.");
       const buffer = await blob.arrayBuffer();
       channel.send(JSON.stringify({ type: "photo", id, bytes: buffer.byteLength, mime: blob.type }));
-      channel.bufferedAmountLowThreshold = 256 * 1024;
+      channel.bufferedAmountLowThreshold = 128 * 1024;
+      let lastPercent = -1;
       for (let offset = 0; offset < buffer.byteLength; offset += 16384) {
         if (channel.readyState !== "open") throw new Error("Connection lost.");
-        if (channel.bufferedAmount > 512 * 1024) await new Promise((resolve, reject) => {
-          const timer = setTimeout(() => { channel.removeEventListener("bufferedamountlow", drained); reject(new Error("Connection slowed down.")); }, 15000);
+        if (channel.bufferedAmount > 256 * 1024) await new Promise((resolve, reject) => {
+          const timer = setTimeout(() => { channel.removeEventListener("bufferedamountlow", drained); reject(new Error("Connection slowed down.")); }, 30000);
           function drained() { clearTimeout(timer); channel.removeEventListener("bufferedamountlow", drained); resolve(); }
           channel.addEventListener("bufferedamountlow", drained);
           if (channel.bufferedAmount <= channel.bufferedAmountLowThreshold) drained();
         });
         channel.send(buffer.slice(offset, offset + 16384));
+        const percent = Math.floor(100 * Math.min(buffer.byteLength, offset + 16384) / buffer.byteLength);
+        if (percent >= lastPercent + 10) { lastPercent = percent; say(`Sending photo ${percent}%…`); showCountdown(`${percent}%`, "Sending full-quality photo…"); }
       }
       channel.send(JSON.stringify({ type: "photo-end", id }));
-      say("Photo sent! Ready for the next shot. ✨");
+      showCountdown("✦", "Finishing full-quality transfer…");
+      say("Finishing photo transfer…");
     } catch (error) {
       if (channel?.readyState === "open") channel.send(JSON.stringify({ type: "photo-error", id }));
+      countdown.hidden = true;
       say(error.message || "Could not take photo.", true);
     } finally { busy = false; }
   }
@@ -89,19 +168,36 @@
       await preview.play();
       area.classList.add("is-live");
       area.classList.toggle("is-front", mode === "user");
+      configureZoom();
       peer = new RTCPeerConnection({ iceServers: ICE });
-      stream.getTracks().forEach((track) => peer.addTrack(track, stream));
+      stream.getTracks().forEach((track) => tunePreview(peer.addTrack(track, stream)));
       peer.ondatachannel = (event) => {
         channel = event.channel;
-        channel.onopen = () => say("Connected! Pose and use the photobooth screen to take photos. ✨");
+        channel.onopen = () => {
+          document.getElementById("phoneZoomControl").hidden = false;
+          sendState({ type:"zoom-state", zoom, digital:Number(area.style.getPropertyValue("--camera-digital-zoom")) || 1, max:Number(zoomInput.max) });
+          say("Connected! Pose and use the photobooth screen to take photos. ✨");
+        };
         channel.onmessage = (message) => {
-          try { const data = JSON.parse(message.data); if (data.type === "capture" && typeof data.id === "string") sendPhoto(data.id); } catch {}
+          try {
+            const data = JSON.parse(message.data);
+            if (data.type === "capture" && typeof data.id === "string") sendPhoto(data.id);
+            else if (data.type === "countdown" && Number.isFinite(data.shot) && Number.isFinite(data.total)) {
+              zoomInput.disabled = true;
+              showCountdown(data.value, `Photo ${data.shot} of ${data.total}`);
+              say(`Photo ${data.shot}/${data.total}: ${data.value === "SMILE" ? "Smile!" : "Get ready!"}`);
+            } else if (data.type === "zoom-set" && Number.isFinite(data.zoom) && !busy) applyZoom(data.zoom).catch(() => {});
+            else if (data.type === "photo-ack") { countdown.hidden = true; zoomInput.disabled = false; say("Photo received! Ready for the next shot. ✨"); }
+            else if (data.type === "session-done") { countdown.hidden = true; zoomInput.disabled = false; say("Session complete! View your photocard on the booth screen. ✨"); }
+            else if (data.type === "session-error") { countdown.hidden = true; zoomInput.disabled = false; say("Photo session interrupted. Check the booth screen.", true); }
+          } catch {}
         };
         channel.onclose = () => { if (peer && peer.connectionState !== "connected") cleanup("Photobooth disconnected. Generate a new pairing code to reconnect."); };
       };
       peer.onconnectionstatechange = () => {
         if (peer?.connectionState === "failed" || peer?.connectionState === "closed") cleanup("Connection lost. Generate a new pairing code to reconnect.");
         else if (peer?.connectionState === "disconnected") say("Signal interrupted. Reconnecting…");
+        else if (peer?.connectionState === "connected") peer.getSenders?.().filter((sender) => sender.track?.kind === "video").forEach((sender) => tunePreview(sender));
       };
       await peer.setRemoteDescription(new RTCSessionDescription(data.offer));
       await peer.setLocalDescription(await peer.createAnswer());
@@ -130,6 +226,8 @@
       preview.srcObject = stream;
       await preview.play();
       mode = next;
+      configureZoom();
+      await tunePreview(sender);
       area.classList.toggle("is-front", mode === "user");
       say(`${mode === "user" ? "Front" : "Rear"} camera ready. ✨`);
     } catch (error) { say("Could not switch camera. Try again.", true); }
@@ -149,6 +247,11 @@
     } catch (error) { say(error.message || "Pairing unavailable. Check your connection.", true); }
   }
   start.addEventListener("click", connect);
+  zoomInput.addEventListener("input", () => {
+    zoomLabel.textContent = `${Number(zoomInput.value).toFixed(1)}×`;
+    clearTimeout(zoomTimer);
+    zoomTimer = setTimeout(() => applyZoom(Number(zoomInput.value)).catch(() => {}), 65);
+  });
   flip.addEventListener("click", flipCamera);
   stop.addEventListener("click", () => { ref?.delete().catch(() => {}); cleanup(); });
   window.addEventListener("pagehide", () => { stream?.getTracks().forEach((track) => track.stop()); try { peer?.close(); } catch {} });

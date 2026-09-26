@@ -28,9 +28,13 @@
     if (typeof event.data === "string") {
       let message;
       try { message = JSON.parse(event.data); } catch { return; }
+      if (message.type === "zoom-state") {
+        if (Number.isFinite(message.zoom) && Number.isFinite(message.digital)) session.onZoom?.(message);
+        return;
+      }
       if (!session.pending || message.id !== session.pending.id) return;
-      if (message.type === "photo" && Number.isInteger(message.bytes) && message.bytes > 0 && message.bytes <= 12 * 1024 * 1024) {
-        session.photo = { id: message.id, expected: message.bytes, mime: message.mime === "image/png" ? "image/png" : "image/jpeg", chunks: [], size: 0 };
+      if (message.type === "photo" && Number.isInteger(message.bytes) && message.bytes > 0 && message.bytes <= 64 * 1024 * 1024) {
+        session.photo = { id: message.id, expected: message.bytes, mime: ["image/png","image/webp"].includes(message.mime) ? message.mime : "image/jpeg", chunks: [], size: 0 };
       } else if (message.type === "photo-end") {
         const photo = session.photo;
         if (!photo || photo.id !== message.id || photo.size !== photo.expected) { failPending(session, "The phone photo was incomplete. Please try again."); return; }
@@ -39,6 +43,7 @@
         session.photo = null;
         clearTimeout(pending.timer);
         pending.resolve(new Blob(photo.chunks, { type: photo.mime }));
+        try { session.channel.send(JSON.stringify({ type:"photo-ack", id:message.id })); } catch {}
       } else if (message.type === "photo-error") {
         failPending(session, "The phone could not take a photo. Please try again.");
       }
@@ -50,6 +55,10 @@
       session.photo.size += buffer.byteLength;
       if (session.photo.size > session.photo.expected) { failPending(session, "The phone photo was too large."); return; }
       session.photo.chunks.push(buffer);
+      if (session.photo.size === session.photo.expected || session.photo.size - (session.photo.lastProgress || 0) > 256 * 1024) {
+        session.photo.lastProgress = session.photo.size;
+        session.pending.onProgress?.(Math.round(100 * session.photo.size / session.photo.expected));
+      }
     };
     if (event.data instanceof ArrayBuffer) add(event.data);
     else if (event.data instanceof Blob) event.data.arrayBuffer().then(add).catch(() => failPending(session, "Unable to receive the phone photo."));
@@ -68,7 +77,7 @@
     session.ref?.delete().catch(() => {});
   }
 
-  async function createRoom({ onStream, onStatus, onDisconnected }) {
+  async function createRoom({ onStream, onStatus, onDisconnected, onZoom }) {
     disconnect();
     if (!window.isSecureContext || !window.RTCPeerConnection || !crypto?.getRandomValues) throw new Error("Phone pairing requires HTTPS and WebRTC.");
     if (!window.firebase?.firestore) throw new Error("Firebase is unavailable. Check your connection.");
@@ -77,7 +86,7 @@
     const bytes = new Uint8Array(24);
     crypto.getRandomValues(bytes);
     const id = Array.from(bytes, (n) => n.toString(16).padStart(2, "0")).join("");
-    const session = { id, ref: db.collection("photoboothPairs").doc(id), peer: new RTCPeerConnection({ iceServers: ICE }), onStatus, onDisconnected, pending: null };
+    const session = { id, ref: db.collection("photoboothPairs").doc(id), peer: new RTCPeerConnection({ iceServers: ICE }), onStatus, onDisconnected, onZoom, pending: null };
     room = session;
     const peer = session.peer;
     peer.addTransceiver("video", { direction: "recvonly" });
@@ -130,18 +139,24 @@
     }
   }
 
-  function requestPhoto() {
+  function sendControl(payload) {
+    const session = room;
+    if (session?.channel?.readyState !== "open") return false;
+    try { session.channel.send(JSON.stringify(payload)); return true; } catch { return false; }
+  }
+
+  function requestPhoto({ onProgress } = {}) {
     const session = room;
     if (!session || session.channel?.readyState !== "open") return Promise.reject(new Error("Phone is not connected. Reconnect it and try again."));
     if (session.pending) return Promise.reject(new Error("The phone is still taking a photo."));
     const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => failPending(session, "Phone photo timed out. Please try again."), 25000);
-      session.pending = { id, resolve, reject, timer };
+      const timer = setTimeout(() => failPending(session, "Phone photo timed out. Please try again."), 90000);
+      session.pending = { id, resolve, reject, timer, onProgress };
       try { session.channel.send(JSON.stringify({ type: "capture", id })); }
       catch (error) { failPending(session, "Unable to ask the phone to take a photo."); }
     });
   }
 
-  window.SFKPhoneCamera = { createRoom, requestPhoto, disconnect, get connected() { return room?.channel?.readyState === "open"; } };
+  window.SFKPhoneCamera = { createRoom, requestPhoto, sendControl, disconnect, get connected() { return room?.channel?.readyState === "open"; } };
 })();

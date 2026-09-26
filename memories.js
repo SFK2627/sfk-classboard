@@ -170,6 +170,8 @@ const photoBoothState = {
   stream: null,
   source: "webcam",
   pairUrl: "",
+  zoom: 1,
+  digitalZoom: 1,
   devices: [],
   deviceId: "",
   facingMode: "user",
@@ -230,6 +232,7 @@ function bindMemoryEvents() {
   document.getElementById("photoboothFilterStrength")?.addEventListener("input", handlePhotoboothStrengthInput);
   document.getElementById("photoboothTimer")?.addEventListener("change", syncPhotoboothSettingsFromUi);
   document.getElementById("photoboothCameraSelect")?.addEventListener("change", handlePhotoboothCameraSelect);
+  document.getElementById("photoboothZoom")?.addEventListener("input", handlePhotoboothZoomInput);
   document.getElementById("photoboothUseWebcam")?.addEventListener("click", () => setPhotoboothCameraSource("webcam"));
   document.getElementById("photoboothUsePhone")?.addEventListener("click", () => setPhotoboothCameraSource("phone"));
   document.getElementById("photoboothNewPairCode")?.addEventListener("click", startPhotoboothPhonePairing);
@@ -7236,6 +7239,7 @@ function syncPhotoboothSettingsFromUi() {
   photoBoothState.sound = document.getElementById("photoboothSound")?.checked !== false;
   const stage = document.getElementById("photoboothStage");
   stage?.classList.toggle("no-mirror", !photoBoothState.mirror);
+  syncPhotoboothZoomUi();
   syncPhotoboothMobileUi();
 }
 
@@ -7351,14 +7355,55 @@ function syncPhotoboothCameraSourceUi() {
   const settings = document.getElementById("photoboothPhoneSettings"); if (settings) settings.hidden = !phone;
   const switchButton = document.getElementById("photoboothSwitchCamera"); if (switchButton) switchButton.hidden = phone;
   const overlay = document.getElementById("photoboothPairOverlay"); if (overlay) overlay.hidden = !phone || Boolean(photoBoothState.stream);
+  syncPhotoboothZoomUi();
+}
+
+function syncPhotoboothZoomUi() {
+  const slider = document.getElementById("photoboothZoom");
+  if (slider) slider.value = String(photoBoothState.zoom);
+  const label = document.getElementById("photoboothZoomValue");
+  if (label) label.textContent = `${photoBoothState.zoom.toFixed(1)}×`;
+  const video = document.getElementById("photoboothVideo");
+  if (video) video.style.transform = `${photoBoothState.mirror ? "scaleX(-1) " : ""}scale(${photoBoothState.digitalZoom})`;
+}
+
+async function applyPhotoboothZoom(value) {
+  const slider = document.getElementById("photoboothZoom");
+  photoBoothState.zoom = Math.max(1, Math.min(Number(slider?.max) || 3, Number(value) || 1));
+  if (photoBoothState.source === "phone") {
+    window.SFKPhoneCamera?.sendControl({ type:"zoom-set", zoom:photoBoothState.zoom });
+  } else {
+    const track = photoBoothState.stream?.getVideoTracks()[0];
+    const range = track?.getCapabilities?.().zoom;
+    let digital = photoBoothState.zoom;
+    if (range && Number.isFinite(range.min) && Number.isFinite(range.max) && track?.applyConstraints) {
+      try { await track.applyConstraints({ advanced:[{ zoom:Math.max(range.min, Math.min(range.max, photoBoothState.zoom)) }] }); digital = 1; }
+      catch { digital = photoBoothState.zoom; }
+    }
+    photoBoothState.digitalZoom = digital;
+  }
+  syncPhotoboothZoomUi();
+}
+
+function handlePhotoboothZoomInput(event) {
+  if (photoBoothState.busy) return;
+  const value = Number(event.target.value);
+  photoBoothState.zoom = value;
+  syncPhotoboothZoomUi();
+  clearTimeout(photoBoothState.zoomTimer);
+  photoBoothState.zoomTimer = setTimeout(() => applyPhotoboothZoom(value).catch(() => {}), 65);
 }
 
 async function setPhotoboothCameraSource(source) {
   if (photoBoothState.busy || photoBoothState.source === source) return;
+  clearTimeout(photoBoothState.zoomTimer);
   photoBoothState.pairAttempt = (photoBoothState.pairAttempt || 0) + 1;
   if (photoBoothState.source === "webcam") stopPhotoboothCamera();
   else { window.SFKPhoneCamera?.disconnect(); stopPhotoboothCamera(); }
   photoBoothState.source = source;
+  photoBoothState.zoom = 1;
+  photoBoothState.digitalZoom = 1;
+  const slider = document.getElementById("photoboothZoom"); if (slider) slider.max = "3";
   photoBoothState.pairUrl = "";
   const copy = document.getElementById("photoboothCopyPairLink"); if (copy) copy.disabled = true;
   syncPhotoboothCameraSourceUi();
@@ -7402,6 +7447,14 @@ async function startPhotoboothPhonePairing() {
         document.getElementById("photoboothPairOverlay").hidden = true;
         const label = document.getElementById("photoboothLiveLabel"); if (label) label.textContent = "Phone camera live";
       },
+      onZoom: (message) => {
+        if (attempt !== photoBoothState.pairAttempt || photoBoothState.source !== "phone") return;
+        const slider = document.getElementById("photoboothZoom");
+        if (slider) slider.max = String(Number.isFinite(message.max) && message.max > 1 ? Math.min(6, message.max) : 3);
+        photoBoothState.zoom = Math.max(1, Number(message.zoom) || 1);
+        photoBoothState.digitalZoom = Math.max(1, Number(message.digital) || 1);
+        syncPhotoboothZoomUi();
+      },
       onDisconnected: () => {
         if (attempt !== photoBoothState.pairAttempt || photoBoothState.source !== "phone") return;
         window.SFKPhoneCamera?.disconnect();
@@ -7419,7 +7472,7 @@ async function startPhotoboothPhonePairing() {
     if (link) { link.href = url; link.hidden = false; }
     if (copy) copy.disabled = false;
     try {
-      if (window.QRCode && qr) new QRCode(qr, { text:url, width:190, height:190, colorDark:"#21180b", colorLight:"#ffffff", correctLevel:QRCode.CorrectLevel.M });
+      if (window.QRCode && qr) new QRCode(qr, { text:url, width:236, height:236, colorDark:"#21180b", colorLight:"#ffffff", correctLevel:QRCode.CorrectLevel.M });
       else if (qr) qr.textContent = "Use the pairing link below";
     } catch { if (qr) qr.textContent = "Use the pairing link below"; }
     setPhotoboothPhoneStatus("Scan this QR with your phone, then tap Allow Camera & Connect.");
@@ -7442,6 +7495,8 @@ async function openPhotobooth() {
   if (!modal) return;
   modal.hidden = false;
   photoBoothState.source = "webcam";
+  photoBoothState.zoom = 1;
+  photoBoothState.digitalZoom = 1;
   syncPhotoboothCameraSourceUi();
   document.body.style.overflow = "hidden";
   photoBoothState.filter = photoBoothState.defaultFilter || "normal";
@@ -7461,6 +7516,7 @@ function closePhotobooth() {
   const modal = document.getElementById("photoboothModal");
   if (!modal || modal.hidden) return;
   modal.hidden = true;
+  clearTimeout(photoBoothState.zoomTimer);
   window.SFKPhoneCamera?.disconnect();
   stopPhotoboothCamera();
   photoBoothState.pairUrl = "";
@@ -7501,6 +7557,12 @@ async function startPhotoboothCamera({ deviceId = photoBoothState.deviceId, faci
       return false;
     }
     photoBoothState.stream = stream;
+    const zoomSlider = document.getElementById("photoboothZoom");
+    const zoomRange = stream.getVideoTracks()[0]?.getCapabilities?.().zoom;
+    if (zoomSlider) zoomSlider.max = String(zoomRange?.max > 1 ? Math.min(6, zoomRange.max) : 3);
+    photoBoothState.zoom = 1;
+    photoBoothState.digitalZoom = 1;
+    syncPhotoboothZoomUi();
     video.srcObject = stream;
     await video.play().catch(() => {});
     const activeTrack = stream.getVideoTracks()[0];
@@ -7611,16 +7673,19 @@ function hidePhotoboothCountdown() { const overlay=document.getElementById("phot
 async function runPhotoboothCountdown(seconds, shotIndex, totalShots) {
   if (seconds <= 0) {
     showPhotoboothCountdown("•", totalShots > 1 ? `Photo ${shotIndex}/${totalShots}` : "Smile!");
+    if (photoBoothState.source === "phone") window.SFKPhoneCamera?.sendControl({ type:"countdown", value:"SMILE", shot:shotIndex, total:totalShots });
     await waitMs(520);
     hidePhotoboothCountdown();
     return;
   }
   for (let remaining = seconds; remaining > 0; remaining -= 1) {
     showPhotoboothCountdown(remaining, totalShots > 1 ? `Photo ${shotIndex}/${totalShots}` : "Get ready!");
+    if (photoBoothState.source === "phone") window.SFKPhoneCamera?.sendControl({ type:"countdown", value:remaining, shot:shotIndex, total:totalShots });
     playPhotoboothTone("beep");
     await waitMs(860);
   }
   showPhotoboothCountdown("SMILE", totalShots > 1 ? `Photo ${shotIndex}/${totalShots}` : "Ready!");
+  if (photoBoothState.source === "phone") window.SFKPhoneCamera?.sendControl({ type:"countdown", value:"SMILE", shot:shotIndex, total:totalShots });
   await waitMs(300);
   hidePhotoboothCountdown();
 }
@@ -7638,7 +7703,7 @@ async function capturePhotoboothFrame() {
   if (!video || !video.videoWidth || !video.videoHeight) throw new Error("Camera image is not ready yet.");
   let photo = video;
   if (photoBoothState.source === "phone") {
-    const blob = await window.SFKPhoneCamera.requestPhoto();
+    const blob = await window.SFKPhoneCamera.requestPhoto({ onProgress:(percent) => setPhotoboothStatus(`Receiving high-quality phone photo… ${percent}%`) });
     if (window.createImageBitmap) photo = await createImageBitmap(blob);
     else photo = await new Promise((resolve, reject) => {
       const url = URL.createObjectURL(blob);
@@ -7650,6 +7715,7 @@ async function capturePhotoboothFrame() {
   }
   const width = photo.width || photo.videoWidth;
   const height = photo.height || photo.videoHeight;
+  if (photoBoothState.source === "phone") setPhotoboothStatus(`Full-quality phone photo received: ${width} × ${height}. Preparing photocard…`);
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
@@ -7660,7 +7726,10 @@ async function capturePhotoboothFrame() {
     ctx.translate(width,0);
     ctx.scale(-1,1);
   }
-  ctx.drawImage(photo,0,0,width,height);
+  const digitalZoom = Math.max(1, Number(photoBoothState.digitalZoom) || 1);
+  const cropWidth = width / digitalZoom;
+  const cropHeight = height / digitalZoom;
+  ctx.drawImage(photo,(width-cropWidth)/2,(height-cropHeight)/2,cropWidth,cropHeight,0,0,width,height);
   ctx.restore();
   if (photo !== video && photo.close) photo.close();
   return canvas;
@@ -7686,6 +7755,7 @@ async function startPhotoboothCaptureSequence() {
   const switchButton = document.getElementById("photoboothSwitchCamera");
   if (captureButton) captureButton.disabled = true;
   if (switchButton) switchButton.disabled = true;
+  const zoomSlider = document.getElementById("photoboothZoom"); if (zoomSlider) zoomSlider.disabled = true;
   document.getElementById("photoboothShotProgress").hidden = false;
   try {
     for (let index = 0; index < layout.shots; index += 1) {
@@ -7700,14 +7770,17 @@ async function startPhotoboothCaptureSequence() {
       if (index < layout.shots - 1) await waitMs(650);
     }
     await renderPhotoboothCollage();
+    if (photoBoothState.source === "phone") window.SFKPhoneCamera?.sendControl({ type:"session-done" });
   } catch (error) {
     console.error("Photobooth capture failed", error);
     setPhotoboothStatus(error.message || "Unable to capture the photo.", true);
+    if (photoBoothState.source === "phone") window.SFKPhoneCamera?.sendControl({ type:"session-error" });
   } finally {
     photoBoothState.busy = false;
     setPhotoboothMobileBusy(false);
     if (captureButton) captureButton.disabled = false;
     if (switchButton) switchButton.disabled = false;
+    if (zoomSlider) zoomSlider.disabled = false;
     const progress = document.getElementById("photoboothShotProgress");
     if (progress) progress.hidden = true;
     hidePhotoboothCountdown();
@@ -8330,8 +8403,10 @@ async function renderPhotoboothCollage() {
   const feast = photoBoothState.theme === "feast-faustina";
   const feastSpec = getFeastFaustinaTemplateSpec(photoBoothState.themeVariant);
   const plan = getPhotoboothCanvasPlan(photoBoothState.layout, photoBoothState.theme);
-  canvas.width = plan.width; canvas.height = plan.height;
+  const exportScale = feast ? 2 : 1;
+  canvas.width = plan.width * exportScale; canvas.height = plan.height * exportScale;
   const ctx = canvas.getContext("2d");
+  ctx.scale(exportScale, exportScale);
   if (feast) {
     const backgroundGradient = ctx.createLinearGradient(0, 0, plan.width, plan.height);
     const stops = feastSpec.bgStops || ["#fffdfa", "#fff4cf", "#fff9ea", "#f5e3a9"];
@@ -8379,7 +8454,7 @@ async function renderPhotoboothCollage() {
     ctx.textAlign="right"; ctx.fillStyle="#555148"; ctx.font="700 20px Arial";
     ctx.fillText(new Date().toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}),plan.width-38,footerY+20);
   }
-  photoBoothState.resultBlob = await canvasToJpegBlob(canvas, 0.93);
+  photoBoothState.resultBlob = await canvasToJpegBlob(canvas, 0.96);
   if (!photoBoothState.resultBlob) throw new Error("Unable to prepare the final photobooth image.");
   if (photoBoothState.resultUrl) URL.revokeObjectURL(photoBoothState.resultUrl);
   photoBoothState.resultUrl = URL.createObjectURL(photoBoothState.resultBlob);
