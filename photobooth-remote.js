@@ -32,6 +32,10 @@
         if (Number.isFinite(message.zoom) && Number.isFinite(message.digital)) session.onZoom?.(message);
         return;
       }
+      if (message.type === "start-session") {
+        if (session === room && session.channel?.readyState === "open") session.onStart?.();
+        return;
+      }
       if (!session.pending || message.id !== session.pending.id) return;
       if (message.type === "photo" && Number.isInteger(message.bytes) && message.bytes > 0 && message.bytes <= 64 * 1024 * 1024) {
         session.photo = { id: message.id, expected: message.bytes, mime: ["image/png","image/webp"].includes(message.mime) ? message.mime : "image/jpeg", chunks: [], size: 0 };
@@ -77,7 +81,7 @@
     session.ref?.delete().catch(() => {});
   }
 
-  async function createRoom({ onStream, onStatus, onDisconnected, onZoom }) {
+  async function createRoom({ onStream, onStatus, onDisconnected, onZoom, onStart }) {
     disconnect();
     if (!window.isSecureContext || !window.RTCPeerConnection || !crypto?.getRandomValues) throw new Error("Phone pairing requires HTTPS and WebRTC.");
     if (!window.firebase?.firestore) throw new Error("Firebase is unavailable. Check your connection.");
@@ -86,7 +90,7 @@
     const bytes = new Uint8Array(24);
     crypto.getRandomValues(bytes);
     const id = Array.from(bytes, (n) => n.toString(16).padStart(2, "0")).join("");
-    const session = { id, ref: db.collection("photoboothPairs").doc(id), peer: new RTCPeerConnection({ iceServers: ICE }), onStatus, onDisconnected, onZoom, pending: null };
+    const session = { id, ref: db.collection("photoboothPairs").doc(id), peer: new RTCPeerConnection({ iceServers: ICE }), onStatus, onDisconnected, onZoom, onStart, pending: null };
     room = session;
     const peer = session.peer;
     peer.addTransceiver("video", { direction: "recvonly" });

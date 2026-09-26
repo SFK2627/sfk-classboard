@@ -3,6 +3,7 @@
   const ICE = window.SFK_PHOTOBOOTH_ICE_SERVERS || [{ urls: "stun:stun.l.google.com:19302" }];
   const preview = document.getElementById("phonePreview");
   const start = document.getElementById("phoneStart");
+  const capture = document.getElementById("phoneCapture");
   const flip = document.getElementById("phoneFlip");
   const stop = document.getElementById("phoneStop");
   const area = document.querySelector(".cameraArea");
@@ -12,6 +13,7 @@
   const countdown = document.getElementById("phoneCountdown");
   const id = new URLSearchParams(location.hash.slice(1)).get("pair");
   let ref, stream, peer, channel, mode = "environment", busy = false, zoom = 1, zoomTimer;
+  let sessionReady = false, sessionActive = false;
 
   function say(message, error = false) { status.textContent = message; status.classList.toggle("error", error); }
   function showCountdown(value, caption) {
@@ -19,7 +21,27 @@
     document.getElementById("phoneCountdownNumber").textContent = String(value);
     document.getElementById("phoneCountdownCaption").textContent = caption || "Get ready!";
   }
-  function sendState(message) { if (channel?.readyState === "open") channel.send(JSON.stringify(message)); }
+  function sendState(message) {
+    if (channel?.readyState !== "open") return false;
+    try { channel.send(JSON.stringify(message)); return true; } catch { return false; }
+  }
+  function updateCaptureButton(label = "Start Photo Session") {
+    capture.hidden = channel?.readyState !== "open";
+    capture.disabled = !sessionReady || sessionActive;
+    capture.textContent = `📸 ${label}`;
+    capture.setAttribute("aria-label", label);
+  }
+  function requestSession() {
+    if (!sessionReady || sessionActive || busy || channel?.readyState !== "open") return;
+    sessionActive = true;
+    updateCaptureButton();
+    say("Starting photo session on the booth screen… ✨");
+    if (!sendState({ type:"start-session" })) {
+      sessionActive = false;
+      updateCaptureButton();
+      say("Connection interrupted. Try again.", true);
+    }
+  }
   async function applyZoom(value = zoom) {
     zoom = Math.max(1, Math.min(Number(zoomInput.max) || 3, Number(value) || 1));
     zoomInput.value = String(zoom);
@@ -69,6 +91,8 @@
     start.hidden = false;
     start.disabled = false;
     busy = false;
+    sessionReady = sessionActive = false;
+    updateCaptureButton();
     say(message);
   }
   function waitForIce(connection) {
@@ -176,7 +200,8 @@
         channel.onopen = () => {
           document.getElementById("phoneZoomControl").hidden = false;
           sendState({ type:"zoom-state", zoom, digital:Number(area.style.getPropertyValue("--camera-digital-zoom")) || 1, max:Number(zoomInput.max) });
-          say("Connected! Pose and use the photobooth screen to take photos. ✨");
+          updateCaptureButton();
+          say("Connected! Waiting for the booth preview… ✨");
         };
         channel.onmessage = (message) => {
           try {
@@ -186,18 +211,46 @@
               zoomInput.disabled = true;
               showCountdown(data.value, `Photo ${data.shot} of ${data.total}`);
               say(`Photo ${data.shot}/${data.total}: ${data.value === "SMILE" ? "Smile!" : "Get ready!"}`);
-            } else if (data.type === "zoom-set" && Number.isFinite(data.zoom) && !busy) applyZoom(data.zoom).catch(() => {});
-            else if (data.type === "photo-ack") { countdown.hidden = true; zoomInput.disabled = false; say("Photo received! Ready for the next shot. ✨"); }
-            else if (data.type === "session-done") { countdown.hidden = true; zoomInput.disabled = false; say("Session complete! View your photocard on the booth screen. ✨"); }
-            else if (data.type === "session-error") { countdown.hidden = true; zoomInput.disabled = false; say("Photo session interrupted. Check the booth screen.", true); }
+            } else if (data.type === "session-ready") {
+              sessionReady = true;
+              if (!sessionActive) { updateCaptureButton(); say("Ready! Start the photo session here or on the booth screen. ✨"); }
+            } else if (data.type === "session-start" || data.type === "session-busy") {
+              sessionActive = true;
+              zoomInput.disabled = flip.disabled = true;
+              updateCaptureButton();
+              say(data.type === "session-busy" ? "A photo session is already running. Please wait…" : "Photo session started! Get ready to pose. ✨");
+            } else if (data.type === "session-unavailable") {
+              sessionActive = sessionReady = false;
+              updateCaptureButton();
+              say("Booth camera is getting ready. Wait for the live preview.", true);
+            } else if (data.type === "zoom-set" && Number.isFinite(data.zoom) && !busy && !sessionActive) applyZoom(data.zoom).catch(() => {});
+            else if (data.type === "photo-ack") { countdown.hidden = true; say("Photo received! Getting ready for the next shot. ✨"); }
+            else if (data.type === "session-done") {
+              countdown.hidden = true;
+              sessionActive = false;
+              sessionReady = true;
+              zoomInput.disabled = flip.disabled = false;
+              updateCaptureButton("Start Another Session");
+              say("Session complete! View your photocard on the booth screen, or take another. ✨");
+            } else if (data.type === "session-error") {
+              countdown.hidden = true;
+              sessionActive = false;
+              sessionReady = true;
+              zoomInput.disabled = flip.disabled = false;
+              updateCaptureButton("Retry Photo Session");
+              say("Photo session interrupted. Check the booth screen, then retry.", true);
+            }
           } catch {}
         };
-        channel.onclose = () => { if (peer && peer.connectionState !== "connected") cleanup("Photobooth disconnected. Generate a new pairing code to reconnect."); };
+        channel.onclose = () => cleanup("Photobooth disconnected. Generate a new pairing code to reconnect.");
       };
       peer.onconnectionstatechange = () => {
         if (peer?.connectionState === "failed" || peer?.connectionState === "closed") cleanup("Connection lost. Generate a new pairing code to reconnect.");
-        else if (peer?.connectionState === "disconnected") say("Signal interrupted. Reconnecting…");
-        else if (peer?.connectionState === "connected") peer.getSenders?.().filter((sender) => sender.track?.kind === "video").forEach((sender) => tunePreview(sender));
+        else if (peer?.connectionState === "disconnected") { capture.disabled = true; say("Signal interrupted. Reconnecting…"); }
+        else if (peer?.connectionState === "connected") {
+          updateCaptureButton();
+          peer.getSenders?.().filter((sender) => sender.track?.kind === "video").forEach((sender) => tunePreview(sender));
+        }
       };
       await peer.setRemoteDescription(new RTCSessionDescription(data.offer));
       await peer.setLocalDescription(await peer.createAnswer());
@@ -213,7 +266,7 @@
   }
 
   async function flipCamera() {
-    if (!peer || busy) return;
+    if (!peer || busy || sessionActive) return;
     flip.disabled = true;
     const next = mode === "environment" ? "user" : "environment";
     try {
@@ -247,6 +300,7 @@
     } catch (error) { say(error.message || "Pairing unavailable. Check your connection.", true); }
   }
   start.addEventListener("click", connect);
+  capture.addEventListener("click", requestSession);
   zoomInput.addEventListener("input", () => {
     zoomLabel.textContent = `${Number(zoomInput.value).toFixed(1)}×`;
     clearTimeout(zoomTimer);

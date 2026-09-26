@@ -7436,16 +7436,25 @@ async function startPhotoboothPhonePairing() {
         if (attempt !== photoBoothState.pairAttempt || photoBoothState.source !== "phone") return;
         setPhotoboothPhoneStatus(message);
         if (ready) { clearTimeout(photoBoothState.pairHintTimer); document.getElementById("photoboothPairOverlay").hidden = true; }
+        if (ready && document.getElementById("photoboothVideo")?.videoWidth) window.SFKPhoneCamera?.sendControl({ type:"session-ready" });
       },
       onStream: async (stream) => {
         if (attempt !== photoBoothState.pairAttempt || photoBoothState.source !== "phone") return;
         photoBoothState.stream = stream;
         const video = document.getElementById("photoboothVideo");
         video.srcObject = stream;
+        video.addEventListener("loadedmetadata", () => {
+          if (attempt === photoBoothState.pairAttempt && photoBoothState.source === "phone" && !photoBoothState.busy) window.SFKPhoneCamera?.sendControl({ type:"session-ready" });
+        }, { once:true });
         await video.play().catch(() => {});
         applyPhotoboothLiveFilter();
         document.getElementById("photoboothPairOverlay").hidden = true;
         const label = document.getElementById("photoboothLiveLabel"); if (label) label.textContent = "Phone camera live";
+        if (video.videoWidth && !photoBoothState.busy) window.SFKPhoneCamera?.sendControl({ type:"session-ready" });
+      },
+      onStart: () => {
+        if (attempt !== photoBoothState.pairAttempt || photoBoothState.source !== "phone" || document.getElementById("photoboothModal")?.hidden) return;
+        startPhotoboothCaptureSequence({ fromPhone:true });
       },
       onZoom: (message) => {
         if (attempt !== photoBoothState.pairAttempt || photoBoothState.source !== "phone") return;
@@ -7735,20 +7744,27 @@ async function capturePhotoboothFrame() {
   return canvas;
 }
 
-async function startPhotoboothCaptureSequence() {
-  if (photoBoothState.busy) return;
+async function startPhotoboothCaptureSequence({ fromPhone = false } = {}) {
+  if (photoBoothState.busy) {
+    if (fromPhone) window.SFKPhoneCamera?.sendControl({ type:"session-busy" });
+    return;
+  }
   const video = document.getElementById("photoboothVideo");
   if (!photoBoothState.stream || !video?.videoWidth) {
     setPhotoboothStatus("Camera is not ready yet. Try again after the live preview appears.", true);
+    if (fromPhone) window.SFKPhoneCamera?.sendControl({ type:"session-unavailable" });
     return;
   }
   if (photoBoothState.source === "phone" && !window.SFKPhoneCamera?.connected) {
     setPhotoboothStatus("Wait for the phone to connect before taking photos.", true);
+    if (fromPhone) window.SFKPhoneCamera?.sendControl({ type:"session-unavailable" });
     return;
   }
+  if (photoBoothState.resultBlob) resetPhotoboothResult({ keepCamera:true, quiet:true });
   syncPhotoboothSettingsFromUi();
   const layout = PHOTOBOOTH_LAYOUTS[photoBoothState.layout] || PHOTOBOOTH_LAYOUTS.single;
   photoBoothState.busy = true;
+  if (photoBoothState.source === "phone") window.SFKPhoneCamera?.sendControl({ type:"session-start" });
   setPhotoboothMobileBusy(true);
   photoBoothState.shots = [];
   const captureButton = document.getElementById("photoboothCaptureButton");
