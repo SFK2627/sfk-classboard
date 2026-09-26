@@ -24,6 +24,14 @@
     session.photo = null;
   }
 
+  function refreshPhotoTimeout(session) {
+    if (!session.pending) return;
+    clearTimeout(session.pending.timer);
+    // A large original still can take longer than 90 seconds on a slow link.
+    // Time out only when the camera or transfer has stopped making progress.
+    session.pending.timer = setTimeout(() => failPending(session, "Phone photo stalled. Please check the connection and try again."), 45000);
+  }
+
   function handleMessage(session, event) {
     if (typeof event.data === "string") {
       let message;
@@ -38,7 +46,8 @@
       }
       if (!session.pending || message.id !== session.pending.id) return;
       if (message.type === "photo" && Number.isInteger(message.bytes) && message.bytes > 0 && message.bytes <= 64 * 1024 * 1024) {
-        session.photo = { id: message.id, expected: message.bytes, mime: ["image/png","image/webp"].includes(message.mime) ? message.mime : "image/jpeg", chunks: [], size: 0 };
+        session.photo = { id: message.id, expected: message.bytes, mime: ["image/png","image/webp"].includes(message.mime) ? message.mime : "image/jpeg", bytes: new Uint8Array(message.bytes), size: 0 };
+        refreshPhotoTimeout(session);
       } else if (message.type === "photo-end") {
         const photo = session.photo;
         if (!photo || photo.id !== message.id || photo.size !== photo.expected) { failPending(session, "The phone photo was incomplete. Please try again."); return; }
@@ -46,7 +55,7 @@
         session.pending = null;
         session.photo = null;
         clearTimeout(pending.timer);
-        pending.resolve(new Blob(photo.chunks, { type: photo.mime }));
+        pending.resolve(new Blob([photo.bytes], { type: photo.mime }));
         try { session.channel.send(JSON.stringify({ type:"photo-ack", id:message.id })); } catch {}
       } else if (message.type === "photo-error") {
         failPending(session, "The phone could not take a photo. Please try again.");
@@ -56,12 +65,15 @@
     if (!session.photo || !session.pending) return;
     const add = (buffer) => {
       if (session !== room || !session.photo) return;
+      if (session.photo.size + buffer.byteLength > session.photo.expected) { failPending(session, "The phone photo was too large."); return; }
+      session.photo.bytes.set(new Uint8Array(buffer), session.photo.size);
       session.photo.size += buffer.byteLength;
-      if (session.photo.size > session.photo.expected) { failPending(session, "The phone photo was too large."); return; }
-      session.photo.chunks.push(buffer);
-      if (session.photo.size === session.photo.expected || session.photo.size - (session.photo.lastProgress || 0) > 256 * 1024) {
+      if (session.photo.size === session.photo.expected || session.photo.size - (session.photo.lastProgress || 0) >= Math.max(256 * 1024, session.photo.expected / 20)) {
         session.photo.lastProgress = session.photo.size;
-        session.pending.onProgress?.(Math.round(100 * session.photo.size / session.photo.expected));
+        refreshPhotoTimeout(session);
+        const percent = Math.round(100 * session.photo.size / session.photo.expected);
+        session.pending.onProgress?.(percent);
+        try { session.channel.send(JSON.stringify({ type:"photo-progress", id:session.photo.id, percent })); } catch {}
       }
     };
     if (event.data instanceof ArrayBuffer) add(event.data);
@@ -155,8 +167,8 @@
     if (session.pending) return Promise.reject(new Error("The phone is still taking a photo."));
     const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => failPending(session, "Phone photo timed out. Please try again."), 90000);
-      session.pending = { id, resolve, reject, timer, onProgress };
+      session.pending = { id, resolve, reject, timer:null, onProgress };
+      refreshPhotoTimeout(session);
       try { session.channel.send(JSON.stringify({ type: "capture", id })); }
       catch (error) { failPending(session, "Unable to ask the phone to take a photo."); }
     });

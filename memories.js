@@ -7741,6 +7741,7 @@ async function capturePhotoboothFrame() {
   if (!video || !video.videoWidth || !video.videoHeight) throw new Error("Camera image is not ready yet.");
   let photo = video;
   if (photoBoothState.source === "phone") {
+    setPhotoboothStatus("Taking a high-quality photo on the phone…");
     const blob = await window.SFKPhoneCamera.requestPhoto({ onProgress:(percent) => setPhotoboothStatus(`Receiving high-quality phone photo… ${percent}%`) });
     if (window.createImageBitmap) photo = await createImageBitmap(blob);
     else photo = await new Promise((resolve, reject) => {
@@ -7757,20 +7758,23 @@ async function capturePhotoboothFrame() {
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
-  const ctx = canvas.getContext("2d");
-  ctx.save();
-  ctx.filter = getPhotoboothFilterString();
-  if (photoBoothState.mirror) {
-    ctx.translate(width,0);
-    ctx.scale(-1,1);
+  try {
+    const ctx = canvas.getContext("2d");
+    ctx.save();
+    ctx.filter = getPhotoboothFilterString();
+    if (photoBoothState.mirror) {
+      ctx.translate(width,0);
+      ctx.scale(-1,1);
+    }
+    const digitalZoom = Math.max(1, Number(photoBoothState.digitalZoom) || 1);
+    const cropWidth = width / digitalZoom;
+    const cropHeight = height / digitalZoom;
+    ctx.drawImage(photo,(width-cropWidth)/2,(height-cropHeight)/2,cropWidth,cropHeight,0,0,width,height);
+    ctx.restore();
+    return canvas;
+  } finally {
+    if (photo !== video && photo.close) photo.close();
   }
-  const digitalZoom = Math.max(1, Number(photoBoothState.digitalZoom) || 1);
-  const cropWidth = width / digitalZoom;
-  const cropHeight = height / digitalZoom;
-  ctx.drawImage(photo,(width-cropWidth)/2,(height-cropHeight)/2,cropWidth,cropHeight,0,0,width,height);
-  ctx.restore();
-  if (photo !== video && photo.close) photo.close();
-  return canvas;
 }
 
 async function startPhotoboothCaptureSequence({ fromPhone = false } = {}) {
@@ -7814,6 +7818,9 @@ async function startPhotoboothCaptureSequence({ fromPhone = false } = {}) {
       photoBoothState.shots.push(await capturePhotoboothFrame());
       if (index < layout.shots - 1) await waitMs(650);
     }
+    setPhotoboothStatus("Preparing your high-quality photocard…");
+    if (photoBoothState.source === "phone") window.SFKPhoneCamera?.sendControl({ type:"photo-preparing" });
+    await new Promise((resolve) => requestAnimationFrame(resolve));
     await renderPhotoboothCollage();
     if (photoBoothState.source === "phone") window.SFKPhoneCamera?.sendControl({ type:"session-done" });
   } catch (error) {
@@ -8586,6 +8593,8 @@ async function renderPhotoboothCollage() {
   }
   photoBoothState.resultBlob = await canvasToJpegBlob(canvas, 0.96);
   if (!photoBoothState.resultBlob) throw new Error("Unable to prepare the final photobooth image.");
+  // The finished photocard canvas owns the result; free large per-shot canvases.
+  photoBoothState.shots = [];
   if (photoBoothState.resultUrl) URL.revokeObjectURL(photoBoothState.resultUrl);
   photoBoothState.resultUrl = URL.createObjectURL(photoBoothState.resultBlob);
   stage.classList.remove("is-live"); stage.classList.add("is-result");

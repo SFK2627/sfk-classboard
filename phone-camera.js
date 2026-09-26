@@ -12,7 +12,7 @@
   const zoomLabel = document.getElementById("phoneZoomValue");
   const countdown = document.getElementById("phoneCountdown");
   const id = new URLSearchParams(location.hash.slice(1)).get("pair");
-  let ref, stream, peer, channel, mode = "environment", busy = false, zoom = 1, zoomTimer;
+  let ref, stream, peer, channel, mode = "environment", busy = false, zoom = 1, zoomTimer, photoAck, activePhotoId;
   let sessionReady = false, sessionActive = false;
 
   function say(message, error = false) { status.textContent = message; status.classList.toggle("error", error); }
@@ -75,8 +75,28 @@
       await sender.setParameters(parameters);
     } catch {} // The camera track remains full resolution for still capture.
   }
+  async function prioritizePhotoTransfer(limited) {
+    const sender = peer?.getSenders?.().find((item) => item.track?.kind === "video");
+    try {
+      const parameters = sender?.getParameters?.();
+      if (!parameters?.encodings?.length) return;
+      // Reduce the *network preview* briefly; this does not resize or recompress
+      // the camera's original still photo or change its capture track.
+      parameters.encodings[0].maxBitrate = limited ? 120000 : 1200000;
+      parameters.encodings[0].maxFramerate = limited ? 4 : 24;
+      await sender.setParameters(parameters);
+    } catch {} // Some browsers do not support updating sender encodings.
+  }
+  function waitForPhotoAck(id) {
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => { photoAck = null; reject(new Error("Photo confirmation timed out. Check the booth screen.")); }, 15000);
+      photoAck = { id, resolve:() => { clearTimeout(timer); photoAck = null; resolve(); }, reject:(error) => { clearTimeout(timer); photoAck = null; reject(error); } };
+    });
+  }
   function cleanup(message = "Disconnected.") {
     clearTimeout(zoomTimer);
+    photoAck?.reject(new Error("Connection lost."));
+    activePhotoId = null;
     try { channel?.close(); } catch {}
     try { peer?.close(); } catch {}
     stream?.getTracks().forEach((track) => track.stop());
@@ -147,35 +167,53 @@
   async function sendPhoto(id) {
     if (busy || !channel || channel.readyState !== "open") return;
     busy = true;
+    activePhotoId = id;
+    let previewLimited = false;
     try {
       showCountdown("✦", "Taking a high-quality photo…");
       say("Taking photo… ✦");
       const blob = await takePhoto();
       if (blob.size > 64 * 1024 * 1024) throw new Error("This photo exceeds the browser transfer limit. Choose another camera resolution.");
+      await prioritizePhotoTransfer(true);
+      previewLimited = true;
       const buffer = await blob.arrayBuffer();
       channel.send(JSON.stringify({ type: "photo", id, bytes: buffer.byteLength, mime: blob.type }));
-      channel.bufferedAmountLowThreshold = 128 * 1024;
-      let lastPercent = -1;
+      channel.bufferedAmountLowThreshold = 192 * 1024;
+      say("Sending original phone photo to the booth…");
+      showCountdown("✦", "Sending original photo…");
       for (let offset = 0; offset < buffer.byteLength; offset += 16384) {
         if (channel.readyState !== "open") throw new Error("Connection lost.");
-        if (channel.bufferedAmount > 256 * 1024) await new Promise((resolve, reject) => {
-          const timer = setTimeout(() => { channel.removeEventListener("bufferedamountlow", drained); reject(new Error("Connection slowed down.")); }, 30000);
-          function drained() { clearTimeout(timer); channel.removeEventListener("bufferedamountlow", drained); resolve(); }
+        if (channel.bufferedAmount > 384 * 1024) await new Promise((resolve, reject) => {
+          const timer = setTimeout(() => { done(new Error("Connection slowed down.")); }, 30000);
+          let finished = false;
+          function done(error) { if (finished) return; finished = true; clearTimeout(timer); channel.removeEventListener("bufferedamountlow", drained); channel.removeEventListener("close", closed); error ? reject(error) : resolve(); }
+          function drained() { done(); }
+          function closed() { done(new Error("Connection lost.")); }
           channel.addEventListener("bufferedamountlow", drained);
-          if (channel.bufferedAmount <= channel.bufferedAmountLowThreshold) drained();
+          channel.addEventListener("close", closed);
+          if (channel.readyState !== "open") closed();
+          else if (channel.bufferedAmount <= channel.bufferedAmountLowThreshold) drained();
         });
         channel.send(buffer.slice(offset, offset + 16384));
-        const percent = Math.floor(100 * Math.min(buffer.byteLength, offset + 16384) / buffer.byteLength);
-        if (percent >= lastPercent + 10) { lastPercent = percent; say(`Sending photo ${percent}%…`); showCountdown(`${percent}%`, "Sending full-quality photo…"); }
+        // Let the phone update the screen and receive actual PC progress events.
+        if (offset && offset % (256 * 1024) === 0) await new Promise((resolve) => setTimeout(resolve, 0));
       }
-      channel.send(JSON.stringify({ type: "photo-end", id }));
-      showCountdown("✦", "Finishing full-quality transfer…");
-      say("Finishing photo transfer…");
-    } catch (error) {
-      if (channel?.readyState === "open") channel.send(JSON.stringify({ type: "photo-error", id }));
+      const acknowledgment = waitForPhotoAck(id);
+      try { channel.send(JSON.stringify({ type: "photo-end", id })); }
+      catch (error) { photoAck?.reject(error); }
+      await acknowledgment;
       countdown.hidden = true;
-      say(error.message || "Could not take photo.", true);
-    } finally { busy = false; }
+      say("Photo received! Getting ready for the next shot. ✨");
+    } catch (error) {
+      if (channel?.readyState === "open") sendState({ type: "photo-error", id });
+      countdown.hidden = true;
+      if (channel?.readyState === "open") say(error.message || "Could not take photo.", true);
+    } finally {
+      photoAck?.id === id && photoAck.reject(new Error("Photo transfer stopped."));
+      if (previewLimited) await prioritizePhotoTransfer(false);
+      if (activePhotoId === id) activePhotoId = null;
+      busy = false;
+    }
   }
 
   async function connect() {
@@ -224,7 +262,12 @@
               updateCaptureButton();
               say("Booth camera is getting ready. Wait for the live preview.", true);
             } else if (data.type === "zoom-set" && Number.isFinite(data.zoom) && !busy && !sessionActive) applyZoom(data.zoom).catch(() => {});
-            else if (data.type === "photo-ack") { countdown.hidden = true; say("Photo received! Getting ready for the next shot. ✨"); }
+            else if (data.type === "photo-progress" && data.id === activePhotoId && Number.isFinite(data.percent)) {
+              const percent = Math.max(0, Math.min(100, Math.round(data.percent)));
+              showCountdown(`${percent}%`, "Received by booth…");
+              say(`Booth received ${percent}% of the original photo…`);
+            } else if (data.type === "photo-ack" && data.id === photoAck?.id) photoAck.resolve();
+            else if (data.type === "photo-preparing") say("Preparing your photocard on the booth screen… ✨");
             else if (data.type === "session-done") {
               countdown.hidden = true;
               sessionActive = false;
@@ -249,7 +292,7 @@
         else if (peer?.connectionState === "disconnected") { capture.disabled = true; say("Signal interrupted. Reconnecting…"); }
         else if (peer?.connectionState === "connected") {
           updateCaptureButton();
-          peer.getSenders?.().filter((sender) => sender.track?.kind === "video").forEach((sender) => tunePreview(sender));
+          peer.getSenders?.().filter((sender) => sender.track?.kind === "video").forEach((sender) => activePhotoId ? prioritizePhotoTransfer(true) : tunePreview(sender));
         }
       };
       await peer.setRemoteDescription(new RTCSessionDescription(data.offer));
