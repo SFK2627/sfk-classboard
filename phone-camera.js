@@ -82,8 +82,9 @@
       if (!parameters?.encodings?.length) return;
       // Reduce the *network preview* briefly; this does not resize or recompress
       // the camera's original still photo or change its capture track.
-      parameters.encodings[0].maxBitrate = limited ? 120000 : 1200000;
-      parameters.encodings[0].maxFramerate = limited ? 4 : 24;
+      parameters.encodings[0].scaleResolutionDownBy = limited ? 2.5 : 1.5;
+      parameters.encodings[0].maxBitrate = limited ? 300000 : 1200000;
+      parameters.encodings[0].maxFramerate = limited ? 20 : 24;
       await sender.setParameters(parameters);
     } catch {} // Some browsers do not support updating sender encodings.
   }
@@ -169,10 +170,12 @@
     busy = true;
     activePhotoId = id;
     let previewLimited = false;
+    const startedAt = performance.now();
     try {
       showCountdown("✦", "Taking a high-quality photo…");
       say("Taking photo… ✦");
       const blob = await takePhoto();
+      const captureMs = Math.round(performance.now() - startedAt);
       if (blob.size > 64 * 1024 * 1024) throw new Error("This photo exceeds the browser transfer limit. Choose another camera resolution.");
       await prioritizePhotoTransfer(true);
       previewLimited = true;
@@ -180,8 +183,11 @@
       channel.send(JSON.stringify({ type: "photo", id, bytes: buffer.byteLength, mime: blob.type }));
       channel.bufferedAmountLowThreshold = 192 * 1024;
       say("Sending original phone photo to the booth…");
-      showCountdown("✦", "Sending original photo…");
-      for (let offset = 0; offset < buffer.byteLength; offset += 16384) {
+      countdown.hidden = true;
+      const maxMessageSize = peer?.sctp?.maxMessageSize;
+      const chunkSize = maxMessageSize === 0 || maxMessageSize >= 32768 ? 32768 :
+        Number.isFinite(maxMessageSize) && maxMessageSize > 0 ? Math.min(16384, maxMessageSize) : 16384;
+      for (let offset = 0; offset < buffer.byteLength; offset += chunkSize) {
         if (channel.readyState !== "open") throw new Error("Connection lost.");
         if (channel.bufferedAmount > 384 * 1024) await new Promise((resolve, reject) => {
           const timer = setTimeout(() => { done(new Error("Connection slowed down.")); }, 30000);
@@ -194,9 +200,10 @@
           if (channel.readyState !== "open") closed();
           else if (channel.bufferedAmount <= channel.bufferedAmountLowThreshold) drained();
         });
-        channel.send(buffer.slice(offset, offset + 16384));
-        // Let the phone update the screen and receive actual PC progress events.
-        if (offset && offset % (256 * 1024) === 0) await new Promise((resolve) => setTimeout(resolve, 0));
+        // A view avoids copying every chunk into another JS ArrayBuffer.
+        channel.send(new Uint8Array(buffer, offset, Math.min(chunkSize, buffer.byteLength - offset)));
+        // Keep the camera preview and controls responsive during a large still.
+        if ((offset + chunkSize) % (256 * 1024) < chunkSize) await new Promise((resolve) => setTimeout(resolve, 0));
       }
       const acknowledgment = waitForPhotoAck(id);
       try { channel.send(JSON.stringify({ type: "photo-end", id })); }
@@ -204,6 +211,7 @@
       await acknowledgment;
       countdown.hidden = true;
       say("Photo received! Getting ready for the next shot. ✨");
+      console.info("Photobooth phone capture and transfer", { bytes:blob.size, captureMs, transferMs:Math.round(performance.now()-startedAt-captureMs) });
     } catch (error) {
       if (channel?.readyState === "open") sendState({ type: "photo-error", id });
       countdown.hidden = true;
@@ -262,11 +270,7 @@
               updateCaptureButton();
               say("Booth camera is getting ready. Wait for the live preview.", true);
             } else if (data.type === "zoom-set" && Number.isFinite(data.zoom) && !busy && !sessionActive) applyZoom(data.zoom).catch(() => {});
-            else if (data.type === "photo-progress" && data.id === activePhotoId && Number.isFinite(data.percent)) {
-              const percent = Math.max(0, Math.min(100, Math.round(data.percent)));
-              showCountdown(`${percent}%`, "Received by booth…");
-              say(`Booth received ${percent}% of the original photo…`);
-            } else if (data.type === "photo-ack" && data.id === photoAck?.id) photoAck.resolve();
+            else if (data.type === "photo-ack" && data.id === photoAck?.id) photoAck.resolve();
             else if (data.type === "photo-preparing") say("Preparing your photocard on the booth screen… ✨");
             else if (data.type === "session-done") {
               countdown.hidden = true;

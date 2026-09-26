@@ -7736,13 +7736,24 @@ function flashPhotobooth() {
   flash.classList.add("is-flashing");
 }
 
-async function capturePhotoboothFrame() {
+async function capturePhotoboothFrame(shotIndex = 0) {
   const video = document.getElementById("photoboothVideo");
   if (!video || !video.videoWidth || !video.videoHeight) throw new Error("Camera image is not ready yet.");
+  const startedAt = performance.now();
+  const plan = getPhotoboothCanvasPlan(photoBoothState.layout, photoBoothState.theme);
+  const slot = plan.slots[shotIndex] || plan.slots[0];
+  const scale = photoBoothState.theme === "feast-faustina" ? 2 : 1;
+  // A shot only needs the pixels its slot can show in the final photocard.
+  // Preserve full-resolution capture and transfer; crop and filter once at export size.
+  const targetWidth = Math.ceil(slot.w * scale);
+  const targetHeight = Math.ceil(slot.h * scale);
   let photo = video;
   if (photoBoothState.source === "phone") {
     setPhotoboothStatus("Taking a high-quality photo on the phone…");
-    const blob = await window.SFKPhoneCamera.requestPhoto({ onProgress:(percent) => setPhotoboothStatus(`Receiving high-quality phone photo… ${percent}%`) });
+    const blob = await window.SFKPhoneCamera.requestPhoto({
+      onStart:() => setPhotoboothStatus("Receiving the original phone photo…"),
+      onTiming:(timing) => console.info("Photobooth photo transfer", timing)
+    });
     if (window.createImageBitmap) photo = await createImageBitmap(blob);
     else photo = await new Promise((resolve, reject) => {
       const url = URL.createObjectURL(blob);
@@ -7754,23 +7765,27 @@ async function capturePhotoboothFrame() {
   }
   const width = photo.width || photo.videoWidth;
   const height = photo.height || photo.videoHeight;
-  if (photoBoothState.source === "phone") setPhotoboothStatus(`Full-quality phone photo received: ${width} × ${height}. Preparing photocard…`);
+  if (photoBoothState.source === "phone") setPhotoboothStatus("Photo received. Preparing the next shot…");
   const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
   try {
     const ctx = canvas.getContext("2d");
     ctx.save();
     ctx.filter = getPhotoboothFilterString();
     if (photoBoothState.mirror) {
-      ctx.translate(width,0);
+      ctx.translate(targetWidth,0);
       ctx.scale(-1,1);
     }
     const digitalZoom = Math.max(1, Number(photoBoothState.digitalZoom) || 1);
-    const cropWidth = width / digitalZoom;
-    const cropHeight = height / digitalZoom;
-    ctx.drawImage(photo,(width-cropWidth)/2,(height-cropHeight)/2,cropWidth,cropHeight,0,0,width,height);
+    let cropWidth = width / digitalZoom;
+    let cropHeight = height / digitalZoom;
+    const slotRatio = targetWidth / targetHeight;
+    if (cropWidth / cropHeight > slotRatio) cropWidth = cropHeight * slotRatio;
+    else cropHeight = cropWidth / slotRatio;
+    ctx.drawImage(photo,(width-cropWidth)/2,(height-cropHeight)/2,cropWidth,cropHeight,0,0,targetWidth,targetHeight);
     ctx.restore();
+    if (photoBoothState.source === "phone") console.info("Photobooth photo preparation", { originalWidth:width, originalHeight:height, slotWidth:targetWidth, slotHeight:targetHeight, ms:Math.round(performance.now()-startedAt) });
     return canvas;
   } finally {
     if (photo !== video && photo.close) photo.close();
@@ -7797,6 +7812,7 @@ async function startPhotoboothCaptureSequence({ fromPhone = false } = {}) {
   syncPhotoboothSettingsFromUi();
   const layout = PHOTOBOOTH_LAYOUTS[photoBoothState.layout] || PHOTOBOOTH_LAYOUTS.single;
   photoBoothState.busy = true;
+  if (photoBoothState.theme === "feast-faustina") getEmbeddedFeastPortrait().catch(() => {});
   if (photoBoothState.source === "phone") window.SFKPhoneCamera?.sendControl({ type:"session-start" });
   setPhotoboothMobileBusy(true);
   photoBoothState.shots = [];
@@ -7815,7 +7831,7 @@ async function startPhotoboothCaptureSequence({ fromPhone = false } = {}) {
       if (document.getElementById("photoboothModal")?.hidden) return;
       flashPhotobooth();
       playPhotoboothTone("shutter");
-      photoBoothState.shots.push(await capturePhotoboothFrame());
+      photoBoothState.shots.push(await capturePhotoboothFrame(index));
       if (index < layout.shots - 1) await waitMs(650);
     }
     setPhotoboothStatus("Preparing your high-quality photocard…");
@@ -8537,6 +8553,7 @@ async function renderPhotoboothCollage() {
   const canvas = document.getElementById("photoboothResultCanvas");
   const stage = document.getElementById("photoboothStage");
   if (!canvas || !stage || !photoBoothState.shots.length) return;
+  const renderStartedAt = performance.now();
   const feast = photoBoothState.theme === "feast-faustina";
   const feastSpec = getFeastFaustinaTemplateSpec(photoBoothState.themeVariant);
   const plan = getPhotoboothCanvasPlan(photoBoothState.layout, photoBoothState.theme);
@@ -8593,6 +8610,7 @@ async function renderPhotoboothCollage() {
   }
   photoBoothState.resultBlob = await canvasToJpegBlob(canvas, 0.96);
   if (!photoBoothState.resultBlob) throw new Error("Unable to prepare the final photobooth image.");
+  console.info("Photobooth final render", { width:canvas.width, height:canvas.height, ms:Math.round(performance.now()-renderStartedAt) });
   // The finished photocard canvas owns the result; free large per-shot canvases.
   photoBoothState.shots = [];
   if (photoBoothState.resultUrl) URL.revokeObjectURL(photoBoothState.resultUrl);

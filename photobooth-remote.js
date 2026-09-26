@@ -47,7 +47,9 @@
       if (!session.pending || message.id !== session.pending.id) return;
       if (message.type === "photo" && Number.isInteger(message.bytes) && message.bytes > 0 && message.bytes <= 64 * 1024 * 1024) {
         session.photo = { id: message.id, expected: message.bytes, mime: ["image/png","image/webp"].includes(message.mime) ? message.mime : "image/jpeg", bytes: new Uint8Array(message.bytes), size: 0 };
+        session.pending.headerAt = performance.now();
         refreshPhotoTimeout(session);
+        try { session.pending.onStart?.(message.bytes); } catch {}
       } else if (message.type === "photo-end") {
         const photo = session.photo;
         if (!photo || photo.id !== message.id || photo.size !== photo.expected) { failPending(session, "The phone photo was incomplete. Please try again."); return; }
@@ -55,7 +57,9 @@
         session.pending = null;
         session.photo = null;
         clearTimeout(pending.timer);
-        pending.resolve(new Blob([photo.bytes], { type: photo.mime }));
+        const blob = new Blob([photo.bytes], { type: photo.mime });
+        try { pending.onTiming?.({ bytes:photo.expected, captureMs:Math.round((pending.headerAt || performance.now())-pending.startedAt), transferMs:Math.round(performance.now()-(pending.headerAt || pending.startedAt)) }); } catch {}
+        pending.resolve(blob);
         try { session.channel.send(JSON.stringify({ type:"photo-ack", id:message.id })); } catch {}
       } else if (message.type === "photo-error") {
         failPending(session, "The phone could not take a photo. Please try again.");
@@ -72,8 +76,7 @@
         session.photo.lastProgress = session.photo.size;
         refreshPhotoTimeout(session);
         const percent = Math.round(100 * session.photo.size / session.photo.expected);
-        session.pending.onProgress?.(percent);
-        try { session.channel.send(JSON.stringify({ type:"photo-progress", id:session.photo.id, percent })); } catch {}
+        try { session.pending.onProgress?.(percent); } catch {}
       }
     };
     if (event.data instanceof ArrayBuffer) add(event.data);
@@ -161,13 +164,13 @@
     try { session.channel.send(JSON.stringify(payload)); return true; } catch { return false; }
   }
 
-  function requestPhoto({ onProgress } = {}) {
+  function requestPhoto({ onProgress, onStart, onTiming } = {}) {
     const session = room;
     if (!session || session.channel?.readyState !== "open") return Promise.reject(new Error("Phone is not connected. Reconnect it and try again."));
     if (session.pending) return Promise.reject(new Error("The phone is still taking a photo."));
     const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     return new Promise((resolve, reject) => {
-      session.pending = { id, resolve, reject, timer:null, onProgress };
+      session.pending = { id, resolve, reject, timer:null, onProgress, onStart, onTiming, startedAt:performance.now() };
       refreshPhotoTimeout(session);
       try { session.channel.send(JSON.stringify({ type: "capture", id })); }
       catch (error) { failPending(session, "Unable to ask the phone to take a photo."); }
