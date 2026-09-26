@@ -11,11 +11,11 @@
   <meta name="apple-mobile-web-app-title" content="SFK Memories" />
   <title>SFK Memories</title>
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
-  <link rel="manifest" href="manifest.webmanifest?v=portrait-reminder-v1" />
+  <link rel="manifest" href="manifest.webmanifest?v=feast-portrait-v2" />
   <link rel="icon" href="icons/icon-192.png?v=14" />
   <link rel="apple-touch-icon" href="icons/icon-192.png?v=14" />
-  <link rel="stylesheet" href="memories.css?v=81-phone-zoom" />
-  <script src="orientation-lock.js?v=appwide-v6" defer></script>
+  <link rel="stylesheet" href="memories.css?v=82-feast-portrait" />
+  <script src="orientation-lock.js?v=photobooth-landscape-v7" defer></script>
 </head>
 <body>
   <header class="memoryTopbar">
@@ -294,6 +294,13 @@
                   <button type="button" data-mobile-layout="grid4"><span class="boothLayoutIcon grid4"><i></i><i></i><i></i><i></i></span><b>2 × 2</b></button>
                   <button type="button" data-mobile-layout="strip4"><span class="boothLayoutIcon strip4"><i></i><i></i><i></i><i></i></span><b>Strip 4</b></button>
                 </div>
+                <div id="photoboothMobileOrientationGroup" class="photoboothMobileOrientationGroup">
+                  <strong>Feast Day photocard shape</strong>
+                  <div id="photoboothMobileOrientationOptions" class="photoboothOrientationOptions" aria-label="Feast Day photocard orientation on mobile">
+                    <button type="button" data-feast-orientation="landscape" class="is-active" aria-pressed="true"><span class="orientationIcon landscape" aria-hidden="true"></span> Landscape</button>
+                    <button type="button" data-feast-orientation="portrait" aria-pressed="false"><span class="orientationIcon portrait" aria-hidden="true"></span> Portrait</button>
+                  </div>
+                </div>
               </section>
 
               <section id="photoboothMobileTimerPanel" class="photoboothMobilePanel" data-mobile-panel="timer" hidden>
@@ -364,6 +371,11 @@
               <button type="button" data-booth-theme="feast-faustina" class="is-active"><b>Feast Day</b></button>
             </div>
             <div id="photoboothFeastTemplateGroup" class="photoboothSubtemplateGroup" aria-label="Feast Day sub-templates">
+              <div class="photoboothSubtemplateHead"><strong>Photocard shape</strong><small>Choose landscape or portrait output. You can hold the phone either way.</small></div>
+              <div id="photoboothFeastOrientationOptions" class="photoboothOrientationOptions" aria-label="Feast Day photocard orientation">
+                <button type="button" data-feast-orientation="landscape" class="is-active" aria-pressed="true"><span class="orientationIcon landscape" aria-hidden="true"></span> Landscape</button>
+                <button type="button" data-feast-orientation="portrait" aria-pressed="false"><span class="orientationIcon portrait" aria-hidden="true"></span> Portrait</button>
+              </div>
               <div class="photoboothSubtemplateHead">
                 <strong>Feast Day style</strong>
                 <small>Choose the amount of decoration.</small>
@@ -575,6 +587,6 @@
   <script src="pwa.js?v=media-fix-v8"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
   <script src="photobooth-remote.js?v=3-phone-shutter"></script>
-  <script src="memories.js?v=feast-photocard-v9-phone-shutter"></script>
+  <script src="memories.js?v=feast-photocard-v10-portrait"></script>
 </body>
 </html>

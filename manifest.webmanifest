@@ -6,7 +6,7 @@
   "start_url": "./index.html?source=pwa-page-lock-v328",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait-primary",
+  "orientation": "any",
   "background_color": "#111111",
   "theme_color": "#f7c600",
   "shortcuts": [

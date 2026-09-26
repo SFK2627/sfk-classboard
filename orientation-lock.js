@@ -109,7 +109,7 @@
   }
 
   async function tryNativePortraitLock() {
-    if (!isMobileLikeDevice()) return;
+    if (!isMobileLikeDevice() || allowLandscape) return;
     try {
       if (screen.orientation && screen.orientation.lock) {
         try {
@@ -144,12 +144,18 @@
     tryNativePortraitLock();
   }
 
+  function setLandscapePermission(value) {
+    allowLandscape = Boolean(value);
+    applyPortraitReminder();
+    if (allowLandscape) {
+      try { screen.orientation?.unlock?.(); } catch {}
+      try { screen.orientation?.lock?.("any")?.catch?.(() => {}); } catch {}
+    } else tryNativePortraitLock();
+  }
+
   window.SFK_PHONE_ORIENTATION = {
-    allowWatchLandscape(value) {
-      allowLandscape = Boolean(value);
-      applyPortraitReminder();
-      if (!allowLandscape) tryNativePortraitLock();
-    },
+    allowWatchLandscape: setLandscapePermission,
+    allowPhotoboothLandscape: setLandscapePermission,
     refresh: applyPortraitReminder
   };
 
