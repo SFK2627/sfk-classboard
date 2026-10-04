@@ -1140,6 +1140,16 @@ function sanitizeRichNode(node) {
 /* SUBJECT ANNOUNCEMENT */
 async function saveAnnouncement() {
   const announcementText = getRichEditorStorageValue("announcementText");
+  const linkUrl = document.getElementById("announcementLinkUrl").value.trim();
+  const linkName = document.getElementById("announcementLinkName").value.trim();
+  if (linkUrl && !isValidAnnouncementLink(linkUrl)) {
+    showToast("Enter a valid http:// or https:// link.");
+    return;
+  }
+  if (!linkUrl && linkName) {
+    showToast("Add the link URL for the link name.");
+    return;
+  }
   const attachmentFiles = await buildAttachmentPayload("announcementAttachments", showToast);
 
   if (attachmentFiles === null) return;
@@ -1154,6 +1164,8 @@ async function saveAnnouncement() {
     ExpiryDate: document.getElementById("announcementExpiryDate").value,
     ShowDeadline: document.getElementById("announcementShowDeadline").value,
     AttachmentFiles: attachmentFiles,
+    AttachmentURLs: linkUrl,
+    AttachmentNames: linkUrl ? linkName || "Open Link" : "",
     Priority: document.getElementById("announcementPriority").value,
     Publish: document.getElementById("announcementPublish").value
   };
@@ -1176,6 +1188,8 @@ async function saveAnnouncement() {
       "announcementText",
       "announcementFormat",
       "announcementAttachments",
+      "announcementLinkUrl",
+      "announcementLinkName",
       "announcementTeacher",
       "announcementDeadline",
       "announcementPublishDate",
@@ -1184,6 +1198,15 @@ async function saveAnnouncement() {
       "announcementPriority",
       "announcementPublish"
     ]);
+  }
+}
+
+function isValidAnnouncementLink(value) {
+  try {
+    const url = new URL(String(value || "").trim());
+    return ["http:", "https:"].includes(url.protocol) && Boolean(url.hostname) && !url.username && !url.password;
+  } catch (_) {
+    return false;
   }
 }
 

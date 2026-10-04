@@ -168,6 +168,12 @@
             Optional. Up to 5 photos. No-billing mode compresses images and stores them in Firestore.
           </small>
 
+          <label for="officerAnnouncementLinkUrl">Attach a Link (optional)</label>
+          <input id="officerAnnouncementLinkUrl" type="url" inputmode="url" placeholder="https://example.com" />
+          <label for="officerAnnouncementLinkName">Link Name (optional)</label>
+          <input id="officerAnnouncementLinkName" type="text" maxlength="100" placeholder="Example: Open Google Form" />
+          <small class="fieldHint">The link will appear as a clickable attachment. Include https:// at the start.</small>
+
           <label for="officerAnnouncementPriority">Priority</label>
           <select id="officerAnnouncementPriority">
             <option value="Reminder">Reminder</option>
@@ -389,9 +395,9 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js?v=2-secure-auth"></script>
   <script src="auth.js?v=admin-officer-rescue-v2"></script>
-  <script src="firebase-adapter.js?v=shortcut-toggle-v115"></script>
+  <script src="firebase-adapter.js?v=v578-announcement-links"></script>
   <script src="app-presence.js?v=v551-whole-app-active"></script>
   <script src="pwa.js?v=shortcut-toggle-v115"></script>
-  <script src="officer.js?v=admin-officer-rescue-v2"></script>
+  <script src="officer.js?v=v578-announcement-links"></script>
 </body>
 </html>

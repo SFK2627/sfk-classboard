@@ -1007,6 +1007,12 @@ https://audio.jukehost.co.uk/AAAhttps://audio.jukehost.co.uk/BBBhttps://audio.ju
             Optional. Up to 5 photos. No-billing mode compresses images and stores them in Firestore.
           </small>
 
+          <label for="announcementLinkUrl">Attach a Link (optional)</label>
+          <input id="announcementLinkUrl" type="url" inputmode="url" placeholder="https://example.com" />
+          <label for="announcementLinkName">Link Name (optional)</label>
+          <input id="announcementLinkName" type="text" maxlength="100" placeholder="Example: Open Google Form" />
+          <small class="fieldHint">The link will appear as a clickable attachment. Include https:// at the start.</small>
+
           <label for="announcementPriority">Priority</label>
           <select id="announcementPriority">
             <option value="Reminder">Reminder</option>
@@ -1434,11 +1440,11 @@ https://audio.jukehost.co.uk/AAAhttps://audio.jukehost.co.uk/BBBhttps://audio.ju
   <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
   <script src="firebase-config.js?v=2-secure-auth"></script>
   <script src="auth.js?v=admin-officer-rescue-v2"></script>
-  <script src="firebase-adapter.js?v=v563-merit-polish"></script>
+  <script src="firebase-adapter.js?v=v578-announcement-links"></script>
   <script src="app-presence.js?v=v551-whole-app-active"></script>
   <script src="pwa.js?v=v456-freedom-wall-layout-admin-delete"></script>
   <script src="class-chat-admin.js?v=v560-conduct-skyblue"></script>
-  <script src="admin.js?v=v563-merit-polish"></script>
+  <script src="admin.js?v=v578-announcement-links"></script>
 
 
   <script>

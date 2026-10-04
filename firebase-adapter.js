@@ -908,13 +908,16 @@
     const prepared = { ...payload };
     delete prepared.AttachmentFiles;
 
+    const linkUrls = normalizeAttachmentText(
+      prepared.AttachmentURLs || prepared.Attachments || prepared.AttachmentURL || ""
+    );
+    const linkNames = normalizeAttachmentText(
+      prepared.AttachmentNames || prepared.AttachmentLabels || prepared.AttachmentName || ""
+    );
+
     if (files.length === 0) {
-      prepared.AttachmentURLs = normalizeAttachmentText(
-        prepared.AttachmentURLs || prepared.Attachments || prepared.AttachmentURL || ""
-      );
-      prepared.AttachmentNames = normalizeAttachmentText(
-        prepared.AttachmentNames || prepared.AttachmentLabels || prepared.AttachmentName || ""
-      );
+      prepared.AttachmentURLs = linkUrls;
+      prepared.AttachmentNames = linkNames;
       return prepared;
     }
 
@@ -923,12 +926,12 @@
     }
 
     const uploadResult = await uploadAnnouncementAttachmentsNoBilling(id, files);
-    prepared.AttachmentURLs = uploadResult.urls || "";
-    prepared.Attachments = uploadResult.urls || "";
-    prepared.AttachmentURL = uploadResult.urls || "";
-    prepared.AttachmentNames = uploadResult.names || "";
-    prepared.AttachmentLabels = uploadResult.names || "";
-    prepared.AttachmentName = uploadResult.names || "";
+    prepared.AttachmentURLs = [uploadResult.urls, linkUrls].filter(Boolean).join("\n");
+    prepared.Attachments = prepared.AttachmentURLs;
+    prepared.AttachmentURL = prepared.AttachmentURLs;
+    prepared.AttachmentNames = [uploadResult.names, linkNames].filter(Boolean).join("\n");
+    prepared.AttachmentLabels = prepared.AttachmentNames;
+    prepared.AttachmentName = prepared.AttachmentNames;
     prepared.AttachmentRefs = uploadResult.refs || "";
     return prepared;
   }

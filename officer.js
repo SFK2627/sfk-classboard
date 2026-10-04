@@ -778,6 +778,16 @@ function sanitizeRichNode(node) {
 /* SUBJECT ANNOUNCEMENT */
 async function saveOfficerAnnouncement() {
   const announcementText = getRichEditorStorageValue("officerAnnouncementText");
+  const linkUrl = document.getElementById("officerAnnouncementLinkUrl").value.trim();
+  const linkName = document.getElementById("officerAnnouncementLinkName").value.trim();
+  if (linkUrl && !isValidAnnouncementLink(linkUrl)) {
+    showOfficerToast("Enter a valid http:// or https:// link.");
+    return;
+  }
+  if (!linkUrl && linkName) {
+    showOfficerToast("Add the link URL for the link name.");
+    return;
+  }
   const attachmentFiles = await buildOfficerAttachmentPayload("officerAnnouncementAttachments", showOfficerToast);
 
   if (attachmentFiles === null) return;
@@ -793,6 +803,8 @@ async function saveOfficerAnnouncement() {
     ExpiryDate: document.getElementById("officerAnnouncementExpiryDate").value,
     ShowDeadline: document.getElementById("officerAnnouncementShowDeadline").value,
     AttachmentFiles: attachmentFiles,
+    AttachmentURLs: linkUrl,
+    AttachmentNames: linkUrl ? linkName || "Open Link" : "",
     Priority: document.getElementById("officerAnnouncementPriority").value,
     Publish: document.getElementById("officerAnnouncementPublish").value
   };
@@ -815,6 +827,8 @@ async function saveOfficerAnnouncement() {
       "officerAnnouncementText",
       "officerAnnouncementFormat",
       "officerAnnouncementAttachments",
+      "officerAnnouncementLinkUrl",
+      "officerAnnouncementLinkName",
       "officerAnnouncementTeacher",
       "officerAnnouncementDeadline",
       "officerAnnouncementPublishDate",
@@ -823,6 +837,15 @@ async function saveOfficerAnnouncement() {
       "officerAnnouncementPriority",
       "officerAnnouncementPublish"
     ]);
+  }
+}
+
+function isValidAnnouncementLink(value) {
+  try {
+    const url = new URL(String(value || "").trim());
+    return ["http:", "https:"].includes(url.protocol) && Boolean(url.hostname) && !url.username && !url.password;
+  } catch (_) {
+    return false;
   }
 }
 

@@ -5663,6 +5663,14 @@ ol.formattedText li {
   text-underline-offset: .12em;
 }
 
+.announcementsCard .announcement-main-text a.announcement-inline-link {
+  color: #174ea6;
+  text-decoration: underline;
+  text-underline-offset: .12em;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
 .thing-detail .richBoardText ul,
 .thing-detail .richBoardText ol {
   margin-left: 0;

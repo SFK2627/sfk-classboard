@@ -10637,7 +10637,7 @@ function renderAnnouncements(items) {
   const subjectColor = configuredSubjectTheme.background;
   const subjectTextColor = configuredSubjectTheme.text;
   const announcementText = item.Announcement || "";
-  const formattedAnnouncement = formatBoardText(announcementText, "center");
+  const formattedAnnouncement = formatBoardText(announcementText, "center", true);
   const announcementSizeClass = getAnnouncementTextSizeClass(announcementText);
   const announcementRichClass = isRichBoardText(announcementText) ? "announcement-rich" : "";
   const attachmentMarkup = renderAnnouncementAttachments(item);
@@ -11555,7 +11555,7 @@ function shouldDisplayAnnouncementDeadline(showDeadlineValue, deadline) {
 }
 
 function renderAnnouncementAttachments(item) {
-  const urls = splitAttachmentField(item.AttachmentURLs || item.Attachments || item.AttachmentURL || item.AttachmentRefs || item.attachmentRefs);
+  const urls = splitAttachmentField(item.AttachmentURLs || item.Attachments || item.AttachmentURL || item.AttachmentRefs || item.attachmentRefs, true);
   const labels = splitAttachmentField(item.AttachmentNames || item.AttachmentLabels || item.AttachmentName);
 
   if (urls.length === 0) return "";
@@ -12006,7 +12006,7 @@ async function resolveClassBoardMediaDataUrl(value) {
   }
 }
 
-function splitAttachmentField(value) {
+function splitAttachmentField(value, isUrlField = false) {
   const text = String(value || "").trim();
   if (!text) return [];
 
@@ -12016,6 +12016,11 @@ function splitAttachmentField(value) {
     .filter(Boolean);
 
   if (lineItems.length > 1 || /^data:image\//i.test(text)) return lineItems;
+
+  // Commas inside a URL (such as query parameters) are part of the link.
+  if (isUrlField) {
+    return text.split(/,\s*(?=(?:https?:\/\/|sfk-media:\/\/))/i).map(item => item.trim()).filter(Boolean);
+  }
 
   return text
     .split(/,\s*/)
@@ -12552,7 +12557,7 @@ function escapeHTML(value) {
     .replaceAll("'", "&#039;");
 }
 
-function formatBoardText(value, defaultAlign = "center") {
+function formatBoardText(value, defaultAlign = "center", linkify = false) {
   const rawValue = String(value || "").replace(/\r/g, "").trim();
 
   if (!rawValue) {
@@ -12563,7 +12568,8 @@ function formatBoardText(value, defaultAlign = "center") {
     const richHtml = extractRichBoardHtml(rawValue);
     const safeHtml = sanitizeBoardRichHtml(richHtml);
     if (!safeHtml) return "";
-    return `<div class="formattedText richBoardText">${safeHtml}</div>`;
+    const formatted = `<div class="formattedText richBoardText">${safeHtml}</div>`;
+    return linkify ? linkifyBoardHtml(formatted) : formatted;
   }
 
   const rawLines = rawValue
@@ -12587,11 +12593,12 @@ function formatBoardText(value, defaultAlign = "center") {
 
   if (mode === "bullets" || mode === "numbers") {
     const tagName = mode === "numbers" ? "ol" : "ul";
-    return `
+    const formatted = `
       <${tagName} class="formattedText align-left">
         ${safeLines.map(line => `<li>${line}</li>`).join("")}
       </${tagName}>
     `;
+    return linkify ? linkifyBoardHtml(formatted) : formatted;
   }
 
   const alignClass =
@@ -12600,7 +12607,54 @@ function formatBoardText(value, defaultAlign = "center") {
       : mode === "left"
         ? "align-left"
         : "align-center";
-  return `<div class="formattedText ${alignClass}">${safeLines.join("<br>")}</div>`;
+  const formatted = `<div class="formattedText ${alignClass}">${safeLines.join("<br>")}</div>`;
+  return linkify ? linkifyBoardHtml(formatted) : formatted;
+}
+
+function linkifyBoardHtml(html) {
+  const template = document.createElement("template");
+  template.innerHTML = html;
+  const walker = document.createTreeWalker(template.content, NodeFilter.SHOW_TEXT);
+  const textNodes = [];
+  while (walker.nextNode()) textNodes.push(walker.currentNode);
+
+  textNodes.forEach(node => {
+    const text = node.textContent || "";
+    const matches = /\b(?:https?:\/\/|www\.)[^\s<>"']+/gi;
+    const fragment = document.createDocumentFragment();
+    let cursor = 0;
+    let match;
+    let linked = false;
+
+    while ((match = matches.exec(text))) {
+      const raw = match[0];
+      const linkText = raw.replace(/[.,!?;:)\]}]+$/, "");
+      const suffix = raw.slice(linkText.length);
+      const href = /^www\./i.test(linkText) ? `https://${linkText}` : linkText;
+      let url;
+      try { url = new URL(href); } catch (_) { continue; }
+      if (!["http:", "https:"].includes(url.protocol) || !url.hostname || url.username || url.password) continue;
+
+      fragment.appendChild(document.createTextNode(text.slice(cursor, match.index)));
+      const anchor = document.createElement("a");
+      anchor.className = "announcement-inline-link";
+      anchor.href = url.href;
+      anchor.target = "_blank";
+      anchor.rel = "noopener noreferrer";
+      anchor.textContent = linkText;
+      fragment.appendChild(anchor);
+      fragment.appendChild(document.createTextNode(suffix));
+      cursor = match.index + raw.length;
+      linked = true;
+    }
+
+    if (linked) {
+      fragment.appendChild(document.createTextNode(text.slice(cursor)));
+      node.parentNode.replaceChild(fragment, node);
+    }
+  });
+
+  return template.innerHTML;
 }
 
 function isRichBoardText(value) {
