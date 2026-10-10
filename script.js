@@ -169,6 +169,7 @@ function initClassBoard() {
     if (event.key === "sfkClassBoardAnnouncementUpdatedAt") startAnnouncementFastRefreshBurst("admin-saved");
     if (event.key === "sfkClassBoardPageLockUpdatedAt") startAnnouncementFastRefreshBurst("page-lock-updated");
     if (event.key === "sfkClassBoardHomepageEffectUpdatedAt") loadClassBoard();
+    if (event.key === "sfkClassBoardBrandingUpdatedAt") loadClassBoard();
   });
   try {
     if (typeof BroadcastChannel !== "undefined") {
@@ -177,6 +178,7 @@ function initClassBoard() {
         if (event.data?.type === "announcement-updated") startAnnouncementFastRefreshBurst("announcement-broadcast");
         if (event.data?.type === "page-lock-updated") startAnnouncementFastRefreshBurst("page-lock-broadcast");
         if (event.data?.type === "homepage-effect-updated") loadClassBoard();
+        if (event.data?.type === "classboard-branding-updated") loadClassBoard();
       });
     }
   } catch (error) {
@@ -9394,8 +9396,137 @@ async function applyHomepageEffectSettings(settings = {}) {
   else clearHomepageRickroll();
 }
 
+const CLASSBOARD_BRANDING_DEFAULTS = Object.freeze({
+  ClassBoardIntroMotto: "Change yourself",
+  ClassBoardIntroPhotoCaption: "So Far, so Knavish",
+  ClassBoardMainHashtag: "#Magpakatao",
+  ClassBoardIntroSubtitle: "Maging tao, Maging Isa"
+});
+
+function normalizeClassBoardBrandingText(value, fallback, maxLength = 120) {
+  const text = String(value ?? "").trim();
+  return (text || fallback).slice(0, maxLength);
+}
+
+function normalizeClassBoardHashtag(value) {
+  const raw = normalizeClassBoardBrandingText(value, CLASSBOARD_BRANDING_DEFAULTS.ClassBoardMainHashtag, 40)
+    .replace(/\s+/g, "");
+  if (!raw) return CLASSBOARD_BRANDING_DEFAULTS.ClassBoardMainHashtag;
+  return raw.startsWith("#") ? raw : `#${raw}`;
+}
+
+function renderSfkStartPhotoCaption(element, text) {
+  if (!element) return;
+  element.replaceChildren();
+  const accented = new Set();
+  for (const character of String(text || "")) {
+    if (["S", "F", "K"].includes(character) && !accented.has(character)) {
+      const span = document.createElement("span");
+      span.className = "sfkStartAccent";
+      span.textContent = character;
+      element.appendChild(span);
+      accented.add(character);
+    } else {
+      element.appendChild(document.createTextNode(character));
+    }
+  }
+}
+
+let sfkBrandWordFitFrame = 0;
+
+function fitSfkStartBrandWord(element = document.getElementById("sfkStartWord")) {
+  if (!element || !element.isConnected) return;
+
+  // Start from the responsive CSS size, then shrink only when the actual
+  // rendered word is wider than the intro's text column. This keeps any
+  // Admin-entered hashtag on one line without creating horizontal scroll.
+  element.style.removeProperty("font-size");
+  element.classList.remove("isUltraLongBrandWord");
+
+  const available = Math.max(0, element.clientWidth - 8);
+  if (!available) return;
+
+  let fontSize = parseFloat(getComputedStyle(element).fontSize) || 48;
+  const isPhone = window.matchMedia?.("(max-width: 640px)")?.matches;
+  const minimum = isPhone ? 25 : 30;
+
+  for (let pass = 0; pass < 4 && element.scrollWidth > available + 1; pass += 1) {
+    const ratio = available / Math.max(element.scrollWidth, 1);
+    fontSize = Math.max(minimum, fontSize * ratio * 0.965);
+    element.style.fontSize = `${fontSize.toFixed(2)}px`;
+  }
+
+  if (element.scrollWidth > available + 1) {
+    element.classList.add("isUltraLongBrandWord");
+    const ratio = available / Math.max(element.scrollWidth, 1);
+    fontSize = Math.max(22, fontSize * ratio * 0.985);
+    element.style.fontSize = `${fontSize.toFixed(2)}px`;
+  }
+}
+
+function scheduleSfkStartBrandWordFit(element = document.getElementById("sfkStartWord")) {
+  if (!element) return;
+  cancelAnimationFrame(sfkBrandWordFitFrame);
+  sfkBrandWordFitFrame = requestAnimationFrame(() => fitSfkStartBrandWord(element));
+}
+
+function renderSfkStartBrandWord(element, hashtag) {
+  if (!element) return;
+  const word = normalizeClassBoardHashtag(hashtag);
+  element.setAttribute("aria-label", word);
+  element.classList.toggle("isLongBrandWord", word.length > 8);
+  element.replaceChildren();
+  Array.from(word).forEach((character, index) => {
+    const span = document.createElement("span");
+    span.setAttribute("aria-hidden", "true");
+    span.style.setProperty("--sfk-wave-index", String(index));
+    span.textContent = character;
+    element.appendChild(span);
+  });
+  scheduleSfkStartBrandWordFit(element);
+}
+
+window.addEventListener("resize", () => scheduleSfkStartBrandWordFit(), { passive: true });
+if (document.fonts?.ready) {
+  document.fonts.ready.then(() => scheduleSfkStartBrandWordFit()).catch(() => {});
+}
+requestAnimationFrame(() => scheduleSfkStartBrandWordFit());
+
+function applyClassBoardBrandingSettings(settings = {}) {
+  const motto = normalizeClassBoardBrandingText(
+    settings.ClassBoardIntroMotto,
+    CLASSBOARD_BRANDING_DEFAULTS.ClassBoardIntroMotto,
+    80
+  );
+  const photoCaption = normalizeClassBoardBrandingText(
+    settings.ClassBoardIntroPhotoCaption,
+    CLASSBOARD_BRANDING_DEFAULTS.ClassBoardIntroPhotoCaption,
+    80
+  );
+  const hashtag = normalizeClassBoardHashtag(settings.ClassBoardMainHashtag);
+  const subtitle = normalizeClassBoardBrandingText(
+    settings.ClassBoardIntroSubtitle,
+    CLASSBOARD_BRANDING_DEFAULTS.ClassBoardIntroSubtitle,
+    120
+  );
+
+  const tag = document.getElementById("sfkStartTag");
+  if (tag) tag.textContent = motto;
+
+  renderSfkStartPhotoCaption(document.getElementById("sfkStartPhotoCaption"), photoCaption);
+  renderSfkStartBrandWord(document.getElementById("sfkStartWord"), hashtag);
+
+  const subtitleElement = document.getElementById("sfkStartSubtitle");
+  if (subtitleElement) subtitleElement.textContent = subtitle;
+
+  const tickerHashtag = document.getElementById("tickerBrandHashtag");
+  if (tickerHashtag) tickerHashtag.textContent = hashtag;
+}
+
 function renderDashboard(data) {
   if (!data || !data.settings) return;
+
+  applyClassBoardBrandingSettings(data.settings || {});
 
   if (isClassBoardPageLocked(data.settings)) {
     showClassBoardPageLock(data.settings);

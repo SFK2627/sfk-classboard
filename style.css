@@ -20511,7 +20511,7 @@ body.classBoardPageLocked .app > :not(#sfkPageLockScreen) {
 ========================================================= */
 @media (min-width: 901px) {
   .ticker {
-    grid-template-columns: 78px minmax(0, 1fr) 132px !important;
+    grid-template-columns: 78px minmax(0, 1fr) minmax(132px, 176px) !important;
     column-gap: 12px !important;
     padding: 7px 16px !important;
   }
@@ -20539,7 +20539,9 @@ body.classBoardPageLocked .app > :not(#sfkPageLockScreen) {
     content: "#BeKind" !important;
     align-self: stretch !important;
     justify-self: end !important;
-    width: 118px !important;
+    width: auto !important;
+    min-width: 118px !important;
+    max-width: 176px !important;
     min-height: 100% !important;
     display: flex !important;
     align-items: center !important;
@@ -23230,16 +23232,19 @@ body.classBoardPageLocked .app > :not(#sfkPageLockScreen) {
     grid-column: 3 !important;
     align-self: stretch !important;
     justify-self: end !important;
-    width: 118px !important;
+    width: auto !important;
+    min-width: 118px !important;
+    max-width: 176px !important;
     min-height: 100% !important;
     display: flex !important;
     align-items: center !important;
     justify-content: flex-end !important;
     color: #f6e190 !important;
     font-weight: 900 !important;
-    font-size: 1.34rem !important;
+    font-size: clamp(1.02rem, 1.45vw, 1.28rem) !important;
     line-height: 1 !important;
-    letter-spacing: .015em !important;
+    letter-spacing: .008em !important;
+    white-space: nowrap !important;
     padding-left: 14px !important;
     border-left: 2px solid rgba(246, 225, 144, .95) !important;
     background: transparent !important;
